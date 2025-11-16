@@ -19,6 +19,8 @@ Aether Site Exporter is a WordPress plugin that enables you to export your WordP
 - 🗂️ **Database Persistence** - Export jobs stored in dedicated database table
 - ⚡ **REST API** - Full REST API for programmatic access
 - 🎨 **Modern UI** - React-based admin interface with real-time progress tracking
+- 🧹 **Automatic Cleanup** - Scheduled daily cleanup of old exports (30+ days)
+- 💻 **WP-CLI Support** - Command-line tools for cleanup and statistics
 
 ## Installation
 
@@ -54,6 +56,51 @@ The job history table shows:
 - Current status (pending, running, complete, failed)
 - Download buttons for completed exports
 - Delete button to remove old exports
+
+## WP-CLI Commands
+
+### Cleanup Old Exports
+
+Clean up export jobs and files older than specified days:
+
+```bash
+# Clean up jobs older than 30 days (default)
+wp aether-exporter cleanup
+
+# Clean up jobs older than 7 days
+wp aether-exporter cleanup --days=7
+
+# Preview what would be deleted (dry run)
+wp aether-exporter cleanup --dry-run
+```
+
+### Cleanup Failed Jobs
+
+Clean up failed jobs older than specified hours:
+
+```bash
+# Clean up failed jobs older than 24 hours (default)
+wp aether-exporter cleanup-failed
+
+# Clean up failed jobs older than 1 hour
+wp aether-exporter cleanup-failed --hours=1
+```
+
+### View Statistics
+
+View export statistics (job count, file count, disk usage):
+
+```bash
+wp aether-exporter stats
+```
+
+## Automatic Cleanup
+
+The plugin automatically runs a daily cleanup job that removes:
+- Export jobs older than 30 days
+- Associated export files
+
+The cleanup is scheduled via WordPress cron and runs once per day.
 
 ## REST API
 

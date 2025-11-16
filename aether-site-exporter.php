@@ -135,6 +135,12 @@ function activate(): void
  */
 function deactivate(): void
 {
+	// Clear scheduled cleanup event.
+	$timestamp = \wp_next_scheduled('aether_site_exporter_cleanup');
+	if ($timestamp) {
+		\wp_unschedule_event($timestamp, 'aether_site_exporter_cleanup');
+	}
+
 	// Flush rewrite rules.
 	\flush_rewrite_rules();
 }

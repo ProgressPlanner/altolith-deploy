@@ -54,6 +54,8 @@ class Plugin
 	private function __construct()
 	{
 		$this->init_hooks();
+		$this->register_wp_cli();
+		$this->schedule_cleanup();
 	}
 
 	/**
@@ -75,6 +77,9 @@ class Plugin
 
 		// Add admin bar menu.
 		\add_action('admin_bar_menu', [ $this, 'add_admin_bar_menu' ], 100);
+
+		// Scheduled cleanup.
+		\add_action('aether_site_exporter_cleanup', [ $this, 'run_scheduled_cleanup' ]);
 	}
 
 	/**
@@ -245,5 +250,47 @@ class Plugin
 				'parent' => false,
 			]
 		);
+	}
+
+	/**
+	 * Register WP-CLI commands.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	private function register_wp_cli(): void
+	{
+		if (! \defined('WP_CLI') || ! WP_CLI) {
+			return;
+		}
+
+		\WP_CLI::add_command('aether-exporter', CLI\CleanupCommand::class);
+	}
+
+	/**
+	 * Schedule automatic cleanup via cron.
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	private function schedule_cleanup(): void
+	{
+		if (! \wp_next_scheduled('aether_site_exporter_cleanup')) {
+			\wp_schedule_event(\time(), 'daily', 'aether_site_exporter_cleanup');
+		}
+	}
+
+	/**
+	 * Run scheduled cleanup.
+	 *
+	 * Automatically cleans up old export jobs (older than 30 days).
+	 *
+	 * @since 1.0.0
+	 * @return void
+	 */
+	public function run_scheduled_cleanup(): void
+	{
+		$cleanup = new Services\CleanupService();
+		$cleanup->cleanup_old_jobs(30);
 	}
 }
