@@ -78,7 +78,7 @@ class ComposerStaticInit0aaa6aff1a56429b6b11f89085f15cd3
         ),
         'A' => 
         array (
-            'Aether\\' => 7,
+            'Aether\\SiteExporter\\' => 20,
         ),
     );
 
@@ -231,7 +231,7 @@ class ComposerStaticInit0aaa6aff1a56429b6b11f89085f15cd3
         array (
             0 => __DIR__ . '/..' . '/clue/ndjson-react/src',
         ),
-        'Aether\\' => 
+        'Aether\\SiteExporter\\' => 
         array (
             0 => __DIR__ . '/../..' . '/includes',
         ),
