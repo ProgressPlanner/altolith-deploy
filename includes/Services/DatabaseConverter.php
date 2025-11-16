@@ -196,11 +196,15 @@ class DatabaseConverter
 	 */
 	private function convert_ddl_to_sqlite(string $mysql_ddl): string
 	{
-		// Remove MySQL-specific table options first.
-		$sqlite_ddl = \preg_replace('/ENGINE=\w+/i', '', $mysql_ddl);
-		$sqlite_ddl = \preg_replace('/DEFAULT CHARSET=[\w]+/i', '', $sqlite_ddl);
-		$sqlite_ddl = \preg_replace('/COLLATE[\s=][\w]+/i', '', $sqlite_ddl);
-		$sqlite_ddl = \preg_replace('/AUTO_INCREMENT=\d+/i', '', $sqlite_ddl);
+		// Remove MySQL-specific table options that appear after the table definition.
+		// Don't match on closing paren - just remove the options themselves.
+		$sqlite_ddl = \preg_replace('/\s+ENGINE\s*=\s*\w+/i', '', $mysql_ddl);
+		$sqlite_ddl = \preg_replace('/\s+DEFAULT\s+CHARSET\s*=\s*[\w]+/i', '', $sqlite_ddl);
+		$sqlite_ddl = \preg_replace('/\s+COLLATE\s*=\s*[\w]+/i', '', $sqlite_ddl);
+		$sqlite_ddl = \preg_replace('/\s+AUTO_INCREMENT\s*=\s*\d+/i', '', $sqlite_ddl);
+
+		// Remove trailing semicolon if present.
+		$sqlite_ddl = \rtrim($sqlite_ddl, ' ;');
 
 		// Convert data types - use word boundaries to avoid matching column names.
 		// Process in order from most specific to least specific.
@@ -276,7 +280,7 @@ class DatabaseConverter
 
 		// Clean up extra commas and whitespace.
 		$sqlite_ddl = \preg_replace('/,\s*\)/', ')', $sqlite_ddl);
-		$sqlite_ddl = \preg_replace('/\)\s+\)/', ')', $sqlite_ddl);
+		// Note: Don't remove )) as it's needed - one ) closes PRIMARY KEY columns, other closes CREATE TABLE.
 		$sqlite_ddl = \preg_replace('/\s+/', ' ', $sqlite_ddl);
 		$sqlite_ddl = \trim($sqlite_ddl);
 
