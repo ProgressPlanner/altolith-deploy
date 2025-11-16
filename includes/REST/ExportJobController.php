@@ -119,6 +119,11 @@ class ExportJobController
 		// Get export types from request.
 		$export_types = $body['exportTypes'] ?? [];
 
+		// Debug logging
+		\error_log('Export request received:');
+		\error_log('Body: ' . \wp_json_encode($body));
+		\error_log('Export types: ' . \wp_json_encode($export_types));
+
 		// Get export configuration from request.
 		$config = [
 			'exportStaticSite' => (bool) ( $export_types['staticSite'] ?? false ),
@@ -127,6 +132,9 @@ class ExportJobController
 			'staticSitePath'   => \sanitize_text_field($body['staticSitePath'] ?? ''),
 			'blueprintPath'    => \sanitize_text_field($body['blueprintPath'] ?? ''),
 		];
+
+		// Debug logging of final config
+		\error_log('Final config: ' . \wp_json_encode($config));
 
 		// Validate: at least one export type must be selected.
 		if (! $config['exportStaticSite'] && ! $config['exportBlueprint']) {

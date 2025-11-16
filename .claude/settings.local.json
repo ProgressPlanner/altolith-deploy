@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(unzip:*)",
+      "WebSearch",
+      "WebFetch(domain:developer.wordpress.org)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

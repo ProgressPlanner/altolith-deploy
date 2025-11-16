@@ -102,6 +102,13 @@ const ExportInterface = () => {
 		setError( null );
 		setIsExporting( true );
 
+		// Debug logging
+		console.log( 'Export config:', config );
+		console.log( 'Export types being sent:', {
+			staticSite: config.exportStaticSite,
+			blueprint: config.exportBlueprint,
+		} );
+
 		try {
 			// Create export job
 			const response = await apiFetch( {
