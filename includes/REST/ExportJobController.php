@@ -116,11 +116,16 @@ class ExportJobController
 	{
 		$body = $request->get_json_params();
 
+		// Get export types from request.
+		$export_types = $body['exportTypes'] ?? [];
+
 		// Get export configuration from request.
 		$config = [
-			'exportStaticSite' => (bool) ( $body['exportStaticSite'] ?? false ),
-			'exportBlueprint'  => (bool) ( $body['exportBlueprint'] ?? false ),
+			'exportStaticSite' => (bool) ( $export_types['staticSite'] ?? false ),
+			'exportBlueprint'  => (bool) ( $export_types['blueprint'] ?? false ),
 			'targetUrl'        => \sanitize_text_field($body['targetUrl'] ?? ''),
+			'staticSitePath'   => \sanitize_text_field($body['staticSitePath'] ?? ''),
+			'blueprintPath'    => \sanitize_text_field($body['blueprintPath'] ?? ''),
 		];
 
 		// Validate: at least one export type must be selected.
