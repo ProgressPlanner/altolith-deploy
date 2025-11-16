@@ -28,7 +28,13 @@ const ExportInterface = () => {
 		exportStaticSite: true,
 		exportBlueprint: false,
 		targetUrl: window.location.origin,
+		staticSitePath: '',
+		blueprintPath: '',
 	} );
+
+	// State for showing custom path inputs
+	const [ showStaticPathInput, setShowStaticPathInput ] = useState( false );
+	const [ showBlueprintPathInput, setShowBlueprintPathInput ] = useState( false );
 
 	// State for current export job
 	const [ currentJob, setCurrentJob ] = useState( null );
@@ -107,6 +113,8 @@ const ExportInterface = () => {
 						blueprint: config.exportBlueprint,
 					},
 					targetUrl: config.targetUrl,
+					staticSitePath: config.staticSitePath || '',
+					blueprintPath: config.blueprintPath || '',
 				},
 			} );
 
@@ -283,14 +291,44 @@ const ExportInterface = () => {
 					/>
 
 					{ config.exportStaticSite && (
-						<TextControl
-							label={ __( 'Target URL', 'aether-site-exporter' ) }
-							help={ __( 'The URL where the static site will be deployed', 'aether-site-exporter' ) }
-							value={ config.targetUrl }
-							onChange={ ( value ) => setConfig( { ...config, targetUrl: value } ) }
-							disabled={ isExporting }
-							placeholder="https://example.com"
-						/>
+						<>
+							<TextControl
+								label={ __( 'Target URL', 'aether-site-exporter' ) }
+								help={ __( 'The URL where the static site will be deployed', 'aether-site-exporter' ) }
+								value={ config.targetUrl }
+								onChange={ ( value ) => setConfig( { ...config, targetUrl: value } ) }
+								disabled={ isExporting }
+								placeholder="https://example.com"
+							/>
+
+							<div style={ { marginTop: '16px', marginBottom: '16px' } }>
+								{ ! showStaticPathInput ? (
+									<>
+										<p style={ { marginBottom: '8px' } }>
+											{ __( 'Static files will be written to:', 'aether-site-exporter' ) }{ ' ' }
+											<code>{ config.staticSitePath || '/wp-content/aether-exports/{job-id}/static-site' }</code>
+										</p>
+										<Button
+											variant="secondary"
+											onClick={ () => setShowStaticPathInput( true ) }
+											disabled={ isExporting }
+											style={ { marginTop: '8px' } }
+										>
+											{ __( 'Customize Path', 'aether-site-exporter' ) }
+										</Button>
+									</>
+								) : (
+									<TextControl
+										label={ __( 'Custom Static Site Path', 'aether-site-exporter' ) }
+										help={ __( 'Absolute path where static files will be written. Leave empty for default.', 'aether-site-exporter' ) }
+										value={ config.staticSitePath }
+										onChange={ ( value ) => setConfig( { ...config, staticSitePath: value } ) }
+										disabled={ isExporting }
+										placeholder="/var/www/html/static-site"
+									/>
+								) }
+							</div>
+						</>
 					) }
 
 					<CheckboxControl
@@ -300,6 +338,36 @@ const ExportInterface = () => {
 						onChange={ ( value ) => setConfig( { ...config, exportBlueprint: value } ) }
 						disabled={ isExporting }
 					/>
+
+					{ config.exportBlueprint && (
+						<div style={ { marginTop: '16px', marginBottom: '16px' } }>
+							{ ! showBlueprintPathInput ? (
+								<>
+									<p style={ { marginBottom: '8px' } }>
+										{ __( 'Blueprint bundle will be written to:', 'aether-site-exporter' ) }{ ' ' }
+										<code>{ config.blueprintPath || '/wp-content/aether-exports/{job-id}/blueprint-bundle' }</code>
+									</p>
+									<Button
+										variant="secondary"
+										onClick={ () => setShowBlueprintPathInput( true ) }
+										disabled={ isExporting }
+										style={ { marginTop: '8px' } }
+									>
+										{ __( 'Customize Path', 'aether-site-exporter' ) }
+									</Button>
+								</>
+							) : (
+								<TextControl
+									label={ __( 'Custom Blueprint Path', 'aether-site-exporter' ) }
+									help={ __( 'Absolute path where blueprint bundle will be written. Leave empty for default.', 'aether-site-exporter' ) }
+									value={ config.blueprintPath }
+									onChange={ ( value ) => setConfig( { ...config, blueprintPath: value } ) }
+									disabled={ isExporting }
+									placeholder="/var/www/html/blueprint"
+								/>
+							) }
+						</div>
+					) }
 
 					<div className="aether-site-exporter__actions">
 						<Button

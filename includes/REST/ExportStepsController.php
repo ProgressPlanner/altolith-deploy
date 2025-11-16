@@ -194,8 +194,11 @@ class ExportStepsController
 				);
 			}
 
-			// Create bundle directory.
-			$bundle_dir = AETHER_EXPORTS_DIR . '/' . $job_id . '/blueprint-bundle';
+			// Determine bundle directory (use custom path if provided).
+			$bundle_dir = ! empty($config['blueprintPath'])
+				? \rtrim($config['blueprintPath'], '/') . '/' . $job_id
+				: AETHER_EXPORTS_DIR . '/' . $job_id . '/blueprint-bundle';
+
 			if (! \file_exists($bundle_dir)) {
 				\wp_mkdir_p($bundle_dir);
 			}
@@ -294,8 +297,11 @@ class ExportStepsController
 
 			$config = $job['config'] ?? [];
 
-			// Create output directories.
-			$output_dir = AETHER_EXPORTS_DIR . '/' . $job_id . '/static-site';
+			// Determine output directory (use custom path if provided).
+			$output_dir = ! empty($config['staticSitePath'])
+				? \rtrim($config['staticSitePath'], '/') . '/' . $job_id
+				: AETHER_EXPORTS_DIR . '/' . $job_id . '/static-site';
+
 			if (! \file_exists($output_dir)) {
 				\wp_mkdir_p($output_dir);
 			}
