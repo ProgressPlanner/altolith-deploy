@@ -1,0 +1,208 @@
+# Constants
+
+Centralized constants for the Aether plugin. All magic strings, numbers, and configuration values should be defined here.
+
+## Purpose
+
+Constants provide:
+- **Single source of truth** for configuration values
+- **Type safety** with JSDoc annotations
+- **Discoverability** through IDE autocomplete
+- **Maintainability** by eliminating magic values scattered throughout code
+
+## Files
+
+### api.js
+
+REST API endpoints and HTTP configuration.
+
+```javascript
+import { ENDPOINTS, HTTP_METHODS, HTTP_STATUS } from '../constants';
+
+// API endpoints
+const response = await apiFetch({
+    path: ENDPOINTS.PUBLISH.START,
+    method: HTTP_METHODS.POST,
+});
+
+// Status code checking
+if (response.status === HTTP_STATUS.OK) {
+    // ...
+}
+```
+
+**Contents:**
+- `API_NAMESPACE` - WordPress REST API namespace
+- `API_BASE_PATH` - Base path for all endpoints
+- `ENDPOINTS` - All REST API endpoints (nested by feature)
+- `HTTP_METHODS` - HTTP method constants (GET, POST, PUT, DELETE, PATCH)
+- `HTTP_STATUS` - HTTP status codes (200, 404, 500, etc.)
+- `API_HEADERS` - Common request headers
+
+### timing.js
+
+Polling intervals, timeouts, delays, and cache durations.
+
+```javascript
+import { POLLING_INTERVAL, CACHE_DURATION } from '../constants';
+
+// Use polling interval instead of magic number
+const pollInterval = setInterval(checkStatus, POLLING_INTERVAL);
+
+// Cache with standard duration
+localStorage.setItem(key, value);
+setTimeout(() => localStorage.removeItem(key), CACHE_DURATION.SHORT);
+```
+
+**Contents:**
+- `POLLING_INTERVAL` - Standard polling rate (500ms)
+- `SLOW_POLLING_INTERVAL` - Slower polling rate (1000ms)
+- `FAST_POLLING_INTERVAL` - Faster polling rate (200ms)
+- `TIMEOUT_DEFAULT` - Default timeout (5000ms)
+- `DEBOUNCE_DELAY` - Input debounce delay (300ms)
+- `CACHE_DURATION` - Cache TTL values (SHORT, MEDIUM, LONG)
+- `RETRY_DELAYS` - Backoff delays for retries
+
+### providers.js
+
+Provider IDs, types, and categorization functions.
+
+```javascript
+import { PROVIDER_IDS, isGitProvider, hasCapability } from '../constants';
+
+// Check provider type
+if (isGitProvider(providerId)) {
+    // Handle git provider
+}
+
+// Check capabilities
+if (hasCapability(provider, 'storage')) {
+    // Provider supports storage
+}
+```
+
+**Contents:**
+- `PROVIDER_IDS` - All provider ID constants
+- `PROVIDER_TYPES` - Provider type constants (edge, storage, static-site, media)
+- `GIT_PROVIDERS` - Array of git-based provider IDs
+- `STORAGE_PROVIDERS` - Array of storage provider IDs
+- Helper functions:
+  - `isGitProvider(providerId)` - Check if provider uses git
+  - `isStorageProvider(providerId)` - Check if provider is storage
+  - `hasCapability(provider, capability)` - Check provider capabilities
+
+### steps.js
+
+Publish workflow step IDs, statuses, and progress calculation.
+
+```javascript
+import { PUBLISH_STEPS, STEP_STATUS, calculateOverallProgress } from '../constants';
+
+// Use step constants
+const currentStep = PUBLISH_STEPS.GENERATE_BLUEPRINT;
+
+// Check status
+if (step.status === STEP_STATUS.COMPLETE) {
+    // Step is done
+}
+
+// Calculate progress
+const progress = calculateOverallProgress(currentStep, stepProgress);
+```
+
+**Contents:**
+- `PUBLISH_STEPS` - Step ID constants
+- `STEP_STATUS` - Status values (pending, active, complete, error, skipped, waiting)
+- `PUBLISH_STATUS` - Overall workflow statuses
+- `STEP_WEIGHTS` - Relative weights for progress calculation
+- Helper functions:
+  - `calculateOverallProgress(stepId, stepProgress)` - Weighted progress
+  - `getStepIndex(stepId)` - Get step position in workflow
+  - `getNextStep(stepId)` - Get next step ID
+  - `getPreviousStep(stepId)` - Get previous step ID
+
+**Note:** This file complements `publish/utils/steps.js` which contains step definitions and metadata.
+
+### capabilities.js
+
+Provider capability constants and validation functions.
+
+```javascript
+import { CAP_STORAGE, CAP_EDGE, hasRequiredCapabilities } from '../constants';
+
+// Check if provider meets requirements
+const required = [CAP_STORAGE, CAP_EDGE];
+if (hasRequiredCapabilities(provider.capabilities, required)) {
+    // Provider supports both storage and edge
+}
+```
+
+**Contents:**
+- `CAP_STORAGE` - Storage capability constant
+- `CAP_EDGE` - Edge computing capability
+- `CAP_MEDIA` - Media offload capability
+- `CAP_STATIC_SITE` - Static site hosting capability
+- Helper functions:
+  - `hasRequiredCapabilities(providerCaps, requiredCaps)` - Validate capabilities
+  - `getCapabilityLabel(capability)` - Get human-readable label
+
+### index.js
+
+Central export file. Import constants from here:
+
+```javascript
+// ✅ Import from constants directory
+import { ENDPOINTS, POLLING_INTERVAL, PROVIDER_IDS } from '../constants';
+
+// ❌ Don't import from individual files
+import { ENDPOINTS } from '../constants/api'; // Avoid this
+```
+
+## Usage Guidelines
+
+### When to Add Constants
+
+Add a constant when you find yourself:
+- Using the same string/number in multiple places
+- Hardcoding API endpoints or URLs
+- Writing timeout/interval values inline
+- Checking provider types with string comparisons
+- Defining configuration that might change
+
+### Naming Conventions
+
+- **ALL_CAPS** for simple constants: `POLLING_INTERVAL`, `PROVIDER_IDS`
+- **NAMESPACED** objects for grouped constants: `ENDPOINTS.PUBLISH.START`
+- **camelCase** for helper functions: `isGitProvider()`, `calculateProgress()`
+- **Descriptive names** that explain purpose: `SLOW_POLLING_INTERVAL` not `INTERVAL_2`
+
+### Example: Replacing Magic Values
+
+```javascript
+// ❌ Before: Magic values scattered throughout code
+setTimeout(checkStatus, 500);
+fetch('/wp-json/aether/v1/publish');
+if (providerId === 'cloudflare-r2') { }
+
+// ✅ After: Using constants
+import { POLLING_INTERVAL, ENDPOINTS, PROVIDER_IDS } from '../constants';
+
+setTimeout(checkStatus, POLLING_INTERVAL);
+fetch(ENDPOINTS.PUBLISH.START);
+if (providerId === PROVIDER_IDS.CLOUDFLARE_R2) { }
+```
+
+## Benefits
+
+1. **Discoverability**: IDE autocomplete shows all available constants
+2. **Type Safety**: JSDoc provides type checking and documentation
+3. **Refactoring**: Change value once, updates everywhere
+4. **Consistency**: Everyone uses the same values
+5. **Testing**: Easy to mock/override constants in tests
+6. **Documentation**: Constants serve as API documentation
+
+## Related Documentation
+
+- [Main README](../README.md) - Source code overview
+- [Publish README](../publish/README.md) - Workflow steps
+- [Providers README](../providers/README.md) - Provider system

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug WordPress.org API Detection</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .pass { background: #d4edda; border: 1px solid #c3e6cb; }
+        .fail { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>WordPress.org API Detection Debug Tool</h1>
+
+    <div>
+        <button onclick="testCurrentImplementation()">Test Current Implementation</button>
+        <button onclick="testWithCorsType()">Test with CORS Type</button>
+        <button onclick="testWithoutRedirectManual()">Test without redirect:manual</button>
+        <button onclick="testWithGetMethod()">Test with GET Method</button>
+        <button onclick="testAllVariations()">Run All Tests</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const testPlugins = [
+            { slug: 'akismet', type: 'plugin', shouldExist: true },
+            { slug: 'jetpack', type: 'plugin', shouldExist: true },
+            { slug: 'woocommerce', type: 'plugin', shouldExist: true },
+            { slug: 'contact-form-7', type: 'plugin', shouldExist: true },
+            { slug: 'my-custom-plugin-12345', type: 'plugin', shouldExist: false },
+        ];
+
+        const testThemes = [
+            { slug: 'twentytwentyfour', type: 'theme', shouldExist: true },
+            { slug: 'twentytwentythree', type: 'theme', shouldExist: true },
+            { slug: 'astra', type: 'theme', shouldExist: true },
+            { slug: 'my-custom-theme-12345', type: 'theme', shouldExist: false },
+        ];
+
+        function log(html) {
+            document.getElementById('results').innerHTML += html;
+        }
+
+        function clearLog() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Current implementation
+        async function isFromWordPressOrgCurrent(slug, type) {
+            try {
+                const url = `https://wordpress.org/${type}s/${slug}/`;
+                const response = await fetch(url, {
+                    method: 'HEAD',
+                    redirect: 'manual',
+                });
+
+                const result = response.status === 200 && response.type === 'basic';
+
+                return {
+                    result,
+                    details: {
+                        status: response.status,
+                        type: response.type,
+                        statusText: response.statusText,
+                        ok: response.ok,
+                        redirected: response.redirected,
+                    }
+                };
+            } catch (error) {
+                return {
+                    result: false,
+                    error: error.message,
+                    details: { error: error.toString() }
+                };
+            }
+        }
+
+        // Test with CORS type accepted
+        async function isFromWordPressOrgWithCors(slug, type) {
+            try {
+                const url = `https://wordpress.org/${type}s/${slug}/`;
+                const response = await fetch(url, {
+                    method: 'HEAD',
+                    redirect: 'manual',
+                });
+
+                const result = response.status === 200 && ['basic', 'cors'].includes(response.type);
+
+                return {
+                    result,
+                    details: {
+                        status: response.status,
+                        type: response.type,
+                        statusText: response.statusText,
+                        ok: response.ok,
+                        redirected: response.redirected,
+                    }
+                };
+            } catch (error) {
+                return {
+                    result: false,
+                    error: error.message,
+                    details: { error: error.toString() }
+                };
+            }
+        }
+
+        // Test without redirect: manual
+        async function isFromWordPressOrgNoRedirectManual(slug, type) {
+            try {
+                const url = `https://wordpress.org/${type}s/${slug}/`;
+                const response = await fetch(url, {
+                    method: 'HEAD',
+                    // No redirect: 'manual'
+                });
+
+                const result = response.ok;
+
+                return {
+                    result,
+                    details: {
+                        status: response.status,
+                        type: response.type,
+                        statusText: response.statusText,
+                        ok: response.ok,
+                        redirected: response.redirected,
+                    }
+                };
+            } catch (error) {
+                return {
+                    result: false,
+                    error: error.message,
+                    details: { error: error.toString() }
+                };
+            }
+        }
+
+        // Test with GET method
+        async function isFromWordPressOrgWithGet(slug, type) {
+            try {
+                const url = `https://wordpress.org/${type}s/${slug}/`;
+                const response = await fetch(url, {
+                    method: 'GET',
+                });
+
+                const result = response.ok;
+
+                return {
+                    result,
+                    details: {
+                        status: response.status,
+                        type: response.type,
+                        statusText: response.statusText,
+                        ok: response.ok,
+                        redirected: response.redirected,
+                    }
+                };
+            } catch (error) {
+                return {
+                    result: false,
+                    error: error.message,
+                    details: { error: error.toString() }
+                };
+            }
+        }
+
+        async function testCurrentImplementation() {
+            clearLog();
+            log('<h2>Testing Current Implementation (HEAD + redirect:manual + type===basic)</h2>');
+            await runTests(isFromWordPressOrgCurrent, [...testPlugins, ...testThemes]);
+        }
+
+        async function testWithCorsType() {
+            clearLog();
+            log('<h2>Testing with CORS Type Accepted (HEAD + redirect:manual + type===basic|cors)</h2>');
+            await runTests(isFromWordPressOrgWithCors, [...testPlugins, ...testThemes]);
+        }
+
+        async function testWithoutRedirectManual() {
+            clearLog();
+            log('<h2>Testing without redirect:manual (HEAD + response.ok)</h2>');
+            await runTests(isFromWordPressOrgNoRedirectManual, [...testPlugins, ...testThemes]);
+        }
+
+        async function testWithGetMethod() {
+            clearLog();
+            log('<h2>Testing with GET Method (GET + response.ok)</h2>');
+            await runTests(isFromWordPressOrgWithGet, [...testPlugins, ...testThemes]);
+        }
+
+        async function testAllVariations() {
+            await testCurrentImplementation();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await testWithCorsType();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await testWithoutRedirectManual();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await testWithGetMethod();
+        }
+
+        async function runTests(testFunction, assets) {
+            let passed = 0;
+            let failed = 0;
+
+            for (const asset of assets) {
+                const { slug, type, shouldExist } = asset;
+                const { result, details, error } = await testFunction(slug, type);
+
+                const isCorrect = result === shouldExist;
+
+                if (isCorrect) {
+                    passed++;
+                } else {
+                    failed++;
+                }
+
+                const className = isCorrect ? 'pass' : 'fail';
+                const icon = isCorrect ? '✅' : '❌';
+
+                log(`
+                    <div class="test-result ${className}">
+                        <strong>${icon} ${type}: ${slug}</strong><br>
+                        Expected: ${shouldExist ? 'EXISTS on WordPress.org' : 'DOES NOT EXIST'}<br>
+                        Result: ${result ? 'EXISTS' : 'DOES NOT EXIST'}<br>
+                        ${error ? `Error: ${error}<br>` : ''}
+                        <details>
+                            <summary>Response Details</summary>
+                            <pre>${JSON.stringify(details, null, 2)}</pre>
+                        </details>
+                    </div>
+                `);
+
+                // Add delay to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+
+            log(`
+                <div class="test-result info">
+                    <strong>Summary:</strong><br>
+                    ✅ Passed: ${passed}/${assets.length}<br>
+                    ❌ Failed: ${failed}/${assets.length}<br>
+                    Accuracy: ${Math.round(passed / assets.length * 100)}%
+                </div>
+            `);
+        }
+
+        // Auto-run current implementation on load
+        window.addEventListener('load', () => {
+            log('<div class="test-result info">Click a button above to run tests. This will make real API calls to WordPress.org.</div>');
+        });
+    </script>
+</body>
+</html>

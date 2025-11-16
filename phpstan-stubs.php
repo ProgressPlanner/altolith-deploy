@@ -7,8 +7,8 @@
  */
 
 // Define plugin constants for PHPStan analysis.
-if (!\defined('AETHER_EXPORTS_DIR')) {
-	\define('AETHER_EXPORTS_DIR', '');
+if (!\defined('AETHER_PLUGIN_URL')) {
+	\define('AETHER_PLUGIN_URL', '');
 }
 
 // WordPress cookie constants for PHPStan analysis.
@@ -101,3 +101,4 @@ if (!\class_exists('WP_CLI')) {
 		}
 	}
 }
+

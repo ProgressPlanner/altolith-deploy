@@ -1,30 +1,55 @@
 module.exports = {
-	extends: [
-		'plugin:@wordpress/eslint-plugin/recommended',
-		'plugin:jest/recommended',
-	],
-	env: {
-		browser: true,
-		es2021: true,
-		node: true,
-		jest: true,
-	},
-	parserOptions: {
-		ecmaFeatures: {
-			jsx: true,
-		},
-		ecmaVersion: 'latest',
-		sourceType: 'module',
+	extends: [ 'plugin:@wordpress/eslint-plugin/recommended' ],
+	globals: {
+		r2SyncAdmin: 'readonly',
+		r2SyncLogger: 'readonly',
+		r2SyncPublish: 'readonly',
+		localStorage: 'readonly',
+		confirm: 'readonly',
+		jQuery: 'readonly',
+		navigator: 'readonly',
+		alert: 'readonly',
+		location: 'readonly',
+		requestAnimationFrame: 'readonly',
 	},
 	rules: {
-		'react/react-in-jsx-scope': 'off', // Not needed with React 17+
-		'@wordpress/no-unused-vars-before-return': 'off',
-		'jsdoc/require-jsdoc': 'off',
-		'jsdoc/require-param': 'off',
-		'jsdoc/require-returns': 'off',
+		'no-console': 'off', // Allow console statements in this project
+		'no-alert': 'off', // Allow alerts for confirmations
+		'jsdoc/require-param-type': 'off', // Types in JSDoc not required
+		'@wordpress/no-unused-vars-before-return': 'off', // Allow early variable assignment
 	},
-	globals: {
-		wp: 'readonly',
-		wpApiSettings: 'readonly',
-	},
+	overrides: [
+		{
+			files: [
+				'tests/**/*.test.js',
+				'tests/**/*.spec.js',
+				'tests/**/setup.js',
+				'tests/**/helpers/**/*.js',
+				'tests/**/Helpers/**/*.js',
+				'**/__tests__/**/*.js',
+				'**/*.test.js',
+			],
+			env: {
+				jest: true,
+				node: true,
+			},
+			globals: {
+				Element: 'readonly',
+				HTMLElement: 'readonly',
+				page: 'readonly',
+				browser: 'readonly',
+				context: 'readonly',
+				playwright: 'readonly',
+			},
+			rules: {
+				'jsdoc/check-tag-names': 'off', // Allow @jest-environment pragma
+				'no-console': 'off', // Allow console in tests
+				'jsdoc/require-returns-description': 'off', // Relax JSDoc requirements in tests
+				'no-unused-vars': 'off', // Allow unused vars in tests (common for test setup)
+				'@wordpress/no-unused-vars-before-return': 'off', // Allow unused vars in tests
+				'no-shadow': 'warn', // Warn instead of error for shadowed variables in tests
+				'no-nested-ternary': 'warn', // Warn instead of error for nested ternaries in tests
+			},
+		},
+	],
 };

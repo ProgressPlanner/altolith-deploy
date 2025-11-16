@@ -1,0 +1,13 @@
+name = "playground-cors-proxy"
+main = "PlaygroundCorsProxy.js"
+compatibility_date = "2025-01-13"
+workers_dev = true
+
+# Cloudflare Account Configuration
+account_id = "6cd2a4ddc39f529081d3a0e4a1484779"
+
+# D1 Database for WordPress.org plugin/theme cache
+[[d1_databases]]
+binding = "DB"
+database_name = "wporg-cache"
+database_id = "85701657-3b3c-4b03-bbe0-6e1093bbdf5f"

@@ -19,7 +19,7 @@ module.exports = {
 		'^.+\\.(js|jsx)$': [ 'babel-jest', { configFile: './babel.config.js' } ],
 	},
 	transformIgnorePatterns: [
-		'node_modules/',
+		'node_modules/(?!(p-retry|retry|is-network-error|parse5)/)',
 	],
 	globals: {
 		wpApiSettings: {

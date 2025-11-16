@@ -1,0 +1,38 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"landingPage": "/",
+	"preferredVersions": {
+		"php": "8.2",
+		"wp": "latest"
+	},
+	"phpExtensionBundles": [
+		"kitchen-sink"
+	],
+	"features": {
+		"networking": true
+	},
+	"steps": [
+		{
+			"step": "login",
+			"username": "admin",
+			"password": "password"
+		},
+		{
+			"step": "writeFile",
+			"path": "/wordpress/wp-content/db.php",
+			"data": "<?php\n// SQLite integration stub\ndefine('USE_MYSQL', false);\n"
+		},
+		{
+			"step": "unzip",
+			"zipPath": "/wordpress/wp-content.zip",
+			"extractToPath": "/wordpress"
+		},
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "wordpress.org/plugins",
+				"slug": "wordpress-importer"
+			}
+		}
+	]
+}

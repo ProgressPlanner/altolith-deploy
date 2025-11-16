@@ -15,13 +15,13 @@
  * - ❌ BLOCKED: External API calls to wordpress.org, cloudflare.com, etc.
  *
  * Usage:
- * - Static site HTML fetching (ExportStepsController.php)
+ * - Static site HTML fetching (PublishStepsController.php)
  * - URL discovery (URLDiscoveryService.php)
  *
- * @package AetherSiteExporter\Utilities
+ * @package Aether\Utilities
  */
 
-namespace AetherSiteExporter\Utilities;
+namespace Aether\Utilities;
 
 \defined('ABSPATH') || exit;
 

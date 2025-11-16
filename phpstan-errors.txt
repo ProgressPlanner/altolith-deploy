@@ -1,0 +1,278 @@
+ ------ ----------------------------------------------------------------------- 
+  Line   includes/Core/EventHandlers/BlueprintAssetHandler.php                  
+ ------ ----------------------------------------------------------------------- 
+  215    Property WP_Upgrader::$result (array<string, bool|string>|WP_Error) i  
+         n isset() is not nullable.                                             
+         🪪  isset.property                                                     
+  216    Offset 'destination' on array{source: string, source_files: string,    
+         destination: string, destination_name: string, local_destination:      
+         string, remote_destination: string, clear_destination: bool} on left   
+         side of ?? always exists and is not nullable.                          
+         🪪  nullCoalesce.offset                                                
+  229    Property WP_Upgrader::$result (array<string, bool|string>|WP_Error) i  
+         n isset() is not nullable.                                             
+         🪪  isset.property                                                     
+  230    Offset 'destination' on array{source: string, source_files: string,    
+         destination: string, destination_name: string, local_destination:      
+         string, remote_destination: string, clear_destination: bool} on left   
+         side of ?? always exists and is not nullable.                          
+         🪪  nullCoalesce.offset                                                
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   includes/Scanner/FileScanner.php                                       
+ ------ ----------------------------------------------------------------------- 
+  37     Call to function is_array() with array will always evaluate to true.   
+         🪪  function.alreadyNarrowedType                                       
+         💡  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------- 
+  Line   includes/Storage/MultipartUploader.php                       
+ ------ ------------------------------------------------------------- 
+  52     Call to private method initiate_multipart_upload() of class  
+         R2Sync\Storage\Providers\R2StorageProvider.                  
+         🪪  method.private                                           
+  64     Call to private method abort_multipart_upload() of class     
+         R2Sync\Storage\Providers\R2StorageProvider.                  
+         🪪  method.private                                           
+  75     Call to private method abort_multipart_upload() of class     
+         R2Sync\Storage\Providers\R2StorageProvider.                  
+         🪪  method.private                                           
+  79     Call to private method upload_part() of class                
+         R2Sync\Storage\Providers\R2StorageProvider.                  
+         🪪  method.private                                           
+  83     Call to private method abort_multipart_upload() of class     
+         R2Sync\Storage\Providers\R2StorageProvider.                  
+         🪪  method.private                                           
+  110    Call to private method complete_multipart_upload() of class  
+         R2Sync\Storage\Providers\R2StorageProvider.                  
+         🪪  method.private                                           
+  113    Call to private method abort_multipart_upload() of class     
+         R2Sync\Storage\Providers\R2StorageProvider.                  
+         🪪  method.private                                           
+ ------ ------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------------------- 
+  Line   includes/Storage/Providers/FTPStorageProvider.php                    
+ ------ --------------------------------------------------------------------- 
+  23     Property R2Sync\Storage\Providers\FTPStorageProvider::$connection    
+         (FTP\Connection|resource|null) is never assigned resource so it can  
+         be removed from the property type.                                   
+         🪪  property.unusedType                                              
+ ------ --------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------------- 
+  Line   includes/Storage/S3SignatureGenerator.php                
+ ------ --------------------------------------------------------- 
+  150    Parameter #2 $callback of function array_filter expects  
+         (callable(string): bool)|null, 'strlen' given.           
+         🪪  argument.type                                        
+  155    Parameter #2 $callback of function array_filter expects  
+         (callable(string): bool)|null, 'strlen' given.           
+         🪪  argument.type                                        
+  169    Parameter #2 $callback of function array_filter expects  
+         (callable(string): bool)|null, 'strlen' given.           
+         🪪  argument.type                                        
+  178    Parameter #2 $callback of function array_filter expects  
+         (callable(string): bool)|null, 'strlen' given.           
+         🪪  argument.type                                        
+ ------ --------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------- 
+  Line   includes/Sync/BatchProcessor.php                                   
+ ------ ------------------------------------------------------------------- 
+  140    Call to an undefined method                                        
+         R2Sync\Storage\StorageProviderInterface::prepare_upload_handle().  
+         🪪  method.notFound                                                
+ ------ ------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   includes/Sync/BlueprintManager.php                                     
+ ------ ----------------------------------------------------------------------- 
+  66     Path in require_once() "./wp-admin/includes/plugin-install.php" is     
+         not a file or it does not exist.                                       
+         🪪  requireOnce.fileNotFound                                           
+  118    Path in require_once() "./wp-admin/includes/theme.php" is not a file   
+         or it does not exist.                                                  
+         🪪  requireOnce.fileNotFound                                           
+  202    Path in require_once() "./wp-admin/includes/plugin.php" is not a file  
+         or it does not exist.                                                  
+         🪪  requireOnce.fileNotFound                                           
+  262    Method R2Sync\Sync\BlueprintManager::create_plugin_step() never        
+         returns null so it can be removed from the return type.                
+         🪪  return.unusedType                                                  
+  298    Method R2Sync\Sync\BlueprintManager::create_theme_step() never         
+         returns null so it can be removed from the return type.                
+         🪪  return.unusedType                                                  
+  425    Method R2Sync\Sync\BlueprintManager::create_uploads_step() never       
+         returns null so it can be removed from the return type.                
+         🪪  return.unusedType                                                  
+  465    Variable $commands in empty() always exists and is not falsy.          
+         🪪  empty.variable                                                     
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   includes/class-multi-folder-sync.php                                   
+ ------ ----------------------------------------------------------------------- 
+  53     Property R2Sync\Multi_Folder_Sync::$blueprint_manager is never read,   
+         only written.                                                          
+         🪪  property.onlyWritten                                               
+         💡  See:                                                               
+         https://phpstan.org/developing-extensions/always-read-written-propert  
+         ies                                                                    
+  343    Parameter #2 $size_kb of static method                                 
+         R2Sync\Utilities\Logger::batch() expects string, float given.          
+         🪪  argument.type                                                      
+  538    Undefined variable: $files                                             
+         🪪  variable.undefined                                                 
+  755    Cannot access offset 'deleted' on bool.                                
+         🪪  offsetAccess.nonOffsetAccessible                                   
+  756    Cannot access offset 'errors' on bool.                                 
+         🪪  offsetAccess.nonOffsetAccessible                                   
+  758    Cannot access offset 'deleted' on bool.                                
+         🪪  offsetAccess.nonOffsetAccessible                                   
+  759    Undefined variable: $folder_key                                        
+         🪪  variable.undefined                                                 
+  823    Cannot access offset 'deleted' on bool.                                
+         🪪  offsetAccess.nonOffsetAccessible                                   
+  824    Cannot access offset 'errors' on bool.                                 
+         🪪  offsetAccess.nonOffsetAccessible                                   
+  827    Cannot access offset 'deleted' on bool.                                
+         🪪  offsetAccess.nonOffsetAccessible                                   
+  941    Method R2Sync\Multi_Folder_Sync::sync_specific_folder() should return  
+         array but returns WP_Error.                                            
+         🪪  return.type                                                        
+  1036   Method R2Sync\Multi_Folder_Sync::parallel_upload_batch() is unused.    
+         🪪  method.unused                                                      
+  1051   Call to an undefined method                                            
+         R2Sync\Storage\StorageProviderInterface::prepare_upload_handle().      
+         🪪  method.notFound                                                    
+  1108   Method R2Sync\Multi_Folder_Sync::sync_specific_files() should return   
+         array but returns WP_Error.                                            
+         🪪  return.type                                                        
+  1153   Method R2Sync\Multi_Folder_Sync::delete_specific_files() should        
+         return array but returns WP_Error.                                     
+         🪪  return.type                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   includes/class-multi-provider-manager.php                              
+ ------ ----------------------------------------------------------------------- 
+  147    Call to function is_array() with bool will always evaluate to false.   
+         🪪  function.impossibleType                                            
+         💡  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  149    Offset 'success' on *NEVER* in isset() always exists and is not        
+         nullable.                                                              
+         🪪  isset.offset                                                       
+  150    Offset 'errors' on *NEVER* in isset() always exists and is not         
+         nullable.                                                              
+         🪪  isset.offset                                                       
+  151    Offset 'total' on *NEVER* in isset() always exists and is not          
+         nullable.                                                              
+         🪪  isset.offset                                                       
+  151    Offset 'total_files' on *NEVER* in isset() always exists and is not    
+         nullable.                                                              
+         🪪  isset.offset                                                       
+  186    Call to function is_array() with bool will always evaluate to false.   
+         🪪  function.impossibleType                                            
+         💡  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  188    Offset 'success' on *NEVER* in isset() always exists and is not        
+         nullable.                                                              
+         🪪  isset.offset                                                       
+  189    Offset 'errors' on *NEVER* in isset() always exists and is not         
+         nullable.                                                              
+         🪪  isset.offset                                                       
+  190    Offset 'total' on *NEVER* in isset() always exists and is not          
+         nullable.                                                              
+         🪪  isset.offset                                                       
+  190    Offset 'total_files' on *NEVER* in isset() always exists and is not    
+         nullable.                                                              
+         🪪  isset.offset                                                       
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   includes/class-sync-manager.php                                        
+ ------ ----------------------------------------------------------------------- 
+  30     Property R2Sync\Sync_Manager::$storage_provider is never read, only    
+         written.                                                               
+         🪪  property.onlyWritten                                               
+         💡  See:                                                               
+         https://phpstan.org/developing-extensions/always-read-written-propert  
+         ies                                                                    
+  51     Property R2Sync\Sync_Manager::$remote_db_key is never read, only       
+         written.                                                               
+         🪪  property.onlyWritten                                               
+         💡  See:                                                               
+         https://phpstan.org/developing-extensions/always-read-written-propert  
+         ies                                                                    
+  195    Left side of && is always true.                                        
+         🪪  booleanAnd.leftAlwaysTrue                                          
+         💡  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  205    Call to function is_wp_error() with array will always evaluate to      
+         false.                                                                 
+         🪪  function.impossibleType                                            
+         💡  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  251    Variable $result in isset() always exists and is not nullable.         
+         🪪  isset.variable                                                     
+  271    Method R2Sync\Sync_Manager::push_to_r2() should return bool|WP_Error   
+         but returns array.                                                     
+         🪪  return.type                                                        
+  278    Method R2Sync\Sync_Manager::push_to_r2() should return bool|WP_Error   
+         but returns array.                                                     
+         🪪  return.type                                                        
+  305    Method R2Sync\Sync_Manager::force_pull() should return bool|WP_Error   
+         but returns array.                                                     
+         🪪  return.type                                                        
+  389    If condition is always true.                                           
+         🪪  if.alwaysTrue                                                      
+         💡  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  450    Negated boolean expression is always false.                            
+         🪪  booleanNot.alwaysFalse                                             
+         💡  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  477    Negated boolean expression is always false.                            
+         🪪  booleanNot.alwaysFalse                                             
+         💡  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  486    Method R2Sync\Multi_Folder_Sync::cleanup_specific_folder() invoked     
+         with 2 parameters, 1 required.                                         
+         🪪  arguments.count                                                    
+  497    Negated boolean expression is always false.                            
+         🪪  booleanNot.alwaysFalse                                             
+         💡  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  512    Negated boolean expression is always false.                            
+         🪪  booleanNot.alwaysFalse                                             
+         💡  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+ ------ ----------------------------------------------------------------------- 
+
+ -- --------------------------------------------------------------------------- 
+     Error                                                                      
+ -- --------------------------------------------------------------------------- 
+     Ignored error pattern #Function                                            
+     (add_action|add_filter|do_action|apply_filters|get_option|update_option|d  
+     elete_option|get_transient|set_transient|delete_transient|wp_json_encode|  
+     is_wp_error|esc_html|esc_attr|esc_url|__|_e|_n|_x) not found# was not      
+     matched in reported errors.                                                
+ -- --------------------------------------------------------------------------- 
+
+ [ERROR] Found 65 errors                                                        
+

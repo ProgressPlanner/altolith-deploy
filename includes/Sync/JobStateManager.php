@@ -3,227 +3,111 @@
 /**
  * Job State Manager
  *
- * Handles database operations for export job state management.
- * Unlike Aether which uses transients, this uses a dedicated database table
- * for persistent storage of export jobs.
+ * Handles transient get/set operations and state transitions for publish jobs.
  *
- * @package AetherSiteExporter\Sync
- * @since 1.0.0
+ * @package Aether\Sync
  */
 
-declare(strict_types=1);
+namespace Aether\Sync;
 
-namespace AetherSiteExporter\Sync;
+\defined('ABSPATH') || exit;
 
 /**
- * Manages export job state via database table.
- *
- * @since 1.0.0
+ * Manages publish job state via WordPress transients.
  */
 class JobStateManager
 {
 	/**
-	 * Database table name (without prefix).
+	 * Transient expiration time (30 minutes).
 	 *
-	 * @var string
+	 * Increased to accommodate large file uploads via browser.
+	 *
+	 * @var int
 	 */
-	private string $table_name;
+	const TRANSIENT_EXPIRATION = 1800;
 
 	/**
-	 * WordPress database instance.
+	 * Get job status from transient.
 	 *
-	 * @var \wpdb
+	 * @param string $jobId Job ID.
+	 * @return array<string, mixed>|false Job status array or false if not found.
 	 */
-	private \wpdb $wpdb;
-
-	/**
-	 * Constructor.
-	 *
-	 * @since 1.0.0
-	 */
-	public function __construct()
+	public function getStatus(string $jobId)
 	{
-		global $wpdb;
-		$this->wpdb       = $wpdb;
-		$this->table_name = $wpdb->prefix . 'aether_export_jobs';
+		return \get_transient($jobId);
 	}
 
 	/**
-	 * Create a new export job.
+	 * Update job status in transient.
 	 *
-	 * @since 1.0.0
-	 * @param array<string, mixed> $config Job configuration.
-	 * @return string|false Job ID on success, false on failure.
-	 */
-	public function create_job(array $config)
-	{
-		// Generate unique job ID.
-		$job_id = 'export_' . \time() . '_' . \wp_generate_password(8, false);
-
-		$result = $this->wpdb->insert(
-			$this->table_name,
-			[
-				'id'             => $job_id,
-				'status'         => 'pending',
-				'current_step'   => null,
-				'workflow_state' => \wp_json_encode([]),
-				'config'         => \wp_json_encode($config),
-				'error_message'  => null,
-				'created_at'     => \current_time('mysql'),
-				'updated_at'     => \current_time('mysql'),
-			],
-			[
-				'%s', // id.
-				'%s', // status.
-				'%s', // current_step.
-				'%s', // workflow_state.
-				'%s', // config.
-				'%s', // error_message.
-				'%s', // created_at.
-				'%s', // updated_at.
-			]
-		);
-
-		return $result ? $job_id : false;
-	}
-
-	/**
-	 * Get job status from database.
-	 *
-	 * @since 1.0.0
-	 * @param string $job_id Job ID.
-	 * @return array<string, mixed>|false Job data or false if not found.
-	 */
-	public function get_status(string $job_id)
-	{
-		// phpcs:disable WordPress.DB.PreparedSQL
-		$job = $this->wpdb->get_row(
-			$this->wpdb->prepare(
-				"SELECT * FROM {$this->table_name} WHERE id = %s",
-				$job_id
-			),
-			ARRAY_A
-		);
-		// phpcs:enable WordPress.DB.PreparedSQL
-
-		if (! $job) {
-			return false;
-		}
-
-		// Decode JSON fields.
-		$job['workflow_state'] = \json_decode($job['workflow_state'], true) ?? [];
-		$job['config']         = \json_decode($job['config'], true) ?? [];
-
-		return $job;
-	}
-
-	/**
-	 * Update job status.
-	 *
-	 * @since 1.0.0
-	 * @param string               $job_id Job ID.
-	 * @param array<string, mixed> $data Data to update.
+	 * @param string               $jobId Job ID.
+	 * @param array<string, mixed> $status Status array.
 	 * @return bool True on success, false on failure.
 	 */
-	public function update_status(string $job_id, array $data): bool
+	public function updateStatus(string $jobId, array $status): bool
 	{
-		// Get current job data to merge workflow_state.
-		$current = $this->get_status($job_id);
-		if (false === $current) {
-			return false;
-		}
+		return \set_transient($jobId, $status, self::TRANSIENT_EXPIRATION);
+	}
 
-		// Prepare update data.
-		$update_data = [
-			'updated_at' => \current_time('mysql'),
-		];
-
-		// Update status if provided.
-		if (isset($data['status'])) {
-			$update_data['status'] = $data['status'];
-		}
-
-		// Update current step if provided.
-		if (isset($data['current_step'])) {
-			$update_data['current_step'] = $data['current_step'];
-		}
-
-		// Update error message if provided.
-		if (isset($data['error_message'])) {
-			$update_data['error_message'] = $data['error_message'];
-		}
-
-		// Merge workflow state.
-		if (isset($data['workflow_state'])) {
-			$merged_state                   = \array_merge($current['workflow_state'], $data['workflow_state']);
-			$update_data['workflow_state'] = \wp_json_encode($merged_state);
-		}
-
-		// Update config if provided.
-		if (isset($data['config'])) {
-			$update_data['config'] = \wp_json_encode($data['config']);
-		}
-
-		$result = $this->wpdb->update(
-			$this->table_name,
-			$update_data,
-			[ 'id' => $job_id ],
-			null,
-			[ '%s' ] // WHERE format.
-		);
-
-		return false !== $result;
+	/**
+	 * Delete job status transient.
+	 *
+	 * @param string $jobId Job ID.
+	 * @return bool True on success, false on failure.
+	 */
+	public function deleteStatus(string $jobId): bool
+	{
+		return \delete_transient($jobId);
 	}
 
 	/**
 	 * Transition to next step.
 	 *
-	 * @since 1.0.0
-	 * @param string               $job_id Job ID.
-	 * @param string               $next_step Next step identifier.
-	 * @param string               $message Status message.
-	 * @param array<string, mixed> $extra_data Optional extra data to merge into workflow_state.
+	 * @param string               $jobId      Job ID.
+	 * @param string               $nextStep   Next step identifier.
+	 * @param string               $message     Status message.
+	 * @param array<string, mixed> $extraData  Optional extra data to merge.
 	 * @return bool True on success, false on failure.
 	 */
-	public function transition_to(string $job_id, string $next_step, string $message, array $extra_data = []): bool
+	public function transitionTo(string $jobId, string $nextStep, string $message, array $extraData = []): bool
 	{
-		$workflow_state = \array_merge(
+		$currentStatus = $this->getStatus($jobId);
+
+		if (false === $currentStatus) {
+			return false;
+		}
+
+		$newStatus = \array_merge(
+			$currentStatus,
 			[
-				'message' => $message,
+				'status'       => 'running',
+				'currentStep' => $nextStep,
+				'message'      => $message,
 			],
-			$extra_data
+			$extraData
 		);
 
-		return $this->update_status(
-			$job_id,
-			[
-				'status'         => 'running',
-				'current_step'   => $next_step,
-				'workflow_state' => $workflow_state,
-			]
-		);
+		return $this->updateStatus($jobId, $newStatus);
 	}
 
 	/**
 	 * Mark job as complete.
 	 *
-	 * @since 1.0.0
-	 * @param string $job_id Job ID.
+	 * @param string $jobId Job ID.
 	 * @param string $message Success message.
 	 * @return bool True on success, false on failure.
 	 */
-	public function mark_complete(string $job_id, string $message = ''): bool
+	public function markComplete(string $jobId, string $message = ''): bool
 	{
 		if (empty($message)) {
-			$message = \__('Export completed successfully!', 'aether-site-exporter');
+			$message = \__('Site published successfully!', 'aether');
 		}
 
-		return $this->update_status(
-			$job_id,
+		return $this->updateStatus(
+			$jobId,
 			[
-				'status'         => 'complete',
-				'current_step'   => 'completed',
-				'workflow_state' => [ 'message' => $message ],
+				'status'  => 'complete',
+				'message' => $message,
 			]
 		);
 	}
@@ -231,115 +115,119 @@ class JobStateManager
 	/**
 	 * Mark job as failed.
 	 *
-	 * @since 1.0.0
-	 * @param string $job_id Job ID.
-	 * @param string $error_message Error message.
-	 * @param string $current_step Step that failed (optional).
+	 * @param string $jobId       Job ID.
+	 * @param string $errorMessage Error message.
+	 * @param string $currentStep  Step that failed (optional).
 	 * @return bool True on success, false on failure.
 	 */
-	public function mark_failed(string $job_id, string $error_message, string $current_step = ''): bool
+	public function markFailed(string $jobId, string $errorMessage, string $currentStep = ''): bool
 	{
-		$data = [
-			'status'        => 'failed',
-			'error_message' => $error_message,
+		$status = [
+			'status'  => 'failed',
+			'message' => $errorMessage,
 		];
 
-		if (! empty($current_step)) {
-			$data['current_step'] = $current_step;
+		if (! empty($currentStep)) {
+			$status['currentStep'] = $currentStep;
 		}
 
-		return $this->update_status($job_id, $data);
+		return $this->updateStatus($jobId, $status);
+	}
+
+	/**
+	 * Increment retry counter for a step.
+	 *
+	 * @param string $jobId      Job ID.
+	 * @param string $stepName   Step identifier.
+	 * @param int    $maxRetries Maximum retries allowed.
+	 * @return array{shouldRetry: bool, retryCount: int} Retry decision and count.
+	 */
+	public function incrementRetry(string $jobId, string $stepName, int $maxRetries = 2): array
+	{
+		$status = $this->getStatus($jobId);
+
+		if (false === $status) {
+			return [
+				'shouldRetry' => false,
+				'retryCount'  => 0,
+			];
+		}
+
+		$stepRetries = $status['stepRetries'] ?? [];
+		$retryCount  = $stepRetries[ $stepName ] ?? 0;
+		$retryCount++;
+
+		$stepRetries[ $stepName ] = $retryCount;
+		$status['stepRetries']     = $stepRetries;
+
+		$this->updateStatus($jobId, $status);
+
+		return [
+			'shouldRetry' => $retryCount <= $maxRetries,
+			'retryCount'  => $retryCount,
+		];
+	}
+
+	/**
+	 * Check if job should be retried after error.
+	 *
+	 * @param string $jobId      Job ID.
+	 * @param string $stepName   Step identifier.
+	 * @param int    $maxRetries Maximum retries allowed.
+	 * @return bool True if should retry, false otherwise.
+	 */
+	public function shouldRetry(string $jobId, string $stepName, int $maxRetries = 2): bool
+	{
+		$status = $this->getStatus($jobId);
+
+		if (false === $status) {
+			return false;
+		}
+
+		$stepRetries = $status['stepRetries'] ?? [];
+		$retryCount  = $stepRetries[ $stepName ] ?? 0;
+
+		return $retryCount < $maxRetries;
 	}
 
 	/**
 	 * Get all jobs, sorted by most recent first.
 	 *
-	 * @since 1.0.0
 	 * @param int|null $limit Optional limit for number of jobs to return.
-	 * @return array<int, array<string, mixed>> Array of jobs.
+	 * @return array<int, array<string, mixed>> Array of jobs with jobId and status data.
 	 */
-	public function get_all_jobs(?int $limit = null): array
+	public function getAllJobs(?int $limit = null): array
 	{
-		$sql = "SELECT * FROM {$this->table_name} ORDER BY created_at DESC";
+		global $wpdb;
 
+		// Query for all aether transients.
+		$results = $wpdb->get_results(
+			"SELECT option_name, option_value FROM {$wpdb->options}
+			WHERE option_name LIKE '_transient_aether_%'
+			AND option_name NOT LIKE '_transient_timeout_%'
+			ORDER BY option_name DESC",
+			ARRAY_A
+		);
+
+		$jobs = [];
+
+		foreach ($results as $row) {
+			$jobId = \str_replace('_transient_', '', $row['option_name']);
+			$status = \maybe_unserialize($row['option_value']);
+
+			if (\is_array($status)) {
+				$jobs[] = \array_merge(
+					[ 'jobId' => $jobId ],
+					$status
+				);
+			}
+		}
+
+		// Apply limit if specified.
 		if (null !== $limit && $limit > 0) {
-			$sql .= $this->wpdb->prepare(' LIMIT %d', $limit);
+			$jobs = \array_slice($jobs, 0, $limit);
 		}
 
-		$results = $this->wpdb->get_results($sql, ARRAY_A); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
-
-		if (! $results) {
-			return [];
-		}
-
-		// Decode JSON fields for each job.
-		foreach ($results as &$job) {
-			$job['workflow_state'] = \json_decode($job['workflow_state'], true) ?? [];
-			$job['config']         = \json_decode($job['config'], true) ?? [];
-		}
-
-		return $results;
-	}
-
-	/**
-	 * Delete a job.
-	 *
-	 * @since 1.0.0
-	 * @param string $job_id Job ID.
-	 * @return bool True on success, false on failure.
-	 */
-	public function delete_job(string $job_id): bool
-	{
-		$result = $this->wpdb->delete(
-			$this->table_name,
-			[ 'id' => $job_id ],
-			[ '%s' ]
-		);
-
-		return false !== $result;
-	}
-
-	/**
-	 * Clean up old jobs.
-	 *
-	 * Keeps only the N most recent jobs, deletes the rest.
-	 *
-	 * @since 1.0.0
-	 * @param int $keep_count Number of jobs to keep.
-	 * @return int Number of jobs deleted.
-	 */
-	public function cleanup_old_jobs(int $keep_count = 10): int
-	{
-		// Get all job IDs sorted by created_at desc.
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
-		$all_jobs = $this->wpdb->get_col(
-			"SELECT id FROM {$this->table_name} ORDER BY created_at DESC" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-		);
-
-		if (\count($all_jobs) <= $keep_count) {
-			return 0;
-		}
-
-		// Get IDs to delete (everything after $keep_count).
-		$jobs_to_delete = \array_slice($all_jobs, $keep_count);
-
-		if (empty($jobs_to_delete)) {
-			return 0;
-		}
-
-		// Build IN clause.
-		$placeholders = \implode(', ', \array_fill(0, \count($jobs_to_delete), '%s'));
-
-		// Delete old jobs.
-		// phpcs:disable WordPress.DB.PreparedSQL
-		$deleted = $this->wpdb->query(
-			$this->wpdb->prepare(
-				"DELETE FROM {$this->table_name} WHERE id IN ($placeholders)",
-				$jobs_to_delete
-			)
-		);
-		// phpcs:enable WordPress.DB.PreparedSQL
-
-		return (int) $deleted;
+		return $jobs;
 	}
 }

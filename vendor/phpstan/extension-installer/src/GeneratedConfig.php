@@ -12,7 +12,7 @@ final class GeneratedConfig
 	public const EXTENSIONS = array (
   'composer/pcre' => 
   array (
-    'install_path' => '/Users/aristath/Local Sites/local/app/public/wp-content/plugins/aether-site-exporter/vendor/composer/pcre',
+    'install_path' => '/Users/aristath/Local Sites/local/app/public/wp-content/plugins/aether/vendor/composer/pcre',
     'relative_install_path' => '../../../composer/pcre',
     'extra' => 
     array (
@@ -26,7 +26,7 @@ final class GeneratedConfig
   ),
   'szepeviktor/phpstan-wordpress' => 
   array (
-    'install_path' => '/Users/aristath/Local Sites/local/app/public/wp-content/plugins/aether-site-exporter/vendor/szepeviktor/phpstan-wordpress',
+    'install_path' => '/Users/aristath/Local Sites/local/app/public/wp-content/plugins/aether/vendor/szepeviktor/phpstan-wordpress',
     'relative_install_path' => '../../../szepeviktor/phpstan-wordpress',
     'extra' => 
     array (

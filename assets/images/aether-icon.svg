@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20">
+  <!-- Chevron icon for WordPress admin menu (no background) -->
+  <path d="M 10 2 L 18 18 L 15 18 L 10 7 L 5 18 L 2 18 Z"
+        fill="currentColor" />
+</svg>

@@ -1,141 +1,67 @@
 <?php
 
 /**
- * REST Helpers Trait
+ * REST API Helpers Trait
  *
- * Common utilities for REST API controllers.
+ * Provides common functionality for REST controllers.
+ * Replaces BaseRESTController inheritance.
  *
- * @package AetherSiteExporter\REST
- * @since 1.0.0
+ * @package Aether\REST
  */
 
-declare(strict_types=1);
-
-namespace AetherSiteExporter\REST;
-
-use WP_Error;
-use WP_REST_Request;
+namespace Aether\REST;
 
 /**
- * REST helpers trait.
- *
- * @since 1.0.0
+ * Trait providing REST API helper methods.
  */
 trait RESTHelpersTrait
 {
-	/**
-	 * Get REST API namespace.
-	 *
-	 * @since 1.0.0
-	 * @return string
-	 */
-	protected function get_namespace(): string
-	{
-		return 'aether-site-exporter/v1';
-	}
-
 	/**
 	 * Permission check for REST endpoints.
 	 *
 	 * Requires manage_options capability.
 	 *
-	 * @since 1.0.0
-	 * @return bool
+	 * @return bool True if user has permission.
 	 */
-	public function permission_check(): bool
+	public function permissionCheck(): bool
 	{
 		return \current_user_can('manage_options');
 	}
 
 	/**
-	 * Validate job ID from request.
+	 * Get REST API namespace.
 	 *
-	 * @since 1.0.0
-	 * @param WP_REST_Request $request Request object.
-	 * @return string|WP_Error Job ID or error.
+	 * @return string API namespace.
 	 */
-	protected function validate_job_id(WP_REST_Request $request)
+	public function getNamespace(): string
 	{
-		$job_id = $request->get_param('jobId');
-
-		if (empty($job_id)) {
-			return new WP_Error(
-				'missing_job_id',
-				\__('Job ID is required', 'aether-site-exporter'),
-				[ 'status' => 400 ]
-			);
-		}
-
-		// Validate format (export_timestamp_randomchars).
-		if (! \preg_match('/^export_\d+_[a-zA-Z0-9]{8}$/', $job_id)) {
-			return new WP_Error(
-				'invalid_job_id',
-				\__('Invalid job ID format', 'aether-site-exporter'),
-				[ 'status' => 400 ]
-			);
-		}
-
-		return $job_id;
+		return 'aether/v1';
 	}
 
 	/**
-	 * Get job status or return error.
+	 * Send CORS headers for REST responses.
 	 *
-	 * @since 1.0.0
-	 * @param string $job_id Job ID.
-	 * @return array<string, mixed>|WP_Error Job status or error.
+	 * Handles cross-origin requests for WordPress Playground iframe contexts.
+	 * Uses actual request origin instead of wildcard when credentials are needed.
+	 *
+	 * @return void
 	 */
-	protected function get_job_status_or_error(string $job_id)
+	public function sendCorsHeaders(): void
 	{
-		$status = $this->state_manager->get_status($job_id);
+		// Get the origin from the request
+		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
+		$origin = isset($_SERVER['HTTP_ORIGIN']) ? \esc_url_raw(\wp_unslash($_SERVER['HTTP_ORIGIN'])) : '';
 
-		if (false === $status) {
-			return new WP_Error(
-				'job_not_found',
-				\__('Export job not found', 'aether-site-exporter'),
-				[ 'status' => 404 ]
-			);
+		if ($origin) {
+			// Use actual origin to allow credentials (required for cookie authentication)
+			\header('Access-Control-Allow-Origin: ' . $origin);
+		} else {
+			// Fallback to wildcard for non-cross-origin requests
+			\header('Access-Control-Allow-Origin: *');
 		}
 
-		return $status;
-	}
-
-	/**
-	 * Send success response.
-	 *
-	 * @since 1.0.0
-	 * @param mixed  $data Response data.
-	 * @param string $message Optional message.
-	 * @return \WP_REST_Response
-	 */
-	protected function success_response($data = null, string $message = ''): \WP_REST_Response
-	{
-		$response = [
-			'success' => true,
-		];
-
-		if (null !== $data) {
-			$response['data'] = $data;
-		}
-
-		if (! empty($message)) {
-			$response['message'] = $message;
-		}
-
-		return \rest_ensure_response($response);
-	}
-
-	/**
-	 * Send error response.
-	 *
-	 * @since 1.0.0
-	 * @param string $code Error code.
-	 * @param string $message Error message.
-	 * @param int    $status HTTP status code.
-	 * @return WP_Error
-	 */
-	protected function error_response(string $code, string $message, int $status = 400): WP_Error
-	{
-		return new WP_Error($code, $message, [ 'status' => $status ]);
+		\header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+		\header('Access-Control-Allow-Headers: Content-Type, Authorization, X-WP-Nonce');
+		\header('Access-Control-Allow-Credentials: true');
 	}
 }

@@ -1,0 +1,53 @@
+/* Test Static Site Styles */
+
+:root {
+	--primary-color: #007cba;
+	--text-color: #333;
+	--bg-color: #fff;
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+	line-height: 1.6;
+	color: var(--text-color);
+	background-color: var(--bg-color);
+}
+
+header {
+	background-color: var(--primary-color);
+	color: white;
+	padding: 1rem;
+}
+
+header h1 {
+	margin-bottom: 0.5rem;
+}
+
+nav a {
+	color: white;
+	text-decoration: none;
+	margin-right: 1rem;
+}
+
+nav a:hover {
+	text-decoration: underline;
+}
+
+main {
+	padding: 2rem;
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+footer {
+	background-color: #f5f5f5;
+	text-align: center;
+	padding: 1rem;
+	margin-top: 2rem;
+}

@@ -1,0 +1,187 @@
+/**
+ * API Constants
+ *
+ * Centralized API endpoints and configuration for WordPress REST API
+ *
+ * @package
+ */
+
+/**
+ * WordPress REST API namespace for Aether plugin
+ * @constant {string}
+ */
+export const API_NAMESPACE = 'aether/v1';
+
+/**
+ * Base path for all Aether REST API endpoints
+ * Note: Does not include /wp-json/ prefix as that's handled by apiFetch root URL middleware
+ * @constant {string}
+ */
+export const API_BASE_PATH = API_NAMESPACE;
+
+/**
+ * REST API Endpoints
+ *
+ * All WordPress REST API endpoints used throughout the application.
+ * Use these constants instead of hardcoded strings.
+ */
+export const ENDPOINTS = {
+	/**
+	 * Settings endpoints
+	 */
+	SETTINGS: `${ API_BASE_PATH }/settings`,
+	SETTINGS_GET: `${ API_BASE_PATH }/settings`,
+	SETTINGS_UPDATE: `${ API_BASE_PATH }/settings`,
+
+	/**
+	 * Publish workflow endpoints
+	 */
+	PUBLISH: {
+		START: `${ API_BASE_PATH }/publish`,
+		STATUS: `${ API_BASE_PATH }/publish/status`,
+		STEPS: `${ API_BASE_PATH }/publish/steps`,
+		STEP: ( stepId ) => `${ API_BASE_PATH }/publish/steps/${ stepId }`,
+		CANCEL: `${ API_BASE_PATH }/publish/cancel`,
+		RECENT_JOBS: `${ API_BASE_PATH }/publish/recent-jobs`,
+		JOB_STATUS: ( jobId ) => `${ API_BASE_PATH }/publish/${ jobId }/status`,
+		UPDATE_JOB_STATUS: ( jobId ) =>
+			`${ API_BASE_PATH }/publish/${ jobId }/status`,
+		MARK_UPLOADS_COMPLETE: ( jobId ) =>
+			`${ API_BASE_PATH }/publish/${ jobId }/mark-uploads-complete`,
+	},
+
+	/**
+	 * Provider endpoints
+	 */
+	PROVIDERS: {
+		LIST: `${ API_BASE_PATH }/providers`,
+		GET: ( providerId ) => `${ API_BASE_PATH }/providers/${ providerId }`,
+		CONFIG: ( providerId ) =>
+			`${ API_BASE_PATH }/providers/${ providerId }/config`,
+		SAVE_CONFIG: ( providerId ) =>
+			`${ API_BASE_PATH }/providers/${ providerId }/config`,
+		DELETE_CONFIG: ( providerId ) =>
+			`${ API_BASE_PATH }/providers/${ providerId }/config`,
+		TEST: ( providerId ) =>
+			`${ API_BASE_PATH }/providers/${ providerId }/test`,
+		STATUS: ( providerId ) =>
+			`${ API_BASE_PATH }/providers/${ providerId }/status`,
+	},
+
+	/**
+	 * Media offload endpoints
+	 */
+	MEDIA: {
+		OFFLOAD: `${ API_BASE_PATH }/media/offload`,
+		STATUS: `${ API_BASE_PATH }/media/status`,
+		DELETE: `${ API_BASE_PATH }/media/delete`,
+		UNPROCESSED: `${ API_BASE_PATH }/media/unprocessed`,
+		UPLOAD: `${ API_BASE_PATH }/media/upload`,
+	},
+
+	/**
+	 * Blueprint endpoints
+	 * Note: Blueprint generation is now handled client-side via useBlueprintGenerator hook
+	 */
+	BLUEPRINT: {
+		GET: `${ API_BASE_PATH }/blueprint`,
+	},
+
+	/**
+	 * Worker deployment endpoints
+	 */
+	WORKERS: {
+		DEPLOY: `${ API_BASE_PATH }/workers/deploy`,
+		STATUS: `${ API_BASE_PATH }/workers/status`,
+		DELETE: `${ API_BASE_PATH }/workers/delete`,
+		LIST: `${ API_BASE_PATH }/workers/list`,
+	},
+
+	/**
+	 * Export endpoints
+	 */
+	EXPORT: {
+		START: `${ API_BASE_PATH }/export/start`,
+		STATUS: `${ API_BASE_PATH }/export/status`,
+		DOWNLOAD: `${ API_BASE_PATH }/export/download`,
+	},
+
+	/**
+	 * Configuration endpoints
+	 */
+	CONFIG: {
+		GET: `${ API_BASE_PATH }/config`,
+		UPDATE: `${ API_BASE_PATH }/config`,
+		RESET: `${ API_BASE_PATH }/config/reset`,
+	},
+
+	/**
+	 * Git provider endpoints
+	 */
+	GIT: {
+		CONFIG: `${ API_BASE_PATH }/git-config`,
+		TEST: `${ API_BASE_PATH }/git-test`,
+	},
+
+	/**
+	 * Static site endpoints
+	 */
+	STATIC_SITE: {
+		URLS: `${ API_BASE_PATH }/static-site/urls`,
+		GENERATE: `${ API_BASE_PATH }/static-site/generate`,
+	},
+
+	/**
+	 * Asset management endpoints
+	 * Note: Asset discovery now handled by useAssetDiscovery.js hook (browser-based)
+	 * These endpoints have been removed as they made HTTP requests that fail in WordPress Playground
+	 */
+	ASSETS: {
+		// Removed: DISCOVER, STATUS, MARK_CHANGED (now in useAssetDiscovery.js)
+		EXTRACT: `${ API_BASE_PATH }/assets/extract`,
+	},
+
+	/**
+	 * Usage statistics endpoints
+	 */
+	USAGE: {
+		SUMMARY: `${ API_BASE_PATH }/usage/summary`,
+		DETAILS: `${ API_BASE_PATH }/usage/details`,
+	},
+};
+
+/**
+ * HTTP Methods
+ * @constant {Object}
+ */
+export const HTTP_METHODS = {
+	GET: 'GET',
+	POST: 'POST',
+	PUT: 'PUT',
+	DELETE: 'DELETE',
+	PATCH: 'PATCH',
+};
+
+/**
+ * API Request Headers
+ * @constant {Object}
+ */
+export const API_HEADERS = {
+	CONTENT_TYPE_JSON: 'application/json',
+	CONTENT_TYPE_FORM: 'application/x-www-form-urlencoded',
+};
+
+/**
+ * API Response Status Codes
+ * @constant {Object}
+ */
+export const HTTP_STATUS = {
+	OK: 200,
+	CREATED: 201,
+	NO_CONTENT: 204,
+	BAD_REQUEST: 400,
+	UNAUTHORIZED: 401,
+	FORBIDDEN: 403,
+	NOT_FOUND: 404,
+	INTERNAL_SERVER_ERROR: 500,
+};

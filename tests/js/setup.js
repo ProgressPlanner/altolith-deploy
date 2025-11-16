@@ -176,6 +176,77 @@ global.console = {
 // Setup fetch mock
 global.fetch = jest.fn();
 
+// Polyfill FileReader for Node.js environments
+if ( typeof FileReader === 'undefined' ) {
+	global.FileReader = class FileReader {
+		constructor() {
+			this.result = null;
+			this.error = null;
+			this.readyState = 0;
+			this.onload = null;
+			this.onerror = null;
+		}
+
+		readAsText( blob ) {
+			this.result = blob.toString();
+			this.readyState = 2; // DONE
+			if ( this.onload ) {
+				this.onload( { target: this } );
+			}
+		}
+
+		readAsArrayBuffer( blob ) {
+			// Convert blob to ArrayBuffer
+			const buffer = new ArrayBuffer( blob.size );
+			const view = new Uint8Array( buffer );
+			for ( let i = 0; i < blob.size; i++ ) {
+				view[ i ] = blob[ i ] || 0;
+			}
+			this.result = buffer;
+			this.readyState = 2; // DONE
+			if ( this.onload ) {
+				this.onload( { target: this } );
+			}
+		}
+	};
+}
+
+// Polyfill Blob.text() for Node.js environments
+if ( ! Blob.prototype.text ) {
+	Blob.prototype.text = function () {
+		return new Promise( ( resolve, reject ) => {
+			// eslint-disable-next-line no-undef
+			const reader = new FileReader();
+			reader.onload = () => resolve( reader.result );
+			reader.onerror = () => reject( reader.error );
+			reader.readAsText( this );
+		} );
+	};
+}
+
+// Polyfill Blob.arrayBuffer() for Node.js environments
+if ( ! Blob.prototype.arrayBuffer ) {
+	Blob.prototype.arrayBuffer = function () {
+		return new Promise( ( resolve, reject ) => {
+			// eslint-disable-next-line no-undef
+			const reader = new FileReader();
+			reader.onload = () => resolve( reader.result );
+			reader.onerror = () => reject( reader.error );
+			reader.readAsArrayBuffer( this );
+		} );
+	};
+}
+
+// Polyfill File.arrayBuffer() if needed (File extends Blob)
+if ( typeof File !== 'undefined' && ! File.prototype.arrayBuffer ) {
+	File.prototype.arrayBuffer = Blob.prototype.arrayBuffer;
+}
+
+// Polyfill File.text() if needed (File extends Blob)
+if ( typeof File !== 'undefined' && ! File.prototype.text ) {
+	File.prototype.text = Blob.prototype.text;
+}
+
 // Reset mocks before each test
 beforeEach( () => {
 	jest.clearAllMocks();
