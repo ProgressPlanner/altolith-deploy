@@ -1,4 +1,5 @@
 <?php
+
 /**
  * REST Helpers Trait
  *
@@ -20,14 +21,16 @@ use WP_REST_Request;
  *
  * @since 1.0.0
  */
-trait RESTHelpersTrait {
+trait RESTHelpersTrait
+{
 	/**
 	 * Get REST API namespace.
 	 *
 	 * @since 1.0.0
 	 * @return string
 	 */
-	protected function get_namespace(): string {
+	protected function get_namespace(): string
+	{
 		return 'aether-site-exporter/v1';
 	}
 
@@ -39,8 +42,9 @@ trait RESTHelpersTrait {
 	 * @since 1.0.0
 	 * @return bool
 	 */
-	public function permission_check(): bool {
-		return current_user_can( 'manage_options' );
+	public function permission_check(): bool
+	{
+		return \current_user_can('manage_options');
 	}
 
 	/**
@@ -50,22 +54,23 @@ trait RESTHelpersTrait {
 	 * @param WP_REST_Request $request Request object.
 	 * @return string|WP_Error Job ID or error.
 	 */
-	protected function validate_job_id( WP_REST_Request $request ) {
-		$job_id = $request->get_param( 'jobId' );
+	protected function validate_job_id(WP_REST_Request $request)
+	{
+		$job_id = $request->get_param('jobId');
 
-		if ( empty( $job_id ) ) {
+		if (empty($job_id)) {
 			return new WP_Error(
 				'missing_job_id',
-				__( 'Job ID is required', 'aether-site-exporter' ),
+				\__('Job ID is required', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
 
 		// Validate format (export_timestamp_randomchars).
-		if ( ! preg_match( '/^export_\d+_[a-zA-Z0-9]{8}$/', $job_id ) ) {
+		if (! \preg_match('/^export_\d+_[a-zA-Z0-9]{8}$/', $job_id)) {
 			return new WP_Error(
 				'invalid_job_id',
-				__( 'Invalid job ID format', 'aether-site-exporter' ),
+				\__('Invalid job ID format', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -80,13 +85,14 @@ trait RESTHelpersTrait {
 	 * @param string $job_id Job ID.
 	 * @return array<string, mixed>|WP_Error Job status or error.
 	 */
-	protected function get_job_status_or_error( string $job_id ) {
-		$status = $this->state_manager->get_status( $job_id );
+	protected function get_job_status_or_error(string $job_id)
+	{
+		$status = $this->state_manager->get_status($job_id);
 
-		if ( false === $status ) {
+		if (false === $status) {
 			return new WP_Error(
 				'job_not_found',
-				__( 'Export job not found', 'aether-site-exporter' ),
+				\__('Export job not found', 'aether-site-exporter'),
 				[ 'status' => 404 ]
 			);
 		}
@@ -102,20 +108,21 @@ trait RESTHelpersTrait {
 	 * @param string $message Optional message.
 	 * @return \WP_REST_Response
 	 */
-	protected function success_response( $data = null, string $message = '' ): \WP_REST_Response {
+	protected function success_response($data = null, string $message = ''): \WP_REST_Response
+	{
 		$response = [
 			'success' => true,
 		];
 
-		if ( null !== $data ) {
+		if (null !== $data) {
 			$response['data'] = $data;
 		}
 
-		if ( ! empty( $message ) ) {
+		if (! empty($message)) {
 			$response['message'] = $message;
 		}
 
-		return rest_ensure_response( $response );
+		return \rest_ensure_response($response);
 	}
 
 	/**
@@ -127,7 +134,8 @@ trait RESTHelpersTrait {
 	 * @param int    $status HTTP status code.
 	 * @return WP_Error
 	 */
-	protected function error_response( string $code, string $message, int $status = 400 ): WP_Error {
-		return new WP_Error( $code, $message, [ 'status' => $status ] );
+	protected function error_response(string $code, string $message, int $status = 400): WP_Error
+	{
+		return new WP_Error($code, $message, [ 'status' => $status ]);
 	}
 }

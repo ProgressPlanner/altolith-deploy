@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Download Controller
  *
@@ -21,7 +22,8 @@ use WP_Error;
  *
  * @since 1.0.0
  */
-class DownloadController {
+class DownloadController
+{
 	use RESTHelpersTrait;
 
 	/**
@@ -36,7 +38,8 @@ class DownloadController {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct() {
+	public function __construct()
+	{
 		$this->state_manager = new JobStateManager();
 	}
 
@@ -46,9 +49,10 @@ class DownloadController {
 	 * @since 1.0.0
 	 * @return void
 	 */
-	public function register_routes(): void {
+	public function register_routes(): void
+	{
 		// Download static site archive.
-		register_rest_route(
+		\register_rest_route(
 			$this->get_namespace(),
 			'/download/(?P<jobId>[a-zA-Z0-9_]+)/static-site',
 			[
@@ -59,7 +63,7 @@ class DownloadController {
 		);
 
 		// Download blueprint bundle.
-		register_rest_route(
+		\register_rest_route(
 			$this->get_namespace(),
 			'/download/(?P<jobId>[a-zA-Z0-9_]+)/blueprint',
 			[
@@ -79,15 +83,16 @@ class DownloadController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function download_static_site( WP_REST_Request $request ) {
-		$job_id = $this->validate_job_id( $request );
-		if ( is_wp_error( $job_id ) ) {
+	public function download_static_site(WP_REST_Request $request)
+	{
+		$job_id = $this->validate_job_id($request);
+		if (\is_wp_error($job_id)) {
 			return $job_id;
 		}
 
 		// Verify job exists.
-		$status = $this->get_job_status_or_error( $job_id );
-		if ( is_wp_error( $status ) ) {
+		$status = $this->get_job_status_or_error($job_id);
+		if (\is_wp_error($status)) {
 			return $status;
 		}
 
@@ -99,7 +104,7 @@ class DownloadController {
 
 		return $this->error_response(
 			'not_implemented',
-			__( 'Download not implemented yet', 'aether-site-exporter' ),
+			\__('Download not implemented yet', 'aether-site-exporter'),
 			501
 		);
 	}
@@ -113,15 +118,16 @@ class DownloadController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function download_blueprint( WP_REST_Request $request ) {
-		$job_id = $this->validate_job_id( $request );
-		if ( is_wp_error( $job_id ) ) {
+	public function download_blueprint(WP_REST_Request $request)
+	{
+		$job_id = $this->validate_job_id($request);
+		if (\is_wp_error($job_id)) {
 			return $job_id;
 		}
 
 		// Verify job exists.
-		$status = $this->get_job_status_or_error( $job_id );
-		if ( is_wp_error( $status ) ) {
+		$status = $this->get_job_status_or_error($job_id);
+		if (\is_wp_error($status)) {
 			return $status;
 		}
 
@@ -129,7 +135,7 @@ class DownloadController {
 
 		return $this->error_response(
 			'not_implemented',
-			__( 'Download not implemented yet', 'aether-site-exporter' ),
+			\__('Download not implemented yet', 'aether-site-exporter'),
 			501
 		);
 	}

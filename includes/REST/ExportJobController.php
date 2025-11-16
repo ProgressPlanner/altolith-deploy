@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Export Job Controller
  *
@@ -21,7 +22,8 @@ use WP_Error;
  *
  * @since 1.0.0
  */
-class ExportJobController {
+class ExportJobController
+{
 	use RESTHelpersTrait;
 
 	/**
@@ -36,7 +38,8 @@ class ExportJobController {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct() {
+	public function __construct()
+	{
 		$this->state_manager = new JobStateManager();
 	}
 
@@ -46,9 +49,10 @@ class ExportJobController {
 	 * @since 1.0.0
 	 * @return void
 	 */
-	public function register_routes(): void {
+	public function register_routes(): void
+	{
 		// Start export job.
-		register_rest_route(
+		\register_rest_route(
 			$this->get_namespace(),
 			'/export',
 			[
@@ -59,7 +63,7 @@ class ExportJobController {
 		);
 
 		// Get job status.
-		register_rest_route(
+		\register_rest_route(
 			$this->get_namespace(),
 			'/export/(?P<jobId>[a-zA-Z0-9_]+)/status',
 			[
@@ -77,7 +81,7 @@ class ExportJobController {
 		);
 
 		// Get recent export jobs.
-		register_rest_route(
+		\register_rest_route(
 			$this->get_namespace(),
 			'/export/jobs',
 			[
@@ -88,7 +92,7 @@ class ExportJobController {
 		);
 
 		// Delete export job.
-		register_rest_route(
+		\register_rest_route(
 			$this->get_namespace(),
 			'/export/(?P<jobId>[a-zA-Z0-9_]+)',
 			[
@@ -108,48 +112,49 @@ class ExportJobController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function start_export( WP_REST_Request $request ) {
+	public function start_export(WP_REST_Request $request)
+	{
 		$body = $request->get_json_params();
 
 		// Get export configuration from request.
 		$config = [
 			'exportStaticSite' => (bool) ( $body['exportStaticSite'] ?? false ),
 			'exportBlueprint'  => (bool) ( $body['exportBlueprint'] ?? false ),
-			'targetUrl'        => sanitize_text_field( $body['targetUrl'] ?? '' ),
+			'targetUrl'        => \sanitize_text_field($body['targetUrl'] ?? ''),
 		];
 
 		// Validate: at least one export type must be selected.
-		if ( ! $config['exportStaticSite'] && ! $config['exportBlueprint'] ) {
+		if (! $config['exportStaticSite'] && ! $config['exportBlueprint']) {
 			return $this->error_response(
 				'invalid_config',
-				__( 'At least one export type must be selected', 'aether-site-exporter' ),
+				\__('At least one export type must be selected', 'aether-site-exporter'),
 				400
 			);
 		}
 
 		// Validate: target URL required if static site export selected.
-		if ( $config['exportStaticSite'] && empty( $config['targetUrl'] ) ) {
+		if ($config['exportStaticSite'] && empty($config['targetUrl'])) {
 			return $this->error_response(
 				'missing_target_url',
-				__( 'Target URL is required for static site export', 'aether-site-exporter' ),
+				\__('Target URL is required for static site export', 'aether-site-exporter'),
 				400
 			);
 		}
 
 		// Create job.
-		$job_id = $this->state_manager->create_job( $config );
+		$job_id = $this->state_manager->create_job($config);
 
-		if ( false === $job_id ) {
+		if (false === $job_id) {
 			return $this->error_response(
 				'job_creation_failed',
-				__( 'Failed to create export job', 'aether-site-exporter' ),
+				\__('Failed to create export job', 'aether-site-exporter'),
 				500
 			);
 		}
 
 		return $this->success_response(
 			[ 'jobId' => $job_id ],
-			__( 'Export job created', 'aether-site-exporter' )
+			\__('Export job created', 'aether-site-exporter')
 		);
 	}
 
@@ -160,18 +165,19 @@ class ExportJobController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function get_status( WP_REST_Request $request ) {
-		$job_id = $this->validate_job_id( $request );
-		if ( is_wp_error( $job_id ) ) {
+	public function get_status(WP_REST_Request $request)
+	{
+		$job_id = $this->validate_job_id($request);
+		if (\is_wp_error($job_id)) {
 			return $job_id;
 		}
 
-		$status = $this->get_job_status_or_error( $job_id );
-		if ( is_wp_error( $status ) ) {
+		$status = $this->get_job_status_or_error($job_id);
+		if (\is_wp_error($status)) {
 			return $status;
 		}
 
-		return $this->success_response( $status );
+		return $this->success_response($status);
 	}
 
 	/**
@@ -183,45 +189,46 @@ class ExportJobController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function update_status( WP_REST_Request $request ) {
-		$job_id = $this->validate_job_id( $request );
-		if ( is_wp_error( $job_id ) ) {
+	public function update_status(WP_REST_Request $request)
+	{
+		$job_id = $this->validate_job_id($request);
+		if (\is_wp_error($job_id)) {
 			return $job_id;
 		}
 
 		$body = $request->get_json_params();
 
-		if ( empty( $body ) ) {
+		if (empty($body)) {
 			return $this->error_response(
 				'missing_status',
-				__( 'Status data is required', 'aether-site-exporter' ),
+				\__('Status data is required', 'aether-site-exporter'),
 				400
 			);
 		}
 
 		// Verify job exists.
-		$current_status = $this->get_job_status_or_error( $job_id );
-		if ( is_wp_error( $current_status ) ) {
+		$current_status = $this->get_job_status_or_error($job_id);
+		if (\is_wp_error($current_status)) {
 			return $current_status;
 		}
 
 		// Update job status.
-		$success = $this->state_manager->update_status( $job_id, $body );
+		$success = $this->state_manager->update_status($job_id, $body);
 
-		if ( ! $success ) {
+		if (! $success) {
 			return $this->error_response(
 				'update_failed',
-				__( 'Failed to update job status', 'aether-site-exporter' ),
+				\__('Failed to update job status', 'aether-site-exporter'),
 				500
 			);
 		}
 
 		// Get updated status.
-		$updated_status = $this->state_manager->get_status( $job_id );
+		$updated_status = $this->state_manager->get_status($job_id);
 
 		return $this->success_response(
 			$updated_status,
-			__( 'Job status updated', 'aether-site-exporter' )
+			\__('Job status updated', 'aether-site-exporter')
 		);
 	}
 
@@ -232,15 +239,16 @@ class ExportJobController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function get_recent_jobs( WP_REST_Request $request ) {
-		$limit = absint( $request->get_param( 'limit' ) ?? 10 );
-		$limit = min( $limit, 50 ); // Cap at 50 jobs.
+	public function get_recent_jobs(WP_REST_Request $request)
+	{
+		$limit = \absint($request->get_param('limit') ?? 10);
+		$limit = \min($limit, 50); // Cap at 50 jobs.
 
-		$jobs = $this->state_manager->get_all_jobs( $limit );
+		$jobs = $this->state_manager->get_all_jobs($limit);
 
 		return $this->success_response(
 			[ 'jobs' => $jobs ],
-			__( 'Recent jobs retrieved', 'aether-site-exporter' )
+			\__('Recent jobs retrieved', 'aether-site-exporter')
 		);
 	}
 
@@ -251,25 +259,26 @@ class ExportJobController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function delete_job( WP_REST_Request $request ) {
-		$job_id = $this->validate_job_id( $request );
-		if ( is_wp_error( $job_id ) ) {
+	public function delete_job(WP_REST_Request $request)
+	{
+		$job_id = $this->validate_job_id($request);
+		if (\is_wp_error($job_id)) {
 			return $job_id;
 		}
 
 		// Verify job exists.
-		$status = $this->get_job_status_or_error( $job_id );
-		if ( is_wp_error( $status ) ) {
+		$status = $this->get_job_status_or_error($job_id);
+		if (\is_wp_error($status)) {
 			return $status;
 		}
 
 		// Delete from database.
-		$success = $this->state_manager->delete_job( $job_id );
+		$success = $this->state_manager->delete_job($job_id);
 
-		if ( ! $success ) {
+		if (! $success) {
 			return $this->error_response(
 				'delete_failed',
-				__( 'Failed to delete export job', 'aether-site-exporter' ),
+				\__('Failed to delete export job', 'aether-site-exporter'),
 				500
 			);
 		}
@@ -278,7 +287,7 @@ class ExportJobController {
 
 		return $this->success_response(
 			null,
-			__( 'Export job deleted', 'aether-site-exporter' )
+			\__('Export job deleted', 'aether-site-exporter')
 		);
 	}
 }

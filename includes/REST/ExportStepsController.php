@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Export Steps Controller
  *
@@ -21,7 +22,8 @@ use WP_Error;
  *
  * @since 1.0.0
  */
-class ExportStepsController {
+class ExportStepsController
+{
 	use RESTHelpersTrait;
 
 	/**
@@ -36,7 +38,8 @@ class ExportStepsController {
 	 *
 	 * @since 1.0.0
 	 */
-	public function __construct() {
+	public function __construct()
+	{
 		$this->state_manager = new JobStateManager();
 	}
 
@@ -46,9 +49,10 @@ class ExportStepsController {
 	 * @since 1.0.0
 	 * @return void
 	 */
-	public function register_routes(): void {
+	public function register_routes(): void
+	{
 		// Discover URLs.
-		register_rest_route(
+		\register_rest_route(
 			$this->get_namespace(),
 			'/export/(?P<jobId>[a-zA-Z0-9_]+)/discover-urls',
 			[
@@ -59,7 +63,7 @@ class ExportStepsController {
 		);
 
 		// Generate blueprint bundle.
-		register_rest_route(
+		\register_rest_route(
 			$this->get_namespace(),
 			'/export/(?P<jobId>[a-zA-Z0-9_]+)/generate-blueprint',
 			[
@@ -70,7 +74,7 @@ class ExportStepsController {
 		);
 
 		// Create static site archive.
-		register_rest_route(
+		\register_rest_route(
 			$this->get_namespace(),
 			'/export/(?P<jobId>[a-zA-Z0-9_]+)/create-archive',
 			[
@@ -81,7 +85,7 @@ class ExportStepsController {
 		);
 
 		// Cleanup old exports.
-		register_rest_route(
+		\register_rest_route(
 			$this->get_namespace(),
 			'/export/(?P<jobId>[a-zA-Z0-9_]+)/cleanup',
 			[
@@ -101,9 +105,10 @@ class ExportStepsController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function discover_urls( WP_REST_Request $request ) {
-		$job_id = $this->validate_job_id( $request );
-		if ( is_wp_error( $job_id ) ) {
+	public function discover_urls(WP_REST_Request $request)
+	{
+		$job_id = $this->validate_job_id($request);
+		if (\is_wp_error($job_id)) {
 			return $job_id;
 		}
 
@@ -116,17 +121,17 @@ class ExportStepsController {
 			[
 				'workflow_state' => [
 					'urls'     => $urls,
-					'urlCount' => count( $urls ),
+					'urlCount' => \count($urls),
 				],
 			]
 		);
 
 		return $this->success_response(
 			[ 'urls' => $urls ],
-			sprintf(
+			\sprintf(
 				/* translators: %d: number of URLs */
-				__( 'Discovered %d URLs', 'aether-site-exporter' ),
-				count( $urls )
+				\__('Discovered %d URLs', 'aether-site-exporter'),
+				\count($urls)
 			)
 		);
 	}
@@ -140,9 +145,10 @@ class ExportStepsController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function generate_blueprint_bundle( WP_REST_Request $request ) {
-		$job_id = $this->validate_job_id( $request );
-		if ( is_wp_error( $job_id ) ) {
+	public function generate_blueprint_bundle(WP_REST_Request $request)
+	{
+		$job_id = $this->validate_job_id($request);
+		if (\is_wp_error($job_id)) {
 			return $job_id;
 		}
 
@@ -150,7 +156,7 @@ class ExportStepsController {
 
 		return $this->success_response(
 			null,
-			__( 'Blueprint bundle generated', 'aether-site-exporter' )
+			\__('Blueprint bundle generated', 'aether-site-exporter')
 		);
 	}
 
@@ -163,9 +169,10 @@ class ExportStepsController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function create_static_site_archive( WP_REST_Request $request ) {
-		$job_id = $this->validate_job_id( $request );
-		if ( is_wp_error( $job_id ) ) {
+	public function create_static_site_archive(WP_REST_Request $request)
+	{
+		$job_id = $this->validate_job_id($request);
+		if (\is_wp_error($job_id)) {
 			return $job_id;
 		}
 
@@ -173,7 +180,7 @@ class ExportStepsController {
 
 		return $this->success_response(
 			null,
-			__( 'Static site archive created', 'aether-site-exporter' )
+			\__('Static site archive created', 'aether-site-exporter')
 		);
 	}
 
@@ -186,9 +193,10 @@ class ExportStepsController {
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function cleanup( WP_REST_Request $request ) {
-		$job_id = $this->validate_job_id( $request );
-		if ( is_wp_error( $job_id ) ) {
+	public function cleanup(WP_REST_Request $request)
+	{
+		$job_id = $this->validate_job_id($request);
+		if (\is_wp_error($job_id)) {
 			return $job_id;
 		}
 
@@ -196,7 +204,7 @@ class ExportStepsController {
 
 		return $this->success_response(
 			null,
-			__( 'Cleanup complete', 'aether-site-exporter' )
+			\__('Cleanup complete', 'aether-site-exporter')
 		);
 	}
 }

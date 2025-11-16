@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Plugin Name: Aether Site Exporter
  * Plugin URI: https://github.com/aristath/aether-site-exporter
@@ -21,41 +22,41 @@ declare(strict_types=1);
 namespace AetherSiteExporter;
 
 // Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
+if (! \defined('ABSPATH')) {
 	exit;
 }
 
 // Define plugin constants.
-define( 'AETHER_SITE_EXPORTER_VERSION', '1.0.0' );
-define( 'AETHER_SITE_EXPORTER_PLUGIN_FILE', __FILE__ );
-define( 'AETHER_SITE_EXPORTER_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'AETHER_SITE_EXPORTER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
-define( 'AETHER_SITE_EXPORTER_PLUGIN_BASENAME', plugin_basename( __FILE__ ) );
+\define('AETHER_SITE_EXPORTER_VERSION', '1.0.0');
+\define('AETHER_SITE_EXPORTER_PLUGIN_FILE', __FILE__);
+\define('AETHER_SITE_EXPORTER_PLUGIN_DIR', \plugin_dir_path(__FILE__));
+\define('AETHER_SITE_EXPORTER_PLUGIN_URL', \plugin_dir_url(__FILE__));
+\define('AETHER_SITE_EXPORTER_PLUGIN_BASENAME', \plugin_basename(__FILE__));
 
 // Exports directory (wp-content/aether-exports).
-if ( ! defined( 'AETHER_EXPORTS_DIR' ) ) {
-	define( 'AETHER_EXPORTS_DIR', WP_CONTENT_DIR . '/aether-exports' );
+if (! \defined('AETHER_EXPORTS_DIR')) {
+	\define('AETHER_EXPORTS_DIR', WP_CONTENT_DIR . '/aether-exports');
 }
 
 // PSR-4 autoloader.
-spl_autoload_register(
-	function ( $class ) {
+\spl_autoload_register(
+	function ($class) {
 		// Only autoload classes in our namespace.
 		$prefix = 'AetherSiteExporter\\';
-		$len    = strlen( $prefix );
+		$len    = \strlen($prefix);
 
-		if ( strncmp( $prefix, $class, $len ) !== 0 ) {
+		if (\strncmp($prefix, $class, $len) !== 0) {
 			return;
 		}
 
 		// Get the relative class name.
-		$relative_class = substr( $class, $len );
+		$relative_class = \substr($class, $len);
 
 		// Convert namespace separators to directory separators.
-		$file = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'includes/' . str_replace( '\\', '/', $relative_class ) . '.php';
+		$file = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'includes/' . \str_replace('\\', '/', $relative_class) . '.php';
 
 		// Require the file if it exists.
-		if ( file_exists( $file ) ) {
+		if (\file_exists($file)) {
 			require $file;
 		}
 	}
@@ -67,12 +68,13 @@ spl_autoload_register(
  * @since 1.0.0
  * @return void
  */
-function init(): void {
+function init(): void
+{
 	// Load plugin instance.
 	Plugin::get_instance();
 }
 
-add_action( 'plugins_loaded', __NAMESPACE__ . '\\init' );
+\add_action('plugins_loaded', __NAMESPACE__ . '\\init');
 
 /**
  * Activation hook.
@@ -80,19 +82,20 @@ add_action( 'plugins_loaded', __NAMESPACE__ . '\\init' );
  * @since 1.0.0
  * @return void
  */
-function activate(): void {
+function activate(): void
+{
 	// Create exports directory.
-	if ( ! file_exists( AETHER_EXPORTS_DIR ) ) {
-		wp_mkdir_p( AETHER_EXPORTS_DIR );
+	if (! \file_exists(AETHER_EXPORTS_DIR)) {
+		\wp_mkdir_p(AETHER_EXPORTS_DIR);
 	}
 
 	// Create .htaccess to protect exports directory.
 	$htaccess_file = AETHER_EXPORTS_DIR . '/.htaccess';
-	if ( ! file_exists( $htaccess_file ) ) {
+	if (! \file_exists($htaccess_file)) {
 		$htaccess_content = "# Protect Aether exports directory\n";
 		$htaccess_content .= "Order deny,allow\n";
 		$htaccess_content .= "Deny from all\n";
-		file_put_contents( $htaccess_file, $htaccess_content ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_put_contents_file_put_contents
+		\file_put_contents($htaccess_file, $htaccess_content); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_put_contents_file_put_contents
 	}
 
 	// Create database table for export jobs.
@@ -116,13 +119,13 @@ function activate(): void {
 	) $charset_collate;";
 
 	require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-	dbDelta( $sql );
+	\dbDelta($sql);
 
 	// Flush rewrite rules.
-	flush_rewrite_rules();
+	\flush_rewrite_rules();
 }
 
-register_activation_hook( __FILE__, __NAMESPACE__ . '\\activate' );
+\register_activation_hook(__FILE__, __NAMESPACE__ . '\\activate');
 
 /**
  * Deactivation hook.
@@ -130,12 +133,13 @@ register_activation_hook( __FILE__, __NAMESPACE__ . '\\activate' );
  * @since 1.0.0
  * @return void
  */
-function deactivate(): void {
+function deactivate(): void
+{
 	// Flush rewrite rules.
-	flush_rewrite_rules();
+	\flush_rewrite_rules();
 }
 
-register_deactivation_hook( __FILE__, __NAMESPACE__ . '\\deactivate' );
+\register_deactivation_hook(__FILE__, __NAMESPACE__ . '\\deactivate');
 
 /**
  * Uninstall hook (optional - clean up data).
@@ -145,11 +149,12 @@ register_deactivation_hook( __FILE__, __NAMESPACE__ . '\\deactivate' );
  * @since 1.0.0
  * @return void
  */
-function uninstall(): void {
+function uninstall(): void
+{
 	// Remove database table.
 	global $wpdb;
 	$table_name = $wpdb->prefix . 'aether_export_jobs';
-	$wpdb->query( "DROP TABLE IF EXISTS $table_name" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+	$wpdb->query("DROP TABLE IF EXISTS $table_name"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 
 	// Optionally remove exports directory.
 	// Note: Commented out to preserve user data by default.
