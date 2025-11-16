@@ -1,0 +1,67 @@
+{
+    "name": "aether/site-exporter",
+    "description": "Export WordPress sites as static HTML or WordPress Playground blueprint bundles with MySQL to SQLite conversion",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "AetherSiteExporter\\": "includes/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AetherSiteExporter\\Tests\\": "tests/php/"
+        }
+    },
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "yoast/phpunit-polyfills": "^1.0",
+        "wp-phpunit/wp-phpunit": "^6.0",
+        "squizlabs/php_codesniffer": "*",
+        "wp-coding-standards/wpcs": "*",
+        "phpstan/phpstan": "*",
+        "phpstan/extension-installer": "*",
+        "szepeviktor/phpstan-wordpress": "*",
+        "friendsofphp/php-cs-fixer": "^3.89"
+    },
+    "scripts": {
+        "test": "phpunit --testsuite=unit",
+        "test:unit": "phpunit --testsuite=unit",
+        "test:integration": "phpunit -c phpunit-integration.xml.dist --testsuite=integration",
+        "test:all": "phpunit && phpunit -c phpunit-integration.xml.dist --testsuite=integration",
+        "test:coverage": "phpunit --testsuite=unit --coverage-html coverage",
+        "check-cs": "phpcs --standard=phpcs.xml",
+        "fix-cs": [
+            "phpcbf --standard=phpcs.xml",
+            "php-cs-fixer fix --allow-risky=yes"
+        ],
+        "fix-cs-fixer": "php-cs-fixer fix --allow-risky=yes",
+        "phpstan": "phpstan analyse --memory-limit=1G",
+        "check-stan": "@phpstan",
+        "check": [
+            "@check-cs",
+            "@phpstan"
+        ]
+    },
+    "scripts-descriptions": {
+        "test": "Run unit tests only (default, no real database operations)",
+        "test:unit": "Run unit tests only (mocked, fast)",
+        "test:integration": "Run integration tests (requires WordPress test environment)",
+        "test:all": "Run all tests (unit + integration)",
+        "test:coverage": "Generate code coverage report",
+        "check-cs": "Check coding standards",
+        "fix-cs": "Fix coding standards",
+        "phpstan": "Run PHPStan static analysis",
+        "check": "Run all code quality checks"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
+        },
+        "process-timeout": 600
+    }
+}
