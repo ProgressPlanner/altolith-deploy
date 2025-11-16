@@ -106,6 +106,25 @@ class DatabaseConverterControllerTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Helper to get data from WP_REST_Response or WP_Error.
+	 *
+	 * @since 1.0.0
+	 * @param \WP_REST_Response|\WP_Error $response Response object.
+	 * @return array Response data.
+	 */
+	private function get_response_data( $response ): array {
+		if ( \is_wp_error( $response ) ) {
+			return [
+				'success' => false,
+				'error'   => $response->get_error_message(),
+				'code'    => $response->get_error_code(),
+			];
+		}
+
+		return $response->get_data();
+	}
+
+	/**
 	 * Test: Routes should be registered correctly.
 	 *
 	 * @since 1.0.0
@@ -144,7 +163,7 @@ class DatabaseConverterControllerTest extends WP_UnitTestCase {
 
 		// Act.
 		$response = $this->controller->analyze_database( $request );
-		$data     = $response->get_data();
+		$data     = $this->get_response_data( $response );
 
 		// Assert: Response structure.
 		$this->assertTrue( $data['success'], 'Response should be successful' );
@@ -211,7 +230,7 @@ class DatabaseConverterControllerTest extends WP_UnitTestCase {
 
 		// Act.
 		$response = $this->controller->convert_chunk( $convert_request );
-		$data     = $response->get_data();
+		$data     = $this->get_response_data( $response );
 
 		// Assert: Response structure.
 		$this->assertTrue( $data['success'], 'Response should be successful' );
@@ -304,7 +323,7 @@ class DatabaseConverterControllerTest extends WP_UnitTestCase {
 		$finalize_request = new WP_REST_Request( 'POST', "/aether-site-exporter/v1/export/{$this->test_job_id}/finalize-database" );
 		$finalize_request->set_param( 'jobId', $this->test_job_id );
 		$response = $this->controller->finalize_database( $finalize_request );
-		$data     = $response->get_data();
+		$data     = $this->get_response_data( $response );
 
 		// Assert.
 		$this->assertTrue( $data['success'], 'Finalization should be successful' );
@@ -386,9 +405,10 @@ class DatabaseConverterControllerTest extends WP_UnitTestCase {
 		$analyze_request = new WP_REST_Request( 'POST', "/aether-site-exporter/v1/export/{$this->test_job_id}/analyze-database" );
 		$analyze_request->set_param( 'jobId', $this->test_job_id );
 		$analyze_response = $this->controller->analyze_database( $analyze_request );
-		$this->assertTrue( $analyze_response->get_data()['success'], 'Analysis should succeed' );
+		$analyze_data     = $this->get_response_data( $analyze_response );
+		$this->assertTrue( $analyze_data['success'], 'Analysis should succeed' );
 
-		$analysis = $analyze_response->get_data()['data'];
+		$analysis = $analyze_data['data'];
 		$total_chunks = $analysis['totalChunks'];
 
 		// Step 2: Convert all chunks.
@@ -402,7 +422,7 @@ class DatabaseConverterControllerTest extends WP_UnitTestCase {
 			$convert_request->set_body_params( [ 'chunkIndex' => $chunk_index ] );
 
 			$convert_response = $this->controller->convert_chunk( $convert_request );
-			$convert_data = $convert_response->get_data();
+			$convert_data = $this->get_response_data( $convert_response );
 
 			$this->assertTrue( $convert_data['success'], "Chunk $chunk_index conversion should succeed" );
 
@@ -417,8 +437,9 @@ class DatabaseConverterControllerTest extends WP_UnitTestCase {
 		$finalize_request = new WP_REST_Request( 'POST', "/aether-site-exporter/v1/export/{$this->test_job_id}/finalize-database" );
 		$finalize_request->set_param( 'jobId', $this->test_job_id );
 		$finalize_response = $this->controller->finalize_database( $finalize_request );
+		$finalize_data     = $this->get_response_data( $finalize_response );
 
-		$this->assertTrue( $finalize_response->get_data()['success'], 'Finalization should succeed' );
+		$this->assertTrue( $finalize_data['success'], 'Finalization should succeed' );
 
 		// Verify: SQLite database file exists.
 		$job_status = $this->state_manager->get_status( $this->test_job_id );

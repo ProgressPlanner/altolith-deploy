@@ -177,7 +177,14 @@ class DatabaseConverter
 		$sqlite_ddl = $this->convert_ddl_to_sqlite($mysql_ddl);
 
 		// Execute in SQLite.
-		$pdo->exec($sqlite_ddl);
+		try {
+			$pdo->exec($sqlite_ddl);
+		} catch (\PDOException $e) {
+			// Log the DDL for debugging.
+			error_log('Failed to execute SQLite DDL:'); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log($sqlite_ddl); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			throw $e;
+		}
 	}
 
 	/**
@@ -189,64 +196,89 @@ class DatabaseConverter
 	 */
 	private function convert_ddl_to_sqlite(string $mysql_ddl): string
 	{
-		// Remove MySQL-specific options.
-		$sqlite_ddl = \preg_replace('/ENGINE=\w+/', '', $mysql_ddl);
-		$sqlite_ddl = \preg_replace('/DEFAULT CHARSET=\w+/', '', $sqlite_ddl);
-		$sqlite_ddl = \preg_replace('/COLLATE=\w+/', '', $sqlite_ddl);
-		$sqlite_ddl = \preg_replace('/AUTO_INCREMENT=\d+/', '', $sqlite_ddl);
+		// Remove MySQL-specific table options first.
+		$sqlite_ddl = \preg_replace('/ENGINE=\w+/i', '', $mysql_ddl);
+		$sqlite_ddl = \preg_replace('/DEFAULT CHARSET=[\w]+/i', '', $sqlite_ddl);
+		$sqlite_ddl = \preg_replace('/COLLATE[\s=][\w]+/i', '', $sqlite_ddl);
+		$sqlite_ddl = \preg_replace('/AUTO_INCREMENT=\d+/i', '', $sqlite_ddl);
 
-		// Convert data types.
+		// Convert data types - use word boundaries to avoid matching column names.
+		// Process in order from most specific to least specific.
 		$type_mappings = [
-			'/tinyint\(\d+\)/i'     => 'INTEGER',
-			'/smallint\(\d+\)/i'    => 'INTEGER',
-			'/mediumint\(\d+\)/i'   => 'INTEGER',
-			'/int\(\d+\)/i'         => 'INTEGER',
-			'/bigint\(\d+\)/i'      => 'INTEGER',
-			'/float/i'              => 'REAL',
-			'/double/i'             => 'REAL',
-			'/decimal\(\d+,\d+\)/i' => 'REAL',
-			'/varchar\(\d+\)/i'     => 'TEXT',
-			'/char\(\d+\)/i'        => 'TEXT',
-			'/text/i'               => 'TEXT',
-			'/mediumtext/i'         => 'TEXT',
-			'/longtext/i'           => 'TEXT',
-			'/blob/i'               => 'BLOB',
-			'/mediumblob/i'         => 'BLOB',
-			'/longblob/i'           => 'BLOB',
-			'/datetime/i'           => 'TEXT',
-			'/timestamp/i'          => 'TEXT',
-			'/date/i'               => 'TEXT',
-			'/time/i'               => 'TEXT',
-			"/enum\([^)]+\)/i"      => 'TEXT',
-			"/set\([^)]+\)/i"       => 'TEXT',
+			// Integer types with size and unsigned.
+			'/\bbigint\(\d+\)\s+unsigned\b/i'  => 'INTEGER',
+			'/\bint\(\d+\)\s+unsigned\b/i'     => 'INTEGER',
+			'/\btinyint\(\d+\)\s+unsigned\b/i' => 'INTEGER',
+			// Integer types with size.
+			'/\btinyint\(\d+\)/i'              => 'INTEGER',
+			'/\bsmallint\(\d+\)/i'             => 'INTEGER',
+			'/\bmediumint\(\d+\)/i'            => 'INTEGER',
+			'/\bint\(\d+\)/i'                  => 'INTEGER',
+			'/\bbigint\(\d+\)/i'               => 'INTEGER',
+			// Integer types without size (e.g., just "bigint").
+			'/\bbigint\b/i'                    => 'INTEGER',
+			'/\bint\b/i'                       => 'INTEGER',
+			'/\btinyint\b/i'                   => 'INTEGER',
+			'/\bsmallint\b/i'                  => 'INTEGER',
+			'/\bmediumint\b/i'                 => 'INTEGER',
+			// Decimal types.
+			'/\bfloat\b/i'                     => 'REAL',
+			'/\bdouble\b/i'                    => 'REAL',
+			'/\bdecimal\(\d+,\d+\)/i'          => 'REAL',
+			// String types.
+			'/\bvarchar\(\d+\)/i'              => 'TEXT',
+			'/\bchar\(\d+\)/i'                 => 'TEXT',
+			'/\blongtext\b/i'                  => 'TEXT',
+			'/\bmediumtext\b/i'                => 'TEXT',
+			'/\btext\b/i'                      => 'TEXT',
+			// Binary types.
+			'/\blongblob\b/i'                  => 'BLOB',
+			'/\bmediumblob\b/i'                => 'BLOB',
+			'/\bblob\b/i'                      => 'BLOB',
+			// Date/time types.
+			'/\bdatetime\b/i'                  => 'TEXT',
+			'/\btimestamp\b/i'                 => 'TEXT',
+			'/\bdate\b/i'                      => 'TEXT',
+			'/\btime\b/i'                      => 'TEXT',
+			// Set/enum types.
+			'/\benum\([^)]+\)/i'               => 'TEXT',
+			'/\bset\([^)]+\)/i'                => 'TEXT',
 		];
 
 		foreach ($type_mappings as $pattern => $replacement) {
 			$sqlite_ddl = \preg_replace($pattern, $replacement, $sqlite_ddl);
 		}
 
-		// Convert AUTO_INCREMENT to AUTOINCREMENT.
-		$sqlite_ddl = \preg_replace('/AUTO_INCREMENT/i', 'AUTOINCREMENT', $sqlite_ddl);
+		// Remove unsigned, zerofill attributes (after type conversion).
+		$sqlite_ddl = \preg_replace('/\s+unsigned\b/i', '', $sqlite_ddl);
+		$sqlite_ddl = \preg_replace('/\s+zerofill\b/i', '', $sqlite_ddl);
 
-		// Remove unsigned, zerofill attributes.
-		$sqlite_ddl = \preg_replace('/\s+unsigned/i', '', $sqlite_ddl);
-		$sqlite_ddl = \preg_replace('/\s+zerofill/i', '', $sqlite_ddl);
+		// Convert AUTO_INCREMENT to AUTOINCREMENT for INTEGER PRIMARY KEY only.
+		// In SQLite, AUTOINCREMENT can only be used with INTEGER PRIMARY KEY.
+		$sqlite_ddl = \preg_replace(
+			'/(\bINTEGER\b[^,]*)\s+AUTO_INCREMENT/i',
+			'$1',
+			$sqlite_ddl
+		);
 
 		// Remove character set and collation from column definitions.
-		$sqlite_ddl = \preg_replace('/CHARACTER SET \w+/', '', $sqlite_ddl);
-		$sqlite_ddl = \preg_replace('/COLLATE \w+/', '', $sqlite_ddl);
+		$sqlite_ddl = \preg_replace('/CHARACTER SET [\w]+/i', '', $sqlite_ddl);
+		$sqlite_ddl = \preg_replace('/COLLATE [\w]+/i', '', $sqlite_ddl);
 
 		// Remove COMMENT.
-		$sqlite_ddl = \preg_replace("/COMMENT '[^']*'/", '', $sqlite_ddl);
+		$sqlite_ddl = \preg_replace("/COMMENT '[^']*'/i", '', $sqlite_ddl);
 
-		// Remove KEY definitions (will be recreated as indexes).
+		// Remove KEY definitions (will be recreated as indexes later).
+		// Match KEY definitions that come before PRIMARY KEY.
 		$sqlite_ddl = \preg_replace('/,\s*KEY `[^`]+` \([^)]+\)/i', '', $sqlite_ddl);
 		$sqlite_ddl = \preg_replace('/,\s*UNIQUE KEY `[^`]+` \([^)]+\)/i', '', $sqlite_ddl);
 		$sqlite_ddl = \preg_replace('/,\s*FULLTEXT KEY `[^`]+` \([^)]+\)/i', '', $sqlite_ddl);
 
 		// Clean up extra commas and whitespace.
 		$sqlite_ddl = \preg_replace('/,\s*\)/', ')', $sqlite_ddl);
+		$sqlite_ddl = \preg_replace('/\)\s+\)/', ')', $sqlite_ddl);
 		$sqlite_ddl = \preg_replace('/\s+/', ' ', $sqlite_ddl);
+		$sqlite_ddl = \trim($sqlite_ddl);
 
 		return $sqlite_ddl;
 	}
