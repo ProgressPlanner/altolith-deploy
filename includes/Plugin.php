@@ -218,10 +218,6 @@ class Plugin
 		$export_job = new REST\ExportJobController();
 		$export_job->register_routes();
 
-		// Database converter controller.
-		$database_converter = new REST\DatabaseConverterController();
-		$database_converter->register_routes();
-
 		// Download controller.
 		$download = new REST\DownloadController();
 		$download->register_routes();

@@ -105,7 +105,7 @@ function activate(): void
 	$charset_collate = $wpdb->get_charset_collate();
 
 	$sql = "CREATE TABLE IF NOT EXISTS $table_name (
-		id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+		id varchar(255) NOT NULL,
 		status varchar(20) NOT NULL DEFAULT 'pending',
 		current_step varchar(50) DEFAULT NULL,
 		workflow_state longtext DEFAULT NULL,

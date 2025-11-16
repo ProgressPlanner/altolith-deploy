@@ -16,6 +16,7 @@ namespace AetherSiteExporter\Services;
 
 use WP_Query;
 use ZipArchive;
+use AetherSiteExporter\Utilities\HTTPClient;
 
 // phpcs:disable WordPress.DB.PreparedSQL.NotPrepared -- No database queries in this class.
 
@@ -29,32 +30,16 @@ class StaticSiteGenerator
 	/**
 	 * Discover all URLs to export.
 	 *
+	 * Uses URLDiscoveryService for comprehensive URL discovery including
+	 * posts, pages, categories, tags, custom post types, authors, and date archives.
+	 *
 	 * @since 1.0.0
 	 * @return array List of URLs.
 	 */
 	public function discover_urls(): array
 	{
-		$urls = [];
-
-		// Home page.
-		$urls[] = \home_url('/');
-
-		// Get all published posts and pages.
-		$query = new WP_Query([
-			'post_type'      => ['post', 'page'],
-			'post_status'    => 'publish',
-			'posts_per_page' => -1,
-			'no_found_rows'  => true,
-		]);
-
-		foreach ($query->posts as $post) {
-			$permalink = \get_permalink($post);
-			if ($permalink) {
-				$urls[] = $permalink;
-			}
-		}
-
-		return \array_unique($urls);
+		$discovery_service = new URLDiscoveryService();
+		return $discovery_service->discoverAllUrls();
 	}
 
 	/**
@@ -68,17 +53,23 @@ class StaticSiteGenerator
 	 */
 	public function generate_static_file(string $url, string $output_dir, string $target_url): array
 	{
-		// Fetch HTML content.
-		$response = \wp_remote_get($url);
+		// Fetch HTML content using HTTPClient for consistent error handling.
+		$result = HTTPClient::get(
+			$url,
+			[
+				'timeout'    => 30,
+				'user-agent' => 'Aether Site Exporter Static Site Generator',
+			]
+		);
 
-		if (\is_wp_error($response)) {
+		if (! $result['success'] || empty($result['body'])) {
 			return [
 				'success' => false,
-				'error'   => $response->get_error_message(),
+				'error'   => $result['error'] ?? 'Failed to fetch URL',
 			];
 		}
 
-		$html = \wp_remote_retrieve_body($response);
+		$html = $result['body'];
 
 		// Rewrite URLs.
 		$html = $this->rewrite_urls($html, $target_url);

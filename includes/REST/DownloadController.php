@@ -77,11 +77,11 @@ class DownloadController
 	/**
 	 * Download static site archive.
 	 *
-	 * TODO: Implement file serving.
+	 * Serves the static site ZIP file with appropriate security checks.
 	 *
 	 * @since 1.0.0
 	 * @param WP_REST_Request $request Request object.
-	 * @return \WP_REST_Response|WP_Error
+	 * @return \WP_REST_Response|WP_Error|void Returns error on failure, exits on success.
 	 */
 	public function download_static_site(WP_REST_Request $request)
 	{
@@ -91,32 +91,52 @@ class DownloadController
 		}
 
 		// Verify job exists.
-		$status = $this->get_job_status_or_error($job_id);
-		if (\is_wp_error($status)) {
-			return $status;
+		$job = $this->get_job_status_or_error($job_id);
+		if (\is_wp_error($job)) {
+			return $job;
 		}
 
-		// TODO: Implement secure file serving.
-		// - Verify file exists
-		// - Set appropriate headers
-		// - Stream file to browser
-		// - Exit to prevent WordPress from adding extra output
+		// Get file path from job state.
+		$workflow_state = $job['workflow_state'] ?? [];
+		$file_path = $workflow_state['staticSiteZip'] ?? AETHER_EXPORTS_DIR . '/' . $job_id . '-static-site.zip';
 
-		return $this->error_response(
-			'not_implemented',
-			\__('Download not implemented yet', 'aether-site-exporter'),
-			501
+		// Verify file exists.
+		if (! \file_exists($file_path)) {
+			return $this->error_response(
+				'file_not_found',
+				\__('Static site archive not found. The export may not be complete.', 'aether-site-exporter'),
+				404
+			);
+		}
+
+		// Verify file is within exports directory (security check).
+		$real_path = \realpath($file_path);
+		$exports_dir = \realpath(AETHER_EXPORTS_DIR);
+
+		if (false === $real_path || false === $exports_dir || ! \str_starts_with($real_path, $exports_dir)) {
+			return $this->error_response(
+				'invalid_file_path',
+				\__('Invalid file path', 'aether-site-exporter'),
+				403
+			);
+		}
+
+		// Serve the file.
+		$this->serve_file(
+			$file_path,
+			\sanitize_file_name($job_id . '-static-site.zip'),
+			'application/zip'
 		);
 	}
 
 	/**
 	 * Download blueprint bundle.
 	 *
-	 * TODO: Implement file serving.
+	 * Serves the blueprint bundle ZIP file with appropriate security checks.
 	 *
 	 * @since 1.0.0
 	 * @param WP_REST_Request $request Request object.
-	 * @return \WP_REST_Response|WP_Error
+	 * @return \WP_REST_Response|WP_Error|void Returns error on failure, exits on success.
 	 */
 	public function download_blueprint(WP_REST_Request $request)
 	{
@@ -126,17 +146,87 @@ class DownloadController
 		}
 
 		// Verify job exists.
-		$status = $this->get_job_status_or_error($job_id);
-		if (\is_wp_error($status)) {
-			return $status;
+		$job = $this->get_job_status_or_error($job_id);
+		if (\is_wp_error($job)) {
+			return $job;
 		}
 
-		// TODO: Implement secure file serving.
+		// Get file path from job state.
+		$workflow_state = $job['workflow_state'] ?? [];
+		$file_path = $workflow_state['blueprintZip'] ?? AETHER_EXPORTS_DIR . '/' . $job_id . '-blueprint.zip';
 
-		return $this->error_response(
-			'not_implemented',
-			\__('Download not implemented yet', 'aether-site-exporter'),
-			501
+		// Verify file exists.
+		if (! \file_exists($file_path)) {
+			return $this->error_response(
+				'file_not_found',
+				\__('Blueprint bundle not found. The export may not be complete.', 'aether-site-exporter'),
+				404
+			);
+		}
+
+		// Verify file is within exports directory (security check).
+		$real_path = \realpath($file_path);
+		$exports_dir = \realpath(AETHER_EXPORTS_DIR);
+
+		if (false === $real_path || false === $exports_dir || ! \str_starts_with($real_path, $exports_dir)) {
+			return $this->error_response(
+				'invalid_file_path',
+				\__('Invalid file path', 'aether-site-exporter'),
+				403
+			);
+		}
+
+		// Serve the file.
+		$this->serve_file(
+			$file_path,
+			\sanitize_file_name($job_id . '-blueprint.zip'),
+			'application/zip'
 		);
+	}
+
+	/**
+	 * Serve a file for download.
+	 *
+	 * Sets appropriate headers and streams the file to the browser.
+	 * Exits after sending the file to prevent WordPress from adding extra output.
+	 *
+	 * @since 1.0.0
+	 * @param string $file_path Path to file.
+	 * @param string $filename  Download filename.
+	 * @param string $mime_type MIME type.
+	 * @return void This function exits after sending the file.
+	 */
+	private function serve_file(string $file_path, string $filename, string $mime_type): void
+	{
+		// Clear any previous output.
+		if (\ob_get_level()) {
+			\ob_end_clean();
+		}
+
+		// Set headers for file download.
+		\header('Content-Type: ' . $mime_type);
+		\header('Content-Disposition: attachment; filename="' . $filename . '"');
+		\header('Content-Length: ' . \filesize($file_path));
+		\header('Cache-Control: no-cache, must-revalidate');
+		\header('Expires: 0');
+		\header('Pragma: public');
+
+		// Disable WordPress output buffering.
+		\nocache_headers();
+
+		// Stream the file in chunks to handle large files.
+		$handle = \fopen($file_path, 'rb');
+		if (false !== $handle) {
+			while (! \feof($handle)) {
+				$buffer = \fread($handle, 8192);
+				if (false !== $buffer) {
+					echo $buffer; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+					\flush();
+				}
+			}
+			\fclose($handle);
+		}
+
+		exit;
 	}
 }

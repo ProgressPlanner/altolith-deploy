@@ -272,6 +272,9 @@ class ExportJobController
 			return $status;
 		}
 
+		// Delete export files from filesystem first.
+		$deleted_files = $this->delete_export_files($job_id);
+
 		// Delete from database.
 		$success = $this->state_manager->delete_job($job_id);
 
@@ -283,11 +286,77 @@ class ExportJobController
 			);
 		}
 
-		// TODO: Also delete export files from filesystem.
-
 		return $this->success_response(
-			null,
+			[
+				'deletedFiles' => $deleted_files,
+			],
 			\__('Export job deleted', 'aether-site-exporter')
 		);
+	}
+
+	/**
+	 * Delete export files for a job.
+	 *
+	 * Deletes all files and directories associated with an export job.
+	 *
+	 * @since 1.0.0
+	 * @param string $job_id Job ID.
+	 * @return int Number of files deleted.
+	 */
+	private function delete_export_files(string $job_id): int
+	{
+		$deleted = 0;
+
+		// Delete static site ZIP.
+		$static_zip = AETHER_EXPORTS_DIR . '/' . $job_id . '-static-site.zip';
+		if (\file_exists($static_zip)) {
+			\unlink($static_zip);
+			$deleted++;
+		}
+
+		// Delete blueprint ZIP.
+		$blueprint_zip = AETHER_EXPORTS_DIR . '/' . $job_id . '-blueprint.zip';
+		if (\file_exists($blueprint_zip)) {
+			\unlink($blueprint_zip);
+			$deleted++;
+		}
+
+		// Delete job directory (if it exists and contains temporary files).
+		$job_dir = AETHER_EXPORTS_DIR . '/' . $job_id;
+		if (\is_dir($job_dir)) {
+			$this->delete_directory($job_dir);
+			$deleted++;
+		}
+
+		return $deleted;
+	}
+
+	/**
+	 * Delete directory recursively.
+	 *
+	 * @since 1.0.0
+	 * @param string $dir Directory path.
+	 * @return void
+	 */
+	private function delete_directory(string $dir): void
+	{
+		if (! \is_dir($dir)) {
+			return;
+		}
+
+		$files = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+			\RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ($files as $file) {
+			if ($file->isDir()) {
+				\rmdir($file->getRealPath());
+			} else {
+				\unlink($file->getRealPath());
+			}
+		}
+
+		\rmdir($dir);
 	}
 }
