@@ -165,14 +165,14 @@ class Plugin
 		}
 
 		// Enqueue React app (will be built with webpack).
-		$asset_file = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/export.asset.php';
+		$asset_file = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin.asset.php';
 
 		if (\file_exists($asset_file)) {
 			$asset = include $asset_file;
 
 			\wp_enqueue_script(
-				'aether-site-exporter-export',
-				AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/export.js',
+				'aether-site-exporter-admin',
+				AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin.js',
 				$asset['dependencies'] ?? [],
 				$asset['version'] ?? AETHER_SITE_EXPORTER_VERSION,
 				true
@@ -180,7 +180,7 @@ class Plugin
 
 			// Localize script with plugin data.
 			\wp_localize_script(
-				'aether-site-exporter-export',
+				'aether-site-exporter-admin',
 				'aetherSiteExporterData',
 				[
 					'restUrl'       => \rest_url(),
@@ -195,11 +195,11 @@ class Plugin
 			);
 
 			// Enqueue styles if exists.
-			$style_file = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/export.css';
+			$style_file = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin.css';
 			if (\file_exists($style_file)) {
 				\wp_enqueue_style(
-					'aether-site-exporter-export',
-					AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/export.css',
+					'aether-site-exporter-admin',
+					AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin.css',
 					[],
 					$asset['version'] ?? AETHER_SITE_EXPORTER_VERSION
 				);
