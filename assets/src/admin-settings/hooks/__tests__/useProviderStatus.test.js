@@ -128,7 +128,7 @@ describe( 'useProviderStatus', () => {
 
 		// Should have called API
 		expect( apiFetch ).toHaveBeenCalledWith( {
-			path: '/aether/v1/providers/cloudflare-r2/status',
+			path: '/aether/site-exporter/providers/cloudflare-r2/status',
 		} );
 
 		// Should have correct status
@@ -177,7 +177,7 @@ describe( 'useProviderStatus', () => {
 		await waitFor(
 			() => {
 				expect( apiFetch ).toHaveBeenCalledWith( {
-					path: '/aether/v1/providers/cloudflare-r2/status',
+					path: '/aether/site-exporter/providers/cloudflare-r2/status',
 				} );
 			},
 			{ timeout: 4000 }

@@ -52,7 +52,7 @@ export default function useProviderStatus( providerId ) {
 			safeSetLoading( true );
 
 			const response = await apiFetch( {
-				path: `/aether/v1/providers/${ providerId }/status`,
+				path: `/aether/site-exporter/providers/${ providerId }/status`,
 			} );
 
 			safeSetStatus(

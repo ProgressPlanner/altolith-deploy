@@ -35,7 +35,7 @@ export function useWorkerDeploy( workerType, providerId = 'cloudflare-r2' ) {
 			try {
 				// Get edge provider ID from settings.
 				const settingsResponse = await apiFetch( {
-					path: '/aether/v1/settings',
+					path: '/aether/site-exporter/settings',
 				} );
 				const settings = settingsResponse.settings || {};
 				const providerTypes = settings.provider_types || {};
@@ -49,7 +49,7 @@ export function useWorkerDeploy( workerType, providerId = 'cloudflare-r2' ) {
 
 				// Get worker bindings.
 				const storageConfigResponse = await apiFetch( {
-					path: `/aether/v1/providers/${ providerId }/config`,
+					path: `/aether/site-exporter/providers/${ providerId }/config`,
 				} );
 				const config = storageConfigResponse.config || {};
 				const bindings = await edgeService.getWorkerBindings(
@@ -68,7 +68,7 @@ export function useWorkerDeploy( workerType, providerId = 'cloudflare-r2' ) {
 				if ( ! deployResult.success ) {
 					throw new Error(
 						deployResult.error ||
-							__( 'Worker deployment failed', 'aether' )
+							__( 'Worker deployment failed', 'aether-site-exporter' )
 					);
 				}
 
@@ -85,7 +85,7 @@ export function useWorkerDeploy( workerType, providerId = 'cloudflare-r2' ) {
 				deployments[ workerType ] = deploymentInfo;
 
 				await apiFetch( {
-					path: '/aether/v1/settings',
+					path: '/aether/site-exporter/settings',
 					method: 'POST',
 					data: { key: 'worker_deployments', value: deployments },
 				} );
@@ -94,7 +94,7 @@ export function useWorkerDeploy( workerType, providerId = 'cloudflare-r2' ) {
 				if ( deployResult.workerUrl ) {
 					// Get current providers settings.
 					const providersResponse = await apiFetch( {
-						path: '/aether/v1/settings',
+						path: '/aether/site-exporter/settings',
 						method: 'GET',
 					} );
 					const providers =
@@ -110,7 +110,7 @@ export function useWorkerDeploy( workerType, providerId = 'cloudflare-r2' ) {
 
 					// Update providers settings.
 					await apiFetch( {
-						path: '/aether/v1/settings',
+						path: '/aether/site-exporter/settings',
 						method: 'POST',
 						data: {
 							key: 'providers',
@@ -128,7 +128,7 @@ export function useWorkerDeploy( workerType, providerId = 'cloudflare-r2' ) {
 				};
 			} catch ( err ) {
 				const errorMessage =
-					err.message || __( 'Worker deployment failed', 'aether' );
+					err.message || __( 'Worker deployment failed', 'aether-site-exporter' );
 				setError( errorMessage );
 				setDeploying( false );
 				return {

@@ -46,7 +46,7 @@ function PublishPageContent() {
 		return (
 			<div className="aether-publish-page" style={ pageStyle }>
 				<p className="aether-publish-page__loading">
-					{ __( 'Loading…', 'aether' ) }
+					{ __( 'Loading…', 'aether-site-exporter' ) }
 				</p>
 			</div>
 		);

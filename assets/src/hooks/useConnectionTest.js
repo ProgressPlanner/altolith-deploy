@@ -62,7 +62,7 @@ export function useCloudflareConnectionTest( accountId, apiToken ) {
 			setResult( {
 				success: false,
 				message:
-					err.message || __( 'Connection test failed', 'aether' ),
+					err.message || __( 'Connection test failed', 'aether-site-exporter' ),
 			} );
 		} finally {
 			setTesting( false );
@@ -94,7 +94,7 @@ export function useR2ConnectionTest( providerId, config ) {
 		try {
 			// Test connection via REST API endpoint (server-side proxy, avoids CORS)
 			const response = await apiFetch( {
-				path: `/aether/v1/providers/${ providerId }/test`,
+				path: `/aether/site-exporter/providers/${ providerId }/test`,
 				method: 'POST',
 				data: {
 					config,
@@ -105,7 +105,7 @@ export function useR2ConnectionTest( providerId, config ) {
 				throw new Error(
 					response.message ||
 						response.error ||
-						__( 'Connection test failed', 'aether' )
+						__( 'Connection test failed', 'aether-site-exporter' )
 				);
 			}
 
@@ -113,13 +113,13 @@ export function useR2ConnectionTest( providerId, config ) {
 				success: true,
 				message:
 					response.message ||
-					__( 'Successfully connected to Cloudflare R2', 'aether' ),
+					__( 'Successfully connected to Cloudflare R2', 'aether-site-exporter' ),
 			} );
 		} catch ( err ) {
 			setResult( {
 				success: false,
 				message:
-					err.message || __( 'Connection test failed', 'aether' ),
+					err.message || __( 'Connection test failed', 'aether-site-exporter' ),
 			} );
 		} finally {
 			setTesting( false );
@@ -158,7 +158,7 @@ export function useGitLabConnectionTest( config ) {
 				! repositoryName
 			) {
 				throw new Error(
-					__( 'Missing required GitLab credentials', 'aether' )
+					__( 'Missing required GitLab credentials', 'aether-site-exporter' )
 				);
 			}
 
@@ -204,13 +204,13 @@ export function useGitLabConnectionTest( config ) {
 
 			setResult( {
 				success: true,
-				message: __( 'Successfully connected to GitLab', 'aether' ),
+				message: __( 'Successfully connected to GitLab', 'aether-site-exporter' ),
 			} );
 		} catch ( err ) {
 			setResult( {
 				success: false,
 				message:
-					err.message || __( 'Connection test failed', 'aether' ),
+					err.message || __( 'Connection test failed', 'aether-site-exporter' ),
 			} );
 		} finally {
 			setTesting( false );
@@ -249,7 +249,7 @@ export function useConnectionTest( providerId, config ) {
 				// Use REST API endpoint to test connection (avoids CORS issues)
 				try {
 					const response = await apiFetch( {
-						path: `/aether/v1/providers/${ providerId }/test`,
+						path: `/aether/site-exporter/providers/${ providerId }/test`,
 						method: 'POST',
 						data: { config },
 					} );
@@ -270,7 +270,7 @@ export function useConnectionTest( providerId, config ) {
 					throw new Error(
 						response.message ||
 							response.error ||
-							__( 'Connection test failed', 'aether' )
+							__( 'Connection test failed', 'aether-site-exporter' )
 					);
 				} catch ( apiError ) {
 					// Handle API errors (WP_Error responses)
@@ -278,14 +278,14 @@ export function useConnectionTest( providerId, config ) {
 						apiError?.message ||
 						apiError?.data?.message ||
 						apiError?.error ||
-						__( 'Connection test failed', 'aether' );
+						__( 'Connection test failed', 'aether-site-exporter' );
 					throw new Error( errorMessage );
 				}
 			} else if ( providerId === 'cloudflare-r2' ) {
 				// Test R2 connection directly via REST API endpoint
 				try {
 					const response = await apiFetch( {
-						path: `/aether/v1/providers/${ providerId }/test`,
+						path: `/aether/site-exporter/providers/${ providerId }/test`,
 						method: 'POST',
 						data: {
 							config,
@@ -301,7 +301,7 @@ export function useConnectionTest( providerId, config ) {
 						throw new Error(
 							response.message ||
 								response.error ||
-								__( 'Connection test failed', 'aether' )
+								__( 'Connection test failed', 'aether-site-exporter' )
 						);
 					}
 
@@ -320,7 +320,7 @@ export function useConnectionTest( providerId, config ) {
 						err?.message ||
 						err?.data?.message ||
 						err?.error ||
-						__( 'Connection test failed', 'aether' );
+						__( 'Connection test failed', 'aether-site-exporter' );
 
 					setResult( {
 						success: false,
@@ -337,7 +337,7 @@ export function useConnectionTest( providerId, config ) {
 			} else {
 				// For other providers, fall back to REST API.
 				const response = await apiFetch( {
-					path: `/aether/v1/providers/${ providerId }/test`,
+					path: `/aether/site-exporter/providers/${ providerId }/test`,
 					method: 'POST',
 					data: { config },
 				} );
@@ -347,14 +347,14 @@ export function useConnectionTest( providerId, config ) {
 					message:
 						response.message ||
 						response.error ||
-						__( 'Connection test failed', 'aether' ),
+						__( 'Connection test failed', 'aether-site-exporter' ),
 				} );
 			}
 		} catch ( err ) {
 			setResult( {
 				success: false,
 				message:
-					err.message || __( 'Connection test failed', 'aether' ),
+					err.message || __( 'Connection test failed', 'aether-site-exporter' ),
 			} );
 		} finally {
 			setTesting( false );

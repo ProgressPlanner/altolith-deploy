@@ -10,7 +10,7 @@
  * WordPress REST API namespace for Aether plugin
  * @constant {string}
  */
-export const API_NAMESPACE = 'aether/v1';
+export const API_NAMESPACE = 'aether/site-exporter';
 
 /**
  * Base path for all Aether REST API endpoints

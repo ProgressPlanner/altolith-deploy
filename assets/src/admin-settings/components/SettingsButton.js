@@ -16,7 +16,7 @@ export default function SettingsButton( { onClick, disabled = false } ) {
 			onClick={ onClick }
 			disabled={ disabled }
 			icon={ cog }
-			aria-label={ __( 'Configure', 'aether' ) }
+			aria-label={ __( 'Configure', 'aether-site-exporter' ) }
 		/>
 	);
 }

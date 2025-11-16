@@ -159,7 +159,7 @@ export default function SettingsModal( {
 	return (
 		<Modal
 			className="aether-settings-modal"
-			title={ title || __( 'Provider Settings', 'aether' ) }
+			title={ title || __( 'Provider Settings', 'aether-site-exporter' ) }
 			onRequestClose={ onClose }
 		>
 			<div
@@ -168,7 +168,7 @@ export default function SettingsModal( {
 			>
 				{ ! providerId && (
 					<p className="aether-settings-modal__message">
-						{ __( 'Please select a provider first.', 'aether' ) }
+						{ __( 'Please select a provider first.', 'aether-site-exporter' ) }
 					</p>
 				) }
 				{ providerId && providerError && (
@@ -178,7 +178,7 @@ export default function SettingsModal( {
 				) }
 				{ providerId && ! provider && ! providerError && (
 					<p className="aether-settings-modal__loading">
-						{ __( 'Loading provider settings…', 'aether' ) }
+						{ __( 'Loading provider settings…', 'aether-site-exporter' ) }
 					</p>
 				) }
 			</div>

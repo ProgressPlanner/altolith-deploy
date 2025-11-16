@@ -74,7 +74,7 @@ describe( 'ConfigContext', () => {
 			} );
 			expect( result.current.error ).toBe( null );
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/v1/config',
+				path: '/aether/site-exporter/config',
 			} );
 		} );
 

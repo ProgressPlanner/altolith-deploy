@@ -22,7 +22,7 @@ export function useRecentJobs( limit = 5 ) {
 		error,
 		refresh,
 	} = useAPIData( {
-		path: `/aether/v1/publish/jobs?limit=${ limit }`,
+		path: `/aether/site-exporter/publish/jobs?limit=${ limit }`,
 		transform: ( response ) => {
 			if ( ! response.success || ! response.value?.jobs ) {
 				throw new Error( 'Failed to fetch jobs' );

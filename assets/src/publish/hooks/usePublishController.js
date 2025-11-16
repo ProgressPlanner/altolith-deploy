@@ -321,7 +321,7 @@ export function usePublishController( publishState ) {
 
 			// Fetch settings to get storage provider ID before starting
 			const settingsResponse = await apiFetch( {
-				path: '/aether/v1/settings',
+				path: '/aether/site-exporter/settings',
 			} );
 
 			if ( settingsResponse.success ) {
@@ -359,7 +359,7 @@ export function usePublishController( publishState ) {
 			let siteKey = '';
 			try {
 				const configResponse = await apiFetch( {
-					path: '/aether/v1/config',
+					path: '/aether/site-exporter/config',
 				} );
 				siteKey = configResponse.siteKey || '';
 			} catch ( error ) {

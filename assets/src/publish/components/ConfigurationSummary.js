@@ -105,7 +105,7 @@ export default function ConfigurationSummary( {
 					className="aether-config-summary__title"
 					style={ headerTitleStyle }
 				>
-					{ __( 'What Will Be Published', 'aether' ) }
+					{ __( 'What Will Be Published', 'aether-site-exporter' ) }
 				</h2>
 				<p
 					className="aether-config-summary__description"
@@ -127,7 +127,7 @@ export default function ConfigurationSummary( {
 						className="aether-config-summary__card-title"
 						style={ cardTitleStyle }
 					>
-						{ __( 'Blueprint Storage', 'aether' ) }
+						{ __( 'Blueprint Storage', 'aether-site-exporter' ) }
 					</h4>
 					<div
 						className="aether-config-summary__card-value"
@@ -141,17 +141,17 @@ export default function ConfigurationSummary( {
 								{ usageSummary.blueprint.provider &&
 									renderStatus(
 										'success',
-										__( 'Configured', 'aether' )
+										__( 'Configured', 'aether-site-exporter' )
 									) }
 							</>
 						) : (
 							<>
 								<span className="aether-config-summary__value-label">
-									{ __( 'Not configured', 'aether' ) }
+									{ __( 'Not configured', 'aether-site-exporter' ) }
 								</span>
 								{ renderStatus(
 									'error',
-									__( 'Required', 'aether' )
+									__( 'Required', 'aether-site-exporter' )
 								) }
 							</>
 						) }
@@ -175,7 +175,7 @@ export default function ConfigurationSummary( {
 						className="aether-config-summary__card-title"
 						style={ cardTitleStyle }
 					>
-						{ __( 'Static Site Generation', 'aether' ) }
+						{ __( 'Static Site Generation', 'aether-site-exporter' ) }
 					</h4>
 					<div
 						className="aether-config-summary__card-value"
@@ -184,21 +184,21 @@ export default function ConfigurationSummary( {
 						{ staticEnabled ? (
 							<>
 								<span className="aether-config-summary__value-label">
-									{ __( 'Enabled', 'aether' ) }
+									{ __( 'Enabled', 'aether-site-exporter' ) }
 								</span>
 								{ renderStatus(
 									'success',
-									__( 'Active', 'aether' )
+									__( 'Active', 'aether-site-exporter' )
 								) }
 							</>
 						) : (
 							<>
 								<span className="aether-config-summary__value-label">
-									{ __( 'Disabled', 'aether' ) }
+									{ __( 'Disabled', 'aether-site-exporter' ) }
 								</span>
 								{ renderStatus(
 									'warning',
-									__( 'Optional', 'aether' )
+									__( 'Optional', 'aether-site-exporter' )
 								) }
 							</>
 						) }
@@ -221,12 +221,12 @@ export default function ConfigurationSummary( {
 							className="aether-config-summary__card-description"
 							style={ configDescriptionStyle }
 						>
-							{ __( 'Enable in', 'aether' ) }{ ' ' }
+							{ __( 'Enable in', 'aether-site-exporter' ) }{ ' ' }
 							<a
 								className="aether-config-summary__link"
 								href="/wp-admin/admin.php?page=aether-static"
 							>
-								{ __( 'Static Site Settings', 'aether' ) }
+								{ __( 'Static Site Settings', 'aether-site-exporter' ) }
 							</a>{ ' ' }
 							{ __(
 								'to generate and deploy a static version of your site.',
@@ -244,7 +244,7 @@ export default function ConfigurationSummary( {
 						className="aether-config-summary__card-title"
 						style={ cardTitleStyle }
 					>
-						{ __( 'Media Offloading', 'aether' ) }
+						{ __( 'Media Offloading', 'aether-site-exporter' ) }
 					</h4>
 					<div
 						className="aether-config-summary__card-value"
@@ -258,17 +258,17 @@ export default function ConfigurationSummary( {
 								</span>
 								{ renderStatus(
 									'success',
-									__( 'Active', 'aether' )
+									__( 'Active', 'aether-site-exporter' )
 								) }
 							</>
 						) : (
 							<>
 								<span className="aether-config-summary__value-label">
-									{ __( 'Not configured', 'aether' ) }
+									{ __( 'Not configured', 'aether-site-exporter' ) }
 								</span>
 								{ renderStatus(
 									'warning',
-									__( 'Optional', 'aether' )
+									__( 'Optional', 'aether-site-exporter' )
 								) }
 							</>
 						) }
@@ -285,12 +285,12 @@ export default function ConfigurationSummary( {
 							)
 						) : (
 							<>
-								{ __( 'Configure in', 'aether' ) }{ ' ' }
+								{ __( 'Configure in', 'aether-site-exporter' ) }{ ' ' }
 								<a
 									className="aether-config-summary__link"
 									href="/wp-admin/admin.php?page=aether-media"
 								>
-									{ __( 'Media Settings', 'aether' ) }
+									{ __( 'Media Settings', 'aether-site-exporter' ) }
 								</a>{ ' ' }
 								{ __(
 									'to offload images and videos to Cloudflare.',

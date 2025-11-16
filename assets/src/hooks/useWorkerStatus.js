@@ -28,7 +28,7 @@ export function useWorkerStatus() {
 		error,
 		refresh,
 	} = useAPIData( {
-		path: '/aether/v1/settings',
+		path: '/aether/site-exporter/settings',
 		transform: ( response ) => {
 			if ( ! response.success && ! response.value ) {
 				throw new Error( 'Failed to fetch settings' );

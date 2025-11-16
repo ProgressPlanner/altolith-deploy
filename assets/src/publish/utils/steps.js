@@ -12,42 +12,42 @@ import { __ } from '@wordpress/i18n';
 export const PUBLISH_STEPS = [
 	{
 		id: 'discoverAssets',
-		label: __( 'Discover Assets', 'aether' ),
+		label: __( 'Discover Assets', 'aether-site-exporter' ),
 		supportsProgress: false,
 		phase: 'discover',
-		waitingMessage: __( 'Discovering plugins and themes…', 'aether' ),
-		completionMessage: __( 'Assets discovered successfully', 'aether' ),
+		waitingMessage: __( 'Discovering plugins and themes…', 'aether-site-exporter' ),
+		completionMessage: __( 'Assets discovered successfully', 'aether-site-exporter' ),
 	},
 	{
 		id: 'offloadMedia',
-		label: __( 'Offload Media', 'aether' ),
+		label: __( 'Offload Media', 'aether-site-exporter' ),
 		supportsProgress: true,
 		phase: 'upload',
-		waitingMessage: __( 'Offloading media to R2…', 'aether' ),
-		completionMessage: __( 'Media offloaded successfully', 'aether' ),
+		waitingMessage: __( 'Offloading media to R2…', 'aether-site-exporter' ),
+		completionMessage: __( 'Media offloaded successfully', 'aether-site-exporter' ),
 	},
 	{
 		id: 'getStaticSiteUrls',
-		label: __( 'Get Static Site URLs', 'aether' ),
+		label: __( 'Get Static Site URLs', 'aether-site-exporter' ),
 		supportsProgress: false,
 		phase: 'prepare',
-		waitingMessage: __( 'Discovering URLs for static site…', 'aether' ),
-		completionMessage: __( 'URLs discovered successfully', 'aether' ),
+		waitingMessage: __( 'Discovering URLs for static site…', 'aether-site-exporter' ),
+		completionMessage: __( 'URLs discovered successfully', 'aether-site-exporter' ),
 	},
 	{
 		id: 'generateBlueprint',
-		label: __( 'Generate Blueprint', 'aether' ),
+		label: __( 'Generate Blueprint', 'aether-site-exporter' ),
 		supportsProgress: false,
 		phase: 'generate',
-		waitingMessage: __( 'Generating blueprint…', 'aether' ),
-		completionMessage: __( 'Blueprint generated successfully', 'aether' ),
+		waitingMessage: __( 'Generating blueprint…', 'aether-site-exporter' ),
+		completionMessage: __( 'Blueprint generated successfully', 'aether-site-exporter' ),
 	},
 	{
 		id: 'createSiteArchive',
-		label: __( 'Create Site Archive', 'aether' ),
+		label: __( 'Create Site Archive', 'aether-site-exporter' ),
 		supportsProgress: true,
 		phase: 'generate',
-		waitingMessage: __( 'Creating administration archive…', 'aether' ),
+		waitingMessage: __( 'Creating administration archive…', 'aether-site-exporter' ),
 		completionMessage: __(
 			'Administration archive created successfully',
 			'aether'
@@ -55,10 +55,10 @@ export const PUBLISH_STEPS = [
 	},
 	{
 		id: 'uploadStaticSiteFiles',
-		label: __( 'Upload Static Site Files', 'aether' ),
+		label: __( 'Upload Static Site Files', 'aether-site-exporter' ),
 		supportsProgress: true,
 		phase: 'upload',
-		waitingMessage: __( 'Uploading static site files…', 'aether' ),
+		waitingMessage: __( 'Uploading static site files…', 'aether-site-exporter' ),
 		completionMessage: __(
 			'Static site files uploaded successfully',
 			'aether'
@@ -66,11 +66,11 @@ export const PUBLISH_STEPS = [
 	},
 	{
 		id: 'uploadSiteArchive',
-		label: __( 'Upload Site Archive', 'aether' ),
+		label: __( 'Upload Site Archive', 'aether-site-exporter' ),
 		supportsProgress: true,
 		phase: 'upload',
-		waitingMessage: __( 'Uploading site archive…', 'aether' ),
-		completionMessage: __( 'Site archive uploaded successfully', 'aether' ),
+		waitingMessage: __( 'Uploading site archive…', 'aether-site-exporter' ),
+		completionMessage: __( 'Site archive uploaded successfully', 'aether-site-exporter' ),
 	},
 ];
 

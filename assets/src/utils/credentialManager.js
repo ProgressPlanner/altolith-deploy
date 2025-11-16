@@ -42,7 +42,7 @@ export async function getCredentials( providerId ) {
 
 	// Fetch from REST endpoint (using /config endpoint).
 	const response = await apiFetch( {
-		path: `/aether/v1/providers/${ providerId }/config`,
+		path: `/aether/site-exporter/providers/${ providerId }/config`,
 		method: 'GET',
 	} );
 

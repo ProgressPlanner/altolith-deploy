@@ -55,13 +55,8 @@ module.exports = {
 	entry: {
 		'admin-settings': './assets/src/admin-settings/index.js',
 		'admin-common': './assets/src/admin-common/index.js',
-		'publish': './assets/src/publish/index.js',
+		'export': './assets/src/publish/index.js',
 		'admin-bar': './assets/src/admin-bar/AdminBarPublish.js',
-		// Separate provider bundles for conditional loading
-		'provider-cloudflare-r2': './assets/src/providers/cloudflare-r2/index.js',
-		'provider-cloudflare': './assets/src/providers/cloudflare/index.js',
-		'provider-gitlab': './assets/src/providers/gitlab/index.js',
-		'provider-gitlab-pages': './assets/src/providers/gitlab-pages/index.js',
 	},
 	output: {
 		...defaultConfig.output,

@@ -93,7 +93,7 @@ export default function PublishButton( {
 					className="aether-publish-button__title"
 					style={ headerTitleStyle }
 				>
-					{ __( 'Publish Your Site', 'aether' ) }
+					{ __( 'Publish Your Site', 'aether-site-exporter' ) }
 				</h2>
 				<p
 					className="aether-publish-button__description"
@@ -139,14 +139,14 @@ export default function PublishButton( {
 						className="aether-publish-button__notice-link"
 						style={ utilityStyles.noMargin }
 					>
-						{ __( 'Visit the', 'aether' ) }{ ' ' }
+						{ __( 'Visit the', 'aether-site-exporter' ) }{ ' ' }
 						<a
 							className="aether-publish-button__link"
 							href={ adminUrl }
 						>
-							{ __( 'Dashboard', 'aether' ) }
+							{ __( 'Dashboard', 'aether-site-exporter' ) }
 						</a>{ ' ' }
-						{ __( 'to configure your providers.', 'aether' ) }
+						{ __( 'to configure your providers.', 'aether-site-exporter' ) }
 					</p>
 				</div>
 			) }
@@ -160,7 +160,7 @@ export default function PublishButton( {
 						className="aether-publish-button__notice-text"
 						style={ utilityStyles.noMargin }
 					>
-						{ __( 'Your site is ready to publish!', 'aether' ) }
+						{ __( 'Your site is ready to publish!', 'aether-site-exporter' ) }
 					</p>
 				</div>
 			) }
@@ -180,8 +180,8 @@ export default function PublishButton( {
 				>
 					<span className="dashicons dashicons-upload aether-publish-button__icon" />
 					{ isPublishing
-						? __( 'Publishing…', 'aether' )
-						: __( 'Publish Site Now', 'aether' ) }
+						? __( 'Publishing…', 'aether-site-exporter' )
+						: __( 'Publish Site Now', 'aether-site-exporter' ) }
 				</Button>
 			</div>
 		</div>

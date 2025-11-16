@@ -249,14 +249,14 @@ class Plugin
 		];
 
 		// Enqueue required webpack chunks FIRST (before main script)
-		$this->enqueueWebpackChunks('aether-publish');
+		$this->enqueueWebpackChunks('aether-export');
 
 		// Get chunk handles for dependencies (discovered dynamically)
 		$chunkHandles = $this->getChunkHandles([ 'common', 'vendor', 'isomorphic-git-vendor' ], true);
 
 		\wp_enqueue_script(
-			'aether-publish',
-			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/publish.js',
+			'aether-export',
+			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/export.js',
 			\array_merge($publishAsset['dependencies'], $chunkHandles),
 			$publishAsset['version'],
 			true
@@ -465,7 +465,7 @@ class Plugin
 		// Map of script handles to their required chunks
 		// Named chunks (common, vendor, etc.) are stable, numbered chunks need discovery
 		$chunkMap = [
-			'aether-publish' => [ 'common', 'vendor', 'isomorphic-git-vendor' ],
+			'aether-export' => [ 'common', 'vendor', 'isomorphic-git-vendor' ],
 			'aether-admin-bar' => [ 'common', 'vendor', 'isomorphic-git-vendor' ],
 			'aether-admin-settings' => [ 'common', 'vendor' ],
 		];
@@ -479,7 +479,7 @@ class Plugin
 
 		// Add numbered chunks (typically the PublishProgressModal chunk)
 		// Scripts that need PublishProgressModal should include numbered chunks
-		if (\in_array($scriptHandle, [ 'aether-publish', 'aether-admin-bar' ], true)) {
+		if (\in_array($scriptHandle, [ 'aether-export', 'aether-admin-bar' ], true)) {
 			$chunks = \array_merge($numberedChunks, $chunks);
 		}
 
@@ -996,12 +996,12 @@ class Plugin
 		// Add Publish button (will trigger modal via JavaScript).
 		$wpAdminBar->add_node(
 			[
-				'id'     => 'aether-publish',
+				'id'     => 'aether-export',
 				'parent' => 'top-secondary',
 				'title'  => \__('Publish', 'aether-site-exporter'),
 				'href'   => '#',
 				'meta'   => [
-					'class' => 'aether-adminbar-button aether-publish-button',
+					'class' => 'aether-adminbar-button aether-export-button',
 					'title' => \__('Publish your site to static hosting', 'aether-site-exporter'),
 				],
 			]

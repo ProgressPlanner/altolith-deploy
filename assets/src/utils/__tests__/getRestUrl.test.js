@@ -43,7 +43,7 @@ describe( 'getRestUrl', () => {
 
 		const url = getRestUrl();
 
-		expect( url ).toBe( '/wp-json/aether/v1/' );
+		expect( url ).toBe( '/wp-json/aether/site-exporter/' );
 	} );
 
 	test( 'returns default URL when meta tag is null', () => {
@@ -51,7 +51,7 @@ describe( 'getRestUrl', () => {
 
 		const url = getRestUrl();
 
-		expect( url ).toBe( '/wp-json/aether/v1/' );
+		expect( url ).toBe( '/wp-json/aether/site-exporter/' );
 	} );
 
 	test( 'returns default URL when meta tag content is null', () => {
@@ -63,7 +63,7 @@ describe( 'getRestUrl', () => {
 
 		const url = getRestUrl();
 
-		expect( url ).toBe( '/wp-json/aether/v1/' );
+		expect( url ).toBe( '/wp-json/aether/site-exporter/' );
 	} );
 
 	test( 'handles different custom URLs', () => {

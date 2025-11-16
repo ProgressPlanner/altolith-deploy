@@ -63,7 +63,7 @@ export class ConfigStorage {
 		// Load from REST API
 		try {
 			const response = await apiFetch( {
-				path: `/aether/v1/providers/${ this.providerId }/config`,
+				path: `/aether/site-exporter/providers/${ this.providerId }/config`,
 				method: 'GET',
 			} );
 
@@ -96,7 +96,7 @@ export class ConfigStorage {
 	async save( config ) {
 		try {
 			await apiFetch( {
-				path: `/aether/v1/providers/${ this.providerId }/config`,
+				path: `/aether/site-exporter/providers/${ this.providerId }/config`,
 				method: 'POST',
 				data: { config },
 			} );
@@ -118,7 +118,7 @@ export class ConfigStorage {
 	async delete() {
 		try {
 			await apiFetch( {
-				path: `/aether/v1/providers/${ this.providerId }/config`,
+				path: `/aether/site-exporter/providers/${ this.providerId }/config`,
 				method: 'DELETE',
 			} );
 

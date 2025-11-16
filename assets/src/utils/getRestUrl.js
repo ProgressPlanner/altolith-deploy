@@ -15,7 +15,7 @@
 export function getRestUrl() {
 	const metaTag = document.querySelector( 'meta[name="aether-rest-url"]' );
 	if ( metaTag ) {
-		return metaTag.getAttribute( 'content' ) || '/wp-json/aether/v1/';
+		return metaTag.getAttribute( 'content' ) || '/wp-json/aether/site-exporter/';
 	}
-	return '/wp-json/aether/v1/';
+	return '/wp-json/aether/site-exporter/';
 }

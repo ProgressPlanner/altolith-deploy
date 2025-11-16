@@ -42,7 +42,7 @@ class PublishPage extends BaseAdminPage
 		\wp_enqueue_style('wp-components');
 
 		// Enqueue React build.
-		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/publish.asset.php';
+		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/export.asset.php';
 		$asset     = \file_exists($assetFile) ? require $assetFile : [
 			'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n' ],
 			'version'      => AETHER_SITE_EXPORTER_VERSION,
@@ -50,14 +50,14 @@ class PublishPage extends BaseAdminPage
 
 		// Enqueue required webpack chunks FIRST (before main script)
 		$plugin = \Aether\Plugin::getInstance();
-		$plugin->enqueueWebpackChunks('aether-publish');
+		$plugin->enqueueWebpackChunks('aether-export');
 
 		// Get chunk handles for dependencies (discovered dynamically)
 		$chunkHandles = $plugin->getChunkHandles([ 'common', 'vendor', 'isomorphic-git-vendor' ], true);
 
 		\wp_enqueue_script(
-			'aether-publish',
-			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/publish.js',
+			'aether-export',
+			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/export.js',
 			\array_merge($asset['dependencies'], $chunkHandles),
 			$asset['version'],
 			true

@@ -158,12 +158,12 @@ export default function PublishProgressModal( {
 
 	const getModalTitle = () => {
 		if ( error ) {
-			return __( 'Publish Failed', 'aether' );
+			return __( 'Publish Failed', 'aether-site-exporter' );
 		}
 		if ( finalStatus ) {
-			return __( 'Site Published Successfully!', 'aether' );
+			return __( 'Site Published Successfully!', 'aether-site-exporter' );
 		}
-		return __( 'Publishing Site', 'aether' );
+		return __( 'Publishing Site', 'aether-site-exporter' );
 	};
 
 	const modalContentStyle = {
@@ -379,7 +379,7 @@ export default function PublishProgressModal( {
 							className="aether-publish-progress-modal__loading-text"
 							style={ loadingParagraphStyle }
 						>
-							{ __( 'Initializing publish process…', 'aether' ) }
+							{ __( 'Initializing publish process…', 'aether-site-exporter' ) }
 						</p>
 					</div>
 				) }

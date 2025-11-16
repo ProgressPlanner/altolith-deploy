@@ -9,7 +9,7 @@ import { __ } from '@wordpress/i18n';
 import { spacing, colors } from '../utils/styles';
 
 export default function LoadingState( {
-	message = __( 'Loading…', 'aether' ),
+	message = __( 'Loading…', 'aether-site-exporter' ),
 } ) {
 	const containerStyle = {
 		display: 'flex',

@@ -99,7 +99,7 @@ export function ConfigProvider( { children } ) {
 
 			try {
 				const response = await apiFetch( {
-					path: '/aether/v1/config',
+					path: '/aether/site-exporter/config',
 				} );
 
 				if ( response.success ) {

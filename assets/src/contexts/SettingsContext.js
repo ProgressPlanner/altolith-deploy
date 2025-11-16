@@ -63,7 +63,7 @@ export function SettingsProvider( { children } ) {
 
 		try {
 			const response = await apiFetch( {
-				path: '/aether/v1/settings',
+				path: '/aether/site-exporter/settings',
 			} );
 
 			if ( response.success ) {
@@ -116,7 +116,7 @@ export function SettingsProvider( { children } ) {
 			try {
 				// Save to API
 				const response = await apiFetch( {
-					path: '/aether/v1/settings',
+					path: '/aether/site-exporter/settings',
 					method: 'POST',
 					data: {
 						key: 'provider_types',
@@ -131,7 +131,7 @@ export function SettingsProvider( { children } ) {
 				}
 
 				// Invalidate cache for settings endpoint
-				invalidateAPICache( '/aether/v1/settings' );
+				invalidateAPICache( '/aether/site-exporter/settings' );
 
 				return true;
 			} catch ( err ) {
@@ -153,7 +153,7 @@ export function SettingsProvider( { children } ) {
 	 * Invalidate cache and refetch settings
 	 */
 	const invalidateCache = useCallback( () => {
-		invalidateAPICache( '/aether/v1/settings' );
+		invalidateAPICache( '/aether/site-exporter/settings' );
 		fetchSettings();
 	}, [ fetchSettings ] );
 

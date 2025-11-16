@@ -101,7 +101,7 @@ export async function isFromWordPressOrg( slug, type ) {
 async function getInstalledAssets() {
 	try {
 		const response = await apiFetch( {
-			path: '/aether/v1/assets',
+			path: '/aether/site-exporter/assets',
 			method: 'GET',
 		} );
 

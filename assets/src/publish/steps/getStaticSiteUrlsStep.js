@@ -27,7 +27,7 @@ export async function getStaticSiteUrlsHandler( context ) {
 
 	// Call REST endpoint to discover URLs (handled by URLDiscoveryService.php)
 	const urlsResponse = await apiFetch( {
-		path: '/aether/v1/publish/steps/getStaticSiteUrls',
+		path: '/aether/site-exporter/publish/steps/getStaticSiteUrls',
 	} );
 
 	if ( ! urlsResponse.success || ! urlsResponse.urls ) {

@@ -29,7 +29,7 @@ export default function ProviderActions( {
 		const loadConfig = async () => {
 			try {
 				const response = await apiFetch( {
-					path: '/aether/v1/settings',
+					path: '/aether/site-exporter/settings',
 				} );
 
 				if (
@@ -123,14 +123,14 @@ export default function ProviderActions( {
 					isDismissible={ false }
 					onRemove={ () => {} }
 				>
-					{ __( 'Worker deployed successfully!', 'aether' ) }
+					{ __( 'Worker deployed successfully!', 'aether-site-exporter' ) }
 					{ deployResult.workerUrl && (
 						<div
 							className="aether-provider-actions__worker-url"
 							style={ { marginTop: spacing.sm } }
 						>
 							<strong className="aether-provider-actions__worker-url-label">
-								{ __( 'Worker URL:', 'aether' ) }
+								{ __( 'Worker URL:', 'aether-site-exporter' ) }
 							</strong>{ ' ' }
 							<a
 								className="aether-provider-actions__worker-url-link"
@@ -168,8 +168,8 @@ export default function ProviderActions( {
 					disabled={ testing || deploying }
 				>
 					{ testing
-						? __( 'Testing…', 'aether' )
-						: __( 'Test Connection', 'aether' ) }
+						? __( 'Testing…', 'aether-site-exporter' )
+						: __( 'Test Connection', 'aether-site-exporter' ) }
 				</Button>
 
 				{ requiresWorker && (
@@ -181,8 +181,8 @@ export default function ProviderActions( {
 						disabled={ testing || deploying }
 					>
 						{ deploying
-							? __( 'Deploying…', 'aether' )
-							: __( 'Deploy Worker', 'aether' ) }
+							? __( 'Deploying…', 'aether-site-exporter' )
+							: __( 'Deploy Worker', 'aether-site-exporter' ) }
 					</Button>
 				) }
 			</div>

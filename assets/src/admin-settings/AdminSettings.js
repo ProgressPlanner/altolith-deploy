@@ -116,7 +116,7 @@ function AdminSettingsContent() {
 	};
 
 	if ( loading ) {
-		return <LoadingState message={ __( 'Loading settings…', 'aether' ) } />;
+		return <LoadingState message={ __( 'Loading settings…', 'aether-site-exporter' ) } />;
 	}
 
 	return (
@@ -126,7 +126,7 @@ function AdminSettingsContent() {
 				className="aether-admin-settings__heading"
 				style={ headingStyle }
 			>
-				{ __( 'Aether Settings', 'aether' ) }
+				{ __( 'Aether Settings', 'aether-site-exporter' ) }
 			</h1>
 
 			{ error && (
@@ -145,7 +145,7 @@ function AdminSettingsContent() {
 			>
 				<ProviderSection
 					type="edge"
-					label={ __( 'Edge Provider', 'aether' ) }
+					label={ __( 'Edge Provider', 'aether-site-exporter' ) }
 					description={ __(
 						'Edge providers deploy workers that enable browser-based operations like Git commits and media uploads. These workers act as secure proxies, allowing your site to work seamlessly in WordPress Playground and other browser environments.',
 						'aether'
@@ -164,7 +164,7 @@ function AdminSettingsContent() {
 
 				<ProviderSection
 					type="storage"
-					label={ __( 'Storage Provider', 'aether' ) }
+					label={ __( 'Storage Provider', 'aether-site-exporter' ) }
 					description={ __(
 						'Storage providers store your wp-content.zip file, which contains your site database and any custom plugins or themes you have installed. This allows you to restore your site configuration, share it with others, or deploy it to different environments without losing your setup.',
 						'aether'
@@ -183,7 +183,7 @@ function AdminSettingsContent() {
 
 				<ProviderSection
 					type="media"
-					label={ __( 'Media Provider', 'aether' ) }
+					label={ __( 'Media Provider', 'aether-site-exporter' ) }
 					description={ __(
 						'Media providers store your images, videos, and other media files in cloud storage instead of on your server. This reduces server storage usage, improves site performance, and can lower hosting costs.',
 						'aether'
@@ -202,7 +202,7 @@ function AdminSettingsContent() {
 
 				<ProviderSection
 					type="staticSite"
-					label={ __( 'Static Site Provider', 'aether' ) }
+					label={ __( 'Static Site Provider', 'aether-site-exporter' ) }
 					description={ __(
 						'Static site providers host a fully static version of your WordPress site. This creates a fast, secure, and cost-effective version of your site that can be served from a CDN without requiring a database or PHP server.',
 						'aether'

@@ -29,9 +29,9 @@ export default function useProviderSettings( providerId ) {
 			setLoading( true );
 			setError( null );
 
-			// Load providers settings from /aether/v1/settings endpoint
+			// Load providers settings from /aether/site-exporter/settings endpoint
 			const response = await apiFetch( {
-				path: '/aether/v1/settings?key=providers',
+				path: '/aether/site-exporter/settings?key=providers',
 			} );
 
 			if ( ! response.success ) {
@@ -60,7 +60,7 @@ export default function useProviderSettings( providerId ) {
 
 				// Get current providers settings
 				const getResponse = await apiFetch( {
-					path: '/aether/v1/settings?key=providers',
+					path: '/aether/site-exporter/settings?key=providers',
 				} );
 
 				if ( ! getResponse.success ) {
@@ -74,9 +74,9 @@ export default function useProviderSettings( providerId ) {
 					[ providerId ]: newSettings,
 				};
 
-				// Save updated providers object using /aether/v1/settings endpoint
+				// Save updated providers object using /aether/site-exporter/settings endpoint
 				const saveResponse = await apiFetch( {
-					path: '/aether/v1/settings',
+					path: '/aether/site-exporter/settings',
 					method: 'POST',
 					data: {
 						key: 'providers',

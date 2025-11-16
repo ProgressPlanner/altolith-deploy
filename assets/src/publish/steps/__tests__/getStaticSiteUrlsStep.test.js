@@ -42,7 +42,7 @@ describe( 'getStaticSiteUrlsStep', () => {
 
 			// INTENDED: Calls correct REST endpoint
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/v1/publish/steps/getStaticSiteUrls',
+				path: '/aether/site-exporter/publish/steps/getStaticSiteUrls',
 			} );
 
 			// INTENDED: Status messages set

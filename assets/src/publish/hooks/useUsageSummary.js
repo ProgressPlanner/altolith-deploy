@@ -13,9 +13,9 @@ import { __ } from '@wordpress/i18n';
 import { useAPIData } from '../../hooks/useAPIData';
 
 const PROVIDER_LABELS = {
-	'cloudflare-r2': __( 'Cloudflare R2', 'aether' ),
-	'gitlab-pages': __( 'GitLab Pages', 'aether' ),
-	'cloudflare-workers': __( 'Cloudflare Workers', 'aether' ),
+	'cloudflare-r2': __( 'Cloudflare R2', 'aether-site-exporter' ),
+	'gitlab-pages': __( 'GitLab Pages', 'aether-site-exporter' ),
+	'cloudflare-workers': __( 'Cloudflare Workers', 'aether-site-exporter' ),
 };
 
 /**
@@ -26,7 +26,7 @@ const PROVIDER_LABELS = {
  */
 function getProviderLabel( providerId ) {
 	if ( ! providerId ) {
-		return __( 'Not configured', 'aether' );
+		return __( 'Not configured', 'aether-site-exporter' );
 	}
 	return PROVIDER_LABELS[ providerId ] || providerId;
 }
@@ -38,7 +38,7 @@ function getProviderLabel( providerId ) {
  */
 export function useUsageSummary() {
 	const { data: settingsData, loading } = useAPIData( {
-		path: '/aether/v1/settings',
+		path: '/aether/site-exporter/settings',
 		transform: ( response ) => {
 			if ( ! response.success ) {
 				return null;
@@ -52,15 +52,15 @@ export function useUsageSummary() {
 		if ( ! settingsData ) {
 			return {
 				blueprint: {
-					label: __( 'Not configured', 'aether' ),
+					label: __( 'Not configured', 'aether-site-exporter' ),
 					provider: null,
 				},
 				staticSite: {
-					label: __( 'Not configured', 'aether' ),
+					label: __( 'Not configured', 'aether-site-exporter' ),
 					provider: null,
 				},
 				media: {
-					label: __( 'Not configured', 'aether' ),
+					label: __( 'Not configured', 'aether-site-exporter' ),
 					provider: null,
 				},
 				staticEnabled: false,

@@ -30,7 +30,7 @@ describe( 'ConfigStorage', () => {
 			const config = await storage.load();
 
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/v1/providers/test-provider/config',
+				path: '/aether/site-exporter/providers/test-provider/config',
 				method: 'GET',
 			} );
 			expect( config ).toEqual( {
@@ -50,7 +50,7 @@ describe( 'ConfigStorage', () => {
 			await storage.save( config );
 
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/v1/providers/test-provider/config',
+				path: '/aether/site-exporter/providers/test-provider/config',
 				method: 'POST',
 				data: { config },
 			} );
@@ -70,7 +70,7 @@ describe( 'ConfigStorage', () => {
 			expect( apiFetch ).toHaveBeenCalledTimes( 1 );
 			expect( apiFetch ).toHaveBeenCalledWith(
 				expect.objectContaining( {
-					path: '/aether/v1/providers/test-provider/config',
+					path: '/aether/site-exporter/providers/test-provider/config',
 				} )
 			);
 		} );
@@ -81,7 +81,7 @@ describe( 'ConfigStorage', () => {
 			await storage.delete();
 
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/v1/providers/test-provider/config',
+				path: '/aether/site-exporter/providers/test-provider/config',
 				method: 'DELETE',
 			} );
 		} );

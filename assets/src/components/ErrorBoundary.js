@@ -111,7 +111,7 @@ class ErrorBoundary extends Component {
 							className="aether-error-boundary__heading"
 							style={ headingStyle }
 						>
-							{ __( 'Something went wrong', 'aether' ) }
+							{ __( 'Something went wrong', 'aether-site-exporter' ) }
 						</h2>
 						<p
 							className="aether-error-boundary__message"
@@ -128,7 +128,7 @@ class ErrorBoundary extends Component {
 								style={ { marginTop: spacing.lg } }
 							>
 								<summary className="aether-error-boundary__summary">
-									{ __( 'Error details', 'aether' ) }
+									{ __( 'Error details', 'aether-site-exporter' ) }
 								</summary>
 								<pre
 									className="aether-error-boundary__error-text"
@@ -163,7 +163,7 @@ class ErrorBoundary extends Component {
 								lineHeight: 1.5,
 							} }
 						>
-							{ __( 'Try again', 'aether' ) }
+							{ __( 'Try again', 'aether-site-exporter' ) }
 						</button>
 					</div>
 				</div>

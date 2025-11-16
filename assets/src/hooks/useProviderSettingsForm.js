@@ -36,7 +36,7 @@ export function useProviderSettingsForm( providerId ) {
 			try {
 				setLoading( true );
 				const response = await apiFetch( {
-					path: '/aether/v1/settings',
+					path: '/aether/site-exporter/settings',
 				} );
 
 				if ( response?.success && response?.settings ) {
@@ -84,7 +84,7 @@ export function useProviderSettingsForm( providerId ) {
 
 			try {
 				const allSettingsResponse = await apiFetch( {
-					path: '/aether/v1/settings',
+					path: '/aether/site-exporter/settings',
 				} );
 
 				if ( ! allSettingsResponse?.success ) {
@@ -105,7 +105,7 @@ export function useProviderSettingsForm( providerId ) {
 					updatedSettings._saveValue || updatedSettings.providers;
 
 				await apiFetch( {
-					path: '/aether/v1/settings',
+					path: '/aether/site-exporter/settings',
 					method: 'POST',
 					data: {
 						key: saveKey,

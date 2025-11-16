@@ -22,7 +22,7 @@ import {
 export default function RecentJobs( { jobs = [], loading = false } ) {
 	const formatJobTime = ( timestamp ) => {
 		if ( ! timestamp ) {
-			return __( 'Unknown', 'aether' );
+			return __( 'Unknown', 'aether-site-exporter' );
 		}
 
 		const now = Math.floor( Date.now() / 1000 ); // Current time in seconds
@@ -33,36 +33,36 @@ export default function RecentJobs( { jobs = [], loading = false } ) {
 
 		if ( days > 0 ) {
 			return `${ days } ${
-				days === 1 ? __( 'day', 'aether' ) : __( 'days', 'aether' )
-			} ${ __( 'ago', 'aether' ) }`;
+				days === 1 ? __( 'day', 'aether-site-exporter' ) : __( 'days', 'aether-site-exporter' )
+			} ${ __( 'ago', 'aether-site-exporter' ) }`;
 		}
 		if ( hours > 0 ) {
 			return `${ hours } ${
-				hours === 1 ? __( 'hour', 'aether' ) : __( 'hours', 'aether' )
-			} ${ __( 'ago', 'aether' ) }`;
+				hours === 1 ? __( 'hour', 'aether-site-exporter' ) : __( 'hours', 'aether-site-exporter' )
+			} ${ __( 'ago', 'aether-site-exporter' ) }`;
 		}
 		if ( minutes > 0 ) {
 			return `${ minutes } ${
 				minutes === 1
-					? __( 'minute', 'aether' )
-					: __( 'minutes', 'aether' )
-			} ${ __( 'ago', 'aether' ) }`;
+					? __( 'minute', 'aether-site-exporter' )
+					: __( 'minutes', 'aether-site-exporter' )
+			} ${ __( 'ago', 'aether-site-exporter' ) }`;
 		}
-		return __( 'Just now', 'aether' );
+		return __( 'Just now', 'aether-site-exporter' );
 	};
 
 	const getStatusDisplay = ( status ) => {
 		const displays = {
 			complete: {
-				label: __( 'Completed', 'aether' ),
+				label: __( 'Completed', 'aether-site-exporter' ),
 				class: 'success',
 			},
 			failed: {
-				label: __( 'Failed', 'aether' ),
+				label: __( 'Failed', 'aether-site-exporter' ),
 				class: 'error',
 			},
 			running: {
-				label: __( 'Running', 'aether' ),
+				label: __( 'Running', 'aether-site-exporter' ),
 				class: 'info',
 			},
 		};
@@ -215,7 +215,7 @@ export default function RecentJobs( { jobs = [], loading = false } ) {
 					className="aether-recent-jobs__title"
 					style={ headerTitleStyle }
 				>
-					{ __( 'Recent Publish Jobs', 'aether' ) }
+					{ __( 'Recent Publish Jobs', 'aether-site-exporter' ) }
 				</h2>
 				<p
 					className="aether-recent-jobs__description"
@@ -238,7 +238,7 @@ export default function RecentJobs( { jobs = [], loading = false } ) {
 						style={ noticeParagraphStyle }
 					>
 						<Spinner className="aether-recent-jobs__spinner" />
-						{ __( 'Loading recent jobs…', 'aether' ) }
+						{ __( 'Loading recent jobs…', 'aether-site-exporter' ) }
 					</p>
 				</div>
 			) }
@@ -290,7 +290,7 @@ export default function RecentJobs( { jobs = [], loading = false } ) {
 										style={ jobIdStyle }
 									>
 										<strong className="aether-recent-jobs__job-id-label">
-											{ __( 'Job ID:', 'aether' ) }
+											{ __( 'Job ID:', 'aether-site-exporter' ) }
 										</strong>
 										<code
 											className="aether-recent-jobs__job-id-value"

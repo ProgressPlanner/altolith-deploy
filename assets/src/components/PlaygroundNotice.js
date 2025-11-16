@@ -43,7 +43,7 @@ export default function PlaygroundNotice() {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						{ __( 'WordPress Playground', 'aether' ) }
+						{ __( 'WordPress Playground', 'aether-site-exporter' ) }
 					</a>
 				) }
 			</p>

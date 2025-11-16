@@ -41,7 +41,7 @@ describe( 'createSiteArchiveStep', () => {
 
 			// INTENDED: Calls createArchive endpoint
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/v1/publish/createArchive',
+				path: '/aether/site-exporter/publish/createArchive',
 				method: 'POST',
 			} );
 

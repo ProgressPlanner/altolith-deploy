@@ -82,10 +82,10 @@ export default function ProviderForm( {
 			if ( onSubmit ) {
 				await onSubmit( values );
 			} else {
-				// Default: save to settings using /aether/v1/settings endpoint
+				// Default: save to settings using /aether/site-exporter/settings endpoint
 				// Get current providers settings
 				const settingsResponse = await apiFetch( {
-					path: '/aether/v1/settings?key=providers',
+					path: '/aether/site-exporter/settings?key=providers',
 				} );
 
 				if ( ! settingsResponse.success ) {
@@ -101,7 +101,7 @@ export default function ProviderForm( {
 
 				// Save updated providers object
 				const saveResponse = await apiFetch( {
-					path: '/aether/v1/settings',
+					path: '/aether/site-exporter/settings',
 					method: 'POST',
 					data: {
 						key: 'providers',
@@ -120,7 +120,7 @@ export default function ProviderForm( {
 			showSuccess( () => setSuccess( false ) );
 		} catch ( err ) {
 			setError(
-				err.message || __( 'Failed to save settings', 'aether' )
+				err.message || __( 'Failed to save settings', 'aether-site-exporter' )
 			);
 		} finally {
 			setSaving( false );
@@ -163,7 +163,7 @@ export default function ProviderForm( {
 					isDismissible
 					onRemove={ () => setSuccess( false ) }
 				>
-					{ __( 'Settings saved successfully!', 'aether' ) }
+					{ __( 'Settings saved successfully!', 'aether-site-exporter' ) }
 				</Notice>
 			) }
 
@@ -189,8 +189,8 @@ export default function ProviderForm( {
 					disabled={ saving }
 				>
 					{ saving
-						? __( 'Saving…', 'aether' )
-						: __( 'Save Settings', 'aether' ) }
+						? __( 'Saving…', 'aether-site-exporter' )
+						: __( 'Save Settings', 'aether-site-exporter' ) }
 				</Button>
 			</div>
 		</form>

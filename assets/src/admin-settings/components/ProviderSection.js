@@ -146,10 +146,10 @@ export default function ProviderSection( {
 					providerId={ value }
 					title={
 						selectedProvider
-							? __( 'Settings', 'aether' ) +
+							? __( 'Settings', 'aether-site-exporter' ) +
 							  ': ' +
 							  selectedProvider.label
-							: __( 'Provider Settings', 'aether' )
+							: __( 'Provider Settings', 'aether-site-exporter' )
 					}
 				/>
 			) }

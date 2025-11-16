@@ -27,14 +27,14 @@ import apiFetch from '../utils/api';
  * @example
  * // Simple usage
  * const { data, loading, error, refresh } = useAPIData({
- *     path: '/aether/v1/config',
+ *     path: '/aether/site-exporter/config',
  *     initialData: {}
  * });
  *
  * @example
  * // With transformation
  * const { data, loading, error } = useAPIData({
- *     path: '/aether/v1/publish/jobs?limit=5',
+ *     path: '/aether/site-exporter/publish/jobs?limit=5',
  *     transform: (response) => response.value?.jobs || [],
  *     initialData: []
  * });
@@ -42,7 +42,7 @@ import apiFetch from '../utils/api';
  * @example
  * // With dependencies
  * const { data } = useAPIData({
- *     path: `/aether/v1/providers/${providerId}/status`,
+ *     path: `/aether/site-exporter/providers/${providerId}/status`,
  *     dependencies: [providerId],
  *     fetchOnMount: !!providerId
  * });
@@ -187,7 +187,7 @@ export function useAPIData( {
  *
  * @example
  * const { data, loading, page, totalPages, nextPage, prevPage } = usePaginatedData({
- *     path: '/aether/v1/publish/jobs',
+ *     path: '/aether/site-exporter/publish/jobs',
  *     perPage: 10
  * });
  */

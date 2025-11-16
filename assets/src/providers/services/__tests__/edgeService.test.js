@@ -183,7 +183,7 @@ describe( 'EdgeService', () => {
 			expect( result.data.workerName ).toContain( 'aether-r2-' );
 			expect( result.data.workerUrl ).toContain( '.workers.dev' );
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/v1/providers/cloudflare-r2/deploy-worker',
+				path: '/aether/site-exporter/providers/cloudflare-r2/deploy-worker',
 				method: 'POST',
 				data: expect.objectContaining( {
 					worker_name: expect.stringMatching( /^aether-r2-/ ),

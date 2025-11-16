@@ -84,7 +84,7 @@ export function useStaticSiteGenerator( onProgress ) {
 			if ( isGitProvider ) {
 				try {
 					const gitConfigResponse = await apiFetch( {
-						path: '/aether/v1/git-config',
+						path: '/aether/site-exporter/git-config',
 					} );
 					if (
 						gitConfigResponse &&

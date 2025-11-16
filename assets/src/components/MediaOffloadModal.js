@@ -31,7 +31,7 @@ export function MediaOffloadModal( { isOpen, totalFiles, completedFiles } ) {
 	return (
 		<Modal
 			className="aether-media-offload-modal"
-			title={ __( 'Offloading Media Files', 'aether' ) }
+			title={ __( 'Offloading Media Files', 'aether-site-exporter' ) }
 			onRequestClose={ () => {} }
 			isDismissible={ false }
 			shouldCloseOnClickOutside={ false }
@@ -56,7 +56,7 @@ export function MediaOffloadModal( { isOpen, totalFiles, completedFiles } ) {
 				} }
 			>
 				{ completedFiles } / { totalFiles }{ ' ' }
-				{ __( 'files completed', 'aether' ) }
+				{ __( 'files completed', 'aether-site-exporter' ) }
 			</p>
 		</Modal>
 	);

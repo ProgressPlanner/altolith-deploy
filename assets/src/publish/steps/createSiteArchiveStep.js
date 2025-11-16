@@ -39,7 +39,7 @@ export async function createSiteArchiveHandler( context ) {
 	// Call stateless createArchive endpoint
 	// Returns immediately - archive is created synchronously
 	const response = await apiFetch( {
-		path: '/aether/v1/publish/createArchive',
+		path: '/aether/site-exporter/publish/createArchive',
 		method: 'POST',
 		data: customAssetSlugs
 			? { custom_assets: customAssetSlugs }

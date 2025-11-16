@@ -150,7 +150,7 @@ export class EdgeService {
 		if ( workerType === 'r2' ) {
 			try {
 				const response = await apiFetch( {
-					path: '/aether/v1/providers/cloudflare-r2/deploy-worker',
+					path: '/aether/site-exporter/providers/cloudflare-r2/deploy-worker',
 					method: 'POST',
 					data: {
 						worker_name: workerName,
@@ -581,7 +581,7 @@ export class EdgeService {
 
 		try {
 			const response = await apiFetch( {
-				path: `/aether/v1/providers/${ targetProviderId }/edge/worker-script/${ workerType }`,
+				path: `/aether/site-exporter/providers/${ targetProviderId }/edge/worker-script/${ workerType }`,
 				method: 'GET',
 			} );
 
