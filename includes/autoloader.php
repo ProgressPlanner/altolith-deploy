@@ -25,7 +25,7 @@ if (! \defined('ABSPATH')) {
 		$class = \str_replace('\\', '/', $class);
 
 		// Build the file path.
-		$file = AETHER_PLUGIN_DIR . 'includes/' . $class . '.php';
+		$file = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'includes/' . $class . '.php';
 
 		// If the file exists, require it.
 		if (\file_exists($file)) {

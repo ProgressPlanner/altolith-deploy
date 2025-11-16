@@ -8,7 +8,7 @@
  * @package Aether\Services
  */
 
-namespace Aether\Services;
+namespace Aether\SiteExporter\Services;
 
 use Aether\Plugin;
 use Aether\Core\ZipHelper;
@@ -93,7 +93,7 @@ class ExportService
 		if (true !== $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
 			return new \WP_Error(
 				'zip_create_failed',
-				\__('Failed to create site export zip', 'aether'),
+				\__('Failed to create site export zip', 'aether-site-exporter'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -232,7 +232,7 @@ class ExportService
 			@\unlink($tempZipPath);
 			return new \WP_Error(
 				'zip_move_failed',
-				\__('Failed to move zip file to final location', 'aether'),
+				\__('Failed to move zip file to final location', 'aether-site-exporter'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -254,7 +254,7 @@ class ExportService
 		 *
 		 * @param array<string, mixed>|\WP_Error $result Export result.
 		 */
-		return \apply_filters('aether_export_complete_site', $result);
+		return \apply_filters('aether_site_exporter_export_complete_site', $result);
 	}
 
 	/**

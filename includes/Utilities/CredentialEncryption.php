@@ -8,7 +8,7 @@
  * @package Aether\Utilities
  */
 
-namespace Aether\Utilities;
+namespace Aether\SiteExporter\Utilities;
 
 \defined('ABSPATH') || exit;
 
@@ -39,7 +39,7 @@ class CredentialEncryption
 	 */
 	private static function getEncryptionKey(): string
 	{
-		$optionName = 'aether_encryption_key';
+		$optionName = 'aether_site_exporter_encryption_key';
 		$storedKey = \get_option($optionName);
 
 		// If key exists and is valid length, use it.

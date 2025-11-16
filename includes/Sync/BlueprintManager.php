@@ -9,7 +9,7 @@
  * @package Aether\Sync
  */
 
-namespace Aether\Sync;
+namespace Aether\SiteExporter\Sync;
 
 use Aether\Sync\Blueprint\AssetDiscoveryService;
 

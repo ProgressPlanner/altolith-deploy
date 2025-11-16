@@ -10,7 +10,7 @@
  * @since   1.0.0
  */
 
-namespace Aether\Core;
+namespace Aether\SiteExporter\Core;
 
 /**
  * Repository for centralized settings access.
@@ -24,7 +24,7 @@ class SettingsRepository
 	/**
 	 * Main settings option key.
 	 */
-	const SETTINGS_KEY = 'aether_settings';
+	const SETTINGS_KEY = 'aether_site_exporter_settings';
 
 	/**
 	 * Get all settings.
@@ -65,12 +65,12 @@ class SettingsRepository
 	public static function getPublicPluginUrl(): string
 	{
 		// Check if custom URL is defined (for environments where plugin_dir_url doesn't work).
-		if (\defined('AETHER_PUBLIC_PLUGIN_URL')) {
-			return AETHER_PUBLIC_PLUGIN_URL;
+		if (\defined('AETHER_SITE_EXPORTER_PUBLIC_PLUGIN_URL')) {
+			return AETHER_SITE_EXPORTER_PUBLIC_PLUGIN_URL;
 		}
 
 		// Default to WordPress plugin_dir_url.
-		return \plugin_dir_url(AETHER_PLUGIN_FILE);
+		return \plugin_dir_url(AETHER_SITE_EXPORTER_PLUGIN_FILE);
 	}
 
 	/**

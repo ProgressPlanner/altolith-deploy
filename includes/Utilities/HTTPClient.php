@@ -21,7 +21,7 @@
  * @package Aether\Utilities
  */
 
-namespace Aether\Utilities;
+namespace Aether\SiteExporter\Utilities;
 
 \defined('ABSPATH') || exit;
 

@@ -8,7 +8,7 @@
  * @package Aether\REST\Publish
  */
 
-namespace Aether\REST\Publish;
+namespace Aether\SiteExporter\REST\Publish;
 
 use Aether\REST\RESTHelpersTrait;
 use Aether\Plugin;
@@ -64,7 +64,7 @@ class PublishGitController
 	public function getGitConfig()
 	{
 		// Get provider configuration from WordPress options.
-		$settings = \get_option('aether_settings', []);
+		$settings = \get_option('aether_site_exporter_settings', []);
 		$providerTypes = $settings['provider_types'] ?? [];
 		$storageProviderId = $providerTypes['storage'] ?? '';
 
@@ -72,7 +72,7 @@ class PublishGitController
 		if (empty($storageProviderId)) {
 			return new WP_Error(
 				'no_provider',
-				\__('Storage provider is not configured.', 'aether'),
+				\__('Storage provider is not configured.', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -86,7 +86,7 @@ class PublishGitController
 				'not_git_provider',
 				\sprintf(
 					/* translators: %s: provider ID */
-					\__('Provider "%s" does not support git-based uploads. Use storage provider upload instead.', 'aether'),
+					\__('Provider "%s" does not support git-based uploads. Use storage provider upload instead.', 'aether-site-exporter'),
 					$storageProviderId
 				),
 				[ 'status' => 400 ]
@@ -100,7 +100,7 @@ class PublishGitController
 		if (empty($providerConfig)) {
 			return new WP_Error(
 				'no_config',
-				\__('Provider configuration not found.', 'aether'),
+				\__('Provider configuration not found.', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -118,7 +118,7 @@ class PublishGitController
 		if (empty($gitUrl)) {
 			return new WP_Error(
 				'incomplete_config',
-				\__('Git configuration is incomplete. Please configure repository URL and access token.', 'aether'),
+				\__('Git configuration is incomplete. Please configure repository URL and access token.', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -128,7 +128,7 @@ class PublishGitController
 		if (empty($gitUrl)) {
 			return new WP_Error(
 				'invalid_url',
-				\__('Invalid Git repository URL.', 'aether'),
+				\__('Invalid Git repository URL.', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -138,7 +138,7 @@ class PublishGitController
 		if (false === $parsedUrl || ! isset($parsedUrl['scheme']) || 'https' !== \strtolower($parsedUrl['scheme'])) {
 			return new WP_Error(
 				'invalid_url_scheme',
-				\__('Git repository URL must use HTTPS protocol.', 'aether'),
+				\__('Git repository URL must use HTTPS protocol.', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -166,7 +166,7 @@ class PublishGitController
 		if (! $isAllowedHost) {
 			return new WP_Error(
 				'invalid_host',
-				\__('Git repository hostname is not allowed. Only GitHub, GitLab, and Bitbucket are supported.', 'aether'),
+				\__('Git repository hostname is not allowed. Only GitHub, GitLab, and Bitbucket are supported.', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -176,7 +176,7 @@ class PublishGitController
 		if (empty($branch) || ! \preg_match('/^[a-zA-Z0-9_\/\-]+$/', $branch)) {
 			return new WP_Error(
 				'invalid_branch',
-				\__('Invalid branch name. Only alphanumeric characters, hyphens, underscores, and slashes are allowed.', 'aether'),
+				\__('Invalid branch name. Only alphanumeric characters, hyphens, underscores, and slashes are allowed.', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -185,7 +185,7 @@ class PublishGitController
 		if (empty($personalAccessToken)) {
 			return new WP_Error(
 				'incomplete_config',
-				\__('Git configuration is incomplete. Please configure repository URL and access token.', 'aether'),
+				\__('Git configuration is incomplete. Please configure repository URL and access token.', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}

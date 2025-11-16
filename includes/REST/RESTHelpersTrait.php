@@ -9,7 +9,7 @@
  * @package Aether\REST
  */
 
-namespace Aether\REST;
+namespace Aether\SiteExporter\REST;
 
 /**
  * Trait providing REST API helper methods.
@@ -35,7 +35,7 @@ trait RESTHelpersTrait
 	 */
 	public function getNamespace(): string
 	{
-		return 'aether/v1';
+		return 'aether/site-exporter';
 	}
 
 	/**

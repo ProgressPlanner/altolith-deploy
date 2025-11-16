@@ -8,7 +8,7 @@
  * @package Aether\Core
  */
 
-namespace Aether\Core;
+namespace Aether\SiteExporter\Core;
 
 /**
  * Class description.

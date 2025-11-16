@@ -9,7 +9,7 @@
  * @package Aether\REST\Publish
  */
 
-namespace Aether\REST\Publish;
+namespace Aether\SiteExporter\REST\Publish;
 
 use Aether\Plugin;
 use Aether\Sync\JobStateManager;
@@ -63,7 +63,7 @@ trait PublishHelpersTrait
 		if (false === $status) {
 			return new WP_Error(
 				'job_not_found',
-				\__('Job not found or expired', 'aether'),
+				\__('Job not found or expired', 'aether-site-exporter'),
 				[ 'status' => 404 ]
 			);
 		}
@@ -84,7 +84,7 @@ trait PublishHelpersTrait
 		if (empty($jobId)) {
 			return new WP_Error(
 				'missing_job_id',
-				\__('Job ID is required', 'aether'),
+				\__('Job ID is required', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}

@@ -10,7 +10,7 @@
  * @package Aether\REST\Publish
  */
 
-namespace Aether\REST\Publish;
+namespace Aether\SiteExporter\REST\Publish;
 
 use Aether\REST\RESTHelpersTrait;
 use Aether\Plugin;
@@ -140,7 +140,7 @@ class PublishStepsController
 
 			return [
 				'status' => $newStatus,
-				'message' => \__('Site archive created successfully', 'aether'),
+				'message' => \__('Site archive created successfully', 'aether-site-exporter'),
 			];
 		});
 	}
@@ -167,7 +167,7 @@ class PublishStepsController
 
 			return [
 				'status' => $newStatus,
-				'message' => \__('Static site generation complete', 'aether'),
+				'message' => \__('Static site generation complete', 'aether-site-exporter'),
 			];
 		});
 	}
@@ -194,7 +194,7 @@ class PublishStepsController
 		}
 
 		if (empty($jobId)) {
-			return new WP_Error('missing_job_id', \__('Job ID is required', 'aether'), ['status' => 422]);
+			return new WP_Error('missing_job_id', \__('Job ID is required', 'aether-site-exporter'), ['status' => 422]);
 		}
 
 		$status = $this->getJobStatusOrError($jobId);
@@ -206,7 +206,7 @@ class PublishStepsController
 		if (($status['currentStep'] ?? '') !== $stepName) {
 			return new WP_Error(
 				'invalid_step',
-				\sprintf(\__('Job is not on %1$s step. Current step: %2$s', 'aether'), $stepName, $status['currentStep'] ?? 'unknown'),
+				\sprintf(\__('Job is not on %1$s step. Current step: %2$s', 'aether-site-exporter'), $stepName, $status['currentStep'] ?? 'unknown'),
 				['status' => 422]
 			);
 		}
@@ -230,7 +230,7 @@ class PublishStepsController
 
 			return new WP_Error(
 				'step_execution_failed',
-				\sprintf(\__('Step execution failed: %s', 'aether'), $e->getMessage()),
+				\sprintf(\__('Step execution failed: %s', 'aether-site-exporter'), $e->getMessage()),
 				['status' => 500]
 			);
 		}
@@ -252,7 +252,7 @@ class PublishStepsController
 		$siteKey = \Aether\Plugin::getSiteKey();
 
 		// Get provider settings.
-		$settings = \get_option('aether_settings', []);
+		$settings = \get_option('aether_site_exporter_settings', []);
 		$providerTypes = $settings['provider_types'] ?? [];
 		$staticSiteProviderId = $providerTypes['static_site'] ?? '';
 
@@ -322,7 +322,7 @@ class PublishStepsController
 		} catch (\Exception $e) {
 			return new WP_Error(
 				'url_discovery_failed',
-				\sprintf(\__('Failed to discover URLs: %s', 'aether'), $e->getMessage()),
+				\sprintf(\__('Failed to discover URLs: %s', 'aether-site-exporter'), $e->getMessage()),
 				['status' => 500]
 			);
 		}
@@ -346,7 +346,7 @@ class PublishStepsController
 		if (empty($url)) {
 			return new WP_Error(
 				'missing_url',
-				\__('URL parameter is required', 'aether'),
+				\__('URL parameter is required', 'aether-site-exporter'),
 				['status' => 400]
 			);
 		}
@@ -356,7 +356,7 @@ class PublishStepsController
 		if (! \filter_var($url, FILTER_VALIDATE_URL)) {
 			return new WP_Error(
 				'invalid_url',
-				\__('Invalid URL provided', 'aether'),
+				\__('Invalid URL provided', 'aether-site-exporter'),
 				['status' => 400]
 			);
 		}
@@ -395,7 +395,7 @@ class PublishStepsController
 			if (! $result['success'] || empty($result['body'])) {
 				return new WP_Error(
 					'fetch_failed',
-					\sprintf(\__('Failed to fetch HTML content from URL: %s', 'aether'), $url),
+					\sprintf(\__('Failed to fetch HTML content from URL: %s', 'aether-site-exporter'), $url),
 					['status' => 500]
 				);
 			}
@@ -417,7 +417,7 @@ class PublishStepsController
 
 			return new WP_Error(
 				'html_fetch_failed',
-				\sprintf(\__('Failed to fetch HTML: %s', 'aether'), $e->getMessage()),
+				\sprintf(\__('Failed to fetch HTML: %s', 'aether-site-exporter'), $e->getMessage()),
 				['status' => 500]
 			);
 		}
@@ -445,13 +445,13 @@ class PublishStepsController
 		if ($customAssets !== null && ! \is_array($customAssets)) {
 			return new WP_Error(
 				'invalid_custom_assets',
-				\__('custom_assets must be an array of plugin/theme slugs', 'aether'),
+				\__('custom_assets must be an array of plugin/theme slugs', 'aether-site-exporter'),
 				['status' => 422]
 			);
 		}
 
 		// Generate unique progress ID.
-		$progressId = 'aether_archive_' . \time() . '_' . \wp_generate_password(8, false);
+		$progressId = 'aether_site_exporter_archive_' . \time() . '_' . \wp_generate_password(8, false);
 
 		// Initialize progress transient.
 		\set_transient($progressId, ['progress' => 0], 1800); // 30 minutes
@@ -474,7 +474,7 @@ class PublishStepsController
 		return \rest_ensure_response([
 			'success' => true,
 			'data' => $result,
-			'message' => \__('Site archive created successfully', 'aether'),
+			'message' => \__('Site archive created successfully', 'aether-site-exporter'),
 		]);
 	}
 
@@ -491,7 +491,7 @@ class PublishStepsController
 		if (empty($progressId)) {
 			return new WP_Error(
 				'missing_progress_id',
-				\__('Progress ID is required', 'aether'),
+				\__('Progress ID is required', 'aether-site-exporter'),
 				['status' => 422]
 			);
 		}
@@ -501,7 +501,7 @@ class PublishStepsController
 		if (false === $progress) {
 			return new WP_Error(
 				'progress_not_found',
-				\__('Progress ID not found or expired', 'aether'),
+				\__('Progress ID not found or expired', 'aether-site-exporter'),
 				['status' => 404]
 			);
 		}

@@ -8,7 +8,7 @@
  * @package Aether\Admin\Pages
  */
 
-namespace Aether\Admin\Pages;
+namespace Aether\SiteExporter\Admin\Pages;
 
 use Aether\Admin\BaseAdminPage;
 use Aether\Admin\Settings;
@@ -28,8 +28,8 @@ class SettingsPage extends BaseAdminPage
 		parent::__construct($settings);
 
 		$this->pageSlug     = 'aether';
-		$this->pageTitle    = \__('Aether Settings', 'aether');
-		$this->menuTitle    = \__('Aether', 'aether');
+		$this->pageTitle    = \__('Aether Settings', 'aether-site-exporter');
+		$this->menuTitle    = \__('Aether', 'aether-site-exporter');
 		$this->iconUrl      = 'dashicons-cloud';
 		$this->menuPosition = 30;
 	}
@@ -43,10 +43,10 @@ class SettingsPage extends BaseAdminPage
 		\wp_enqueue_style('wp-components');
 
 		// Enqueue React build.
-		$assetFile = AETHER_PLUGIN_DIR . 'assets/build/admin-settings.asset.php';
+		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-settings.asset.php';
 		$asset     = \file_exists($assetFile) ? require $assetFile : [
 			'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n' ],
-			'version'      => AETHER_VERSION,
+			'version'      => AETHER_SITE_EXPORTER_VERSION,
 		];
 
 		// Webpack chunks are loaded automatically by webpack runtime when needed
@@ -56,7 +56,7 @@ class SettingsPage extends BaseAdminPage
 		// Webpack runtime handles chunk loading automatically
 		\wp_enqueue_script(
 			'aether-admin-settings',
-			AETHER_PLUGIN_URL . 'assets/build/admin-settings.js',
+			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin-settings.js',
 			$asset['dependencies'], // Only use actual WordPress dependencies, not webpack chunks
 			$asset['version'],
 			true
@@ -86,7 +86,7 @@ class SettingsPage extends BaseAdminPage
 				<!-- React will mount here -->
 				<noscript>
 					<div class="notice notice-error">
-						<p><?php \esc_html_e('JavaScript is required for the Aether settings page to function.', 'aether'); ?></p>
+						<p><?php \esc_html_e('JavaScript is required for the Aether settings page to function.', 'aether-site-exporter'); ?></p>
 					</div>
 				</noscript>
 			</div>

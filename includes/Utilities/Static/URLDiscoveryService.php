@@ -9,7 +9,7 @@
  * @package Aether\Utilities\Static
  */
 
-namespace Aether\Utilities\Static;
+namespace Aether\SiteExporter\Utilities\Static;
 
 use Aether\Utilities\HTTPClient;
 

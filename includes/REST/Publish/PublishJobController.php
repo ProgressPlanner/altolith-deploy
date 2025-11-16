@@ -8,7 +8,7 @@
  * @package Aether\REST\Publish
  */
 
-namespace Aether\REST\Publish;
+namespace Aether\SiteExporter\REST\Publish;
 
 use Aether\REST\RESTHelpersTrait;
 use Aether\Plugin;
@@ -123,13 +123,13 @@ class PublishJobController
 		$discoveredAssets = isset($body['discoveredAssets']) ? $sanitizeArrayRecursive($body['discoveredAssets']) : null;
 
 		// Generate unique job ID.
-		$jobId = 'aether_' . \time() . '_' . \wp_generate_password(8, false);
+		$jobId = 'aether_site_exporter_' . \time() . '_' . \wp_generate_password(8, false);
 
 		// Initialize job status.
 		// Workflow starts with: discoverAssets (first tracked step).
 		$jobData = [
 			'status'         => 'pending',
-			'message'        => \__('Queued...', 'aether'),
+			'message'        => \__('Queued...', 'aether-site-exporter'),
 			'currentStep'   => 'discoverAssets',
 			'started'        => \time(),
 			'changedAssets' => $changedAssets,
@@ -147,7 +147,7 @@ class PublishJobController
 			'data' => [
 				'jobId' => $jobId,
 			],
-			'message' => \__('Publish queued', 'aether')
+			'message' => \__('Publish queued', 'aether-site-exporter')
 		]);
 	}
 
@@ -182,7 +182,7 @@ class PublishJobController
 		$newStatus = $sanitizeArrayRecursive($bodyParams);
 
 		if (empty($newStatus)) {
-			return new WP_Error('missing_status', \__('Status data is required', 'aether'), ['status' => 422]);
+			return new WP_Error('missing_status', \__('Status data is required', 'aether-site-exporter'), ['status' => 422]);
 		}
 
 		// Verify job exists.
@@ -200,7 +200,7 @@ class PublishJobController
 		return \rest_ensure_response([
 			'success' => true,
 			'data' => $mergedStatus,
-			'message' => \__('Job status updated', 'aether')
+			'message' => \__('Job status updated', 'aether-site-exporter')
 		]);
 	}
 
@@ -223,7 +223,7 @@ class PublishJobController
 		}
 
 		// Add database upload result to response for Playground debugging.
-		$dbResult = \get_transient('aether_db_upload_result');
+		$dbResult = \get_transient('aether_site_exporter_db_upload_result');
 		if ($dbResult && isset($dbResult['success'], $dbResult['message'])) {
 			$status['debugDbUpload'] = $dbResult;
 		}
@@ -251,7 +251,7 @@ class PublishJobController
 		return \rest_ensure_response([
 			'success' => true,
 			'data' => [ 'jobs' => $jobs ],
-			'message' => \__('Recent jobs retrieved', 'aether')
+			'message' => \__('Recent jobs retrieved', 'aether-site-exporter')
 		]);
 	}
 
@@ -279,7 +279,7 @@ class PublishJobController
 		if (($status['currentStep'] ?? '') !== 'uploadSiteArchive' || ($status['status'] ?? '') !== 'waitingForUpload') {
 			return new WP_Error(
 				'invalid_state',
-				\__('Job is not waiting for upload completion', 'aether'),
+				\__('Job is not waiting for upload completion', 'aether-site-exporter'),
 				['status' => 422]
 			);
 		}
@@ -288,7 +288,7 @@ class PublishJobController
 		$newStatus = \array_merge($status, [
 			'status'       => 'complete',
 			'currentStep' => 'completed',
-			'message'      => \__('Site published successfully!', 'aether'),
+			'message'      => \__('Site published successfully!', 'aether-site-exporter'),
 			'completedAt' => \current_time('mysql'),
 		]);
 
@@ -297,7 +297,7 @@ class PublishJobController
 		$deploymentUrl = '';
 		if (!empty($siteKey)) {
 			// Get provider settings.
-			$settings = \get_option('aether_settings', []);
+			$settings = \get_option('aether_site_exporter_settings', []);
 			$providerTypes = $settings['provider_types'] ?? [];
 			$staticSiteProviderId = $providerTypes['static_site'] ?? '';
 
@@ -336,7 +336,7 @@ class PublishJobController
 			if (!empty($baseUrl)) {
 				$deploymentUrl = \rtrim($baseUrl, '/') . '/' . $siteKey . '/';
 				$settings['deployment_url'] = $deploymentUrl;
-				\update_option('aether_settings', $settings);
+				\update_option('aether_site_exporter_settings', $settings);
 			}
 		}
 
@@ -350,7 +350,7 @@ class PublishJobController
 		return \rest_ensure_response([
 			'success' => true,
 			'data' => $newStatus,
-			'message' => \__('Uploads marked as complete', 'aether')
+			'message' => \__('Uploads marked as complete', 'aether-site-exporter')
 		]);
 	}
 }

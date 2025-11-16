@@ -9,7 +9,7 @@
  * @package Aether\Utilities
  */
 
-namespace Aether\Utilities;
+namespace Aether\SiteExporter\Utilities;
 
 use Aether\Utilities\CredentialEncryption;
 

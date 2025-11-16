@@ -8,7 +8,7 @@
  * @package Aether\REST
  */
 
-namespace Aether\REST;
+namespace Aether\SiteExporter\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;

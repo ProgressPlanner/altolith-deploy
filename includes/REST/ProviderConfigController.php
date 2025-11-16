@@ -17,7 +17,7 @@
  * @package Aether\REST
  */
 
-namespace Aether\REST;
+namespace Aether\SiteExporter\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
@@ -120,14 +120,14 @@ class ProviderConfigController
 		$providerId = \sanitize_key($request->get_param('provider_id'));
 
 		// Get provider config from aether_settings (where settings are actually stored)
-		$settings = \get_option('aether_settings', []);
+		$settings = \get_option('aether_site_exporter_settings', []);
 		$providers = $settings['providers'] ?? [];
 		$config = $providers[ $providerId ] ?? [];
 
 		if (empty($config)) {
 			return new WP_Error(
 				'restProviderNotConfigured',
-				\__('Provider is not configured.', 'aether'),
+				\__('Provider is not configured.', 'aether-site-exporter'),
 				[ 'status' => 404 ]
 			);
 		}
@@ -156,7 +156,7 @@ class ProviderConfigController
 		$config     = $request->get_param('config');
 
 		if (! \is_array($config)) {
-			return new WP_Error('invalid_config', \__('Config must be an object.', 'aether'), [ 'status' => 400 ]);
+			return new WP_Error('invalid_config', \__('Config must be an object.', 'aether-site-exporter'), [ 'status' => 400 ]);
 		}
 
 		// Sanitize and encrypt.
@@ -164,21 +164,21 @@ class ProviderConfigController
 		$encrypted = $this->encryptSensitiveFields($sanitized);
 
 		// Save to aether_settings['providers'][providerId]
-		$settings = \get_option('aether_settings', []);
+		$settings = \get_option('aether_site_exporter_settings', []);
 		if (! isset($settings['providers']) || ! \is_array($settings['providers'])) {
 			$settings['providers'] = [];
 		}
 		$settings['providers'][$providerId] = $encrypted;
-		$result = \update_option('aether_settings', $settings);
+		$result = \update_option('aether_site_exporter_settings', $settings);
 
-		if (! $result && \get_option('aether_settings') !== $settings) {
-			return new WP_Error('save_failed', \__('Failed to save provider configuration.', 'aether'), [ 'status' => 500 ]);
+		if (! $result && \get_option('aether_site_exporter_settings') !== $settings) {
+			return new WP_Error('save_failed', \__('Failed to save provider configuration.', 'aether-site-exporter'), [ 'status' => 500 ]);
 		}
 
 		return new WP_REST_Response(
 			[
 				'success' => true,
-				'message' => \__('Provider configuration saved successfully.', 'aether'),
+				'message' => \__('Provider configuration saved successfully.', 'aether-site-exporter'),
 			],
 			200
 		);
@@ -195,16 +195,16 @@ class ProviderConfigController
 		$providerId = \sanitize_key($request->get_param('provider_id'));
 
 		// Delete from aether_settings['providers'][providerId]
-		$settings = \get_option('aether_settings', []);
+		$settings = \get_option('aether_site_exporter_settings', []);
 		if (isset($settings['providers'][$providerId])) {
 			unset($settings['providers'][$providerId]);
-			\update_option('aether_settings', $settings);
+			\update_option('aether_site_exporter_settings', $settings);
 		}
 
 		return new WP_REST_Response(
 			[
 				'success' => true,
-				'message' => \__('Provider configuration deleted successfully.', 'aether'),
+				'message' => \__('Provider configuration deleted successfully.', 'aether-site-exporter'),
 			],
 			200
 		);
@@ -255,7 +255,7 @@ class ProviderConfigController
 		$providerId = \sanitize_key($request->get_param('provider_id'));
 
 		// Check provider config in aether_settings (where settings are actually stored)
-		$settings = \get_option('aether_settings', []);
+		$settings = \get_option('aether_site_exporter_settings', []);
 		$providers = $settings['providers'] ?? [];
 		$config = $providers[ $providerId ] ?? [];
 
@@ -333,7 +333,7 @@ class ProviderConfigController
 
 		// If config is provided, use it; otherwise load from saved settings
 		if (! \is_array($config) || empty($config)) {
-			$settings = \get_option('aether_settings', []);
+			$settings = \get_option('aether_site_exporter_settings', []);
 			$providers = $settings['providers'] ?? [];
 			$savedConfig = $providers[ $providerId ] ?? [];
 			$config = $this->decryptSensitiveFields($savedConfig);
@@ -347,7 +347,7 @@ class ProviderConfigController
 			if (empty($accountId) || empty($apiToken)) {
 				return new WP_Error(
 					'missing_credentials',
-					\__('Account ID and API token are required.', 'aether'),
+					\__('Account ID and API token are required.', 'aether-site-exporter'),
 					[ 'status' => 400 ]
 				);
 			}
@@ -356,7 +356,7 @@ class ProviderConfigController
 			if (! \preg_match('/^[a-f0-9]{32}$/i', $accountId)) {
 				return new WP_Error(
 					'invalid_account_id',
-					\__('Invalid account ID format. Account ID must be a 32-character hexadecimal string', 'aether'),
+					\__('Invalid account ID format. Account ID must be a 32-character hexadecimal string', 'aether-site-exporter'),
 					[ 'status' => 400 ]
 				);
 			}
@@ -389,7 +389,7 @@ class ProviderConfigController
 			if ($statusCode !== 200) {
 				$errorMessage = isset($data['errors'][0]['message'])
 					? $data['errors'][0]['message']
-					: (isset($data['error']) ? $data['error'] : \sprintf(\__('HTTP %d: Connection test failed', 'aether'), $statusCode));
+					: (isset($data['error']) ? $data['error'] : \sprintf(\__('HTTP %d: Connection test failed', 'aether-site-exporter'), $statusCode));
 
 				return new WP_Error(
 					'cloudflare_api_error',
@@ -401,7 +401,7 @@ class ProviderConfigController
 			return new WP_REST_Response(
 				[
 					'success' => true,
-					'message' => \__('Successfully connected to Cloudflare Workers', 'aether'),
+					'message' => \__('Successfully connected to Cloudflare Workers', 'aether-site-exporter'),
 				],
 				200
 			);
@@ -415,7 +415,7 @@ class ProviderConfigController
 			if (empty($workerEndpoint)) {
 				return new WP_Error(
 					'missing_worker_endpoint',
-					\__('Worker endpoint is required for R2 connection testing. Please deploy a worker first.', 'aether'),
+					\__('Worker endpoint is required for R2 connection testing. Please deploy a worker first.', 'aether-site-exporter'),
 					[ 'status' => 400 ]
 				);
 			}
@@ -423,7 +423,7 @@ class ProviderConfigController
 			if (empty($bucketName)) {
 				return new WP_Error(
 					'missing_bucket_name',
-					\__('Bucket name is required for R2 connection testing.', 'aether'),
+					\__('Bucket name is required for R2 connection testing.', 'aether-site-exporter'),
 					[ 'status' => 400 ]
 				);
 			}
@@ -452,7 +452,7 @@ class ProviderConfigController
 				) {
 					return new WP_Error(
 						'worker_not_accessible',
-						\__('Worker endpoint is not accessible yet. This may be due to DNS propagation delay after deployment. Please wait a few minutes and try again.', 'aether'),
+						\__('Worker endpoint is not accessible yet. This may be due to DNS propagation delay after deployment. Please wait a few minutes and try again.', 'aether-site-exporter'),
 						[ 'status' => 503 ]
 					);
 				}
@@ -471,7 +471,7 @@ class ProviderConfigController
 			// We're just testing if the worker endpoint is reachable and functioning
 			if ($statusCode !== 200 && $statusCode !== 404) {
 				// Try to parse error message from response
-				$errorMessage = \sprintf(\__('HTTP %d: Connection test failed', 'aether'), $statusCode);
+				$errorMessage = \sprintf(\__('HTTP %d: Connection test failed', 'aether-site-exporter'), $statusCode);
 				$contentType = \wp_remote_retrieve_header($response, 'content-type');
 				$contentTypeStr = \is_array($contentType) ? \implode(', ', $contentType) : (string) $contentType;
 				if ($contentTypeStr && \strpos($contentTypeStr, 'application/json') !== false) {
@@ -491,8 +491,8 @@ class ProviderConfigController
 			// If we got a 404, it means the worker is accessible and functioning
 			// (The test file doesn't exist, which is expected)
 			$message = $statusCode === 404
-				? \__('Worker endpoint is accessible and functioning correctly', 'aether')
-				: \__('Successfully connected to Cloudflare R2', 'aether');
+				? \__('Worker endpoint is accessible and functioning correctly', 'aether-site-exporter')
+				: \__('Successfully connected to Cloudflare R2', 'aether-site-exporter');
 
 			return new WP_REST_Response(
 				[
@@ -506,7 +506,7 @@ class ProviderConfigController
 		// For other providers, return not implemented
 		return new WP_Error(
 			'not_implemented',
-			\sprintf(\__('Connection testing is not implemented for provider: %s', 'aether'), $providerId),
+			\sprintf(\__('Connection testing is not implemented for provider: %s', 'aether-site-exporter'), $providerId),
 			[ 'status' => 501 ]
 		);
 	}
@@ -530,18 +530,18 @@ class ProviderConfigController
 		if (! isset($workerScripts[ $workerType ])) {
 			return new WP_Error(
 				'invalid_worker_type',
-				\sprintf(\__('Invalid worker type: %s', 'aether'), $workerType),
+				\sprintf(\__('Invalid worker type: %s', 'aether-site-exporter'), $workerType),
 				[ 'status' => 400 ]
 			);
 		}
 
 		$scriptFile = $workerScripts[ $workerType ];
-		$scriptPath = AETHER_PLUGIN_DIR . 'assets/workers/' . $scriptFile;
+		$scriptPath = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/workers/' . $scriptFile;
 
 		if (! \file_exists($scriptPath)) {
 			return new WP_Error(
 				'worker_script_not_found',
-				\sprintf(\__('Worker script not found: %s', 'aether'), $scriptFile),
+				\sprintf(\__('Worker script not found: %s', 'aether-site-exporter'), $scriptFile),
 				[ 'status' => 404 ]
 			);
 		}
@@ -551,7 +551,7 @@ class ProviderConfigController
 		if ($scriptContent === false) {
 			return new WP_Error(
 				'failed_to_read_script',
-				\__('Failed to read worker script', 'aether'),
+				\__('Failed to read worker script', 'aether-site-exporter'),
 				[ 'status' => 500 ]
 			);
 		}

@@ -8,7 +8,7 @@
  * @package Aether\Sync
  */
 
-namespace Aether\Sync;
+namespace Aether\SiteExporter\Sync;
 
 \defined('ABSPATH') || exit;
 
@@ -100,7 +100,7 @@ class JobStateManager
 	public function markComplete(string $jobId, string $message = ''): bool
 	{
 		if (empty($message)) {
-			$message = \__('Site published successfully!', 'aether');
+			$message = \__('Site published successfully!', 'aether-site-exporter');
 		}
 
 		return $this->updateStatus(

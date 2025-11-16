@@ -17,7 +17,7 @@
  * @package Aether\Sync\Blueprint
  */
 
-namespace Aether\Sync\Blueprint;
+namespace Aether\SiteExporter\Sync\Blueprint;
 
 /**
  * Service class for discovering installed WordPress assets.

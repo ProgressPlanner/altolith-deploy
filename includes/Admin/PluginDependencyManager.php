@@ -8,7 +8,7 @@
  * @package Aether\Admin
  */
 
-namespace Aether\Admin;
+namespace Aether\SiteExporter\Admin;
 
 \defined('ABSPATH') || exit;
 
@@ -70,7 +70,7 @@ class PluginDependencyManager
 
 		if (\in_array($plugin, self::PROTECTED_PLUGINS, true)) {
 			// Set transient for notice.
-			\set_transient('aether_deactivation_prevented', $plugin, 30);
+			\set_transient('aether_site_exporter_deactivation_prevented', $plugin, 30);
 
 			// Redirect back to plugins page.
 			\wp_safe_redirect(\admin_url('plugins.php'));
@@ -83,15 +83,15 @@ class PluginDependencyManager
 	 */
 	public function showProtectionNotice(): void
 	{
-		$preventedPlugin = \get_transient('aether_deactivation_prevented');
+		$preventedPlugin = \get_transient('aether_site_exporter_deactivation_prevented');
 
 		if (! $preventedPlugin) {
 			return;
 		}
 
-		\delete_transient('aether_deactivation_prevented');
+		\delete_transient('aether_site_exporter_deactivation_prevented');
 
-		require AETHER_PLUGIN_DIR . 'views/admin/notices/deactivation-prevented.php';
+		require AETHER_SITE_EXPORTER_PLUGIN_DIR . 'views/admin/notices/deactivation-prevented.php';
 	}
 
 	/**

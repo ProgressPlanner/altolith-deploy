@@ -9,7 +9,7 @@
  * @package Aether\Admin
  */
 
-namespace Aether\Admin;
+namespace Aether\SiteExporter\Admin;
 
 use Aether\Admin\Settings;
 
@@ -147,8 +147,8 @@ abstract class BaseAdminPage
 		// Check user permissions.
 		if (! \current_user_can($this->capability)) {
 			\wp_die(
-				\esc_html__('You do not have sufficient permissions to access this page.', 'aether'),
-				\esc_html__('Permission Denied', 'aether'),
+				\esc_html__('You do not have sufficient permissions to access this page.', 'aether-site-exporter'),
+				\esc_html__('Permission Denied', 'aether-site-exporter'),
 				[ 'response' => 403 ]
 			);
 		}

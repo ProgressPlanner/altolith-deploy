@@ -8,7 +8,7 @@
  * @package Aether\Admin\Pages
  */
 
-namespace Aether\Admin\Pages;
+namespace Aether\SiteExporter\Admin\Pages;
 
 use Aether\Admin\BaseAdminPage;
 use Aether\Admin\Settings;
@@ -28,8 +28,8 @@ class PublishPage extends BaseAdminPage
 		parent::__construct($settings);
 
 		$this->pageSlug   = 'aether-publish';
-		$this->pageTitle  = \__('Publish Site', 'aether');
-		$this->menuTitle  = \__('Publish', 'aether');
+		$this->pageTitle  = \__('Publish Site', 'aether-site-exporter');
+		$this->menuTitle  = \__('Publish', 'aether-site-exporter');
 		$this->parentSlug = 'aether';
 	}
 
@@ -42,10 +42,10 @@ class PublishPage extends BaseAdminPage
 		\wp_enqueue_style('wp-components');
 
 		// Enqueue React build.
-		$assetFile = AETHER_PLUGIN_DIR . 'assets/build/publish.asset.php';
+		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/publish.asset.php';
 		$asset     = \file_exists($assetFile) ? require $assetFile : [
 			'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n' ],
-			'version'      => AETHER_VERSION,
+			'version'      => AETHER_SITE_EXPORTER_VERSION,
 		];
 
 		// Enqueue required webpack chunks FIRST (before main script)
@@ -57,7 +57,7 @@ class PublishPage extends BaseAdminPage
 
 		\wp_enqueue_script(
 			'aether-publish',
-			AETHER_PLUGIN_URL . 'assets/build/publish.js',
+			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/publish.js',
 			\array_merge($asset['dependencies'], $chunkHandles),
 			$asset['version'],
 			true

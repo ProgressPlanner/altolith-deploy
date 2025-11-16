@@ -8,7 +8,7 @@
  * @package Aether\Admin
  */
 
-namespace Aether\Admin;
+namespace Aether\SiteExporter\Admin;
 
 \defined('ABSPATH') || exit;
 
@@ -54,8 +54,8 @@ class Settings
 	public function registerSettings(): void
 	{
 		\register_setting(
-			'aether_settings',
-			'aether_settings',
+			'aether_site_exporter_settings',
+			'aether_site_exporter_settings',
 			[
 				'sanitize_callback' => [ $this, 'sanitizeSettings' ],
 			]
@@ -94,7 +94,7 @@ class Settings
 	{
 		// Important: We must clear the static cache in getStorageConfig()
 		// First update the option directly.
-		$result = \update_option('aether_settings', $settings);
+		$result = \update_option('aether_site_exporter_settings', $settings);
 
 		// Force cache refresh by calling get_storage_config with bypass_cache.
 		if ($result && \function_exists('\Aether\getStorageConfig')) {

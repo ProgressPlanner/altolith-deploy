@@ -8,7 +8,7 @@
  * @package Aether\Admin
  */
 
-namespace Aether\Admin;
+namespace Aether\SiteExporter\Admin;
 
 use Aether\Admin\Settings;
 

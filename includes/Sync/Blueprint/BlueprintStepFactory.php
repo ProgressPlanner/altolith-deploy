@@ -9,7 +9,7 @@
  * @package Aether\Sync\Blueprint
  */
 
-namespace Aether\Sync\Blueprint;
+namespace Aether\SiteExporter\Sync\Blueprint;
 
 /**
  * Factory class for creating WordPress Playground blueprint steps.

@@ -6,7 +6,7 @@
  * @package Aether
  */
 
-namespace Aether;
+namespace Aether\SiteExporter;
 
 \defined('ABSPATH') || exit;
 use Aether\Admin\PluginDependencyManager;
@@ -158,7 +158,7 @@ class Plugin
 		\load_plugin_textdomain(
 			'aether',
 			false,
-			\dirname(\plugin_basename(AETHER_PLUGIN_FILE)) . '/languages'
+			\dirname(\plugin_basename(AETHER_SITE_EXPORTER_PLUGIN_FILE)) . '/languages'
 		);
 	}
 
@@ -242,10 +242,10 @@ class Plugin
 		\wp_enqueue_style('wp-components');
 
 		// Enqueue publish React build (contains PublishProgressModal component).
-		$publishAssetFile = AETHER_PLUGIN_DIR . 'assets/build/publish.asset.php';
+		$publishAssetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/publish.asset.php';
 		$publishAsset     = \file_exists($publishAssetFile) ? require $publishAssetFile : [
 			'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n' ],
-			'version'      => AETHER_VERSION,
+			'version'      => AETHER_SITE_EXPORTER_VERSION,
 		];
 
 		// Enqueue required webpack chunks FIRST (before main script)
@@ -256,17 +256,17 @@ class Plugin
 
 		\wp_enqueue_script(
 			'aether-publish',
-			AETHER_PLUGIN_URL . 'assets/build/publish.js',
+			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/publish.js',
 			\array_merge($publishAsset['dependencies'], $chunkHandles),
 			$publishAsset['version'],
 			true
 		);
 
 		// Enqueue admin bar JavaScript (handles button clicks and modal mounting).
-		$adminBarAssetFile = AETHER_PLUGIN_DIR . 'assets/build/admin-bar.asset.php';
+		$adminBarAssetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-bar.asset.php';
 		$adminBarAsset     = \file_exists($adminBarAssetFile) ? require $adminBarAssetFile : [
 			'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n', 'wp-hooks' ],
-			'version'      => AETHER_VERSION,
+			'version'      => AETHER_SITE_EXPORTER_VERSION,
 		];
 
 		// WordPress doesn't expose ReactJSXRuntime, so we need to provide it
@@ -317,7 +317,7 @@ class Plugin
 
 		\wp_enqueue_script(
 			'aether-admin-bar',
-			AETHER_PLUGIN_URL . 'assets/build/admin-bar.js',
+			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin-bar.js',
 			$dependencies,
 			$adminBarAsset['version'],
 			true
@@ -353,7 +353,7 @@ class Plugin
 		?>
 		<meta name="aether-rest-url" content="<?php echo \esc_attr(\rest_url('aether/v1/')); ?>">
 		<meta name="aether-rest-nonce" content="<?php echo \esc_attr(\wp_create_nonce('wp_rest')); ?>">
-		<meta name="aether-plugin-url" content="<?php echo \esc_attr((string) AETHER_PLUGIN_URL); ?>">
+		<meta name="aether-plugin-url" content="<?php echo \esc_attr((string) AETHER_SITE_EXPORTER_PLUGIN_URL); ?>">
 		<?php
 	}
 
@@ -435,7 +435,7 @@ class Plugin
 		$chunkHandles = [];
 
 		if ($includeNumbered) {
-			$numberedChunks = $this->discoverNumberedChunks((string) AETHER_PLUGIN_DIR);
+			$numberedChunks = $this->discoverNumberedChunks((string) AETHER_SITE_EXPORTER_PLUGIN_DIR);
 			$namedChunks = \array_merge($numberedChunks, $namedChunks);
 		}
 
@@ -456,8 +456,8 @@ class Plugin
 	 */
 	public function enqueueWebpackChunks(string $scriptHandle): void
 	{
-		$pluginUrl = AETHER_PLUGIN_URL;
-		$pluginDir = AETHER_PLUGIN_DIR;
+		$pluginUrl = AETHER_SITE_EXPORTER_PLUGIN_URL;
+		$pluginDir = AETHER_SITE_EXPORTER_PLUGIN_DIR;
 
 		// Discover numbered chunks dynamically (uses cached result)
 		$numberedChunks = $this->discoverNumberedChunks((string) $pluginDir);
@@ -503,7 +503,7 @@ class Plugin
 				$chunkHandle,
 				$pluginUrl . "assets/build/{$chunkName}.js",
 				[], // Chunks don't have dependencies, they're loaded by webpack runtime
-				AETHER_VERSION,
+				AETHER_SITE_EXPORTER_VERSION,
 				true
 			);
 
@@ -537,12 +537,12 @@ class Plugin
 			return;
 		}
 
-		$pluginUrl = AETHER_PLUGIN_URL;
+		$pluginUrl = AETHER_SITE_EXPORTER_PLUGIN_URL;
 		\wp_enqueue_script(
 			'aether-admin-common',
 			$pluginUrl . 'assets/build/admin-common.js',
 			[],
-			AETHER_VERSION,
+			AETHER_SITE_EXPORTER_VERSION,
 			true
 		);
 
@@ -605,7 +605,7 @@ class Plugin
 		// On admin settings page, providers are imported directly in JavaScript
 		// (see assets/src/admin-settings/index.js), so skip PHP enqueuing here
 		// Hook format: toplevel_page_{pageSlug} or {parentSlug}_page_{pageSlug}
-		$isAdminSettings = \str_contains($hook, 'aether') || \str_contains($hook, 'aether-settings');
+		$isAdminSettings = \str_contains($hook, 'aether-site-exporter') || \str_contains($hook, 'aether-settings');
 
 		// Skip enqueuing on admin settings page - providers are imported directly
 		if ($isAdminSettings) {
@@ -642,8 +642,8 @@ class Plugin
 		$providersToEnqueue = $configuredProviders; // Only configured providers
 
 		// Enqueue provider scripts
-		$pluginUrl = AETHER_PLUGIN_URL;
-		$pluginDir = AETHER_PLUGIN_DIR;
+		$pluginUrl = AETHER_SITE_EXPORTER_PLUGIN_URL;
+		$pluginDir = AETHER_SITE_EXPORTER_PLUGIN_DIR;
 
 		foreach ($providersToEnqueue as $providerId) {
 			if (! isset($providerScripts[ $providerId ])) {
@@ -656,7 +656,7 @@ class Plugin
 				? require $assetFile
 				: [
 					'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n', 'wp-hooks' ],
-					'version'      => AETHER_VERSION,
+					'version'      => AETHER_SITE_EXPORTER_VERSION,
 				];
 
 			\wp_enqueue_script(
@@ -835,10 +835,10 @@ class Plugin
 		$userAgent = isset($_SERVER['HTTP_USER_AGENT']) ? \sanitize_text_field(\wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
 
 		// Also check for custom header as alternative detection method.
-		$customHeader = isset($_SERVER['HTTP_X_AETHER_ANONYMOUS']) ? \sanitize_text_field(\wp_unslash($_SERVER['HTTP_X_AETHER_ANONYMOUS'])) : '';
+		$customHeader = isset($_SERVER['HTTP_X_AETHER_SITE_EXPORTER_ANONYMOUS']) ? \sanitize_text_field(\wp_unslash($_SERVER['HTTP_X_AETHER_SITE_EXPORTER_ANONYMOUS'])) : '';
 
 		// Check for query parameter as another alternative.
-		$queryParam = isset($_GET['aether_anonymous']) ? \sanitize_text_field(\wp_unslash($_GET['aether_anonymous'])) : '';
+		$queryParam = isset($_GET['aether_site_exporter_anonymous']) ? \sanitize_text_field(\wp_unslash($_GET['aether_site_exporter_anonymous'])) : '';
 
 		// If any indicator is present, force anonymous user context.
 		if (
@@ -943,7 +943,7 @@ class Plugin
 	 */
 	public static function getSiteKey(): string
 	{
-		$siteKey = \get_option('aether_site_key', '');
+		$siteKey = \get_option('aether_site_exporter_site_key', '');
 
 		if (empty($siteKey)) {
 			// Generate a unique site key using wp_generate_password for randomness.
@@ -951,11 +951,11 @@ class Plugin
 			$siteKey = \md5(\wp_generate_password(32, false) . \home_url() . \time());
 
 			// Store it permanently.
-			\update_option('aether_site_key', $siteKey, false);
+			\update_option('aether_site_exporter_site_key', $siteKey, false);
 		}
 
 		// Allow filtering site key (useful for testing or custom environments).
-		$siteKey = \apply_filters('aether_site_key', \is_string($siteKey) ? $siteKey : '');
+		$siteKey = \apply_filters('aether_site_exporter_site_key', \is_string($siteKey) ? $siteKey : '');
 
 		return \is_string($siteKey) ? $siteKey : '';
 	}
@@ -998,17 +998,17 @@ class Plugin
 			[
 				'id'     => 'aether-publish',
 				'parent' => 'top-secondary',
-				'title'  => \__('Publish', 'aether'),
+				'title'  => \__('Publish', 'aether-site-exporter'),
 				'href'   => '#',
 				'meta'   => [
 					'class' => 'aether-adminbar-button aether-publish-button',
-					'title' => \__('Publish your site to static hosting', 'aether'),
+					'title' => \__('Publish your site to static hosting', 'aether-site-exporter'),
 				],
 			]
 		);
 
 		// Get deployment URL from settings.
-		$settings = \get_option('aether_settings', []);
+		$settings = \get_option('aether_site_exporter_settings', []);
 		$deploymentUrl = $settings['deployment_url'] ?? '';
 
 		// If no deployment URL in settings, try to get it from the most recent completed job
@@ -1045,7 +1045,7 @@ class Plugin
 							$deploymentUrl = \rtrim($baseUrl, '/') . '/' . $siteKey . '/';
 							// Save it for future use
 							$settings['deployment_url'] = $deploymentUrl;
-							\update_option('aether_settings', $settings);
+							\update_option('aether_site_exporter_settings', $settings);
 							break;
 						}
 					}
@@ -1074,7 +1074,7 @@ class Plugin
 						if (!empty($baseUrl)) {
 							$deploymentUrl = \rtrim($baseUrl, '/') . '/' . $siteKey . '/';
 							$settings['deployment_url'] = $deploymentUrl;
-							\update_option('aether_settings', $settings);
+							\update_option('aether_site_exporter_settings', $settings);
 						}
 					}
 				}
@@ -1088,14 +1088,14 @@ class Plugin
 			[
 				'id'     => 'aether-view-site',
 				'parent' => 'top-secondary',
-				'title'  => \__('View Static Site', 'aether'),
+				'title'  => \__('View Static Site', 'aether-site-exporter'),
 				'href'   => !empty($deploymentUrl) ? $deploymentUrl : '#',
 				'meta'   => [
 					'target' => !empty($deploymentUrl) ? '_blank' : '',
 					'class'  => 'aether-adminbar-button aether-view-site-button' . (empty($deploymentUrl) ? ' aether-disabled' : ''),
 					'title'  => !empty($deploymentUrl)
-						? \__('View your deployed static site', 'aether')
-						: \__('Publish your site first to view the static site', 'aether'),
+						? \__('View your deployed static site', 'aether-site-exporter')
+						: \__('Publish your site first to view the static site', 'aether-site-exporter'),
 				],
 			]
 		);

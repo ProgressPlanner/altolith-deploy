@@ -6,7 +6,7 @@
  * @package Aether\REST
  */
 
-namespace Aether\REST;
+namespace Aether\SiteExporter\REST;
 
 use Aether\Plugin;
 use Aether\Services\ExportService;
@@ -111,7 +111,7 @@ class ExportController
 		if (true !== $zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
 			return new WP_Error(
 				'zip_create_failed',
-				\__('Failed to create export zip', 'aether'),
+				\__('Failed to create export zip', 'aether-site-exporter'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -215,7 +215,7 @@ class ExportController
 				'success'     => true,
 				'jobId'      => $jobId,
 				'totalItems' => $totalItems,
-				'message'     => \__('Export started', 'aether'),
+				'message'     => \__('Export started', 'aether-site-exporter'),
 			]
 		);
 	}
@@ -235,7 +235,7 @@ class ExportController
 		if (false === $status) {
 			return new WP_Error(
 				'job_not_found',
-				\__('Export job not found or expired', 'aether'),
+				\__('Export job not found or expired', 'aether-site-exporter'),
 				[ 'status' => 404 ]
 			);
 		}
@@ -246,7 +246,7 @@ class ExportController
 				[
 					'success' => true,
 					'status'  => 'complete',
-					'message' => \__('Export complete', 'aether'),
+					'message' => \__('Export complete', 'aether-site-exporter'),
 				]
 			);
 		}
@@ -265,7 +265,7 @@ class ExportController
 				[
 					'success' => true,
 					'status'  => 'complete',
-					'message' => \__('Export complete', 'aether'),
+					'message' => \__('Export complete', 'aether-site-exporter'),
 				]
 			);
 		}
@@ -278,7 +278,7 @@ class ExportController
 		if (true !== $zip->open($status['zipPath'], \ZipArchive::CREATE)) {
 			return new WP_Error(
 				'zip_open_failed',
-				\__('Failed to open export zip', 'aether'),
+				\__('Failed to open export zip', 'aether-site-exporter'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -311,7 +311,7 @@ class ExportController
 				'total'    => $status['totalItems'],
 				'message'  => \sprintf(
 					/* translators: 1: item type, 2: item name */
-					\__('Added %1$s: %2$s', 'aether'),
+					\__('Added %1$s: %2$s', 'aether-site-exporter'),
 					$item['type'],
 					$item['name']
 				),
@@ -334,7 +334,7 @@ class ExportController
 		if (false === $status) {
 			return new WP_Error(
 				'job_not_found',
-				\__('Export job not found or expired', 'aether'),
+				\__('Export job not found or expired', 'aether-site-exporter'),
 				[ 'status' => 404 ]
 			);
 		}
@@ -342,7 +342,7 @@ class ExportController
 		if ('complete' !== $status['status']) {
 			return new WP_Error(
 				'export_incomplete',
-				\__('Export not yet complete', 'aether'),
+				\__('Export not yet complete', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -352,7 +352,7 @@ class ExportController
 		if (! \file_exists($zipPath)) {
 			return new WP_Error(
 				'file_not_found',
-				\__('Export file not found', 'aether'),
+				\__('Export file not found', 'aether-site-exporter'),
 				[ 'status' => 404 ]
 			);
 		}

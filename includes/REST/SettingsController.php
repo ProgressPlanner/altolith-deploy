@@ -8,7 +8,7 @@
  * @package Aether\REST
  */
 
-namespace Aether\REST;
+namespace Aether\SiteExporter\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
@@ -44,7 +44,7 @@ class SettingsController
 					'key' => [
 						'required'          => false,
 						'type'              => 'string',
-						'description'       => \__('Setting key (top-level only, e.g., "providers")', 'aether'),
+						'description'       => \__('Setting key (top-level only, e.g., "providers")', 'aether-site-exporter'),
 						'sanitize_callback' => 'sanitize_text_field',
 					],
 				],
@@ -63,12 +63,12 @@ class SettingsController
 					'key' => [
 						'required'          => true,
 						'type'              => 'string',
-						'description'       => \__('Setting key (top-level only, e.g., "providers")', 'aether'),
+						'description'       => \__('Setting key (top-level only, e.g., "providers")', 'aether-site-exporter'),
 						'sanitize_callback' => 'sanitize_text_field',
 					],
 					'value' => [
 						'required'    => true,
-						'description' => \__('Setting value (can be nested array)', 'aether'),
+						'description' => \__('Setting value (can be nested array)', 'aether-site-exporter'),
 					],
 				],
 			]
@@ -119,7 +119,7 @@ class SettingsController
 	public function getSettings(WP_REST_Request $request)
 	{
 		$key = $request->get_param('key');
-		$settings = \get_option('aether_settings', []);
+		$settings = \get_option('aether_site_exporter_settings', []);
 
 		// Ensure provider_types exists in settings (even if empty)
 		if (!isset($settings['provider_types']) || !\is_array($settings['provider_types'])) {
@@ -179,13 +179,13 @@ class SettingsController
 		if (empty($key)) {
 			return new WP_Error(
 				'missing_key',
-				\__('Setting key is required.', 'aether'),
+				\__('Setting key is required.', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
 
 		// Get current settings.
-		$settings = \get_option('aether_settings', []);
+		$settings = \get_option('aether_site_exporter_settings', []);
 
 		// If updating providers, merge with existing providers to preserve other provider configs
 		// This ensures that updating one provider (e.g., cloudflare-r2) doesn't remove
@@ -220,7 +220,7 @@ class SettingsController
 			} catch (\Exception $e) {
 				return new WP_Error(
 					'encryption_failed',
-					\sprintf(\__('Failed to encrypt provider settings: %s', 'aether'), $e->getMessage()),
+					\sprintf(\__('Failed to encrypt provider settings: %s', 'aether-site-exporter'), $e->getMessage()),
 					[ 'status' => 500 ]
 				);
 			}
@@ -230,13 +230,13 @@ class SettingsController
 		$settings[ $key ] = $value;
 
 		// Update settings.
-		$result = \update_option('aether_settings', $settings);
+		$result = \update_option('aether_site_exporter_settings', $settings);
 
 		// update_option returns false if value hasn't changed, which is not an error
-		if ($result === false && \get_option('aether_settings') !== $settings) {
+		if ($result === false && \get_option('aether_site_exporter_settings') !== $settings) {
 			return new WP_Error(
 				'settings_update_failed',
-				\__('Failed to update settings.', 'aether'),
+				\__('Failed to update settings.', 'aether-site-exporter'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -250,7 +250,7 @@ class SettingsController
 		return new WP_REST_Response(
 			[
 				'success' => true,
-				'message' => \__('Setting updated successfully.', 'aether'),
+				'message' => \__('Setting updated successfully.', 'aether-site-exporter'),
 				'key'     => $key,
 				'value'   => $updatedValue,
 			],
@@ -355,13 +355,13 @@ class SettingsController
 	{
 
 		// Check if in Playground.
-		$isPlayground = \defined('AETHER_PLAYGROUND_SITE') && AETHER_PLAYGROUND_SITE === true;
+		$isPlayground = \defined('AETHER_SITE_EXPORTER_PLAYGROUND_SITE') && AETHER_SITE_EXPORTER_PLAYGROUND_SITE === true;
 
 		// Check if dismissed.
-		$isDismissed = (bool) \get_user_meta(\get_current_user_id(), 'aether_dismiss_playground_notice', true);
+		$isDismissed = (bool) \get_user_meta(\get_current_user_id(), 'aether_site_exporter_dismiss_playground_notice', true);
 
 		// Check if skip check is defined.
-		$skipCheck = \defined('AETHER_SKIP_PLAYGROUND_CHECK') && AETHER_SKIP_PLAYGROUND_CHECK;
+		$skipCheck = \defined('AETHER_SITE_EXPORTER_SKIP_PLAYGROUND_CHECK') && AETHER_SITE_EXPORTER_SKIP_PLAYGROUND_CHECK;
 
 		// Determine if notice should be shown.
 		$shouldShow = ! $isPlayground && ! $isDismissed && ! $skipCheck;
@@ -388,12 +388,12 @@ class SettingsController
 	public function dismissPlaygroundNotice(\WP_REST_Request $_request)
 	{
 
-		$result = \update_user_meta(\get_current_user_id(), 'aether_dismiss_playground_notice', true);
+		$result = \update_user_meta(\get_current_user_id(), 'aether_site_exporter_dismiss_playground_notice', true);
 
 		if (! $result) {
 			return new WP_Error(
 				'dismiss_failed',
-				\__('Failed to dismiss notice.', 'aether'),
+				\__('Failed to dismiss notice.', 'aether-site-exporter'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -401,7 +401,7 @@ class SettingsController
 		return new WP_REST_Response(
 			[
 				'success' => true,
-				'message' => \__('Notice dismissed successfully.', 'aether'),
+				'message' => \__('Notice dismissed successfully.', 'aether-site-exporter'),
 			],
 			200
 		);
@@ -420,14 +420,14 @@ class SettingsController
 
 		// Return common i18n strings.
 		$i18n = [
-			'confirm'    => \__('Are you sure?', 'aether'),
-			'error'      => \__('An error occurred.', 'aether'),
-			'success'    => \__('Operation completed successfully.', 'aether'),
-			'processing' => \__('Processing...', 'aether'),
-			'saving'     => \__('Saving...', 'aether'),
-			'loading'    => \__('Loading...', 'aether'),
-			'delete'     => \__('Delete', 'aether'),
-			'cancel'     => \__('Cancel', 'aether'),
+			'confirm'    => \__('Are you sure?', 'aether-site-exporter'),
+			'error'      => \__('An error occurred.', 'aether-site-exporter'),
+			'success'    => \__('Operation completed successfully.', 'aether-site-exporter'),
+			'processing' => \__('Processing...', 'aether-site-exporter'),
+			'saving'     => \__('Saving...', 'aether-site-exporter'),
+			'loading'    => \__('Loading...', 'aether-site-exporter'),
+			'delete'     => \__('Delete', 'aether-site-exporter'),
+			'cancel'     => \__('Cancel', 'aether-site-exporter'),
 		];
 
 		return new WP_REST_Response(

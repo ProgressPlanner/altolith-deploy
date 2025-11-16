@@ -1,6 +1,6 @@
 {
-    "name": "aristath/aether",
-    "description": "Run WordPress serverless in the cloud and deploy as static sites",
+    "name": "aristath/aether-site-exporter",
+    "description": "Export WordPress sites as static HTML or WordPress Playground blueprint bundles",
     "type": "wordpress-plugin",
     "require": {
         "php": ">=7.4"
@@ -15,7 +15,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Aether\\": "includes/"
+            "Aether\\SiteExporter\\": "includes/"
         }
     },
     "scripts": {

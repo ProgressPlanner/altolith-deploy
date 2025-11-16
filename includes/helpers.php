@@ -8,7 +8,7 @@
  * @package Aether
  */
 
-namespace Aether;
+namespace Aether\SiteExporter\SiteExporter;
 
 \defined('ABSPATH') || exit;
 
