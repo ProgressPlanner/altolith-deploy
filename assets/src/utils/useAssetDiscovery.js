@@ -205,11 +205,21 @@ export default function useAssetDiscovery() {
 
 			const { plugins, themes } = await getInstalledAssets();
 
+			// Only include active plugins and themes (like getBlueprintAssets does)
+			// This ensures the message shows only what will actually be included in the bundle
+			const activePlugins = plugins.filter(
+				( plugin ) => plugin.is_active
+			);
+
+			// Get active theme (themes array should only have one active theme)
+			const activeTheme = themes.find( ( theme ) => theme.is_active );
+			const activeThemes = activeTheme ? [ activeTheme ] : [];
+
 			// Check each asset against WordPress.org
 			// Method is configurable via filters (default: PHP server-side)
 			const items = [
-				...plugins.map( ( p ) => ( { ...p, assetType: 'plugin' } ) ),
-				...themes.map( ( t ) => ( { ...t, assetType: 'theme' } ) ),
+				...activePlugins.map( ( p ) => ( { ...p, assetType: 'plugin' } ) ),
+				...activeThemes.map( ( t ) => ( { ...t, assetType: 'theme' } ) ),
 			];
 
 			// Check all assets in parallel

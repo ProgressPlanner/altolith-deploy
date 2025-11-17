@@ -40,14 +40,14 @@ export async function discoverAssetsHandler( context ) {
 	// Build success message
 	let message;
 	if ( assets.length === 0 ) {
-		message = 'Discovered 0 custom plugins/themes';
+		message = 'Discovered 0 active custom plugins/themes';
 	} else {
 		const parts = [];
 		if ( plugins.length > 0 ) {
 			const pluginText =
 				plugins.length === 1
-					? `1 custom plugin (${ plugins[ 0 ].slug })`
-					: `${ plugins.length } custom plugins (${ plugins
+					? `1 active custom plugin (${ plugins[ 0 ].slug })`
+					: `${ plugins.length } active custom plugins (${ plugins
 							.map( ( p ) => p.slug )
 							.join( ', ' ) })`;
 			parts.push( pluginText );
@@ -55,15 +55,15 @@ export async function discoverAssetsHandler( context ) {
 		if ( themes.length > 0 ) {
 			const themeText =
 				themes.length === 1
-					? `1 custom theme (${ themes[ 0 ].slug })`
-					: `${ themes.length } custom themes (${ themes
+					? `1 active custom theme (${ themes[ 0 ].slug })`
+					: `${ themes.length } active custom themes (${ themes
 							.map( ( t ) => t.slug )
 							.join( ', ' ) })`;
 			parts.push( themeText );
 		}
 		message = `Discovered ${ parts.join(
 			' and '
-		) }. These will be included in the <code>wp-content.zip</code> file.`;
+		) }. These will be included in the blueprint bundle.`;
 	}
 
 	setStatusMessage( message, 'success', 'discoverAssets' );

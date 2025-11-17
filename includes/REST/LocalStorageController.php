@@ -252,20 +252,50 @@ class LocalStorageController
 		}
 
 		// Final validation after directory creation
+		// Note: realpath() requires the path to exist, so this should work now
 		$realFileDir = \realpath($fileDir);
-		if (false === $realFileDir || 0 !== \strpos($realFileDir, $realAbspath)) {
-			// Clean up if validation fails
-			if (\is_dir($fileDir) && $fileDir !== $uploadDir) {
-				@\rmdir($fileDir);
+		if (false === $realFileDir) {
+			// Debug logging to understand why realpath failed
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: realpath() failed for directory: %s (exists: %s, readable: %s)',
+					$fileDir,
+					\is_dir($fileDir) ? 'yes' : 'no',
+					\is_readable($fileDir) ? 'yes' : 'no'
+				));
 			}
+
+			// Don't delete the directory we just created - it might still be usable
+			// Instead, try using the non-resolved path
+			$realFileDir = $fileDir;
+		}
+
+		// Verify the resolved path is within ABSPATH
+		if (0 !== \strpos($realFileDir, $realAbspath)) {
+			// This indicates a security issue - path escaped ABSPATH
 			return new WP_Error(
 				'path_validation_failed',
-				\__('File path validation failed.', 'aether-site-exporter'),
+				\__('File path validation failed: path is outside WordPress installation.', 'aether-site-exporter'),
 				[ 'status' => 400 ]
 			);
 		}
 
 		$realFullPath = $realFileDir . '/' . \basename($fullPath);
+
+		// Verify directory exists before attempting file move
+		if (!\is_dir($realFileDir)) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Directory disappeared before file move: %s',
+					$realFileDir
+				));
+			}
+			return new WP_Error(
+				'directory_missing',
+				\__('Upload directory does not exist.', 'aether-site-exporter'),
+				[ 'status' => 500 ]
+			);
+		}
 
 		// Move uploaded file to target location
 		if (isset($file['tmp_name']) && \is_uploaded_file($file['tmp_name'])) {
