@@ -7,12 +7,12 @@
  * with consistent error handling, logging, and response validation.
  *
  * IMPORTANT: This class is for INTERNAL WordPress requests only (same-site).
- * For external API calls (Cloudflare, WordPress.org), use browser-based fetch()
+ * For external API calls (external APIs, WordPress.org), use browser-based fetch()
  * because WordPress Playground blocks external wp_remote_* requests.
  *
  * WordPress Playground Compatibility:
  * - ✅ WORKS: Internal requests to same WordPress site (static site generation)
- * - ❌ BLOCKED: External API calls to wordpress.org, cloudflare.com, etc.
+ * - ❌ BLOCKED: External API calls to wordpress.org, api.example.com, etc.
  *
  * Usage:
  * - Static site HTML fetching (PublishStepsController.php)

@@ -28,7 +28,7 @@ if ( ! /^[a-z0-9-]+$/.test( providerName ) ) {
 	console.error(
 		'❌ Error: Provider name must be kebab-case (lowercase letters, numbers, and hyphens only)'
 	);
-	console.log( 'Example: my-cloud, cloudflare-r2, digital-ocean' );
+	console.log( 'Example: my-cloud, digital-ocean, aws-s3' );
 	process.exit( 1 );
 }
 

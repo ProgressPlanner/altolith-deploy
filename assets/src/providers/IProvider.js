@@ -16,7 +16,7 @@
  * Provider Interface
  *
  * Defines the contract that all cloud providers must follow.
- * Providers handle deployment to specific cloud platforms (Cloudflare R2, GitLab Pages, etc.).
+ * Providers handle deployment to specific cloud platforms (Local Filesystem, cloud storage, etc.).
  *
  * @interface IProvider
  *
@@ -75,7 +75,7 @@
  *
  * @memberof IProvider
  * @function getId
- * @return {string} Unique provider ID (e.g., 'cloudflare-r2', 'gitlab-pages')
+ * @return {string} Unique provider ID (e.g., 'local-filesystem')
  *
  * @example
  * getId() {
@@ -91,7 +91,7 @@
  *
  * @memberof IProvider
  * @function getName
- * @return {string} Provider display name (e.g., 'Cloudflare R2', 'GitLab Pages')
+ * @return {string} Provider display name (e.g., 'Local Filesystem')
  *
  * @example
  * getName() {

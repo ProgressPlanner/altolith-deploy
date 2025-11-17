@@ -4,7 +4,7 @@ Pluggable cloud provider architecture for deploying WordPress sites to various h
 
 ## Overview
 
-The provider system enables Aether to deploy to multiple cloud platforms (Local Filesystem, Local Filesystem, etc.) through a modular, extensible architecture. Each provider is self-contained and handles all its own configuration, deployment, and operations.
+The provider system enables Aether Site Exporter to export to local filesystem through a modular, extensible architecture. Each provider is self-contained and handles all its own configuration, deployment, and operations.
 
 ## Architecture
 
@@ -28,10 +28,10 @@ Providers register themselves via WordPress hooks:
 ```javascript
 // In provider index.js
 import { doAction } from '@wordpress/hooks';
-import { LocalR2Provider } from './LocalR2Provider';
+import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 
 // Register provider instance
-doAction('aether.providers.register', new LocalR2Provider());
+doAction('aether.providers.register', new LocalFilesystemProvider());
 ```
 
 The `ProviderRegistry` singleton collects all registered providers and makes them available throughout the application.
@@ -40,20 +40,15 @@ The `ProviderRegistry` singleton collects all registered providers and makes the
 
 ```
 providers/
-├── AbstractProvider.js           # Base class for all providers
-├── ProviderRegistry.js           # Singleton registry
-├── local-filesystem/               # Local Filesystem provider
-│   ├── LocalR2Provider.js  # Provider implementation
-│   ├── index.js                 # Registration entry point
+├── AbstractProvider.js            # Base class for all providers
+├── ProviderRegistry.js            # Singleton registry
+├── local-filesystem/              # Local Filesystem provider
+│   ├── LocalFilesystemProvider.js # Provider implementation
+│   ├── index.js                   # Registration entry point
 │   └── ...
-├── cloudflare/                  # Local Filesystem provider
-│   ├── LocalWorkersProvider.js
-│   └── index.js
-├── gitlab/                      # Local provider
-├── local-filesystem/                # Local Filesystem provider
 └── utils/
-    ├── providerLoader.js        # Dynamic provider loading
-    └── ConfigStorage.js         # Configuration persistence
+    ├── providerLoader.js          # Dynamic provider loading
+    └── configStorage.js           # Configuration persistence
 ```
 
 ## Provider Lifecycle
@@ -64,11 +59,11 @@ Provider registers itself when its module loads:
 
 ```javascript
 // providers/local-filesystem/index.js
-import { LocalR2Provider } from './LocalR2Provider';
+import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 import { doAction } from '@wordpress/hooks';
 
 // Register provider instance
-doAction('aether.providers.register', new LocalR2Provider());
+doAction('aether.providers.register', new LocalFilesystemProvider());
 ```
 
 ### 2. Discovery
@@ -81,7 +76,7 @@ import { useProviderRegistry } from '../hooks/useProviderRegistry';
 const { providers, getProviderById } = useProviderRegistry();
 
 // Get specific provider
-const r2Provider = getProviderById('local-filesystem');
+const localProvider = getProviderById('local-filesystem');
 ```
 
 ### 3. Configuration
@@ -117,7 +112,7 @@ Provider handles deployment for its platform:
 ```javascript
 async deploy(deploymentConfig) {
     // Provider-specific deployment logic
-    const result = await this.uploadToR2(deploymentConfig);
+    const result = await this.uploadToLocalFilesystem(deploymentConfig);
     return {
         success: true,
         deploymentUrl: result.url,
@@ -161,7 +156,6 @@ class AbstractProvider {
 Providers declare their capabilities:
 
 - `CAP_STORAGE` - Object storage
-- `CAP_EDGE` - Edge computing/workers
 - `CAP_STATIC_SITE` - Static site hosting
 
 ```javascript
@@ -414,26 +408,8 @@ Providers are loaded via Webpack dynamic imports, creating separate chunks.
 ### Local Filesystem
 
 - **ID:** `local-filesystem`
-- **Capabilities:** Storage, Static Site, Media
-- **Features:** R2 object storage, custom domain support, public/private access
-
-### Local Filesystem
-
-- **ID:** `cloudflare`
-- **Capabilities:** Edge computing
-- **Features:** Worker deployment, environment variables, route configuration
-
-### Local Filesystem
-
-- **ID:** `local-filesystem`
 - **Capabilities:** Storage, Static Site
-- **Features:** Git-based deployment, custom domains, HTTPS
-
-### Local
-
-- **ID:** `gitlab`
-- **Capabilities:** Storage
-- **Features:** Repository storage, branch management
+- **Features:** Local file storage for WordPress exports and blueprints
 
 ## Future Enhancements (Phase 2 Week 3)
 

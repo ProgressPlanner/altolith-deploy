@@ -105,17 +105,6 @@ class ProviderConfigController
 				],
 			]
 		);
-
-		// Get worker script for edge provider.
-		\register_rest_route(
-			$this->getNamespace(),
-			'/providers/(?P<provider_id>[a-z0-9_-]+)/edge/worker-script/(?P<worker_type>[a-z0-9_-]+)',
-			[
-				'methods'             => 'GET',
-				'callback'            => [ $this, 'getWorkerScript' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
-			]
-		);
 	}
 
 	/**
@@ -369,19 +358,4 @@ class ProviderConfigController
 		);
 	}
 
-	/**
-	 * Get worker script content.
-	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response|WP_Error Response with worker script or error.
-	 */
-	public function getWorkerScript(WP_REST_Request $request)
-	{
-		// Worker scripts are not supported for local filesystem exports
-		return new WP_Error(
-			'not_supported',
-			\__('Worker scripts are not supported for local filesystem exports', 'aether-site-exporter'),
-			[ 'status' => 501 ]
-		);
-	}
 }

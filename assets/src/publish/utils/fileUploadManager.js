@@ -6,7 +6,6 @@
  *
  * Used by:
  * - Static site file uploads (useStaticSiteGenerator.js)
- * - Media file uploads (useMediaOffload.js)
  * - wp-content.zip uploads (usePublishController.js)
  *
  * @package

@@ -295,7 +295,7 @@ export default function ConfigurationSummary( {
 						{ usageSummary?.media?.provider &&
 						usageSummary.media.provider !== 'none' ? (
 							__(
-								'Media files are being offloaded to Cloudflare.',
+								'Media files are being offloaded to external storage.',
 								'aether'
 							)
 						) : (
@@ -311,7 +311,7 @@ export default function ConfigurationSummary( {
 									) }
 								</a>{ ' ' }
 								{ __(
-									'to offload images and videos to Cloudflare.',
+									'to offload images and videos to external storage.',
 									'aether'
 								) }
 							</>

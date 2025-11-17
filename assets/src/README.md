@@ -75,9 +75,6 @@ Webpack builds multiple entry points from `assets/src/`:
 - **admin-settings.js** - Settings page UI
 - **publish.js** - Publish workflow modal
 - **provider-local-filesystem.js** - Local Filesystem provider
-- **provider-cloudflare.js** - Local Filesystem provider
-- **provider-local-filesystem.js** - Local Filesystem provider
-- **provider-gitlab.js** - Local provider
 
 ### Code Splitting
 

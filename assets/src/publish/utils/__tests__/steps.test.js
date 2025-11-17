@@ -24,7 +24,6 @@ describe( 'steps', () => {
 			expect( stepIds ).toContain( 'getStaticSiteUrls' );
 			expect( stepIds ).toContain( 'generateBlueprint' );
 			expect( stepIds ).toContain( 'createSiteArchive' );
-			expect( stepIds ).toContain( 'offloadMedia' );
 			expect( stepIds ).toContain( 'uploadStaticSiteFiles' );
 			expect( stepIds ).toContain( 'uploadSiteArchive' );
 		} );
@@ -74,7 +73,7 @@ describe( 'steps', () => {
 		test( 'returns next step ID for valid current step', () => {
 			const nextStep = getNextStep( 'discoverAssets' );
 
-			expect( nextStep ).toBe( 'offloadMedia' );
+			expect( nextStep ).toBe( 'getStaticSiteUrls' );
 		} );
 
 		test( 'returns null for last step', () => {

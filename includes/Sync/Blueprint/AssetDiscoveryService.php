@@ -12,7 +12,7 @@
  *
  * WordPress Playground Compatibility:
  * - Internal WordPress requests work (HTTPClient for same-site requests)
- * - External API calls fail (wordpress.org, cloudflare.com) - use browser fetch()
+ * - External API calls fail (wordpress.org, api.example.com) - use browser fetch()
  *
  * @package Aether\Sync\Blueprint
  */

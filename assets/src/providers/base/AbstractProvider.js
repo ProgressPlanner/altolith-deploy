@@ -471,7 +471,7 @@ export class AbstractProvider {
 	async getDeploymentUrl() {
 		const config = await this.getConfig();
 
-		// Check pages_url first (GitHub, GitLab, CloudflarePages)
+		// Check pages_url first (for providers with hosted pages)
 		if ( config.pages_url ) {
 			return config.pages_url;
 		}
@@ -498,7 +498,7 @@ export class AbstractProvider {
 	 * @return {string} Upload strategy: 'git', 'storage', 'direct', or 'api'
 	 *
 	 * Strategies:
-	 * - 'git': Uses Git-based upload (GitHub Pages, GitLab Pages)
+	 * - 'git': Uses Git-based upload
 	 * - 'storage': Uses object storage upload (R2, S3, Spaces)
 	 * - 'direct': Direct HTTP upload to provider API
 	 * - 'api': Uses provider-specific API for uploads

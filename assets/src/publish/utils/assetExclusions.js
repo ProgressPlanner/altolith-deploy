@@ -8,7 +8,7 @@
  */
 
 /**
- * Image file extensions that are handled by Cloudflare Images.
+ * Image file extensions that are served from external CDNs.
  * These are skipped when found in CSS/JS, but collected when referenced in HTML.
  */
 export const SKIP_EXTENSIONS = [
@@ -57,7 +57,7 @@ export const WEBPACK_MODULE_IDS = [
 export const EXCLUDED_URL_PATTERNS = [
 	'/wp-json/', // WordPress REST API endpoints
 	'/xmlrpc.php', // WordPress XML-RPC endpoint
-	'imagedelivery.net', // Cloudflare Images URLs
+	'imagedelivery.net', // External CDN (imagedelivery.net)
 	'wp-content/plugins/aether/', // Aether plugin assets (admin-only)
 ];
 

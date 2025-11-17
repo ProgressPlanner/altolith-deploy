@@ -83,11 +83,9 @@ if (hasCapability(provider, 'storage')) {
 
 **Contents:**
 - `PROVIDER_IDS` - All provider ID constants
-- `PROVIDER_TYPES` - Provider type constants (edge, storage, static-site, media)
-- `GIT_PROVIDERS` - Array of git-based provider IDs
+- `PROVIDER_TYPES` - Provider type constants (storage, static-site)
 - `STORAGE_PROVIDERS` - Array of storage provider IDs
 - Helper functions:
-  - `isGitProvider(providerId)` - Check if provider uses git
   - `isStorageProvider(providerId)` - Check if provider is storage
   - `hasCapability(provider, capability)` - Check provider capabilities
 
@@ -128,19 +126,17 @@ const progress = calculateOverallProgress(currentStep, stepProgress);
 Provider capability constants and validation functions.
 
 ```javascript
-import { CAP_STORAGE, CAP_EDGE, hasRequiredCapabilities } from '../constants';
+import { CAP_STORAGE, CAP_STATIC_SITE, hasRequiredCapabilities } from '../constants';
 
 // Check if provider meets requirements
-const required = [CAP_STORAGE, CAP_EDGE];
+const required = [CAP_STORAGE, CAP_STATIC_SITE];
 if (hasRequiredCapabilities(provider.capabilities, required)) {
-    // Provider supports both storage and edge
+    // Provider supports both storage and static site hosting
 }
 ```
 
 **Contents:**
 - `CAP_STORAGE` - Storage capability constant
-- `CAP_EDGE` - Edge computing capability
-- `CAP_MEDIA` - Media offload capability
 - `CAP_STATIC_SITE` - Static site hosting capability
 - Helper functions:
   - `hasRequiredCapabilities(providerCaps, requiredCaps)` - Validate capabilities

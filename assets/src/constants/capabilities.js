@@ -20,28 +20,10 @@
 export const CAP_STORAGE = 'storage';
 
 /**
- * Edge computing capability - provider supports edge/workers
- * @constant {string}
- */
-export const CAP_EDGE = 'edge';
-
-/**
- * Media hosting capability - provider can host media files
- * @constant {string}
- */
-export const CAP_MEDIA = 'media';
-
-/**
  * Static site hosting capability - provider can host static sites
  * @constant {string}
  */
 export const CAP_STATIC_SITE = 'static-site';
-
-/**
- * Git deployment capability - provider uses Git for deployment
- * @constant {string}
- */
-export const CAP_GIT = 'git';
 
 /**
  * CDN capability - provider offers CDN distribution
@@ -110,33 +92,13 @@ export const STATIC_SITE_CAPABILITIES = [
 ];
 
 /**
- * Capabilities for a media host
- * @constant {string[]}
- */
-export const MEDIA_HOST_CAPABILITIES = [
-	CAP_STORAGE,
-	CAP_MEDIA,
-	CAP_CDN,
-	CAP_IMAGE_OPTIMIZATION,
-];
-
-/**
- * Capabilities for an edge computing provider
- * @constant {string[]}
- */
-export const EDGE_CAPABILITIES = [ CAP_EDGE, CAP_CACHE, CAP_CDN ];
-
-/**
  * Capability Labels
  *
  * Human-readable labels for each capability.
  */
 export const CAPABILITY_LABELS = {
 	[ CAP_STORAGE ]: 'Storage',
-	[ CAP_EDGE ]: 'Edge Computing',
-	[ CAP_MEDIA ]: 'Media Hosting',
 	[ CAP_STATIC_SITE ]: 'Static Site Hosting',
-	[ CAP_GIT ]: 'Git Deployment',
 	[ CAP_CDN ]: 'CDN',
 	[ CAP_ANALYTICS ]: 'Analytics',
 	[ CAP_CUSTOM_DOMAIN ]: 'Custom Domain',
@@ -153,11 +115,8 @@ export const CAPABILITY_LABELS = {
  */
 export const CAPABILITY_DESCRIPTIONS = {
 	[ CAP_STORAGE ]: 'Store and retrieve files (blueprints, archives, assets)',
-	[ CAP_EDGE ]: 'Run code at the edge for low-latency responses',
-	[ CAP_MEDIA ]: 'Host and deliver media files (images, videos, documents)',
 	[ CAP_STATIC_SITE ]:
 		'Host static HTML/CSS/JS sites with global distribution',
-	[ CAP_GIT ]: 'Deploy using Git version control',
 	[ CAP_CDN ]: 'Content delivery network for fast global access',
 	[ CAP_ANALYTICS ]: 'Track usage, visitors, and performance metrics',
 	[ CAP_CUSTOM_DOMAIN ]: 'Use your own domain name',
@@ -187,12 +146,6 @@ export const STATIC_SITE_REQUIRED_CAPABILITIES = [
 	CAP_STORAGE,
 	CAP_STATIC_SITE,
 ];
-
-/**
- * Required capabilities for media offload
- * @constant {string[]}
- */
-export const MEDIA_REQUIRED_CAPABILITIES = [ CAP_STORAGE, CAP_MEDIA ];
 
 /**
  * Helper Functions
@@ -257,19 +210,6 @@ export function canHostStaticSite( providerCapabilities ) {
 	return hasRequiredCapabilities(
 		providerCapabilities,
 		STATIC_SITE_REQUIRED_CAPABILITIES
-	);
-}
-
-/**
- * Check if provider can handle media offload
- *
- * @param {string[]} providerCapabilities - Capabilities the provider supports
- * @return {boolean} True if provider can handle media
- */
-export function canOffloadMedia( providerCapabilities ) {
-	return hasRequiredCapabilities(
-		providerCapabilities,
-		MEDIA_REQUIRED_CAPABILITIES
 	);
 }
 

@@ -19,7 +19,6 @@ import {
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
-import ProviderActions from './ProviderActions';
 import { colors, spacing, fontSize, createFlexStyle } from '../utils/styles';
 
 /**
@@ -384,19 +383,6 @@ export function ProviderSettings( { provider, onSave } ) {
 
 				{ fields.map( renderField ) }
 
-				{ /* Provider actions (Test Connection & Deploy Worker) */ }
-				{ provider.requiresWorker && (
-					<ProviderActions
-						providerId={ provider.getId() }
-						requiresWorker={ true }
-						workerType={ provider.workerType || 'r2' }
-						currentConfig={ config }
-						onWorkerDeployed={ ( workerUrl ) => {
-							handleFieldChange( 'workerEndpoint', workerUrl );
-						} }
-					/>
-				) }
-
 				{ /* Form actions */ }
 				{ fields.length > 0 && (
 					<div
@@ -419,50 +405,48 @@ export function ProviderSettings( { provider, onSave } ) {
 						</Button>
 
 						{ /* Optional: Test connection button */ }
-						{ provider.testConnection &&
-							! provider.requiresWorker && (
-								<Button
-									className="aether-provider-settings__test-button"
-									variant="secondary"
-									disabled={
-										isSaving ||
-										Object.keys( errors ).length > 0
-									}
-									onClick={ async () => {
-										try {
-											const result =
-												await provider.testConnection(
-													config
-												);
-											if ( result.success ) {
-												setSaveSuccess( true );
-												setSaveError( null );
-											} else {
-												setSaveError(
-													result.error ||
-														__(
-															'Connection test failed',
-															'aether'
-														)
-												);
-											}
-										} catch ( error ) {
+						{ provider.testConnection && (
+							<Button
+								className="aether-provider-settings__test-button"
+								variant="secondary"
+								disabled={
+									isSaving || Object.keys( errors ).length > 0
+								}
+								onClick={ async () => {
+									try {
+										const result =
+											await provider.testConnection(
+												config
+											);
+										if ( result.success ) {
+											setSaveSuccess( true );
+											setSaveError( null );
+										} else {
 											setSaveError(
-												error.message ||
+												result.error ||
 													__(
 														'Connection test failed',
 														'aether'
 													)
 											);
 										}
-									} }
-								>
-									{ __(
-										'Test Connection',
-										'aether-site-exporter'
-									) }
-								</Button>
-							) }
+									} catch ( error ) {
+										setSaveError(
+											error.message ||
+												__(
+													'Connection test failed',
+													'aether'
+												)
+										);
+									}
+								} }
+							>
+								{ __(
+									'Test Connection',
+									'aether-site-exporter'
+								) }
+							</Button>
+						) }
 					</div>
 				) }
 			</form>

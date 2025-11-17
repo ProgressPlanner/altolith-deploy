@@ -72,7 +72,7 @@ class ProviderRegistry {
 	/**
 	 * Register a provider class.
 	 *
-	 * @param {string}   providerId    Provider ID (e.g., 'cloudflare-r2').
+	 * @param {string}   providerId    Provider ID (e.g., 'local-filesystem').
 	 * @param {Function} providerClass Provider class constructor.
 	 * @return {ProviderRegistry} This instance for chaining
 	 */

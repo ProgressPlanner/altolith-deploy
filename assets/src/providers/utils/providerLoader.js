@@ -342,16 +342,16 @@ function loadProviderScript( providerId, attempt = 1, maxAttempts = 3 ) {
  *
  * @example
  * // Load with defaults (throws on error)
- * await loadProvider('cloudflare-r2');
+ * await loadProvider('local-filesystem');
  *
  * // Load without throwing
- * const success = await loadProvider('cloudflare-r2', { throwOnError: false });
+ * const success = await loadProvider('local-filesystem', { throwOnError: false });
  * if (!success) {
  *     debugError('Failed to load provider');
  * }
  *
  * // Load with custom retry attempts
- * await loadProvider('cloudflare-r2', { maxAttempts: 5 });
+ * await loadProvider('local-filesystem', { maxAttempts: 5 });
  */
 export async function loadProvider( providerId, options = {} ) {
 	const { maxAttempts = 3, throwOnError = true } = options;
@@ -404,7 +404,7 @@ export async function loadProvider( providerId, options = {} ) {
  * @property {Object.<string, Error>} errors                       - Errors keyed by provider ID
  *
  * @example
- * const results = await loadProviders(['cloudflare-r2', 'gitlab']);
+ * const results = await loadProviders(['local-filesystem']);
  * debug(`Loaded: ${results.loaded.length}, Failed: ${results.failed.length}`);
  *
  * if (results.failed.length > 0) {
@@ -485,13 +485,7 @@ export async function loadProviders( providerIds, options = {} ) {
  */
 export async function loadAllProviders( options = {} ) {
 	// Default provider IDs
-	let allProviderIds = [
-		'local-filesystem',
-		'cloudflare-r2',
-		'cloudflare',
-		'gitlab',
-		'gitlab-pages',
-	];
+	let allProviderIds = [ 'local-filesystem' ];
 
 	// Allow plugins to extend provider IDs via filter
 	// Use dynamic import to avoid circular dependencies and reduce bundle size

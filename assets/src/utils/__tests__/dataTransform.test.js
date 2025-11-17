@@ -12,10 +12,10 @@ describe( 'flattenSettings', () => {
 	test( 'should flatten edge provider configuration', () => {
 		const settings = {
 			provider_types: {
-				edge: 'cloudflare',
+				edge: 'local-filesystem',
 			},
 			providers: {
-				cloudflare: {
+				localStorage: {
 					account_id: 'test-account',
 					api_token: 'test-token',
 				},
@@ -24,7 +24,7 @@ describe( 'flattenSettings', () => {
 
 		const flattened = flattenSettings( settings );
 
-		expect( flattened.edgeProvider ).toBe( 'cloudflare' );
+		expect( flattened.edgeProvider ).toBe( 'local-filesystem' );
 		expect( flattened.account_id ).toBe( 'test-account' );
 		expect( flattened.api_token ).toBe( 'test-token' );
 	} );
@@ -32,10 +32,10 @@ describe( 'flattenSettings', () => {
 	test( 'should skip encrypted values', () => {
 		const settings = {
 			provider_types: {
-				edge: 'cloudflare',
+				edge: 'local-filesystem',
 			},
 			providers: {
-				cloudflare: {
+				localStorage: {
 					api_token: 'encrypted:secret-value',
 				},
 			},
@@ -100,18 +100,20 @@ describe( 'flattenSettings', () => {
 describe( 'unflattenSettings', () => {
 	test( 'should unflatten edge provider configuration', () => {
 		const flattened = {
-			edgeProvider: 'cloudflare',
+			edgeProvider: 'local-filesystem',
 			account_id: 'test-account',
 			api_token: 'test-token',
 		};
 
 		const settings = unflattenSettings( flattened );
 
-		expect( settings.provider_types.edge ).toBe( 'cloudflare' );
-		expect( settings.providers.cloudflare.account_id ).toBe(
+		expect( settings.provider_types.edge ).toBe( 'local-filesystem' );
+		expect( settings.providers.localStorage.account_id ).toBe(
 			'test-account'
 		);
-		expect( settings.providers.cloudflare.api_token ).toBe( 'test-token' );
+		expect( settings.providers.localStorage.api_token ).toBe(
+			'test-token'
+		);
 	} );
 
 	test( 'should unflatten storage provider configuration', () => {
@@ -180,10 +182,10 @@ describe( 'unflattenSettings', () => {
 	test( 'should round-trip flatten and unflatten', () => {
 		const original = {
 			provider_types: {
-				edge: 'cloudflare',
+				edge: 'local-filesystem',
 			},
 			providers: {
-				cloudflare: {
+				localStorage: {
 					account_id: 'test-account',
 				},
 				'local-filesystem': {
@@ -202,8 +204,8 @@ describe( 'unflattenSettings', () => {
 		expect( unflattened.provider_types.edge ).toBe(
 			original.provider_types.edge
 		);
-		expect( unflattened.providers.cloudflare.account_id ).toBe(
-			original.providers.cloudflare.account_id
+		expect( unflattened.providers.localStorage.account_id ).toBe(
+			original.providers.localStorage.account_id
 		);
 		expect( unflattened.activeProvider ).toBe( original.activeProvider );
 		expect( unflattened.providers[ 'local-filesystem' ].bucket_name ).toBe(

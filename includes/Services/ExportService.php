@@ -255,7 +255,7 @@ class ExportService
 		}
 
 		// 2. Add uploads directory (user media files).
-		// Skips files already offloaded to external storage (Cloudflare Images/R2).
+		// Skips files already offloaded to external storage (external storage).
 		// This prevents duplicate uploads and reduces zip size.
 		$uploadsDir = WP_CONTENT_DIR . '/uploads';
 		if (\is_dir($uploadsDir)) {
@@ -435,7 +435,7 @@ class ExportService
 		$fullPath = $realFullPath;
 
 		// Detect if we're processing the uploads directory.
-		// This determines whether to skip offloaded files (Cloudflare Images/R2).
+		// This determines whether to skip offloaded files (external storage).
 		$isUploadsDir = false !== \strpos($zipPath, 'wp-content/uploads');
 
 		// Detect if we're processing plugin/theme/mu-plugin directories.
@@ -529,7 +529,7 @@ class ExportService
 				// Handle regular files.
 
 				// Skip files that have been offloaded to external storage.
-				// Offloaded files are already on Cloudflare Images/R2, no need to include in zip.
+				// Offloaded files are already on external storage, no need to include in zip.
 				if ($isUploadsDir && ! empty($offloadedFiles)) {
 					// Normalize file path before comparison to handle symlinks and path variations.
 					$normalizedFilePath = \realpath($filePath);

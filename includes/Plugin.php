@@ -300,7 +300,7 @@ class Plugin
 		// Map of script handles to their required chunks
 		// Named chunks (common, vendor, etc.) are stable, numbered chunks need discovery
 		$chunkMap = [
-			'aether-export' => [ 'common', 'vendor', 'isomorphic-git-vendor' ],
+			'aether-export' => [ 'common', 'vendor' ],
 			'aether-admin-settings' => [ 'common', 'vendor' ],
 		];
 

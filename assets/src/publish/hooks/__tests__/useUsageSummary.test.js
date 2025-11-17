@@ -24,7 +24,7 @@ describe( 'useUsageSummary', () => {
 				provider_types: {
 					storage: 'local-filesystem',
 					static_site: 'local-filesystem',
-					mediaImages: 'cloudflare-images',
+					mediaImages: 'local-filesystem',
 				},
 				staticSite: {
 					enabled: true,
@@ -39,10 +39,10 @@ describe( 'useUsageSummary', () => {
 		} );
 
 		expect( result.current.blueprint.provider ).toBe( 'local-filesystem' );
-		expect( result.current.blueprint.label ).toBe( 'Cloudflare R2' );
+		expect( result.current.blueprint.label ).toBe( 'Local Filesystem' );
 		expect( result.current.staticSite.provider ).toBe( 'local-filesystem' );
-		expect( result.current.staticSite.label ).toBe( 'GitLab Pages' );
-		expect( result.current.media.provider ).toBe( 'cloudflare-images' );
+		expect( result.current.staticSite.label ).toBe( 'Local Filesystem' );
+		expect( result.current.media.provider ).toBe( 'local-filesystem' );
 		expect( result.current.staticEnabled ).toBe( true );
 	} );
 
@@ -93,7 +93,7 @@ describe( 'useUsageSummary', () => {
 			value: {
 				provider_types: {
 					storage: 'local-filesystem',
-					media: 'cloudflare-images',
+					media: 'local-filesystem',
 				},
 			},
 		} );
@@ -104,7 +104,7 @@ describe( 'useUsageSummary', () => {
 			expect( result.current.loading ).toBe( false );
 		} );
 
-		expect( result.current.media.provider ).toBe( 'cloudflare-images' );
+		expect( result.current.media.provider ).toBe( 'local-filesystem' );
 	} );
 
 	it( 'should handle static site disabled state', async () => {

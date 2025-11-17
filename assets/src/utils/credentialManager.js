@@ -25,7 +25,7 @@ const CACHE_EXPIRY_MS = 5 * 60 * 1000;
 /**
  * Fetch credentials for a provider.
  *
- * @param {string} providerId Provider ID (e.g., 'cloudflare-r2').
+ * @param {string} providerId Provider ID (e.g., 'local-filesystem').
  * @return {Promise<Object>} Credentials object.
  */
 export async function getCredentials( providerId ) {

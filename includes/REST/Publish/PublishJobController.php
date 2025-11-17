@@ -360,7 +360,7 @@ class PublishJobController
 			$decryptedConfig = $this->decryptSensitiveFields($providerConfig);
 
 			// Check in priority order (matching JavaScript getDeploymentUrl()):
-			// 1. pages_url (GitHub Pages, GitLab Pages)
+			// 1. pages_url (hosted pages)
 			if (!empty($decryptedConfig['pages_url'])) {
 				$baseUrl = $decryptedConfig['pages_url'];
 			} elseif (!empty($decryptedConfig['custom_domain'])) { // 2. custom_domain (custom domain for R2)

@@ -69,32 +69,11 @@ export const ENDPOINTS = {
 	},
 
 	/**
-	 * Media offload endpoints
-	 */
-	MEDIA: {
-		OFFLOAD: `${ API_BASE_PATH }/media/offload`,
-		STATUS: `${ API_BASE_PATH }/media/status`,
-		DELETE: `${ API_BASE_PATH }/media/delete`,
-		UNPROCESSED: `${ API_BASE_PATH }/media/unprocessed`,
-		UPLOAD: `${ API_BASE_PATH }/media/upload`,
-	},
-
-	/**
 	 * Blueprint endpoints
 	 * Note: Blueprint generation is now handled client-side via useBlueprintGenerator hook
 	 */
 	BLUEPRINT: {
 		GET: `${ API_BASE_PATH }/blueprint`,
-	},
-
-	/**
-	 * Worker deployment endpoints
-	 */
-	WORKERS: {
-		DEPLOY: `${ API_BASE_PATH }/workers/deploy`,
-		STATUS: `${ API_BASE_PATH }/workers/status`,
-		DELETE: `${ API_BASE_PATH }/workers/delete`,
-		LIST: `${ API_BASE_PATH }/workers/list`,
 	},
 
 	/**
@@ -113,14 +92,6 @@ export const ENDPOINTS = {
 		GET: `${ API_BASE_PATH }/config`,
 		UPDATE: `${ API_BASE_PATH }/config`,
 		RESET: `${ API_BASE_PATH }/config/reset`,
-	},
-
-	/**
-	 * Git provider endpoints
-	 */
-	GIT: {
-		CONFIG: `${ API_BASE_PATH }/git-config`,
-		TEST: `${ API_BASE_PATH }/git-test`,
 	},
 
 	/**

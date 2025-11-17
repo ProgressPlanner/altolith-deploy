@@ -183,7 +183,7 @@ export default function HowItWorks() {
 								) }
 							</strong>{ ' ' }
 							{ __(
-								'Uploads blueprint and static files to your selected providers (R2, GitHub, or GitLab).',
+								'Uploads blueprint and static files to your configured storage provider.',
 								'aether'
 							) }
 						</li>
@@ -238,7 +238,7 @@ export default function HowItWorks() {
 						style={ benefitParagraphStyle }
 					>
 						{ __(
-							'Your WordPress site is packaged as a Playground blueprint - a complete, portable version that can run in WordPress Playground. This blueprint is stored in your selected provider (R2, GitHub, or GitLab) and can be accessed via the /wp-admin URL of your published site.',
+							'Your WordPress site is packaged as a Playground blueprint - a complete, portable version that can run in WordPress Playground. This blueprint is stored in your configured storage provider and can be accessed via the /wp-admin URL of your published site.',
 							'aether'
 						) }
 					</p>
@@ -262,7 +262,7 @@ export default function HowItWorks() {
 						style={ benefitParagraphStyle }
 					>
 						{ __(
-							'When static site generation is enabled, Aether crawls your site, generates HTML for all pages, collects assets, and deploys everything to GitHub Pages or GitLab Pages. Visitors see the fast, secure static version while you maintain full WordPress editing capabilities.',
+							'When static site generation is enabled, Aether crawls your site, generates HTML for all pages, collects assets, and deploys everything to your configured hosting provider. Visitors see the fast, secure static version while you maintain full WordPress editing capabilities.',
 							'aether'
 						) }
 					</p>

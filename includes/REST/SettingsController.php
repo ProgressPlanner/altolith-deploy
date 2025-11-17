@@ -188,8 +188,8 @@ class SettingsController
 		$settings = \get_option('aether_site_exporter_settings', []);
 
 		// If updating providers, merge with existing providers to preserve other provider configs
-		// This ensures that updating one provider (e.g., cloudflare-r2) doesn't remove
-		// configuration from other providers (e.g., cloudflare edge provider).
+		// This ensures that updating one provider doesn't remove
+		// configuration from other providers.
 		if ($key === 'providers' && \is_array($value)) {
 			// Get existing providers to merge with
 			$existingProviders = $settings['providers'] ?? [];

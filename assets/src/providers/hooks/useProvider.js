@@ -12,7 +12,7 @@ import { useProviderContext } from '../../hooks/useProviderContext';
 /**
  * Get a provider instance by ID.
  *
- * @param {string} providerId Provider ID (e.g., 'cloudflare-r2').
+ * @param {string} providerId Provider ID (e.g., 'local-filesystem').
  * @param {Object} config     Optional configuration to pass to provider.
  * @return {{provider: Object|null, isLoading: boolean, error: string|null}} Provider instance, loading state, and error
  */

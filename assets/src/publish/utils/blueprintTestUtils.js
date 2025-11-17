@@ -10,35 +10,23 @@
  * Default credentials fixture for testing.
  */
 export const mockCredentials = {
-	cloudflareR2: {
-		public_url: 'https://r2.example.com',
-		worker_endpoint: 'https://worker.example.com',
-		custom_domain: 'https://example.com',
-		bucket_name: 'test-bucket',
+	localStorage: {
+		public_url: 'https://example.com',
+		worker_endpoint: '',
+		custom_domain: '',
+		bucket_name: '',
 	},
-	cloudflareR2WithCustomDomain: {
+	localStorageWithCustomDomain: {
 		public_url: '',
 		worker_endpoint: '',
 		custom_domain: 'https://s12y.org',
-		bucket_name: 'test-bucket',
+		bucket_name: '',
 	},
-	cloudflareR2WithPublicUrl: {
-		public_url: 'https://r2.s12y.org',
-		worker_endpoint: 'https://worker.example.com',
-		custom_domain: '',
-		bucket_name: 'test-bucket',
-	},
-	cloudflareR2WithWorkerOnly: {
-		public_url: '',
-		worker_endpoint: 'https://worker.example.com',
-		custom_domain: '',
-		bucket_name: 'test-bucket',
-	},
-	cloudflareR2NoEndpoints: {
-		public_url: '',
+	localStorageWithPublicUrl: {
+		public_url: 'https://local.s12y.org',
 		worker_endpoint: '',
 		custom_domain: '',
-		bucket_name: 'test-bucket',
+		bucket_name: '',
 	},
 };
 

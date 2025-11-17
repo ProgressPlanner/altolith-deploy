@@ -52,25 +52,11 @@ export const PROVIDER_TYPES = {
  */
 
 /**
- * Git-based providers
- * These providers use Git for deployment
- * @constant {string[]}
- */
-export const GIT_PROVIDERS = [];
-
-/**
  * Storage-based providers (local filesystem, etc.)
  * These providers use storage for static sites
  * @constant {string[]}
  */
 export const STORAGE_PROVIDERS = [ PROVIDER_IDS.LOCAL_FILESYSTEM ];
-
-/**
- * Edge computing providers
- * These providers support edge computing/workers
- * @constant {string[]}
- */
-export const EDGE_PROVIDERS = [];
 
 /**
  * Static site hosting providers
@@ -82,40 +68,13 @@ export const STATIC_SITE_PROVIDERS = [ PROVIDER_IDS.LOCAL_FILESYSTEM ];
 /**
  * Provider Configuration Keys
  *
- * Standard configuration field names used across providers.
+ * Standard configuration field names for local filesystem provider.
  */
 export const PROVIDER_CONFIG_KEYS = {
-	// Authentication
-	API_KEY: 'api_key',
-	API_TOKEN: 'api_token',
-	ACCESS_KEY_ID: 'access_key_id',
-	SECRET_ACCESS_KEY: 'secret_access_key',
-	PERSONAL_ACCESS_TOKEN: 'personal_access_token',
-
-	// Account/Project
-	ACCOUNT_ID: 'account_id',
-	PROJECT_ID: 'project_id',
-	NAMESPACE: 'namespace',
-	PROJECT_PATH: 'project_path',
-
-	// Storage
-	BUCKET_NAME: 'bucket_name',
-	REGION: 'region',
-	ENDPOINT: 'endpoint',
-	WORKER_ENDPOINT: 'worker_endpoint',
-
 	// URLs
+	ENDPOINT: 'endpoint',
 	CUSTOM_DOMAIN: 'custom_domain',
 	PUBLIC_URL: 'public_url',
-	PAGES_URL: 'pages_url',
-
-	// Git
-	BRANCH: 'branch',
-	REPOSITORY: 'repository',
-
-	// Features
-	PUBLIC_ACCESS: 'public_access',
-	PAGES_ENABLED: 'pages_enabled',
 };
 
 /**
@@ -174,12 +133,6 @@ export const PROVIDER_STATUS = {
  */
 export const PROVIDER_INTERNAL_KEYS = {
 	/**
-	 * Edge computing provider key
-	 * @constant {string}
-	 */
-	EDGE_PROVIDER: 'edgeProvider',
-
-	/**
 	 * Storage provider key
 	 * @constant {string}
 	 */
@@ -190,30 +143,6 @@ export const PROVIDER_INTERNAL_KEYS = {
 	 * @constant {string}
 	 */
 	STATIC_SITE_PROVIDER: 'staticSiteProvider',
-
-	/**
-	 * Media provider key
-	 * @constant {string}
-	 */
-	MEDIA_PROVIDER: 'mediaProvider',
-
-	/**
-	 * Image provider key (legacy)
-	 * @constant {string}
-	 */
-	IMAGE_PROVIDER: 'imageProvider',
-
-	/**
-	 * Video provider key (legacy)
-	 * @constant {string}
-	 */
-	VIDEO_PROVIDER: 'videoProvider',
-
-	/**
-	 * Other files provider key (legacy)
-	 * @constant {string}
-	 */
-	OTHER_FILES_PROVIDER: 'otherFilesProvider',
 };
 
 /**
@@ -276,16 +205,6 @@ export const PROVIDER_ERROR_CODES = {
  */
 
 /**
- * Check if provider is a Git provider
- *
- * @param {string} providerId - Provider ID to check
- * @return {boolean} True if provider uses Git
- */
-export function isGitProvider( providerId ) {
-	return GIT_PROVIDERS.includes( providerId );
-}
-
-/**
  * Check if provider is a storage provider
  *
  * @param {string} providerId - Provider ID to check
@@ -293,16 +212,6 @@ export function isGitProvider( providerId ) {
  */
 export function isStorageProvider( providerId ) {
 	return STORAGE_PROVIDERS.includes( providerId );
-}
-
-/**
- * Check if provider is an edge provider
- *
- * @param {string} providerId - Provider ID to check
- * @return {boolean} True if provider supports edge computing
- */
-export function isEdgeProvider( providerId ) {
-	return EDGE_PROVIDERS.includes( providerId );
 }
 
 /**

@@ -120,15 +120,15 @@ export function usePublishController( publishState ) {
 				}
 
 				// DECISION POINT: Git vs Storage provider upload.
-				// Priority: Git upload takes precedence if configured (GitHub/GitLab Pages workflow).
-				// Fallback: Storage provider upload (R2/Spaces via Worker API).
+				// Priority: Git upload takes precedence if configured.
+				// Fallback: Storage provider upload via API.
 				if (
 					uploadStrategy === 'git' &&
 					gitConfig &&
 					gitConfig.success &&
 					gitConfig.config
 				) {
-					// METHOD 1: Git-based upload (GitHub Pages / GitLab Pages)
+					// METHOD 1: Git-based upload
 					// Create simple manifest with wp-content.zip for Git upload.
 					// eslint-disable-next-line no-unused-vars
 					const _manifest = [

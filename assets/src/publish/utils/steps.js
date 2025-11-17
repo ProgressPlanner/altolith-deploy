@@ -25,17 +25,6 @@ export const PUBLISH_STEPS = [
 		),
 	},
 	{
-		id: 'offloadMedia',
-		label: __( 'Offload Media', 'aether-site-exporter' ),
-		supportsProgress: true,
-		phase: 'upload',
-		waitingMessage: __( 'Offloading media to R2…', 'aether-site-exporter' ),
-		completionMessage: __(
-			'Media offloaded successfully',
-			'aether-site-exporter'
-		),
-	},
-	{
 		id: 'getStaticSiteUrls',
 		label: __( 'Get Static Site URLs', 'aether-site-exporter' ),
 		supportsProgress: false,

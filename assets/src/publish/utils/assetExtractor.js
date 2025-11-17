@@ -719,7 +719,7 @@ function shouldCollectAsset( url, siteUrl, source = 'css' ) {
 		return true;
 	}
 
-	// FILTER 1 & 2: Skip excluded URL patterns (Cloudflare Images, Aether plugin, REST API, etc.).
+	// FILTER 1 & 2: Skip excluded URL patterns (external CDNs, Aether plugin, REST API, etc.).
 	// Only applies to non-essential assets (essential assets already returned above).
 	if ( isExcludedUrl( url ) ) {
 		return false;
@@ -739,7 +739,7 @@ function shouldCollectAsset( url, siteUrl, source = 'css' ) {
 	}
 
 	// FILTER 4: Skip image files when found in CSS/JS (handled by CF Images).
-	// Images are handled by Cloudflare Images, not stored in static site.
+	// Images may be hosted on external CDNs, not stored in static site.
 	if ( isSkippedExtension( extension ) ) {
 		return false;
 	}

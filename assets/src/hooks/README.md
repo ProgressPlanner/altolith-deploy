@@ -106,7 +106,7 @@ const {
 const storageProviders = getProvidersByCapability('storage');
 
 // Get specific provider
-const r2Provider = getProviderById('local-filesystem');
+const localProvider = getProviderById('local-filesystem');
 ```
 
 ### useProvider
