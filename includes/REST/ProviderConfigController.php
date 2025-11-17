@@ -34,6 +34,15 @@ class ProviderConfigController
 	use EncryptionHelper;
 
 	/**
+	 * Maximum JSON decode depth for API responses.
+	 *
+	 * Prevents DoS attacks via deeply nested JSON while supporting complex API responses.
+	 *
+	 * @var int
+	 */
+	private const JSON_DECODE_MAX_DEPTH = 10;
+
+	/**
 	 * Register REST routes.
 	 *
 	 * @return void
@@ -400,8 +409,9 @@ class ProviderConfigController
 			$body       = \wp_remote_retrieve_body($response);
 
 			// Security: Use json_decode with error handling and depth limit
+			// Increased depth limit to support complex API responses while still preventing DoS attacks
 			try {
-				$data = \json_decode($body, true, 5, \JSON_THROW_ON_ERROR);
+				$data = \json_decode($body, true, self::JSON_DECODE_MAX_DEPTH, \JSON_THROW_ON_ERROR);
 			} catch (\JsonException $e) {
 				return new WP_Error(
 					'json_decode_error',
@@ -511,9 +521,14 @@ class ProviderConfigController
 				$contentType = \wp_remote_retrieve_header($response, 'content-type');
 				$contentTypeStr = \is_array($contentType) ? \implode(', ', $contentType) : (string) $contentType;
 				if ($contentTypeStr && \strpos($contentTypeStr, 'application/json') !== false) {
-					$data = \json_decode($body, true);
-					if (isset($data['error'])) {
-						$errorMessage = $data['error'];
+					// Parse JSON with depth limit to prevent DoS attacks
+					try {
+						$data = \json_decode($body, true, self::JSON_DECODE_MAX_DEPTH, \JSON_THROW_ON_ERROR);
+						if (\is_array($data) && isset($data['error'])) {
+							$errorMessage = $data['error'];
+						}
+					} catch (\JsonException $e) {
+						// If JSON parsing fails, use default error message
 					}
 				}
 
@@ -574,7 +589,19 @@ class ProviderConfigController
 		$scriptFile = $workerScripts[ $workerType ];
 		$scriptPath = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/workers/' . $scriptFile;
 
-		if (! \file_exists($scriptPath)) {
+		// Security: Validate script path using realpath() to prevent path traversal via symlinks
+		$realPath = \realpath($scriptPath);
+		$allowedDir = \realpath(AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/workers/');
+
+		if (false === $realPath || false === $allowedDir || 0 !== \strpos($realPath, $allowedDir)) {
+			return new WP_Error(
+				'invalid_path',
+				\__('Invalid script path', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		if (! \file_exists($realPath)) {
 			return new WP_Error(
 				'worker_script_not_found',
 				\sprintf(\__('Worker script not found: %s', 'aether-site-exporter'), $scriptFile),
@@ -582,7 +609,7 @@ class ProviderConfigController
 			);
 		}
 
-		$scriptContent = \file_get_contents($scriptPath);
+		$scriptContent = \file_get_contents($realPath);
 
 		if ($scriptContent === false) {
 			return new WP_Error(
