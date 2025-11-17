@@ -207,8 +207,9 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 	const normalizedSiteUrl = forceHttps( siteUrl );
 
 	// Treat empty string as null.
+	// Do NOT force HTTPS on static URL - preserve the protocol the user configured
 	const normalizedStaticUrl =
-		staticUrl && staticUrl.trim() ? forceHttps( staticUrl ) : null;
+		staticUrl && staticUrl.trim() ? staticUrl.trim() : null;
 
 	// Detect if static URL is a public URL (direct R2 access) vs worker endpoint.
 	// Public URLs need /static/ prefix, worker endpoints add it internally.
@@ -405,27 +406,17 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 
 		// Apply static URL base if configured.
 		if ( normalizedStaticUrl ) {
-			// Use explicit HTTPS URLs for security, compatibility, and SEO.
-			// Protocol-relative URLs are deprecated (Paul Irish 2014) and cause issues:
-			// - Security: can load over HTTP (man-in-the-middle attacks)
-			// - Breaks with file:// protocol (local testing)
-			// - Email/PDF generation failures
-			// - SEO tools flag them as issues
+			// Preserve the protocol from the configured static URL
+			// Users can choose HTTP or HTTPS based on their deployment needs
 			try {
 				const staticUrlObj = new URL( normalizedStaticUrl );
-				// Always use HTTPS for static site URLs
-				staticUrlObj.protocol = 'https:';
 				// Preserve the base path from static URL
 				// Remove trailing slash from base, then append staticPath
 				const basePath = staticUrlObj.pathname.replace( /\/$/, '' );
 				return staticUrlObj.origin + basePath + staticPath;
 			} catch {
-				// If URL parsing fails, fall back to full URL with HTTPS.
-				const httpsStaticUrl = normalizedStaticUrl.replace(
-					/^http:/,
-					'https:'
-				);
-				return httpsStaticUrl.replace( /\/$/, '' ) + staticPath;
+				// If URL parsing fails, fall back to simple concatenation
+				return normalizedStaticUrl.replace( /\/$/, '' ) + staticPath;
 			}
 		}
 
