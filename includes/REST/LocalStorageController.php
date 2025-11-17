@@ -246,6 +246,18 @@ class LocalStorageController
 
 		// NOW safe to create directories
 		if (!\is_dir($uploadDir)) {
+			// Check if a FILE exists where we need a DIRECTORY (legacy bug cleanup)
+			// This can happen if paths with trailing slashes were uploaded before the fix
+			if (\file_exists($uploadDir) && \is_file($uploadDir)) {
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Removing legacy blocking file to create directory: %s',
+						$uploadDir
+					));
+				}
+				@\unlink($uploadDir);
+			}
+
 			if (!\wp_mkdir_p($uploadDir)) {
 				return new WP_Error(
 					'directory_creation_failed',
@@ -256,6 +268,18 @@ class LocalStorageController
 		}
 
 		if (!\is_dir($fileDir)) {
+			// Check if a FILE exists where we need a DIRECTORY (legacy bug cleanup)
+			// This can happen if paths with trailing slashes were uploaded before the fix
+			if (\file_exists($fileDir) && \is_file($fileDir)) {
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Removing legacy blocking file to create directory: %s',
+						$fileDir
+					));
+				}
+				@\unlink($fileDir);
+			}
+
 			if (!\wp_mkdir_p($fileDir)) {
 				return new WP_Error(
 					'directory_creation_failed',
