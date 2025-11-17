@@ -129,10 +129,19 @@ class WPOrgCheckController extends WP_REST_Controller
 		$statusCode = \wp_remote_retrieve_response_code($response);
 		$body       = \wp_remote_retrieve_body($response);
 
-		// Parse JSON response
-		$data = \json_decode($body, true);
+		// Parse JSON response with depth limit to prevent DoS attacks
+		try {
+			$data = \json_decode($body, true, 10, \JSON_THROW_ON_ERROR);
+		} catch (\JsonException $e) {
+			return new WP_Error(
+				'wporg_api_invalid_json',
+				\sprintf('Invalid JSON response from WordPress.org API: %s', $e->getMessage()),
+				[ 'status' => 500 ]
+			);
+		}
 
-		if (null === $data) {
+		// Validate decoded data is an array
+		if (!\is_array($data)) {
 			return new WP_Error(
 				'wporg_api_invalid_json',
 				'Invalid JSON response from WordPress.org API',
