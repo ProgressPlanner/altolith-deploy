@@ -193,8 +193,19 @@ class LocalStorageController
 		}
 
 		// Build full path: ABSPATH/static_path/key
+		// Handle trailing slashes: paths ending with / should become index.html files
+		// e.g., "category/uncategorized/" -> "category/uncategorized/index.html"
+		$cleanKey = \ltrim($key, '/');
+		if (\substr($cleanKey, -1) === '/') {
+			// Path ends with slash - this is a directory index
+			$cleanKey .= 'index.html';
+		} elseif (empty($cleanKey)) {
+			// Empty key means root index
+			$cleanKey = 'index.html';
+		}
+
 		$uploadDir = \rtrim(ABSPATH, '/') . '/' . $staticPath;
-		$fullPath = $uploadDir . '/' . \ltrim($key, '/');
+		$fullPath = $uploadDir . '/' . $cleanKey;
 		$fileDir = \dirname($fullPath);
 
 		// Security: Validate parent exists and is within ABSPATH BEFORE creating any directories
