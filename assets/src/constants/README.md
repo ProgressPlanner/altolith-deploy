@@ -44,24 +44,24 @@ if (response.status === HTTP_STATUS.OK) {
 Polling intervals, timeouts, delays, and cache durations.
 
 ```javascript
-import { POLLING_INTERVAL, CACHE_DURATION } from '../constants';
+import { POLLING_INTERVAL, MAX_RETRIES, RETRY_INITIAL_DELAY, RETRY_MAX_DELAY } from '../constants';
 
 // Use polling interval instead of magic number
 const pollInterval = setInterval(checkStatus, POLLING_INTERVAL);
 
-// Cache with standard duration
-localStorage.setItem(key, value);
-setTimeout(() => localStorage.removeItem(key), CACHE_DURATION.SHORT);
+// Use retry configuration for API calls
+const response = await fetchWithRetry(url, options, {
+    retries: MAX_RETRIES,
+    minTimeout: RETRY_INITIAL_DELAY,
+    maxTimeout: RETRY_MAX_DELAY,
+});
 ```
 
 **Contents:**
 - `POLLING_INTERVAL` - Standard polling rate (500ms)
-- `SLOW_POLLING_INTERVAL` - Slower polling rate (1000ms)
-- `FAST_POLLING_INTERVAL` - Faster polling rate (200ms)
-- `TIMEOUT_DEFAULT` - Default timeout (5000ms)
-- `DEBOUNCE_DELAY` - Input debounce delay (300ms)
-- `CACHE_DURATION` - Cache TTL values (SHORT, MEDIUM, LONG)
-- `RETRY_DELAYS` - Backoff delays for retries
+- `MAX_RETRIES` - Maximum number of retry attempts (3)
+- `RETRY_INITIAL_DELAY` - Initial retry delay in milliseconds (1000ms)
+- `RETRY_MAX_DELAY` - Maximum retry delay in milliseconds (30000ms)
 
 ### providers.js
 
@@ -174,7 +174,7 @@ Add a constant when you find yourself:
 - **ALL_CAPS** for simple constants: `POLLING_INTERVAL`, `PROVIDER_IDS`
 - **NAMESPACED** objects for grouped constants: `ENDPOINTS.PUBLISH.START`
 - **camelCase** for helper functions: `isGitProvider()`, `calculateProgress()`
-- **Descriptive names** that explain purpose: `SLOW_POLLING_INTERVAL` not `INTERVAL_2`
+- **Descriptive names** that explain purpose: `RETRY_INITIAL_DELAY` not `DELAY_1`
 
 ### Example: Replacing Magic Values
 

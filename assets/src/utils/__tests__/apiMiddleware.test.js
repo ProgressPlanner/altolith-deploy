@@ -6,11 +6,7 @@
  * actual API calls using the exported apiFetch.
  */
 
-import {
-	invalidateCache,
-	createAuthHeaders,
-	createBasicAuthHeaders,
-} from '../api';
+import { invalidateCache, createAuthHeaders } from '../api';
 
 // Create a test-friendly version that doesn't auto-configure
 jest.mock( '@wordpress/api-fetch', () => {
@@ -412,40 +408,6 @@ describe( 'API Middleware', () => {
 
 				expect( headers ).toEqual( {
 					Authorization: 'Bearer ',
-					'Content-Type': 'application/json',
-				} );
-			} );
-		} );
-
-		describe( 'createBasicAuthHeaders', () => {
-			it( 'should create Basic auth headers with base64 encoding', () => {
-				const headers = createBasicAuthHeaders( 'user', 'pass' );
-
-				// Base64 encoding of "user:pass" is "dXNlcjpwYXNz"
-				expect( headers ).toEqual( {
-					Authorization: 'Basic dXNlcjpwYXNz',
-					'Content-Type': 'application/json',
-				} );
-			} );
-
-			it( 'should handle special characters in credentials', () => {
-				const headers = createBasicAuthHeaders(
-					'user@email.com',
-					'p@ss:w0rd!'
-				);
-
-				// Verify it's properly base64 encoded
-				const base64 = headers.Authorization.replace( 'Basic ', '' );
-				const decoded = atob( base64 );
-				expect( decoded ).toBe( 'user@email.com:p@ss:w0rd!' );
-			} );
-
-			it( 'should handle empty credentials', () => {
-				const headers = createBasicAuthHeaders( '', '' );
-
-				// Base64 encoding of ":" is "Og=="
-				expect( headers ).toEqual( {
-					Authorization: 'Basic Og==',
 					'Content-Type': 'application/json',
 				} );
 			} );

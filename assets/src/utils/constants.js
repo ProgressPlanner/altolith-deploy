@@ -18,11 +18,6 @@ export const SUCCESS_MESSAGE_DURATION_MS = 3000;
 export const SHORT_DELAY_MS = 100;
 
 /**
- * Polling interval for job status checks (milliseconds).
- */
-export const POLL_INTERVAL_MS = 30000;
-
-/**
  * Maximum progress percentage.
  */
 export const MAX_PROGRESS = 100;

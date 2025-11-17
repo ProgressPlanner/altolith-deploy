@@ -30,21 +30,6 @@ export function createAuthHeaders( token, type = 'Bearer' ) {
 }
 
 /**
- * Create basic auth headers (base64 encoded).
- *
- * @param {string} username Username.
- * @param {string} password Password or token.
- * @return {Object} Headers object with basic auth.
- */
-export function createBasicAuthHeaders( username, password ) {
-	const credentials = btoa( `${ username }:${ password }` );
-	return {
-		Authorization: `Basic ${ credentials }`,
-		'Content-Type': 'application/json',
-	};
-}
-
-/**
  * Get REST API nonce from meta tag or default.
  *
  * @return {string} REST API nonce.

@@ -13,35 +13,7 @@ This directory contains reusable React components that are used by multiple feat
 
 ## Components
 
-### MediaOffloadModal
-
-Progress modal for media file offloading.
-
-**Location:** `MediaOffloadModal.js`
-
-**Usage:**
-```javascript
-import { MediaOffloadModal } from '../components/MediaOffloadModal';
-
-<MediaOffloadModal
-    isOpen={showModal}
-    totalFiles={10}
-    completedFiles={7}
-    onClose={() => setShowModal(false)}
-/>
-```
-
-**Props:**
-- `isOpen` (boolean) - Whether modal is visible
-- `totalFiles` (number) - Total files to offload
-- `completedFiles` (number) - Files completed so far
-- `onClose` (function) - Close handler (modal is non-dismissible during upload)
-
-**Features:**
-- Non-dismissible during upload (prevents accidental closure)
-- Progress bar with percentage
-- File count display
-- Auto-closes after completion
+No shared components are currently defined. Components will be extracted here as part of the refactoring plan.
 
 ## Component Guidelines
 
@@ -84,9 +56,9 @@ export function ComponentName( { title, onAction } ) {
 
 ### Naming Conventions
 
-- **PascalCase** for component files: `MediaOffloadModal.js`
+- **PascalCase** for component files: `ComponentName.js`
 - **Named exports** for components: `export function ComponentName`
-- **Descriptive names** that explain purpose: `MediaOffloadModal` not `Modal`
+- **Descriptive names** that explain purpose: `ComponentName` not `Modal`
 
 ### Props
 
@@ -190,31 +162,27 @@ function MediaOffloadHandler() {
 ### Example: After Extraction
 
 ```javascript
-// components/MediaOffloadModal.js (49 LOC)
-export function MediaOffloadModal({ isOpen, totalFiles, completedFiles }) {
-    if (!isOpen) return null;
-
-    const progress = totalFiles > 0 ? (completedFiles / totalFiles) * 100 : 0;
-
+// components/ExampleComponent.js
+export function ExampleComponent({ title, onAction }) {
     return (
-        <Modal title={__('Offloading Media Files', 'aether')}>
-            <ProgressBar value={progress} />
-            <p>{completedFiles} / {totalFiles} {__('files completed', 'aether')}</p>
+        <Modal title={title}>
+            <Button onClick={onAction}>
+                {__('Action', 'aether')}
+            </Button>
         </Modal>
     );
 }
 
-// media-offload/index.js (now 332 LOC, down from 495)
-import { MediaOffloadModal } from '../components/MediaOffloadModal';
+// feature/index.js (reduced from 500+ LOC)
+import { ExampleComponent } from '../components/ExampleComponent';
 
-function MediaOffloadHandler() {
+function FeatureHandler() {
     return (
         <>
             {/* handler logic */}
-            <MediaOffloadModal
-                isOpen={showModal}
-                totalFiles={totalFiles}
-                completedFiles={completedFiles}
+            <ExampleComponent
+                title={title}
+                onAction={handleAction}
             />
         </>
     );
@@ -230,38 +198,25 @@ function MediaOffloadHandler() {
 npm run test:js -- components
 
 # Test specific component
-npm run test:js -- components/MediaOffloadModal
+npm run test:js -- components/ExampleComponent
 ```
 
 ### Test Structure
 
 ```javascript
 import { render, screen } from '@testing-library/react';
-import { MediaOffloadModal } from '../MediaOffloadModal';
+import { ExampleComponent } from '../ExampleComponent';
 
-describe('MediaOffloadModal', () => {
-    it('should render when open', () => {
+describe('ExampleComponent', () => {
+    it('should render correctly', () => {
         render(
-            <MediaOffloadModal
-                isOpen={true}
-                totalFiles={10}
-                completedFiles={5}
+            <ExampleComponent
+                title="Test Title"
+                onAction={() => {}}
             />
         );
 
-        expect(screen.getByText('5 / 10')).toBeInTheDocument();
-    });
-
-    it('should not render when closed', () => {
-        const { container } = render(
-            <MediaOffloadModal
-                isOpen={false}
-                totalFiles={10}
-                completedFiles={5}
-            />
-        );
-
-        expect(container.firstChild).toBeNull();
+        expect(screen.getByText('Test Title')).toBeInTheDocument();
     });
 });
 ```

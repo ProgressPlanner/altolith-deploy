@@ -9,7 +9,6 @@
 import {
 	parseErrorResponse,
 	parseErrorResponseWithStatus,
-	parseMultipleErrors,
 } from '../errorParser';
 
 describe( 'parseErrorResponse', () => {
@@ -155,79 +154,5 @@ describe( 'parseErrorResponseWithStatus', () => {
 		);
 
 		expect( result ).toBe( 'Something went wrong' );
-	} );
-} );
-
-describe( 'parseMultipleErrors', () => {
-	it( 'should extract multiple Cloudflare errors', () => {
-		const response = JSON.stringify( {
-			errors: [
-				{ message: 'Error 1' },
-				{ message: 'Error 2' },
-				{ message: 'Error 3' },
-			],
-		} );
-
-		const result = parseMultipleErrors( response );
-
-		expect( result ).toEqual( [ 'Error 1', 'Error 2', 'Error 3' ] );
-	} );
-
-	it( 'should handle single error format', () => {
-		const response = JSON.stringify( {
-			error: 'Single error',
-		} );
-
-		const result = parseMultipleErrors( response );
-
-		expect( result ).toEqual( [ 'Single error' ] );
-	} );
-
-	it( 'should handle message format', () => {
-		const response = JSON.stringify( {
-			message: 'Error message',
-		} );
-
-		const result = parseMultipleErrors( response );
-
-		expect( result ).toEqual( [ 'Error message' ] );
-	} );
-
-	it( 'should handle plain text response', () => {
-		const response = 'Plain text error';
-
-		const result = parseMultipleErrors( response );
-
-		expect( result ).toEqual( [ 'Plain text error' ] );
-	} );
-
-	it( 'should return empty array for empty response', () => {
-		const result = parseMultipleErrors( '' );
-
-		expect( result ).toEqual( [] );
-	} );
-
-	it( 'should filter out empty error messages', () => {
-		const response = JSON.stringify( {
-			errors: [
-				{ message: 'Valid error' },
-				{ message: '' },
-				{ message: 'Another error' },
-			],
-		} );
-
-		const result = parseMultipleErrors( response );
-
-		expect( result ).toEqual( [ 'Valid error', 'Another error' ] );
-	} );
-
-	it( 'should stringify errors without message property', () => {
-		const response = JSON.stringify( {
-			errors: [ { code: 1234, detail: 'Error detail' } ],
-		} );
-
-		const result = parseMultipleErrors( response );
-
-		expect( result ).toEqual( [ '{"code":1234,"detail":"Error detail"}' ] );
 	} );
 } );

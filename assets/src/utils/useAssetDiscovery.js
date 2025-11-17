@@ -356,37 +356,9 @@ export default function useAssetDiscovery() {
 		}
 	}, [] );
 
-	/**
-	 * Check if a specific asset is from WordPress.org
-	 *
-	 * @param {string} slug - Asset slug
-	 * @param {string} type - 'plugin' or 'theme'
-	 * @return {Promise<Object>} Result with from_wporg boolean
-	 */
-	const checkAsset = useCallback( async ( slug, type ) => {
-		setLoading( true );
-		setError( null );
-
-		try {
-			const fromWpOrg = await isFromWordPressOrg( slug, type );
-
-			setLoading( false );
-			return {
-				slug,
-				type,
-				from_wporg: fromWpOrg,
-			};
-		} catch ( err ) {
-			setError( err.message );
-			setLoading( false );
-			throw err;
-		}
-	}, [] );
-
 	return {
 		discoverCustomAssets,
 		getBlueprintAssets,
-		checkAsset,
 		loading,
 		error,
 	};
