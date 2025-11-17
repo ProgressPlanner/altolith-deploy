@@ -367,6 +367,11 @@ class SettingsController
 			// Allow alphanumeric, underscores, and hyphens
 			$sanitizedKey = \preg_replace('/[^a-zA-Z0-9_-]/', '', $key);
 
+			// Skip empty keys after sanitization to prevent data loss or collisions
+			if (empty($sanitizedKey)) {
+				continue;
+			}
+
 			if (\is_array($value)) {
 				$sanitized[ $sanitizedKey ] = $this->sanitizeConfig($value, $depth + 1);
 			} elseif (\is_bool($value)) {

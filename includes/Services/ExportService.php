@@ -79,6 +79,11 @@ class ExportService
 		$settings = \get_option('aether_site_exporter_settings', []);
 		$exportPath = $settings['providers']['local-filesystem']['export_path'] ?? 'blueprint-bundle/bundle.zip';
 
+		// Security: Validate export_path is a string and doesn't contain null bytes
+		if (!\is_string($exportPath) || \strpos($exportPath, "\0") !== false) {
+			$exportPath = 'blueprint-bundle/bundle.zip';
+		}
+
 		// Extract directory and validate it to prevent path traversal attacks.
 		$exportDir = \dirname($exportPath);
 
@@ -189,10 +194,14 @@ class ExportService
 		$progressCallback = null;
 		if ($jobId && $totalFiles > 0) {
 			$progressCallback = function () use ($jobId, $stateManager, $totalFiles, &$processedFiles) {
-				// Prevent integer overflow: clamp to reasonable maximum
-				// PHP_INT_MAX on 64-bit is ~9.2E18, but we clamp to 2^31 for safety
-				if ($processedFiles < 2147483647) {
+				// Prevent integer overflow: use PHP_INT_MAX for portability across systems
+				if ($processedFiles < PHP_INT_MAX) {
 					$processedFiles++;
+				} else {
+					// Log warning if maximum integer value is exceeded
+					if (\defined('WP_DEBUG') && WP_DEBUG) {
+						\error_log('Aether: File count exceeded maximum integer value');
+					}
 				}
 
 				// Update progress more granularly for better UX, especially for small file counts
@@ -261,6 +270,15 @@ class ExportService
 				if ('aether' === $slug) {
 					continue;
 				}
+
+				// Security: Validate slug doesn't contain path traversal or null bytes
+				if (!\is_string($slug) ||
+					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
+					\strpos($slug, "\0") !== false) {
+					continue;
+				}
+
+				$slug = \sanitize_file_name($slug);
 				$pluginDir = WP_PLUGIN_DIR . '/' . $slug;
 				if (\is_dir($pluginDir)) {
 					$this->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $slug, '', null, null, $progressCallback);
@@ -291,6 +309,14 @@ class ExportService
 			// Note: We need to detect which slugs are themes vs plugins.
 			// For now, check if directory exists in themes directory.
 			foreach ($customAssetSlugs as $slug) {
+				// Security: Validate slug doesn't contain path traversal or null bytes
+				if (!\is_string($slug) ||
+					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
+					\strpos($slug, "\0") !== false) {
+					continue;
+				}
+
+				$slug = \sanitize_file_name($slug);
 				$themeDir = \get_theme_root() . '/' . $slug;
 				if (\is_dir($themeDir)) {
 					$this->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $slug, '', null, null, $progressCallback);
