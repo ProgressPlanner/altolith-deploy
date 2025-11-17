@@ -26,7 +26,7 @@ describe( 'credentialManager', () => {
 
 	describe( 'getCredentials', () => {
 		test( 'fetches credentials from API', async () => {
-			const providerId = 'cloudflare-r2';
+			const providerId = 'local-filesystem';
 			const mockCredentials = {
 				access_key_id: 'test-key',
 				secret_access_key: 'test-secret',
@@ -47,7 +47,7 @@ describe( 'credentialManager', () => {
 		} );
 
 		test( 'caches credentials', async () => {
-			const providerId = 'cloudflare-r2';
+			const providerId = 'local-filesystem';
 			const mockCredentials = {
 				access_key_id: 'test-key',
 			};
@@ -68,7 +68,7 @@ describe( 'credentialManager', () => {
 		} );
 
 		test( 'expires cache after 5 minutes', async () => {
-			const providerId = 'cloudflare-r2';
+			const providerId = 'local-filesystem';
 			const mockCredentials = {
 				access_key_id: 'test-key',
 			};
@@ -91,7 +91,7 @@ describe( 'credentialManager', () => {
 		} );
 
 		test( 'throws error on API failure', async () => {
-			const providerId = 'cloudflare-r2';
+			const providerId = 'local-filesystem';
 
 			apiFetch.mockResolvedValueOnce( {
 				success: false,
@@ -104,7 +104,7 @@ describe( 'credentialManager', () => {
 		} );
 
 		test( 'throws error when response is missing', async () => {
-			const providerId = 'cloudflare-r2';
+			const providerId = 'local-filesystem';
 
 			apiFetch.mockResolvedValueOnce( null );
 
@@ -114,7 +114,7 @@ describe( 'credentialManager', () => {
 		} );
 
 		test( 'handles empty config', async () => {
-			const providerId = 'cloudflare-r2';
+			const providerId = 'local-filesystem';
 
 			apiFetch.mockResolvedValueOnce( {
 				success: true,
@@ -128,7 +128,7 @@ describe( 'credentialManager', () => {
 
 	describe( 'clearCredentials', () => {
 		test( 'clears cached credentials for provider', async () => {
-			const providerId = 'cloudflare-r2';
+			const providerId = 'local-filesystem';
 			const mockCredentials = {
 				access_key_id: 'test-key',
 			};
@@ -161,8 +161,8 @@ describe( 'credentialManager', () => {
 
 	describe( 'clearAllCredentials', () => {
 		test( 'clears all cached credentials', async () => {
-			const provider1 = 'cloudflare-r2';
-			const provider2 = 'gitlab-pages';
+			const provider1 = 'local-filesystem';
+			const provider2 = 'local-filesystem';
 			const mockCredentials = {
 				access_key_id: 'test-key',
 			};

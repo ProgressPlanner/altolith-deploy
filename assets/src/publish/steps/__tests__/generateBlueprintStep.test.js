@@ -125,7 +125,7 @@ describe( 'generateBlueprintStep', () => {
 			);
 			// INTENDED: Not called with providerId as first parameter
 			expect( mockGenerateBlueprintJson ).not.toHaveBeenCalledWith(
-				'cloudflare-r2',
+				'local-filesystem',
 				expect.any( Function )
 			);
 		} );

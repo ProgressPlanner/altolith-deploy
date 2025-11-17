@@ -310,37 +310,15 @@ class ProviderConfigController
 		// Decrypt config to check actual values (encrypted values are non-empty strings)
 		$decryptedConfig = $this->decryptSensitiveFields($config);
 
-		// Check required fields based on provider type
-		switch ($providerId) {
-			case 'cloudflare':
-			case 'cloudflare-workers':
-				// Cloudflare Edge requires account_id and api_token
-				return ! empty($decryptedConfig['account_id'] ?? '') &&
-					! empty($decryptedConfig['api_token'] ?? '');
-
-			case 'cloudflare-r2':
-				// Cloudflare R2 requires cloudflare_account_id, bucket_name, access_key_id, and secret_access_key
-				return ! empty($decryptedConfig['cloudflare_account_id'] ?? '') &&
-					! empty($decryptedConfig['bucket_name'] ?? '') &&
-					! empty($decryptedConfig['access_key_id'] ?? '') &&
-					! empty($decryptedConfig['secret_access_key'] ?? '');
-
-			case 'gitlab-pages':
-				// GitLab Pages requires personal_access_token and project_id
-				return ! empty($decryptedConfig['personal_access_token'] ?? '') &&
-					! empty($decryptedConfig['project_id'] ?? '');
-
-			default:
-				// For other providers, check if config has any non-empty values
-				$hasValues = false;
-				foreach ($decryptedConfig as $value) {
-					if (! empty($value) && ! \is_array($value)) {
-						$hasValues = true;
-						break;
-					}
-				}
-				return $hasValues;
+		// For local filesystem provider, check if config has any non-empty values
+		$hasValues = false;
+		foreach ($decryptedConfig as $value) {
+			if (! empty($value) && ! \is_array($value)) {
+				$hasValues = true;
+				break;
+			}
 		}
+		return $hasValues;
 	}
 
 	/**
@@ -352,203 +330,32 @@ class ProviderConfigController
 	public function testConnection(WP_REST_Request $request)
 	{
 		$providerId = \sanitize_key($request->get_param('provider_id'));
-		$config     = $request->get_param('config');
 
-		// If config is provided, use it; otherwise load from saved settings
-		if (! \is_array($config) || empty($config)) {
-			$settings = \get_option('aether_site_exporter_settings', []);
-			$providers = $settings['providers'] ?? [];
-			$savedConfig = $providers[ $providerId ] ?? [];
-			$config = $this->decryptSensitiveFields($savedConfig);
-		}
+		// For local filesystem provider, verify export directory is writable
+		if ($providerId === 'local-filesystem') {
+			$exportDir = \trailingslashit(WP_CONTENT_DIR) . 'aether-exports';
 
-		// Handle Cloudflare Edge provider (NOT R2 - R2 is a storage provider)
-		if ($providerId === 'cloudflare' || $providerId === 'cloudflare-workers') {
-			$accountId = \sanitize_text_field($config['account_id'] ?? '');
-			$apiToken  = \sanitize_text_field($config['api_token'] ?? '');
-
-			if (empty($accountId) || empty($apiToken)) {
+			// Check if directory exists and is writable
+			if (! \file_exists($exportDir)) {
 				return new WP_Error(
-					'missing_credentials',
-					\__('Account ID and API token are required.', 'aether-site-exporter'),
-					[ 'status' => 400 ]
+					'export_dir_not_found',
+					\sprintf(\__('Export directory not found: %s', 'aether-site-exporter'), $exportDir),
+					[ 'status' => 404 ]
 				);
 			}
 
-			// Validate account ID format
-			if (! \preg_match('/^[a-f0-9]{32}$/i', $accountId)) {
+			if (! \is_writable($exportDir)) {
 				return new WP_Error(
-					'invalid_account_id',
-					\__('Invalid account ID format. Account ID must be a 32-character hexadecimal string', 'aether-site-exporter'),
-					[ 'status' => 400 ]
-				);
-			}
-
-			// Test connection via Cloudflare API (server-side, no CORS issues)
-			$url = 'https://api.cloudflare.com/client/v4/accounts/' . \urlencode($accountId) . '/workers/scripts';
-			$response = \wp_remote_get(
-				$url,
-				[
-					'headers' => [
-						'Authorization' => 'Bearer ' . $apiToken,
-						'Content-Type'  => 'application/json',
-					],
-					'timeout' => 30,
-				]
-			);
-
-			if (\is_wp_error($response)) {
-				return new WP_Error(
-					'connection_failed',
-					$response->get_error_message(),
+					'export_dir_not_writable',
+					\sprintf(\__('Export directory is not writable: %s', 'aether-site-exporter'), $exportDir),
 					[ 'status' => 500 ]
-				);
-			}
-
-			$statusCode = \wp_remote_retrieve_response_code($response);
-			$body       = \wp_remote_retrieve_body($response);
-
-			// Security: Use json_decode with error handling and depth limit
-			// Increased depth limit to support complex API responses while still preventing DoS attacks
-			try {
-				$data = \json_decode($body, true, self::JSON_DECODE_MAX_DEPTH, \JSON_THROW_ON_ERROR);
-			} catch (\JsonException $e) {
-				return new WP_Error(
-					'json_decode_error',
-					\sprintf(
-						/* translators: %s: JSON error message */
-						\__('Failed to parse API response: %s', 'aether-site-exporter'),
-						$e->getMessage()
-					),
-					[ 'status' => 500 ]
-				);
-			}
-
-			// Validate decoded data is an array
-			if (!\is_array($data)) {
-				return new WP_Error(
-					'invalid_json_response',
-					\__('API returned invalid JSON response', 'aether-site-exporter'),
-					[ 'status' => 500 ]
-				);
-			}
-
-			if ($statusCode !== 200) {
-				$errorMessage = isset($data['errors'][0]['message'])
-					? $data['errors'][0]['message']
-					: (isset($data['error']) ? $data['error'] : \sprintf(\__('HTTP %d: Connection test failed', 'aether-site-exporter'), $statusCode));
-
-				return new WP_Error(
-					'cloudflare_api_error',
-					$errorMessage,
-					[ 'status' => $statusCode ]
 				);
 			}
 
 			return new WP_REST_Response(
 				[
 					'success' => true,
-					'message' => \__('Successfully connected to Cloudflare Workers', 'aether-site-exporter'),
-				],
-				200
-			);
-		}
-
-		// Handle Cloudflare R2 storage provider
-		if ($providerId === 'cloudflare-r2') {
-			$workerEndpoint = isset($config['worker_endpoint']) ? \esc_url_raw($config['worker_endpoint']) : '';
-			$bucketName = isset($config['bucket_name']) ? \sanitize_text_field($config['bucket_name']) : '';
-
-			if (empty($workerEndpoint)) {
-				return new WP_Error(
-					'missing_worker_endpoint',
-					\__('Worker endpoint is required for R2 connection testing. Please deploy a worker first.', 'aether-site-exporter'),
-					[ 'status' => 400 ]
-				);
-			}
-
-			if (empty($bucketName)) {
-				return new WP_Error(
-					'missing_bucket_name',
-					\__('Bucket name is required for R2 connection testing.', 'aether-site-exporter'),
-					[ 'status' => 400 ]
-				);
-			}
-
-			// Test connection via worker endpoint (server-side, no CORS issues)
-			// Worker expects GET requests in format: /{filepath}
-			// Use a test filepath to verify worker is accessible
-			$testUrl = \trailingslashit($workerEndpoint) . 'test.html';
-
-			$response = \wp_remote_get(
-				$testUrl,
-				[
-					'timeout' => 30,
-				]
-			);
-
-			if (\is_wp_error($response)) {
-				$errorMessage = $response->get_error_message();
-
-				// Check for DNS resolution errors (worker might not be accessible yet)
-				if (
-					\strpos($errorMessage, 'Could not resolve host') !== false ||
-					\strpos($errorMessage, 'getaddrinfo failed') !== false ||
-					\strpos($errorMessage, 'Name or service not known') !== false
-				) {
-					return new WP_Error(
-						'worker_not_accessible',
-						\__('Worker endpoint is not accessible yet. This may be due to DNS propagation delay after deployment. Please wait a few minutes and try again.', 'aether-site-exporter'),
-						[ 'status' => 503 ]
-					);
-				}
-
-				return new WP_Error(
-					'connection_failed',
-					$errorMessage,
-					[ 'status' => 500 ]
-				);
-			}
-
-			$statusCode = \wp_remote_retrieve_response_code($response);
-			$body       = \wp_remote_retrieve_body($response);
-
-			// Accept both 200 (file exists) and 404 (worker accessible, file doesn't exist) as success
-			// We're just testing if the worker endpoint is reachable and functioning
-			if ($statusCode !== 200 && $statusCode !== 404) {
-				// Try to parse error message from response
-				$errorMessage = \sprintf(\__('HTTP %d: Connection test failed', 'aether-site-exporter'), $statusCode);
-				$contentType = \wp_remote_retrieve_header($response, 'content-type');
-				$contentTypeStr = \is_array($contentType) ? \implode(', ', $contentType) : (string) $contentType;
-				if ($contentTypeStr && \strpos($contentTypeStr, 'application/json') !== false) {
-					// Parse JSON with depth limit to prevent DoS attacks
-					try {
-						$data = \json_decode($body, true, self::JSON_DECODE_MAX_DEPTH, \JSON_THROW_ON_ERROR);
-						if (\is_array($data) && isset($data['error'])) {
-							$errorMessage = $data['error'];
-						}
-					} catch (\JsonException $e) {
-						// If JSON parsing fails, use default error message
-					}
-				}
-
-				return new WP_Error(
-					'r2_connection_failed',
-					$errorMessage,
-					[ 'status' => $statusCode ]
-				);
-			}
-
-			// If we got a 404, it means the worker is accessible and functioning
-			// (The test file doesn't exist, which is expected)
-			$message = $statusCode === 404
-				? \__('Worker endpoint is accessible and functioning correctly', 'aether-site-exporter')
-				: \__('Successfully connected to Cloudflare R2', 'aether-site-exporter');
-
-			return new WP_REST_Response(
-				[
-					'success' => true,
-					'message' => $message,
+					'message' => \__('Local filesystem is ready for exports', 'aether-site-exporter'),
 				],
 				200
 			);
@@ -570,58 +377,11 @@ class ProviderConfigController
 	 */
 	public function getWorkerScript(WP_REST_Request $request)
 	{
-		$providerId = \sanitize_key($request->get_param('provider_id'));
-		$workerType = \sanitize_key($request->get_param('worker_type'));
-
-		// Map worker types to script files
-		$workerScripts = [
-			'r2' => 'CloudflareR2Worker.js',
-		];
-
-		if (! isset($workerScripts[ $workerType ])) {
-			return new WP_Error(
-				'invalid_worker_type',
-				\sprintf(\__('Invalid worker type: %s', 'aether-site-exporter'), $workerType),
-				[ 'status' => 400 ]
-			);
-		}
-
-		$scriptFile = $workerScripts[ $workerType ];
-		$scriptPath = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/workers/' . $scriptFile;
-
-		// Security: Validate script path using realpath() to prevent path traversal via symlinks
-		$realPath = \realpath($scriptPath);
-		$allowedDir = \realpath(AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/workers/');
-
-		if (false === $realPath || false === $allowedDir || 0 !== \strpos($realPath, $allowedDir)) {
-			return new WP_Error(
-				'invalid_path',
-				\__('Invalid script path', 'aether-site-exporter'),
-				[ 'status' => 400 ]
-			);
-		}
-
-		if (! \file_exists($realPath)) {
-			return new WP_Error(
-				'worker_script_not_found',
-				\sprintf(\__('Worker script not found: %s', 'aether-site-exporter'), $scriptFile),
-				[ 'status' => 404 ]
-			);
-		}
-
-		$scriptContent = \file_get_contents($realPath);
-
-		if ($scriptContent === false) {
-			return new WP_Error(
-				'failed_to_read_script',
-				\__('Failed to read worker script', 'aether-site-exporter'),
-				[ 'status' => 500 ]
-			);
-		}
-
-		// Return script as plain text
-		return new WP_REST_Response($scriptContent, 200, [
-			'Content-Type' => 'text/javascript; charset=utf-8',
-		]);
+		// Worker scripts are not supported for local filesystem exports
+		return new WP_Error(
+			'not_supported',
+			\__('Worker scripts are not supported for local filesystem exports', 'aether-site-exporter'),
+			[ 'status' => 501 ]
+		);
 	}
 }

@@ -12,7 +12,7 @@ assets/src/
 ├── constants/           # Centralized constants (API, timing, providers, etc.)
 ├── hooks/               # Custom React hooks
 ├── media-offload/       # Automatic media offloading to cloud storage
-├── providers/           # Cloud provider integrations (Cloudflare, GitLab, etc.)
+├── providers/           # Cloud provider integrations (Local, Local, etc.)
 ├── publish/             # Static site generation and deployment workflow
 └── utils/               # Utility functions and helpers
 ```
@@ -74,10 +74,10 @@ Webpack builds multiple entry points from `assets/src/`:
 
 - **admin-settings.js** - Settings page UI
 - **publish.js** - Publish workflow modal
-- **provider-cloudflare-r2.js** - Cloudflare R2 provider
-- **provider-cloudflare.js** - Cloudflare Workers provider
-- **provider-gitlab-pages.js** - GitLab Pages provider
-- **provider-gitlab.js** - GitLab provider
+- **provider-local-filesystem.js** - Local Filesystem provider
+- **provider-cloudflare.js** - Local Filesystem provider
+- **provider-local-filesystem.js** - Local Filesystem provider
+- **provider-gitlab.js** - Local provider
 
 ### Code Splitting
 

@@ -106,7 +106,7 @@ const {
 const storageProviders = getProvidersByCapability('storage');
 
 // Get specific provider
-const r2Provider = getProviderById('cloudflare-r2');
+const r2Provider = getProviderById('local-filesystem');
 ```
 
 ### useProvider
@@ -127,7 +127,7 @@ const {
     testConnection,   // Test provider connection
     deploy,           // Deploy to provider
     getStatus,        // Get deployment status
-} = useProvider('cloudflare-r2');
+} = useProvider('local-filesystem');
 ```
 
 ### useProviderConfig
@@ -143,7 +143,7 @@ const {
     loadConfig,     // Load from storage
     saveConfig,     // Save to storage
     deleteConfig,   // Delete configuration
-} = useProviderConfig('cloudflare-r2');
+} = useProviderConfig('local-filesystem');
 ```
 
 ## Hook Patterns

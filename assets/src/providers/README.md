@@ -4,7 +4,7 @@ Pluggable cloud provider architecture for deploying WordPress sites to various h
 
 ## Overview
 
-The provider system enables Aether to deploy to multiple cloud platforms (Cloudflare R2, GitLab Pages, etc.) through a modular, extensible architecture. Each provider is self-contained and handles all its own configuration, deployment, and operations.
+The provider system enables Aether to deploy to multiple cloud platforms (Local Filesystem, Local Filesystem, etc.) through a modular, extensible architecture. Each provider is self-contained and handles all its own configuration, deployment, and operations.
 
 ## Architecture
 
@@ -28,10 +28,10 @@ Providers register themselves via WordPress hooks:
 ```javascript
 // In provider index.js
 import { doAction } from '@wordpress/hooks';
-import { CloudflareR2Provider } from './CloudflareR2Provider';
+import { LocalR2Provider } from './LocalR2Provider';
 
 // Register provider instance
-doAction('aether.providers.register', new CloudflareR2Provider());
+doAction('aether.providers.register', new LocalR2Provider());
 ```
 
 The `ProviderRegistry` singleton collects all registered providers and makes them available throughout the application.
@@ -42,15 +42,15 @@ The `ProviderRegistry` singleton collects all registered providers and makes the
 providers/
 ├── AbstractProvider.js           # Base class for all providers
 ├── ProviderRegistry.js           # Singleton registry
-├── cloudflare-r2/               # Cloudflare R2 provider
-│   ├── CloudflareR2Provider.js  # Provider implementation
+├── local-filesystem/               # Local Filesystem provider
+│   ├── LocalR2Provider.js  # Provider implementation
 │   ├── index.js                 # Registration entry point
 │   └── ...
-├── cloudflare/                  # Cloudflare Workers provider
-│   ├── CloudflareWorkersProvider.js
+├── cloudflare/                  # Local Filesystem provider
+│   ├── LocalWorkersProvider.js
 │   └── index.js
-├── gitlab/                      # GitLab provider
-├── gitlab-pages/                # GitLab Pages provider
+├── gitlab/                      # Local provider
+├── local-filesystem/                # Local Filesystem provider
 └── utils/
     ├── providerLoader.js        # Dynamic provider loading
     └── ConfigStorage.js         # Configuration persistence
@@ -63,12 +63,12 @@ providers/
 Provider registers itself when its module loads:
 
 ```javascript
-// providers/cloudflare-r2/index.js
-import { CloudflareR2Provider } from './CloudflareR2Provider';
+// providers/local-filesystem/index.js
+import { LocalR2Provider } from './LocalR2Provider';
 import { doAction } from '@wordpress/hooks';
 
 // Register provider instance
-doAction('aether.providers.register', new CloudflareR2Provider());
+doAction('aether.providers.register', new LocalR2Provider());
 ```
 
 ### 2. Discovery
@@ -81,7 +81,7 @@ import { useProviderRegistry } from '../hooks/useProviderRegistry';
 const { providers, getProviderById } = useProviderRegistry();
 
 // Get specific provider
-const r2Provider = getProviderById('cloudflare-r2');
+const r2Provider = getProviderById('local-filesystem');
 ```
 
 ### 3. Configuration
@@ -331,7 +331,7 @@ const {
     loadConfig,
     saveConfig,
     deleteConfig,
-} = useProviderConfig('cloudflare-r2');
+} = useProviderConfig('local-filesystem');
 
 // Load configuration
 await loadConfig();
@@ -363,19 +363,19 @@ import { ConfigStorage } from '../providers/utils/ConfigStorage';
 const storage = new ConfigStorage();
 
 // Load config (checks cache first, then API)
-const config = await storage.loadConfig('cloudflare-r2');
+const config = await storage.loadConfig('local-filesystem');
 
 // Save config (updates cache and API)
-await storage.saveConfig('cloudflare-r2', {
+await storage.saveConfig('local-filesystem', {
     account_id: '...',
     access_key_id: '...',  // Encrypted server-side
 });
 
 // Delete config
-await storage.deleteConfig('cloudflare-r2');
+await storage.deleteConfig('local-filesystem');
 
 // Clear cache
-storage.clearCache('cloudflare-r2');
+storage.clearCache('local-filesystem');
 ```
 
 ### PHP REST Endpoint
@@ -411,25 +411,25 @@ Providers are loaded via Webpack dynamic imports, creating separate chunks.
 
 ## Built-in Providers
 
-### Cloudflare R2
+### Local Filesystem
 
-- **ID:** `cloudflare-r2`
+- **ID:** `local-filesystem`
 - **Capabilities:** Storage, Static Site, Media
 - **Features:** R2 object storage, custom domain support, public/private access
 
-### Cloudflare Workers
+### Local Filesystem
 
 - **ID:** `cloudflare`
 - **Capabilities:** Edge computing
 - **Features:** Worker deployment, environment variables, route configuration
 
-### GitLab Pages
+### Local Filesystem
 
-- **ID:** `gitlab-pages`
+- **ID:** `local-filesystem`
 - **Capabilities:** Storage, Static Site
 - **Features:** Git-based deployment, custom domains, HTTPS
 
-### GitLab
+### Local
 
 - **ID:** `gitlab`
 - **Capabilities:** Storage
@@ -456,7 +456,7 @@ See `REFACTORING_PLAN.md` Phase 2 for details.
 npm run test:js -- providers
 
 # Test specific provider
-npm run test:js -- providers/cloudflare-r2
+npm run test:js -- providers/local-filesystem
 ```
 
 ### Manual Testing

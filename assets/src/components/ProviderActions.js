@@ -10,15 +10,11 @@ import { useState, useEffect } from '@wordpress/element';
 import { Button, Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useConnectionTest } from '../hooks/useConnectionTest';
-import { useWorkerDeploy } from '../hooks/useWorkerDeploy';
 import apiFetch from '../utils/api';
 import { colors, spacing, createFlexStyle } from '../utils/styles';
 
 export default function ProviderActions( {
 	providerId,
-	requiresWorker,
-	workerType = 'r2',
-	onWorkerDeployed,
 	currentConfig = null,
 } ) {
 	const [ config, setConfig ] = useState( {} );
@@ -61,29 +57,9 @@ export default function ProviderActions( {
 		testing,
 		result: testResult,
 	} = useConnectionTest( providerId, testConfig );
-	const {
-		deploy,
-		deploying,
-		error: deployError,
-		result: deployResult,
-	} = useWorkerDeploy( workerType );
 
 	const handleTestConnection = async () => {
 		await test();
-	};
-
-	const handleDeployWorker = async () => {
-		const result = await deploy( false );
-		if ( result.success && result.workerUrl ) {
-			setConfig( ( prevConfig ) => ( {
-				...prevConfig,
-				workerEndpoint: result.workerUrl,
-			} ) );
-
-			if ( onWorkerDeployed ) {
-				onWorkerDeployed( result.workerUrl );
-			}
-		}
 	};
 
 	const containerStyle = {
@@ -116,49 +92,6 @@ export default function ProviderActions( {
 				</Notice>
 			) }
 
-			{ deployResult && deployResult.success && (
-				<Notice
-					className="aether-provider-actions__notice aether-provider-actions__notice--success"
-					status="success"
-					isDismissible={ false }
-					onRemove={ () => {} }
-				>
-					{ __(
-						'Worker deployed successfully!',
-						'aether-site-exporter'
-					) }
-					{ deployResult.workerUrl && (
-						<div
-							className="aether-provider-actions__worker-url"
-							style={ { marginTop: spacing.sm } }
-						>
-							<strong className="aether-provider-actions__worker-url-label">
-								{ __( 'Worker URL:', 'aether-site-exporter' ) }
-							</strong>{ ' ' }
-							<a
-								className="aether-provider-actions__worker-url-link"
-								href={ deployResult.workerUrl }
-								target="_blank"
-								rel="noopener noreferrer"
-							>
-								{ deployResult.workerUrl }
-							</a>
-						</div>
-					) }
-				</Notice>
-			) }
-
-			{ deployError && (
-				<Notice
-					className="aether-provider-actions__notice aether-provider-actions__notice--error"
-					status="error"
-					isDismissible={ false }
-					onRemove={ () => {} }
-				>
-					{ deployError }
-				</Notice>
-			) }
-
 			<div
 				className="aether-provider-actions__buttons"
 				style={ buttonsStyle }
@@ -168,26 +101,12 @@ export default function ProviderActions( {
 					variant="secondary"
 					onClick={ handleTestConnection }
 					isBusy={ testing }
-					disabled={ testing || deploying }
+					disabled={ testing }
 				>
 					{ testing
 						? __( 'Testing…', 'aether-site-exporter' )
 						: __( 'Test Connection', 'aether-site-exporter' ) }
 				</Button>
-
-				{ requiresWorker && (
-					<Button
-						className="aether-provider-actions__deploy-button"
-						variant="secondary"
-						onClick={ handleDeployWorker }
-						isBusy={ deploying }
-						disabled={ testing || deploying }
-					>
-						{ deploying
-							? __( 'Deploying…', 'aether-site-exporter' )
-							: __( 'Deploy Worker', 'aether-site-exporter' ) }
-					</Button>
-				) }
 			</div>
 		</div>
 	);

@@ -182,7 +182,7 @@ Add a constant when you find yourself:
 // ❌ Before: Magic values scattered throughout code
 setTimeout(checkStatus, 500);
 fetch('/wp-json/aether/v1/publish');
-if (providerId === 'cloudflare-r2') { }
+if (providerId === 'local-filesystem') { }
 
 // ✅ After: Using constants
 import { POLLING_INTERVAL, ENDPOINTS, PROVIDER_IDS } from '../constants';

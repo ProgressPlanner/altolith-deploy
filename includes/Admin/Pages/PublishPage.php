@@ -53,7 +53,7 @@ class PublishPage extends BaseAdminPage
 		$plugin->enqueueWebpackChunks('aether-export');
 
 		// Get chunk handles for dependencies (discovered dynamically)
-		$chunkHandles = $plugin->getChunkHandles([ 'common', 'vendor', 'isomorphic-git-vendor' ], true);
+		$chunkHandles = $plugin->getChunkHandles([ 'common', 'vendor' ], true);
 
 		\wp_enqueue_script(
 			'aether-export',

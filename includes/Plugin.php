@@ -429,7 +429,6 @@ class Plugin
 		// Initialize publish controllers.
 		$publishJobController = new REST\Publish\PublishJobController($this);
 		$publishStepsController = new REST\Publish\PublishStepsController($this);
-		$publishGitController = new REST\Publish\PublishGitController($this);
 
 		// Register routes from each controller.
 		$settingsController->registerRoutes();
@@ -443,7 +442,6 @@ class Plugin
 		// Register publish routes.
 		$publishJobController->registerRoutes();
 		$publishStepsController->registerRoutes();
-		$publishGitController->registerRoutes();
 	}
 
 	/**

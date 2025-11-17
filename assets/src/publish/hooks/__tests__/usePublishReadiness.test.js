@@ -23,7 +23,7 @@ describe( 'usePublishReadiness', () => {
 			success: true,
 			value: {
 				provider_types: {
-					storage: 'cloudflare-r2',
+					storage: 'local-filesystem',
 					static_site: 'github-pages',
 				},
 				staticSite: {
@@ -76,7 +76,7 @@ describe( 'usePublishReadiness', () => {
 			success: true,
 			value: {
 				provider_types: {
-					storage: 'cloudflare-r2',
+					storage: 'local-filesystem',
 					static_site: '',
 				},
 				staticSite: {
@@ -107,7 +107,7 @@ describe( 'usePublishReadiness', () => {
 			success: true,
 			value: {
 				provider_types: {
-					storage: 'cloudflare-r2',
+					storage: 'local-filesystem',
 				},
 				staticSite: {
 					enabled: false,

@@ -2,7 +2,7 @@
  * Error Response Parser Utility
  *
  * Centralized error response parsing for API calls.
- * Handles multiple error response formats (Cloudflare API, generic, plain text).
+ * Handles multiple error response formats (generic, plain text).
  *
  * @package
  */
@@ -11,7 +11,7 @@
  * Parse error response from various API formats.
  *
  * Handles:
- * - Cloudflare API format: { errors: [{ message: "..." }] }
+ * - API format with array of errors: { errors: [{ message: "..." }] }
  * - Generic format: { error: "..." }
  * - Message format: { message: "..." }
  * - Plain text responses
@@ -28,7 +28,7 @@ export function parseErrorResponse( responseText, defaultMessage ) {
 	try {
 		const data = JSON.parse( responseText );
 
-		// Handle Cloudflare API format: { errors: [{ message: "..." }] }
+		// Handle API format with errors array: { errors: [{ message: "..." }] }
 		if ( data.errors && Array.isArray( data.errors ) ) {
 			if ( data.errors.length > 0 && data.errors[ 0 ].message ) {
 				return data.errors[ 0 ].message;

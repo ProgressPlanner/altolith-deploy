@@ -14,28 +14,10 @@
  */
 export const PROVIDER_IDS = {
 	/**
-	 * Cloudflare R2 Storage Provider
+	 * Local Filesystem Provider
 	 * @constant {string}
 	 */
-	CLOUDFLARE_R2: 'cloudflare-r2',
-
-	/**
-	 * Cloudflare Workers Edge Provider
-	 * @constant {string}
-	 */
-	CLOUDFLARE_WORKERS: 'cloudflare',
-
-	/**
-	 * GitLab Git Provider
-	 * @constant {string}
-	 */
-	GITLAB: 'gitlab',
-
-	/**
-	 * GitLab Pages Static Site Provider
-	 * @constant {string}
-	 */
-	GITLAB_PAGES: 'gitlab-pages',
+	LOCAL_FILESYSTEM: 'local-filesystem',
 
 	/**
 	 * None/Disabled Provider
@@ -51,13 +33,7 @@ export const PROVIDER_IDS = {
  */
 export const PROVIDER_TYPES = {
 	/**
-	 * Edge computing providers (Cloudflare Workers, etc.)
-	 * @constant {string}
-	 */
-	EDGE: 'edge',
-
-	/**
-	 * Storage providers (R2, S3, etc.)
+	 * Storage providers (local filesystem, etc.)
 	 * @constant {string}
 	 */
 	STORAGE: 'storage',
@@ -67,24 +43,6 @@ export const PROVIDER_TYPES = {
 	 * @constant {string}
 	 */
 	STATIC_SITE: 'static-site',
-
-	/**
-	 * Media hosting providers
-	 * @constant {string}
-	 */
-	MEDIA: 'media',
-
-	/**
-	 * Git-based providers
-	 * @constant {string}
-	 */
-	GIT: 'git',
-
-	/**
-	 * Cloud storage providers
-	 * @constant {string}
-	 */
-	CLOUD_STORAGE: 'cloud-storage',
 };
 
 /**
@@ -94,35 +52,32 @@ export const PROVIDER_TYPES = {
  */
 
 /**
- * Git-based providers (GitLab, GitHub, etc.)
+ * Git-based providers
  * These providers use Git for deployment
  * @constant {string[]}
  */
-export const GIT_PROVIDERS = [ PROVIDER_IDS.GITLAB, PROVIDER_IDS.GITLAB_PAGES ];
+export const GIT_PROVIDERS = [];
 
 /**
- * Storage-based providers (R2, S3, etc.)
- * These providers use object storage
+ * Storage-based providers (local filesystem, etc.)
+ * These providers use storage for static sites
  * @constant {string[]}
  */
-export const STORAGE_PROVIDERS = [ PROVIDER_IDS.CLOUDFLARE_R2 ];
+export const STORAGE_PROVIDERS = [ PROVIDER_IDS.LOCAL_FILESYSTEM ];
 
 /**
  * Edge computing providers
  * These providers support edge computing/workers
  * @constant {string[]}
  */
-export const EDGE_PROVIDERS = [ PROVIDER_IDS.CLOUDFLARE_WORKERS ];
+export const EDGE_PROVIDERS = [];
 
 /**
  * Static site hosting providers
  * These providers support static site hosting
  * @constant {string[]}
  */
-export const STATIC_SITE_PROVIDERS = [
-	PROVIDER_IDS.CLOUDFLARE_R2,
-	PROVIDER_IDS.GITLAB_PAGES,
-];
+export const STATIC_SITE_PROVIDERS = [ PROVIDER_IDS.LOCAL_FILESYSTEM ];
 
 /**
  * Provider Configuration Keys

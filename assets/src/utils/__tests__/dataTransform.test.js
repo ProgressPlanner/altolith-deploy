@@ -48,9 +48,9 @@ describe( 'flattenSettings', () => {
 
 	test( 'should flatten storage provider configuration', () => {
 		const settings = {
-			activeProvider: 'cloudflare-r2',
+			activeProvider: 'local-filesystem',
 			providers: {
-				'cloudflare-r2': {
+				'local-filesystem': {
 					bucket_name: 'test-bucket',
 					access_key_id: 'test-key',
 					secret_access_key: 'test-secret',
@@ -60,7 +60,7 @@ describe( 'flattenSettings', () => {
 
 		const flattened = flattenSettings( settings );
 
-		expect( flattened.storageProvider ).toBe( 'cloudflare-r2' );
+		expect( flattened.storageProvider ).toBe( 'local-filesystem' );
 		expect( flattened.bucket_name ).toBe( 'test-bucket' );
 		expect( flattened.access_key_id ).toBe( 'test-key' );
 		expect( flattened.secret_access_key ).toBe( 'test-secret' );
@@ -70,14 +70,14 @@ describe( 'flattenSettings', () => {
 		const settings = {
 			media: {
 				enabled: true,
-				provider: 'cloudflare-r2',
+				provider: 'local-filesystem',
 			},
 		};
 
 		const flattened = flattenSettings( settings );
 
 		expect( flattened.mediaEnabled ).toBe( true );
-		expect( flattened.mediaProvider ).toBe( 'cloudflare-r2' );
+		expect( flattened.mediaProvider ).toBe( 'local-filesystem' );
 	} );
 
 	test( 'should handle empty settings', () => {
@@ -116,19 +116,19 @@ describe( 'unflattenSettings', () => {
 
 	test( 'should unflatten storage provider configuration', () => {
 		const flattened = {
-			storageProvider: 'cloudflare-r2',
+			storageProvider: 'local-filesystem',
 			bucket_name: 'test-bucket',
 			access_key_id: 'test-key',
 		};
 
 		const settings = unflattenSettings( flattened );
 
-		expect( settings.activeProvider ).toBe( 'cloudflare-r2' );
-		expect( settings.usage.blueprintProvider ).toBe( 'cloudflare-r2' );
-		expect( settings.providers[ 'cloudflare-r2' ].bucket_name ).toBe(
+		expect( settings.activeProvider ).toBe( 'local-filesystem' );
+		expect( settings.usage.blueprintProvider ).toBe( 'local-filesystem' );
+		expect( settings.providers[ 'local-filesystem' ].bucket_name ).toBe(
 			'test-bucket'
 		);
-		expect( settings.providers[ 'cloudflare-r2' ].access_key_id ).toBe(
+		expect( settings.providers[ 'local-filesystem' ].access_key_id ).toBe(
 			'test-key'
 		);
 	} );
@@ -136,18 +136,18 @@ describe( 'unflattenSettings', () => {
 	test( 'should unflatten media configuration', () => {
 		const flattened = {
 			mediaEnabled: true,
-			mediaProvider: 'cloudflare-r2',
+			mediaProvider: 'local-filesystem',
 		};
 
 		const settings = unflattenSettings( flattened );
 
 		expect( settings.media.enabled ).toBe( true );
-		expect( settings.media.provider ).toBe( 'cloudflare-r2' );
+		expect( settings.media.provider ).toBe( 'local-filesystem' );
 	} );
 
 	test( 'should exclude edge provider keys from storage provider', () => {
 		const flattened = {
-			storageProvider: 'cloudflare-r2',
+			storageProvider: 'local-filesystem',
 			bucket_name: 'test-bucket',
 			account_id: 'edge-account', // Should not be in storage provider
 			api_token: 'edge-token', // Should not be in storage provider
@@ -155,14 +155,14 @@ describe( 'unflattenSettings', () => {
 
 		const settings = unflattenSettings( flattened );
 
-		expect( settings.providers[ 'cloudflare-r2' ].bucket_name ).toBe(
+		expect( settings.providers[ 'local-filesystem' ].bucket_name ).toBe(
 			'test-bucket'
 		);
 		expect(
-			settings.providers[ 'cloudflare-r2' ].account_id
+			settings.providers[ 'local-filesystem' ].account_id
 		).toBeUndefined();
 		expect(
-			settings.providers[ 'cloudflare-r2' ].api_token
+			settings.providers[ 'local-filesystem' ].api_token
 		).toBeUndefined();
 	} );
 
@@ -186,11 +186,11 @@ describe( 'unflattenSettings', () => {
 				cloudflare: {
 					account_id: 'test-account',
 				},
-				'cloudflare-r2': {
+				'local-filesystem': {
 					bucket_name: 'test-bucket',
 				},
 			},
-			activeProvider: 'cloudflare-r2',
+			activeProvider: 'local-filesystem',
 			media: {
 				enabled: true,
 			},
@@ -206,8 +206,8 @@ describe( 'unflattenSettings', () => {
 			original.providers.cloudflare.account_id
 		);
 		expect( unflattened.activeProvider ).toBe( original.activeProvider );
-		expect( unflattened.providers[ 'cloudflare-r2' ].bucket_name ).toBe(
-			original.providers[ 'cloudflare-r2' ].bucket_name
+		expect( unflattened.providers[ 'local-filesystem' ].bucket_name ).toBe(
+			original.providers[ 'local-filesystem' ].bucket_name
 		);
 		expect( unflattened.media.enabled ).toBe( original.media.enabled );
 	} );

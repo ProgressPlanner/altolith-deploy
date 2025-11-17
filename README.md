@@ -1,40 +1,32 @@
-# Aether
+# Aether Site Exporter
 
 [![Tests](https://github.com/aristath/aether/workflows/Tests/badge.svg)](https://github.com/aristath/aether/actions)
 [![PHP Version](https://img.shields.io/badge/php-7.4%2B-blue.svg)](https://php.net)
 [![WordPress Version](https://img.shields.io/badge/wordpress-6.4%2B-blue.svg)](https://wordpress.org)
 [![License](https://img.shields.io/badge/license-GPL--2.0%2B-green.svg)](LICENSE)
 
-**Run WordPress serverless in the cloud and deploy as static sites - powered by Cloudflare**
+**Export WordPress sites as static HTML or WordPress Playground blueprint bundles**
 
-Aether enables you to administer WordPress sites in WordPress Playground (browser-based WordPress) and deploy them as production-ready static sites to multiple cloud providers.
+Aether Site Exporter enables you to export WordPress sites to static HTML files or create WordPress Playground blueprints, all stored locally on your server's filesystem.
 
 ## ✨ Key Features
 
-### 🌐 Multi-Provider Architecture
-- **Cloudflare R2** - Object storage with static site hosting
-- **Cloudflare Pages** - JAMstack deployment platform
-- **GitHub Pages** - Static site hosting via GitHub
-- **GitLab Pages** - Static site hosting via GitLab
-- **DigitalOcean Spaces** - S3-compatible object storage
+### 📦 Static Site Export
+- Convert dynamic WordPress to static HTML
+- Export to local filesystem
+- Complete site archiving with all assets
+- Cache-optimized static pages
 
 ### 🚀 WordPress Playground Integration
-- Administer sites in browser-based WordPress Playground
-- Blueprint-based persistence (98% storage reduction)
-- No traditional hosting required
+- Create Playground blueprint bundles
+- Blueprint-based site export (98% storage reduction)
 - SQLite database support
+- No cloud hosting required
 
-### 📦 Media Offloading
-- **Cloudflare Images** - Image optimization and delivery
-- **Cloudflare Stream** - Video hosting and streaming
-- **Cloudflare R2** - General media storage
-- Automatic upload and URL rewriting
-
-### 🔄 Static Site Generation
-- Convert dynamic WordPress to static HTML
-- Deploy to any supported provider
-- Custom domain support
-- Cache-optimized delivery
+### 🔄 Export Formats
+- **Static HTML** - Complete static website export
+- **Blueprint Bundle** - WordPress Playground blueprint format
+- **Archive** - ZIP files for easy transfer
 
 ## 🎯 Quick Start
 
@@ -42,245 +34,203 @@ Aether enables you to administer WordPress sites in WordPress Playground (browse
 
 - WordPress 6.4+
 - PHP 7.4+ (PHP 8.1+ recommended)
-- Cloudflare account (for Workers and media offloading)
-- One or more deployment providers (R2, GitHub, GitLab, Pages, Spaces)
+- Writable `wp-content/aether-exports` directory
 
 ### Installation
 
 1. **Install the Plugin**
    ```bash
    cd wp-content/plugins
-   git clone https://github.com/aristath/aether.git
-   cd aether
-   composer install
-   npm install
+   git clone https://github.com/aristath/aether-site-exporter.git
    ```
 
-2. **Activate the Plugin**
+2. **Install Dependencies**
+   ```bash
+   cd aether-site-exporter
+   composer install
+   npm install
+   npm run build
+   ```
+
+3. **Activate the Plugin**
    - Go to WordPress Admin → Plugins
-   - Activate "Aether"
-   - You'll be redirected to the Setup Wizard
+   - Activate "Aether Site Exporter"
 
-3. **Run the Setup Wizard**
-   The wizard guides you through:
-   - Step 1: Cloudflare credentials
-   - Step 2: Playground persistence provider
-   - Step 3: Media offloading configuration
-   - Step 4: Static site deployment (optional)
-   - Step 5: Automatic worker deployment
+4. **Configure Export Settings**
+   - Go to Settings → Aether Export
+   - Configure export options as needed
 
-## 📖 Documentation
+## 📖 Usage
 
-For detailed documentation, see the [docs/](docs/) directory:
+### Creating an Export
 
-- **[CLAUDE.md](CLAUDE.md)** - Complete developer guide for AI assistants
-- **[docs/ARCHITECTURE-SUMMARY.md](docs/ARCHITECTURE-SUMMARY.md)** - Multi-provider architecture overview
-- **[docs/MULTI-PROVIDER-ARCHITECTURE.md](docs/MULTI-PROVIDER-ARCHITECTURE.md)** - Detailed architecture documentation
+1. Navigate to **Aether Export** in the WordPress admin
+2. Click **Create New Export**
+3. Select export type (Static HTML or Blueprint)
+4. Configure export options
+5. Click **Start Export**
 
-## 🎨 Publishing Workflow
+### Accessing Exports
 
-### 1. Create Content in WordPress Playground
-- Administer your site in browser-based WordPress
-- Install plugins, themes, create content
-- No server setup required
+Exports are stored in `wp-content/aether-exports/` directory. Each export is contained in its own subdirectory with:
+- Static HTML files
+- Assets (images, CSS, JS)
+- Database exports (if applicable)
+- Blueprint files (for Playground exports)
 
-### 2. Publish to Cloud
-- Click "Publish Site" in the admin bar
-- Site exports, uploads to configured provider
-- Blueprint generated for Playground persistence
+### Downloading Exports
 
-### 3. Deploy as Static Site (Optional)
-- Enable static site generation in settings
-- Configure deployment provider
-- Automatic HTML generation and deployment
+Exports can be downloaded as ZIP archives directly from the WordPress admin interface.
 
-## 🛠️ Advanced Features
+## 🛠 Development
 
-### Blueprint-Based Sync
-- WordPress.org plugins/themes stored as JSON references
-- 98% storage reduction compared to full uploads
-- Automatic change detection and updates
-
-### Edge Workers
-Located in `assets/js/worker/` and provider directories, these workers enable browser-based uploads:
-
-**Supported Edge Platforms**:
-- **Cloudflare Workers** - Full support for all worker types (R2, Git, Media, Spaces)
-- **Deno Deploy** - Supports Git, Media, and Spaces workers (R2 not compatible)
-- **Vercel Edge Functions** - Supports Git, Media, and Spaces workers
-
-**Worker Types**:
-- **R2 Worker** - Proxies uploads to Cloudflare R2 (Cloudflare Workers only)
-- **Git Worker** - Handles GitHub/GitLab API operations (all platforms)
-- **Spaces Worker** - Proxies uploads to DigitalOcean Spaces (all platforms)
-- **Media Worker** - Handles Cloudflare Images/Stream operations (all platforms)
-
-### Smart Caching
-- CDN-optimized cache headers
-- Path-based cache rules
-- Extension-based cache rules
-- Custom cache control
-
-### Media URL Rewriting
-- Automatic URL rewriting for offloaded media
-- Supports custom domains
-- Seamless integration with WordPress media library
-
-## 🧪 Code Quality
-
-Aether maintains high code quality standards:
+### Build Commands
 
 ```bash
-# PHP code standards (PSR-12 + WordPress)
-composer check-cs                # Check coding standards
-composer fix-cs                  # Fix coding standards automatically
+# Development build
+npm run build:dev
 
-# PHP static analysis (PHPStan Level 8)
-composer phpstan                 # Run static analysis
+# Production build
+npm run build
 
-# JavaScript/React code standards
-npm run lint:js                  # Check JavaScript code
-npm run lint:js:fix              # Fix JavaScript issues
+# Watch mode
+npm start
 
-# JavaScript tests (Jest)
-npm run test:js                  # Run Jest unit tests
-npm run test:js:coverage         # Run with coverage report
+# Run tests
+npm run test:js
+composer test
 
-# Run all checks
-composer check                   # PHP checks (PHPCS + PHPStan)
-npm run lint:js                  # JavaScript checks
-npm run test:js                  # JavaScript tests
+# Linting
+npm run lint:js
+composer lint
+```
+
+### File Structure
+
+```
+aether-site-exporter/
+├── assets/
+│   ├── src/          # Source JavaScript/React files
+│   └── build/        # Compiled assets
+├── includes/
+│   ├── REST/         # REST API controllers
+│   ├── Services/     # Core services
+│   └── Utilities/    # Helper utilities
+├── tests/            # PHP unit tests
+└── webpack.config.js # Build configuration
+```
+
+## 🔧 REST API
+
+The plugin provides REST API endpoints for export management:
+
+### Export Endpoints
+
+- `GET /wp-json/aether/site-exporter/exports` - List all exports
+- `POST /wp-json/aether/site-exporter/exports` - Create new export
+- `GET /wp-json/aether/site-exporter/exports/{id}` - Get export details
+- `DELETE /wp-json/aether/site-exporter/exports/{id}` - Delete export
+- `GET /wp-json/aether/site-exporter/exports/{id}/download` - Download export
+
+### Export Steps
+
+- `POST /wp-json/aether/site-exporter/exports/{id}/discover-urls` - Discover site URLs
+- `POST /wp-json/aether/site-exporter/exports/{id}/generate-blueprint` - Generate blueprint
+- `POST /wp-json/aether/site-exporter/exports/{id}/create-archive` - Create ZIP archive
+
+## 🧪 Testing
+
+### PHP Tests
+
+```bash
+composer test
+```
+
+### JavaScript Tests
+
+```bash
+npm run test:js
+
+# With coverage
+npm run test:js:coverage
+
+# Watch mode
+npm run test:js:watch
+```
+
+## 📝 WP-CLI Commands
+
+The plugin includes WP-CLI commands for command-line export management:
+
+### Export Management
+
+```bash
+# Create new export
+wp aether-exporter export create
+
+# List exports
+wp aether-exporter export list
+
+# Delete old exports (older than 30 days)
+wp aether-exporter cleanup --days=30
+
+# Delete failed exports
+wp aether-exporter cleanup-failed
+
+# View statistics
+wp aether-exporter stats
+```
+
+## 🔍 Troubleshooting
+
+### Export Directory Not Writable
+
+Ensure the export directory has proper permissions:
+
+```bash
+chmod 755 wp-content/aether-exports
+```
+
+### Memory Limit Issues
+
+For large sites, increase PHP memory limit in `wp-config.php`:
+
+```php
+define( 'WP_MEMORY_LIMIT', '512M' );
+```
+
+### Timeout Issues
+
+Increase PHP max execution time in `php.ini` or `.htaccess`:
+
+```ini
+max_execution_time = 300
 ```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! Please follow these steps:
 
 1. Fork the repository
-2. Create a feature branch
-3. Write tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📝 License
+## 📄 License
 
-GPL-2.0-or-later - see [LICENSE](LICENSE) for details.
+This project is licensed under the GPL-2.0+ License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Credits
 
-**Author**: Aristeidis Stathopoulos ([@aristath](https://github.com/aristath))
+Built with:
+- [WordPress](https://wordpress.org/)
+- [React](https://reactjs.org/)
+- [@wordpress/scripts](https://www.npmjs.com/package/@wordpress/scripts)
+- [WordPress Playground](https://wordpress.github.io/wordpress-playground/)
 
-**Technology Stack**:
-- WordPress Playground
-- Cloudflare Workers
-- Cloudflare R2, Images, Stream, Pages
-- GitHub/GitLab Pages
-- DigitalOcean Spaces
+## 📧 Support
 
-## 🔌 WordPress.org API Check Filters
-
-The plugin provides a filterable system for checking if plugins/themes exist on WordPress.org, allowing you to customize the behavior for different environments.
-
-### Available Filters
-
-#### `aether_site_exporter_wporg_check_method`
-
-Control which method is used to check WordPress.org:
-
-**Available Methods:**
-- `'php'` (default) - Server-side PHP calls (no CORS issues, no external dependencies)
-- `'cors-proxy'` - External CORS proxy worker (e.g., cfp.s12y.org)
-- `'direct'` - Direct browser calls to WordPress.org API (will fail in most browsers due to CORS)
-
-**Example:**
-```php
-// Use CORS proxy method
-add_filter( 'aether_site_exporter_wporg_check_method', function( $method ) {
-    return 'cors-proxy';
-} );
-```
-
-#### `aether_site_exporter_cors_proxy_url`
-
-Customize the CORS proxy URL when using `cors-proxy` method:
-
-**Example:**
-```php
-// Use custom CORS proxy worker
-add_filter( 'aether_site_exporter_cors_proxy_url', function( $url ) {
-    return 'https://my-worker.example.com/check-wporg';
-} );
-```
-
-#### `aether_site_exporter_wporg_check_response`
-
-Override the entire check logic for specific plugins/themes:
-
-**Example:**
-```php
-// Always treat 'my-custom-plugin' as non-WordPress.org
-add_filter( 'aether_site_exporter_wporg_check_response', function( $response, $slug, $type ) {
-    if ( $slug === 'my-custom-plugin' ) {
-        return [
-            'success' => true,
-            'exists'  => false,
-            'slug'    => $slug,
-            'type'    => $type,
-            'custom'  => true,
-        ];
-    }
-    return $response; // Use default behavior
-}, 10, 3 );
-```
-
-### Use Cases
-
-**Development Environment (Local):**
-```php
-// Use PHP method (default) - no external dependencies needed
-// No filter needed, this is the default behavior
-```
-
-**WordPress Playground Environment:**
-```php
-// Use CORS proxy for browser-based deployment
-add_filter( 'aether_site_exporter_wporg_check_method', function() {
-    return 'cors-proxy';
-} );
-
-// Point to your deployed Cloudflare Worker
-add_filter( 'aether_site_exporter_cors_proxy_url', function() {
-    return 'https://your-worker.workers.dev/check-wporg';
-} );
-```
-
-**Enterprise Environment (Firewall Restrictions):**
-```php
-// Use custom logic to determine WordPress.org status
-add_filter( 'aether_site_exporter_wporg_check_response', function( $response, $slug, $type ) {
-    // Check against internal database or API
-    $is_wporg = my_internal_wporg_check( $slug, $type );
-
-    return [
-        'success' => true,
-        'exists'  => $is_wporg,
-        'slug'    => $slug,
-        'type'    => $type,
-    ];
-}, 10, 3 );
-```
-
-### CORS Proxy Worker Deployment
-
-If you need to use the CORS proxy method, you can deploy the included worker to Cloudflare Workers:
-
-1. **Worker File:** `/assets/workers/PlaygroundCorsProxy.js`
-2. **Features:** D1 database caching, dual-TTL strategy (30 days for WordPress.org, 2 days for custom)
-3. **Deploy:** Use Wrangler or Cloudflare dashboard
-4. **Configure:** Update URL with the `aether_site_exporter_cors_proxy_url` filter
-
----
-
-**Aether** - *Greek god of pure upper air and clear sky. Personification of the bright upper atmosphere.*
-
-Perfect for a plugin that runs WordPress in the cloud. ☁️
+For issues and questions:
+- [GitHub Issues](https://github.com/aristath/aether-site-exporter/issues)
+- [Documentation](https://github.com/aristath/aether-site-exporter/wiki)

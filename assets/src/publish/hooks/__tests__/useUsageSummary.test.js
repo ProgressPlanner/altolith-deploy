@@ -22,8 +22,8 @@ describe( 'useUsageSummary', () => {
 			success: true,
 			value: {
 				provider_types: {
-					storage: 'cloudflare-r2',
-					static_site: 'gitlab-pages',
+					storage: 'local-filesystem',
+					static_site: 'local-filesystem',
 					mediaImages: 'cloudflare-images',
 				},
 				staticSite: {
@@ -38,9 +38,9 @@ describe( 'useUsageSummary', () => {
 			expect( result.current.loading ).toBe( false );
 		} );
 
-		expect( result.current.blueprint.provider ).toBe( 'cloudflare-r2' );
+		expect( result.current.blueprint.provider ).toBe( 'local-filesystem' );
 		expect( result.current.blueprint.label ).toBe( 'Cloudflare R2' );
-		expect( result.current.staticSite.provider ).toBe( 'gitlab-pages' );
+		expect( result.current.staticSite.provider ).toBe( 'local-filesystem' );
 		expect( result.current.staticSite.label ).toBe( 'GitLab Pages' );
 		expect( result.current.media.provider ).toBe( 'cloudflare-images' );
 		expect( result.current.staticEnabled ).toBe( true );
@@ -92,7 +92,7 @@ describe( 'useUsageSummary', () => {
 			success: true,
 			value: {
 				provider_types: {
-					storage: 'cloudflare-r2',
+					storage: 'local-filesystem',
 					media: 'cloudflare-images',
 				},
 			},
@@ -112,7 +112,7 @@ describe( 'useUsageSummary', () => {
 			success: true,
 			value: {
 				provider_types: {
-					storage: 'cloudflare-r2',
+					storage: 'local-filesystem',
 				},
 				staticSite: {
 					enabled: false,

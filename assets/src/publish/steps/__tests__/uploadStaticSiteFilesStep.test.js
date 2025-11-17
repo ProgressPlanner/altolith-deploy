@@ -30,7 +30,7 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					blueprintData: { $schema: 'test' },
 				},
 				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: mockSetStatusMessage,
 				removeMessage: mockRemoveMessage,
 			};
@@ -41,7 +41,7 @@ describe( 'uploadStaticSiteFilesStep', () => {
 			expect( mockProcessStaticSiteUrls ).toHaveBeenCalledWith(
 				[ 'https://example.com/', 'https://example.com/about/' ],
 				'https://static.example.com',
-				'cloudflare-r2',
+				'local-filesystem',
 				'https://example.com',
 				mockSetStatusMessage,
 				{ $schema: 'test' },
@@ -73,7 +73,7 @@ describe( 'uploadStaticSiteFilesStep', () => {
 				processStaticSiteUrls: jest.fn(),
 				currentStatus: {}, // No urls
 				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: jest.fn(),
 				removeMessage: jest.fn(),
 			};
@@ -93,7 +93,7 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					urls: 'not-an-array',
 				},
 				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: jest.fn(),
 				removeMessage: jest.fn(),
 			};
@@ -120,7 +120,7 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					urls: [],
 				},
 				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: mockSetStatusMessage,
 				removeMessage: jest.fn(),
 			};
@@ -153,7 +153,7 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					// staticSiteUrl missing
 				},
 				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: jest.fn(),
 				removeMessage: jest.fn(),
 			};
@@ -216,7 +216,7 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					urls: [ 'https://example.com/' ],
 				},
 				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: jest.fn(),
 				removeMessage: jest.fn(),
 			};
@@ -243,7 +243,7 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					urls: [ 'https://example.com/' ],
 				},
 				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: mockSetStatusMessage,
 				removeMessage: jest.fn(),
 			};
@@ -273,7 +273,7 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					urls: [ 'https://example.com/' ],
 				},
 				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: jest.fn(),
 				removeMessage: jest.fn(),
 			};
@@ -303,7 +303,7 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					),
 				},
 				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: mockSetStatusMessage,
 				removeMessage: jest.fn(),
 			};

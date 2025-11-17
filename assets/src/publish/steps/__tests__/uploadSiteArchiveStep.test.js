@@ -19,7 +19,7 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: mockSetStatusMessage,
 			};
 
@@ -27,7 +27,7 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			// INTENDED: handleSiteArchiveUpload called with providerId and context
 			expect( mockHandleSiteArchiveUpload ).toHaveBeenCalledWith(
-				'cloudflare-r2',
+				'local-filesystem',
 				context
 			);
 
@@ -70,7 +70,7 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: mockSetStatusMessage,
 			};
 
@@ -88,7 +88,7 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: jest.fn(),
 			};
 
@@ -135,7 +135,7 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: mockSetStatusMessage,
 			};
 
@@ -154,7 +154,7 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				providerId: 'cloudflare-r2',
+				providerId: 'local-filesystem',
 				setStatusMessage: jest.fn(),
 			};
 

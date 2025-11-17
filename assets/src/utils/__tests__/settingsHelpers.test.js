@@ -14,7 +14,7 @@ describe( 'settingsHelpers', () => {
 		test( 'returns provider settings from full settings object', () => {
 			const settings = {
 				providers: {
-					'cloudflare-r2': {
+					'local-filesystem': {
 						bucket_name: 'my-bucket',
 						access_key_id: 'key123',
 					},
@@ -24,7 +24,7 @@ describe( 'settingsHelpers', () => {
 				},
 			};
 
-			const result = getProviderSettings( settings, 'cloudflare-r2' );
+			const result = getProviderSettings( settings, 'local-filesystem' );
 
 			expect( result ).toEqual( {
 				bucket_name: 'my-bucket',
@@ -35,7 +35,7 @@ describe( 'settingsHelpers', () => {
 		test( 'returns empty object when provider not found', () => {
 			const settings = {
 				providers: {
-					'cloudflare-r2': {
+					'local-filesystem': {
 						bucket_name: 'my-bucket',
 					},
 				},
@@ -49,19 +49,19 @@ describe( 'settingsHelpers', () => {
 		test( 'returns empty object when providers object missing', () => {
 			const settings = {};
 
-			const result = getProviderSettings( settings, 'cloudflare-r2' );
+			const result = getProviderSettings( settings, 'local-filesystem' );
 
 			expect( result ).toEqual( {} );
 		} );
 
 		test( 'returns empty object when settings is null', () => {
-			const result = getProviderSettings( null, 'cloudflare-r2' );
+			const result = getProviderSettings( null, 'local-filesystem' );
 
 			expect( result ).toEqual( {} );
 		} );
 
 		test( 'returns empty object when settings is undefined', () => {
-			const result = getProviderSettings( undefined, 'cloudflare-r2' );
+			const result = getProviderSettings( undefined, 'local-filesystem' );
 
 			expect( result ).toEqual( {} );
 		} );
@@ -71,7 +71,7 @@ describe( 'settingsHelpers', () => {
 		test( 'updates provider settings in full settings object', () => {
 			const allSettings = {
 				providers: {
-					'cloudflare-r2': {
+					'local-filesystem': {
 						bucket_name: 'old-bucket',
 					},
 					gitlab: {
@@ -87,11 +87,11 @@ describe( 'settingsHelpers', () => {
 
 			const result = updateProviderSettings(
 				allSettings,
-				'cloudflare-r2',
+				'local-filesystem',
 				providerSettings
 			);
 
-			expect( result.providers[ 'cloudflare-r2' ] ).toEqual(
+			expect( result.providers[ 'local-filesystem' ] ).toEqual(
 				providerSettings
 			);
 			expect( result.providers.gitlab ).toEqual( { project_id: '123' } );
@@ -108,12 +108,12 @@ describe( 'settingsHelpers', () => {
 
 			const result = updateProviderSettings(
 				allSettings,
-				'cloudflare-r2',
+				'local-filesystem',
 				providerSettings
 			);
 
 			expect( result.providers ).toEqual( {
-				'cloudflare-r2': providerSettings,
+				'local-filesystem': providerSettings,
 			} );
 			expect( result._saveKey ).toBe( 'providers' );
 			expect( result._saveValue ).toEqual( result.providers );
@@ -133,7 +133,7 @@ describe( 'settingsHelpers', () => {
 
 			const result = updateProviderSettings(
 				allSettings,
-				'cloudflare-r2',
+				'local-filesystem',
 				providerSettings
 			);
 
@@ -152,13 +152,13 @@ describe( 'settingsHelpers', () => {
 
 			const result = updateProviderSettings(
 				allSettings,
-				'cloudflare-r2',
+				'local-filesystem',
 				providerSettings
 			);
 
 			expect( result._saveKey ).toBe( 'providers' );
 			expect( result._saveValue ).toEqual( {
-				'cloudflare-r2': providerSettings,
+				'local-filesystem': providerSettings,
 			} );
 		} );
 	} );

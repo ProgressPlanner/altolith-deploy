@@ -37,7 +37,7 @@ import { SettingsContext } from '../contexts/SettingsContext';
  *             onChange={(e) => setProviderType('storage', e.target.value)}
  *         >
  *             <option value="">Select provider</option>
- *             <option value="cloudflare-r2">Cloudflare R2</option>
+ *             <option value="local-filesystem">Local Filesystem</option>
  *         </select>
  *     );
  * }

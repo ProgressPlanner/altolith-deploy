@@ -13,9 +13,7 @@ import { __ } from '@wordpress/i18n';
 import { useAPIData } from '../../hooks/useAPIData';
 
 const PROVIDER_LABELS = {
-	'cloudflare-r2': __( 'Cloudflare R2', 'aether-site-exporter' ),
-	'gitlab-pages': __( 'GitLab Pages', 'aether-site-exporter' ),
-	'cloudflare-workers': __( 'Cloudflare Workers', 'aether-site-exporter' ),
+	'local-filesystem': __( 'Local Filesystem', 'aether-site-exporter' ),
 };
 
 /**
