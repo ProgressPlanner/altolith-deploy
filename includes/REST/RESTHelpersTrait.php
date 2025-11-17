@@ -56,6 +56,12 @@ trait RESTHelpersTrait
 				return true;
 			}
 
+			// Log security event for monitoring (only in debug mode)
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				$ip = isset($_SERVER['REMOTE_ADDR']) ? \sanitize_text_field(\wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
+				\error_log(\sprintf('Aether Security: Missing nonce from IP %s', $ip));
+			}
+
 			return new \WP_Error(
 				'missing_nonce',
 				\__('CSRF token missing. Please refresh and try again.', 'aether-site-exporter'),
@@ -65,6 +71,12 @@ trait RESTHelpersTrait
 
 		// Verify nonce explicitly for defense in depth
 		if (!\wp_verify_nonce($nonce, 'wp_rest')) {
+			// Log security event for monitoring (only in debug mode)
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				$ip = isset($_SERVER['REMOTE_ADDR']) ? \sanitize_text_field(\wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
+				\error_log(\sprintf('Aether Security: Invalid nonce verification from IP %s', $ip));
+			}
+
 			return new \WP_Error(
 				'invalid_nonce',
 				\__('CSRF token invalid. Please refresh and try again.', 'aether-site-exporter'),
@@ -167,13 +179,16 @@ trait RESTHelpersTrait
 	{
 		$userId = \get_current_user_id();
 
-		// For logged-in users, use user ID; otherwise use IP address
+		// For logged-in users, use user ID; otherwise use IP address + User-Agent for better tracking
 		if ($userId > 0) {
 			$identifier = "user_{$userId}";
 		} else {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
 			$ip = isset($_SERVER['REMOTE_ADDR']) ? \sanitize_text_field(\wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
-			$identifier = "ip_" . \md5($ip);
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
+			$ua = isset($_SERVER['HTTP_USER_AGENT']) ? \sanitize_text_field(\wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+			// Combine IP and User-Agent for better rate limiting (harder to bypass with proxies)
+			$identifier = "ip_" . \md5($ip . $ua);
 		}
 
 		$transientKey = "aether_ratelimit_{$operation}_{$identifier}";
@@ -186,6 +201,12 @@ trait RESTHelpersTrait
 		}
 
 		if ($requests >= $maxRequests) {
+			// Log security event for monitoring (only in debug mode)
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				$ip = isset($_SERVER['REMOTE_ADDR']) ? \sanitize_text_field(\wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
+				\error_log(\sprintf('Aether Security: Rate limit exceeded for operation "%s" from IP %s', $operation, $ip));
+			}
+
 			return new \WP_Error(
 				'rate_limit_exceeded',
 				\sprintf(
