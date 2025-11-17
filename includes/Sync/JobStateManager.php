@@ -161,6 +161,12 @@ class JobStateManager
 	 * Uses optimistic locking with retry logic to prevent race conditions.
 	 * This is more reliable than transient-based locks which aren't atomic.
 	 *
+	 * Note: While this implementation uses compare-and-swap with retry logic and exponential
+	 * backoff, it's not completely race-condition free. Under high concurrency, there's a small
+	 * chance that two processes could read the same value and both succeed in updating. However,
+	 * the retry mechanism with exponential backoff significantly mitigates this risk, and for
+	 * most use cases, this implementation is sufficient.
+	 *
 	 * @param string $jobId      Job ID.
 	 * @param string $stepName   Step identifier.
 	 * @param int    $maxRetries Maximum retries allowed.
