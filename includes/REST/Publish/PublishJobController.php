@@ -210,6 +210,9 @@ class PublishJobController
 
 		$bodyParams = $request->get_json_params();
 
+		// Security: Whitelist allowed fields to prevent overwriting critical server-controlled fields
+		$allowedFields = ['message', 'progress', 'deployment_url', 'completedAt', 'currentStep'];
+		
 		// Recursively sanitize array values.
 		$sanitizeArrayRecursive = function ($data) use (&$sanitizeArrayRecursive) {
 			if (\is_array($data)) {
@@ -221,7 +224,13 @@ class PublishJobController
 			return $data;
 		};
 
-		$newStatus = $sanitizeArrayRecursive($bodyParams);
+		// Only allow updates to whitelisted fields
+		$newStatus = [];
+		foreach ($allowedFields as $field) {
+			if (isset($bodyParams[$field])) {
+				$newStatus[$field] = $sanitizeArrayRecursive($bodyParams[$field]);
+			}
+		}
 
 		if (empty($newStatus)) {
 			return new WP_Error('missing_status', \__('Status data is required', 'aether-site-exporter'), ['status' => 422]);
