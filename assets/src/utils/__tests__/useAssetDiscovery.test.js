@@ -6,9 +6,10 @@
 
 import { renderHook, act, waitFor } from '@testing-library/react';
 import useAssetDiscovery, { isFromWordPressOrg } from '../useAssetDiscovery';
+import apiFetch from '../api';
 
-// Mock global fetch
-global.fetch = jest.fn();
+// Mock apiFetch
+jest.mock( '../api' );
 
 describe( 'isFromWordPressOrg', () => {
 	beforeEach( () => {
@@ -16,45 +17,39 @@ describe( 'isFromWordPressOrg', () => {
 	} );
 
 	it( 'returns true for existing WordPress.org plugin', async () => {
-		global.fetch.mockResolvedValueOnce( {
-			status: 200,
-			type: 'basic',
+		// Use 'php' method (default) which uses apiFetch
+		apiFetch.mockResolvedValueOnce( {
+			success: true,
+			exists: true,
 		} );
 
 		const result = await isFromWordPressOrg( 'akismet', 'plugin' );
 
 		expect( result ).toBe( true );
-		expect( global.fetch ).toHaveBeenCalledWith(
-			'https://wordpress.org/plugins/akismet/',
-			{
-				method: 'HEAD',
-				redirect: 'manual',
-			}
-		);
+		expect( apiFetch ).toHaveBeenCalledWith( {
+			path: expect.stringContaining( '/check-wporg' ),
+		} );
 	} );
 
 	it( 'returns true for existing WordPress.org theme', async () => {
-		global.fetch.mockResolvedValueOnce( {
-			status: 200,
-			type: 'basic',
+		// Use 'php' method (default) which uses apiFetch
+		apiFetch.mockResolvedValueOnce( {
+			success: true,
+			exists: true,
 		} );
 
 		const result = await isFromWordPressOrg( 'twentytwentyfour', 'theme' );
 
 		expect( result ).toBe( true );
-		expect( global.fetch ).toHaveBeenCalledWith(
-			'https://wordpress.org/themes/twentytwentyfour/',
-			{
-				method: 'HEAD',
-				redirect: 'manual',
-			}
-		);
+		expect( apiFetch ).toHaveBeenCalledWith( {
+			path: expect.stringContaining( '/check-wporg' ),
+		} );
 	} );
 
 	it( 'returns false for non-existent plugin (404)', async () => {
-		global.fetch.mockResolvedValueOnce( {
-			status: 404,
-			type: 'basic',
+		apiFetch.mockResolvedValueOnce( {
+			success: true,
+			exists: false,
 		} );
 
 		const result = await isFromWordPressOrg(
@@ -66,18 +61,21 @@ describe( 'isFromWordPressOrg', () => {
 	} );
 
 	it( 'returns false when response is redirected', async () => {
-		global.fetch.mockResolvedValueOnce( {
+		// Use 'direct' method to test redirect behavior
+		global.fetch = jest.fn().mockResolvedValueOnce( {
 			status: 200,
 			type: 'opaqueredirect',
 		} );
 
-		const result = await isFromWordPressOrg( 'redirected', 'plugin' );
+		const result = await isFromWordPressOrg( 'redirected', 'plugin', {
+			wporgCheckMethod: 'direct',
+		} );
 
 		expect( result ).toBe( false );
 	} );
 
 	it( 'returns false on network error', async () => {
-		global.fetch.mockRejectedValueOnce( new Error( 'Network error' ) );
+		apiFetch.mockRejectedValueOnce( new Error( 'Network error' ) );
 
 		const result = await isFromWordPressOrg( 'test-plugin', 'plugin' );
 
@@ -85,7 +83,7 @@ describe( 'isFromWordPressOrg', () => {
 	} );
 
 	it( 'returns false on CORS error', async () => {
-		global.fetch.mockRejectedValueOnce( new TypeError( 'CORS error' ) );
+		apiFetch.mockRejectedValueOnce( new TypeError( 'CORS error' ) );
 
 		const result = await isFromWordPressOrg( 'test-plugin', 'plugin' );
 
@@ -96,33 +94,10 @@ describe( 'isFromWordPressOrg', () => {
 describe( 'useAssetDiscovery', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
+		jest.resetModules(); // Reset modules to clear cache between tests
 
-		// Setup mock WordPress data
+		// Setup mock window.wp.siteName
 		global.window.wp = {
-			plugins: {
-				'akismet/akismet': {
-					Name: 'Akismet',
-					Version: '5.0',
-					active: true,
-				},
-				'custom-plugin/custom-plugin': {
-					Name: 'Custom Plugin',
-					Version: '1.0',
-					active: true,
-				},
-			},
-			themes: {
-				twentytwentyfour: {
-					Name: 'Twenty Twenty-Four',
-					Version: '1.0',
-					active: true,
-				},
-				'custom-theme': {
-					Name: 'Custom Theme',
-					Version: '1.0',
-					active: false,
-				},
-			},
 			siteName: 'Test Site',
 		};
 	} );
@@ -133,27 +108,64 @@ describe( 'useAssetDiscovery', () => {
 
 	describe( 'discoverCustomAssets', () => {
 		it( 'discovers custom plugins and themes', async () => {
-			// Mock WordPress.org checks
-			global.fetch
+			// Mock apiFetch for config and assets endpoints
+			// Note: apiFetch is called multiple times:
+			// 1. Config endpoint
+			// 2. Assets endpoint
+			// 3-5. WordPress.org checks for each active asset
+			apiFetch
 				.mockResolvedValueOnce( {
-					// akismet - from wporg
-					status: 200,
-					type: 'basic',
+					// Config response
+					wporgCheckMethod: 'php',
 				} )
 				.mockResolvedValueOnce( {
-					// custom-plugin - not from wporg
-					status: 404,
-					type: 'basic',
+					// Assets response
+					success: true,
+					plugins: [
+						{
+							slug: 'akismet/akismet',
+							name: 'Akismet',
+							version: '5.0',
+							is_active: true,
+						},
+						{
+							slug: 'custom-plugin/custom-plugin',
+							name: 'Custom Plugin',
+							version: '1.0',
+							is_active: true,
+						},
+					],
+					themes: [
+						{
+							slug: 'twentytwentyfour',
+							name: 'Twenty Twenty-Four',
+							version: '1.0',
+							is_active: true,
+						},
+						{
+							slug: 'custom-theme',
+							name: 'Custom Theme',
+							version: '1.0',
+							is_active: false,
+						},
+					],
+				} )
+				// Mock WordPress.org checks via apiFetch (php method)
+				// Checks are done for active plugins/themes only, in order
+				.mockResolvedValueOnce( {
+					// akismet - from wporg (should be filtered out)
+					success: true,
+					exists: true,
 				} )
 				.mockResolvedValueOnce( {
-					// twentytwentyfour - from wporg
-					status: 200,
-					type: 'basic',
+					// custom-plugin - not from wporg (should be included)
+					success: true,
+					exists: false,
 				} )
 				.mockResolvedValueOnce( {
-					// custom-theme - not from wporg
-					status: 404,
-					type: 'basic',
+					// twentytwentyfour - from wporg (should be filtered out)
+					success: true,
+					exists: true,
 				} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
@@ -163,30 +175,33 @@ describe( 'useAssetDiscovery', () => {
 				customAssets = await result.current.discoverCustomAssets();
 			} );
 
-			expect( customAssets ).toHaveLength( 2 );
+			// Should only include custom-plugin (akismet and twentytwentyfour are from wporg)
+			expect( customAssets ).toHaveLength( 1 );
 			expect( customAssets ).toContainEqual( {
 				type: 'plugin',
 				slug: 'custom-plugin/custom-plugin',
 				name: 'Custom Plugin',
 				version: '1.0',
 			} );
-			expect( customAssets ).toContainEqual( {
-				type: 'theme',
-				slug: 'custom-theme',
-				name: 'Custom Theme',
-				version: '1.0',
-			} );
+			// Should not include wporg assets
+			expect( customAssets ).not.toContainEqual(
+				expect.objectContaining( { slug: 'akismet/akismet' } )
+			);
+			expect( customAssets ).not.toContainEqual(
+				expect.objectContaining( { slug: 'twentytwentyfour' } )
+			);
 		} );
 
 		it( 'sets loading state during discovery', async () => {
-			global.fetch.mockImplementation(
+			apiFetch.mockImplementation(
 				() =>
 					new Promise( ( resolve ) =>
 						setTimeout(
 							() =>
 								resolve( {
-									status: 200,
-									type: 'basic',
+									success: true,
+									plugins: [],
+									themes: [],
 								} ),
 							100
 						)
@@ -209,9 +224,24 @@ describe( 'useAssetDiscovery', () => {
 		} );
 
 		it( 'handles errors gracefully', async () => {
-			// isFromWordPressOrg catches network errors and returns false
-			// So assets will be marked as custom, not cause an error
-			global.fetch.mockRejectedValue( new Error( 'Network failure' ) );
+			// Mock apiFetch to return config and assets, then fail on wporg check
+			apiFetch
+				.mockResolvedValueOnce( {
+					wporgCheckMethod: 'php',
+				} )
+				.mockResolvedValueOnce( {
+					success: true,
+					plugins: [
+						{
+							slug: 'custom-plugin',
+							name: 'Custom Plugin',
+							version: '1.0',
+							is_active: true,
+						},
+					],
+					themes: [],
+				} )
+				.mockRejectedValueOnce( new Error( 'Network failure' ) );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
 
@@ -220,30 +250,62 @@ describe( 'useAssetDiscovery', () => {
 				customAssets = await result.current.discoverCustomAssets();
 			} );
 
-			// All assets should be treated as custom since wporg checks failed
-			expect( customAssets.length ).toBeGreaterThan( 0 );
+			// Asset should be treated as custom since wporg check failed (error returns false)
+			expect( customAssets.length ).toBe( 1 );
+			expect( customAssets[ 0 ].slug ).toBe( 'custom-plugin' );
 			expect( result.current.loading ).toBe( false );
 		} );
 	} );
 
 	describe( 'getBlueprintAssets', () => {
 		it( 'returns only WordPress.org assets for blueprint', async () => {
-			// Mock WordPress.org checks - need to return results for ALL active plugins/themes
-			global.fetch
+			// Mock apiFetch for config and assets endpoints
+			apiFetch
 				.mockResolvedValueOnce( {
-					// akismet - from wporg, active
-					status: 200,
-					type: 'basic',
+					// Config response
+					wporgCheckMethod: 'php',
 				} )
 				.mockResolvedValueOnce( {
-					// custom-plugin - NOT from wporg (inactive gets filtered out before check)
-					status: 404,
-					type: 'basic',
+					// Assets response
+					success: true,
+					plugins: [
+						{
+							slug: 'akismet/akismet',
+							name: 'Akismet',
+							version: '5.0',
+							is_active: true,
+						},
+						{
+							slug: 'custom-plugin/custom-plugin',
+							name: 'Custom Plugin',
+							version: '1.0',
+							is_active: true,
+						},
+					],
+					themes: [
+						{
+							slug: 'twentytwentyfour',
+							name: 'Twenty Twenty-Four',
+							version: '1.0',
+							is_active: true,
+						},
+					],
+				} )
+				// Mock WordPress.org checks via apiFetch (php method)
+				.mockResolvedValueOnce( {
+					// akismet - from wporg, active
+					success: true,
+					exists: true,
+				} )
+				.mockResolvedValueOnce( {
+					// custom-plugin - NOT from wporg
+					success: true,
+					exists: false,
 				} )
 				.mockResolvedValueOnce( {
 					// twentytwentyfour - from wporg, active
-					status: 200,
-					type: 'basic',
+					success: true,
+					exists: true,
 				} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
@@ -253,32 +315,41 @@ describe( 'useAssetDiscovery', () => {
 				assets = await result.current.getBlueprintAssets();
 			} );
 
-			expect( assets ).toEqual( {
-				plugins: [ 'akismet/akismet' ],
-				themes: [ 'twentytwentyfour' ],
-				siteName: 'Test Site',
-			} );
+			// Should only include WordPress.org assets (akismet and twentytwentyfour)
+			// custom-plugin should be excluded because exists: false
+			expect( assets.plugins ).toContain( 'akismet' );
+			expect( assets.plugins ).not.toContain( 'custom-plugin' );
+			expect( assets.themes ).toContain( 'twentytwentyfour' );
+			expect( assets.siteName ).toBe( 'Test Site' );
 		} );
 
 		it( 'excludes built-in Playground plugins', async () => {
-			global.window.wp.plugins = {
-				...global.window.wp.plugins,
-				aether: {
-					Name: 'Aether',
-					Version: '1.0',
-					active: true,
-				},
-				'sqlite-database-integration': {
-					Name: 'SQLite',
-					Version: '1.0',
-					active: true,
-				},
-			};
-
-			global.fetch.mockResolvedValue( {
-				status: 200,
-				type: 'basic',
-			} );
+			apiFetch
+				.mockResolvedValueOnce( {
+					wporgCheckMethod: 'php',
+				} )
+				.mockResolvedValueOnce( {
+					success: true,
+					plugins: [
+						{
+							slug: 'aether/aether',
+							name: 'Aether',
+							version: '1.0',
+							is_active: true,
+						},
+						{
+							slug: 'sqlite-database-integration/sqlite-database-integration',
+							name: 'SQLite',
+							version: '1.0',
+							is_active: true,
+						},
+					],
+					themes: [],
+				} )
+				.mockResolvedValue( {
+					success: true,
+					exists: true,
+				} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
 
@@ -294,23 +365,32 @@ describe( 'useAssetDiscovery', () => {
 		} );
 
 		it( 'only includes active plugins', async () => {
-			global.window.wp.plugins = {
-				'active-plugin': {
-					Name: 'Active Plugin',
-					Version: '1.0',
-					active: true,
-				},
-				'inactive-plugin': {
-					Name: 'Inactive Plugin',
-					Version: '1.0',
-					active: false,
-				},
-			};
-
-			global.fetch.mockResolvedValue( {
-				status: 200,
-				type: 'basic',
-			} );
+			apiFetch
+				.mockResolvedValueOnce( {
+					wporgCheckMethod: 'php',
+				} )
+				.mockResolvedValueOnce( {
+					success: true,
+					plugins: [
+						{
+							slug: 'active-plugin',
+							name: 'Active Plugin',
+							version: '1.0',
+							is_active: true,
+						},
+						{
+							slug: 'inactive-plugin',
+							name: 'Inactive Plugin',
+							version: '1.0',
+							is_active: false,
+						},
+					],
+					themes: [],
+				} )
+				.mockResolvedValue( {
+					success: true,
+					exists: true,
+				} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
 

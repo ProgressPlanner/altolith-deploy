@@ -253,6 +253,13 @@ class ExportController
 			return $nonceCheck;
 		}
 
+		// Rate limiting: Prevent DoS by limiting status polling frequency
+		// Allow 60 requests per minute (generous for polling, but prevents abuse)
+		$rateLimitCheck = $this->checkRateLimit('export_status', 60, 60); // 60 seconds = 1 minute
+		if (\is_wp_error($rateLimitCheck)) {
+			return $rateLimitCheck;
+		}
+
 		$jobId = \sanitize_key($request->get_param('jobId'));
 
 		$status = \get_transient($jobId);

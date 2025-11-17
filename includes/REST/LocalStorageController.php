@@ -110,6 +110,21 @@ class LocalStorageController
 			);
 		}
 
+		// Security: Validate file size to prevent disk exhaustion and DoS attacks
+		// Allow up to 100MB per file (reasonable for web assets like images, fonts, CSS, JS)
+		$maxFileSize = 100 * 1024 * 1024; // 100MB in bytes
+		if (isset($file['size']) && $file['size'] > $maxFileSize) {
+			return new WP_Error(
+				'file_too_large',
+				\sprintf(
+					/* translators: %s: Maximum allowed file size in human-readable format */
+					\__('File size exceeds maximum allowed size of %s.', 'aether-site-exporter'),
+					\size_format($maxFileSize)
+				),
+				[ 'status' => 400 ]
+			);
+		}
+
 		// Security: Validate file type and MIME type to prevent malicious uploads
 		$fileExtension = \strtolower(\pathinfo($key, PATHINFO_EXTENSION));
 		$allowedExtensions = [

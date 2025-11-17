@@ -71,7 +71,7 @@ describe( 'discoverAssetsStep', () => {
 
 			// Success message shows zero assets
 			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
-				'Discovered 0 custom plugins/themes',
+				'Discovered 0 active custom plugins/themes',
 				'success',
 				'discoverAssets'
 			);
@@ -97,9 +97,14 @@ describe( 'discoverAssetsStep', () => {
 
 			await discoverAssetsHandler( context );
 
-			// Message shows singular form
+			// Message shows singular form with full text
 			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
-				expect.stringContaining( '1 custom plugin (my-plugin)' ),
+				expect.stringContaining( '1 active custom plugin (my-plugin)' ),
+				'success',
+				'discoverAssets'
+			);
+			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
+				expect.stringContaining( 'These will be included in the blueprint bundle' ),
 				'success',
 				'discoverAssets'
 			);
@@ -125,11 +130,16 @@ describe( 'discoverAssetsStep', () => {
 
 			await discoverAssetsHandler( context );
 
-			// Message shows plural form with list
+			// Message shows plural form with list and full text
 			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
 				expect.stringContaining(
-					'2 custom plugins (plugin-1, plugin-2)'
+					'2 active custom plugins (plugin-1, plugin-2)'
 				),
+				'success',
+				'discoverAssets'
+			);
+			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
+				expect.stringContaining( 'These will be included in the blueprint bundle' ),
 				'success',
 				'discoverAssets'
 			);
@@ -152,9 +162,14 @@ describe( 'discoverAssetsStep', () => {
 
 			await discoverAssetsHandler( context );
 
-			// Message shows singular form
+			// Message shows singular form with full text
 			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
-				expect.stringContaining( '1 custom theme (my-theme)' ),
+				expect.stringContaining( '1 active custom theme (my-theme)' ),
+				'success',
+				'discoverAssets'
+			);
+			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
+				expect.stringContaining( 'These will be included in the blueprint bundle' ),
 				'success',
 				'discoverAssets'
 			);

@@ -327,6 +327,14 @@ class SettingsController
 	 */
 	private function sanitizeProviderSettings(array $providers): array
 	{
+		// Security: Validate total nesting depth BEFORE processing to prevent stack overflow
+		// This prevents attackers from sending deeply nested arrays
+		$maxDepth = 10; // Must match sanitizeConfig() depth limit
+		if ($this->getArrayDepth($providers) > $maxDepth) {
+			// Return empty array to reject malicious deeply-nested input
+			return [];
+		}
+
 		$sanitized = [];
 
 		foreach ($providers as $providerId => $config) {
@@ -427,6 +435,39 @@ class SettingsController
 		}
 
 		return $sanitized;
+	}
+
+	/**
+	 * Calculate the maximum nesting depth of an array.
+	 *
+	 * Used to prevent stack overflow attacks via deeply nested arrays.
+	 *
+	 * @param mixed $array The array to analyze (or other value).
+	 * @param int   $currentDepth Current recursion depth (internal use).
+	 * @return int Maximum depth of the array structure.
+	 */
+	private function getArrayDepth($array, int $currentDepth = 0): int
+	{
+		// If not an array, depth is current depth
+		if (! \is_array($array)) {
+			return $currentDepth;
+		}
+
+		// If empty array, depth is current depth
+		if (empty($array)) {
+			return $currentDepth;
+		}
+
+		// Find the maximum depth among all array values
+		$maxDepth = $currentDepth;
+		foreach ($array as $value) {
+			if (\is_array($value)) {
+				$depth = $this->getArrayDepth($value, $currentDepth + 1);
+				$maxDepth = \max($maxDepth, $depth);
+			}
+		}
+
+		return $maxDepth;
 	}
 
 		// Encryption helper methods now provided by EncryptionHelper trait

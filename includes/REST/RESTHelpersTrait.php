@@ -236,8 +236,20 @@ trait RESTHelpersTrait
 	 */
 	public function sanitizeExceptionMessage(string $message): string
 	{
-		// Remove absolute paths - replace with [PATH]
+		// Remove absolute paths - replace with [PATH] (Unix-style)
 		$result = \preg_replace('#' . \preg_quote(ABSPATH, '#') . '[^\s]*#', '[PATH]', $message);
+		$message = \is_string($result) ? $result : $message;
+
+		// Remove Windows-style absolute paths (C:\Users\..., D:\...)
+		$result = \preg_replace('#[A-Za-z]:[\\\/][^\s]*#', '[PATH]', $message);
+		$message = \is_string($result) ? $result : $message;
+
+		// Remove temporary directory paths (/tmp/..., /var/tmp/...)
+		$result = \preg_replace('#/(?:tmp|var/tmp)/[^\s]*#', '[TEMP]', $message);
+		$message = \is_string($result) ? $result : $message;
+
+		// Remove stack trace line information (in /path/to/file.php on line 123)
+		$result = \preg_replace('#in /[^\s]+ on line \d+#', 'in [PATH] on line [LINE]', $message);
 		$message = \is_string($result) ? $result : $message;
 
 		// Remove common sensitive patterns

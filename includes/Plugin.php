@@ -99,6 +99,9 @@ class Plugin
 		// Register REST API routes.
 		\add_action('rest_api_init', [ $this, 'registerRestRoutes' ]);
 
+		// Cleanup temporary export files daily (uses WordPress scheduled delete event)
+		\add_action('wp_scheduled_delete', [ $this, 'cleanupExpiredExports' ]);
+
 		// Fix PHP 8.1+ deprecation: ensure admin page titles are never null.
 		\add_filter('admin_title', [ $this, 'ensureAdminTitleIsString' ], 1, 2);
 
@@ -552,15 +555,24 @@ class Plugin
 			$allowedOrigins[] = $siteUrl;
 		}
 
-		// Allow local development origins
-		if (\defined('WP_DEBUG') && WP_DEBUG) {
-			// Allow localhost with any port
-			if ($origin && \preg_match('/^https?:\/\/localhost(:\d+)?$/', $origin)) {
-				$allowedOrigins[] = $origin;
+		// Allow local development origins (requires explicit opt-in for security)
+		// Define AETHER_ALLOW_LOCAL_CORS in wp-config.php to enable
+		if (\defined('WP_DEBUG') && WP_DEBUG && \defined('AETHER_ALLOW_LOCAL_CORS') && AETHER_ALLOW_LOCAL_CORS) {
+			// Security: Only allow common development ports to reduce attack surface
+			$commonDevPorts = ['3000', '3001', '8000', '8080', '8888'];
+
+			// Allow localhost with common dev ports
+			if ($origin && \preg_match('/^https?:\/\/localhost:(\d+)$/', $origin, $matches)) {
+				if (\in_array($matches[1], $commonDevPorts, true)) {
+					$allowedOrigins[] = $origin;
+				}
 			}
-			// Allow 127.0.0.1 with any port
-			if ($origin && \preg_match('/^https?:\/\/127\.0\.0\.1(:\d+)?$/', $origin)) {
-				$allowedOrigins[] = $origin;
+
+			// Allow 127.0.0.1 with common dev ports
+			if ($origin && \preg_match('/^https?:\/\/127\.0\.0\.1:(\d+)$/', $origin, $matches)) {
+				if (\in_array($matches[1], $commonDevPorts, true)) {
+					$allowedOrigins[] = $origin;
+				}
 			}
 		}
 
@@ -742,5 +754,43 @@ class Plugin
 	public function getAllCustomAssets(): array
 	{
 		return $this->assetDiscovery->getAllCustomAssets();
+	}
+
+	/**
+	 * Cleanup expired temporary export files.
+	 *
+	 * Runs daily via WordPress 'wp_scheduled_delete' action.
+	 * Removes temporary export zip files older than 1 hour to prevent disk exhaustion.
+	 *
+	 * Security: Prevents attackers from filling disk space with abandoned export files.
+	 *
+	 * @return void
+	 */
+	public function cleanupExpiredExports(): void
+	{
+		$tempDir = \sys_get_temp_dir();
+		$pattern = $tempDir . '/wp-content-export-*.zip';
+
+		// Use glob to find all export files (returns array or false)
+		$files = \glob($pattern);
+
+		if (false === $files) {
+			return;
+		}
+
+		foreach ($files as $file) {
+			// Skip if file doesn't exist (may have been deleted between glob and check)
+			if (! \file_exists($file)) {
+				continue;
+			}
+
+			// Delete files older than 1 hour (3600 seconds)
+			// Export jobs expire after 10 minutes, so 1 hour provides safety margin
+			$fileAge = \time() - \filemtime($file);
+			if ($fileAge > 3600) {
+				// Suppress errors - file may be deleted by another process
+				@\unlink($file);
+			}
+		}
 	}
 }

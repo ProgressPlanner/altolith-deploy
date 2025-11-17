@@ -12,7 +12,7 @@ describe( 'flattenSettings', () => {
 	test( 'should flatten edge provider configuration', () => {
 		const settings = {
 			provider_types: {
-				edge: 'local-filesystem',
+				edge: 'localStorage',
 			},
 			providers: {
 				localStorage: {
@@ -24,7 +24,7 @@ describe( 'flattenSettings', () => {
 
 		const flattened = flattenSettings( settings );
 
-		expect( flattened.edgeProvider ).toBe( 'local-filesystem' );
+		expect( flattened.edgeProvider ).toBe( 'localStorage' );
 		expect( flattened.account_id ).toBe( 'test-account' );
 		expect( flattened.api_token ).toBe( 'test-token' );
 	} );
@@ -32,7 +32,7 @@ describe( 'flattenSettings', () => {
 	test( 'should skip encrypted values', () => {
 		const settings = {
 			provider_types: {
-				edge: 'local-filesystem',
+				edge: 'localStorage',
 			},
 			providers: {
 				localStorage: {
@@ -100,14 +100,14 @@ describe( 'flattenSettings', () => {
 describe( 'unflattenSettings', () => {
 	test( 'should unflatten edge provider configuration', () => {
 		const flattened = {
-			edgeProvider: 'local-filesystem',
+			edgeProvider: 'localStorage',
 			account_id: 'test-account',
 			api_token: 'test-token',
 		};
 
 		const settings = unflattenSettings( flattened );
 
-		expect( settings.provider_types.edge ).toBe( 'local-filesystem' );
+		expect( settings.provider_types.edge ).toBe( 'localStorage' );
 		expect( settings.providers.localStorage.account_id ).toBe(
 			'test-account'
 		);
@@ -182,7 +182,7 @@ describe( 'unflattenSettings', () => {
 	test( 'should round-trip flatten and unflatten', () => {
 		const original = {
 			provider_types: {
-				edge: 'local-filesystem',
+				edge: 'localStorage',
 			},
 			providers: {
 				localStorage: {

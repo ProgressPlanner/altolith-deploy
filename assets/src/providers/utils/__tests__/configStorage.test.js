@@ -6,8 +6,13 @@
 
 import { ConfigStorage } from '../configStorage';
 import apiFetch from '../../../utils/api';
+import { applyFilters } from '@wordpress/hooks';
 
 jest.mock( '../../../utils/api' );
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
 
 describe( 'ConfigStorage', () => {
 	let storage;
