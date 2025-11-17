@@ -213,8 +213,22 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 	// Detect if static URL is a public URL (direct R2 access) vs worker endpoint.
 	// Public URLs need /static/ prefix, worker endpoints add it internally.
 	// Worker endpoints contain .workers.dev.
-	const isPublicUrl =
-		normalizedStaticUrl && ! normalizedStaticUrl.includes( '.workers.dev' );
+	// Local URLs with paths (like localhost:10003/static) should NOT get prefix - they already have the path.
+	let isPublicUrl = normalizedStaticUrl && ! normalizedStaticUrl.includes( '.workers.dev' );
+
+	// If the static URL has a pathname component (other than /), don't add /static prefix
+	// Example: http://localhost:10003/static already has /static in the path
+	if ( isPublicUrl && normalizedStaticUrl ) {
+		try {
+			const urlObj = new URL( normalizedStaticUrl );
+			if ( urlObj.pathname && urlObj.pathname !== '/' ) {
+				// URL already has a path component, don't add /static prefix
+				isPublicUrl = false;
+			}
+		} catch {
+			// URL parsing failed, leave isPublicUrl as is
+		}
+	}
 
 	// Build initial URL mapping (homepage).
 	// Include both HTTP and HTTPS versions of the site URL in the mapping.

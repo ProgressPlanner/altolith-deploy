@@ -268,6 +268,17 @@ class PublishStepsController
 		$providerTypes = $settings['provider_types'] ?? [];
 		$staticSiteProviderId = $providerTypes['static_site'] ?? '';
 
+		// Fallback: If no static site provider type is set, use the first available provider
+		// that supports static_site export (typically 'local-filesystem')
+		if (empty($staticSiteProviderId) && !empty($settings['providers'])) {
+			foreach ($settings['providers'] as $providerId => $config) {
+				if (isset($config['export_types']) && \is_array($config['export_types']) && \in_array('static_site', $config['export_types'], true)) {
+					$staticSiteProviderId = $providerId;
+					break;
+				}
+			}
+		}
+
 		// If no static site provider is configured, use relative URLs.
 		if (empty($staticSiteProviderId)) {
 			return '';
