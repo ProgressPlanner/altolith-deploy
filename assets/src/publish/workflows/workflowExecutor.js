@@ -70,12 +70,35 @@ export async function executeWorkflow(
 			} );
 
 			// Wait for all steps in phase to complete
-			const stepResults = await Promise.all( stepPromises );
+			// Use Promise.allSettled() to collect results from all steps,
+			// even if some fail. This allows better error recovery and cleanup.
+			const stepResults = await Promise.allSettled( stepPromises );
 
-			// Merge step results into state
-			stepResults.forEach( ( result ) => {
-				Object.assign( state, result );
+			// Process results - merge successful results into state, throw on failures
+			const errors = [];
+			stepResults.forEach( ( result, index ) => {
+				if ( result.status === 'fulfilled' ) {
+					// Step succeeded - merge result into state
+					Object.assign( state, result.value );
+				} else {
+					// Step failed - collect error
+					const [ stepId ] = phase[ index ];
+					errors.push( {
+						stepId,
+						error: result.reason,
+					} );
+				}
 			} );
+
+			// If any steps failed, throw error with details
+			if ( errors.length > 0 ) {
+				const errorMessages = errors
+					.map( ( { stepId, error } ) => `${ stepId }: ${ error.message }` )
+					.join( ', ' );
+				throw new Error(
+					`${ errors.length } step(s) failed: ${ errorMessages }`
+				);
+			}
 
 			// Update cumulative progress
 			const phaseProgress = phase.reduce(

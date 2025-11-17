@@ -142,8 +142,8 @@ export async function uploadFilesWithProgress( {
 						);
 					}
 
-					// Report progress
-					if ( onProgress ) {
+					// Report progress (guard against empty array to prevent division by zero)
+					if ( onProgress && files.length > 0 ) {
 						onProgress( totalProcessed, files.length, null );
 					}
 
@@ -222,8 +222,8 @@ export async function uploadFilesWithProgress( {
 						);
 					}
 
-					// Report progress after upload completes
-					if ( onProgress ) {
+					// Report progress after upload completes (guard against empty array)
+					if ( onProgress && files.length > 0 ) {
 						onProgress( totalProcessed, files.length, null );
 					}
 

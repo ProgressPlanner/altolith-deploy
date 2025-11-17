@@ -271,7 +271,6 @@ export function usePublishController( publishState ) {
 				providerId,
 
 				// Hooks and utilities
-				// 				mediaOffload,
 				processStaticSiteUrls,
 				generateBlueprintJson,
 				handleSiteArchiveUpload,
@@ -290,10 +289,7 @@ export function usePublishController( publishState ) {
 				'blueprint_bundle',
 			];
 
-			debug(
-				'[Workflow] Export types configured:',
-				exportTypes
-			);
+			debug( '[Workflow] Export types configured:', exportTypes );
 
 			// Filter workflow based on export types
 			const filteredWorkflow = filterWorkflowByExportTypes(
@@ -353,7 +349,6 @@ export function usePublishController( publishState ) {
 		updateFromStep,
 		config,
 		storageProviderId,
-		// 		mediaOffload,
 		processStaticSiteUrls,
 		generateBlueprintJson,
 		handleSiteArchiveUpload,

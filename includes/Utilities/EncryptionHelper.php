@@ -19,19 +19,25 @@ use Aether\SiteExporter\Utilities\CredentialEncryption;
 trait EncryptionHelper
 {
 	/**
-	 * Encrypt sensitive fields recursively.
+	 * Encrypt sensitive fields recursively with depth limit.
 	 *
 	 * @param array<string, mixed> $config Configuration array.
+	 * @param int                  $depth  Current recursion depth.
 	 * @return array<string, mixed> Configuration with encrypted fields.
 	 */
-	protected function encryptSensitiveFields(array $config): array
+	protected function encryptSensitiveFields(array $config, int $depth = 0): array
 	{
+		// Prevent stack overflow attacks by limiting recursion depth
+		if ($depth > 10) {
+			return [];
+		}
+
 		$encrypted = [];
 
 		foreach ($config as $key => $value) {
 			if (\is_array($value)) {
-				$encrypted[ $key ] = $this->encryptSensitiveFields($value);
-			} elseif ($this->isSensitiveField($key) && ! empty($value)) {
+				$encrypted[ $key ] = $this->encryptSensitiveFields($value, $depth + 1);
+			} elseif ($this->isSensitiveField($key) && '' !== $value && null !== $value) {
 				// Check if already encrypted
 				$decrypted = CredentialEncryption::decrypt($value);
 				if (false !== $decrypted) {
@@ -49,19 +55,25 @@ trait EncryptionHelper
 	}
 
 	/**
-	 * Decrypt sensitive fields recursively.
+	 * Decrypt sensitive fields recursively with depth limit.
 	 *
 	 * @param array<string, mixed> $config Configuration array.
+	 * @param int                  $depth  Current recursion depth.
 	 * @return array<string, mixed> Configuration with decrypted fields.
 	 */
-	protected function decryptSensitiveFields(array $config): array
+	protected function decryptSensitiveFields(array $config, int $depth = 0): array
 	{
+		// Prevent stack overflow attacks by limiting recursion depth
+		if ($depth > 10) {
+			return [];
+		}
+
 		$decrypted = [];
 
 		foreach ($config as $key => $value) {
 			if (\is_array($value)) {
-				$decrypted[ $key ] = $this->decryptSensitiveFields($value);
-			} elseif ($this->isSensitiveField($key) && ! empty($value)) {
+				$decrypted[ $key ] = $this->decryptSensitiveFields($value, $depth + 1);
+			} elseif ($this->isSensitiveField($key) && '' !== $value && null !== $value) {
 				$decryptedValue = CredentialEncryption::decrypt($value);
 				$decrypted[ $key ] = false !== $decryptedValue ? $decryptedValue : $value;
 			} else {

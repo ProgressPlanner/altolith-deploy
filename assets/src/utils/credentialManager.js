@@ -33,7 +33,10 @@ export async function getCredentials( providerId ) {
 	const cached = credentialCache.get( providerId );
 	if ( cached ) {
 		const age = Date.now() - cached.timestamp;
-		if ( age < CACHE_EXPIRY_MS ) {
+		// Use <= to include the exact expiry time (off-by-one fix)
+		// Cache is valid for the full CACHE_EXPIRY_MS duration
+		// Expires only when age > CACHE_EXPIRY_MS
+		if ( age <= CACHE_EXPIRY_MS ) {
 			return cached.credentials;
 		}
 		// Cache expired, remove it.

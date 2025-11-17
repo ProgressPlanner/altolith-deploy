@@ -102,10 +102,33 @@ class BlueprintBundleGenerator
 
 		$zip->addFromString('blueprint.json', $blueprintJson);
 
+		// Validate file size before adding to prevent memory exhaustion
+		// Set limit to 512MB to prevent timeout/memory issues
+		$wpContentSize = \filesize($realWpContentPath);
+		$maxSize = 512 * 1024 * 1024; // 512MB limit
+
+		if (false === $wpContentSize || $wpContentSize > $maxSize) {
+			$zip->close();
+			\wp_delete_file($bundlePath);
+			\wp_delete_file($realWpContentPath);
+			return false;
+		}
+
 		// Add wp-content.zip to bundle using validated path
 		if (!$zip->addFile($realWpContentPath, 'wp-content.zip')) {
 			$zip->close();
 			\wp_delete_file($bundlePath);
+			return false;
+		}
+
+		// Re-validate file size after addFile() to prevent TOCTOU race condition
+		// File could have been modified between initial filesize() check and addFile() call
+		clearstatcache(true, $realWpContentPath);
+		$wpContentSizeAfter = \filesize($realWpContentPath);
+		if (false === $wpContentSizeAfter || $wpContentSizeAfter > $maxSize) {
+			$zip->close();
+			\wp_delete_file($bundlePath);
+			\wp_delete_file($realWpContentPath);
 			return false;
 		}
 

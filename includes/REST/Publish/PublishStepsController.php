@@ -238,12 +238,15 @@ class PublishStepsController
 				'message' => $result['message'],
 			]);
 		} catch (\Exception $e) {
-			// Mark job as failed.
-			$this->stateManager->markFailed($jobId, $e->getMessage(), $stepName);
+			// Sanitize exception message to prevent information disclosure
+			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
+
+			// Mark job as failed with sanitized message
+			$this->stateManager->markFailed($jobId, $sanitizedMessage, $stepName);
 
 			return new WP_Error(
 				'step_execution_failed',
-				\sprintf(\__('Step execution failed: %s', 'aether-site-exporter'), $e->getMessage()),
+				\sprintf(\__('Step execution failed: %s', 'aether-site-exporter'), $sanitizedMessage),
 				['status' => 500]
 			);
 		}
@@ -293,6 +296,24 @@ class PublishStepsController
 			return '';
 		}
 
+		// Security: Validate URL to prevent open redirect and malicious schemes
+		// Only allow http:// and https:// protocols
+		$parsedUrl = \wp_parse_url($baseUrl);
+		if (
+			empty($parsedUrl) ||
+			! isset($parsedUrl['scheme']) ||
+			! \in_array(\strtolower($parsedUrl['scheme']), ['http', 'https'], true)
+		) {
+			// Invalid URL or non-HTTP(S) scheme - fall back to relative URLs
+			return '';
+		}
+
+		// Sanitize the URL
+		$baseUrl = \esc_url_raw($baseUrl, ['http', 'https']);
+		if (empty($baseUrl)) {
+			return '';
+		}
+
 		// Ensure trailing slash
 		return \rtrim($baseUrl, '/') . '/';
 	}
@@ -308,10 +329,33 @@ class PublishStepsController
 	 */
 	public function getStaticSiteUrls(WP_REST_Request $request)
 	{
+		// Rate limiting: URL discovery is expensive, limit to 5 requests per minute
+		$rateLimitCheck = $this->checkRateLimit('url_discovery', 5, 60);
+		if (\is_wp_error($rateLimitCheck)) {
+			return $rateLimitCheck;
+		}
+
 		try {
 			// Increase execution time limit for URL discovery (can be slow in Playground).
 			// WordPress Playground may have strict timeout limits, so we try to increase it.
-			@\set_time_limit(120); // 2 minutes
+			// Check if set_time_limit is available (disabled in safe mode)
+			if (\function_exists('set_time_limit')) {
+				@\set_time_limit(120); // 2 minutes
+
+				// Verify the timeout was actually set (may fail in safe mode or with max_execution_time)
+				// ini_get('max_execution_time') returns the current limit
+				$currentLimit = @\ini_get('max_execution_time');
+				if (false !== $currentLimit && (int) $currentLimit < 120 && (int) $currentLimit !== 0) {
+					// Timeout increase failed (0 means unlimited, so that's OK)
+					\error_log(\sprintf(
+						'Aether: set_time_limit() call did not increase timeout (current: %d, requested: 120)',
+						(int) $currentLimit
+					));
+				}
+			} else {
+				// Log that we couldn't increase timeout for debugging purposes
+				\error_log('Aether: set_time_limit() not available, using default timeout');
+			}
 
 			// Discover all URLs.
 			$urlDiscovery = new URLDiscoveryService();
@@ -326,9 +370,12 @@ class PublishStepsController
 				'staticSiteUrl' => $staticSiteUrl,
 			]);
 		} catch (\Exception $e) {
+			// Sanitize exception message to prevent information disclosure
+			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
+
 			return new WP_Error(
 				'url_discovery_failed',
-				\sprintf(\__('Failed to discover URLs: %s', 'aether-site-exporter'), $e->getMessage()),
+				\sprintf(\__('Failed to discover URLs: %s', 'aether-site-exporter'), $sanitizedMessage),
 				['status' => 500]
 			);
 		}
@@ -367,6 +414,9 @@ class PublishStepsController
 			);
 		}
 
+		// Save current user ID so we can restore it after fetching.
+		$currentUserId = \get_current_user_id();
+
 		try {
 			// CRITICAL: Switch to logged-out user context (user ID = 0).
 			// Why: We need to fetch the page as an anonymous visitor would see it,
@@ -374,8 +424,6 @@ class PublishStepsController
 			// 1. No admin bar in the HTML
 			// 2. No user-specific content (private posts, drafts, etc)
 			// 3. Accurate representation of what public users will see
-			// Save current user ID so we can restore it after fetching.
-			$currentUserId = \get_current_user_id();
 			\wp_set_current_user(0);
 
 			// Fetch the page HTML using internal HTTP request.
@@ -390,11 +438,6 @@ class PublishStepsController
 					'cookies'    => [], // Critical: No cookies = anonymous visitor
 				]
 			);
-
-			// CRITICAL: Always restore the original user context after fetching.
-			// This prevents the REST API request from continuing as user ID 0,
-			// which could cause permission issues for subsequent operations.
-			\wp_set_current_user($currentUserId);
 
 			// Validate the HTTP response.
 			// Check both success flag and that we actually got HTML content.
@@ -414,18 +457,20 @@ class PublishStepsController
 				'url' => $url,
 			]);
 		} catch (\Exception $e) {
-			// Error handler: Restore user context if an exception occurs.
-			// This ensures we don't leave the request in user ID 0 state,
-			// which could cause security issues or permission errors.
-			if (isset($currentUserId)) {
-				\wp_set_current_user($currentUserId);
-			}
+			// Sanitize exception message to prevent information disclosure
+			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
 
 			return new WP_Error(
 				'html_fetch_failed',
-				\sprintf(\__('Failed to fetch HTML: %s', 'aether-site-exporter'), $e->getMessage()),
+				\sprintf(\__('Failed to fetch HTML: %s', 'aether-site-exporter'), $sanitizedMessage),
 				['status' => 500]
 			);
+		} finally {
+			// CRITICAL: Always restore the original user context, even if an exception occurred.
+			// Using finally block ensures this runs regardless of return/exception in try block.
+			// This prevents the REST API request from continuing as user ID 0,
+			// which could cause permission issues for subsequent operations.
+			\wp_set_current_user($currentUserId);
 		}
 	}
 
@@ -541,6 +586,24 @@ class PublishStepsController
 			);
 		}
 
+		// Validate blueprint schema to prevent malformed data
+		if (! \is_array($blueprintData)) {
+			return new WP_Error(
+				'invalid_blueprint_structure',
+				\__('Blueprint data must be an array', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		// Blueprint must have required fields
+		if (! isset($blueprintData['landingPage']) || ! isset($blueprintData['steps'])) {
+			return new WP_Error(
+				'invalid_blueprint_schema',
+				\__('Blueprint must contain landingPage and steps', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
 		if (empty($archiveResult['zipPath'])) {
 			return new WP_Error(
 				'missing_archive_path',
@@ -552,7 +615,13 @@ class PublishStepsController
 		$zipPath = $archiveResult['zipPath'];
 
 		// Resolve to absolute path if relative
-		if (!\path_is_absolute($zipPath)) {
+		// Check if path is absolute (starts with / on Unix or C:\ on Windows)
+		$isAbsolute = (
+			\strpos($zipPath, '/') === 0 ||
+			\preg_match('/^[a-zA-Z]:[\\\\\\/]/', $zipPath)
+		);
+
+		if (!$isAbsolute) {
 			$zipPath = ABSPATH . $zipPath;
 		}
 

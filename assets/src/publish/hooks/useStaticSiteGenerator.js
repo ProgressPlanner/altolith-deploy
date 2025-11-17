@@ -110,10 +110,13 @@ export function useStaticSiteGenerator( onProgress ) {
 			}
 
 			// Cache for processed HTML and discovered assets
+			// Memory protection: Limit cache size to prevent browser memory exhaustion on large sites
+			const MAX_CACHE_SIZE = 500; // Max URLs to cache in memory at once
 			const urlCache = new Map();
 			const allUniqueAssets = new Set(); // Track unique assets across all URLs
 
 			// Pre-scan: Fetch all URLs, extract assets, count total files
+			let cacheWarningShown = false;
 			for ( let i = 0; i < urls.length; i++ ) {
 				const url = urls[ i ];
 
@@ -153,6 +156,21 @@ export function useStaticSiteGenerator( onProgress ) {
 					// Add all assets to unique set
 					for ( const assetUrl of assetUrls ) {
 						allUniqueAssets.add( assetUrl );
+					}
+
+					// Memory protection: If cache exceeds limit, skip caching but continue processing
+					// This prevents memory exhaustion on very large sites (>500 pages)
+					if ( urlCache.size >= MAX_CACHE_SIZE ) {
+						if ( ! cacheWarningShown ) {
+							debugWarn(
+								`[Aether] URL cache limit reached (${ MAX_CACHE_SIZE }). ` +
+									`Remaining URLs will be processed without caching. ` +
+									`This may result in duplicate asset fetches but prevents memory exhaustion.`
+							);
+							cacheWarningShown = true;
+						}
+						// Skip caching but continue loop to count assets
+						continue;
 					}
 
 					// Process HTML and cache it
@@ -659,6 +677,113 @@ export function useStaticSiteGenerator( onProgress ) {
 				} catch ( error ) {
 					failures.urlsFailed++;
 					failures.failedUrls.push( { url, reason: error.message } );
+				}
+			}
+
+			// Memory protection: Process any remaining uncached URLs (if cache limit was reached)
+			// These URLs will be fetched and uploaded immediately without caching
+			if ( urlCache.size < urls.length ) {
+				debug(
+					`Processing ${ urls.length - urlCache.size } uncached URLs directly (cache limit reached)`
+				);
+
+				for ( let i = urlCache.size; i < urls.length; i++ ) {
+					const url = urls[ i ];
+
+					try {
+						// Update UI to show current progress
+						if ( setStatusMessage ) {
+							setStatusMessage(
+								`Uploading files (${
+									filesUploaded + 1
+								}/${ totalFilesToUpload })`,
+								'progress',
+								'uploadFilesProgress'
+							);
+						}
+
+						// Fetch and process HTML directly (no caching)
+						const htmlResponse = await fetch( url, {
+							method: 'GET',
+							credentials: 'omit',
+							headers: {
+								'User-Agent': 'Aether Static Site Generator',
+							},
+						} );
+
+						if ( htmlResponse.status !== 200 ) {
+							debugWarn(
+								`[Aether] Skipping uncached URL with non-200 status: ${ url } (HTTP ${ htmlResponse.status })`
+							);
+							failures.urlsFailed++;
+							failures.failedUrls.push( {
+								url,
+								reason: `Failed to fetch HTML: HTTP ${ htmlResponse.status } ${ htmlResponse.statusText }`,
+							} );
+							continue;
+						}
+
+						const html = await htmlResponse.text();
+						const processedHtml = processHtml(
+							html,
+							url,
+							siteUrl,
+							staticSiteUrl
+						);
+
+						// Upload HTML file immediately
+						const htmlPath = getStaticFilePath( url );
+						const htmlKey = htmlPath;
+						const htmlBlob = new Blob( [ processedHtml ], {
+							type: 'text/html',
+						} );
+
+						const htmlUploadResult = await storageService.upload(
+							htmlKey,
+							htmlBlob,
+							{
+								contentType: 'text/html',
+							}
+						);
+
+						if ( htmlUploadResult.success ) {
+							filesUploaded++;
+							failures.urlsSucceeded++;
+
+							uploadedFiles.push( {
+								storageKey: htmlKey,
+								relativePath: htmlPath,
+								contentType: 'text/html',
+							} );
+
+							// Extract and upload assets
+							const assetUrls = await extractAssetsFromHtml(
+								html,
+								url,
+								siteUrl
+							);
+							await processAssets( assetUrls );
+						}
+
+						// Report progress
+						if ( onProgress ) {
+							onProgress(
+								filesUploaded,
+								totalFilesToUpload,
+								null
+							);
+						}
+					} catch ( error ) {
+						debugWarn(
+							`[Aether] Error processing uncached URL: ${ url }`,
+							error.message
+						);
+						failures.urlsFailed++;
+						failures.failedUrls.push( {
+							url,
+							reason: error.message,
+						} );
+					}
 				}
 			}
 

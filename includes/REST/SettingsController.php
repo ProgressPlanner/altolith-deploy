@@ -212,15 +212,49 @@ class SettingsController
 			// At this point, both $existingProviders and $value are guaranteed to be arrays.
 			/** @var array<string, mixed> $existingProviders */
 			/** @var array<string, mixed> $value */
+
+			// Input validation: Limit number of providers and config size to prevent DoS attacks
+			$maxProviders = 50; // Maximum 50 provider configurations
+			$maxConfigSize = 100; // Maximum 100 fields per provider config (recursive count)
+
+			if (\is_array($value) && \count($value) > $maxProviders) {
+				return new WP_Error(
+					'too_many_providers',
+					\sprintf(
+						\__('Too many provider configurations. Maximum allowed: %d', 'aether-site-exporter'),
+						$maxProviders
+					),
+					['status' => 400]
+				);
+			}
+
+			// Validate each provider config size
+			foreach ($value as $providerId => $config) {
+				if (\is_array($config) && \count($config, COUNT_RECURSIVE) > $maxConfigSize) {
+					return new WP_Error(
+						'provider_config_too_large',
+						\sprintf(
+							\__('Provider configuration "%s" is too large. Maximum allowed fields: %d', 'aether-site-exporter'),
+							\sanitize_text_field((string) $providerId),
+							$maxConfigSize
+						),
+						['status' => 400]
+					);
+				}
+			}
+
 			$value = \array_merge($existingProviders, $value);
 
 			try {
 				$value = $this->sanitizeProviderSettings($value);
 				$value = $this->encryptProviderSettings($value);
 			} catch (\Exception $e) {
+				// Sanitize exception message to prevent information disclosure
+				$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
+
 				return new WP_Error(
 					'encryption_failed',
-					\sprintf(\__('Failed to encrypt provider settings: %s', 'aether-site-exporter'), $e->getMessage()),
+					\sprintf(\__('Failed to encrypt provider settings: %s', 'aether-site-exporter'), $sanitizedMessage),
 					[ 'status' => 500 ]
 				);
 			}
@@ -312,10 +346,20 @@ class SettingsController
 	 * Preserves snake_case keys (unlike sanitize_key which converts to lowercase).
 	 *
 	 * @param array<string, mixed> $config Configuration array.
+	 * @param int                   $depth  Current recursion depth (internal use).
 	 * @return array<string, mixed> Sanitized configuration.
 	 */
-	private function sanitizeConfig(array $config): array
+	private function sanitizeConfig(array $config, int $depth = 0): array
 	{
+		// Prevent stack overflow: limit recursion depth to 10 levels
+		// Most config structures are 2-3 levels deep, 10 is generous
+		$maxDepth = 10;
+		if ($depth >= $maxDepth) {
+			// Return empty array instead of recursing further
+			// This prevents infinite recursion attacks via circular references
+			return [];
+		}
+
 		$sanitized = [];
 
 		foreach ($config as $key => $value) {
@@ -324,7 +368,7 @@ class SettingsController
 			$sanitizedKey = \preg_replace('/[^a-zA-Z0-9_-]/', '', $key);
 
 			if (\is_array($value)) {
-				$sanitized[ $sanitizedKey ] = $this->sanitizeConfig($value);
+				$sanitized[ $sanitizedKey ] = $this->sanitizeConfig($value, $depth + 1);
 			} elseif (\is_bool($value)) {
 				$sanitized[ $sanitizedKey ] = (bool) $value;
 			} elseif (\is_numeric($value)) {

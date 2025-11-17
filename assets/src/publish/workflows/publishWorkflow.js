@@ -193,7 +193,7 @@ export function getCumulativeProgress( stepId ) {
  * Removes steps that are not needed based on the export_types setting.
  * Redistributes progress weights to maintain 100% total.
  *
- * @param {Array} workflow The workflow to filter.
+ * @param {Array} workflow    The workflow to filter.
  * @param {Array} exportTypes Array of export types ('static_site', 'blueprint_bundle').
  * @return {Array} Filtered workflow with adjusted progress weights.
  */
@@ -229,10 +229,7 @@ export function filterWorkflowByExportTypes( workflow, exportTypes = [] ) {
 				if ( stepType === 'both' ) {
 					return true;
 				}
-				if (
-					stepType === 'static_site' &&
-					includeStaticSite
-				) {
+				if ( stepType === 'static_site' && includeStaticSite ) {
 					return true;
 				}
 				if (

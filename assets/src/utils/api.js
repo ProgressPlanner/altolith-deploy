@@ -90,13 +90,10 @@ const requestDeduplicationMiddleware = ( options, next ) => {
 	pendingRequests.set( requestKey, promise );
 
 	// Clean up when request completes (success or error)
-	promise
-		.then( () => {
-			pendingRequests.delete( requestKey );
-		} )
-		.catch( () => {
-			pendingRequests.delete( requestKey );
-		} );
+	// Use finally() to guarantee cleanup regardless of outcome
+	promise.finally( () => {
+		pendingRequests.delete( requestKey );
+	} );
 
 	return promise;
 };

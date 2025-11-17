@@ -58,6 +58,13 @@ class PluginDependencyManager
 	 */
 	public function preventDeactivation(): void
 	{
+		// CSRF Protection: Verify nonce FIRST before any processing
+		// This prevents any code execution before security validation
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Nonce is checked immediately below
+		if (! isset($_GET['_wpnonce'])) {
+			return;
+		}
+
 		if (! isset($_GET['action']) || 'deactivate' !== $_GET['action']) {
 			return;
 		}
@@ -66,6 +73,15 @@ class PluginDependencyManager
 
 		if (empty($plugin)) {
 			return;
+		}
+
+		// Verify nonce with plugin parameter
+		if (! \wp_verify_nonce(\sanitize_text_field(\wp_unslash($_GET['_wpnonce'])), 'deactivate-plugin_' . $plugin)) {
+			\wp_die(
+				\esc_html__('Security check failed. Please try again.', 'aether-site-exporter'),
+				\esc_html__('Security Check Failed', 'aether-site-exporter'),
+				['response' => 403]
+			);
 		}
 
 		if (\in_array($plugin, self::PROTECTED_PLUGINS, true)) {

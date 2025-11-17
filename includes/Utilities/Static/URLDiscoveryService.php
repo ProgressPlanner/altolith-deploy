@@ -145,6 +145,11 @@ class URLDiscoveryService
 			]
 		);
 
+		// Check if get_posts() failed (can return WP_Error on database failure).
+		if (\is_wp_error($posts)) {
+			return;
+		}
+
 		// Generate permalink for each post and add to crawl queue.
 		// get_permalink() respects permalink structure settings (e.g., /%year%/%monthnum%/%postname%/).
 		foreach ($posts as $postId) {
@@ -165,6 +170,11 @@ class URLDiscoveryService
 				'fields'         => 'ids',
 			]
 		);
+
+		// Check if get_posts() failed (can return WP_Error on database failure).
+		if (\is_wp_error($pages)) {
+			return;
+		}
 
 		// Generate permalink for each page and add to crawl queue.
 		foreach ($pages as $pageId) {
@@ -222,39 +232,28 @@ class URLDiscoveryService
 		}
 
 		// Add date-based archive pages (/2024/01/, /2024/02/, etc).
-		// Iterate through last 12 months from current date.
-		// Only creates archives for months that actually have published posts.
-		$currentYear  = (int) \gmdate('Y');
-		$currentMonth = (int) \gmdate('m');
+		// Use single query to get all months with posts (last 12 months).
+		// This is much more efficient than 12 separate queries.
+		global $wpdb;
 
-		// Loop backwards from current month through last 12 months.
-		for ($i = 0; $i < 12; $i++) {
-			$month = $currentMonth - $i;
-			$year  = $currentYear;
+		$monthsWithPosts = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT DISTINCT YEAR(post_date) as year, MONTH(post_date) as month
+				FROM `{$wpdb->posts}`
+				WHERE post_status = %s
+				AND post_type = %s
+				AND post_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+				ORDER BY post_date DESC",
+				'publish',
+				'post'
+			)
+		);
 
-			// Handle month underflow (e.g., if current month is January, go to December of previous year).
-			if ($month <= 0) {
-				$month += 12;
-				--$year;
-			}
-
-			// Check if any posts exist for this specific month.
-			// posts_per_page => 1 is sufficient - we just need to know if ANY posts exist.
-			// This prevents creating empty archive pages that would show "No posts found".
-			$postsExist = \get_posts(
-				[
-				 'post_type'      => 'post',
-				 'post_status'    => 'publish',
-				 'posts_per_page' => 1,
-				 'fields'         => 'ids',
-				 'year'           => $year,
-				 'monthnum'       => $month,
-				]
-			);
-
-			// Only create archive page if posts exist for this month.
-			if (! empty($postsExist)) {
-				$archiveUrl = \get_month_link($year, $month);
+		// Create archive URLs for each month that has posts
+		// get_results() returns NULL on database error, so check for both NULL and array
+		if (\is_array($monthsWithPosts) && null !== $monthsWithPosts) {
+			foreach ($monthsWithPosts as $monthData) {
+				$archiveUrl = \get_month_link($monthData->year, $monthData->month);
 				if ($archiveUrl) {
 					$this->addToQueue($archiveUrl);
 				}

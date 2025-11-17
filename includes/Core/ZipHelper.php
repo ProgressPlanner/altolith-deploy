@@ -121,7 +121,14 @@ class ZipHelper
 		// Get file count before closing.
 		$fileCount = $zip->numFiles;
 
-		$zip->close();
+		// Close the ZIP archive and check for errors
+		$closeSuccess = $zip->close();
+		if (false === $closeSuccess) {
+			// If close() fails, explicitly unset $zip to release file handles
+			// This prevents resource leaks even when close() fails
+			unset($zip);
+			throw new \RuntimeException('Failed to close ZIP archive');
+		}
 
 		// ZipArchive doesn't create file if empty, so check and handle.
 		if (0 === $fileCount && ! \file_exists($zipFile)) {
@@ -162,6 +169,11 @@ class ZipHelper
 		}
 
 		$files = \scandir($fullPath);
+
+		// Check if scandir() failed (permission denied, directory deleted, etc.).
+		if (false === $files) {
+			return;
+		}
 
 		foreach ($files as $file) {
 			if ('.' === $file || '..' === $file) {

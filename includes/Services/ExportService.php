@@ -82,8 +82,11 @@ class ExportService
 		// Extract directory and validate it to prevent path traversal attacks.
 		$exportDir = \dirname($exportPath);
 
-		// Security: Reject paths with path traversal sequences or absolute paths.
-		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $exportDir) || \preg_match('#^[/\\\\]#', $exportDir)) {
+		// Security: Reject paths with path traversal sequences, absolute paths, or null bytes.
+		// CRITICAL: Validate BEFORE any filesystem operations.
+		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $exportDir) ||
+		    \preg_match('#^[/\\\\]#', $exportDir) ||
+		    \strpos($exportDir, "\0") !== false) {
 			return new \WP_Error(
 				'invalid_export_path',
 				\__('Invalid export path: path traversal not allowed', 'aether-site-exporter'),
@@ -93,14 +96,63 @@ class ExportService
 
 		$fullExportDir = \rtrim(ABSPATH, '/') . '/' . \ltrim($exportDir, '/');
 
-		if (!\is_dir($fullExportDir)) {
-			\wp_mkdir_p($fullExportDir);
+		// Security: Validate parent directory exists and is within ABSPATH BEFORE creating anything.
+		// This prevents creating directories outside ABSPATH via traversal.
+		$parentDir = \dirname($fullExportDir);
+
+		// Parent must exist for realpath() to work
+		if (!\is_dir($parentDir)) {
+			// Recursively check parent's parent to ensure we stay within ABSPATH
+			$checkDir = $parentDir;
+			while (!\is_dir($checkDir) && \strlen($checkDir) > \strlen(ABSPATH)) {
+				$checkDir = \dirname($checkDir);
+			}
+
+			// Validate the existing ancestor is within ABSPATH
+			$realCheckDir = \realpath($checkDir);
+			$realAbspath = \realpath(ABSPATH);
+			if (false === $realCheckDir || false === $realAbspath ||
+			    0 !== \strpos($realCheckDir, $realAbspath)) {
+				return new \WP_Error(
+					'invalid_export_directory',
+					\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
+					[ 'status' => 400 ]
+				);
+			}
+		} else {
+			// Parent exists, validate it's within ABSPATH
+			$realParent = \realpath($parentDir);
+			$realAbspath = \realpath(ABSPATH);
+			if (false === $realParent || false === $realAbspath ||
+			    0 !== \strpos($realParent, $realAbspath)) {
+				return new \WP_Error(
+					'invalid_export_directory',
+					\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
+					[ 'status' => 400 ]
+				);
+			}
 		}
 
-		// Security: Validate that the created directory is within ABSPATH.
+		// NOW safe to create the directory
+		if (!\is_dir($fullExportDir)) {
+			$created = \wp_mkdir_p($fullExportDir);
+			if (!$created) {
+				return new \WP_Error(
+					'directory_creation_failed',
+					\__('Failed to create export directory', 'aether-site-exporter'),
+					[ 'status' => 500 ]
+				);
+			}
+		}
+
+		// Final security check: Validate the created directory is within ABSPATH.
 		$realExportDir = \realpath($fullExportDir);
 		$realAbspath = \realpath(ABSPATH);
 		if (false === $realExportDir || false === $realAbspath || 0 !== \strpos($realExportDir, $realAbspath)) {
+			// Clean up created directory if validation fails
+			if (\is_dir($fullExportDir)) {
+				@\rmdir($fullExportDir);
+			}
 			return new \WP_Error(
 				'invalid_export_directory',
 				\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
@@ -137,10 +189,28 @@ class ExportService
 		$progressCallback = null;
 		if ($jobId && $totalFiles > 0) {
 			$progressCallback = function () use ($jobId, $stateManager, $totalFiles, &$processedFiles) {
-				$processedFiles++;
-				// Update progress every 50 files or every 2% to avoid too many status updates
-				if ($processedFiles % 50 === 0 || \fmod(($processedFiles / $totalFiles * 100), 2) < 0.1) {
-					$progress = \min(100, \round(($processedFiles / $totalFiles) * 100));
+				// Prevent integer overflow: clamp to reasonable maximum
+				// PHP_INT_MAX on 64-bit is ~9.2E18, but we clamp to 2^31 for safety
+				if ($processedFiles < 2147483647) {
+					$processedFiles++;
+				}
+
+				// Update progress more granularly for better UX, especially for small file counts
+				// Update every N files OR every 1% (whichever is more frequent)
+				// Use float division to prevent overflow
+				$updateInterval = \max(1, (int) \floor((float) $totalFiles / 100.0));
+
+				// Prevent modulo by zero and handle overflow in modulo operation
+				if ($updateInterval > 0 && $processedFiles % $updateInterval === 0) {
+					// Use float math to prevent integer overflow on large file counts
+					// Cast to float before division to ensure accurate calculation
+					$progressFloat = \min(100.0, ((float) $processedFiles / (float) $totalFiles) * 100.0);
+					$progress = (int) \round($progressFloat);
+
+					// Overflow protection: clamp to valid range
+					if ($progress < 0 || $progress > 100) {
+						$progress = \min(100, \max(0, $progress));
+					}
 
 					// Use JobStateManager if provided (job tracking).
 					if ($stateManager) {
@@ -550,14 +620,14 @@ class ExportService
 		global $wpdb;
 
 		// Query for all attachments with external storage metadata.
+		// Use JOIN instead of subquery for better performance.
 		$attachmentIds = $wpdb->get_col(
 			$wpdb->prepare(
-				"SELECT post_id FROM {$wpdb->postmeta}
-				WHERE meta_key = %s
-				AND post_id IN (
-					SELECT ID FROM {$wpdb->posts}
-					WHERE post_type = 'attachment'
-				)",
+				"SELECT pm.post_id
+				FROM `{$wpdb->postmeta}` pm
+				INNER JOIN `{$wpdb->posts}` p ON pm.post_id = p.ID
+				WHERE pm.meta_key = %s
+				AND p.post_type = 'attachment'",
 				'_aether_media_metadata'
 			)
 		);

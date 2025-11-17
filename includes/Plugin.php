@@ -852,10 +852,17 @@ class Plugin
 		// Determine which cookies to set based on the action hook.
 		$action = \current_action();
 
+		// Check if site is using HTTPS or if this is a secure auth scheme
+		// SameSite=None requires Secure flag, but Secure flag requires HTTPS
+		$isSecure = \is_ssl() || ('secure_auth' === $scheme);
+
+		// Use SameSite=None for HTTPS (allows cross-site/iframe usage)
+		// Fall back to SameSite=Lax for HTTP sites (still reasonably secure)
+		$sameSite = $isSecure ? 'None' : 'Lax';
+
 		if ('set_auth_cookie' === $action) {
 			// Set the auth cookie (can be AUTH_COOKIE or SECURE_AUTH_COOKIE based on scheme).
-			$secure = ('secure_auth' === $scheme);
-			$authCookieName = $secure ? SECURE_AUTH_COOKIE : AUTH_COOKIE;
+			$authCookieName = $isSecure ? SECURE_AUTH_COOKIE : AUTH_COOKIE;
 
 			\setcookie(
 				$authCookieName,
@@ -864,9 +871,9 @@ class Plugin
 					'expires'  => $expire,
 					'path'     => PLUGINS_COOKIE_PATH,
 					'domain'   => COOKIE_DOMAIN,
-					'secure'   => true, // Required for SameSite=None
+					'secure'   => $isSecure,
 					'httponly' => true,
-					'samesite' => 'None', // Allow cross-site usage in iframes
+					'samesite' => $sameSite,
 				]
 			);
 
@@ -877,9 +884,9 @@ class Plugin
 					'expires'  => $expire,
 					'path'     => ADMIN_COOKIE_PATH,
 					'domain'   => COOKIE_DOMAIN,
-					'secure'   => true,
+					'secure'   => $isSecure,
 					'httponly' => true,
-					'samesite' => 'None',
+					'samesite' => $sameSite,
 				]
 			);
 		} elseif ('set_logged_in_cookie' === $action) {
@@ -891,9 +898,9 @@ class Plugin
 					'expires'  => $expire,
 					'path'     => COOKIEPATH,
 					'domain'   => COOKIE_DOMAIN,
-					'secure'   => true, // Required for SameSite=None
+					'secure'   => $isSecure,
 					'httponly' => true,
-					'samesite' => 'None', // Allow cross-site usage in iframes
+					'samesite' => $sameSite,
 				]
 			);
 
@@ -904,9 +911,9 @@ class Plugin
 					'expires'  => $expire,
 					'path'     => SITECOOKIEPATH,
 					'domain'   => COOKIE_DOMAIN,
-					'secure'   => true,
+					'secure'   => $isSecure,
 					'httponly' => true,
-					'samesite' => 'None',
+					'samesite' => $sameSite,
 				]
 			);
 		}

@@ -108,10 +108,26 @@ class PublishJobController
 		// Get changed assets and discovered assets from request body.
 		$body = $request->get_params();
 
-		// Recursively sanitize array values.
-		$sanitizeArrayRecursive = function ($data) use (&$sanitizeArrayRecursive) {
+		// Validate array complexity BEFORE processing to prevent DoS attacks
+		$complexityCheck = $this->validateArrayComplexity($body, 10, 1000);
+		if (\is_wp_error($complexityCheck)) {
+			return $complexityCheck;
+		}
+
+		// Recursively sanitize array values with depth limit.
+		$sanitizeArrayRecursive = function ($data, $depth = 0) use (&$sanitizeArrayRecursive) {
+			// Prevent stack overflow - this should never happen due to validation above,
+			// but included as defense in depth
+			if ($depth > 10) {
+				return [];
+			}
+
 			if (\is_array($data)) {
-				return \array_map($sanitizeArrayRecursive, $data);
+				$sanitized = [];
+				foreach ($data as $key => $value) {
+					$sanitized[$key] = $sanitizeArrayRecursive($value, $depth + 1);
+				}
+				return $sanitized;
 			}
 			if (\is_string($data)) {
 				return \sanitize_text_field($data);
@@ -122,8 +138,34 @@ class PublishJobController
 		$changedAssets    = $sanitizeArrayRecursive($body['changedAssets'] ?? []);
 		$discoveredAssets = isset($body['discoveredAssets']) ? $sanitizeArrayRecursive($body['discoveredAssets']) : null;
 
-		// Generate unique job ID.
-		$jobId = 'aether_site_exporter_' . \time() . '_' . \wp_generate_password(8, false);
+		// Note: Array complexity validation above already checks both depth and element count
+		// This redundant check is kept for backwards compatibility and defense in depth
+		$maxAssetCount = 1000; // Maximum 1000 assets per request
+		if (\is_array($changedAssets) && \count($changedAssets, COUNT_RECURSIVE) > $maxAssetCount) {
+			return new \WP_Error(
+				'too_many_assets',
+				\sprintf(
+					\__('Too many changed assets provided. Maximum allowed: %d', 'aether-site-exporter'),
+					$maxAssetCount
+				),
+				['status' => 400]
+			);
+		}
+
+		if (\is_array($discoveredAssets) && \count($discoveredAssets, COUNT_RECURSIVE) > $maxAssetCount) {
+			return new \WP_Error(
+				'too_many_assets',
+				\sprintf(
+					\__('Too many discovered assets provided. Maximum allowed: %d', 'aether-site-exporter'),
+					$maxAssetCount
+				),
+				['status' => 400]
+			);
+		}
+
+		// Generate unique job ID using full random generation for better security.
+		// Using 16 characters of randomness instead of time() + 8 chars to prevent predictability.
+		$jobId = 'aether_site_exporter_' . \wp_generate_password(16, false);
 
 		// Initialize job status.
 		// Workflow starts with: discoverAssets (first tracked step).
