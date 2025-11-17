@@ -119,6 +119,7 @@ class LocalStorageController
 			'pdf', 'txt', 'md',                           // Documents
 			'zip', 'tar', 'gz',                           // Archives
 			'html', 'htm', 'xml',                         // Markup
+			'',                                           // Allow files without extension (e.g., directory index files)
 		];
 
 		if (!\in_array($fileExtension, $allowedExtensions, true)) {
@@ -148,6 +149,8 @@ class LocalStorageController
 					'application/pdf', 'text/plain', 'text/markdown',
 					'application/zip', 'application/x-tar', 'application/gzip', 'application/x-gzip',
 					'text/html', 'application/xhtml+xml', 'application/xml', 'text/xml',
+					'application/octet-stream',  // Generic binary - allow for files without extension
+					'inode/x-empty',              // Empty files
 				];
 
 				if (!\in_array($mimeType, $allowedMimeTypes, true)) {
