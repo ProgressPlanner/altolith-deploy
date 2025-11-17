@@ -21,21 +21,6 @@ import { createSuccessResponse, createErrorResponse } from './standardResponse';
  * @return {Promise<Object>} Upload result with success and optional url/error.
  */
 export async function uploadFile( staticPath, key, file, options = {} ) {
-	// Enhanced logging for debugging upload issues
-	const fileExtension = key.split( '.' ).pop();
-	const hasExtension = key.includes( '.' );
-
-	console.log( '[Aether Upload] Starting upload:', {
-		staticPath,
-		key,
-		fileSize: file.size,
-		fileType: file.type,
-		fileName: file.name,
-		hasExtension,
-		extension: hasExtension ? fileExtension : '(none)',
-		contentType: options.contentType || '(not set)',
-	} );
-
 	try {
 		// Create FormData for file upload
 		const formData = new FormData();
@@ -48,30 +33,15 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 			formData.append( 'content_type', options.contentType );
 		}
 
-		console.log( '[Aether Upload] Sending request to:', '/aether/site-exporter/local-storage/upload' );
-
 		const response = await apiFetch( {
 			path: '/aether/site-exporter/local-storage/upload',
 			method: 'POST',
 			body: formData,
 		} );
 
-		console.log( '[Aether Upload] Response received:', {
-			success: response.success,
-			error: response.error || '(none)',
-			fullResponse: response,
-		} );
-
 		if ( ! response.success ) {
-			console.error( '[Aether Upload] Upload failed:', {
-				key,
-				error: response.error || 'Upload failed',
-				response,
-			} );
 			return createErrorResponse( response.error || 'Upload failed' );
 		}
-
-		console.log( '[Aether Upload] ✅ Upload successful:', key );
 
 		// Call progress callback if provided (100% since we don't have chunked upload yet)
 		if ( options.onProgress ) {
@@ -80,12 +50,6 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 
 		return createSuccessResponse();
 	} catch ( error ) {
-		console.error( '[Aether Upload] ❌ Exception during upload:', {
-			key,
-			error: error.message,
-			code: error.code,
-			fullError: error,
-		} );
 		debug( 'filesystemAdapter.uploadFile error:', error );
 		return createErrorResponse( error.message || 'Upload failed' );
 	}
