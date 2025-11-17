@@ -7,6 +7,8 @@
  * @package
  */
 
+import { applyFilters } from '@wordpress/hooks';
+
 /**
  * Production zip URL for Aether plugin (matches PHP constant AETHER_PRODUCTION_ZIP_URL).
  */
@@ -134,7 +136,7 @@ export function buildAetherActivationStep() {
 export function buildBlueprintSteps( config ) {
 	const { wporgPlugins = [], wporgThemes = [] } = config;
 
-	const steps = [];
+	let steps = [];
 
 	// Step 1: Import WordPress files (wp-content.zip from bundle).
 	steps.push( buildImportFilesStep() );
@@ -145,7 +147,27 @@ export function buildBlueprintSteps( config ) {
 	// Step 3: Install WordPress.org themes.
 	steps.push( ...buildThemeInstallSteps( wporgThemes ) );
 
-	return steps;
+	/**
+	 * Filter blueprint steps array.
+	 *
+	 * Allows modification of blueprint steps before final JSON generation.
+	 *
+	 * @param {Array<Object>} steps  Blueprint steps array.
+	 * @param {Object}        config Configuration object with wporgPlugins, wporgThemes.
+	 *
+	 * @example
+	 * import { addFilter } from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.blueprint.steps', 'my-plugin', (steps, config) => {
+	 *     // Add custom step at the end
+	 *     steps.push({
+	 *         step: 'runPHP',
+	 *         code: '<?php update_option("my_custom_option", "value"); ?>'
+	 *     });
+	 *     return steps;
+	 * });
+	 */
+	return applyFilters( 'aether.blueprint.steps', steps, config );
 }
 
 /**
@@ -155,7 +177,7 @@ export function buildBlueprintSteps( config ) {
  * @return {Object} Complete blueprint JSON.
  */
 export function buildBlueprintJson( steps ) {
-	return {
+	let blueprint = {
 		$schema: 'https://playground.wordpress.net/blueprint-schema.json',
 		landingPage: '/wp-login.php',
 		preferredVersions: {
@@ -167,4 +189,33 @@ export function buildBlueprintJson( steps ) {
 		},
 		steps,
 	};
+
+	/**
+	 * Filter complete blueprint JSON object.
+	 *
+	 * Allows modification of the final blueprint configuration.
+	 *
+	 * @param {Object} blueprint Complete blueprint JSON object.
+	 * @param {Array}  steps     Blueprint steps array.
+	 *
+	 * @example
+	 * import { addFilter } from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.blueprint.json', 'my-plugin', (blueprint, steps) => {
+	 *     // Customize landing page
+	 *     blueprint.landingPage = '/wp-admin/';
+	 *
+	 *     // Change PHP version
+	 *     blueprint.preferredVersions.php = '8.3';
+	 *
+	 *     // Add login credentials
+	 *     blueprint.login = {
+	 *         username: 'admin',
+	 *         password: 'password'
+	 *     };
+	 *
+	 *     return blueprint;
+	 * });
+	 */
+	return applyFilters( 'aether.blueprint.json', blueprint, steps );
 }

@@ -8,6 +8,7 @@
  */
 
 import { debug, debugError } from '../../utils/debug';
+import { applyFilters } from '@wordpress/hooks';
 
 /**
  * Resolve relative URL against a base URL.
@@ -47,7 +48,29 @@ export function resolveRelative( url, baseUrl ) {
 		0,
 		base.pathname.lastIndexOf( '/' )
 	);
-	return base.origin + baseDir + '/' + url;
+	let resolvedUrl = base.origin + baseDir + '/' + url;
+
+	/**
+	 * Filter resolved URL after relative-to-absolute conversion.
+	 *
+	 * Allows customization of URL resolution logic.
+	 *
+	 * @param {string} resolvedUrl Resolved absolute URL.
+	 * @param {string} url         Original relative URL.
+	 * @param {string} baseUrl     Base URL used for resolution.
+	 *
+	 * @example
+	 * import { addFilter } from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.url.resolve', 'my-plugin', (resolvedUrl, url, baseUrl) => {
+	 *     // Custom CDN mapping for assets
+	 *     if (url.includes('/uploads/')) {
+	 *         return resolvedUrl.replace('example.com', 'cdn.example.com');
+	 *     }
+	 *     return resolvedUrl;
+	 * });
+	 */
+	return applyFilters( 'aether.url.resolve', resolvedUrl, url, baseUrl );
 }
 
 /**
@@ -63,32 +86,56 @@ export function isExternal( url, siteUrl ) {
 		return false;
 	}
 
+	let isExternalUrl = false;
+
 	// URLs that start with http:// or https:// - check host.
 	if ( url.startsWith( 'http://' ) || url.startsWith( 'https://' ) ) {
 		try {
 			const urlObj = new URL( url );
 			const siteObj = new URL( siteUrl );
-			return urlObj.host !== siteObj.host;
+			isExternalUrl = urlObj.host !== siteObj.host;
 		} catch {
 			// If we can't parse, treat as external to be safe.
-			return true;
+			isExternalUrl = true;
 		}
 	}
-
 	// Protocol-relative URLs - check host.
-	if ( url.startsWith( '//' ) ) {
+	else if ( url.startsWith( '//' ) ) {
 		try {
 			const urlObj = new URL( 'https:' + url );
 			const siteObj = new URL( siteUrl );
-			return urlObj.host !== siteObj.host;
+			isExternalUrl = urlObj.host !== siteObj.host;
 		} catch {
 			// If we can't parse, treat as external to be safe.
-			return true;
+			isExternalUrl = true;
 		}
 	}
-
 	// If it doesn't start with a scheme or /, treat as external to be safe.
-	return true;
+	else {
+		isExternalUrl = true;
+	}
+
+	/**
+	 * Filter external URL detection result.
+	 *
+	 * Allows customization of what's considered "external" for URL rewriting.
+	 *
+	 * @param {boolean} isExternalUrl Whether URL is considered external.
+	 * @param {string}  url           URL being checked.
+	 * @param {string}  siteUrl       Site URL for comparison.
+	 *
+	 * @example
+	 * import { addFilter } from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.url.is_external', 'my-plugin', (isExternal, url, siteUrl) => {
+	 *     // Treat CDN subdomain as internal
+	 *     if (url.includes('cdn.example.com') && siteUrl.includes('example.com')) {
+	 *         return false;
+	 *     }
+	 *     return isExternal;
+	 * });
+	 */
+	return applyFilters( 'aether.url.is_external', isExternalUrl, url, siteUrl );
 }
 
 /**
@@ -182,7 +229,29 @@ export function normalize( url, siteUrl ) {
 	// Remove trailing slash.
 	url = url.replace( /\/$/, '' );
 
-	return url;
+	/**
+	 * Filter normalized URL.
+	 *
+	 * Allows customization of URL normalization logic.
+	 *
+	 * @param {string} url     Normalized URL.
+	 * @param {string} siteUrl Site URL used for normalization.
+	 *
+	 * @example
+	 * import { addFilter } from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.url.normalize', 'my-plugin', (url, siteUrl) => {
+	 *     // Custom normalization: remove query parameters
+	 *     try {
+	 *         const urlObj = new URL(url);
+	 *         urlObj.search = '';
+	 *         return urlObj.toString();
+	 *     } catch {
+	 *         return url;
+	 *     }
+	 * });
+	 */
+	return applyFilters( 'aether.url.normalize', url, siteUrl );
 }
 
 /**
@@ -406,6 +475,7 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 		}
 
 		// Apply static URL base if configured.
+		let rewrittenUrl;
 		if ( normalizedStaticUrl ) {
 			// Preserve the protocol from the configured static URL
 			// Users can choose HTTP or HTTPS based on their deployment needs
@@ -414,14 +484,45 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 				// Preserve the base path from static URL
 				// Remove trailing slash from base, then append staticPath
 				const basePath = staticUrlObj.pathname.replace( /\/$/, '' );
-				return staticUrlObj.origin + basePath + staticPath;
+				rewrittenUrl = staticUrlObj.origin + basePath + staticPath;
 			} catch {
 				// If URL parsing fails, fall back to simple concatenation
-				return normalizedStaticUrl.replace( /\/$/, '' ) + staticPath;
+				rewrittenUrl = normalizedStaticUrl.replace( /\/$/, '' ) + staticPath;
 			}
+		} else {
+			rewrittenUrl = staticPath;
 		}
 
-		return staticPath;
+		/**
+		 * Filter rewritten URL after static site conversion.
+		 *
+		 * Allows customization of the final rewritten URL.
+		 *
+		 * @param {string} rewrittenUrl      Final rewritten URL.
+		 * @param {string} url               Original URL.
+		 * @param {string} contextUrl        Context URL for resolution.
+		 * @param {string} siteUrl           Site URL.
+		 * @param {string} normalizedStaticUrl Static URL (if configured).
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.url.rewrite', 'my-plugin', (rewrittenUrl, url, contextUrl, siteUrl, staticUrl) => {
+		 *     // Custom URL transformation
+		 *     if (rewrittenUrl.includes('/wp-content/uploads/')) {
+		 *         return rewrittenUrl.replace('/wp-content/uploads/', '/media/');
+		 *     }
+		 *     return rewrittenUrl;
+		 * });
+		 */
+		return applyFilters(
+			'aether.url.rewrite',
+			rewrittenUrl,
+			url,
+			contextUrl,
+			normalizedSiteUrl,
+			normalizedStaticUrl
+		);
 	}
 
 	/**
@@ -739,7 +840,31 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 			}
 		}
 
-		return html;
+		/**
+		 * Filter HTML after URL rewriting.
+		 *
+		 * Allows final customization of HTML after all URL rewriting is complete.
+		 *
+		 * @param {string} html       Rewritten HTML content.
+		 * @param {string} contextUrl Context URL (current page).
+		 * @param {string} siteUrl    Site URL.
+		 * @param {string} staticUrl  Static URL (if configured).
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.url.rewrite_html', 'my-plugin', (html, contextUrl, siteUrl, staticUrl) => {
+		 *     // Add custom meta tags
+		 *     return html.replace('</head>', '<meta name="generator" content="Aether"></head>');
+		 * });
+		 */
+		return applyFilters(
+			'aether.url.rewrite_html',
+			html,
+			contextUrl,
+			normalizedSiteUrl,
+			normalizedStaticUrl
+		);
 	}
 
 	return {

@@ -7,6 +7,7 @@
  * @package
  */
 
+import { doAction, applyFilters } from '@wordpress/hooks';
 import { debug, debugError } from '../../utils/debug';
 
 /**
@@ -155,16 +156,86 @@ async function executeStep(
 	);
 	onStepStart( stepId, weight );
 
+	/**
+	 * Action fired before a publish step executes.
+	 *
+	 * @param {Object} context Execution context passed to the step handler.
+	 *
+	 * @example
+	 * import { addAction } from '@wordpress/hooks';
+	 *
+	 * addAction('aether.publish.step.uploadStaticSiteFiles.before', 'my-provider', (context) => {
+	 *   console.log('About to upload files:', context);
+	 * });
+	 */
+	doAction( `aether.publish.step.${ stepId }.before`, context );
+
 	try {
 		// Execute step handler (returns Promise)
 		const result = await handler( context );
 
-		debug( `[WorkflowExecutor] Step completed: ${ stepId }` );
-		onStepComplete( stepId, result );
+		/**
+		 * Filter the result of a publish step.
+		 *
+		 * Allows modification of step results before they're merged into workflow state.
+		 *
+		 * @param {Object} result  The step result object.
+		 * @param {Object} context The execution context.
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.publish.step.createSiteArchive.result', 'my-provider', (result, context) => {
+		 *   return {
+		 *     ...result,
+		 *     customData: 'my custom value'
+		 *   };
+		 * });
+		 */
+		const filteredResult = applyFilters(
+			`aether.publish.step.${ stepId }.result`,
+			result || {},
+			context
+		);
 
-		return result || {};
+		debug( `[WorkflowExecutor] Step completed: ${ stepId }` );
+		onStepComplete( stepId, filteredResult );
+
+		/**
+		 * Action fired after a publish step completes successfully.
+		 *
+		 * @param {Object} result  The step result object (after filtering).
+		 * @param {Object} context The execution context.
+		 *
+		 * @example
+		 * import { addAction } from '@wordpress/hooks';
+		 *
+		 * addAction('aether.publish.step.generateBlueprint.after', 'my-provider', (result, context) => {
+		 *   console.log('Blueprint generated:', result.blueprint);
+		 * });
+		 */
+		doAction( `aether.publish.step.${ stepId }.after`, filteredResult, context );
+
+		return filteredResult;
 	} catch ( error ) {
 		debugError( `[WorkflowExecutor] Step failed: ${ stepId }`, error );
+
+		/**
+		 * Action fired when a publish step fails.
+		 *
+		 * @param {Error}  error   The error object.
+		 * @param {Object} context The execution context.
+		 *
+		 * @example
+		 * import { addAction } from '@wordpress/hooks';
+		 *
+		 * addAction('aether.publish.step.uploadStaticSiteFiles.error', 'my-provider', (error, context) => {
+		 *   // Log error to external service
+		 *   console.error('Upload failed:', error.message);
+		 * });
+		 */
+		doAction( `aether.publish.step.${ stepId }.error`, error, context );
+
 		throw new Error( `Step ${ stepId } failed: ${ error.message }` );
 	}
 }
@@ -183,9 +254,35 @@ export function calculateProgress(
 	stepProgress
 ) {
 	const stepProgressContribution = ( stepWeight * stepProgress ) / 100;
-	return Math.min(
+	const calculatedProgress = Math.min(
 		100,
 		Math.round( cumulativeProgress + stepProgressContribution )
+	);
+
+	/**
+	 * Filter the calculated progress value.
+	 *
+	 * Allows custom progress calculation or smoothing.
+	 *
+	 * @param {number} progress           The calculated progress (0-100).
+	 * @param {number} cumulativeProgress Progress before current step.
+	 * @param {number} stepWeight         Weight of current step.
+	 * @param {number} stepProgress       Progress within current step.
+	 *
+	 * @example
+	 * import { addFilter } from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.publish.progress', 'my-provider', (progress) => {
+	 *   // Never show 100% until truly complete
+	 *   return Math.min(99, progress);
+	 * });
+	 */
+	return applyFilters(
+		'aether.publish.progress',
+		calculatedProgress,
+		cumulativeProgress,
+		stepWeight,
+		stepProgress
 	);
 }
 

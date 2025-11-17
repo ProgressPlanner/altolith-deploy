@@ -19,6 +19,7 @@
  * @package
  */
 
+import { applyFilters } from '@wordpress/hooks';
 import { discoverAssetsHandler } from '../steps/discoverAssetsStep';
 import { getStaticSiteUrlsHandler } from '../steps/getStaticSiteUrlsStep';
 import { generateBlueprintHandler } from '../steps/generateBlueprintStep';
@@ -80,6 +81,32 @@ export const STEP_HANDLERS = {
 	uploadStaticSiteFiles: uploadStaticSiteFilesHandler,
 	uploadSiteArchive: uploadSiteArchiveHandler,
 };
+
+/**
+ * Get workflow with filters applied.
+ *
+ * Allows third-party code to modify the workflow steps via filters.
+ *
+ * @return {Array} Workflow with filters applied.
+ */
+export function getWorkflow() {
+	/**
+	 * Filter the publish workflow steps.
+	 *
+	 * Allows providers to add, remove, or modify workflow steps.
+	 *
+	 * @param {Array} workflow The workflow definition.
+	 *
+	 * @example
+	 * import { addFilter } from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.publish.workflow.steps', 'my-provider', (workflow) => {
+	 *   // Add custom step at the end
+	 *   return [...workflow, [['myCustomStep', 5]]];
+	 * });
+	 */
+	return applyFilters( 'aether.publish.workflow.steps', PUBLISH_WORKFLOW );
+}
 
 /**
  * Validate workflow definition.

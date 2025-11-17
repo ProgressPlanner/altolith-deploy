@@ -8,6 +8,7 @@
  */
 
 import apiFetch from '../../utils/api';
+import { applyFilters, doAction } from '@wordpress/hooks';
 
 /**
  * Cache duration in milliseconds (5 minutes).
@@ -70,10 +71,49 @@ export class ConfigStorage {
 				method: 'GET',
 			} );
 
-			const config = response.config || {};
+			let config = response.config || {};
+
+			/**
+			 * Filter provider configuration after loading from storage.
+			 *
+			 * Allows modification of config loaded from REST API.
+			 *
+			 * @param {Object} config     Loaded configuration.
+			 * @param {string} providerId Provider ID.
+			 *
+			 * @example
+			 * import { addFilter } from '@wordpress/hooks';
+			 *
+			 * addFilter('aether.storage.config.load', 'my-plugin', (config, providerId) => {
+			 *     if (providerId === 'my-provider') {
+			 *         config.autoLoaded = Date.now();
+			 *     }
+			 *     return config;
+			 * });
+			 */
+			config = applyFilters(
+				'aether.storage.config.load',
+				config,
+				this.providerId
+			);
 
 			// Cache the result
 			this.saveToCache( config );
+
+			/**
+			 * Action fired after configuration is loaded from storage.
+			 *
+			 * @param {Object} config     Loaded configuration.
+			 * @param {string} providerId Provider ID.
+			 *
+			 * @example
+			 * import { addAction } from '@wordpress/hooks';
+			 *
+			 * addAction('aether.storage.config.loaded', 'my-plugin', (config, providerId) => {
+			 *     console.log(`Configuration loaded for ${providerId}`);
+			 * });
+			 */
+			doAction( 'aether.storage.config.loaded', config, this.providerId );
 
 			return config;
 		} catch ( error ) {
@@ -97,6 +137,30 @@ export class ConfigStorage {
 	 * @return {Promise<boolean>} True if saved successfully
 	 */
 	async save( config ) {
+		/**
+		 * Filter configuration before saving to storage.
+		 *
+		 * Allows modification of config before REST API call.
+		 *
+		 * @param {Object} config     Configuration to save.
+		 * @param {string} providerId Provider ID.
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.storage.config.before_save', 'my-plugin', (config, providerId) => {
+		 *     if (providerId === 'my-provider') {
+		 *         config.lastSaved = Date.now();
+		 *     }
+		 *     return config;
+		 * });
+		 */
+		config = applyFilters(
+			'aether.storage.config.before_save',
+			config,
+			this.providerId
+		);
+
 		try {
 			await apiFetch( {
 				path: `/aether/site-exporter/providers/${ this.providerId }/config`,
@@ -106,6 +170,21 @@ export class ConfigStorage {
 
 			// Update cache
 			this.saveToCache( config );
+
+			/**
+			 * Action fired after configuration is saved to storage.
+			 *
+			 * @param {Object} config     Saved configuration.
+			 * @param {string} providerId Provider ID.
+			 *
+			 * @example
+			 * import { addAction } from '@wordpress/hooks';
+			 *
+			 * addAction('aether.storage.config.saved', 'my-plugin', (config, providerId) => {
+			 *     console.log(`Configuration saved for ${providerId}`);
+			 * });
+			 */
+			doAction( 'aether.storage.config.saved', config, this.providerId );
 
 			return true;
 		} catch ( error ) {
@@ -119,6 +198,20 @@ export class ConfigStorage {
 	 * @return {Promise<boolean>} True if deleted successfully
 	 */
 	async delete() {
+		/**
+		 * Action fired before configuration is deleted from storage.
+		 *
+		 * @param {string} providerId Provider ID.
+		 *
+		 * @example
+		 * import { addAction } from '@wordpress/hooks';
+		 *
+		 * addAction('aether.storage.config.before_delete', 'my-plugin', (providerId) => {
+		 *     console.log(`Deleting configuration for ${providerId}`);
+		 * });
+		 */
+		doAction( 'aether.storage.config.before_delete', this.providerId );
+
 		try {
 			await apiFetch( {
 				path: `/aether/site-exporter/providers/${ this.providerId }/config`,
@@ -127,6 +220,20 @@ export class ConfigStorage {
 
 			// Clear cache
 			this.clearCache();
+
+			/**
+			 * Action fired after configuration is deleted from storage.
+			 *
+			 * @param {string} providerId Provider ID.
+			 *
+			 * @example
+			 * import { addAction } from '@wordpress/hooks';
+			 *
+			 * addAction('aether.storage.config.deleted', 'my-plugin', (providerId) => {
+			 *     console.log(`Configuration deleted for ${providerId}`);
+			 * });
+			 */
+			doAction( 'aether.storage.config.deleted', this.providerId );
 
 			return true;
 		} catch ( error ) {

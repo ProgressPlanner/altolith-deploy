@@ -8,6 +8,7 @@
  */
 
 import { useCallback } from '@wordpress/element';
+import { applyFilters } from '@wordpress/hooks';
 import useAssetDiscovery from '../../utils/useAssetDiscovery';
 import {
 	buildBlueprintSteps,
@@ -40,8 +41,40 @@ export function useBlueprintGenerator() {
 			}
 			const assetsResponse = await assetDiscovery.getBlueprintAssets();
 
-			const { plugins: wporgPlugins, themes: wporgThemes } =
+			let { plugins: wporgPlugins, themes: wporgThemes } =
 				assetsResponse;
+
+			/**
+			 * Filter discovered WordPress.org assets.
+			 *
+			 * Allows modification of detected plugins and themes before blueprint generation.
+			 *
+			 * @param {Object}        assets            Discovered assets object.
+			 * @param {Array<string>} assets.plugins    WordPress.org plugin slugs.
+			 * @param {Array<string>} assets.themes     WordPress.org theme slugs.
+			 * @param {Object}        assetsResponse    Full asset discovery response.
+			 *
+			 * @example
+			 * import { addFilter } from '@wordpress/hooks';
+			 *
+			 * addFilter('aether.blueprint.assets', 'my-plugin', (assets) => {
+			 *     // Exclude specific plugins
+			 *     assets.plugins = assets.plugins.filter(slug => slug !== 'unwanted-plugin');
+			 *
+			 *     // Add additional plugins
+			 *     assets.plugins.push('my-required-plugin');
+			 *
+			 *     return assets;
+			 * });
+			 */
+			const filteredAssets = applyFilters(
+				'aether.blueprint.assets',
+				{ plugins: wporgPlugins, themes: wporgThemes },
+				assetsResponse
+			);
+
+			wporgPlugins = filteredAssets.plugins || [];
+			wporgThemes = filteredAssets.themes || [];
 
 			// Start configuring Playground settings
 			if ( setStatusMessage ) {
@@ -59,7 +92,7 @@ export function useBlueprintGenerator() {
 			} );
 
 			// Construct blueprint JSON.
-			const blueprint = buildBlueprintJson( steps );
+			let blueprint = buildBlueprintJson( steps );
 
 			if ( setStatusMessage ) {
 				setStatusMessage(
@@ -112,6 +145,32 @@ export function useBlueprintGenerator() {
 					);
 				}
 			}
+
+			/**
+			 * Filter final generated blueprint.
+			 *
+			 * Allows final modification of blueprint before it's used for deployment.
+			 *
+			 * @param {Object}        blueprint    Complete blueprint JSON object.
+			 * @param {Array<string>} wporgPlugins WordPress.org plugin slugs.
+			 * @param {Array<string>} wporgThemes  WordPress.org theme slugs.
+			 *
+			 * @example
+			 * import { addFilter } from '@wordpress/hooks';
+			 *
+			 * addFilter('aether.blueprint.generated', 'my-plugin', (blueprint) => {
+			 *     // Add custom metadata
+			 *     blueprint.description = 'My custom WordPress site';
+			 *
+			 *     return blueprint;
+			 * });
+			 */
+			blueprint = applyFilters(
+				'aether.blueprint.generated',
+				blueprint,
+				wporgPlugins,
+				wporgThemes
+			);
 
 			return blueprint;
 		},

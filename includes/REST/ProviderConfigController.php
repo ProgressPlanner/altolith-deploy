@@ -133,6 +133,32 @@ class ProviderConfigController
 		// Decrypt sensitive fields for client.
 		$config = $this->decryptSensitiveFields($config);
 
+		/**
+		 * Filter provider configuration after loading.
+		 *
+		 * Allows modification of configuration before sending to client.
+		 *
+		 * @param array  $config      The provider configuration.
+		 * @param string $providerId  The provider ID.
+		 *
+		 * @example
+		 * add_filter('aether_provider_config_load', function($config, $providerId) {
+		 *     if ($providerId === 'my-provider') {
+		 *         $config['custom_field'] = 'custom value';
+		 *     }
+		 *     return $config;
+		 * }, 10, 2);
+		 */
+		$config = \apply_filters('aether_provider_config_load', $config, $providerId);
+
+		/**
+		 * Action fired after provider configuration is loaded.
+		 *
+		 * @param string $providerId The provider ID.
+		 * @param array  $config     The loaded configuration.
+		 */
+		\do_action('aether_provider_config_loaded', $providerId, $config);
+
 		return new WP_REST_Response(
 			[
 				'success' => true,
@@ -157,8 +183,46 @@ class ProviderConfigController
 			return new WP_Error('invalid_config', \__('Config must be an object.', 'aether-site-exporter'), [ 'status' => 400 ]);
 		}
 
+		/**
+		 * Filter provider configuration before saving.
+		 *
+		 * Allows modification of configuration before sanitization and encryption.
+		 *
+		 * @param array  $config      The provider configuration to save.
+		 * @param string $providerId  The provider ID.
+		 *
+		 * @example
+		 * add_filter('aether_provider_config_save', function($config, $providerId) {
+		 *     if ($providerId === 'my-provider') {
+		 *         $config['custom_field'] = 'processed value';
+		 *     }
+		 *     return $config;
+		 * }, 10, 2);
+		 */
+		$config = \apply_filters('aether_provider_config_save', $config, $providerId);
+
 		// Sanitize and encrypt.
 		$sanitized = $this->sanitizeConfig($config);
+
+		/**
+		 * Filter provider-specific configuration after sanitization.
+		 *
+		 * Allows provider-specific sanitization logic before encryption.
+		 *
+		 * @param array  $sanitized  The sanitized configuration.
+		 * @param string $providerId The provider ID.
+		 *
+		 * @example
+		 * add_filter('aether_provider_my-provider_sanitize', function($config) {
+		 *     // Add provider-specific validation
+		 *     if (empty($config['required_field'])) {
+		 *         $config['required_field'] = 'default_value';
+		 *     }
+		 *     return $config;
+		 * });
+		 */
+		$sanitized = \apply_filters("aether_provider_{$providerId}_sanitize", $sanitized, $providerId);
+
 		$encrypted = $this->encryptSensitiveFields($sanitized);
 
 		// Save to aether_settings['providers'][providerId]
@@ -172,6 +236,19 @@ class ProviderConfigController
 		if (! $result && \get_option('aether_site_exporter_settings') !== $settings) {
 			return new WP_Error('save_failed', \__('Failed to save provider configuration.', 'aether-site-exporter'), [ 'status' => 500 ]);
 		}
+
+		/**
+		 * Action fired after provider configuration is saved.
+		 *
+		 * @param string $providerId The provider ID.
+		 * @param array  $config     The saved configuration (decrypted for hook access).
+		 *
+		 * @example
+		 * add_action('aether_provider_config_saved', function($providerId, $config) {
+		 *     error_log("Provider {$providerId} configuration updated");
+		 * }, 10, 2);
+		 */
+		\do_action('aether_provider_config_saved', $providerId, $sanitized);
 
 		return new WP_REST_Response(
 			[
@@ -192,12 +269,39 @@ class ProviderConfigController
 	{
 		$providerId = \sanitize_key($request->get_param('provider_id'));
 
+		/**
+		 * Action fired before provider configuration is deleted.
+		 *
+		 * Allows cleanup or validation before deletion.
+		 *
+		 * @param string $providerId The provider ID being deleted.
+		 *
+		 * @example
+		 * add_action('aether_provider_config_before_delete', function($providerId) {
+		 *     // Clean up associated resources
+		 *     delete_option("my_provider_{$providerId}_cache");
+		 * });
+		 */
+		\do_action('aether_provider_config_before_delete', $providerId);
+
 		// Delete from aether_settings['providers'][providerId]
 		$settings = \get_option('aether_site_exporter_settings', []);
 		if (isset($settings['providers'][$providerId])) {
 			unset($settings['providers'][$providerId]);
 			\update_option('aether_site_exporter_settings', $settings);
 		}
+
+		/**
+		 * Action fired after provider configuration is deleted.
+		 *
+		 * @param string $providerId The provider ID that was deleted.
+		 *
+		 * @example
+		 * add_action('aether_provider_config_deleted', function($providerId) {
+		 *     error_log("Provider {$providerId} configuration removed");
+		 * });
+		 */
+		\do_action('aether_provider_config_deleted', $providerId);
 
 		return new WP_REST_Response(
 			[
@@ -250,7 +354,25 @@ class ProviderConfigController
 			}
 		}
 
-		return $sanitized;
+		/**
+		 * Filter sanitized configuration values.
+		 *
+		 * Allows custom sanitization rules for specific configuration fields.
+		 *
+		 * @param array $sanitized The sanitized configuration array.
+		 * @param array $config    The original (unsanitized) configuration array.
+		 * @param int   $depth     Current recursion depth.
+		 *
+		 * @example
+		 * add_filter('aether_provider_config_sanitize', function($sanitized, $config, $depth) {
+		 *     // Only process at root level
+		 *     if ($depth === 0 && isset($sanitized['custom_field'])) {
+		 *         $sanitized['custom_field'] = strtoupper($sanitized['custom_field']);
+		 *     }
+		 *     return $sanitized;
+		 * }, 10, 3);
+		 */
+		return \apply_filters('aether_provider_config_sanitize', $sanitized, $config, $depth);
 	}
 
 	// Encryption helper methods now provided by EncryptionHelper trait

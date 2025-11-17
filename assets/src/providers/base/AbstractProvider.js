@@ -7,6 +7,8 @@
  * @package
  */
 
+import { applyFilters, doAction } from '@wordpress/hooks';
+
 /**
  * Provider capability constants
  */
@@ -169,7 +171,30 @@ export class AbstractProvider {
 		if ( Object.keys( this.config ).length === 0 ) {
 			this.config = await this.loadConfig();
 		}
-		return this.config;
+
+		/**
+		 * Filter provider configuration after loading.
+		 *
+		 * Allows modification of configuration before returning to caller.
+		 *
+		 * @param {Object} config     Provider configuration.
+		 * @param {string} providerId Provider ID.
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.provider.config.get', 'my-plugin', (config, providerId) => {
+		 *     if (providerId === 'my-provider') {
+		 *         config.customField = 'modified value';
+		 *     }
+		 *     return config;
+		 * });
+		 */
+		return applyFilters(
+			'aether.provider.config.get',
+			this.config,
+			this.getId()
+		);
 	}
 
 	/**
@@ -179,6 +204,30 @@ export class AbstractProvider {
 	 * @return {Promise<boolean>} True if saved successfully
 	 */
 	async saveConfig( config ) {
+		/**
+		 * Filter provider configuration before validation.
+		 *
+		 * Allows modification of config before validation and saving.
+		 *
+		 * @param {Object} config     Configuration to save.
+		 * @param {string} providerId Provider ID.
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.provider.config.before_save', 'my-plugin', (config, providerId) => {
+		 *     if (providerId === 'my-provider') {
+		 *         config.auto_generated_field = Date.now();
+		 *     }
+		 *     return config;
+		 * });
+		 */
+		config = applyFilters(
+			'aether.provider.config.before_save',
+			config,
+			this.getId()
+		);
+
 		// Validate configuration
 		const errors = await this.validateConfig( config );
 		if ( Object.keys( errors ).length > 0 ) {
@@ -196,6 +245,21 @@ export class AbstractProvider {
 
 		if ( result ) {
 			this.config = sanitized;
+
+			/**
+			 * Action fired after provider configuration is saved successfully.
+			 *
+			 * @param {Object} config     Saved configuration.
+			 * @param {string} providerId Provider ID.
+			 *
+			 * @example
+			 * import { addAction } from '@wordpress/hooks';
+			 *
+			 * addAction('aether.provider.config.saved', 'my-plugin', (config, providerId) => {
+			 *     console.log(`Provider ${providerId} configuration saved`);
+			 * });
+			 */
+			doAction( 'aether.provider.config.saved', sanitized, this.getId() );
 		}
 
 		return result;
@@ -207,11 +271,39 @@ export class AbstractProvider {
 	 * @return {Promise<boolean>} True if deleted successfully
 	 */
 	async deleteConfig() {
+		/**
+		 * Action fired before provider configuration is deleted.
+		 *
+		 * @param {string} providerId Provider ID.
+		 *
+		 * @example
+		 * import { addAction } from '@wordpress/hooks';
+		 *
+		 * addAction('aether.provider.config.before_delete', 'my-plugin', (providerId) => {
+		 *     console.log(`Deleting configuration for ${providerId}`);
+		 * });
+		 */
+		doAction( 'aether.provider.config.before_delete', this.getId() );
+
 		const storage = await this.getConfigStorage();
 		const result = await storage.delete();
 
 		if ( result ) {
 			this.config = {};
+
+			/**
+			 * Action fired after provider configuration is deleted.
+			 *
+			 * @param {string} providerId Provider ID.
+			 *
+			 * @example
+			 * import { addAction } from '@wordpress/hooks';
+			 *
+			 * addAction('aether.provider.config.deleted', 'my-plugin', (providerId) => {
+			 *     console.log(`Configuration deleted for ${providerId}`);
+			 * });
+			 */
+			doAction( 'aether.provider.config.deleted', this.getId() );
 		}
 
 		return result;
@@ -311,7 +403,31 @@ export class AbstractProvider {
 			}
 		}
 
-		return errors;
+		/**
+		 * Filter validation errors before returning.
+		 *
+		 * Allows adding or removing validation errors.
+		 *
+		 * @param {Object} errors     Validation errors object.
+		 * @param {Object} config     Configuration being validated.
+		 * @param {string} providerId Provider ID.
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.provider.config.validate', 'my-plugin', (errors, config, providerId) => {
+		 *     if (providerId === 'my-provider' && config.field1 === config.field2) {
+		 *         errors.field2 = 'Field 2 must be different from Field 1';
+		 *     }
+		 *     return errors;
+		 * });
+		 */
+		return applyFilters(
+			'aether.provider.config.validate',
+			errors,
+			config,
+			this.getId()
+		);
 	}
 
 	/**
@@ -379,7 +495,32 @@ export class AbstractProvider {
 			// Note: Encryption of sensitive fields handled server-side via REST API
 		}
 
-		return sanitized;
+		/**
+		 * Filter sanitized configuration before returning.
+		 *
+		 * Allows custom sanitization logic for specific fields.
+		 *
+		 * @param {Object} sanitized  Sanitized configuration.
+		 * @param {Object} config     Original configuration.
+		 * @param {string} providerId Provider ID.
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.provider.config.sanitize', 'my-plugin', (sanitized, config, providerId) => {
+		 *     if (providerId === 'my-provider' && sanitized.url) {
+		 *         // Ensure URL always ends with slash
+		 *         sanitized.url = sanitized.url.replace(/\/?$/, '/');
+		 *     }
+		 *     return sanitized;
+		 * });
+		 */
+		return applyFilters(
+			'aether.provider.config.sanitize',
+			sanitized,
+			config,
+			this.getId()
+		);
 	}
 
 	/**
@@ -448,7 +589,7 @@ export class AbstractProvider {
 	 * @return {Object} Metadata object
 	 */
 	getMetadata() {
-		return {
+		const metadata = {
 			id: this.getId(),
 			name: this.getName(),
 			type: this.getType(),
@@ -459,6 +600,30 @@ export class AbstractProvider {
 			settingsUrl: this.getSettingsUrl(),
 			documentationUrl: this.getDocumentationUrl(),
 		};
+
+		/**
+		 * Filter provider metadata before returning.
+		 *
+		 * Allows modification of provider metadata for UI rendering.
+		 *
+		 * @param {Object} metadata   Provider metadata.
+		 * @param {string} providerId Provider ID.
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.provider.metadata', 'my-plugin', (metadata, providerId) => {
+		 *     if (providerId === 'my-provider') {
+		 *         metadata.customField = 'custom value';
+		 *     }
+		 *     return metadata;
+		 * });
+		 */
+		return applyFilters(
+			'aether.provider.metadata',
+			metadata,
+			this.getId()
+		);
 	}
 
 	/**
@@ -471,22 +636,46 @@ export class AbstractProvider {
 	async getDeploymentUrl() {
 		const config = await this.getConfig();
 
+		let deploymentUrl = '';
+
 		// Check pages_url first (for providers with hosted pages)
 		if ( config.pages_url ) {
-			return config.pages_url;
+			deploymentUrl = config.pages_url;
 		}
-
 		// Check worker_endpoint (R2, Spaces)
-		if ( config.worker_endpoint ) {
-			return config.worker_endpoint;
+		else if ( config.worker_endpoint ) {
+			deploymentUrl = config.worker_endpoint;
 		}
-
 		// Fallback to public_url (R2 custom domain)
-		if ( config.public_url ) {
-			return config.public_url;
+		else if ( config.public_url ) {
+			deploymentUrl = config.public_url;
 		}
 
-		return '';
+		/**
+		 * Filter deployment URL for a provider.
+		 *
+		 * Allows customization of the deployment URL.
+		 *
+		 * @param {string} deploymentUrl Deployment URL.
+		 * @param {Object} config        Provider configuration.
+		 * @param {string} providerId    Provider ID.
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.provider.deployment_url', 'my-plugin', (url, config, providerId) => {
+		 *     if (providerId === 'my-provider') {
+		 *         return config.custom_url || url;
+		 *     }
+		 *     return url;
+		 * });
+		 */
+		return applyFilters(
+			'aether.provider.deployment_url',
+			deploymentUrl,
+			config,
+			this.getId()
+		);
 	}
 
 	/**

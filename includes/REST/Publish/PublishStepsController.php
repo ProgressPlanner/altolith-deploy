@@ -223,12 +223,61 @@ class PublishStepsController
 			);
 		}
 
+		/**
+		 * Action fired before a publish step executes.
+		 *
+		 * @param string $stepName Step identifier.
+		 * @param string $jobId    Job ID.
+		 * @param array  $status   Current job status.
+		 *
+		 * @example
+		 * add_action('aether_publish_step_before', function($stepName, $jobId, $status) {
+		 *     error_log("Starting step: {$stepName} for job: {$jobId}");
+		 * }, 10, 3);
+		 */
+		\do_action('aether_publish_step_before', $stepName, $jobId, $status);
+
 		try {
 			// Execute step-specific logic.
 			$result = $stepLogic($status, $jobId);
 
+			/**
+			 * Filter step execution result before saving.
+			 *
+			 * Allows modification of step results before they're persisted.
+			 *
+			 * @param array  $result   Step result (contains 'status' and 'message').
+			 * @param string $stepName Step identifier.
+			 * @param string $jobId    Job ID.
+			 *
+			 * @example
+			 * add_filter('aether_publish_step_result', function($result, $stepName, $jobId) {
+			 *     if ($stepName === 'createSiteArchive') {
+			 *         $result['status']['custom_data'] = 'added by filter';
+			 *     }
+			 *     return $result;
+			 * }, 10, 3);
+			 */
+			$result = \apply_filters('aether_publish_step_result', $result, $stepName, $jobId);
+
 			// Update job status.
 			$this->stateManager->updateStatus($jobId, $result['status']);
+
+			/**
+			 * Action fired after a publish step completes successfully.
+			 *
+			 * @param string $stepName Step identifier.
+			 * @param string $jobId    Job ID.
+			 * @param array  $result   Step result.
+			 *
+			 * @example
+			 * add_action('aether_publish_step_after', function($stepName, $jobId, $result) {
+			 *     if ($stepName === 'createSiteArchive') {
+			 *         error_log("Archive created: " . $result['status']['exportResult']['zipPath']);
+			 *     }
+			 * }, 10, 3);
+			 */
+			\do_action('aether_publish_step_after', $stepName, $jobId, $result);
 
 			return \rest_ensure_response([
 				'success' => true,
@@ -239,6 +288,22 @@ class PublishStepsController
 		} catch (\Exception $e) {
 			// Sanitize exception message to prevent information disclosure
 			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
+
+			/**
+			 * Action fired when a publish step fails.
+			 *
+			 * @param string     $stepName Step identifier.
+			 * @param string     $jobId    Job ID.
+			 * @param \Exception $error    Exception object.
+			 * @param string     $message  Sanitized error message.
+			 *
+			 * @example
+			 * add_action('aether_publish_step_error', function($stepName, $jobId, $error, $message) {
+			 *     // Log to external monitoring service
+			 *     error_log("Step failed: {$stepName} - {$message}");
+			 * }, 10, 4);
+			 */
+			\do_action('aether_publish_step_error', $stepName, $jobId, $e, $sanitizedMessage);
 
 			// Mark job as failed with sanitized message
 			$this->stateManager->markFailed($jobId, $sanitizedMessage, $stepName);
@@ -380,8 +445,41 @@ class PublishStepsController
 			$urlDiscovery = new URLDiscoveryService();
 			$urls = $urlDiscovery->discoverAllUrls();
 
+			/**
+			 * Filter static site URLs before returning to client.
+			 *
+			 * Allows adding, removing, or modifying URLs for static site generation.
+			 *
+			 * @param array $urls Array of URL objects with 'url' and 'type' keys.
+			 *
+			 * @example
+			 * add_filter('aether_static_site_urls', function($urls) {
+			 *     // Add custom URL
+			 *     $urls[] = [
+			 *         'url' => '/custom-page/',
+			 *         'type' => 'page',
+			 *     ];
+			 *     return $urls;
+			 * });
+			 */
+			$urls = \apply_filters('aether_static_site_urls', $urls);
+
 			// Get static site URL for URL rewriting.
 			$staticSiteUrl = $this->getStaticSiteUrl();
+
+			/**
+			 * Filter static site base URL.
+			 *
+			 * Allows modification of the deployment URL used for URL rewriting.
+			 *
+			 * @param string $staticSiteUrl The static site base URL.
+			 *
+			 * @example
+			 * add_filter('aether_static_site_base_url', function($url) {
+			 *     return 'https://custom-domain.com/';
+			 * });
+			 */
+			$staticSiteUrl = \apply_filters('aether_static_site_base_url', $staticSiteUrl);
 
 			return \rest_ensure_response([
 				'success' => true,
@@ -468,11 +566,30 @@ class PublishStepsController
 				);
 			}
 
+			$html = $result['body'];
+
+			/**
+			 * Filter HTML content before sending to client.
+			 *
+			 * Allows modification of HTML before static site processing.
+			 *
+			 * @param string $html The HTML content.
+			 * @param string $url  The URL that was fetched.
+			 *
+			 * @example
+			 * add_filter('aether_html_content', function($html, $url) {
+			 *     // Remove specific scripts
+			 *     $html = preg_replace('/<script.*?analytics.*?<\/script>/s', '', $html);
+			 *     return $html;
+			 * }, 10, 2);
+			 */
+			$html = \apply_filters('aether_html_content', $html, $url);
+
 			// Return the fetched HTML to the client.
 			// Client will process this HTML to extract assets and rewrite URLs.
 			return \rest_ensure_response([
 				'success' => true,
-				'html' => $result['body'],
+				'html' => $html,
 				'url' => $url,
 			]);
 		} catch (\Exception $e) {
@@ -523,6 +640,19 @@ class PublishStepsController
 		// Generate unique progress ID.
 		$progressId = 'aether_site_exporter_archive_' . \time() . '_' . \wp_generate_password(8, false);
 
+		/**
+		 * Action fired before site archive creation starts.
+		 *
+		 * @param string     $progressId    Progress ID for tracking.
+		 * @param array|null $customAssets  Custom assets filter (plugin/theme slugs).
+		 *
+		 * @example
+		 * add_action('aether_archive_before_create', function($progressId, $customAssets) {
+		 *     error_log("Starting archive creation: {$progressId}");
+		 * }, 10, 2);
+		 */
+		\do_action('aether_archive_before_create', $progressId, $customAssets);
+
 		// Initialize progress transient.
 		\set_transient($progressId, ['progress' => 0], 1800); // 30 minutes
 
@@ -538,8 +668,37 @@ class PublishStepsController
 			return $result;
 		}
 
+		/**
+		 * Filter archive creation result.
+		 *
+		 * Allows modification of export result before returning.
+		 *
+		 * @param array  $result      Export result with zipPath, zipSize, etc.
+		 * @param string $progressId  Progress ID used for tracking.
+		 *
+		 * @example
+		 * add_filter('aether_archive_result', function($result, $progressId) {
+		 *     $result['custom_metadata'] = 'added by filter';
+		 *     return $result;
+		 * }, 10, 2);
+		 */
+		$result = \apply_filters('aether_archive_result', $result, $progressId);
+
 		// Mark progress as complete.
 		\set_transient($progressId, ['progress' => 100, 'complete' => true], 1800);
+
+		/**
+		 * Action fired after site archive is created successfully.
+		 *
+		 * @param array  $result      Export result.
+		 * @param string $progressId  Progress ID.
+		 *
+		 * @example
+		 * add_action('aether_archive_created', function($result, $progressId) {
+		 *     error_log("Archive created: " . $result['zipPath']);
+		 * }, 10, 2);
+		 */
+		\do_action('aether_archive_created', $result, $progressId);
 
 		return \rest_ensure_response([
 			'success' => true,
@@ -653,10 +812,44 @@ class PublishStepsController
 			);
 		}
 
+		/**
+		 * Filter blueprint data before bundle generation.
+		 *
+		 * Allows modification of blueprint steps, landing page, and other settings.
+		 *
+		 * @param array $blueprintData Blueprint data array with steps and landingPage.
+		 * @param array $archiveResult Archive result with zipPath.
+		 *
+		 * @example
+		 * add_filter('aether_blueprint_data', function($blueprintData, $archiveResult) {
+		 *     // Add custom step to blueprint
+		 *     $blueprintData['steps'][] = [
+		 *         'step' => 'runPHP',
+		 *         'code' => '<?php echo "Custom setup"; ?>',
+		 *     ];
+		 *     return $blueprintData;
+		 * }, 10, 2);
+		 */
+		$blueprintData = \apply_filters('aether_blueprint_data', $blueprintData, $archiveResult);
+
 		// Get bundle filename from settings
 		$settings = \get_option('aether_site_exporter_settings', []);
 		$exportPath = $settings['providers']['local-filesystem']['export_path'] ?? 'blueprint-bundle/bundle.zip';
 		$bundleFilename = \basename($exportPath);
+
+		/**
+		 * Action fired before blueprint bundle generation.
+		 *
+		 * @param array  $blueprintData Blueprint data.
+		 * @param string $zipPath       Path to wp-content.zip.
+		 * @param string $outputDir     Output directory for bundle.
+		 *
+		 * @example
+		 * add_action('aether_blueprint_before_generate', function($blueprintData, $zipPath, $outputDir) {
+		 *     error_log("Generating blueprint bundle in: {$outputDir}");
+		 * }, 10, 3);
+		 */
+		\do_action('aether_blueprint_before_generate', $blueprintData, $zipPath, \dirname($zipPath));
 
 		// Generate blueprint bundle
 		$generator = new BlueprintBundleGenerator();
@@ -675,13 +868,42 @@ class PublishStepsController
 		$bundleUrl = \str_replace(ABSPATH, \trailingslashit(\site_url()), $bundlePath);
 		$bundleSize = filesize($bundlePath);
 
+		$bundleResult = [
+			'bundlePath' => $bundlePath,
+			'bundleUrl' => $bundleUrl,
+			'bundleSize' => $bundleSize,
+		];
+
+		/**
+		 * Filter blueprint bundle result.
+		 *
+		 * Allows modification of bundle result data.
+		 *
+		 * @param array $bundleResult Result data with bundlePath, bundleUrl, bundleSize.
+		 *
+		 * @example
+		 * add_filter('aether_blueprint_bundle_result', function($result) {
+		 *     $result['custom_metadata'] = 'added by filter';
+		 *     return $result;
+		 * });
+		 */
+		$bundleResult = \apply_filters('aether_blueprint_bundle_result', $bundleResult);
+
+		/**
+		 * Action fired after blueprint bundle is generated successfully.
+		 *
+		 * @param array $bundleResult Bundle result data.
+		 *
+		 * @example
+		 * add_action('aether_blueprint_generated', function($result) {
+		 *     error_log("Blueprint bundle created: " . $result['bundlePath']);
+		 * });
+		 */
+		\do_action('aether_blueprint_generated', $bundleResult);
+
 		return \rest_ensure_response([
 			'success' => true,
-			'data' => [
-				'bundlePath' => $bundlePath,
-				'bundleUrl' => $bundleUrl,
-				'bundleSize' => $bundleSize,
-			],
+			'data' => $bundleResult,
 		]);
 	}
 }

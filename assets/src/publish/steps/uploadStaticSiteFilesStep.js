@@ -7,6 +7,8 @@
  * @package
  */
 
+import { doAction, applyFilters } from '@wordpress/hooks';
+
 /**
  * Upload static site files step handler.
  *
@@ -55,9 +57,27 @@ export async function uploadStaticSiteFilesHandler( context ) {
 		);
 	}
 
+	/**
+	 * Filter the URLs before processing for static site upload.
+	 *
+	 * Allows modification of URLs that will be fetched and uploaded.
+	 *
+	 * @param {Array}  urls       Array of URL objects to process.
+	 * @param {string} providerId The provider ID being used for upload.
+	 *
+	 * @example
+	 * import { addFilter } from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.upload.urls', 'my-provider', (urls, providerId) => {
+	 *   // Add custom URL
+	 *   return [...urls, { url: '/custom-page/', type: 'page' }];
+	 * });
+	 */
+	const filteredUrls = applyFilters( 'aether.upload.urls', urlsArray, providerId );
+
 	// Process ALL URLs and upload static files
 	const result = await processStaticSiteUrls(
-		urlsArray,
+		filteredUrls,
 		siteUrlForStatic,
 		providerId,
 		siteUrl,
@@ -72,8 +92,30 @@ export async function uploadStaticSiteFilesHandler( context ) {
 		'uploadStaticSiteFiles'
 	);
 
-	return {
-		staticFiles: result.uploadedFiles || [],
-		filesUploaded: result.filesUploaded || 0,
-	};
+	/**
+	 * Filter the upload result before returning.
+	 *
+	 * @param {Object} result     The upload result object.
+	 * @param {string} providerId The provider ID used for upload.
+	 *
+	 * @example
+	 * import { addFilter} from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.upload.result', 'my-provider', (result, providerId) => {
+	 *   return {
+	 *     ...result,
+	 *     customMetadata: 'added by my provider'
+	 *   };
+	 * });
+	 */
+	const filteredResult = applyFilters(
+		'aether.upload.result',
+		{
+			staticFiles: result.uploadedFiles || [],
+			filesUploaded: result.filesUploaded || 0,
+		},
+		providerId
+	);
+
+	return filteredResult;
 }

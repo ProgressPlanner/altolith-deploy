@@ -18,6 +18,7 @@ import {
 	isEssentialExtension,
 	isWebpackModuleId,
 } from './assetExclusions';
+import { applyFilters } from '@wordpress/hooks';
 
 /**
  * Extract asset URLs from HTML content.
@@ -124,7 +125,36 @@ export async function extractAssetsFromHtml( html, pageUrl, siteUrl ) {
 	// Collect assets from HTML attributes (img, source, video, audio, link tags).
 	collectHtmlAttributeAssets( html, pageUrl, siteUrl, collected );
 
-	return Array.from( collected );
+	let assets = Array.from( collected );
+
+	/**
+	 * Filter extracted assets before returning.
+	 *
+	 * Allows modification of asset list after extraction.
+	 *
+	 * @param {Array}  assets  Extracted asset URLs.
+	 * @param {string} html    HTML content that was processed.
+	 * @param {string} pageUrl Page URL.
+	 * @param {string} siteUrl Site URL.
+	 *
+	 * @example
+	 * import { addFilter } from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.assets.extracted', 'my-plugin', (assets, html, pageUrl, siteUrl) => {
+	 *     // Add custom asset
+	 *     assets.push('https://example.com/custom-asset.js');
+	 *     return assets;
+	 * });
+	 */
+	assets = applyFilters(
+		'aether.assets.extracted',
+		assets,
+		html,
+		pageUrl,
+		siteUrl
+	);
+
+	return assets;
 }
 
 /**
@@ -746,7 +776,40 @@ function shouldCollectAsset( url, siteUrl, source = 'css' ) {
 
 	// PRIORITY 3: For other non-essential assets, collect if internal to this site.
 	// This prevents collecting random external assets that aren't critical.
-	return true;
+	let shouldCollect = true;
+
+	/**
+	 * Filter whether an asset should be collected.
+	 *
+	 * Allows custom logic to include/exclude specific assets.
+	 *
+	 * @param {boolean} shouldCollect Whether to collect this asset (default: true).
+	 * @param {string}  url           Asset URL.
+	 * @param {string}  siteUrl       Site URL.
+	 * @param {string}  source        Asset source ('css', 'js', 'html').
+	 * @param {string}  extension     File extension.
+	 *
+	 * @example
+	 * import { addFilter } from '@wordpress/hooks';
+	 *
+	 * addFilter('aether.assets.should_collect', 'my-plugin', (shouldCollect, url, siteUrl, source, extension) => {
+	 *     // Skip all PDF files
+	 *     if (extension === 'pdf') {
+	 *         return false;
+	 *     }
+	 *     return shouldCollect;
+	 * });
+	 */
+	shouldCollect = applyFilters(
+		'aether.assets.should_collect',
+		shouldCollect,
+		url,
+		siteUrl,
+		source,
+		extension
+	);
+
+	return shouldCollect;
 }
 
 /**
