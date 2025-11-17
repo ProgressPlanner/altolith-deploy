@@ -20,7 +20,6 @@
  */
 
 import { discoverAssetsHandler } from '../steps/discoverAssetsStep';
-import { offloadMediaHandler } from '../steps/offloadMediaStep';
 import { getStaticSiteUrlsHandler } from '../steps/getStaticSiteUrlsStep';
 import { generateBlueprintHandler } from '../steps/generateBlueprintStep';
 import { createSiteArchiveHandler } from '../steps/createSiteArchiveStep';
@@ -34,18 +33,19 @@ import { uploadSiteArchiveHandler } from '../steps/uploadSiteArchiveStep';
  * Future optimization: Move independent steps into same phase for parallel execution.
  *
  * Total progress must equal 100%.
+ * Note: Removed offloadMedia step (10%) - redistributed to other steps.
+ *
+ * IMPORTANT: generateBlueprint must run AFTER createSiteArchive because it needs
+ * the archive result (zipPath) to generate the blueprint-bundle.zip.
  */
 export const PUBLISH_WORKFLOW = [
-	[ [ 'discoverAssets', 4 ] ],
-	[ [ 'offloadMedia', 10 ] ],
+	[ [ 'discoverAssets', 5 ] ],
+	[ [ 'getStaticSiteUrls', 8 ] ],
+	[ [ 'createSiteArchive', 20 ] ],
+	[ [ 'generateBlueprint', 1 ] ],
 	[
-		[ 'getStaticSiteUrls', 7 ],
-		[ 'generateBlueprint', 1 ],
-	],
-	[ [ 'createSiteArchive', 15 ] ],
-	[
-		[ 'uploadStaticSiteFiles', 48 ],
-		[ 'uploadSiteArchive', 15 ],
+		[ 'uploadStaticSiteFiles', 50 ],
+		[ 'uploadSiteArchive', 16 ],
 	],
 ];
 
@@ -62,7 +62,6 @@ export const PUBLISH_WORKFLOW = [
  * - api: PublishAPI instance
  * - jobId: Current job ID
  * - currentStatus: Current job status
- * - siteKey: Site key for storage
  * - providerId: Storage provider ID
  * - setStatusMessage: Function to update UI status
  * - setOverallProgressValue: Function to update progress bar
@@ -75,7 +74,6 @@ export const PUBLISH_WORKFLOW = [
  */
 export const STEP_HANDLERS = {
 	discoverAssets: discoverAssetsHandler,
-	offloadMedia: offloadMediaHandler,
 	getStaticSiteUrls: getStaticSiteUrlsHandler,
 	generateBlueprint: generateBlueprintHandler,
 	createSiteArchive: createSiteArchiveHandler,
@@ -187,4 +185,84 @@ export function getCumulativeProgress( stepId ) {
 		cumulative += phaseWeight;
 	}
 	return cumulative;
+}
+
+/**
+ * Filter workflow based on export types configuration.
+ *
+ * Removes steps that are not needed based on the export_types setting.
+ * Redistributes progress weights to maintain 100% total.
+ *
+ * @param {Array} workflow The workflow to filter.
+ * @param {Array} exportTypes Array of export types ('static_site', 'blueprint_bundle').
+ * @return {Array} Filtered workflow with adjusted progress weights.
+ */
+export function filterWorkflowByExportTypes( workflow, exportTypes = [] ) {
+	// Default to both if empty or invalid
+	if ( ! Array.isArray( exportTypes ) || exportTypes.length === 0 ) {
+		return workflow;
+	}
+
+	const includeStaticSite = exportTypes.includes( 'static_site' );
+	const includeBlueprintBundle = exportTypes.includes( 'blueprint_bundle' );
+
+	// If both are included, return original workflow
+	if ( includeStaticSite && includeBlueprintBundle ) {
+		return workflow;
+	}
+
+	// Map steps to their export type
+	const stepExportTypes = {
+		discoverAssets: 'both', // Always needed
+		getStaticSiteUrls: 'static_site',
+		createSiteArchive: 'blueprint_bundle',
+		generateBlueprint: 'blueprint_bundle',
+		uploadStaticSiteFiles: 'static_site',
+		uploadSiteArchive: 'blueprint_bundle',
+	};
+
+	// Filter workflow to remove unwanted steps
+	const filteredWorkflow = workflow
+		.map( ( phase ) => {
+			return phase.filter( ( [ stepId ] ) => {
+				const stepType = stepExportTypes[ stepId ];
+				if ( stepType === 'both' ) {
+					return true;
+				}
+				if (
+					stepType === 'static_site' &&
+					includeStaticSite
+				) {
+					return true;
+				}
+				if (
+					stepType === 'blueprint_bundle' &&
+					includeBlueprintBundle
+				) {
+					return true;
+				}
+				return false;
+			} );
+		} )
+		.filter( ( phase ) => phase.length > 0 ); // Remove empty phases
+
+	// Calculate total weight of remaining steps
+	let totalWeight = 0;
+	filteredWorkflow.forEach( ( phase ) => {
+		phase.forEach( ( [ , weight ] ) => {
+			totalWeight += weight;
+		} );
+	} );
+
+	// Redistribute weights to sum to 100%
+	if ( totalWeight > 0 && totalWeight !== 100 ) {
+		const scaleFactor = 100 / totalWeight;
+		return filteredWorkflow.map( ( phase ) => {
+			return phase.map( ( [ stepId, weight ] ) => {
+				return [ stepId, Math.round( weight * scaleFactor ) ];
+			} );
+		} );
+	}
+
+	return filteredWorkflow;
 }

@@ -316,27 +316,13 @@ async function handleStaticFileRequest( request, env, debugInfo ) {
 		const url = new URL( request.url );
 		const pathname = url.pathname;
 
-		// Parse URL: /{site-key}/{filepath}
-		// pathname = /7f1e0e8dff8818d1c2f579415daff8c7/about/index.html
-		// parts = ['7f1e0e8dff8818d1c2f579415daff8c7', 'about', 'index.html']
+		// Parse URL: /{filepath}
+		// pathname = /about/index.html
+		// parts = ['about', 'index.html']
 		const parts = pathname.split( '/' ).filter( ( p ) => p );
 
-		if ( parts.length < 1 ) {
-			return new Response(
-				'Invalid URL format. Use: /{site-key}/{filepath}',
-				{
-					status: 400,
-					headers: {
-						'Content-Type': 'text/plain',
-					},
-				}
-			);
-		}
-
-		// parts[0] = site-key (MD5 hash)
-		// parts[1+] = filepath
-		const siteKey = parts[ 0 ];
-		let filepath = parts.slice( 1 ).join( '/' );
+		// parts = filepath
+		let filepath = parts.join( '/' );
 
 		// Check if original pathname ended with slash (before filtering removed it)
 		const endsWithSlash = pathname.endsWith( '/' );
@@ -346,8 +332,8 @@ async function handleStaticFileRequest( request, env, debugInfo ) {
 			filepath = filepath ? filepath + '/index.html' : 'index.html';
 		}
 
-		// Construct R2 key: {site-key}/static/{filepath}
-		let r2Key = `${ siteKey }/static/${ filepath }`;
+		// Construct R2 key: static/{filepath}
+		let r2Key = `static/${ filepath }`;
 
 		// Fetch file from R2
 		let object = await env.R2_BUCKET.get( r2Key );
@@ -361,7 +347,7 @@ async function handleStaticFileRequest( request, env, debugInfo ) {
 
 			if ( ! hasExtension ) {
 				// Try fetching as directory with index.html
-				r2Key = `${ siteKey }/static/${ filepath }/index.html`;
+				r2Key = `static/${ filepath }/index.html`;
 				object = await env.R2_BUCKET.get( r2Key );
 
 				// Update filepath for content type detection

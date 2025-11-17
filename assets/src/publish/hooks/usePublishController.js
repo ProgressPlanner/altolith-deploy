@@ -9,27 +9,19 @@
 import { useCallback, useState } from '@wordpress/element';
 import { usePublishAPI } from './usePublishAPI';
 import { useAssetManager } from './useAssetManager';
-import { useGitUpload } from './useGitUpload';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
 import { useBlueprintGenerator } from './useBlueprintGenerator';
-import { useMediaOffload } from './useMediaOffload';
-import { StorageService } from '../../providers/services/storageService';
-import { getCredentials } from '../../utils/credentialManager';
 import { useConfig } from '../../hooks/useConfig';
 import { PUBLISH_STEPS } from '../utils/steps';
 import apiFetch from '../../utils/api';
 import { calculateOverallProgress } from '../utils/progressManager';
 import { ProviderRegistry } from '../../providers/registry/ProviderRegistry';
 import { debug, debugError } from '../../utils/debug';
-import { getZipUrl } from '../../utils/getZipUrl';
 import {
-	fetchManifest,
-	updateManifestEntry,
-	shouldSkipUpload,
-	uploadManifest,
-} from '../../utils/manifestManager';
-import { uploadSingleFileWithProgress } from '../utils/fileUploadManager';
-import { PUBLISH_WORKFLOW, STEP_HANDLERS } from '../workflows/publishWorkflow';
+	PUBLISH_WORKFLOW,
+	STEP_HANDLERS,
+	filterWorkflowByExportTypes,
+} from '../workflows/publishWorkflow';
 import { executeWorkflow } from '../workflows/workflowExecutor';
 
 export function usePublishController( publishState ) {
@@ -51,7 +43,6 @@ export function usePublishController( publishState ) {
 
 	const api = usePublishAPI();
 	const assetManager = useAssetManager();
-	const gitUpload = useGitUpload();
 
 	// Get config at hook level (hooks can't be called inside callbacks)
 	const config = useConfig();
@@ -59,22 +50,6 @@ export function usePublishController( publishState ) {
 	// Create blueprint generator hook.
 	const { generateBlueprint: generateBlueprintJson } =
 		useBlueprintGenerator();
-
-	// Create media offload hook with progress callback
-	const mediaOffload = useMediaOffload( ( currentFiles, totalFiles ) => {
-		if ( totalFiles > 0 && currentFiles >= 0 ) {
-			const progress = Math.min(
-				100,
-				Math.max( 0, Math.round( ( currentFiles / totalFiles ) * 100 ) )
-			);
-			const overallProgress = calculateOverallProgress( {
-				step: 'offloadMedia',
-				progress,
-			} );
-			setOverallProgressValue( overallProgress );
-			setStepProgress( 'offloadMedia', progress );
-		}
-	} );
 
 	// Create static site generator with progress callback
 	const processStaticSiteUrls = useStaticSiteGenerator(
@@ -98,25 +73,45 @@ export function usePublishController( publishState ) {
 		}
 	);
 
-	// Helper function to upload wp-content.zip archive file.
-	// Detects upload method from provider's upload strategy (git or storage).
+	// Helper function to upload blueprint-bundle.zip archive file.
+	// Detects upload method from provider's upload strategy (git, storage, or direct).
 	const handleSiteArchiveUpload = useCallback(
-		async ( siteKey, providerId ) => {
+		async ( providerId, context ) => {
 			try {
 				// Use provider ID passed from executeSteps (avoids redundant settings fetch).
-				const fetchedStorageProviderId = providerId;
+				// Default to 'local-filesystem' if no provider configured
+				const fetchedStorageProviderId =
+					providerId || 'local-filesystem';
 
 				// Get provider instance from registry to check upload strategy
 				const registry = ProviderRegistry.getInstance();
+
+				// Debug: Check what providers are registered
+				debug( '[Aether] Registry provider count:', registry.count() );
+				debug( '[Aether] All provider IDs:', registry.getAllIds() );
+				debug(
+					'[Aether] Looking for provider:',
+					fetchedStorageProviderId
+				);
+
 				const provider = registry.getProvider(
 					fetchedStorageProviderId
 				);
 
+				if ( ! provider ) {
+					debug(
+						'[Aether] Provider not found. Available providers:',
+						registry.getAllIds()
+					);
+					throw new Error(
+						`Provider not found: ${ fetchedStorageProviderId }. Available: ${ registry
+							.getAllIds()
+							.join( ', ' ) }`
+					);
+				}
+
 				// Determine upload strategy from provider
-				// If provider not found, default to 'storage' strategy
-				const uploadStrategy = provider
-					? provider.getUploadStrategy()
-					: 'storage';
+				const uploadStrategy = provider.getUploadStrategy();
 
 				let gitConfig = null;
 				if ( uploadStrategy === 'git' ) {
@@ -135,13 +130,14 @@ export function usePublishController( publishState ) {
 				) {
 					// METHOD 1: Git-based upload (GitHub Pages / GitLab Pages)
 					// Create simple manifest with wp-content.zip for Git upload.
-					const manifest = [
+					// eslint-disable-next-line no-unused-vars
+					const _manifest = [
 						{
-							storageKey: `${ siteKey }/wp-content.zip`,
+							storageKey: 'wp-content.zip',
 							contentType: 'application/zip',
 						},
 					];
-					await gitUpload.uploadFiles( manifest, gitConfig );
+					// 					await gitUpload.uploadFiles( manifest, gitConfig );
 					// Update progress to 100% for uploadSiteArchive when Git upload completes.
 					updateFromStep( 'uploadSiteArchive' );
 					setOverallProgressValue(
@@ -150,129 +146,43 @@ export function usePublishController( publishState ) {
 							progress: 100,
 						} )
 					);
-				} else if ( fetchedStorageProviderId ) {
-					// METHOD 2: Storage provider upload (Cloudflare R2 / DigitalOcean Spaces)
-					// Uploads wp-content.zip directly to object storage via Worker proxy.
-					// Fetch storage provider credentials (Worker endpoint + bucket name).
-					const credentials = await getCredentials(
-						fetchedStorageProviderId
-					);
-					const workerEndpoint = credentials.worker_endpoint || '';
-					const bucketName = credentials.bucket_name || '';
+				} else if ( uploadStrategy === 'direct' ) {
+					// METHOD 2: Direct provider upload (LocalFilesystem)
+					// For 'direct' strategy, we use the provider's uploadFile method
+					// This allows the provider to handle the file operation (copy, verify, etc.)
 
-					// Validate required credentials exist.
-					if ( ! workerEndpoint || ! bucketName ) {
+					// Get blueprintBundle data from context (set by generateBlueprint step)
+					// Note: The workflow executor merges step results into context
+					const blueprintBundlePath =
+						context.blueprintBundle?.bundlePath;
+
+					if ( ! blueprintBundlePath ) {
 						throw new Error(
-							'Worker endpoint and bucket name are required for storage operations'
+							'Blueprint bundle not found. generateBlueprint must run before uploadSiteArchive.'
 						);
 					}
 
-					// Initialize storage service for uploads.
-					const uploadStorageService = new StorageService(
-						workerEndpoint,
-						bucketName,
-						credentials
-					);
-
-					// Storage key format: {siteKey}/wp-content.zip
-					const storageKey = `${ siteKey }/wp-content.zip`;
-
-					// Fetch manifest for hash comparison
-					let manifest = {};
-					try {
-						manifest = await fetchManifest(
-							uploadStorageService,
-							siteKey
-						);
-					} catch ( error ) {
-						debug(
-							'Failed to fetch manifest, continuing without hash comparison:',
-							error
-						);
-						manifest = {};
-					}
-
-					// Fetch file from server (wp-content.zip stored in wp-content/ directory).
-					// File is web-accessible, so we can fetch it directly via URL.
-					const fileResponse = await fetch( getZipUrl() );
-
-					if ( ! fileResponse.ok ) {
-						const errorMessage =
-							fileResponse.status === 404
-								? 'wp-content.zip file not found. Please ensure the archive was created successfully.'
-								: `Failed to fetch file: ${ fileResponse.statusText }`;
-						throw new Error( errorMessage );
-					}
-
-					// Convert response to Blob for upload.
-					let fileBlob = await fileResponse.blob();
 					debug(
-						'uploadSiteArchive fileBlob size:',
-						fileBlob.size,
-						'bytes'
+						'Uploading blueprint bundle via provider:',
+						blueprintBundlePath
 					);
 
-					// Upload file using utility
-					const uploadResult = await uploadSingleFileWithProgress( {
-						key: storageKey,
-						blob: fileBlob,
-						storageService: uploadStorageService,
-						setStatusMessage,
-						contentType: 'application/zip',
-						displayName: 'wp-content.zip',
-						statusKey: 'uploadSiteArchive',
-						onProgress: ( uploaded, total, percent ) => {
-							debug( '[Aether] uploadSiteArchive progress:', {
-								uploaded,
-								total,
-								percentage: percent,
-								fileSize: fileBlob.size,
-							} );
+					// Call provider's uploadFile method
+					const uploadResult = await provider.uploadFile(
+						blueprintBundlePath,
+						'blueprint-bundle.zip'
+					);
 
-							updateFromStep( 'uploadSiteArchive' );
-							const overallProgress = calculateOverallProgress( {
-								step: 'uploadSiteArchive',
-								progress: percent,
-							} );
-							debug(
-								'[Aether] uploadSiteArchive overall progress:',
-								overallProgress
-							);
-							setOverallProgressValue( overallProgress );
-							setStepProgress( 'uploadSiteArchive', percent );
-						},
-						skipHashCheck: false,
-						manifest,
-						shouldSkipUpload,
-					} );
-
-					// Update manifest entry if hash was calculated
-					// Include skipped files to ensure they're preserved in manifest
-					if ( uploadResult.hash ) {
-						manifest = updateManifestEntry(
-							manifest,
-							storageKey,
-							uploadResult.size || fileBlob.size,
-							uploadResult.hash
+					if ( ! uploadResult.success ) {
+						throw new Error(
+							uploadResult.error ||
+								'Failed to upload blueprint bundle'
 						);
-
-						// Upload updated manifest
-						try {
-							await uploadManifest(
-								uploadStorageService,
-								siteKey,
-								manifest
-							);
-						} catch ( error ) {
-							debug( 'Failed to upload manifest:', error );
-							// Don't fail publish if manifest upload fails
-						}
 					}
 
-					// Null blob reference to help GC
-					fileBlob = null;
+					debug( 'Blueprint bundle upload complete:', uploadResult );
 
-					// Update progress to 100% when upload completes (or skipped).
+					// Update progress to 100%
 					updateFromStep( 'uploadSiteArchive' );
 					setOverallProgressValue(
 						calculateOverallProgress( {
@@ -281,15 +191,8 @@ export function usePublishController( publishState ) {
 						} )
 					);
 					setStepProgress( 'uploadSiteArchive', 100 );
-
-					if ( ! uploadResult.success && ! uploadResult.skipped ) {
-						throw new Error(
-							uploadResult.error ||
-								'Failed to upload wp-content.zip'
-						);
-					}
 				} else {
-					// ERROR: No upload method configured (neither Git nor storage provider).
+					// ERROR: No upload method configured (no provider configured).
 					throw new Error( 'No supported upload method available' );
 				}
 
@@ -301,10 +204,9 @@ export function usePublishController( publishState ) {
 		[
 			api,
 			updateFromStep,
-			gitUpload,
+			// 			gitUpload,
 			setOverallProgressValue,
 			setStepProgress,
-			setStatusMessage,
 		]
 	);
 
@@ -355,17 +257,6 @@ export function usePublishController( publishState ) {
 			const fetchedStaticSiteProviderId =
 				settingsResponse.settings?.provider_types?.static_site || '';
 
-			// Fetch siteKey (unique identifier for storage path)
-			let siteKey = '';
-			try {
-				const configResponse = await apiFetch( {
-					path: '/aether/site-exporter/config',
-				} );
-				siteKey = configResponse.siteKey || '';
-			} catch ( error ) {
-				debug( 'SiteKey fetch failed, continuing without it' );
-			}
-
 			// Get current site URL for static site generation
 			const siteUrl = config.playgroundUrl || window.location.origin;
 
@@ -376,12 +267,11 @@ export function usePublishController( publishState ) {
 			const workflowContext = {
 				// API and state
 				api,
-				siteKey,
 				siteUrl,
 				providerId,
 
 				// Hooks and utilities
-				mediaOffload,
+				// 				mediaOffload,
 				processStaticSiteUrls,
 				generateBlueprintJson,
 				handleSiteArchiveUpload,
@@ -391,6 +281,30 @@ export function usePublishController( publishState ) {
 				setStepProgress,
 				removeMessage,
 			};
+
+			// Get export_types from provider settings to determine which exports to run
+			const providerSettings =
+				settingsResponse.settings?.providers?.[ providerId ] || {};
+			const exportTypes = providerSettings.export_types || [
+				'static_site',
+				'blueprint_bundle',
+			];
+
+			debug(
+				'[Workflow] Export types configured:',
+				exportTypes
+			);
+
+			// Filter workflow based on export types
+			const filteredWorkflow = filterWorkflowByExportTypes(
+				PUBLISH_WORKFLOW,
+				exportTypes
+			);
+
+			debug(
+				'[Workflow] Filtered workflow phases:',
+				filteredWorkflow.length
+			);
 
 			// Set up workflow lifecycle callbacks for UI updates
 			const workflowOptions = {
@@ -406,9 +320,9 @@ export function usePublishController( publishState ) {
 				},
 			};
 
-			// Execute the workflow
+			// Execute the filtered workflow
 			await executeWorkflow(
-				PUBLISH_WORKFLOW,
+				filteredWorkflow,
 				STEP_HANDLERS,
 				workflowContext,
 				workflowOptions
@@ -439,7 +353,7 @@ export function usePublishController( publishState ) {
 		updateFromStep,
 		config,
 		storageProviderId,
-		mediaOffload,
+		// 		mediaOffload,
 		processStaticSiteUrls,
 		generateBlueprintJson,
 		handleSiteArchiveUpload,

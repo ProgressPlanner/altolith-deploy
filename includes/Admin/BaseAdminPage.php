@@ -11,7 +11,7 @@
 
 namespace Aether\SiteExporter\Admin;
 
-use Aether\Admin\Settings;
+use Aether\SiteExporter\Admin\Settings;
 
 /**
  * Abstract base class for admin pages.

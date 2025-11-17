@@ -15,15 +15,16 @@ const AETHER_PRODUCTION_ZIP_URL = 'https://r2.s12y.org/aether.zip';
 /**
  * Build the importWordPressFiles step for importing wp-content.zip.
  *
- * @param {string} wpContentUrl URL to the wp-content.zip file.
+ * Uses 'bundled' resource type to reference wp-content.zip inside the blueprint-bundle.zip.
+ *
  * @return {Object} Blueprint step object.
  */
-export function buildImportFilesStep( wpContentUrl ) {
+export function buildImportFilesStep() {
 	return {
 		step: 'importWordPressFiles',
 		wordPressFilesZip: {
-			resource: 'url',
-			url: wpContentUrl,
+			resource: 'bundled',
+			path: '/wp-content.zip',
 		},
 	};
 }
@@ -126,61 +127,25 @@ export function buildAetherActivationStep() {
  * Build complete blueprint steps array.
  *
  * @param {Object} config              Configuration object.
- * @param {string} config.wpContentUrl URL to wp-content.zip.
  * @param {Array}  config.wporgPlugins WordPress.org plugin slugs.
  * @param {Array}  config.wporgThemes  WordPress.org theme slugs.
  * @return {Array<Object>} Complete array of blueprint steps.
  */
 export function buildBlueprintSteps( config ) {
-	const { wpContentUrl, wporgPlugins = [], wporgThemes = [] } = config;
+	const { wporgPlugins = [], wporgThemes = [] } = config;
 
 	const steps = [];
 
-	// Step 1: Import WordPress files (wp-content.zip).
-	steps.push( buildImportFilesStep( wpContentUrl ) );
+	// Step 1: Import WordPress files (wp-content.zip from bundle).
+	steps.push( buildImportFilesStep() );
 
-	// Step 2: Install Aether plugin.
-	steps.push( buildAetherInstallStep() );
-
-	// Step 3: Define constant to identify Playground environment.
-	steps.push( buildDefineConstsStep() );
-
-	// Step 4: Install WordPress.org plugins.
+	// Step 2: Install WordPress.org plugins.
 	steps.push( ...buildPluginInstallSteps( wporgPlugins ) );
 
-	// Step 5: Install WordPress.org themes.
+	// Step 3: Install WordPress.org themes.
 	steps.push( ...buildThemeInstallSteps( wporgThemes ) );
 
-	// Step 6: Activate Aether plugin.
-	steps.push( buildAetherActivationStep() );
-
 	return steps;
-}
-
-/**
- * Construct wp-content.zip URL from storage configuration.
- *
- * @param {string} siteKey     Site key for storage path.
- * @param {Object} credentials Storage provider credentials.
- * @return {string} wp-content.zip URL.
- */
-export function constructWpContentUrl( siteKey, credentials ) {
-	const {
-		public_url: publicUrl = '',
-		worker_endpoint: workerEndpoint = '',
-		custom_domain: customDomain = '',
-		bucket_name: bucketName = '',
-	} = credentials;
-
-	// Priority: publicUrl > workerEndpoint > customDomain.
-	const baseUrl = publicUrl || workerEndpoint || customDomain;
-	const includeBucket = ! customDomain && ! publicUrl;
-
-	if ( includeBucket ) {
-		return `${ baseUrl }/${ bucketName }/${ siteKey }/wp-content.zip`;
-	}
-
-	return `${ baseUrl }/${ siteKey }/wp-content.zip`;
 }
 
 /**

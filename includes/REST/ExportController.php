@@ -8,8 +8,8 @@
 
 namespace Aether\SiteExporter\REST;
 
-use Aether\Plugin;
-use Aether\Services\ExportService;
+use Aether\SiteExporter\Plugin;
+use Aether\SiteExporter\Services\ExportService;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -95,6 +95,18 @@ class ExportController
 	 */
 	public function startExport(\WP_REST_Request $_request)
 	{
+		// CSRF protection: Verify nonce for state-changing operation
+		$nonceCheck = $this->verifyNonce($_request);
+		if (\is_wp_error($nonceCheck)) {
+			return $nonceCheck;
+		}
+
+		// Rate limiting: Prevent DoS by limiting export frequency
+		// Allow 5 exports per 5 minutes (300 seconds)
+		$rateLimitCheck = $this->checkRateLimit('export_start', 5, 300);
+		if (\is_wp_error($rateLimitCheck)) {
+			return $rateLimitCheck;
+		}
 
 		// Note: WordPress Playground requires SQLite database.
 		// This endpoint assumes SQLite is being used.
@@ -363,6 +375,16 @@ class ExportController
 		// We MUST stream the file instead of loading it into memory to avoid
 		// memory exhaustion with large files (179+ MB).
 
+		// Register shutdown function to guarantee cleanup even if readfile() fails
+		// This prevents resource leaks from connection aborts, disk errors, etc.
+		\register_shutdown_function(function() use ($zipPath, $jobId) {
+			// Clean up file and transient regardless of success/failure
+			if (\file_exists($zipPath)) {
+				@\unlink($zipPath);
+			}
+			\delete_transient($jobId);
+		});
+
 		// Set headers directly.
 		\header('Content-Type: application/zip');
 		\header('Content-Length: ' . $zipSize);
@@ -371,10 +393,6 @@ class ExportController
 		// Stream the file directly without loading it into memory.
 		// readfile() reads and outputs a file in chunks (8KB by default).
 		\readfile($zipPath);
-
-		// Clean up after successful download.
-		@\unlink($zipPath);
-		\delete_transient($jobId);
 
 		exit;
 	}

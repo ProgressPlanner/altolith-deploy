@@ -54,11 +54,35 @@ class CredentialEncryption
 		}
 
 		// Generate new random key (32 bytes = 256 bits).
-		// wp_generate_password() uses wp_rand() which is cryptographically secure.
-		$randomBytes = \wp_generate_password(32, true, true);
+		// Use cryptographically secure random bytes generation
+		if (\function_exists('random_bytes')) {
+			// PHP 7+: random_bytes() is cryptographically secure
+			try {
+				$randomBytes = \random_bytes(32);
+				$keyBinary = $randomBytes; // Already 32 bytes, no need to hash
+			} catch (\Exception $e) {
+				// Fallback if random_bytes fails
+				$randomBytes = null;
+			}
+		} else {
+			$randomBytes = null;
+		}
 
-		// Hash to ensure exactly 32 bytes and uniform distribution.
-		$keyBinary = \hash('sha256', $randomBytes, true);
+		// Fallback for older PHP or if random_bytes failed
+		if (null === $randomBytes) {
+			if (\function_exists('openssl_random_pseudo_bytes')) {
+				$strongUsed = false;
+				$randomBytes = \openssl_random_pseudo_bytes(32, $strongUsed);
+				if (!$strongUsed || false === $randomBytes) {
+					// OpenSSL didn't use strong algorithm, last resort
+					throw new \Exception('Unable to generate cryptographically secure random bytes');
+				}
+				$keyBinary = $randomBytes; // Already 32 bytes
+			} else {
+				// No secure random source available
+				throw new \Exception('No cryptographically secure random number generator available');
+			}
+		}
 
 		// Store as hex string (easier to work with in database).
 		$keyHex = \bin2hex($keyBinary);
@@ -172,9 +196,16 @@ class CredentialEncryption
 			$iv
 		);
 
-		// If decryption failed, return original value.
+		// If decryption failed, return false to indicate failure
+		// This allows calling code to handle the error appropriately
+		// rather than silently using empty credentials which could cause confusing failures
 		if (false === $decrypted) {
-			return $encryptedData;
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log('Aether: Decryption failed for data (possible tampering detected)');
+			}
+			// Return false to indicate decryption failure
+			// Calling code should check for false and handle appropriately
+			return false;
 		}
 
 		return $decrypted;

@@ -10,10 +10,10 @@
 
 namespace Aether\SiteExporter\REST\Publish;
 
-use Aether\REST\RESTHelpersTrait;
-use Aether\Plugin;
-use Aether\Sync\JobStateManager;
-use Aether\Utilities\EncryptionHelper;
+use Aether\SiteExporter\REST\RESTHelpersTrait;
+use Aether\SiteExporter\Plugin;
+use Aether\SiteExporter\Sync\JobStateManager;
+use Aether\SiteExporter\Utilities\EncryptionHelper;
 use WP_REST_Request;
 use WP_Error;
 
@@ -293,51 +293,48 @@ class PublishJobController
 		]);
 
 		// Save deployment URL to settings for admin bar button.
-		$siteKey = $status['siteKey'] ?? '';
 		$deploymentUrl = '';
-		if (!empty($siteKey)) {
-			// Get provider settings.
-			$settings = \get_option('aether_site_exporter_settings', []);
-			$providerTypes = $settings['provider_types'] ?? [];
-			$staticSiteProviderId = $providerTypes['static_site'] ?? '';
+		// Get provider settings.
+		$settings = \get_option('aether_site_exporter_settings', []);
+		$providerTypes = $settings['provider_types'] ?? [];
+		$staticSiteProviderId = $providerTypes['static_site'] ?? '';
 
-			// Try to get base URL from provider configuration.
-			// Check multiple possible URL keys (matching AbstractProvider.getDeploymentUrl() logic).
-			$baseUrl = '';
-			if (!empty($staticSiteProviderId) && isset($settings['providers'][$staticSiteProviderId])) {
-				$providerConfig = $settings['providers'][$staticSiteProviderId];
+		// Try to get base URL from provider configuration.
+		// Check multiple possible URL keys (matching AbstractProvider.getDeploymentUrl() logic).
+		$baseUrl = '';
+		if (!empty($staticSiteProviderId) && isset($settings['providers'][$staticSiteProviderId])) {
+			$providerConfig = $settings['providers'][$staticSiteProviderId];
 
-				// Decrypt if needed (provider configs are encrypted)
-				$decryptedConfig = $this->decryptSensitiveFields($providerConfig);
+			// Decrypt if needed (provider configs are encrypted)
+			$decryptedConfig = $this->decryptSensitiveFields($providerConfig);
 
-				// Check in priority order (matching JavaScript getDeploymentUrl()):
-				// 1. pages_url (GitHub Pages, GitLab Pages)
-				if (!empty($decryptedConfig['pages_url'])) {
-					$baseUrl = $decryptedConfig['pages_url'];
-				} elseif (!empty($decryptedConfig['custom_domain'])) { // 2. custom_domain (custom domain for R2)
-					$baseUrl = $decryptedConfig['custom_domain'];
-				} elseif (!empty($decryptedConfig['worker_endpoint'])) { // 3. worker_endpoint (R2, Spaces)
-					$baseUrl = $decryptedConfig['worker_endpoint'];
-				} elseif (!empty($decryptedConfig['public_url'])) { // 4. public_url (R2 bucket direct access)
-					$baseUrl = $decryptedConfig['public_url'];
-				}
-			} else {
-				// Log debug info if base URL not found
-				if (\defined('WP_DEBUG') && \WP_DEBUG) {
-					\error_log(\sprintf(
-						'Aether: Could not find base URL. staticSiteProviderId: %s, hasProviders: %s',
-						$staticSiteProviderId ?: 'empty',
-						isset($settings['providers']) ? 'yes' : 'no'
-					));
-				}
+			// Check in priority order (matching JavaScript getDeploymentUrl()):
+			// 1. pages_url (GitHub Pages, GitLab Pages)
+			if (!empty($decryptedConfig['pages_url'])) {
+				$baseUrl = $decryptedConfig['pages_url'];
+			} elseif (!empty($decryptedConfig['custom_domain'])) { // 2. custom_domain (custom domain for R2)
+				$baseUrl = $decryptedConfig['custom_domain'];
+			} elseif (!empty($decryptedConfig['worker_endpoint'])) { // 3. worker_endpoint (R2, Spaces)
+				$baseUrl = $decryptedConfig['worker_endpoint'];
+			} elseif (!empty($decryptedConfig['public_url'])) { // 4. public_url (R2 bucket direct access)
+				$baseUrl = $decryptedConfig['public_url'];
 			}
-
-			// Build deployment URL: {baseUrl}/{siteKey}/
-			if (!empty($baseUrl)) {
-				$deploymentUrl = \rtrim($baseUrl, '/') . '/' . $siteKey . '/';
-				$settings['deployment_url'] = $deploymentUrl;
-				\update_option('aether_site_exporter_settings', $settings);
+		} else {
+			// Log debug info if base URL not found
+			if (\defined('WP_DEBUG') && \WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Could not find base URL. staticSiteProviderId: %s, hasProviders: %s',
+					$staticSiteProviderId ?: 'empty',
+					isset($settings['providers']) ? 'yes' : 'no'
+				));
 			}
+		}
+
+		// Build deployment URL: {baseUrl}/
+		if (!empty($baseUrl)) {
+			$deploymentUrl = \rtrim($baseUrl, '/') . '/';
+			$settings['deployment_url'] = $deploymentUrl;
+			\update_option('aether_site_exporter_settings', $settings);
 		}
 
 		// Add deployment URL to status response for frontend

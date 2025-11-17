@@ -12,11 +12,13 @@
 
 namespace Aether\SiteExporter\REST\Publish;
 
-use Aether\REST\RESTHelpersTrait;
-use Aether\Plugin;
-use Aether\Utilities\Static\HTMLGeneratorService;
-use Aether\Utilities\Static\URLDiscoveryService;
-use Aether\Utilities\HTTPClient;
+use Aether\SiteExporter\REST\RESTHelpersTrait;
+use Aether\SiteExporter\Plugin;
+use Aether\SiteExporter\Services\ExportService;
+use Aether\SiteExporter\Services\BlueprintBundleGenerator;
+use Aether\SiteExporter\Utilities\Static\HTMLGeneratorService;
+use Aether\SiteExporter\Utilities\Static\URLDiscoveryService;
+use Aether\SiteExporter\Utilities\HTTPClient;
 use WP_REST_Request;
 use WP_Error;
 
@@ -110,6 +112,17 @@ class PublishStepsController
 				'permission_callback' => [ $this, 'permissionCheck' ],
 			]
 		);
+
+		// Generate blueprint bundle.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/generateBlueprintBundle',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'generateBlueprintBundle' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
 	}
 
 	/**
@@ -122,7 +135,7 @@ class PublishStepsController
 	{
 		return $this->executeStep($request, 'createSiteArchive', function ($status, $jobId) {
 			// Get export service.
-			$exportService = new \Aether\Services\ExportService($this->plugin);
+			$exportService = new ExportService($this->plugin);
 
 			// Export complete site (database + wp-content) with progress tracking.
 			$result = $exportService->exportCompleteSite($jobId, $this->stateManager);
@@ -240,17 +253,13 @@ class PublishStepsController
 	 * Get static site URL for HTML generation.
 	 *
 	 * Calculates the deployment URL dynamically based on:
-	 * - publicUrl (custom domain) if configured
-	 * - workerEndpoint as fallback
-	 * - siteKey for unique deployment path
+	 * - custom_domain (if configured - this is the public-facing URL)
+	 * - base_url from provider configuration as fallback
 	 *
-	 * @return string Static site URL (e.g., "https://s12y.org/8859159e10186c131461e6bbe04123d0/").
+	 * @return string Static site URL (e.g., "https://example.com/").
 	 */
 	private function getStaticSiteUrl(): string
 	{
-		// Get site key (creates one if it doesn't exist).
-		$siteKey = \Aether\Plugin::getSiteKey();
-
 		// Get provider settings.
 		$settings = \get_option('aether_site_exporter_settings', []);
 		$providerTypes = $settings['provider_types'] ?? [];
@@ -266,18 +275,17 @@ class PublishStepsController
 
 		// Priority order:
 		// 1. custom_domain (if configured - this is the public-facing URL)
-		// 2. worker_endpoint (fallback to worker URL)
-		// Note: public_url is for R2 public buckets, NOT for worker-based static sites
+		// 2. base_url from provider configuration
 		if (
 			isset($settings['providers'][$staticSiteProviderId]['custom_domain']) &&
 			! empty($settings['providers'][$staticSiteProviderId]['custom_domain'])
 		) {
 			$baseUrl = $settings['providers'][$staticSiteProviderId]['custom_domain'];
 		} elseif (
-			isset($settings['providers'][$staticSiteProviderId]['worker_endpoint']) &&
-			! empty($settings['providers'][$staticSiteProviderId]['worker_endpoint'])
+			isset($settings['providers'][$staticSiteProviderId]['base_url']) &&
+			! empty($settings['providers'][$staticSiteProviderId]['base_url'])
 		) {
-			$baseUrl = $settings['providers'][$staticSiteProviderId]['worker_endpoint'];
+			$baseUrl = $settings['providers'][$staticSiteProviderId]['base_url'];
 		}
 
 		// If no base URL found, return empty string (will use relative URLs).
@@ -285,10 +293,8 @@ class PublishStepsController
 			return '';
 		}
 
-		// Build deployment URL: {baseUrl}/{siteKey}/
-		$deploymentUrl = \rtrim($baseUrl, '/') . '/' . $siteKey . '/';
-
-		return $deploymentUrl;
+		// Ensure trailing slash
+		return \rtrim($baseUrl, '/') . '/';
 	}
 
 	/**
@@ -457,7 +463,7 @@ class PublishStepsController
 		\set_transient($progressId, ['progress' => 0], 1800); // 30 minutes
 
 		// Create export service.
-		$exportService = new \Aether\Services\ExportService($this->plugin);
+		$exportService = new ExportService($this->plugin);
 
 		// Export complete site with progress tracking via transient.
 		// Progress is reported via $progressId transient, NOT job tracking.
@@ -509,6 +515,85 @@ class PublishStepsController
 		return \rest_ensure_response([
 			'success' => true,
 			'data' => $progress,
+		]);
+	}
+
+	/**
+	 * Generate blueprint bundle.
+	 *
+	 * Creates a blueprint-bundle.zip file containing blueprint.json and wp-content.zip.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error Response object.
+	 */
+	public function generateBlueprintBundle(WP_REST_Request $request): \WP_REST_Response|WP_Error
+	{
+		$params = $request->get_json_params();
+		$blueprintData = $params['blueprintData'] ?? [];
+		$archiveResult = $params['archiveResult'] ?? [];
+
+		// Validate inputs
+		if (empty($blueprintData)) {
+			return new WP_Error(
+				'missing_blueprint_data',
+				\__('Blueprint data is required', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		if (empty($archiveResult['zipPath'])) {
+			return new WP_Error(
+				'missing_archive_path',
+				\__('Archive path is required', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		$zipPath = $archiveResult['zipPath'];
+
+		// Resolve to absolute path if relative
+		if (!\path_is_absolute($zipPath)) {
+			$zipPath = ABSPATH . $zipPath;
+		}
+
+		// Verify wp-content.zip exists
+		if (!file_exists($zipPath)) {
+			return new WP_Error(
+				'archive_not_found',
+				\__('Archive file not found', 'aether-site-exporter'),
+				['status' => 404]
+			);
+		}
+
+		// Get bundle filename from settings
+		$settings = \get_option('aether_site_exporter_settings', []);
+		$exportPath = $settings['providers']['local-filesystem']['export_path'] ?? 'blueprint-bundle/bundle.zip';
+		$bundleFilename = \basename($exportPath);
+
+		// Generate blueprint bundle
+		$generator = new BlueprintBundleGenerator();
+		$outputDir = \dirname($zipPath); // Same directory as wp-content.zip
+		$bundlePath = $generator->generate($blueprintData, $zipPath, $outputDir, $bundleFilename);
+
+		if ($bundlePath === false) {
+			return new WP_Error(
+				'generation_failed',
+				\__('Failed to generate blueprint bundle', 'aether-site-exporter'),
+				['status' => 500]
+			);
+		}
+
+		// Get bundle URL (convert absolute path to URL)
+		$bundleUrl = \str_replace(ABSPATH, \trailingslashit(\site_url()), $bundlePath);
+		$bundleSize = filesize($bundlePath);
+
+		return \rest_ensure_response([
+			'success' => true,
+			'data' => [
+				'bundlePath' => $bundlePath,
+				'bundleUrl' => $bundleUrl,
+				'bundleSize' => $bundleSize,
+			],
 		]);
 	}
 }

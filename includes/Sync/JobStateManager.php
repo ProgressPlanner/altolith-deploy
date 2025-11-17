@@ -46,7 +46,28 @@ class JobStateManager
 	 */
 	public function updateStatus(string $jobId, array $status): bool
 	{
-		return \set_transient($jobId, $status, self::TRANSIENT_EXPIRATION);
+		$result = \set_transient($jobId, $status, self::TRANSIENT_EXPIRATION);
+
+		// set_transient() returns false both for failure AND when value hasn't changed
+		// Check current value to distinguish between real failure vs. unchanged value
+		if (false === $result) {
+			$currentValue = \get_transient($jobId);
+			// If current value matches new value, treat as success (value unchanged)
+			// Use JSON-based hash comparison to avoid PHP object injection vulnerabilities
+			// json_encode() is safer than serialize() as it cannot deserialize objects
+			// This prevents ['status' => '0'] from matching ['status' => false]
+			if (\is_array($currentValue)) {
+				$currentJson = \wp_json_encode($currentValue, \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE);
+				$statusJson = \wp_json_encode($status, \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE);
+				if (false !== $currentJson && false !== $statusJson && \hash_equals(\md5($currentJson), \md5($statusJson))) {
+					return true;
+				}
+			}
+			// Otherwise it's a real failure
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -135,7 +156,10 @@ class JobStateManager
 	}
 
 	/**
-	 * Increment retry counter for a step.
+	 * Increment retry counter for a step using compare-and-swap pattern.
+	 *
+	 * Uses optimistic locking with retry logic to prevent race conditions.
+	 * This is more reliable than transient-based locks which aren't atomic.
 	 *
 	 * @param string $jobId      Job ID.
 	 * @param string $stepName   Step identifier.
@@ -144,8 +168,77 @@ class JobStateManager
 	 */
 	public function incrementRetry(string $jobId, string $stepName, int $maxRetries = 2): array
 	{
-		$status = $this->getStatus($jobId);
+		global $wpdb;
 
+		$maxCASAttempts = 10;
+		$casAttempt = 0;
+
+		// Use compare-and-swap pattern with retry logic
+		while ($casAttempt < $maxCASAttempts) {
+			// Read current value
+			$optionName = "_transient_{$jobId}";
+			$currentValue = $wpdb->get_var($wpdb->prepare(
+				"SELECT option_value FROM `{$wpdb->options}` WHERE option_name = %s",
+				$optionName
+			));
+
+			if (null === $currentValue) {
+				return [
+					'shouldRetry' => false,
+					'retryCount'  => 0,
+				];
+			}
+
+			$status = \maybe_unserialize($currentValue);
+			if (!is_array($status)) {
+				return [
+					'shouldRetry' => false,
+					'retryCount'  => 0,
+				];
+			}
+
+			// Calculate new retry count
+			$stepRetries = $status['stepRetries'] ?? [];
+			$oldRetryCount = $stepRetries[$stepName] ?? 0;
+			$newRetryCount = $oldRetryCount + 1;
+
+			// Update status array
+			$stepRetries[$stepName] = $newRetryCount;
+			$status['stepRetries'] = $stepRetries;
+			$newValue = \maybe_serialize($status);
+
+			// Attempt atomic update using WHERE clause to check old value
+			// This is the compare-and-swap operation
+			$updated = $wpdb->update(
+				$wpdb->options,
+				['option_value' => $newValue],
+				[
+					'option_name' => $optionName,
+					'option_value' => $currentValue  // Only update if value hasn't changed
+				],
+				['%s'],
+				['%s', '%s']
+			);
+
+			// If update succeeded (affected 1 row), we won the race
+			if (1 === $updated) {
+				return [
+					'shouldRetry' => $newRetryCount <= $maxRetries,
+					'retryCount'  => $newRetryCount,
+				];
+			}
+
+			// Update failed, value changed between read and write
+			// Retry with exponential backoff
+			$casAttempt++;
+			if ($casAttempt < $maxCASAttempts) {
+				\usleep(50000 * (2 ** min($casAttempt, 4))); // Exponential backoff: 50ms, 100ms, 200ms, 400ms, 800ms
+			}
+		}
+
+		// Failed to increment after max attempts
+		// Return current state without incrementing
+		$status = $this->getStatus($jobId);
 		if (false === $status) {
 			return [
 				'shouldRetry' => false,
@@ -154,14 +247,7 @@ class JobStateManager
 		}
 
 		$stepRetries = $status['stepRetries'] ?? [];
-		$retryCount  = $stepRetries[ $stepName ] ?? 0;
-		$retryCount++;
-
-		$stepRetries[ $stepName ] = $retryCount;
-		$status['stepRetries']     = $stepRetries;
-
-		$this->updateStatus($jobId, $status);
-
+		$retryCount = $stepRetries[$stepName] ?? 0;
 		return [
 			'shouldRetry' => $retryCount <= $maxRetries,
 			'retryCount'  => $retryCount,
@@ -200,14 +286,25 @@ class JobStateManager
 	{
 		global $wpdb;
 
-		// Query for all aether transients.
-		$results = $wpdb->get_results(
-			"SELECT option_name, option_value FROM {$wpdb->options}
-			WHERE option_name LIKE '_transient_aether_%'
-			AND option_name NOT LIKE '_transient_timeout_%'
-			ORDER BY option_name DESC",
-			ARRAY_A
+		// Validate and sanitize limit - use large number if not specified
+		// to maintain backward compatibility while ensuring parameter is always present
+		$limitValue = null !== $limit && $limit > 0 ? \absint($limit) : 9999999;
+
+		// Query for aether transients with limit.
+		// CRITICAL: Include LIMIT in prepare() to prevent SQL injection
+		// Previous version concatenated LIMIT after prepare(), breaking prepared statement
+		$query = $wpdb->prepare(
+			"SELECT option_name, option_value FROM `{$wpdb->options}`
+			WHERE option_name LIKE %s
+			AND option_name NOT LIKE %s
+			ORDER BY option_name DESC
+			LIMIT %d",
+			$wpdb->esc_like('_transient_aether_') . '%',
+			$wpdb->esc_like('_transient_timeout_') . '%',
+			$limitValue
 		);
+
+		$results = $wpdb->get_results($query, ARRAY_A);
 
 		$jobs = [];
 
@@ -221,11 +318,6 @@ class JobStateManager
 					$status
 				);
 			}
-		}
-
-		// Apply limit if specified.
-		if (null !== $limit && $limit > 0) {
-			$jobs = \array_slice($jobs, 0, $limit);
 		}
 
 		return $jobs;

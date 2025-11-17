@@ -120,7 +120,8 @@ export default function ProviderForm( {
 			showSuccess( () => setSuccess( false ) );
 		} catch ( err ) {
 			setError(
-				err.message || __( 'Failed to save settings', 'aether-site-exporter' )
+				err.message ||
+					__( 'Failed to save settings', 'aether-site-exporter' )
 			);
 		} finally {
 			setSaving( false );
@@ -163,7 +164,10 @@ export default function ProviderForm( {
 					isDismissible
 					onRemove={ () => setSuccess( false ) }
 				>
-					{ __( 'Settings saved successfully!', 'aether-site-exporter' ) }
+					{ __(
+						'Settings saved successfully!',
+						'aether-site-exporter'
+					) }
 				</Notice>
 			) }
 

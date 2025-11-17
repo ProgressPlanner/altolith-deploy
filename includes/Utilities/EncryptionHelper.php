@@ -11,7 +11,7 @@
 
 namespace Aether\SiteExporter\Utilities;
 
-use Aether\Utilities\CredentialEncryption;
+use Aether\SiteExporter\Utilities\CredentialEncryption;
 
 /**
  * Trait for handling encryption/decryption of sensitive configuration fields.

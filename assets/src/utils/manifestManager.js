@@ -3,7 +3,7 @@
  *
  * Manages the file manifest JSON that tracks file sizes and hashes
  * for upload optimization. The manifest is stored remotely at
- * {siteKey}/file-manifest.json.
+ * file-manifest.json.
  *
  * @package
  */
@@ -14,17 +14,16 @@ import { debug, debugWarn } from './debug';
  * Fetch existing manifest from remote storage.
  *
  * @param {Object} storageService StorageService instance.
- * @param {string} siteKey        Site key for manifest path.
  * @return {Promise<Object>} Manifest object (empty object if not found).
  */
-export async function fetchManifest( storageService, siteKey ) {
-	const manifestKey = `${ siteKey }/file-manifest.json`;
+export async function fetchManifest( storageService ) {
+	const manifestKey = 'file-manifest.json';
 
 	try {
 		debug( 'Fetching manifest:', manifestKey );
 
 		// Try to download manifest from storage.
-		const manifestBlob = await storageService.downloadManifest( siteKey );
+		const manifestBlob = await storageService.downloadManifest();
 
 		if ( ! manifestBlob ) {
 			debug( 'Manifest not found, starting with empty manifest' );
@@ -191,12 +190,11 @@ export function cleanupManifest( manifest, currentFiles ) {
  * Upload manifest to remote storage.
  *
  * @param {Object} storageService StorageService instance.
- * @param {string} siteKey        Site key for manifest path.
  * @param {Object} manifest       Manifest object to upload.
  * @return {Promise<boolean>} True if upload succeeded.
  */
-export async function uploadManifest( storageService, siteKey, manifest ) {
-	const manifestKey = `${ siteKey }/file-manifest.json`;
+export async function uploadManifest( storageService, manifest ) {
+	const manifestKey = 'file-manifest.json';
 
 	try {
 		debug( 'Uploading manifest:', {
@@ -211,10 +209,7 @@ export async function uploadManifest( storageService, siteKey, manifest ) {
 		} );
 
 		// Upload manifest via storage service.
-		const result = await storageService.uploadManifest(
-			siteKey,
-			manifestBlob
-		);
+		const result = await storageService.uploadManifest( manifestBlob );
 
 		if ( result.success ) {
 			debug( 'Manifest uploaded successfully' );

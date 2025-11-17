@@ -465,6 +465,8 @@ export async function loadProviders( providerIds, options = {} ) {
  * Loads all providers (for admin settings where all are needed).
  * Continues loading even if some providers fail.
  *
+ * Provider IDs can be extended by plugins using the 'aether.provider_ids' filter.
+ *
  * @param {Object}  [options]                    - Load options
  * @param {boolean} [options.throwOnError=false] - Whether to throw if any provider fails
  * @return {Promise<LoadResults>} Results for each provider load
@@ -472,14 +474,36 @@ export async function loadProviders( providerIds, options = {} ) {
  * @example
  * const results = await loadAllProviders();
  * debug(`Loaded ${results.loaded.length} providers`);
+ *
+ * @example
+ * // Add custom provider via filter
+ * import { addFilter } from '@wordpress/hooks';
+ *
+ * addFilter('aether.provider_ids', 'my-plugin', (providerIds) => {
+ *     return [...providerIds, 'my-custom-provider'];
+ * });
  */
 export async function loadAllProviders( options = {} ) {
-	const allProviderIds = [
+	// Default provider IDs
+	let allProviderIds = [
+		'local-filesystem',
 		'cloudflare-r2',
 		'cloudflare',
 		'gitlab',
 		'gitlab-pages',
 	];
+
+	// Allow plugins to extend provider IDs via filter
+	// Use dynamic import to avoid circular dependencies and reduce bundle size
+	try {
+		const { applyFilters } = await import( '@wordpress/hooks' );
+		allProviderIds = applyFilters( 'aether.provider_ids', allProviderIds );
+	} catch ( error ) {
+		debugWarn(
+			'Failed to load @wordpress/hooks for provider filtering:',
+			error
+		);
+	}
 
 	return loadProviders( allProviderIds, options );
 }

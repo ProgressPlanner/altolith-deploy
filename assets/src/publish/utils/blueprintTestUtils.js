@@ -186,7 +186,25 @@ export function validateBlueprintSteps( steps, expectedStepConfig ) {
 		);
 	} else {
 		const step = steps[ currentIndex ];
-		if ( ! step.wordPressFilesZip || ! step.wordPressFilesZip.url ) {
+		if ( ! step.wordPressFilesZip ) {
+			errors.push(
+				`Step ${ currentIndex }: importWordPressFiles missing wordPressFilesZip`
+			);
+		} else if ( step.wordPressFilesZip.resource === 'bundled' ) {
+			// Check for bundled resource (new format)
+			if ( ! step.wordPressFilesZip.path ) {
+				errors.push(
+					`Step ${ currentIndex }: importWordPressFiles bundled resource missing path`
+				);
+			} else if (
+				! step.wordPressFilesZip.path.includes( 'wp-content.zip' )
+			) {
+				errors.push(
+					`Step ${ currentIndex }: wordPressFilesZip.path must contain 'wp-content.zip'`
+				);
+			}
+		} else if ( ! step.wordPressFilesZip.url ) {
+			// Fallback for URL-based resources (legacy format)
 			errors.push(
 				`Step ${ currentIndex }: importWordPressFiles missing wordPressFilesZip.url`
 			);
@@ -355,11 +373,10 @@ export function validateBlueprintSteps( steps, expectedStepConfig ) {
  * Validate wp-content.zip URL is constructed correctly.
  *
  * @param {string} url         The URL to validate.
- * @param {string} siteKey     Expected site key.
  * @param {Object} credentials Storage provider credentials.
  * @return {Object} Validation result with isValid and errors.
  */
-export function validateWpContentUrl( url, siteKey, credentials ) {
+export function validateWpContentUrl( url, credentials ) {
 	const errors = [];
 
 	if ( ! url ) {
@@ -369,10 +386,6 @@ export function validateWpContentUrl( url, siteKey, credentials ) {
 
 	if ( ! url.includes( 'wp-content.zip' ) ) {
 		errors.push( "URL must contain 'wp-content.zip'" );
-	}
-
-	if ( ! url.includes( siteKey ) ) {
-		errors.push( `URL must contain site key '${ siteKey }'` );
 	}
 
 	// Check URL matches expected pattern based on credentials
@@ -393,8 +406,8 @@ export function validateWpContentUrl( url, siteKey, credentials ) {
 	const includeBucket = ! custom_domain && ! public_url;
 	const expectedUrl = includeBucket
 		? // eslint-disable-next-line camelcase
-		  `${ baseUrl }/${ bucket_name }/${ siteKey }/wp-content.zip`
-		: `${ baseUrl }/${ siteKey }/wp-content.zip`;
+		  `${ baseUrl }/${ bucket_name }/wp-content.zip`
+		: `${ baseUrl }/wp-content.zip`;
 
 	if ( url !== expectedUrl ) {
 		errors.push(

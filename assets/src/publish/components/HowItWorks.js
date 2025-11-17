@@ -112,7 +112,10 @@ export default function HowItWorks() {
 						className="aether-how-it-works__item-title"
 						style={ benefitTitleStyle }
 					>
-						{ __( 'What Happens When You Publish?', 'aether-site-exporter' ) }
+						{ __(
+							'What Happens When You Publish?',
+							'aether-site-exporter'
+						) }
 					</h4>
 					<p
 						className="aether-how-it-works__item-text"
@@ -141,7 +144,10 @@ export default function HowItWorks() {
 					>
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
-								{ __( 'Blueprint Generation:', 'aether-site-exporter' ) }
+								{ __(
+									'Blueprint Generation:',
+									'aether-site-exporter'
+								) }
 							</strong>{ ' ' }
 							{ __(
 								'Creates a WordPress Playground blueprint with your site content, theme, and plugins.',
@@ -159,7 +165,10 @@ export default function HowItWorks() {
 						</li>
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
-								{ __( 'Static Site Generation:', 'aether-site-exporter' ) }
+								{ __(
+									'Static Site Generation:',
+									'aether-site-exporter'
+								) }
 							</strong>{ ' ' }
 							{ __(
 								'If enabled, converts your site to static HTML, CSS, and JavaScript files.',
@@ -168,7 +177,10 @@ export default function HowItWorks() {
 						</li>
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
-								{ __( 'Upload to Storage:', 'aether-site-exporter' ) }
+								{ __(
+									'Upload to Storage:',
+									'aether-site-exporter'
+								) }
 							</strong>{ ' ' }
 							{ __(
 								'Uploads blueprint and static files to your selected providers (R2, GitHub, or GitLab).',
@@ -177,7 +189,10 @@ export default function HowItWorks() {
 						</li>
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
-								{ __( 'Atomic Deployment:', 'aether-site-exporter' ) }
+								{ __(
+									'Atomic Deployment:',
+									'aether-site-exporter'
+								) }
 							</strong>{ ' ' }
 							{ __(
 								'Atomically switches to the new version, ensuring zero downtime.',
@@ -186,7 +201,10 @@ export default function HowItWorks() {
 						</li>
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
-								{ __( 'Verification:', 'aether-site-exporter' ) }
+								{ __(
+									'Verification:',
+									'aether-site-exporter'
+								) }
 							</strong>{ ' ' }
 							{ __(
 								'Verifies that all files were uploaded successfully and are accessible.',
@@ -234,7 +252,10 @@ export default function HowItWorks() {
 						className="aether-how-it-works__item-title"
 						style={ benefitTitleStyle }
 					>
-						{ __( 'Static Site Deployment', 'aether-site-exporter' ) }
+						{ __(
+							'Static Site Deployment',
+							'aether-site-exporter'
+						) }
 					</h4>
 					<p
 						className="aether-how-it-works__item-text"
@@ -283,10 +304,16 @@ export default function HowItWorks() {
 						style={ benefitListStyle }
 					>
 						<li className="aether-how-it-works__published-item">
-							{ __( 'All published posts and pages', 'aether-site-exporter' ) }
+							{ __(
+								'All published posts and pages',
+								'aether-site-exporter'
+							) }
 						</li>
 						<li className="aether-how-it-works__published-item">
-							{ __( 'Custom post types', 'aether-site-exporter' ) }
+							{ __(
+								'Custom post types',
+								'aether-site-exporter'
+							) }
 						</li>
 						<li className="aether-how-it-works__published-item">
 							{ __(
@@ -295,16 +322,25 @@ export default function HowItWorks() {
 							) }
 						</li>
 						<li className="aether-how-it-works__published-item">
-							{ __( 'Theme files and customizations', 'aether-site-exporter' ) }
+							{ __(
+								'Theme files and customizations',
+								'aether-site-exporter'
+							) }
 						</li>
 						<li className="aether-how-it-works__published-item">
 							{ __( 'Active plugins', 'aether-site-exporter' ) }
 						</li>
 						<li className="aether-how-it-works__published-item">
-							{ __( 'Media files (images, videos)', 'aether-site-exporter' ) }
+							{ __(
+								'Media files (images, videos)',
+								'aether-site-exporter'
+							) }
 						</li>
 						<li className="aether-how-it-works__published-item">
-							{ __( 'WordPress settings and options', 'aether-site-exporter' ) }
+							{ __(
+								'WordPress settings and options',
+								'aether-site-exporter'
+							) }
 						</li>
 						<li
 							className="aether-how-it-works__published-item"

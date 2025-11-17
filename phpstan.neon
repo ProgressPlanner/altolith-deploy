@@ -2,9 +2,9 @@ parameters:
     level: 8
     paths:
         - includes/
-        - aether.php
+        - aether-site-exporter.php
     bootstrapFiles:
-        - aether.php
+        - aether-site-exporter.php
         - phpstan-stubs.php
     excludePaths:
         - vendor/
@@ -13,4 +13,5 @@ parameters:
     # dynamic paths with ABSPATH constant at analysis time
     ignoreErrors:
         - '#Method.*has parameter \$request with generic class WP_REST_Request but does not specify its types#'
-        - '#Parameter.*\$sourceDir.*expects string, null given#'
+        - '#Path in require\(\) "assets/build/.*\.asset\.php" is not a file or it does not exist\.#'
+        - '#Method Aether\\SiteExporter\\Plugin::registerProviderScriptFilter\(\) is unused\.#'

@@ -379,7 +379,10 @@ export default function PublishProgressModal( {
 							className="aether-publish-progress-modal__loading-text"
 							style={ loadingParagraphStyle }
 						>
-							{ __( 'Initializing publish process…', 'aether-site-exporter' ) }
+							{ __(
+								'Initializing publish process…',
+								'aether-site-exporter'
+							) }
 						</p>
 					</div>
 				) }

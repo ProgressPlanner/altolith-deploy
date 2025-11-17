@@ -10,9 +10,9 @@
 
 namespace Aether\SiteExporter\REST\Publish;
 
-use Aether\REST\RESTHelpersTrait;
-use Aether\Plugin;
-use Aether\Utilities\EncryptionHelper;
+use Aether\SiteExporter\REST\RESTHelpersTrait;
+use Aether\SiteExporter\Plugin;
+use Aether\SiteExporter\Utilities\EncryptionHelper;
 use WP_REST_Request;
 use WP_Error;
 
@@ -156,8 +156,20 @@ class PublishGitController
 
 		$hostname = \strtolower($parsedUrl['host'] ?? '');
 		$isAllowedHost = false;
+
+		// Use stricter regex-based validation to prevent subdomain bypass attacks
+		// Only allow exact matches or valid subdomains (alphanumeric + hyphens)
 		foreach ($allowedHosts as $allowedHost) {
-			if ($hostname === $allowedHost || \substr($hostname, -\strlen($allowedHost) - 1) === '.' . $allowedHost) {
+			// Exact match
+			if ($hostname === $allowedHost) {
+				$isAllowedHost = true;
+				break;
+			}
+
+			// Subdomain match: must be *.allowedHost (not evil.com.allowedHost)
+			// Pattern: alphanumeric-subdomain.allowedHost (e.g., my-org.github.com)
+			$escapedHost = \preg_quote($allowedHost, '/');
+			if (\preg_match('/^[a-z0-9\-]+\.' . $escapedHost . '$/', $hostname)) {
 				$isAllowedHost = true;
 				break;
 			}
@@ -190,10 +202,13 @@ class PublishGitController
 			);
 		}
 
+		// Security: Never send decrypted credentials to client
+		// Store config internally but only return sanitized/safe values
 		$gitConfig = [
 			'gitUrl' => $gitUrl,
 			'branch' => $branch,
-			'personalAccessToken' => $personalAccessToken,
+			// Do NOT include personalAccessToken in response - it should never leave the server
+			'hasToken' => !empty($personalAccessToken), // Only indicate if token exists
 		];
 
 		return \rest_ensure_response([

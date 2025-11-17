@@ -55,7 +55,10 @@ export function ProviderSettings( { provider, onSave } ) {
 				if ( mounted ) {
 					setSaveError(
 						error.message ||
-							__( 'Failed to load configuration', 'aether-site-exporter' )
+							__(
+								'Failed to load configuration',
+								'aether-site-exporter'
+							)
 					);
 					setIsLoading( false );
 				}
@@ -136,7 +139,8 @@ export function ProviderSettings( { provider, onSave } ) {
 			}
 		} catch ( error ) {
 			setSaveError(
-				error.message || __( 'Failed to save configuration', 'aether-site-exporter' )
+				error.message ||
+					__( 'Failed to save configuration', 'aether-site-exporter' )
 			);
 			setIsSaving( false );
 		}
@@ -214,7 +218,10 @@ export function ProviderSettings( { provider, onSave } ) {
 						{ ...commonProps }
 						options={ [
 							{
-								label: __( 'Select an option…', 'aether-site-exporter' ),
+								label: __(
+									'Select an option…',
+									'aether-site-exporter'
+								),
 								value: '',
 							},
 							...( options || [] ),
@@ -304,7 +311,10 @@ export function ProviderSettings( { provider, onSave } ) {
 			>
 				<Spinner className="aether-provider-settings__spinner" />
 				<p className="aether-provider-settings__loading-text">
-					{ __( 'Loading provider settings…', 'aether-site-exporter' ) }
+					{ __(
+						'Loading provider settings…',
+						'aether-site-exporter'
+					) }
 				</p>
 			</div>
 		);
@@ -322,7 +332,10 @@ export function ProviderSettings( { provider, onSave } ) {
 					isDismissible={ true }
 					onRemove={ () => setSaveSuccess( false ) }
 				>
-					{ __( 'Settings saved successfully!', 'aether-site-exporter' ) }
+					{ __(
+						'Settings saved successfully!',
+						'aether-site-exporter'
+					) }
 				</Notice>
 			) }
 
@@ -399,7 +412,10 @@ export function ProviderSettings( { provider, onSave } ) {
 						>
 							{ isSaving
 								? __( 'Saving…', 'aether-site-exporter' )
-								: __( 'Save Settings', 'aether-site-exporter' ) }
+								: __(
+										'Save Settings',
+										'aether-site-exporter'
+								  ) }
 						</Button>
 
 						{ /* Optional: Test connection button */ }
@@ -441,7 +457,10 @@ export function ProviderSettings( { provider, onSave } ) {
 										}
 									} }
 								>
-									{ __( 'Test Connection', 'aether-site-exporter' ) }
+									{ __(
+										'Test Connection',
+										'aether-site-exporter'
+									) }
 								</Button>
 							) }
 					</div>

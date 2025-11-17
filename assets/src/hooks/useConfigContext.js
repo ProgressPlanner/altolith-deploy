@@ -31,7 +31,7 @@ import { ConfigContext } from '../contexts/ConfigContext';
  *     if (loading) return <Spinner />;
  *     if (error) return <Error message={error} onRetry={refetch} />;
  *
- *     return <div>Site Key: {config.siteKey}</div>;
+ *     return <div>Playground URL: {config.playgroundUrl}</div>;
  * }
  *
  * @example

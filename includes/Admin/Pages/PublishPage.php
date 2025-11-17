@@ -10,8 +10,8 @@
 
 namespace Aether\SiteExporter\Admin\Pages;
 
-use Aether\Admin\BaseAdminPage;
-use Aether\Admin\Settings;
+use Aether\SiteExporter\Admin\BaseAdminPage;
+use Aether\SiteExporter\Admin\Settings;
 
 /**
  * Publish page class.
@@ -49,7 +49,7 @@ class PublishPage extends BaseAdminPage
 		];
 
 		// Enqueue required webpack chunks FIRST (before main script)
-		$plugin = \Aether\Plugin::getInstance();
+		$plugin = \Aether\SiteExporter\Plugin::getInstance();
 		$plugin->enqueueWebpackChunks('aether-export');
 
 		// Get chunk handles for dependencies (discovered dynamically)
@@ -72,7 +72,7 @@ class PublishPage extends BaseAdminPage
 	 */
 	public function outputMetaTags(): void
 	{
-		$plugin = \Aether\Plugin::getInstance();
+		$plugin = \Aether\SiteExporter\Plugin::getInstance();
 		$plugin->outputMetaTags();
 	}
 

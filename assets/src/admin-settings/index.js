@@ -28,87 +28,33 @@ if ( typeof __webpack_public_path__ !== 'undefined' ) {
 
 import { render } from '@wordpress/element';
 import AdminSettings from './AdminSettings';
-import { ConfigProvider } from '../contexts/ConfigContext';
-import { ProviderProvider } from '../contexts/ProviderContext';
-import { SettingsProvider } from '../contexts/SettingsContext';
-import DevTools from '../components/DevTools';
-import { debugError } from '../utils/debug';
+import ErrorBoundary from '../components/ErrorBoundary';
+import { PublishProvider } from '../contexts/PublishContext';
 
-/**
- * Load all provider modules via dynamic imports.
- *
- * Uses dynamic imports to allow webpack to code-split providers into separate chunks.
- * Catches individual import errors to prevent one failing provider from blocking others.
- *
- * @return {Promise<void>}
- */
-const loadProviders = async () => {
-	try {
-		await Promise.all( [
-			import( '../providers/cloudflare-r2/index' ).catch( () => {
-				// Provider failed to load, continue with others
-			} ),
-			import( '../providers/gitlab/index' ).catch( () => {
-				// Provider failed to load, continue with others
-			} ),
-			import( '../providers/cloudflare/index' ).catch( () => {
-				// Provider failed to load, continue with others
-			} ),
-			import( '../providers/gitlab-pages/index' ).catch( () => {
-				// Provider failed to load, continue with others
-			} ),
-		] );
-	} catch ( error ) {
-		// Log error but continue - admin settings should still render
-		debugError( 'Error loading providers:', error );
-	}
-};
+// Import local-filesystem provider to ensure it's registered
+// This is the default/fallback provider and must always be available
+import '../providers/local-filesystem/index';
 
 /**
  * Initialize admin settings page.
  *
- * Loads providers first to ensure they're registered, then renders the component.
- * If provider loading fails, still renders the component (it will show empty dropdowns).
- *
- * @return {Promise<void>}
+ * @return {void}
  */
-const init = async () => {
+const init = () => {
 	const container = document.getElementById( 'aether-admin-settings' );
 
 	if ( ! container ) {
 		return;
 	}
 
-	try {
-		// Wait for providers to load before rendering
-		await loadProviders();
-
-		render(
-			<ConfigProvider>
-				<ProviderProvider>
-					<SettingsProvider>
-						<AdminSettings />
-						<DevTools />
-					</SettingsProvider>
-				</ProviderProvider>
-			</ConfigProvider>,
-			container
-		);
-	} catch ( error ) {
-		debugError( 'Error initializing admin settings:', error );
-		// Render anyway even if providers fail to load
-		render(
-			<ConfigProvider>
-				<ProviderProvider>
-					<SettingsProvider>
-						<AdminSettings />
-						<DevTools />
-					</SettingsProvider>
-				</ProviderProvider>
-			</ConfigProvider>,
-			container
-		);
-	}
+	render(
+		<ErrorBoundary>
+			<PublishProvider>
+				<AdminSettings />
+			</PublishProvider>
+		</ErrorBoundary>,
+		container
+	);
 };
 
 init();

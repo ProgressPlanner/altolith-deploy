@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Autoloader for Aether classes
+ * Autoloader for Aether Site Exporter classes
  *
- * @package Aether
+ * @package Aether\SiteExporter
  */
 
 // Exit if accessed directly.
@@ -13,13 +13,13 @@ if (! \defined('ABSPATH')) {
 
 \spl_autoload_register(
 	function ($class) {
-		// Only handle Aether namespace.
-		if (\strpos($class, 'Aether\\') !== 0) {
+		// Only handle Aether\SiteExporter namespace.
+		if (\strpos($class, 'Aether\\SiteExporter\\') !== 0) {
 			 return;
 		}
 
 		// Remove the namespace prefix.
-		$class = \str_replace('Aether\\', '', $class);
+		$class = \str_replace('Aether\\SiteExporter\\', '', $class);
 
 		// Convert namespace separators to directory separators.
 		$class = \str_replace('\\', '/', $class);

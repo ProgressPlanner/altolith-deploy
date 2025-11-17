@@ -212,14 +212,9 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 
 	// Detect if static URL is a public URL (direct R2 access) vs worker endpoint.
 	// Public URLs need /static/ prefix, worker endpoints add it internally.
-	// Worker endpoints contain .workers.dev OR include a site key (32-char MD5 hash).
-	// URLs with site keys are routed through workers even if using custom domains (CNAMEs).
-	const hasSiteKey =
-		normalizedStaticUrl && /\/[a-f0-9]{32}\//i.test( normalizedStaticUrl );
+	// Worker endpoints contain .workers.dev.
 	const isPublicUrl =
-		normalizedStaticUrl &&
-		! normalizedStaticUrl.includes( '.workers.dev' ) &&
-		! hasSiteKey;
+		normalizedStaticUrl && ! normalizedStaticUrl.includes( '.workers.dev' );
 
 	// Build initial URL mapping (homepage).
 	// Include both HTTP and HTTPS versions of the site URL in the mapping.
@@ -406,7 +401,7 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 				const staticUrlObj = new URL( normalizedStaticUrl );
 				// Always use HTTPS for static site URLs
 				staticUrlObj.protocol = 'https:';
-				// Preserve the base path from static URL (e.g., /site-key/)
+				// Preserve the base path from static URL
 				// Remove trailing slash from base, then append staticPath
 				const basePath = staticUrlObj.pathname.replace( /\/$/, '' );
 				return staticUrlObj.origin + basePath + staticPath;
@@ -593,7 +588,7 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 
 		// Rewrite absolute paths (starting with /) when static URL includes subdirectories.
 		// This ensures paths like /wp-includes/js/file.js are rewritten to
-		// /site-key/project/wp-includes/js/file.js when needed.
+		// /static/wp-includes/js/file.js when needed.
 		if ( normalizedStaticUrl ) {
 			try {
 				const staticUrlObj = new URL( normalizedStaticUrl );

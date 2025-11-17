@@ -15,7 +15,6 @@
  */
 
 import { useCallback } from '@wordpress/element';
-import { getCredentials } from '../../utils/credentialManager';
 import { StorageService } from '../../providers/services/storageService';
 import { processHtml, getStaticFilePath } from '../utils/htmlProcessor';
 import {
@@ -23,7 +22,6 @@ import {
 	getAssetLocalPath,
 } from '../utils/assetExtractor';
 import { createAssetTracker } from '../utils/assetTracker';
-import apiFetch from '../../utils/api';
 import { debug, debugWarn } from '../../utils/debug';
 import { calculateFileHash } from '../../utils/fileHash';
 import {
@@ -34,11 +32,10 @@ import {
 	cleanupManifest,
 } from '../../utils/manifestManager';
 import { uploadFilesWithProgress } from '../utils/fileUploadManager';
+import apiFetch from '../../utils/api';
 
-/**
- * WordPress Playground root URL (matches PHP constant AETHER_PLAYGROUND_ROOT_URL).
- */
-const AETHER_PLAYGROUND_ROOT_URL = 'https://static-wp.s12y.org/index.html';
+// WordPress Playground root URL constant removed - not currently used
+// const AETHER_PLAYGROUND_ROOT_URL = 'https://static-wp.s12y.org/index.html';
 
 /**
  * Process URLs and upload static site files.
@@ -52,7 +49,6 @@ export function useStaticSiteGenerator( onProgress ) {
 			urls,
 			staticSiteUrl,
 			staticSiteProviderId,
-			siteKey,
 			siteUrl,
 			setStatusMessage,
 			blueprintData,
@@ -72,67 +68,34 @@ export function useStaticSiteGenerator( onProgress ) {
 				failedUrls: [],
 			};
 
-			// Check if Git-based upload is available (GitHub Pages or GitLab Pages provider).
-			// Git config contains: repo URL, branch, access token, etc.
-			// Only fetch if using a Git-based staticSite provider.
-			// Known Git providers: github, gitlab, gitlab-pages
-			const gitProviderIds = [ 'github', 'gitlab', 'gitlab-pages' ];
-			const isGitProvider =
-				gitProviderIds.includes( staticSiteProviderId );
-
-			let gitConfig = null;
-			if ( isGitProvider ) {
-				try {
-					const gitConfigResponse = await apiFetch( {
-						path: '/aether/site-exporter/git-config',
-					} );
-					if (
-						gitConfigResponse &&
-						gitConfigResponse.success &&
-						gitConfigResponse.config
-					) {
-						gitConfig = gitConfigResponse;
-					}
-				} catch ( error ) {
-					// Git config not available, will use StorageService
+			// Get provider configuration
+			let providerConfig = {};
+			try {
+				const settingsResponse = await apiFetch( {
+					path: '/aether/site-exporter/settings?key=providers',
+				} );
+				if ( settingsResponse.success && settingsResponse.value ) {
+					providerConfig =
+						settingsResponse.value[ 'local-filesystem' ] || {};
 				}
+			} catch ( error ) {
+				debug( 'Failed to load provider configuration:', error );
 			}
 
-			// Get credentials for staticSite provider.
-			// Falls back to storage provider if staticSite provider not configured.
-			const credentials = await getCredentials( staticSiteProviderId );
-			const workerEndpoint = credentials.worker_endpoint || '';
-			const bucketName = credentials.bucket_name || '';
+			// Configure local filesystem storage
+			const staticPath = providerConfig.static_files_path || 'static/';
 
-			// DECISION POINT: Git vs Storage provider upload.
-			// Priority: Git upload takes precedence if configured (GitHub/GitLab Pages workflow).
-			// Fallback: Storage provider upload via Worker API.
-			if ( gitConfig && gitConfig.success && gitConfig.config ) {
-				// Git-based upload for staticSite providers (GitHub Pages / GitLab Pages)
-				// Note: Git uploads require collecting all files first, then uploading together
-				// This is a simplified implementation - full Git support would require refactoring
-				// to collect files first, then upload via Git manifest
-				throw new Error(
-					'Git-based staticSite providers are not yet fully supported for static site uploads. Please use a storage-based provider for static site hosting.'
-				);
-			} else if ( ! workerEndpoint || ! bucketName ) {
-				throw new Error(
-					'Worker endpoint and bucket name are required for static site uploads. Please configure a storage-based staticSite provider.'
-				);
-			}
+			const config = {
+				public_url: siteUrl,
+				base_url: staticSiteUrl || siteUrl,
+			};
 
-			if ( ! siteKey ) {
-				throw new Error(
-					'Site key is required for static site generation'
-				);
-			}
+			debug( 'Static site storage configuration:', {
+				staticPath,
+			} );
 
-			// Create storage service.
-			const storageService = new StorageService(
-				workerEndpoint,
-				bucketName,
-				credentials
-			);
+			// Create storage service (jobId no longer needed for path)
+			const storageService = new StorageService( staticPath, '', config );
 
 			const totalUrls = urls.length;
 
@@ -220,11 +183,10 @@ export function useStaticSiteGenerator( onProgress ) {
 				}
 			}
 
-			// Calculate total files: HTML files + unique assets + wp-admin/index.html
+			// Calculate total files: HTML files + unique assets
 			const totalFilesToUpload =
 				urlCache.size + // HTML files successfully fetched
-				allUniqueAssets.size + // Unique assets across all pages
-				1; // wp-admin/index.html
+				allUniqueAssets.size; // Unique assets across all pages
 
 			debug( 'Pre-scan complete:', {
 				urlsScanned: urls.length,
@@ -252,7 +214,7 @@ export function useStaticSiteGenerator( onProgress ) {
 						'fetchManifest'
 					);
 				}
-				manifest = await fetchManifest( storageService, siteKey );
+				manifest = await fetchManifest( storageService );
 				const manifestEntryCount = Object.keys( manifest ).length;
 				if ( setStatusMessage ) {
 					setStatusMessage(
@@ -314,7 +276,7 @@ export function useStaticSiteGenerator( onProgress ) {
 
 						// Get asset path and storage key.
 						const assetPath = getAssetLocalPath( assetUrl );
-						const assetKey = `${ siteKey }/static/${ assetPath }`;
+						const assetKey = assetPath;
 
 						// Create blob with appropriate content type.
 						const assetBlob = new Blob( [ assetContent ], {
@@ -347,7 +309,7 @@ export function useStaticSiteGenerator( onProgress ) {
 									filesSkipped++;
 									uploadedFiles.push( {
 										storageKey: assetKey,
-										relativePath: `static/${ assetPath }`,
+										relativePath: assetPath,
 										contentType,
 									} );
 									continue; // Skip adding to assetData
@@ -448,7 +410,7 @@ export function useStaticSiteGenerator( onProgress ) {
 						// Track uploaded asset file for manifest generation.
 						uploadedFiles.push( {
 							storageKey: assetKey,
-							relativePath: `static/${ assetPath }`,
+							relativePath: assetPath,
 							contentType,
 						} );
 					}
@@ -473,9 +435,8 @@ export function useStaticSiteGenerator( onProgress ) {
 					}
 
 					// Upload HTML file to storage with progress tracking.
-					// Storage path format: {siteKey}/static/{path}/index.html
 					const htmlPath = getStaticFilePath( url );
-					const htmlKey = `${ siteKey }/static/${ htmlPath }`;
+					const htmlKey = htmlPath;
 					let htmlBlob = new Blob( [ processedHtml ], {
 						type: 'text/html',
 					} );
@@ -516,7 +477,7 @@ export function useStaticSiteGenerator( onProgress ) {
 						// This prevents the manifest from being wiped clean on next publish.
 						uploadedFiles.push( {
 							storageKey: htmlKey,
-							relativePath: `static/${ htmlPath }`,
+							relativePath: htmlPath,
 							contentType: 'text/html',
 						} );
 
@@ -634,11 +595,7 @@ export function useStaticSiteGenerator( onProgress ) {
 								'Periodic manifest save:',
 								filesUploaded + ' files'
 							);
-							await uploadManifest(
-								storageService,
-								siteKey,
-								manifest
-							);
+							await uploadManifest( storageService, manifest );
 						} catch ( error ) {
 							debugWarn(
 								'Periodic manifest save failed:',
@@ -674,7 +631,7 @@ export function useStaticSiteGenerator( onProgress ) {
 					// Track uploaded HTML file.
 					uploadedFiles.push( {
 						storageKey: htmlKey,
-						relativePath: `static/${ htmlPath }`,
+						relativePath: htmlPath,
 						contentType: 'text/html',
 					} );
 
@@ -691,11 +648,7 @@ export function useStaticSiteGenerator( onProgress ) {
 								'Periodic manifest save:',
 								filesUploaded + ' files'
 							);
-							await uploadManifest(
-								storageService,
-								siteKey,
-								manifest
-							);
+							await uploadManifest( storageService, manifest );
 						} catch ( error ) {
 							debugWarn(
 								'Periodic manifest save failed:',
@@ -707,178 +660,6 @@ export function useStaticSiteGenerator( onProgress ) {
 					failures.urlsFailed++;
 					failures.failedUrls.push( { url, reason: error.message } );
 				}
-			}
-
-			// Report progress BEFORE uploading wp-admin/index.html
-			if ( onProgress ) {
-				const progressPercent =
-					totalFilesToUpload > 0
-						? Math.round(
-								( filesUploaded / totalFilesToUpload ) * 100
-						  )
-						: 0;
-				debug(
-					'[Aether] uploadStaticSiteFiles wp-admin before upload:',
-					{
-						filesUploaded,
-						totalFilesToUpload,
-						progressPercent,
-					}
-				);
-				onProgress( filesUploaded, totalFilesToUpload, null );
-			}
-
-			// Generate and upload wp-admin/index.html redirect file.
-			if ( setStatusMessage ) {
-				setStatusMessage(
-					'Generating wp-admin redirect file',
-					'progress',
-					'generateWpAdmin'
-				);
-			}
-
-			// Generate base64-encoded blueprint for URL fragment.
-			if ( ! blueprintData ) {
-				throw new Error(
-					'Blueprint data is required for wp-admin redirect'
-				);
-			}
-
-			const blueprintBase64 = btoa( JSON.stringify( blueprintData ) );
-			const playgroundUrl = `${ AETHER_PLAYGROUND_ROOT_URL }#${ blueprintBase64 }`;
-
-			const redirectHtml = `<!DOCTYPE html>
-<html>
-<head>
-	<meta charset="UTF-8">
-	<meta http-equiv="refresh" content="0; url=${ playgroundUrl }">
-	<title>Redirecting to WordPress Playground...</title>
-</head>
-<body>
-	<p>Redirecting to <a href="${ playgroundUrl }">WordPress Playground</a>...</p>
-	<script>window.location.href = ${ JSON.stringify( playgroundUrl ) };</script>
-</body>
-</html>`;
-
-			// Upload wp-admin/index.html file (progress reported via onProgress callback)
-			const wpAdminKey = `${ siteKey }/static/wp-admin/index.html`;
-			let wpAdminBlob = new Blob( [ redirectHtml ], {
-				type: 'text/html',
-			} );
-
-			// Check if file should be skipped based on size and hash
-			const wpAdminSize = wpAdminBlob.size;
-			let wpAdminHash = null;
-			let shouldSkipWpAdmin = false;
-
-			// Stage 1: Check size first
-			const existingWpAdminEntry = manifest[ wpAdminKey ];
-			if (
-				existingWpAdminEntry &&
-				existingWpAdminEntry.size === wpAdminSize
-			) {
-				// Stage 2: Calculate hash if size matches
-				try {
-					wpAdminHash = await calculateFileHash( wpAdminBlob );
-					shouldSkipWpAdmin = shouldSkipUpload(
-						manifest,
-						wpAdminKey,
-						wpAdminSize,
-						wpAdminHash
-					);
-				} catch ( error ) {
-					debugWarn(
-						'Failed to calculate wp-admin hash, will upload:',
-						error
-					);
-					shouldSkipWpAdmin = false;
-				}
-			}
-
-			if ( shouldSkipWpAdmin ) {
-				// File unchanged - skip upload
-				filesUploaded++;
-				filesSkipped++;
-				uploadedFiles.push( {
-					storageKey: wpAdminKey,
-					relativePath: 'static/wp-admin/index.html',
-					contentType: 'text/html',
-				} );
-
-				// Update message to success
-				if ( setStatusMessage ) {
-					setStatusMessage(
-						'Generated wp-admin redirect file',
-						'success',
-						'generateWpAdmin'
-					);
-				}
-
-				// Report final progress (100%)
-				if ( onProgress ) {
-					onProgress( filesUploaded, totalFilesToUpload, null );
-				}
-
-				// Null blob reference to help GC
-				wpAdminBlob = null;
-			} else {
-				// Calculate hash if not already calculated
-				if ( ! wpAdminHash ) {
-					try {
-						wpAdminHash = await calculateFileHash( wpAdminBlob );
-					} catch ( error ) {
-						debugWarn(
-							'Failed to calculate wp-admin hash:',
-							error
-						);
-						wpAdminHash = null;
-					}
-				}
-
-				const wpAdminUploadResult = await storageService.upload(
-					wpAdminKey,
-					wpAdminBlob,
-					{
-						contentType: 'text/html',
-						cacheControl: 'no-store', // Prevent caching - always fetch fresh
-					}
-				);
-
-				if ( wpAdminUploadResult.success ) {
-					filesUploaded++;
-
-					// Update message to success
-					if ( setStatusMessage ) {
-						setStatusMessage(
-							'Generated wp-admin redirect file',
-							'success',
-							'generateWpAdmin'
-						);
-					}
-
-					// Update manifest entry if hash was calculated
-					if ( wpAdminHash ) {
-						manifest = updateManifestEntry(
-							manifest,
-							wpAdminKey,
-							wpAdminSize,
-							wpAdminHash
-						);
-					}
-
-					// Report final progress (100%)
-					if ( onProgress ) {
-						onProgress( filesUploaded, totalFilesToUpload, null );
-					}
-					uploadedFiles.push( {
-						storageKey: wpAdminKey,
-						relativePath: 'static/wp-admin/index.html',
-						contentType: 'text/html',
-					} );
-				}
-
-				// Null blob reference to help GC
-				wpAdminBlob = null;
 			}
 
 			// Upload final manifest with cleanup
@@ -907,11 +688,7 @@ export function useStaticSiteGenerator( onProgress ) {
 					`Manifest cleanup: ${ beforeCleanupCount } entries → ${ afterCleanupCount } entries (${ removedCount } removed, ${ currentFileKeys.size } current files)`
 				);
 
-				await uploadManifest(
-					storageService,
-					siteKey,
-					cleanedManifest
-				);
+				await uploadManifest( storageService, cleanedManifest );
 
 				// Add success message after manifest update
 				if ( setStatusMessage ) {

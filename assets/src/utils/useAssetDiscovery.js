@@ -36,13 +36,15 @@ export function normalizePluginSlug( slug ) {
 /**
  * Check if a plugin or theme exists on WordPress.org
  *
- * Uses CORS proxy (cfp.s12y.org) to bypass browser CORS restrictions.
+ * Uses filterable method (default: PHP server-side) to check WordPress.org.
+ * Can be switched to CORS proxy or direct API calls via WordPress filters.
  *
- * @param {string} slug - Plugin or theme slug (will be normalized for plugins)
- * @param {string} type - 'plugin' or 'theme'
+ * @param {string} slug   - Plugin or theme slug (will be normalized for plugins)
+ * @param {string} type   - 'plugin' or 'theme'
+ * @param {Object} config - Configuration object with wporgCheckMethod and corsProxyUrl
  * @return {Promise<boolean>} True if asset exists on WordPress.org
  */
-export async function isFromWordPressOrg( slug, type ) {
+export async function isFromWordPressOrg( slug, type, config = {} ) {
 	// Normalize plugin slugs (remove file path if present)
 	// Example: 'akismet/akismet.php' -> 'akismet'
 	const normalizedSlug =
@@ -55,25 +57,75 @@ export async function isFromWordPressOrg( slug, type ) {
 	}
 
 	try {
-		// Use Cloudflare Worker with D1 caching
-		// Worker checks D1 first (sub-millisecond), falls back to WordPress.org if needed
-		const workerUrl = `https://cfp.s12y.org/check-wporg?slug=${ encodeURIComponent(
-			normalizedSlug
-		) }&type=${ encodeURIComponent( type ) }`;
+		// Get check method from config (defaults to 'php')
+		const method = config.wporgCheckMethod || 'php';
+		let checkUrl;
 
-		const response = await fetch( workerUrl );
+		switch ( method ) {
+			case 'cors-proxy':
+				// Use external CORS proxy (e.g., cfp.s12y.org or custom worker)
+				checkUrl =
+					config.corsProxyUrl || 'https://cfp.s12y.org/check-wporg';
+				checkUrl += `?slug=${ encodeURIComponent(
+					normalizedSlug
+				) }&type=${ encodeURIComponent( type ) }`;
+				break;
 
-		if ( ! response.ok ) {
-			throw new Error( `Worker returned ${ response.status }` );
+			case 'direct':
+				// Direct WordPress.org API calls (will fail in browsers due to CORS)
+				if ( type === 'theme' ) {
+					checkUrl = `https://api.wordpress.org/themes/info/1.2/?action=theme_information&request[slug]=${ encodeURIComponent(
+						normalizedSlug
+					) }`;
+				} else {
+					checkUrl = `https://api.wordpress.org/plugins/info/1.0/${ encodeURIComponent(
+						normalizedSlug
+					) }.json`;
+				}
+				break;
+
+			case 'php':
+			default:
+				// PHP server-side method (default, no CORS issues)
+				// apiFetch expects path without /wp-json prefix
+				checkUrl = `/aether/site-exporter/check-wporg?slug=${ encodeURIComponent(
+					normalizedSlug
+				) }&type=${ encodeURIComponent( type ) }`;
+				break;
 		}
 
-		const data = await response.json();
+		// For PHP method, use apiFetch (includes WordPress auth)
+		// For other methods, use plain fetch
+		let data;
+		if ( method === 'php' ) {
+			// Use apiFetch for internal WordPress REST API calls
+			// This includes nonce and authentication automatically
+			data = await apiFetch( { path: checkUrl } );
+		} else {
+			// Use plain fetch for external URLs (cors-proxy, direct)
+			const response = await fetch( checkUrl );
 
-		if ( ! data.success ) {
-			throw new Error( data.error || 'Unknown error' );
+			if ( ! response.ok ) {
+				throw new Error(
+					`WordPress.org check returned ${ response.status }`
+				);
+			}
+
+			data = await response.json();
 		}
 
-		const exists = data.exists;
+		// Handle different response formats
+		let exists;
+		if ( method === 'direct' ) {
+			// Direct WordPress.org API: check for 'error' field
+			exists = ! data.error && ( data.slug || data.name );
+		} else {
+			// PHP or CORS proxy: standardized response with 'success' and 'exists' fields
+			if ( ! data.success ) {
+				throw new Error( data.error || 'Unknown error' );
+			}
+			exists = data.exists;
+		}
 
 		// Cache the result
 		wporgCache.set( cacheKey, exists );
@@ -143,21 +195,30 @@ export default function useAssetDiscovery() {
 		setError( null );
 
 		try {
+			// Fetch config to get wporgCheckMethod
+			const configResponse = await apiFetch( {
+				path: '/aether/site-exporter/config',
+				method: 'GET',
+			} );
+
+			const config = configResponse || {};
+
 			const { plugins, themes } = await getInstalledAssets();
 
-			// Check each asset against WordPress.org via D1-cached Worker
-			// No rate limiting needed - Worker caches results in D1 (sub-millisecond lookups)
+			// Check each asset against WordPress.org
+			// Method is configurable via filters (default: PHP server-side)
 			const items = [
 				...plugins.map( ( p ) => ( { ...p, assetType: 'plugin' } ) ),
 				...themes.map( ( t ) => ( { ...t, assetType: 'theme' } ) ),
 			];
 
-			// Check all assets in parallel - fast with D1 caching
+			// Check all assets in parallel
 			const allAssets = await Promise.all(
 				items.map( async ( item ) => {
 					const fromWpOrg = await isFromWordPressOrg(
 						item.slug,
-						item.assetType
+						item.assetType,
+						config
 					);
 					return {
 						...item,
@@ -198,6 +259,14 @@ export default function useAssetDiscovery() {
 		setError( null );
 
 		try {
+			// Fetch config to get wporgCheckMethod
+			const configResponse = await apiFetch( {
+				path: '/aether/site-exporter/config',
+				method: 'GET',
+			} );
+
+			const config = configResponse || {};
+
 			const { plugins, themes } = await getInstalledAssets();
 
 			// Only check active plugins
@@ -209,8 +278,8 @@ export default function useAssetDiscovery() {
 			const activeTheme = themes.find( ( theme ) => theme.is_active );
 			const activeThemes = activeTheme ? [ activeTheme ] : [];
 
-			// Check each asset against WordPress.org via D1-cached Worker
-			// No rate limiting needed - Worker caches results in D1 (sub-millisecond lookups)
+			// Check each asset against WordPress.org
+			// Method is configurable via filters (default: PHP server-side)
 			const items = [
 				...activePlugins.map( ( p ) => ( {
 					...p,
@@ -222,12 +291,13 @@ export default function useAssetDiscovery() {
 				} ) ),
 			];
 
-			// Check all assets in parallel - fast with D1 caching
+			// Check all assets in parallel
 			const allAssets = await Promise.all(
 				items.map( async ( item ) => {
 					const fromWpOrg = await isFromWordPressOrg(
 						item.slug,
-						item.assetType
+						item.assetType,
+						config
 					);
 					return {
 						...item,

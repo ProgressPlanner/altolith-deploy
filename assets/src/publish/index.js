@@ -27,6 +27,10 @@ import { PublishProvider } from '../contexts/PublishContext';
 import DevTools from '../components/DevTools';
 import { debugWarn } from '../utils/debug';
 
+// Import local-filesystem provider to ensure it's registered
+// This is the default/fallback provider
+import '../providers/local-filesystem/index';
+
 // Load providers dynamically to reduce initial bundle size
 // Don't wait for providers to load - render immediately
 // Providers will load in the background

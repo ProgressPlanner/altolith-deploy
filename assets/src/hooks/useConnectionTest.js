@@ -62,7 +62,8 @@ export function useCloudflareConnectionTest( accountId, apiToken ) {
 			setResult( {
 				success: false,
 				message:
-					err.message || __( 'Connection test failed', 'aether-site-exporter' ),
+					err.message ||
+					__( 'Connection test failed', 'aether-site-exporter' ),
 			} );
 		} finally {
 			setTesting( false );
@@ -113,13 +114,17 @@ export function useR2ConnectionTest( providerId, config ) {
 				success: true,
 				message:
 					response.message ||
-					__( 'Successfully connected to Cloudflare R2', 'aether-site-exporter' ),
+					__(
+						'Successfully connected to Cloudflare R2',
+						'aether-site-exporter'
+					),
 			} );
 		} catch ( err ) {
 			setResult( {
 				success: false,
 				message:
-					err.message || __( 'Connection test failed', 'aether-site-exporter' ),
+					err.message ||
+					__( 'Connection test failed', 'aether-site-exporter' ),
 			} );
 		} finally {
 			setTesting( false );
@@ -158,7 +163,10 @@ export function useGitLabConnectionTest( config ) {
 				! repositoryName
 			) {
 				throw new Error(
-					__( 'Missing required GitLab credentials', 'aether-site-exporter' )
+					__(
+						'Missing required GitLab credentials',
+						'aether-site-exporter'
+					)
 				);
 			}
 
@@ -204,13 +212,17 @@ export function useGitLabConnectionTest( config ) {
 
 			setResult( {
 				success: true,
-				message: __( 'Successfully connected to GitLab', 'aether-site-exporter' ),
+				message: __(
+					'Successfully connected to GitLab',
+					'aether-site-exporter'
+				),
 			} );
 		} catch ( err ) {
 			setResult( {
 				success: false,
 				message:
-					err.message || __( 'Connection test failed', 'aether-site-exporter' ),
+					err.message ||
+					__( 'Connection test failed', 'aether-site-exporter' ),
 			} );
 		} finally {
 			setTesting( false );
@@ -270,7 +282,10 @@ export function useConnectionTest( providerId, config ) {
 					throw new Error(
 						response.message ||
 							response.error ||
-							__( 'Connection test failed', 'aether-site-exporter' )
+							__(
+								'Connection test failed',
+								'aether-site-exporter'
+							)
 					);
 				} catch ( apiError ) {
 					// Handle API errors (WP_Error responses)
@@ -301,7 +316,10 @@ export function useConnectionTest( providerId, config ) {
 						throw new Error(
 							response.message ||
 								response.error ||
-								__( 'Connection test failed', 'aether-site-exporter' )
+								__(
+									'Connection test failed',
+									'aether-site-exporter'
+								)
 						);
 					}
 
@@ -354,7 +372,8 @@ export function useConnectionTest( providerId, config ) {
 			setResult( {
 				success: false,
 				message:
-					err.message || __( 'Connection test failed', 'aether-site-exporter' ),
+					err.message ||
+					__( 'Connection test failed', 'aether-site-exporter' ),
 			} );
 		} finally {
 			setTesting( false );

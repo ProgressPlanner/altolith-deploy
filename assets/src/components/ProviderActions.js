@@ -123,7 +123,10 @@ export default function ProviderActions( {
 					isDismissible={ false }
 					onRemove={ () => {} }
 				>
-					{ __( 'Worker deployed successfully!', 'aether-site-exporter' ) }
+					{ __(
+						'Worker deployed successfully!',
+						'aether-site-exporter'
+					) }
 					{ deployResult.workerUrl && (
 						<div
 							className="aether-provider-actions__worker-url"

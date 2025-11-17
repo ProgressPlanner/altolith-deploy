@@ -81,7 +81,7 @@ class Settings
 	 */
 	public function get(): array
 	{
-		return \Aether\getStorageConfig();
+		return \Aether\SiteExporter\getStorageConfig();
 	}
 
 	/**

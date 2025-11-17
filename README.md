@@ -177,6 +177,108 @@ GPL-2.0-or-later - see [LICENSE](LICENSE) for details.
 - GitHub/GitLab Pages
 - DigitalOcean Spaces
 
+## 🔌 WordPress.org API Check Filters
+
+The plugin provides a filterable system for checking if plugins/themes exist on WordPress.org, allowing you to customize the behavior for different environments.
+
+### Available Filters
+
+#### `aether_site_exporter_wporg_check_method`
+
+Control which method is used to check WordPress.org:
+
+**Available Methods:**
+- `'php'` (default) - Server-side PHP calls (no CORS issues, no external dependencies)
+- `'cors-proxy'` - External CORS proxy worker (e.g., cfp.s12y.org)
+- `'direct'` - Direct browser calls to WordPress.org API (will fail in most browsers due to CORS)
+
+**Example:**
+```php
+// Use CORS proxy method
+add_filter( 'aether_site_exporter_wporg_check_method', function( $method ) {
+    return 'cors-proxy';
+} );
+```
+
+#### `aether_site_exporter_cors_proxy_url`
+
+Customize the CORS proxy URL when using `cors-proxy` method:
+
+**Example:**
+```php
+// Use custom CORS proxy worker
+add_filter( 'aether_site_exporter_cors_proxy_url', function( $url ) {
+    return 'https://my-worker.example.com/check-wporg';
+} );
+```
+
+#### `aether_site_exporter_wporg_check_response`
+
+Override the entire check logic for specific plugins/themes:
+
+**Example:**
+```php
+// Always treat 'my-custom-plugin' as non-WordPress.org
+add_filter( 'aether_site_exporter_wporg_check_response', function( $response, $slug, $type ) {
+    if ( $slug === 'my-custom-plugin' ) {
+        return [
+            'success' => true,
+            'exists'  => false,
+            'slug'    => $slug,
+            'type'    => $type,
+            'custom'  => true,
+        ];
+    }
+    return $response; // Use default behavior
+}, 10, 3 );
+```
+
+### Use Cases
+
+**Development Environment (Local):**
+```php
+// Use PHP method (default) - no external dependencies needed
+// No filter needed, this is the default behavior
+```
+
+**WordPress Playground Environment:**
+```php
+// Use CORS proxy for browser-based deployment
+add_filter( 'aether_site_exporter_wporg_check_method', function() {
+    return 'cors-proxy';
+} );
+
+// Point to your deployed Cloudflare Worker
+add_filter( 'aether_site_exporter_cors_proxy_url', function() {
+    return 'https://your-worker.workers.dev/check-wporg';
+} );
+```
+
+**Enterprise Environment (Firewall Restrictions):**
+```php
+// Use custom logic to determine WordPress.org status
+add_filter( 'aether_site_exporter_wporg_check_response', function( $response, $slug, $type ) {
+    // Check against internal database or API
+    $is_wporg = my_internal_wporg_check( $slug, $type );
+
+    return [
+        'success' => true,
+        'exists'  => $is_wporg,
+        'slug'    => $slug,
+        'type'    => $type,
+    ];
+}, 10, 3 );
+```
+
+### CORS Proxy Worker Deployment
+
+If you need to use the CORS proxy method, you can deploy the included worker to Cloudflare Workers:
+
+1. **Worker File:** `/assets/workers/PlaygroundCorsProxy.js`
+2. **Features:** D1 database caching, dual-TTL strategy (30 days for WordPress.org, 2 days for custom)
+3. **Deploy:** Use Wrangler or Cloudflare dashboard
+4. **Configure:** Update URL with the `aether_site_exporter_cors_proxy_url` filter
+
 ---
 
 **Aether** - *Greek god of pure upper air and clear sky. Personification of the bright upper atmosphere.*

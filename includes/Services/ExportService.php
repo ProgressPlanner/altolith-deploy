@@ -10,9 +10,9 @@
 
 namespace Aether\SiteExporter\Services;
 
-use Aether\Plugin;
-use Aether\Core\ZipHelper;
-use Aether\Sync\JobStateManager;
+use Aether\SiteExporter\Plugin;
+use Aether\SiteExporter\Core\ZipHelper;
+use Aether\SiteExporter\Sync\JobStateManager;
 
 \defined('ABSPATH') || exit;
 
@@ -75,8 +75,41 @@ class ExportService
 		@\unlink($tempZipPath);
 		$tempZipPath .= '.zip';
 
-		// Final location: wp-content/wp-content.zip (web-accessible).
-		$zipPath = WP_CONTENT_DIR . '/wp-content.zip';
+		// Get export path from settings.
+		$settings = \get_option('aether_site_exporter_settings', []);
+		$exportPath = $settings['providers']['local-filesystem']['export_path'] ?? 'blueprint-bundle/bundle.zip';
+
+		// Extract directory and validate it to prevent path traversal attacks.
+		$exportDir = \dirname($exportPath);
+
+		// Security: Reject paths with path traversal sequences or absolute paths.
+		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $exportDir) || \preg_match('#^[/\\\\]#', $exportDir)) {
+			return new \WP_Error(
+				'invalid_export_path',
+				\__('Invalid export path: path traversal not allowed', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$fullExportDir = \rtrim(ABSPATH, '/') . '/' . \ltrim($exportDir, '/');
+
+		if (!\is_dir($fullExportDir)) {
+			\wp_mkdir_p($fullExportDir);
+		}
+
+		// Security: Validate that the created directory is within ABSPATH.
+		$realExportDir = \realpath($fullExportDir);
+		$realAbspath = \realpath(ABSPATH);
+		if (false === $realExportDir || false === $realAbspath || 0 !== \strpos($realExportDir, $realAbspath)) {
+			return new \WP_Error(
+				'invalid_export_directory',
+				\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Final location: Use the directory from export_path with wp-content.zip filename.
+		$zipPath = $realExportDir . '/wp-content.zip';
 
 		// Count total files first (for progress tracking).
 		// This is a quick scan that doesn't process files, just counts them.
@@ -165,7 +198,7 @@ class ExportService
 			}
 		} else {
 			// Fallback: Use PHP-based detection (includes ALL active plugins).
-			$customAssets = $this->plugin->getAllCustomAssets();
+			$customAssets = $this->plugin->getAllCustomAssets() ?? [];
 			foreach ($customAssets as $asset) {
 				if ('plugin' === $asset['type']) {
 					// Skip 'aether' plugin - it's added separately in blueprint from aether.zip URL.
@@ -434,7 +467,7 @@ class ExportService
 		}
 
 		// Count files in custom plugins.
-		$customAssets = $this->plugin->getAllCustomAssets();
+		$customAssets = $this->plugin->getAllCustomAssets() ?? [];
 		foreach ($customAssets as $asset) {
 			if ('plugin' === $asset['type']) {
 				$pluginDir = WP_PLUGIN_DIR . '/' . $asset['slug'];

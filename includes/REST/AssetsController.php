@@ -12,7 +12,7 @@ namespace Aether\SiteExporter\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
-use Aether\Sync\Blueprint\AssetDiscoveryService;
+use Aether\SiteExporter\Sync\Blueprint\AssetDiscoveryService;
 
 /**
  * Assets REST endpoints.
@@ -55,9 +55,9 @@ class AssetsController
 	}
 
 	/**
-	 * Get installed plugins and themes.
+	 * Get installed plugins and themes with pagination.
 	 *
-	 * Returns all installed plugins and themes with metadata.
+	 * Returns installed plugins and themes with metadata, paginated for performance.
 	 * The JavaScript code will determine which are from WordPress.org.
 	 *
 	 * @param WP_REST_Request $request Request object.
@@ -66,22 +66,51 @@ class AssetsController
 	public function getAssets(WP_REST_Request $request)
 	{
 		try {
-			$plugins = $this->assetDiscoveryService->getInstalledPlugins();
-			$themes  = $this->assetDiscoveryService->getInstalledThemes();
+			// Get pagination parameters
+			$page = \absint($request->get_param('page') ?? 1);
+			$perPage = \absint($request->get_param('per_page') ?? 50);
+
+			// Validate and cap per_page to prevent memory issues
+			$perPage = \min(\max($perPage, 1), 100); // Min 1, max 100
+			$page = \max($page, 1); // Min 1
+
+			$allPlugins = $this->assetDiscoveryService->getInstalledPlugins();
+			$allThemes  = $this->assetDiscoveryService->getInstalledThemes();
+
+			// Calculate pagination for plugins
+			$totalPlugins = \count($allPlugins);
+			$pluginOffset = ($page - 1) * $perPage;
+			$plugins = \array_slice($allPlugins, $pluginOffset, $perPage);
+
+			// Calculate pagination for themes (use same page/per_page)
+			$totalThemes = \count($allThemes);
+			$themeOffset = ($page - 1) * $perPage;
+			$themes = \array_slice($allThemes, $themeOffset, $perPage);
 
 			return new WP_REST_Response(
 				[
 					'success' => true,
 					'plugins' => $plugins,
 					'themes'  => $themes,
+					'pagination' => [
+						'page' => $page,
+						'per_page' => $perPage,
+						'total_plugins' => $totalPlugins,
+						'total_themes' => $totalThemes,
+						'total_pages_plugins' => \ceil($totalPlugins / $perPage),
+						'total_pages_themes' => \ceil($totalThemes / $perPage),
+					],
 				],
 				200
 			);
 		} catch (\Exception $e) {
+			// Sanitize exception message to prevent information disclosure
+			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
+
 			return new WP_REST_Response(
 				[
 					'success' => false,
-					'error'   => $e->getMessage(),
+					'error'   => $sanitizedMessage,
 				],
 				500
 			);

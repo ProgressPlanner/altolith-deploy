@@ -49,7 +49,9 @@ export default function SecretField( {
 				onClick={ () => setIsVisible( ! isVisible ) }
 				style={ toggleStyle }
 			>
-				{ isVisible ? __( 'Hide', 'aether-site-exporter' ) : __( 'Show', 'aether-site-exporter' ) }
+				{ isVisible
+					? __( 'Hide', 'aether-site-exporter' )
+					: __( 'Show', 'aether-site-exporter' ) }
 			</Button>
 		</div>
 	);

@@ -24,6 +24,10 @@ import { render, unmountComponentAtNode } from '@wordpress/element';
 import { AdminBarPublishModal } from '../components/AdminBarPublishModal';
 import { loadAllProviders } from '../providers/utils/providerLoader';
 
+// Import local-filesystem provider to ensure it's registered
+// This is the default/fallback provider and must always be available
+import '../providers/local-filesystem/index';
+
 // Load providers dynamically to reduce initial bundle size
 // Providers may already be enqueued by PHP, but we call this to ensure they're loaded
 loadAllProviders().catch( () => {

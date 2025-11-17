@@ -33,12 +33,16 @@ export default function RecentJobs( { jobs = [], loading = false } ) {
 
 		if ( days > 0 ) {
 			return `${ days } ${
-				days === 1 ? __( 'day', 'aether-site-exporter' ) : __( 'days', 'aether-site-exporter' )
+				days === 1
+					? __( 'day', 'aether-site-exporter' )
+					: __( 'days', 'aether-site-exporter' )
 			} ${ __( 'ago', 'aether-site-exporter' ) }`;
 		}
 		if ( hours > 0 ) {
 			return `${ hours } ${
-				hours === 1 ? __( 'hour', 'aether-site-exporter' ) : __( 'hours', 'aether-site-exporter' )
+				hours === 1
+					? __( 'hour', 'aether-site-exporter' )
+					: __( 'hours', 'aether-site-exporter' )
 			} ${ __( 'ago', 'aether-site-exporter' ) }`;
 		}
 		if ( minutes > 0 ) {
@@ -290,7 +294,10 @@ export default function RecentJobs( { jobs = [], loading = false } ) {
 										style={ jobIdStyle }
 									>
 										<strong className="aether-recent-jobs__job-id-label">
-											{ __( 'Job ID:', 'aether-site-exporter' ) }
+											{ __(
+												'Job ID:',
+												'aether-site-exporter'
+											) }
 										</strong>
 										<code
 											className="aether-recent-jobs__job-id-value"

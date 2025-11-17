@@ -10,7 +10,7 @@
 
 namespace Aether\SiteExporter\Admin;
 
-use Aether\Admin\Settings;
+use Aether\SiteExporter\Admin\Settings;
 
 /**
  * Class MenuManager
@@ -109,7 +109,7 @@ class MenuManager
 	 */
 	public function outputMetaTags(): void
 	{
-		$plugin = \Aether\Plugin::getInstance();
+		$plugin = \Aether\SiteExporter\Plugin::getInstance();
 		$plugin->outputMetaTags();
 	}
 

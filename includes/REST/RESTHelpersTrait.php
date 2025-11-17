@@ -29,6 +29,53 @@ trait RESTHelpersTrait
 	}
 
 	/**
+	 * Verify WordPress REST API nonce for CSRF protection.
+	 *
+	 * WordPress REST API automatically validates nonces via cookie authentication,
+	 * but this provides an explicit validation for defense in depth.
+	 *
+	 * Note: This check is redundant with WordPress's built-in REST API nonce validation,
+	 * but provides an explicit layer of CSRF protection for state-changing operations.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return bool|\WP_Error True if valid, WP_Error if invalid.
+	 */
+	public function verifyNonce(\WP_REST_Request $request)
+	{
+		// WordPress REST API automatically handles cookie authentication + nonce validation.
+		// If we reach this point and the user is authenticated, nonce was already validated.
+		// This explicit check serves as defense in depth for state-changing operations.
+
+		// Get nonce from header (sent by @wordpress/api-fetch)
+		$nonce = $request->get_header('X-WP-Nonce');
+
+		if (empty($nonce)) {
+			// Check if user is authenticated via cookie (nonce in cookie session)
+			// If user is logged in and we got here, WordPress already validated the session
+			if (\is_user_logged_in()) {
+				return true;
+			}
+
+			return new \WP_Error(
+				'missing_nonce',
+				\__('CSRF token missing. Please refresh and try again.', 'aether-site-exporter'),
+				['status' => 403]
+			);
+		}
+
+		// Verify nonce explicitly for defense in depth
+		if (!\wp_verify_nonce($nonce, 'wp_rest')) {
+			return new \WP_Error(
+				'invalid_nonce',
+				\__('CSRF token invalid. Please refresh and try again.', 'aether-site-exporter'),
+				['status' => 403]
+			);
+		}
+
+		return true;
+	}
+
+	/**
 	 * Get REST API namespace.
 	 *
 	 * @return string API namespace.
@@ -39,10 +86,161 @@ trait RESTHelpersTrait
 	}
 
 	/**
+	 * Validate array complexity to prevent DoS attacks.
+	 *
+	 * Checks array depth and total element count to prevent:
+	 * - Stack overflow from deeply nested arrays
+	 * - Memory exhaustion from extremely large arrays
+	 * - CPU exhaustion from processing complex structures
+	 *
+	 * @param mixed $data       Data to validate (typically from JSON request body).
+	 * @param int   $maxDepth   Maximum nesting depth (default: 10).
+	 * @param int   $maxElements Maximum total elements (default: 10000).
+	 * @return bool|\WP_Error True if valid, WP_Error if invalid.
+	 */
+	public function validateArrayComplexity($data, int $maxDepth = 10, int $maxElements = 10000)
+	{
+		if (! \is_array($data)) {
+			return true; // Not an array, no complexity check needed
+		}
+
+		$elementCount = 0;
+
+		$checkComplexity = function ($array, $depth) use (&$checkComplexity, &$elementCount, $maxDepth, $maxElements) {
+			// Check depth limit
+			if ($depth > $maxDepth) {
+				return new \WP_Error(
+					'array_too_deep',
+					\sprintf(
+						/* translators: %d: maximum allowed depth */
+						\__('Request data is too deeply nested (max depth: %d).', 'aether-site-exporter'),
+						$maxDepth
+					),
+					['status' => 400]
+				);
+			}
+
+			// Count elements and check limit
+			foreach ($array as $value) {
+				$elementCount++;
+
+				// Check element count limit
+				if ($elementCount > $maxElements) {
+					return new \WP_Error(
+						'array_too_large',
+						\sprintf(
+							/* translators: %d: maximum allowed elements */
+							\__('Request data is too large (max elements: %d).', 'aether-site-exporter'),
+							$maxElements
+						),
+						['status' => 400]
+					);
+				}
+
+				// Recursively check nested arrays
+				if (\is_array($value)) {
+					$result = $checkComplexity($value, $depth + 1);
+					if (\is_wp_error($result)) {
+						return $result;
+					}
+				}
+			}
+
+			return true;
+		};
+
+		return $checkComplexity($data, 0);
+	}
+
+	/**
+	 * Rate limit requests to prevent abuse.
+	 *
+	 * Uses WordPress transients to track request counts per user/IP.
+	 * Prevents DoS attacks by limiting the number of requests within a time window.
+	 *
+	 * @param string $operation   Operation identifier (e.g., 'url_discovery').
+	 * @param int    $maxRequests Maximum requests allowed in time window.
+	 * @param int    $timeWindow  Time window in seconds (default: 60).
+	 * @return bool|\WP_Error True if allowed, WP_Error if rate limited.
+	 */
+	public function checkRateLimit(string $operation, int $maxRequests = 10, int $timeWindow = 60)
+	{
+		$userId = \get_current_user_id();
+
+		// For logged-in users, use user ID; otherwise use IP address
+		if ($userId > 0) {
+			$identifier = "user_{$userId}";
+		} else {
+			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
+			$ip = isset($_SERVER['REMOTE_ADDR']) ? \sanitize_text_field(\wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
+			$identifier = "ip_" . \md5($ip);
+		}
+
+		$transientKey = "aether_ratelimit_{$operation}_{$identifier}";
+		$requests = \get_transient($transientKey);
+
+		if (false === $requests) {
+			// First request in this time window
+			\set_transient($transientKey, 1, $timeWindow);
+			return true;
+		}
+
+		if ($requests >= $maxRequests) {
+			return new \WP_Error(
+				'rate_limit_exceeded',
+				\sprintf(
+					/* translators: %d: number of seconds to wait */
+					\__('Rate limit exceeded. Please wait %d seconds before trying again.', 'aether-site-exporter'),
+					$timeWindow
+				),
+				['status' => 429]
+			);
+		}
+
+		// Increment counter
+		\set_transient($transientKey, $requests + 1, $timeWindow);
+		return true;
+	}
+
+	/**
+	 * Sanitize exception message to prevent information disclosure.
+	 *
+	 * Removes sensitive information from exception messages like:
+	 * - Absolute file paths (replace with relative paths or [REDACTED])
+	 * - Database credentials
+	 * - Internal implementation details
+	 *
+	 * @param string $message Exception message to sanitize.
+	 * @return string Sanitized message safe for public display.
+	 */
+	public function sanitizeExceptionMessage(string $message): string
+	{
+		// Remove absolute paths - replace with [PATH]
+		$message = \preg_replace('#' . \preg_quote(ABSPATH, '#') . '[^\s]*#', '[PATH]', $message);
+
+		// Remove common sensitive patterns
+		$patterns = [
+			// Database credentials
+			'#password[\'"]?\s*[:=]\s*[\'"]?[^\s\'"]+#i' => 'password=[REDACTED]',
+			'#user[\'"]?\s*[:=]\s*[\'"]?[^\s\'"]+#i' => 'user=[REDACTED]',
+			// API keys and tokens
+			'#(api[_-]?key|token|secret)[\'"]?\s*[:=]\s*[\'"]?[^\s\'"]+#i' => '$1=[REDACTED]',
+			// Email addresses
+			'#[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}#' => '[EMAIL]',
+		];
+
+		foreach ($patterns as $pattern => $replacement) {
+			$message = \preg_replace($pattern, $replacement, $message);
+		}
+
+		return $message;
+	}
+
+	/**
 	 * Send CORS headers for REST responses.
 	 *
 	 * Handles cross-origin requests for WordPress Playground iframe contexts.
-	 * Uses actual request origin instead of wildcard when credentials are needed.
+	 * Only allows whitelisted origins to prevent CSRF attacks.
 	 *
 	 * @return void
 	 */
@@ -52,16 +250,49 @@ trait RESTHelpersTrait
 		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
 		$origin = isset($_SERVER['HTTP_ORIGIN']) ? \esc_url_raw(\wp_unslash($_SERVER['HTTP_ORIGIN'])) : '';
 
-		if ($origin) {
-			// Use actual origin to allow credentials (required for cookie authentication)
-			\header('Access-Control-Allow-Origin: ' . $origin);
-		} else {
-			// Fallback to wildcard for non-cross-origin requests
-			\header('Access-Control-Allow-Origin: *');
-		}
+		// Security: Whitelist of allowed origins for CORS with credentials.
+		// Only allow requests from the same site or WordPress Playground.
+		$allowedOrigins = [
+			\site_url(),
+			\home_url(),
+			'https://playground.wordpress.net',
+		];
 
-		\header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-		\header('Access-Control-Allow-Headers: Content-Type, Authorization, X-WP-Nonce');
-		\header('Access-Control-Allow-Credentials: true');
+		/**
+		 * Filter the list of allowed CORS origins.
+		 *
+		 * Allows plugins to add additional trusted origins.
+		 *
+		 * @param array<string> $allowedOrigins Array of allowed origin URLs.
+		 */
+		$allowedOrigins = \apply_filters('aether_site_exporter_cors_allowed_origins', $allowedOrigins);
+
+		// Normalize origins by removing trailing slashes AND converting to lowercase
+		// Prevents case-sensitivity bypass (e.g., Playground.WordPress.Net)
+		$normalizedAllowedOrigins = \array_map(function ($url) {
+			return \strtolower(\rtrim($url, '/'));
+		}, $allowedOrigins);
+
+		$normalizedOrigin = \strtolower(\rtrim($origin, '/'));
+
+		// Validate origin is in whitelist
+		if ($origin && \in_array($normalizedOrigin, $normalizedAllowedOrigins, true)) {
+			// Security: Use normalized origin in header to prevent header injection
+			// This ensures we send back the exact whitelisted URL, not user-controlled input
+			$safeOrigin = $normalizedOrigin;
+
+			// Find the matching allowed origin to preserve original casing for response
+			$matchIndex = \array_search($normalizedOrigin, $normalizedAllowedOrigins, true);
+			if (false !== $matchIndex) {
+				$safeOrigin = $allowedOrigins[$matchIndex];
+			}
+
+			// Only set CORS headers for whitelisted origins
+			\header('Access-Control-Allow-Origin: ' . \esc_url_raw($safeOrigin));
+			\header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+			\header('Access-Control-Allow-Headers: Content-Type, Authorization, X-WP-Nonce');
+			\header('Access-Control-Allow-Credentials: true');
+		}
+		// Do not send any CORS headers if origin is not whitelisted
 	}
 }

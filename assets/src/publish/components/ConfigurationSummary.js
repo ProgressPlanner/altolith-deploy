@@ -141,13 +141,19 @@ export default function ConfigurationSummary( {
 								{ usageSummary.blueprint.provider &&
 									renderStatus(
 										'success',
-										__( 'Configured', 'aether-site-exporter' )
+										__(
+											'Configured',
+											'aether-site-exporter'
+										)
 									) }
 							</>
 						) : (
 							<>
 								<span className="aether-config-summary__value-label">
-									{ __( 'Not configured', 'aether-site-exporter' ) }
+									{ __(
+										'Not configured',
+										'aether-site-exporter'
+									) }
 								</span>
 								{ renderStatus(
 									'error',
@@ -175,7 +181,10 @@ export default function ConfigurationSummary( {
 						className="aether-config-summary__card-title"
 						style={ cardTitleStyle }
 					>
-						{ __( 'Static Site Generation', 'aether-site-exporter' ) }
+						{ __(
+							'Static Site Generation',
+							'aether-site-exporter'
+						) }
 					</h4>
 					<div
 						className="aether-config-summary__card-value"
@@ -226,7 +235,10 @@ export default function ConfigurationSummary( {
 								className="aether-config-summary__link"
 								href="/wp-admin/admin.php?page=aether-static"
 							>
-								{ __( 'Static Site Settings', 'aether-site-exporter' ) }
+								{ __(
+									'Static Site Settings',
+									'aether-site-exporter'
+								) }
 							</a>{ ' ' }
 							{ __(
 								'to generate and deploy a static version of your site.',
@@ -264,7 +276,10 @@ export default function ConfigurationSummary( {
 						) : (
 							<>
 								<span className="aether-config-summary__value-label">
-									{ __( 'Not configured', 'aether-site-exporter' ) }
+									{ __(
+										'Not configured',
+										'aether-site-exporter'
+									) }
 								</span>
 								{ renderStatus(
 									'warning',
@@ -290,7 +305,10 @@ export default function ConfigurationSummary( {
 									className="aether-config-summary__link"
 									href="/wp-admin/admin.php?page=aether-media"
 								>
-									{ __( 'Media Settings', 'aether-site-exporter' ) }
+									{ __(
+										'Media Settings',
+										'aether-site-exporter'
+									) }
 								</a>{ ' ' }
 								{ __(
 									'to offload images and videos to Cloudflare.',

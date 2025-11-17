@@ -11,7 +11,7 @@
 
 namespace Aether\SiteExporter\Utilities\Static;
 
-use Aether\Utilities\HTTPClient;
+use Aether\SiteExporter\Utilities\HTTPClient;
 
 /**
  * Discovers all URLs for static site generation.

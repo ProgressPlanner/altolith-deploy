@@ -15,8 +15,14 @@ export const PUBLISH_STEPS = [
 		label: __( 'Discover Assets', 'aether-site-exporter' ),
 		supportsProgress: false,
 		phase: 'discover',
-		waitingMessage: __( 'Discovering plugins and themes…', 'aether-site-exporter' ),
-		completionMessage: __( 'Assets discovered successfully', 'aether-site-exporter' ),
+		waitingMessage: __(
+			'Discovering plugins and themes…',
+			'aether-site-exporter'
+		),
+		completionMessage: __(
+			'Assets discovered successfully',
+			'aether-site-exporter'
+		),
 	},
 	{
 		id: 'offloadMedia',
@@ -24,15 +30,24 @@ export const PUBLISH_STEPS = [
 		supportsProgress: true,
 		phase: 'upload',
 		waitingMessage: __( 'Offloading media to R2…', 'aether-site-exporter' ),
-		completionMessage: __( 'Media offloaded successfully', 'aether-site-exporter' ),
+		completionMessage: __(
+			'Media offloaded successfully',
+			'aether-site-exporter'
+		),
 	},
 	{
 		id: 'getStaticSiteUrls',
 		label: __( 'Get Static Site URLs', 'aether-site-exporter' ),
 		supportsProgress: false,
 		phase: 'prepare',
-		waitingMessage: __( 'Discovering URLs for static site…', 'aether-site-exporter' ),
-		completionMessage: __( 'URLs discovered successfully', 'aether-site-exporter' ),
+		waitingMessage: __(
+			'Discovering URLs for static site…',
+			'aether-site-exporter'
+		),
+		completionMessage: __(
+			'URLs discovered successfully',
+			'aether-site-exporter'
+		),
 	},
 	{
 		id: 'generateBlueprint',
@@ -40,14 +55,20 @@ export const PUBLISH_STEPS = [
 		supportsProgress: false,
 		phase: 'generate',
 		waitingMessage: __( 'Generating blueprint…', 'aether-site-exporter' ),
-		completionMessage: __( 'Blueprint generated successfully', 'aether-site-exporter' ),
+		completionMessage: __(
+			'Blueprint generated successfully',
+			'aether-site-exporter'
+		),
 	},
 	{
 		id: 'createSiteArchive',
 		label: __( 'Create Site Archive', 'aether-site-exporter' ),
 		supportsProgress: true,
 		phase: 'generate',
-		waitingMessage: __( 'Creating administration archive…', 'aether-site-exporter' ),
+		waitingMessage: __(
+			'Creating administration archive…',
+			'aether-site-exporter'
+		),
 		completionMessage: __(
 			'Administration archive created successfully',
 			'aether'
@@ -58,7 +79,10 @@ export const PUBLISH_STEPS = [
 		label: __( 'Upload Static Site Files', 'aether-site-exporter' ),
 		supportsProgress: true,
 		phase: 'upload',
-		waitingMessage: __( 'Uploading static site files…', 'aether-site-exporter' ),
+		waitingMessage: __(
+			'Uploading static site files…',
+			'aether-site-exporter'
+		),
 		completionMessage: __(
 			'Static site files uploaded successfully',
 			'aether'
@@ -70,7 +94,10 @@ export const PUBLISH_STEPS = [
 		supportsProgress: true,
 		phase: 'upload',
 		waitingMessage: __( 'Uploading site archive…', 'aether-site-exporter' ),
-		completionMessage: __( 'Site archive uploaded successfully', 'aether-site-exporter' ),
+		completionMessage: __(
+			'Site archive uploaded successfully',
+			'aether-site-exporter'
+		),
 	},
 ];
 

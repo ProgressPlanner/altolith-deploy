@@ -10,8 +10,8 @@
 
 namespace Aether\SiteExporter\Admin\Pages;
 
-use Aether\Admin\BaseAdminPage;
-use Aether\Admin\Settings;
+use Aether\SiteExporter\Admin\BaseAdminPage;
+use Aether\SiteExporter\Admin\Settings;
 
 /**
  * Settings page class.
@@ -71,7 +71,7 @@ class SettingsPage extends BaseAdminPage
 	 */
 	public function outputMetaTags(): void
 	{
-		$plugin = \Aether\Plugin::getInstance();
+		$plugin = \Aether\SiteExporter\Plugin::getInstance();
 		$plugin->outputMetaTags();
 	}
 

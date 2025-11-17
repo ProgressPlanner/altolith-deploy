@@ -3,12 +3,12 @@
 /**
  * Global Helper Functions
  *
- * Provides global utility functions for the Aether plugin.
+ * Provides global utility functions for the Aether Site Exporter plugin.
  *
- * @package Aether
+ * @package Aether\SiteExporter
  */
 
-namespace Aether\SiteExporter\SiteExporter;
+namespace Aether\SiteExporter;
 
 \defined('ABSPATH') || exit;
 
@@ -28,7 +28,7 @@ function getStorageConfig(bool $forceRefresh = false): array
 {
 	static $repository = null;
 	if (null === $repository) {
-		$repository = new \Aether\Core\SettingsRepository();
+		$repository = new \Aether\SiteExporter\Core\SettingsRepository();
 	}
 	// Pass bypass_cache parameter to get fresh data when needed.
 	return $repository->getAll($forceRefresh);

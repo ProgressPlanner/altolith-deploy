@@ -12,14 +12,15 @@ import {
 	uploadFile,
 	deleteFile,
 	copyFile,
-	listObjects as listObjectsFromWorker,
-	batchCopy as batchCopyFromWorker,
-	batchDelete as batchDeleteFromWorker,
+	listObjects as listObjectsFromAdapter,
+	batchCopy as batchCopyFromAdapter,
+	batchDelete as batchDeleteFromAdapter,
 	getObjectUrl,
-} from '../../../utils/workerEndpointClient';
+	downloadFile,
+} from '../../../utils/filesystemAdapter';
 
-// Mock worker endpoint client
-jest.mock( '../../../utils/workerEndpointClient', () => ( {
+// Mock filesystem adapter
+jest.mock( '../../../utils/filesystemAdapter', () => ( {
 	uploadFile: jest.fn(),
 	deleteFile: jest.fn(),
 	copyFile: jest.fn(),
@@ -27,368 +28,344 @@ jest.mock( '../../../utils/workerEndpointClient', () => ( {
 	batchCopy: jest.fn(),
 	batchDelete: jest.fn(),
 	getObjectUrl: jest.fn(),
+	downloadFile: jest.fn(),
 } ) );
 
 describe( 'StorageService', () => {
 	let service;
-	const mockWorkerEndpoint = 'https://worker.example.com';
-	const mockBucketName = 'test-bucket';
+	const mockStaticPath = 'wp-content/aether-static';
+	const mockJobId = '123456789';
 	const mockConfig = {
-		custom_domain: 'https://cdn.example.com',
+		base_url: 'https://cdn.example.com',
 	};
 
 	beforeEach( () => {
-		service = new StorageService(
-			mockWorkerEndpoint,
-			mockBucketName,
-			mockConfig
-		);
+		service = new StorageService( mockStaticPath, mockJobId, mockConfig );
 		jest.clearAllMocks();
 	} );
 
 	describe( 'Constructor', () => {
-		test( 'should initialize with worker endpoint and bucket name', () => {
-			expect( service.workerEndpoint ).toBe( mockWorkerEndpoint );
-			expect( service.bucketName ).toBe( mockBucketName );
+		test( 'should initialize with static path and job ID', () => {
+			expect( service.staticPath ).toBe( mockStaticPath );
+			expect( service.jobId ).toBe( mockJobId );
 			expect( service.config ).toEqual( mockConfig );
+			expect( service.baseUrl ).toBe( mockConfig.base_url );
+		} );
+
+		test( 'should use public_url as baseUrl if base_url not provided', () => {
+			const configWithoutBaseUrl = { public_url: 'https://example.com' };
+			const testService = new StorageService(
+				mockStaticPath,
+				mockJobId,
+				configWithoutBaseUrl
+			);
+			expect( testService.baseUrl ).toBe( 'https://example.com' );
+		} );
+
+		test( 'should use empty string as baseUrl if neither provided', () => {
+			const emptyConfig = {};
+			const testService = new StorageService(
+				mockStaticPath,
+				mockJobId,
+				emptyConfig
+			);
+			expect( testService.baseUrl ).toBe( '' );
 		} );
 	} );
 
-	describe( 'upload', () => {
-		test( 'should upload file successfully', async () => {
-			const file = new Blob( [ 'test content' ], { type: 'text/plain' } );
-			const key = 'test/file.txt';
-
-			uploadFile.mockResolvedValue( {
-				success: true,
+	describe( 'upload()', () => {
+		test( 'should upload a file successfully', async () => {
+			const mockFile = new Blob( [ 'test content' ], {
+				type: 'text/plain',
 			} );
+			const mockKey = 'test-file.txt';
+			const mockMetadata = { contentType: 'text/plain' };
+
+			uploadFile.mockResolvedValue( { success: true } );
 			getObjectUrl.mockReturnValue(
-				'https://cdn.example.com/test/file.txt'
+				'https://cdn.example.com/test-file.txt'
 			);
 
-			const result = await service.upload( key, file );
+			const result = await service.upload(
+				mockKey,
+				mockFile,
+				mockMetadata
+			);
 
 			expect( uploadFile ).toHaveBeenCalledWith(
-				mockWorkerEndpoint,
-				key,
-				file,
-				expect.objectContaining( {
+				mockStaticPath,
+				mockKey,
+				mockFile,
+				{
 					contentType: 'text/plain',
 					cacheControl: '',
 					onProgress: null,
-				} )
+					jobId: mockJobId,
+				}
 			);
 			expect( result.success ).toBe( true );
 			expect( result.url ).toBe(
-				'https://cdn.example.com/test/file.txt'
+				'https://cdn.example.com/test-file.txt'
 			);
 		} );
 
 		test( 'should handle upload failure', async () => {
-			const file = new Blob( [ 'test' ], { type: 'text/plain' } );
-			const key = 'test/file.txt';
+			const mockFile = new Blob( [ 'test content' ] );
+			const mockKey = 'test-file.txt';
 
 			uploadFile.mockResolvedValue( {
 				success: false,
 				error: 'Upload failed',
 			} );
 
-			const result = await service.upload( key, file );
+			const result = await service.upload( mockKey, mockFile );
 
 			expect( result.success ).toBe( false );
 			expect( result.error ).toBe( 'Upload failed' );
 		} );
 
 		test( 'should reject non-File/Blob objects', async () => {
+			const mockKey = 'test-file.txt';
 			const invalidFile = 'not a file';
-			const key = 'test/file.txt';
 
-			const result = await service.upload( key, invalidFile );
+			const result = await service.upload( mockKey, invalidFile );
 
 			expect( result.success ).toBe( false );
 			expect( result.error ).toBe( 'File must be a File or Blob object' );
-			expect( uploadFile ).not.toHaveBeenCalled();
-		} );
-
-		test( 'should pass metadata options', async () => {
-			const file = new Blob( [ 'test' ], { type: 'image/jpeg' } );
-			const key = 'test/image.jpg';
-			const metadata = {
-				contentType: 'image/jpeg',
-				cacheControl: 'max-age=3600',
-				onProgress: jest.fn(),
-			};
-
-			uploadFile.mockResolvedValue( { success: true } );
-			getObjectUrl.mockReturnValue(
-				'https://cdn.example.com/test/image.jpg'
-			);
-
-			await service.upload( key, file, metadata );
-
-			expect( uploadFile ).toHaveBeenCalledWith(
-				mockWorkerEndpoint,
-				key,
-				file,
-				expect.objectContaining( {
-					contentType: 'image/jpeg',
-					cacheControl: 'max-age=3600',
-					onProgress: metadata.onProgress,
-				} )
-			);
 		} );
 	} );
 
-	describe( 'delete', () => {
-		test( 'should delete file successfully', async () => {
-			const key = 'test/file.txt';
+	describe( 'delete()', () => {
+		test( 'should delete a file successfully', async () => {
+			const mockKey = 'test-file.txt';
 
-			deleteFile.mockResolvedValue( {
-				success: true,
-			} );
+			deleteFile.mockResolvedValue( { success: true } );
 
-			const result = await service.delete( key );
+			const result = await service.delete( mockKey );
 
 			expect( deleteFile ).toHaveBeenCalledWith(
-				mockWorkerEndpoint,
-				key
+				mockStaticPath,
+				mockKey,
+				{
+					jobId: mockJobId,
+				}
 			);
 			expect( result.success ).toBe( true );
 		} );
 
 		test( 'should handle delete failure', async () => {
-			const key = 'test/file.txt';
+			const mockKey = 'test-file.txt';
 
 			deleteFile.mockResolvedValue( {
 				success: false,
 				error: 'Delete failed',
 			} );
 
-			const result = await service.delete( key );
+			const result = await service.delete( mockKey );
 
 			expect( result.success ).toBe( false );
 			expect( result.error ).toBe( 'Delete failed' );
 		} );
 	} );
 
-	describe( 'copy', () => {
-		test( 'should copy file successfully', async () => {
-			const sourceKey = 'source/file.txt';
-			const destKey = 'dest/file.txt';
+	describe( 'copy()', () => {
+		test( 'should return success (not implemented for local filesystem)', async () => {
+			const sourceKey = 'source.txt';
+			const destKey = 'dest.txt';
 
-			copyFile.mockResolvedValue( {
-				success: true,
-			} );
+			copyFile.mockResolvedValue( { success: true } );
 
 			const result = await service.copy( sourceKey, destKey );
 
 			expect( copyFile ).toHaveBeenCalledWith(
-				mockWorkerEndpoint,
+				mockStaticPath,
 				sourceKey,
 				destKey
 			);
 			expect( result.success ).toBe( true );
 		} );
+	} );
 
-		test( 'should handle copy failure', async () => {
-			const sourceKey = 'source/file.txt';
-			const destKey = 'dest/file.txt';
-
-			copyFile.mockResolvedValue( {
-				success: false,
-				error: 'Copy failed',
-			} );
-
-			const result = await service.copy( sourceKey, destKey );
-
-			expect( result.success ).toBe( false );
-			expect( result.error ).toBe( 'Copy failed' );
+	describe( 'exists()', () => {
+		test( 'should return false (not implemented for local filesystem)', async () => {
+			const result = await service.exists( 'test-file.txt' );
+			expect( result ).toBe( false );
 		} );
 	} );
 
-	describe( 'exists', () => {
-		test( 'should return true when file exists', async () => {
-			const key = 'test/file.txt';
+	describe( 'listObjects()', () => {
+		test( 'should list objects with default parameters', async () => {
+			const mockObjects = [
+				{ key: 'file1.txt', size: 100 },
+				{ key: 'file2.txt', size: 200 },
+			];
 
-			listObjectsFromWorker.mockResolvedValue( {
+			listObjectsFromAdapter.mockResolvedValue( {
 				success: true,
-				objects: [ { key: 'test/file.txt' } ],
+				objects: mockObjects,
 			} );
 
-			const exists = await service.exists( key );
+			const result = await service.listObjects();
 
-			expect( listObjectsFromWorker ).toHaveBeenCalledWith(
-				mockWorkerEndpoint,
-				key,
-				1
-			);
-			expect( exists ).toBe( true );
-		} );
-
-		test( 'should return false when file does not exist', async () => {
-			const key = 'test/file.txt';
-
-			listObjectsFromWorker.mockResolvedValue( {
-				success: true,
-				objects: [ { key: 'other/file.txt' } ],
-			} );
-
-			const exists = await service.exists( key );
-
-			expect( exists ).toBe( false );
-		} );
-
-		test( 'should return false when list fails', async () => {
-			const key = 'test/file.txt';
-
-			listObjectsFromWorker.mockResolvedValue( {
-				success: false,
-				error: 'List failed',
-			} );
-
-			const exists = await service.exists( key );
-
-			expect( exists ).toBe( false );
-		} );
-	} );
-
-	describe( 'listObjects', () => {
-		test( 'should list objects successfully', async () => {
-			const prefix = 'test/';
-			const limit = 10;
-
-			listObjectsFromWorker.mockResolvedValue( {
-				success: true,
-				objects: [
-					{ key: 'test/file1.txt' },
-					{ key: 'test/file2.txt' },
-				],
-			} );
-
-			const result = await service.listObjects( prefix, limit );
-
-			expect( listObjectsFromWorker ).toHaveBeenCalledWith(
-				mockWorkerEndpoint,
-				prefix,
-				limit
-			);
-			expect( result.success ).toBe( true );
-			expect( result.objects ).toHaveLength( 2 );
-		} );
-
-		test( 'should use default prefix and limit', async () => {
-			listObjectsFromWorker.mockResolvedValue( {
-				success: true,
-				objects: [],
-			} );
-
-			await service.listObjects();
-
-			expect( listObjectsFromWorker ).toHaveBeenCalledWith(
-				mockWorkerEndpoint,
+			expect( listObjectsFromAdapter ).toHaveBeenCalledWith(
+				mockStaticPath,
 				'',
 				1000
 			);
-		} );
-	} );
-
-	describe( 'getUrl', () => {
-		test( 'should return public URL', () => {
-			const key = 'test/file.txt';
-			const expectedUrl = 'https://cdn.example.com/test/file.txt';
-
-			getObjectUrl.mockReturnValue( expectedUrl );
-
-			const url = service.getUrl( key );
-
-			expect( getObjectUrl ).toHaveBeenCalledWith(
-				mockWorkerEndpoint,
-				mockBucketName,
-				key
-			);
-			expect( url ).toBe( expectedUrl );
-		} );
-	} );
-
-	describe( 'batchCopy', () => {
-		test( 'should batch copy files successfully', async () => {
-			const operations = [
-				{ source: 'source1.txt', dest: 'dest1.txt' },
-				{ source: 'source2.txt', dest: 'dest2.txt' },
-			];
-
-			batchCopyFromWorker.mockResolvedValue( {
-				success: true,
-				copied: 2,
-				errors: 0,
-				results: [],
-			} );
-
-			const result = await service.batchCopy( operations );
-
-			expect( batchCopyFromWorker ).toHaveBeenCalledWith(
-				mockWorkerEndpoint,
-				operations
-			);
 			expect( result.success ).toBe( true );
-			expect( result.copied ).toBe( 2 );
+			expect( result.objects ).toEqual( mockObjects );
 		} );
-	} );
 
-	describe( 'batchDelete', () => {
-		test( 'should batch delete files successfully', async () => {
-			const keys = [ 'file1.txt', 'file2.txt', 'file3.txt' ];
+		test( 'should list objects with prefix and limit', async () => {
+			const mockPrefix = 'static/';
+			const mockLimit = 50;
 
-			batchDeleteFromWorker.mockResolvedValue( {
-				success: true,
-			} );
-
-			const result = await service.batchDelete( keys );
-
-			expect( batchDeleteFromWorker ).toHaveBeenCalledWith(
-				mockWorkerEndpoint,
-				keys
-			);
-			expect( result.success ).toBe( true );
-		} );
-	} );
-
-	describe( 'testConnection', () => {
-		test( 'should return success when connection works', async () => {
-			listObjectsFromWorker.mockResolvedValue( {
+			listObjectsFromAdapter.mockResolvedValue( {
 				success: true,
 				objects: [],
 			} );
 
+			await service.listObjects( mockPrefix, mockLimit );
+
+			expect( listObjectsFromAdapter ).toHaveBeenCalledWith(
+				mockStaticPath,
+				mockPrefix,
+				mockLimit
+			);
+		} );
+	} );
+
+	describe( 'getUrl()', () => {
+		test( 'should return public URL using baseUrl', () => {
+			const mockKey = 'test-file.txt';
+
+			getObjectUrl.mockReturnValue(
+				'https://cdn.example.com/test-file.txt'
+			);
+
+			const url = service.getUrl( mockKey );
+
+			expect( getObjectUrl ).toHaveBeenCalledWith(
+				mockStaticPath,
+				mockConfig.base_url,
+				mockKey
+			);
+			expect( url ).toBe( 'https://cdn.example.com/test-file.txt' );
+		} );
+
+		test( 'should return relative path as fallback if no baseUrl', () => {
+			const emptyService = new StorageService(
+				mockStaticPath,
+				mockJobId,
+				{}
+			);
+			const mockKey = 'test-file.txt';
+
+			const url = emptyService.getUrl( mockKey );
+
+			expect( url ).toBe( mockKey );
+		} );
+	} );
+
+	describe( 'batchCopy()', () => {
+		test( 'should batch copy files', async () => {
+			const mockOperations = [
+				{ source: 'file1.txt', dest: 'copy1.txt' },
+				{ source: 'file2.txt', dest: 'copy2.txt' },
+			];
+
+			batchCopyFromAdapter.mockResolvedValue( { success: true } );
+
+			const result = await service.batchCopy( mockOperations );
+
+			expect( batchCopyFromAdapter ).toHaveBeenCalledWith(
+				mockStaticPath,
+				mockOperations
+			);
+			expect( result.success ).toBe( true );
+		} );
+	} );
+
+	describe( 'batchDelete()', () => {
+		test( 'should batch delete files', async () => {
+			const mockKeys = [ 'file1.txt', 'file2.txt', 'file3.txt' ];
+
+			batchDeleteFromAdapter.mockResolvedValue( { success: true } );
+
+			const result = await service.batchDelete( mockKeys );
+
+			expect( batchDeleteFromAdapter ).toHaveBeenCalledWith(
+				mockStaticPath,
+				mockKeys,
+				{ jobId: mockJobId }
+			);
+			expect( result.success ).toBe( true );
+		} );
+	} );
+
+	describe( 'downloadManifest()', () => {
+		test( 'should download manifest file', async () => {
+			const mockBlob = new Blob( [ '{"test": "data"}' ], {
+				type: 'application/json',
+			} );
+
+			downloadFile.mockResolvedValue( mockBlob );
+
+			const result = await service.downloadManifest();
+
+			expect( downloadFile ).toHaveBeenCalledWith(
+				mockStaticPath,
+				'file-manifest.json',
+				{ jobId: mockJobId }
+			);
+			expect( result ).toBe( mockBlob );
+		} );
+
+		test( 'should return null if manifest download fails', async () => {
+			downloadFile.mockRejectedValue( new Error( 'Not found' ) );
+
+			const result = await service.downloadManifest();
+
+			expect( result ).toBeNull();
+		} );
+	} );
+
+	describe( 'uploadManifest()', () => {
+		test( 'should upload manifest file', async () => {
+			const mockBlob = new Blob( [ '{"test": "data"}' ], {
+				type: 'application/json',
+			} );
+
+			uploadFile.mockResolvedValue( { success: true } );
+			getObjectUrl.mockReturnValue(
+				'https://cdn.example.com/file-manifest.json'
+			);
+
+			const result = await service.uploadManifest( mockBlob );
+
+			expect( uploadFile ).toHaveBeenCalledWith(
+				mockStaticPath,
+				'file-manifest.json',
+				mockBlob,
+				{
+					contentType: 'application/json',
+					cacheControl: '',
+					onProgress: null,
+					jobId: mockJobId,
+				}
+			);
+			expect( result.success ).toBe( true );
+		} );
+	} );
+
+	describe( 'testConnection()', () => {
+		test( 'should return success for local filesystem', async () => {
 			const result = await service.testConnection();
 
 			expect( result.success ).toBe( true );
 			expect( result.message ).toBe(
-				'Successfully connected to Cloudflare R2.'
+				'Local filesystem storage is ready.'
 			);
-		} );
-
-		test( 'should return failure when connection fails', async () => {
-			listObjectsFromWorker.mockResolvedValue( {
-				success: false,
-				error: 'Connection error',
-			} );
-
-			const result = await service.testConnection();
-
-			expect( result.success ).toBe( false );
-			expect( result.error ).toBe( 'Connection error' );
-		} );
-
-		test( 'should return failure with default message when error not provided', async () => {
-			listObjectsFromWorker.mockResolvedValue( {
-				success: false,
-			} );
-
-			const result = await service.testConnection();
-
-			expect( result.success ).toBe( false );
-			expect( result.error ).toBe( 'Failed to list objects' );
 		} );
 	} );
 } );

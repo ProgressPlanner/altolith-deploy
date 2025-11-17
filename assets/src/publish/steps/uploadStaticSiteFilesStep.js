@@ -13,7 +13,6 @@
  * @param {Object}   context                       Execution context.
  * @param {Function} context.processStaticSiteUrls Static site generator function.
  * @param {Object}   context.currentStatus         Current job status.
- * @param {string}   context.siteKey               Site key for storage.
  * @param {string}   context.siteUrl               WordPress site URL.
  * @param {string}   context.providerId            Storage/static-site provider ID.
  * @param {Function} context.setStatusMessage      Status message updater.
@@ -27,7 +26,6 @@ export async function uploadStaticSiteFilesHandler( context ) {
 		staticSiteUrl, // From getStaticSiteUrlsHandler (workflow) or currentStatus (tests)
 		blueprintData, // From generateBlueprintHandler (workflow) or currentStatus (tests)
 		currentStatus, // Legacy support for tests
-		siteKey,
 		siteUrl,
 		providerId,
 		setStatusMessage,
@@ -39,12 +37,6 @@ export async function uploadStaticSiteFilesHandler( context ) {
 		'progress',
 		'uploadStaticSiteFiles'
 	);
-
-	if ( ! siteKey ) {
-		throw new Error(
-			'Site key is required for static site generation. Please ensure the site is properly configured.'
-		);
-	}
 
 	// Support both new format (urls directly in context) and old format (currentStatus.urls for tests)
 	const urlsArray = urls || currentStatus?.urls;
@@ -68,7 +60,6 @@ export async function uploadStaticSiteFilesHandler( context ) {
 		urlsArray,
 		siteUrlForStatic,
 		providerId,
-		siteKey,
 		siteUrl,
 		setStatusMessage,
 		blueprintDataForStatic,

@@ -68,7 +68,10 @@ export function useWorkerDeploy( workerType, providerId = 'cloudflare-r2' ) {
 				if ( ! deployResult.success ) {
 					throw new Error(
 						deployResult.error ||
-							__( 'Worker deployment failed', 'aether-site-exporter' )
+							__(
+								'Worker deployment failed',
+								'aether-site-exporter'
+							)
 					);
 				}
 
@@ -128,7 +131,8 @@ export function useWorkerDeploy( workerType, providerId = 'cloudflare-r2' ) {
 				};
 			} catch ( err ) {
 				const errorMessage =
-					err.message || __( 'Worker deployment failed', 'aether-site-exporter' );
+					err.message ||
+					__( 'Worker deployment failed', 'aether-site-exporter' );
 				setError( errorMessage );
 				setDeploying( false );
 				return {

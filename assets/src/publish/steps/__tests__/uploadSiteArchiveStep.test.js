@@ -19,17 +19,16 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				siteKey: 'test-site-key',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: mockSetStatusMessage,
 			};
 
 			const result = await uploadSiteArchiveHandler( context );
 
-			// INTENDED: handleSiteArchiveUpload called with correct parameters
+			// INTENDED: handleSiteArchiveUpload called with providerId and context
 			expect( mockHandleSiteArchiveUpload ).toHaveBeenCalledWith(
-				'test-site-key',
-				'cloudflare-r2'
+				'cloudflare-r2',
+				context
 			);
 
 			// INTENDED: Status messages set
@@ -71,7 +70,6 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				siteKey: 'test-site-key',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: mockSetStatusMessage,
 			};
@@ -90,7 +88,6 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				siteKey: 'test-site-key',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: jest.fn(),
 			};
@@ -100,25 +97,24 @@ describe( 'uploadSiteArchiveStep', () => {
 			);
 		} );
 
-		test( 'INTENDED: passes siteKey and providerId to upload handler', async () => {
-			// BUG DETECTION: All parameters must be passed in correct order
+		test( 'INTENDED: passes providerId and context to upload handler', async () => {
+			// BUG DETECTION: providerId and context must be passed
 			const mockHandleSiteArchiveUpload = jest
 				.fn()
 				.mockResolvedValue( undefined );
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				siteKey: 'specific-site-key',
 				providerId: 'specific-provider',
 				setStatusMessage: jest.fn(),
 			};
 
 			await uploadSiteArchiveHandler( context );
 
-			// INTENDED: siteKey and providerId in correct order
+			// INTENDED: providerId and context passed
 			expect( mockHandleSiteArchiveUpload ).toHaveBeenCalledWith(
-				'specific-site-key',
-				'specific-provider'
+				'specific-provider',
+				context
 			);
 		} );
 
@@ -139,7 +135,6 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				siteKey: 'test-site-key',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: mockSetStatusMessage,
 			};
@@ -159,7 +154,6 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const context = {
 				handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
-				siteKey: 'test-site-key',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: jest.fn(),
 			};

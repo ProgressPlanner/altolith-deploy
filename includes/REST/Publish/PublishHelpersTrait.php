@@ -11,8 +11,8 @@
 
 namespace Aether\SiteExporter\REST\Publish;
 
-use Aether\Plugin;
-use Aether\Sync\JobStateManager;
+use Aether\SiteExporter\Plugin;
+use Aether\SiteExporter\Sync\JobStateManager;
 use WP_REST_Request;
 use WP_Error;
 

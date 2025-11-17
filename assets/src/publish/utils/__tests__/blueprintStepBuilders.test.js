@@ -14,23 +14,19 @@ import {
 	buildThemeInstallSteps,
 	buildAetherActivationStep,
 	buildBlueprintSteps,
-	constructWpContentUrl,
 	buildBlueprintJson,
 } from '../blueprintStepBuilders';
 
 describe( 'blueprintStepBuilders', () => {
 	describe( 'buildImportFilesStep', () => {
-		it( 'should create importWordPressFiles step with correct URL', () => {
-			// Arrange
-			const url = 'https://example.com/site-key/wp-content.zip';
-
+		it( 'should create importWordPressFiles step with bundled resource', () => {
 			// Act
-			const step = buildImportFilesStep( url );
+			const step = buildImportFilesStep();
 
-			// Assert - INTENDED: Must have correct step type and URL
+			// Assert - INTENDED: Must have correct step type and bundled resource
 			expect( step.step ).toBe( 'importWordPressFiles' );
-			expect( step.wordPressFilesZip.resource ).toBe( 'url' );
-			expect( step.wordPressFilesZip.url ).toBe( url );
+			expect( step.wordPressFilesZip.resource ).toBe( 'bundled' );
+			expect( step.wordPressFilesZip.path ).toBe( '/wp-content.zip' );
 		} );
 	} );
 
@@ -176,7 +172,6 @@ describe( 'blueprintStepBuilders', () => {
 		it( 'should build complete steps array in correct order', () => {
 			// Arrange
 			const config = {
-				wpContentUrl: 'https://example.com/site/wp-content.zip',
 				wporgPlugins: [ 'akismet', 'jetpack' ],
 				wporgThemes: [ 'twentytwentyfour' ],
 			};
@@ -185,10 +180,11 @@ describe( 'blueprintStepBuilders', () => {
 			const steps = buildBlueprintSteps( config );
 
 			// Assert - INTENDED: Steps must be in correct order
-			// 1. importWordPressFiles
+			// 1. importWordPressFiles (bundled resource)
 			expect( steps[ 0 ].step ).toBe( 'importWordPressFiles' );
-			expect( steps[ 0 ].wordPressFilesZip.url ).toBe(
-				config.wpContentUrl
+			expect( steps[ 0 ].wordPressFilesZip.resource ).toBe( 'bundled' );
+			expect( steps[ 0 ].wordPressFilesZip.path ).toBe(
+				'/wp-content.zip'
 			);
 
 			// 2. installPlugin (Aether)
@@ -216,7 +212,6 @@ describe( 'blueprintStepBuilders', () => {
 		it( 'should handle no WordPress.org assets', () => {
 			// Arrange
 			const config = {
-				wpContentUrl: 'https://example.com/site/wp-content.zip',
 				wporgPlugins: [],
 				wporgThemes: [],
 			};
@@ -235,7 +230,6 @@ describe( 'blueprintStepBuilders', () => {
 		it( 'should handle missing wporgPlugins', () => {
 			// Arrange
 			const config = {
-				wpContentUrl: 'https://example.com/site/wp-content.zip',
 				wporgThemes: [],
 			};
 
@@ -249,7 +243,6 @@ describe( 'blueprintStepBuilders', () => {
 		it( 'should handle missing wporgThemes', () => {
 			// Arrange
 			const config = {
-				wpContentUrl: 'https://example.com/site/wp-content.zip',
 				wporgPlugins: [],
 			};
 
@@ -258,138 +251,6 @@ describe( 'blueprintStepBuilders', () => {
 
 			// Assert - INTENDED: Should not fail with undefined themes
 			expect( steps ).toHaveLength( 4 ); // import, aether install, define consts, aether activate
-		} );
-	} );
-
-	describe( 'constructWpContentUrl', () => {
-		it( 'should use publicUrl when available', () => {
-			// Arrange
-			const siteKey = 'test-site';
-			const credentials = {
-				public_url: 'https://r2.example.com',
-				worker_endpoint: 'https://worker.example.com',
-				custom_domain: 'https://example.com',
-				bucket_name: 'test-bucket',
-			};
-
-			// Act
-			const url = constructWpContentUrl( siteKey, credentials );
-
-			// Assert - INTENDED: publicUrl takes priority (no bucket in path)
-			expect( url ).toBe(
-				'https://r2.example.com/test-site/wp-content.zip'
-			);
-		} );
-
-		it( 'should use workerEndpoint when publicUrl not available', () => {
-			// Arrange
-			const siteKey = 'test-site';
-			const credentials = {
-				public_url: '',
-				worker_endpoint: 'https://worker.example.com',
-				custom_domain: '',
-				bucket_name: 'test-bucket',
-			};
-
-			// Act
-			const url = constructWpContentUrl( siteKey, credentials );
-
-			// Assert - INTENDED: workerEndpoint used with bucket name
-			expect( url ).toBe(
-				'https://worker.example.com/test-bucket/test-site/wp-content.zip'
-			);
-		} );
-
-		it( 'should use customDomain when publicUrl and workerEndpoint not available', () => {
-			// Arrange
-			const siteKey = 'test-site';
-			const credentials = {
-				public_url: '',
-				worker_endpoint: '',
-				custom_domain: 'https://example.com',
-				bucket_name: 'test-bucket',
-			};
-
-			// Act
-			const url = constructWpContentUrl( siteKey, credentials );
-
-			// Assert - INTENDED: customDomain used without bucket name
-			expect( url ).toBe(
-				'https://example.com/test-site/wp-content.zip'
-			);
-		} );
-
-		it( 'should include bucket name when using workerEndpoint', () => {
-			// Arrange
-			const siteKey = 'test-site';
-			const credentials = {
-				public_url: '',
-				worker_endpoint: 'https://worker.example.com',
-				custom_domain: '',
-				bucket_name: 'my-bucket',
-			};
-
-			// Act
-			const url = constructWpContentUrl( siteKey, credentials );
-
-			// Assert - INTENDED: Bucket name must be in path
-			expect( url ).toContain( '/my-bucket/' );
-			expect( url ).toBe(
-				'https://worker.example.com/my-bucket/test-site/wp-content.zip'
-			);
-		} );
-
-		it( 'should not include bucket name when using customDomain', () => {
-			// Arrange
-			const siteKey = 'test-site';
-			const credentials = {
-				public_url: '',
-				worker_endpoint: '',
-				custom_domain: 'https://example.com',
-				bucket_name: 'test-bucket',
-			};
-
-			// Act
-			const url = constructWpContentUrl( siteKey, credentials );
-
-			// Assert - INTENDED: Bucket name NOT in path for customDomain
-			expect( url ).not.toContain( 'test-bucket' );
-		} );
-
-		it( 'should not include bucket name when using publicUrl', () => {
-			// Arrange
-			const siteKey = 'test-site';
-			const credentials = {
-				public_url: 'https://r2.example.com',
-				worker_endpoint: '',
-				custom_domain: '',
-				bucket_name: 'test-bucket',
-			};
-
-			// Act
-			const url = constructWpContentUrl( siteKey, credentials );
-
-			// Assert - INTENDED: Bucket name NOT in path for publicUrl
-			expect( url ).not.toContain( 'test-bucket' );
-		} );
-
-		it( 'should handle empty credential values', () => {
-			// Arrange
-			const siteKey = 'test-site';
-			const credentials = {
-				public_url: '',
-				worker_endpoint: 'https://worker.example.com',
-				custom_domain: '',
-				bucket_name: '',
-			};
-
-			// Act
-			const url = constructWpContentUrl( siteKey, credentials );
-
-			// Assert - INTENDED: Should handle empty bucket name
-			expect( url ).toBe(
-				'https://worker.example.com//test-site/wp-content.zip'
-			);
 		} );
 	} );
 

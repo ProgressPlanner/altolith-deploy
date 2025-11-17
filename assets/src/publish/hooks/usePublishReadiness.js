@@ -26,7 +26,9 @@ export function usePublishReadiness() {
 		path: '/aether/site-exporter/settings',
 		transform: ( response ) => {
 			if ( ! response.success ) {
-				throw new Error( __( 'Failed to fetch settings', 'aether-site-exporter' ) );
+				throw new Error(
+					__( 'Failed to fetch settings', 'aether-site-exporter' )
+				);
 			}
 			return response.value || {};
 		},
@@ -82,7 +84,10 @@ export function usePublishReadiness() {
 		const blueprintProvider = settings.provider_types?.storage ?? '';
 		if ( ! blueprintProvider ) {
 			issues.push(
-				__( 'No blueprint storage provider is selected.', 'aether-site-exporter' )
+				__(
+					'No blueprint storage provider is selected.',
+					'aether-site-exporter'
+				)
 			);
 		}
 

@@ -9,10 +9,10 @@
 namespace Aether\SiteExporter;
 
 \defined('ABSPATH') || exit;
-use Aether\Admin\PluginDependencyManager;
-use Aether\Sync\Blueprint\AssetDiscoveryService;
+use Aether\SiteExporter\Admin\PluginDependencyManager;
+use Aether\SiteExporter\Sync\Blueprint\AssetDiscoveryService;
 
-use function Aether\getStorageConfig;
+use function Aether\SiteExporter\getStorageConfig;
 /**
  * Main plugin orchestrator class.
  */
@@ -101,10 +101,6 @@ class Plugin
 		// Initialize settings repository.
 		$this->settingsRepository = new Core\SettingsRepository();
 
-		// Initialize R2 media offload (if provider configured).
-		$r2MediaOffload = new Services\Media\R2MediaOffload();
-		$r2MediaOffload->init();
-
 		// Initialize admin.
 		if (\is_admin()) {
 			new Admin\Settings();
@@ -112,26 +108,6 @@ class Plugin
 
 		// Register REST API routes.
 		\add_action('rest_api_init', [ $this, 'registerRestRoutes' ]);
-
-		// Register WP-CLI commands.
-		if (\defined('WP_CLI') && WP_CLI) {
-			\WP_CLI::add_command('aether deploy-plugin', \Aether\CLI\DeployPluginCommand::class);
-		}
-
-		// Enqueue Publish Site button globally (admin + frontend).
-		\add_action('wp_enqueue_scripts', [ $this, 'enqueuePublishButton' ]);
-		\add_action('admin_enqueue_scripts', [ $this, 'enqueuePublishButton' ]);
-
-		// Enqueue admin bar assets globally (admin + frontend).
-		\add_action('wp_enqueue_scripts', [ $this, 'enqueueAdminBarAssets' ]);
-		\add_action('admin_enqueue_scripts', [ $this, 'enqueueAdminBarAssets' ]);
-
-		// Enqueue provider scripts conditionally (only configured providers, or all on settings page).
-		\add_action('admin_enqueue_scripts', [ $this, 'enqueueProviderScripts' ]);
-		\add_action('wp_enqueue_scripts', [ $this, 'enqueueProviderScripts' ]);
-
-		// Register filter for provider script data attributes (only once).
-		$this->registerProviderScriptFilter();
 
 		// Fix PHP 8.1+ deprecation: ensure admin page titles are never null.
 		\add_filter('admin_title', [ $this, 'ensureAdminTitleIsString' ], 1, 2);
@@ -142,9 +118,6 @@ class Plugin
 
 		// Remove emoji scripts for cleaner static site generation.
 		$this->removeEmojiScripts();
-
-		// Add static site link to admin bar.
-		\add_action('admin_bar_menu', [ $this, 'addAdminBarMenu' ], 100);
 	}
 
 
@@ -538,11 +511,19 @@ class Plugin
 		}
 
 		$pluginUrl = AETHER_SITE_EXPORTER_PLUGIN_URL;
+
+		// Load dependencies from asset file
+		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-common.asset.php';
+		$asset = \file_exists($assetFile) ? require $assetFile : [
+			'dependencies' => [],
+			'version' => AETHER_SITE_EXPORTER_VERSION,
+		];
+
 		\wp_enqueue_script(
 			'aether-admin-common',
 			$pluginUrl . 'assets/build/admin-common.js',
-			[],
-			AETHER_SITE_EXPORTER_VERSION,
+			$asset['dependencies'],
+			$asset['version'],
 			true
 		);
 
@@ -693,8 +674,8 @@ class Plugin
 		$providerConfigController = new REST\ProviderConfigController();
 		$configController = new REST\ConfigController();
 		$assetsController = new REST\AssetsController();
-		$r2WorkerDeploymentController = new REST\R2WorkerDeploymentController();
-		$mediaOffloadController = new REST\MediaOffloadController();
+		$wporgCheckController = new REST\WPOrgCheckController();
+		$localStorageController = new REST\LocalStorageController();
 
 		// Initialize publish controllers.
 		$publishJobController = new REST\Publish\PublishJobController($this);
@@ -707,8 +688,8 @@ class Plugin
 		$providerConfigController->registerRoutes();
 		$configController->registerRoutes();
 		$assetsController->registerRoutes();
-		$r2WorkerDeploymentController->registerRoutes();
-		$mediaOffloadController->registerRoutes();
+		$wporgCheckController->registerRoutes();
+		$localStorageController->registerRoutes();
 
 		// Register publish routes.
 		$publishJobController->registerRoutes();
@@ -931,34 +912,6 @@ class Plugin
 		}
 	}
 
-	/**
-	 * Get or create a unique site key.
-	 *
-	 * This key is generated once and stored in the database to ensure
-	 * consistent organization across the lifetime of the site. Used for:
-	 * - Cloudflare Images folder organization
-	 * - R2 file path organization (blueprint.json, wp-content.zip, etc.)
-	 *
-	 * @return string Site key (16-character hex string).
-	 */
-	public static function getSiteKey(): string
-	{
-		$siteKey = \get_option('aether_site_exporter_site_key', '');
-
-		if (empty($siteKey)) {
-			// Generate a unique site key using wp_generate_password for randomness.
-			// Use only alphanumeric characters for URL safety.
-			$siteKey = \md5(\wp_generate_password(32, false) . \home_url() . \time());
-
-			// Store it permanently.
-			\update_option('aether_site_exporter_site_key', $siteKey, false);
-		}
-
-		// Allow filtering site key (useful for testing or custom environments).
-		$siteKey = \apply_filters('aether_site_exporter_site_key', \is_string($siteKey) ? $siteKey : '');
-
-		return \is_string($siteKey) ? $siteKey : '';
-	}
 
 	/**
 	 * Get WordPress Playground base URL.
@@ -1013,7 +966,7 @@ class Plugin
 
 		// If no deployment URL in settings, try to get it from the most recent completed job
 		if (empty($deploymentUrl)) {
-			$stateManager = new \Aether\Sync\JobStateManager();
+			$stateManager = new \Aether\SiteExporter\Sync\JobStateManager();
 			$recentJobs = $stateManager->getAllJobs(10);
 
 			foreach ($recentJobs as $jobData) {
@@ -1021,9 +974,8 @@ class Plugin
 				$jobStatus = $jobData;
 				$jobId = $jobStatus['jobId'] ?? '';
 
-				// Look for a completed job with siteKey
-				if (($jobStatus['status'] ?? '') === 'complete' && !empty($jobStatus['siteKey'])) {
-					$siteKey = $jobStatus['siteKey'];
+				// Look for a completed job
+				if (($jobStatus['status'] ?? '') === 'complete') {
 					$providerTypes = $settings['provider_types'] ?? [];
 					$staticSiteProviderId = $providerTypes['static_site'] ?? '';
 
@@ -1042,7 +994,7 @@ class Plugin
 						}
 
 						if (!empty($baseUrl)) {
-							$deploymentUrl = \rtrim($baseUrl, '/') . '/' . $siteKey . '/';
+							$deploymentUrl = \rtrim($baseUrl, '/') . '/';
 							// Save it for future use
 							$settings['deployment_url'] = $deploymentUrl;
 							\update_option('aether_site_exporter_settings', $settings);
@@ -1052,30 +1004,27 @@ class Plugin
 				}
 			}
 
-			// Fallback: Use the site key from Plugin::getSiteKey() if no job has siteKey
+			// Fallback: Use provider URLs if no completed job found
 			if (empty($deploymentUrl)) {
-				$siteKey = self::getSiteKey();
-				if (!empty($siteKey)) {
-					$providerTypes = $settings['provider_types'] ?? [];
-					$staticSiteProviderId = $providerTypes['static_site'] ?? '';
+				$providerTypes = $settings['provider_types'] ?? [];
+				$staticSiteProviderId = $providerTypes['static_site'] ?? '';
 
-					if (!empty($staticSiteProviderId) && isset($settings['providers'][$staticSiteProviderId])) {
-						$providerConfig = $settings['providers'][$staticSiteProviderId];
-						// Check for URLs (URLs are not encrypted)
-						$baseUrl = '';
-						if (!empty($providerConfig['custom_domain'])) {
-							$baseUrl = $providerConfig['custom_domain'];
-						} elseif (!empty($providerConfig['worker_endpoint'])) {
-							$baseUrl = $providerConfig['worker_endpoint'];
-						} elseif (!empty($providerConfig['public_url'])) {
-							$baseUrl = $providerConfig['public_url'];
-						}
+				if (!empty($staticSiteProviderId) && isset($settings['providers'][$staticSiteProviderId])) {
+					$providerConfig = $settings['providers'][$staticSiteProviderId];
+					// Check for URLs (URLs are not encrypted)
+					$baseUrl = '';
+					if (!empty($providerConfig['custom_domain'])) {
+						$baseUrl = $providerConfig['custom_domain'];
+					} elseif (!empty($providerConfig['worker_endpoint'])) {
+						$baseUrl = $providerConfig['worker_endpoint'];
+					} elseif (!empty($providerConfig['public_url'])) {
+						$baseUrl = $providerConfig['public_url'];
+					}
 
-						if (!empty($baseUrl)) {
-							$deploymentUrl = \rtrim($baseUrl, '/') . '/' . $siteKey . '/';
-							$settings['deployment_url'] = $deploymentUrl;
-							\update_option('aether_site_exporter_settings', $settings);
-						}
+					if (!empty($baseUrl)) {
+						$deploymentUrl = \rtrim($baseUrl, '/') . '/';
+						$settings['deployment_url'] = $deploymentUrl;
+						\update_option('aether_site_exporter_settings', $settings);
 					}
 				}
 			}

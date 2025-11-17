@@ -146,7 +146,10 @@ export default function PublishButton( {
 						>
 							{ __( 'Dashboard', 'aether-site-exporter' ) }
 						</a>{ ' ' }
-						{ __( 'to configure your providers.', 'aether-site-exporter' ) }
+						{ __(
+							'to configure your providers.',
+							'aether-site-exporter'
+						) }
 					</p>
 				</div>
 			) }
@@ -160,7 +163,10 @@ export default function PublishButton( {
 						className="aether-publish-button__notice-text"
 						style={ utilityStyles.noMargin }
 					>
-						{ __( 'Your site is ready to publish!', 'aether-site-exporter' ) }
+						{ __(
+							'Your site is ready to publish!',
+							'aether-site-exporter'
+						) }
 					</p>
 				</div>
 			) }

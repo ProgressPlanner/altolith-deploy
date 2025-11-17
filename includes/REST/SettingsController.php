@@ -13,9 +13,9 @@ namespace Aether\SiteExporter\REST;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
-use Aether\Utilities\CredentialEncryption;
-use Aether\Utilities\EncryptionHelper;
-use Aether\Admin\Settings;
+use Aether\SiteExporter\Utilities\CredentialEncryption;
+use Aether\SiteExporter\Utilities\EncryptionHelper;
+use Aether\SiteExporter\Admin\Settings;
 
 /**
  * Handles REST API endpoints for settings operations.
@@ -333,6 +333,46 @@ class SettingsController
 				$sanitized[ $sanitizedKey ] = \esc_url_raw($value);
 			} else {
 				$sanitized[ $sanitizedKey ] = \sanitize_text_field($value);
+			}
+
+			// Special validation for static_files_path - default to 'static/' if empty
+			if ($sanitizedKey === 'static_files_path' && \is_string($sanitized[ $sanitizedKey ])) {
+				$sanitized[ $sanitizedKey ] = \trim($sanitized[ $sanitizedKey ]);
+				if (empty($sanitized[ $sanitizedKey ])) {
+					$sanitized[ $sanitizedKey ] = 'static/';
+				}
+			}
+
+			// Special validation for export_path - default to 'blueprint-bundle/bundle.zip' if empty
+			if ($sanitizedKey === 'export_path' && \is_string($sanitized[ $sanitizedKey ])) {
+				$sanitized[ $sanitizedKey ] = \trim($sanitized[ $sanitizedKey ]);
+				if (empty($sanitized[ $sanitizedKey ]) || !\preg_match('/\.zip$/i', $sanitized[ $sanitizedKey ])) {
+					$sanitized[ $sanitizedKey ] = 'blueprint-bundle/bundle.zip';
+				}
+			}
+
+			// Special validation for export_types - ensure it's an array with valid values
+			if ($sanitizedKey === 'export_types') {
+				$validExportTypes = [ 'static_site', 'blueprint_bundle' ];
+
+				// Ensure it's an array
+				if (!\is_array($sanitized[ $sanitizedKey ])) {
+					$sanitized[ $sanitizedKey ] = [ 'static_site', 'blueprint_bundle' ];
+				} else {
+					// Filter to only valid values
+					$sanitized[ $sanitizedKey ] = \array_intersect(
+						$sanitized[ $sanitizedKey ],
+						$validExportTypes
+					);
+
+					// Re-index array (array_intersect preserves keys)
+					$sanitized[ $sanitizedKey ] = \array_values($sanitized[ $sanitizedKey ]);
+
+					// If no valid values remain, use defaults
+					if (empty($sanitized[ $sanitizedKey ])) {
+						$sanitized[ $sanitizedKey ] = [ 'static_site', 'blueprint_bundle' ];
+					}
+				}
 			}
 		}
 

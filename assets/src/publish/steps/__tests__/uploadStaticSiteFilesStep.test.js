@@ -29,7 +29,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					staticSiteUrl: 'https://static.example.com',
 					blueprintData: { $schema: 'test' },
 				},
-				siteKey: 'test-site-key',
 				siteUrl: 'https://example.com',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: mockSetStatusMessage,
@@ -43,7 +42,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 				[ 'https://example.com/', 'https://example.com/about/' ],
 				'https://static.example.com',
 				'cloudflare-r2',
-				'test-site-key',
 				'https://example.com',
 				mockSetStatusMessage,
 				{ $schema: 'test' },
@@ -69,54 +67,11 @@ describe( 'uploadStaticSiteFilesStep', () => {
 			} );
 		} );
 
-		test( 'INTENDED: throws error if siteKey missing', async () => {
-			// BUG DETECTION: Missing siteKey should fail fast
-			const context = {
-				processStaticSiteUrls: jest.fn(),
-				currentStatus: {
-					urls: [ 'https://example.com/' ],
-				},
-				siteKey: '', // Empty site key
-				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
-				setStatusMessage: jest.fn(),
-				removeMessage: jest.fn(),
-			};
-
-			await expect(
-				uploadStaticSiteFilesHandler( context )
-			).rejects.toThrow(
-				'Site key is required for static site generation'
-			);
-		} );
-
-		test( 'INTENDED: throws error if siteKey is null', async () => {
-			// BUG DETECTION: Null siteKey should fail
-			const context = {
-				processStaticSiteUrls: jest.fn(),
-				currentStatus: {
-					urls: [ 'https://example.com/' ],
-				},
-				siteKey: null,
-				siteUrl: 'https://example.com',
-				providerId: 'cloudflare-r2',
-				setStatusMessage: jest.fn(),
-				removeMessage: jest.fn(),
-			};
-
-			await expect(
-				uploadStaticSiteFilesHandler( context )
-			).rejects.toThrow(
-				'Site key is required for static site generation'
-			);
-		} );
-
 		test( 'INTENDED: throws error if URLs missing from currentStatus', async () => {
 			// BUG DETECTION: Missing URLs should fail
 			const context = {
 				processStaticSiteUrls: jest.fn(),
 				currentStatus: {}, // No urls
-				siteKey: 'test-site-key',
 				siteUrl: 'https://example.com',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: jest.fn(),
@@ -137,7 +92,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 				currentStatus: {
 					urls: 'not-an-array',
 				},
-				siteKey: 'test-site-key',
 				siteUrl: 'https://example.com',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: jest.fn(),
@@ -165,7 +119,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 				currentStatus: {
 					urls: [],
 				},
-				siteKey: 'test-site-key',
 				siteUrl: 'https://example.com',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: mockSetStatusMessage,
@@ -199,7 +152,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					urls: [ 'https://example.com/' ],
 					// staticSiteUrl missing
 				},
-				siteKey: 'test-site-key',
 				siteUrl: 'https://example.com',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: jest.fn(),
@@ -231,7 +183,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 					staticSiteUrl: 'https://static.example.com',
 					blueprintData: mockBlueprint,
 				},
-				siteKey: 'unique-site-key',
 				siteUrl: 'https://unique-site.com',
 				providerId: 'specific-provider',
 				setStatusMessage: mockSetStatusMessage,
@@ -245,7 +196,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 				[ 'https://example.com/' ], // urls
 				'https://static.example.com', // staticSiteUrl
 				'specific-provider', // providerId
-				'unique-site-key', // siteKey
 				'https://unique-site.com', // siteUrl
 				mockSetStatusMessage, // setStatusMessage
 				mockBlueprint, // blueprintData
@@ -265,7 +215,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 				currentStatus: {
 					urls: [ 'https://example.com/' ],
 				},
-				siteKey: 'test-site-key',
 				siteUrl: 'https://example.com',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: jest.fn(),
@@ -293,7 +242,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 				currentStatus: {
 					urls: [ 'https://example.com/' ],
 				},
-				siteKey: 'test-site-key',
 				siteUrl: 'https://example.com',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: mockSetStatusMessage,
@@ -324,7 +272,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 				currentStatus: {
 					urls: [ 'https://example.com/' ],
 				},
-				siteKey: 'test-site-key',
 				siteUrl: 'https://example.com',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: jest.fn(),
@@ -355,7 +302,6 @@ describe( 'uploadStaticSiteFilesStep', () => {
 						( f ) => `https://example.com/${ f }`
 					),
 				},
-				siteKey: 'test-site-key',
 				siteUrl: 'https://example.com',
 				providerId: 'cloudflare-r2',
 				setStatusMessage: mockSetStatusMessage,

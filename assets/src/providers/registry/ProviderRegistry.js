@@ -122,6 +122,16 @@ class ProviderRegistry {
 	 * @return {Object|null} Provider instance or null if not found
 	 */
 	get( providerId, config = {} ) {
+		// Validate providerId
+		if ( ! providerId || typeof providerId !== 'string' ) {
+			// eslint-disable-next-line no-console
+			console.error(
+				'[ProviderRegistry] Invalid provider ID:',
+				providerId
+			);
+			return null;
+		}
+
 		// Ensure auto-discovery has run
 		this.autoDiscover();
 

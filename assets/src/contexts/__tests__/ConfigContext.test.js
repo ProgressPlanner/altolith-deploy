@@ -34,7 +34,6 @@ describe( 'ConfigContext', () => {
 		it( 'should initialize with loading state', () => {
 			apiFetch.mockResolvedValue( {
 				success: true,
-				siteKey: 'test-key',
 				playgroundUrl: 'https://example.com',
 				publicUrl: '',
 				adminUrl: '',
@@ -52,7 +51,6 @@ describe( 'ConfigContext', () => {
 		it( 'should fetch config on mount', async () => {
 			apiFetch.mockResolvedValue( {
 				success: true,
-				siteKey: 'test-key-123',
 				playgroundUrl: 'https://playground.example.com',
 				publicUrl: 'https://public.example.com',
 				adminUrl: 'https://admin.example.com',
@@ -67,7 +65,6 @@ describe( 'ConfigContext', () => {
 			} );
 
 			expect( result.current.config ).toEqual( {
-				siteKey: 'test-key-123',
 				playgroundUrl: 'https://playground.example.com',
 				publicUrl: 'https://public.example.com',
 				adminUrl: 'https://admin.example.com',
@@ -99,7 +96,6 @@ describe( 'ConfigContext', () => {
 		it( 'should cache config for 5 minutes', async () => {
 			const mockConfig = {
 				success: true,
-				siteKey: 'cached-key',
 				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
@@ -128,7 +124,6 @@ describe( 'ConfigContext', () => {
 		it( 'should bypass cache when refetch is called', async () => {
 			const mockConfig = {
 				success: true,
-				siteKey: 'test-key',
 				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
@@ -157,7 +152,6 @@ describe( 'ConfigContext', () => {
 		it( 'should invalidate cache after 5 minutes', async () => {
 			const mockConfig = {
 				success: true,
-				siteKey: 'test-key',
 				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
@@ -193,7 +187,6 @@ describe( 'ConfigContext', () => {
 		it( 'should deduplicate concurrent fetch requests', async () => {
 			const mockConfig = {
 				success: true,
-				siteKey: 'test-key',
 				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
@@ -231,7 +224,6 @@ describe( 'ConfigContext', () => {
 		it( 'should update config optimistically', async () => {
 			const initialConfig = {
 				success: true,
-				siteKey: 'initial-key',
 				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
@@ -246,21 +238,19 @@ describe( 'ConfigContext', () => {
 				expect( result.current.loading ).toBe( false );
 			} );
 
-			const newConfig = { siteKey: 'updated-key', foo: 'bar' };
+			const newConfig = { foo: 'bar' };
 
 			act( () => {
 				result.current.updateConfig( newConfig );
 			} );
 
 			// Config should be updated immediately with merge
-			expect( result.current.config.siteKey ).toBe( 'updated-key' );
 			expect( result.current.config.foo ).toBe( 'bar' );
 		} );
 
 		it( 'should merge partial updates', async () => {
 			const initialConfig = {
 				success: true,
-				siteKey: 'test-key',
 				playgroundUrl: 'https://example.com',
 				publicUrl: '',
 				adminUrl: '',
@@ -282,7 +272,6 @@ describe( 'ConfigContext', () => {
 			} );
 
 			// Should merge with existing config
-			expect( result.current.config.siteKey ).toBe( 'test-key' );
 			expect( result.current.config.playgroundUrl ).toBe(
 				'https://new-url.com'
 			);
@@ -293,7 +282,6 @@ describe( 'ConfigContext', () => {
 		it( 'should invalidate cache manually', async () => {
 			const mockConfig = {
 				success: true,
-				siteKey: 'test-key',
 				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
@@ -374,7 +362,6 @@ describe( 'ConfigContext', () => {
 			// Second call succeeds
 			const mockConfig = {
 				success: true,
-				siteKey: 'test-key',
 				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
@@ -387,7 +374,6 @@ describe( 'ConfigContext', () => {
 
 			await waitFor( () => {
 				expect( result.current.error ).toBe( null );
-				expect( result.current.config.siteKey ).toBe( 'test-key' );
 			} );
 		} );
 	} );
@@ -396,7 +382,6 @@ describe( 'ConfigContext', () => {
 		it( 'should provide refetch method that forces fetch', async () => {
 			const initialConfig = {
 				success: true,
-				siteKey: 'initial-key',
 				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
@@ -413,7 +398,6 @@ describe( 'ConfigContext', () => {
 
 			const updatedConfig = {
 				success: true,
-				siteKey: 'updated-key',
 				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
@@ -425,7 +409,7 @@ describe( 'ConfigContext', () => {
 			} );
 
 			await waitFor( () => {
-				expect( result.current.config.siteKey ).toBe( 'updated-key' );
+				expect( result.current.loading ).toBe( false );
 			} );
 		} );
 	} );

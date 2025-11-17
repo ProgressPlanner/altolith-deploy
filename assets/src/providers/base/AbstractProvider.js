@@ -510,6 +510,28 @@ export class AbstractProvider {
 	}
 
 	/**
+	 * Upload a file to the provider.
+	 *
+	 * Abstract method that providers must implement to upload files.
+	 * For local providers, this might be a file copy operation.
+	 * For remote providers, this would be an actual upload to the remote host.
+	 *
+	 * @abstract
+	 * @param {string} sourcePath      Local file path to upload.
+	 * @param {string} destinationPath Destination path/key where file should be stored.
+	 * @param {Object} options         Optional upload options.
+	 * @return {Promise<Object>} Upload result with success status and URL.
+	 */
+	async uploadFile( sourcePath, destinationPath, options = {} ) {
+		// Options parameter kept for API consistency, but not used in abstract implementation
+		// eslint-disable-next-line no-unused-vars
+		const _unused = options;
+		throw new Error(
+			'AbstractProvider.uploadFile() must be implemented by subclass'
+		);
+	}
+
+	/**
 	 * Load configuration from storage.
 	 *
 	 * @protected

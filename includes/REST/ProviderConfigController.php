@@ -22,8 +22,8 @@ namespace Aether\SiteExporter\REST;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
-use Aether\Utilities\CredentialEncryption;
-use Aether\Utilities\EncryptionHelper;
+use Aether\SiteExporter\Utilities\CredentialEncryption;
+use Aether\SiteExporter\Utilities\EncryptionHelper;
 
 /**
  * Provider configuration REST endpoints.
@@ -211,22 +211,36 @@ class ProviderConfigController
 	}
 
 	/**
-	 * Sanitize configuration recursively.
+	 * Sanitize configuration array recursively with depth limit.
 	 *
 	 * Preserves snake_case keys (unlike sanitize_key which converts to lowercase).
+	 * Prevents stack overflow by limiting recursion to 10 levels.
 	 *
-	 * @param array<string, mixed> $config Configuration array.
+	 * @param array<string, mixed> $config Configuration to sanitize.
+	 * @param int                  $depth  Current recursion depth.
 	 * @return array<string, mixed> Sanitized configuration.
 	 */
-	protected function sanitizeConfig(array $config): array
+	protected function sanitizeConfig(array $config, int $depth = 0): array
 	{
+		// Prevent stack overflow attacks by limiting recursion depth
+		if ($depth > 10) {
+			return [];
+		}
+
 		$sanitized = [];
 
 		foreach ($config as $key => $value) {
-			$sanitizedKey = \sanitize_key($key);
+			// Preserve case for snake_case keys instead of lowercasing with sanitize_key()
+			// Allow alphanumeric, underscore, and hyphen
+			$sanitizedKey = \preg_replace('/[^a-zA-Z0-9_-]/', '', $key);
+
+			// Skip empty keys after sanitization
+			if ('' === $sanitizedKey) {
+				continue;
+			}
 
 			if (\is_array($value)) {
-				$sanitized[ $sanitizedKey ] = $this->sanitizeConfig($value);
+				$sanitized[ $sanitizedKey ] = $this->sanitizeConfig($value, $depth + 1);
 			} elseif (\is_bool($value)) {
 				$sanitized[ $sanitizedKey ] = (bool) $value;
 			} elseif (\is_numeric($value)) {
@@ -384,7 +398,30 @@ class ProviderConfigController
 
 			$statusCode = \wp_remote_retrieve_response_code($response);
 			$body       = \wp_remote_retrieve_body($response);
-			$data       = \json_decode($body, true);
+
+			// Security: Use json_decode with error handling and depth limit
+			try {
+				$data = \json_decode($body, true, 5, \JSON_THROW_ON_ERROR);
+			} catch (\JsonException $e) {
+				return new WP_Error(
+					'json_decode_error',
+					\sprintf(
+						/* translators: %s: JSON error message */
+						\__('Failed to parse API response: %s', 'aether-site-exporter'),
+						$e->getMessage()
+					),
+					[ 'status' => 500 ]
+				);
+			}
+
+			// Validate decoded data is an array
+			if (!\is_array($data)) {
+				return new WP_Error(
+					'invalid_json_response',
+					\__('API returned invalid JSON response', 'aether-site-exporter'),
+					[ 'status' => 500 ]
+				);
+			}
 
 			if ($statusCode !== 200) {
 				$errorMessage = isset($data['errors'][0]['message'])
@@ -429,10 +466,9 @@ class ProviderConfigController
 			}
 
 			// Test connection via worker endpoint (server-side, no CORS issues)
-			// Worker expects GET requests in format: /{site-key}/{filepath}
-			// Use a test site-key and filepath to verify worker is accessible
-			$testSiteKey = \md5('connection-test');
-			$testUrl = \trailingslashit($workerEndpoint) . $testSiteKey . '/test.html';
+			// Worker expects GET requests in format: /{filepath}
+			// Use a test filepath to verify worker is accessible
+			$testUrl = \trailingslashit($workerEndpoint) . 'test.html';
 
 			$response = \wp_remote_get(
 				$testUrl,

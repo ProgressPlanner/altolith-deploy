@@ -40,6 +40,9 @@ export class ConfigStorage {
 	 * @param {string} providerId Provider ID.
 	 */
 	constructor( providerId ) {
+		if ( ! providerId || typeof providerId !== 'string' ) {
+			throw new Error( 'ConfigStorage requires a valid provider ID' );
+		}
 		this.providerId = providerId;
 		this.cacheKey = `aetherProviderConfig${
 			providerId.charAt( 0 ).toUpperCase() + providerId.slice( 1 )

@@ -78,6 +78,70 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 		);
 	}
 
+	// Handle toggle group fields (checkbox group with multiple selection)
+	if ( type === 'checkbox-group' && options.length > 0 ) {
+		const currentValue = Array.isArray( value ) ? value : [];
+
+		return (
+			<div
+				className={ `aether-provider-field aether-provider-field--${ type } ${
+					error ? 'aether-provider-field--error' : ''
+				}` }
+			>
+				{ label && (
+					<div className="components-base-control__label">
+						{ label }
+						{ required && (
+							<span className="components-base-control__label__required">
+								*
+							</span>
+						) }
+					</div>
+				) }
+				{ help && (
+					<p className="components-base-control__help">{ help }</p>
+				) }
+				{ error && (
+					<p className="components-base-control__help components-base-control__help--error">
+						{ error }
+					</p>
+				) }
+				<div className="aether-checkbox-group">
+					{ options.map( ( option ) => {
+						const optionValue = option.value;
+						const optionLabel = option.label || option.value;
+						const isSelected = currentValue.includes( optionValue );
+
+						return (
+							<CheckboxControl
+								key={ optionValue }
+								label={ optionLabel }
+								checked={ isSelected }
+								onChange={ ( checked ) => {
+									let newValue;
+									if ( checked ) {
+										// Add to array
+										newValue = [
+											...currentValue,
+											optionValue,
+										];
+									} else {
+										// Remove from array
+										newValue = currentValue.filter(
+											( v ) => v !== optionValue
+										);
+									}
+									onChange( id, newValue );
+								} }
+								__nextHasNoMarginBottom={ true }
+							/>
+						);
+					} ) }
+				</div>
+			</div>
+		);
+	}
+
 	// Handle select fields
 	if ( type === 'select' && options.length > 0 ) {
 		const selectOptions = options.map( ( opt ) => ( {

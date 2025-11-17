@@ -11,7 +11,7 @@
 
 namespace Aether\SiteExporter\Sync;
 
-use Aether\Sync\Blueprint\AssetDiscoveryService;
+use Aether\SiteExporter\Sync\Blueprint\AssetDiscoveryService;
 
 /**
  * Blueprint Manager
