@@ -103,7 +103,9 @@ class ZipHelper
 		}
 		$tempZip = \wp_tempnam($baseName . '-zip');
 		$zipFile = $tempZip . '.zip';
-		\rename($tempZip, $zipFile);
+		if (!\rename($tempZip, $zipFile)) {
+			return new \WP_Error('rename_failed', 'Failed to rename temp zip file');
+		}
 
 		// Create zip using ZipArchive.
 		if (! \class_exists('ZipArchive')) {
