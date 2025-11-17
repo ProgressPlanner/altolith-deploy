@@ -21,6 +21,10 @@ import {
 
 // Mock dependencies
 jest.mock( '../../../utils/useAssetDiscovery' );
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
 
 describe( 'useBlueprintGenerator', () => {
 	let mockGetBlueprintAssets;

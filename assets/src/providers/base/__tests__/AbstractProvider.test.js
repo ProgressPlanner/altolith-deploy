@@ -49,6 +49,10 @@ class TestProvider extends AbstractProvider {
 }
 
 // Mock ConfigStorage
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
 jest.mock( '../../utils/configStorage', () => ( {
 	ConfigStorage: jest.fn().mockImplementation( () => ( {
 		load: jest.fn().mockResolvedValue( {} ),

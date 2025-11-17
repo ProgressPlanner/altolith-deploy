@@ -238,4 +238,130 @@ class CredentialEncryption
 
 		return \strlen($decoded) > $ivLength;
 	}
+
+	/**
+	 * Rotate encryption key and re-encrypt all stored credentials.
+	 *
+	 * This method provides a mechanism for periodic key rotation as a security best practice.
+	 * Key rotation limits the impact of potential key compromise.
+	 *
+	 * USAGE:
+	 * This method should be called via WP-CLI or custom admin interface.
+	 * Example WP-CLI command:
+	 *     wp eval "Aether\SiteExporter\Utilities\CredentialEncryption::rotateEncryptionKey();"
+	 *
+	 * WARNING:
+	 * - This operation CANNOT be undone
+	 * - Always backup your database before rotating keys
+	 * - If the process fails mid-rotation, credentials may become inaccessible
+	 * - Consider running during maintenance window
+	 *
+	 * @return array{success: bool, message: string, providers_rotated: int} Result array with success status and message.
+	 */
+	public static function rotateEncryptionKey(): array
+	{
+		// Step 1: Get all settings that may contain encrypted credentials
+		$settings = \get_option('aether_site_exporter_settings', []);
+
+		if (empty($settings['providers']) || ! \is_array($settings['providers'])) {
+			return [
+				'success'           => true,
+				'message'           => 'No provider credentials to rotate.',
+				'providers_rotated' => 0,
+			];
+		}
+
+		// Step 2: Decrypt all credentials with current (old) key
+		$decryptedProviders = [];
+		foreach ($settings['providers'] as $providerId => $config) {
+			if (! \is_array($config)) {
+				// Skip non-array values
+				$decryptedProviders[ $providerId ] = $config;
+				continue;
+			}
+
+			// Decrypt all string values in config
+			$decryptedConfig = [];
+			foreach ($config as $key => $value) {
+				if (\is_string($value) && self::isEncrypted($value)) {
+					$decrypted = self::decrypt($value);
+					if (false === $decrypted) {
+						// Decryption failed - abort rotation
+						return [
+							'success'           => false,
+							'message'           => \sprintf(
+								'Failed to decrypt credentials for provider: %s. Aborting key rotation.',
+								$providerId
+							),
+							'providers_rotated' => 0,
+						];
+					}
+					$decryptedConfig[ $key ] = $decrypted;
+				} else {
+					$decryptedConfig[ $key ] = $value;
+				}
+			}
+
+			$decryptedProviders[ $providerId ] = $decryptedConfig;
+		}
+
+		// Step 3: Delete old encryption key to force generation of new one
+		\delete_option('aether_site_exporter_encryption_key');
+
+		// Step 4: Re-encrypt all credentials with new key
+		$reencryptedProviders = [];
+		foreach ($decryptedProviders as $providerId => $config) {
+			if (! \is_array($config)) {
+				$reencryptedProviders[ $providerId ] = $config;
+				continue;
+			}
+
+			// Re-encrypt all string values
+			$reencryptedConfig = [];
+			foreach ($config as $key => $value) {
+				if (\is_string($value) && ! empty($value)) {
+					// Encrypt the value
+					$encrypted = self::encrypt($value);
+					if (false === $encrypted) {
+						// Encryption failed - this is a critical error
+						// The old key is already deleted, so we can't recover
+						return [
+							'success'           => false,
+							'message'           => \sprintf(
+								'CRITICAL: Failed to re-encrypt credentials for provider: %s. Old key deleted. Manual recovery required.',
+								$providerId
+							),
+							'providers_rotated' => 0,
+						];
+					}
+					$reencryptedConfig[ $key ] = $encrypted;
+				} else {
+					$reencryptedConfig[ $key ] = $value;
+				}
+			}
+
+			$reencryptedProviders[ $providerId ] = $reencryptedConfig;
+		}
+
+		// Step 5: Save re-encrypted credentials
+		$settings['providers'] = $reencryptedProviders;
+		$updated = \update_option('aether_site_exporter_settings', $settings);
+
+		if (! $updated) {
+			return [
+				'success'           => false,
+				'message'           => 'Failed to save re-encrypted credentials to database.',
+				'providers_rotated' => 0,
+			];
+		}
+
+		return [
+			'success'           => true,
+			'message'           => \sprintf(
+				'Successfully rotated encryption key and re-encrypted credentials for %d provider(s).',
+				\count($reencryptedProviders)
+			),
+			'providers_rotated' => \count($reencryptedProviders),
+		];
+	}
 }

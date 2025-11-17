@@ -144,6 +144,17 @@ abstract class BaseAdminPage
 	 */
 	final public function renderWrapper(): void
 	{
+		// Security: Add security headers for defense in depth
+		// Only send if headers not already sent (prevent warnings)
+		if (! \headers_sent()) {
+			// Prevent MIME type sniffing
+			\header('X-Content-Type-Options: nosniff');
+			// Prevent clickjacking
+			\header('X-Frame-Options: SAMEORIGIN');
+			// Control referrer information
+			\header('Referrer-Policy: strict-origin-when-cross-origin');
+		}
+
 		// Check user permissions.
 		if (! \current_user_can($this->capability)) {
 			\wp_die(

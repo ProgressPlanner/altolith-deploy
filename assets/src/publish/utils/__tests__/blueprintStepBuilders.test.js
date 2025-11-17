@@ -17,6 +17,12 @@ import {
 	buildBlueprintJson,
 } from '../blueprintStepBuilders';
 
+// Mock @wordpress/hooks
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
+
 describe( 'blueprintStepBuilders', () => {
 	describe( 'buildImportFilesStep', () => {
 		it( 'should create importWordPressFiles step with bundled resource', () => {

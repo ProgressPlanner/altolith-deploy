@@ -89,17 +89,57 @@ const requestDeduplicationMiddleware = ( options, next ) => {
  * Caches GET request responses with TTL to reduce redundant API calls.
  *
  * Cache format: Map<requestKey, {response, timestamp}>
- * TTL: 5 minutes (300000ms)
+ * TTL: Configurable per endpoint (default: 5 minutes)
  */
 const responseCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-function isCacheValid( cacheEntry ) {
+// Cache configuration with endpoint-specific TTLs
+const CACHE_CONFIG = {
+	defaultTTL: 5 * 60 * 1000, // 5 minutes default
+	endpointTTLs: {
+		'/assets': 10 * 60 * 1000, // 10 minutes - asset lists change infrequently
+		'/settings': 1 * 60 * 1000, // 1 minute - settings may change
+		'/config': 30 * 60 * 1000, // 30 minutes - static configuration
+		'/check-wporg': 60 * 60 * 1000, // 60 minutes - WordPress.org data rarely changes
+	},
+	// Set to true to bypass cache (useful for development/testing)
+	bypassCache: false,
+};
+
+/**
+ * Get cache TTL for a specific request path.
+ *
+ * @param {string} path Request path to check.
+ * @return {number} TTL in milliseconds.
+ */
+function getCacheTTL( path ) {
+	if ( CACHE_CONFIG.bypassCache ) {
+		return 0;
+	}
+
+	// Check if path matches any endpoint-specific TTL
+	for ( const [ endpoint, ttl ] of Object.entries(
+		CACHE_CONFIG.endpointTTLs
+	) ) {
+		if ( path && path.includes( endpoint ) ) {
+			return ttl;
+		}
+	}
+
+	return CACHE_CONFIG.defaultTTL;
+}
+
+function isCacheValid( cacheEntry, path ) {
 	if ( ! cacheEntry ) {
 		return false;
 	}
+	const ttl = getCacheTTL( path );
+	if ( ttl === 0 ) {
+		// Cache bypass enabled
+		return false;
+	}
 	const age = Date.now() - cacheEntry.timestamp;
-	return age < CACHE_TTL;
+	return age < ttl;
 }
 
 const responseCachingMiddleware = ( options, next ) => {
@@ -113,8 +153,8 @@ const responseCachingMiddleware = ( options, next ) => {
 	const requestKey = createRequestKey( options );
 	const cached = responseCache.get( requestKey );
 
-	// Return cached response if valid
-	if ( isCacheValid( cached ) ) {
+	// Return cached response if valid (pass path for TTL calculation)
+	if ( isCacheValid( cached, options.path ) ) {
 		return Promise.resolve( cached.response );
 	}
 

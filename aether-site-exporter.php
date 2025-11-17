@@ -5,6 +5,9 @@
  * Plugin URI: https://github.com/aristath/aether-site-exporter
  * Description: Export WordPress sites as static HTML or WordPress Playground blueprint bundles
  * Version: 1.0.0
+ * Requires at least: 6.0
+ * Requires PHP: 7.4
+ * Tested up to: 6.7
  * Author: Ari Stathopoulos
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html

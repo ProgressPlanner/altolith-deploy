@@ -12,6 +12,13 @@
  */
 
 import { extractAssetsFromHtml } from '../assetExtractor';
+import { applyFilters } from '@wordpress/hooks';
+
+// Mock @wordpress/hooks
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
 
 // Mock fetch for CSS/JS dependency collection
 global.fetch = jest.fn();
