@@ -502,7 +502,7 @@ export function useStaticSiteGenerator( onProgress ) {
 						if ( setStatusMessage ) {
 							const uploadKey = `upload-${ htmlPath }`;
 							setStatusMessage(
-								`Skipped unchanged file <code>${ htmlPath }</code>`,
+								`Skipped unchanged file ${ htmlPath }`,
 								'success',
 								uploadKey
 							);
@@ -540,7 +540,7 @@ export function useStaticSiteGenerator( onProgress ) {
 					if ( setStatusMessage ) {
 						const uploadKey = `upload-${ htmlPath }`;
 						setStatusMessage(
-							`Uploading <code>${ htmlPath }</code>`,
+							`Uploading ${ htmlPath }`,
 							'progress',
 							uploadKey
 						);
@@ -589,7 +589,7 @@ export function useStaticSiteGenerator( onProgress ) {
 					if ( setStatusMessage ) {
 						const uploadKey = `upload-${ htmlPath }`;
 						setStatusMessage(
-							`Uploaded <code>${ htmlPath }</code>`,
+							`Uploaded ${ htmlPath }`,
 							'success',
 							uploadKey
 						);

@@ -136,7 +136,7 @@ const getIcon = ( type ) => {
  * Activity Log Message Component
  *
  * @param {Object}      props          Component props
- * @param {string}      props.message  Message text (can contain HTML)
+ * @param {string}      props.message  Message text (plain text, HTML will be escaped)
  * @param {string}      props.type     Message type: 'info' | 'success' | 'error' | 'progress'
  * @param {Object|null} props.progress Optional progress data { percent: number, loaded?: number, total?: number }
  * @return {JSX.Element} Activity log message item
@@ -159,10 +159,9 @@ export default function ActivityLogMessage( { message, type, progress } ) {
 			<span
 				className="aether-publish-progress-modal__activity-message"
 				style={ activityMessageStyle }
-				dangerouslySetInnerHTML={ {
-					__html: message,
-				} }
-			/>
+			>
+				{ message }
+			</span>
 			{ progress && (
 				<div
 					className="aether-publish-progress-modal__file-progress"

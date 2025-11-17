@@ -135,7 +135,7 @@ export async function uploadFilesWithProgress( {
 
 					if ( setStatusMessage ) {
 						setStatusMessage(
-							`Skipped unchanged file <code>${ displayName }</code>`,
+							`Skipped unchanged file ${ displayName }`,
 							'success',
 							uploadKey
 						);
@@ -173,7 +173,7 @@ export async function uploadFilesWithProgress( {
 				// Create status message with unique key for progress tracking
 				if ( setStatusMessage ) {
 					setStatusMessage(
-						`Uploading <code>${ displayName }</code>`,
+						`Uploading ${ displayName }`,
 						'progress',
 						uploadKey,
 						{
@@ -194,7 +194,7 @@ export async function uploadFilesWithProgress( {
 						// Update progress in status message
 						if ( setStatusMessage ) {
 							setStatusMessage(
-								`Uploading <code>${ displayName }</code>`,
+								`Uploading ${ displayName }`,
 								'progress',
 								uploadKey,
 								{
@@ -214,7 +214,7 @@ export async function uploadFilesWithProgress( {
 					// Update message to success (remove progress)
 					if ( setStatusMessage ) {
 						setStatusMessage(
-							`Uploaded <code>${ displayName }</code>`,
+							`Uploaded ${ displayName }`,
 							'success',
 							uploadKey,
 							null // Remove progress
@@ -240,7 +240,7 @@ export async function uploadFilesWithProgress( {
 
 					if ( setStatusMessage ) {
 						setStatusMessage(
-							`Failed to upload <code>${ displayName }</code>`,
+							`Failed to upload ${ displayName }`,
 							'error',
 							uploadKey,
 							null
@@ -262,7 +262,7 @@ export async function uploadFilesWithProgress( {
 
 				if ( setStatusMessage ) {
 					setStatusMessage(
-						`Failed to upload <code>${ displayName }</code>`,
+						`Failed to upload ${ displayName }`,
 						'error',
 						uploadKey,
 						null
@@ -399,7 +399,7 @@ export async function uploadSingleFileWithProgress( {
 		// Create status message with progress tracking
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				`Uploading <code>${ displayName }</code>`,
+				`Uploading ${ displayName }`,
 				'progress',
 				statusKey,
 				{
@@ -419,7 +419,7 @@ export async function uploadSingleFileWithProgress( {
 				// Update progress in status message
 				if ( setStatusMessage ) {
 					setStatusMessage(
-						`Uploading <code>${ displayName }</code>`,
+						`Uploading ${ displayName }`,
 						'progress',
 						statusKey,
 						{
@@ -441,7 +441,7 @@ export async function uploadSingleFileWithProgress( {
 			// Update message to success (remove progress)
 			if ( setStatusMessage ) {
 				setStatusMessage(
-					`Uploaded <code>${ displayName }</code>`,
+					`Uploaded ${ displayName }`,
 					'success',
 					statusKey,
 					null // Remove progress
@@ -460,7 +460,7 @@ export async function uploadSingleFileWithProgress( {
 		// Upload failed
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				`Failed to upload <code>${ displayName }</code>`,
+				`Failed to upload ${ displayName }`,
 				'error',
 				statusKey,
 				null
@@ -479,7 +479,7 @@ export async function uploadSingleFileWithProgress( {
 
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				`Failed to upload <code>${ displayName }</code>`,
+				`Failed to upload ${ displayName }`,
 				'error',
 				statusKey,
 				null
