@@ -22,6 +22,13 @@ class ExportController
 	use RESTHelpersTrait;
 
 	/**
+	 * Transient expiration time for export jobs (10 minutes).
+	 *
+	 * @var int
+	 */
+	private const EXPORT_JOB_EXPIRATION = 600;
+
+	/**
 	 * Plugin instance.
 	 *
 	 * @var Plugin
@@ -102,8 +109,8 @@ class ExportController
 		}
 
 		// Rate limiting: Prevent DoS by limiting export frequency
-		// Allow 5 exports per 5 minutes (300 seconds)
-		$rateLimitCheck = $this->checkRateLimit('export_start', 5, 300);
+		// Allow 5 exports per 5 minutes
+		$rateLimitCheck = $this->checkRateLimit('export_start', 5, 300); // 300 seconds = 5 minutes
 		if (\is_wp_error($rateLimitCheck)) {
 			return $rateLimitCheck;
 		}
@@ -219,7 +226,7 @@ class ExportController
 				'totalItems'   => $totalItems,
 				'started'       => \time(),
 			],
-			600 // 10 minutes.
+			self::EXPORT_JOB_EXPIRATION
 		);
 
 		return \rest_ensure_response(
@@ -277,7 +284,7 @@ class ExportController
 		if ($currentIndex >= $totalItems) {
 			// All items added - mark as complete.
 			$status['status'] = 'complete';
-			\set_transient($jobId, $status, 600);
+			\set_transient($jobId, $status, self::EXPORT_JOB_EXPIRATION);
 
 			return \rest_ensure_response(
 				[
@@ -316,7 +323,7 @@ class ExportController
 		// Update status.
 		$status['itemsAdded'][]  = $item;
 		$status['currentIndex'] += 1;
-		\set_transient($jobId, $status, 600);
+		\set_transient($jobId, $status, self::EXPORT_JOB_EXPIRATION);
 
 		$progressPercent = \round(( $status['currentIndex'] / $status['totalItems'] ) * 100);
 
