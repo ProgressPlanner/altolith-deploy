@@ -199,7 +199,8 @@ class WPOrgCheckController extends WP_REST_Controller
 	 */
 	public function checkPermissions($request): bool
 	{
-		return \is_user_logged_in();
+		// Security: Require manage_options to prevent abuse and DoS attacks
+		return \current_user_can('manage_options');
 	}
 
 	/**

@@ -34,7 +34,12 @@ class JobStateManager
 	 */
 	public function getStatus(string $jobId)
 	{
-		return \get_transient($jobId);
+		$jsonValue = \get_transient($jobId);
+		if (false === $jsonValue || !\is_string($jsonValue)) {
+			return false;
+		}
+		// Security: Decode JSON (stored to prevent object injection via serialization)
+		return \json_decode($jsonValue, true);
 	}
 
 	/**
@@ -46,22 +51,21 @@ class JobStateManager
 	 */
 	public function updateStatus(string $jobId, array $status): bool
 	{
-		$result = \set_transient($jobId, $status, self::TRANSIENT_EXPIRATION);
+		// Security: Use JSON instead of serialization (via set_transient) to prevent object injection
+		$jsonValue = \wp_json_encode($status, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+		if (false === $jsonValue) {
+			return false;
+		}
+
+		$result = \set_transient($jobId, $jsonValue, self::TRANSIENT_EXPIRATION);
 
 		// set_transient() returns false both for failure AND when value hasn't changed
 		// Check current value to distinguish between real failure vs. unchanged value
 		if (false === $result) {
 			$currentValue = \get_transient($jobId);
 			// If current value matches new value, treat as success (value unchanged)
-			// Use JSON-based hash comparison to avoid PHP object injection vulnerabilities
-			// json_encode() is safer than serialize() as it cannot deserialize objects
-			// This prevents ['status' => '0'] from matching ['status' => false]
-			if (\is_array($currentValue)) {
-				$currentJson = \wp_json_encode($currentValue, \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE);
-				$statusJson = \wp_json_encode($status, \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE);
-				if (false !== $currentJson && false !== $statusJson && \hash_equals(\md5($currentJson), \md5($statusJson))) {
-					return true;
-				}
+			if (\is_string($currentValue) && \hash_equals(\md5($currentValue), \md5($jsonValue))) {
+				return true;
 			}
 			// Otherwise it's a real failure
 			return false;
@@ -195,7 +199,8 @@ class JobStateManager
 				];
 			}
 
-			$status = \maybe_unserialize($currentValue);
+			// Security: Use JSON instead of serialization to prevent object injection
+			$status = \json_decode($currentValue, true);
 			if (!is_array($status)) {
 				return [
 					'shouldRetry' => false,
@@ -211,7 +216,8 @@ class JobStateManager
 			// Update status array
 			$stepRetries[$stepName] = $newRetryCount;
 			$status['stepRetries'] = $stepRetries;
-			$newValue = \maybe_serialize($status);
+			// Security: Use JSON instead of serialization to prevent object injection
+			$newValue = \wp_json_encode($status, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
 			// Attempt atomic update using WHERE clause to check old value
 			// This is the compare-and-swap operation
@@ -299,6 +305,7 @@ class JobStateManager
 		// Query for aether transients with limit.
 		// CRITICAL: Include LIMIT in prepare() to prevent SQL injection
 		// Previous version concatenated LIMIT after prepare(), breaking prepared statement
+		// Security: $wpdb->options is a WordPress core table name constant, not user input - safe to interpolate
 		$query = $wpdb->prepare(
 			"SELECT option_name, option_value FROM `{$wpdb->options}`
 			WHERE option_name LIKE %s
@@ -317,7 +324,8 @@ class JobStateManager
 
 		foreach ($results as $row) {
 			$jobId = \str_replace('_transient_', '', $row['option_name']);
-			$status = \maybe_unserialize($row['option_value']);
+			// Security: Use JSON instead of serialization to prevent object injection
+			$status = \json_decode($row['option_value'], true);
 
 			if (\is_array($status)) {
 				$jobs[] = \array_merge(

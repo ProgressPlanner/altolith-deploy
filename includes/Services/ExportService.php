@@ -277,17 +277,25 @@ class ExportService
 					continue;
 				}
 
-				// Security: Validate slug doesn't contain path traversal or null bytes
-				// phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf -- Defensive type check for security
+				// Security: Type check first
+				if (!\is_string($slug)) {
+					continue;
+				}
+
+				// Security: Sanitize BEFORE validation to prevent bypasses
+				$slug = \sanitize_file_name($slug);
+
+				// Security: Validate slug doesn't contain path traversal, null bytes, or dangerous values
 				if (
-					!\is_string($slug) ||
+					empty($slug) ||
 					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
-					\strpos($slug, "\0") !== false
+					\strpos($slug, "\0") !== false ||
+					$slug === '.' ||
+					$slug === '..'
 				) {
 					continue;
 				}
 
-				$slug = \sanitize_file_name($slug);
 				$pluginDir = WP_PLUGIN_DIR . '/' . $slug;
 				if (\is_dir($pluginDir)) {
 					$this->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $slug, '', null, null, $progressCallback);
@@ -318,17 +326,25 @@ class ExportService
 			// Note: We need to detect which slugs are themes vs plugins.
 			// For now, check if directory exists in themes directory.
 			foreach ($customAssetSlugs as $slug) {
-				// Security: Validate slug doesn't contain path traversal or null bytes
-				// phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf -- Defensive type check for security
+				// Security: Type check first
+				if (!\is_string($slug)) {
+					continue;
+				}
+
+				// Security: Sanitize BEFORE validation to prevent bypasses
+				$slug = \sanitize_file_name($slug);
+
+				// Security: Validate slug doesn't contain path traversal, null bytes, or dangerous values
 				if (
-					!\is_string($slug) ||
+					empty($slug) ||
 					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
-					\strpos($slug, "\0") !== false
+					\strpos($slug, "\0") !== false ||
+					$slug === '.' ||
+					$slug === '..'
 				) {
 					continue;
 				}
 
-				$slug = \sanitize_file_name($slug);
 				$themeDir = \get_theme_root() . '/' . $slug;
 				if (\is_dir($themeDir)) {
 					$this->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $slug, '', null, null, $progressCallback);
