@@ -240,6 +240,12 @@ class ExportController
 	 */
 	public function exportStatus(WP_REST_Request $request)
 	{
+		// CSRF protection: Verify nonce for state-changing operation
+		$nonceCheck = $this->verifyNonce($request);
+		if (\is_wp_error($nonceCheck)) {
+			return $nonceCheck;
+		}
+
 		$jobId = \sanitize_key($request->get_param('jobId'));
 
 		$status = \get_transient($jobId);

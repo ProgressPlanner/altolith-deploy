@@ -38,9 +38,8 @@ trait EncryptionHelper
 			if (\is_array($value)) {
 				$encrypted[ $key ] = $this->encryptSensitiveFields($value, $depth + 1);
 			} elseif ($this->isSensitiveField($key) && '' !== $value && null !== $value) {
-				// Check if already encrypted
-				$decrypted = CredentialEncryption::decrypt($value);
-				if (false !== $decrypted) {
+				// Check if already encrypted using the dedicated isEncrypted() method
+				if (CredentialEncryption::isEncrypted($value)) {
 					$encrypted[ $key ] = $value; // Already encrypted
 				} else {
 					$encryptedValue = CredentialEncryption::encrypt($value);

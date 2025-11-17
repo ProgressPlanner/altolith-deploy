@@ -779,7 +779,7 @@ class Plugin
 	/**
 	 * Send CORS headers.
 	 *
-	 * Internal method to actually send the headers.
+	 * Internal method to actually send the headers with origin whitelisting.
 	 *
 	 * @return void
 	 */
@@ -790,9 +790,65 @@ class Plugin
 			return;
 		}
 
-		// Allow requests from any origin (required for WordPress Playground).
-		// Note: Cannot use Access-Control-Allow-Credentials: true with wildcard origin.
-		\header('Access-Control-Allow-Origin: *');
+		// Get the origin from the request
+		$origin = isset($_SERVER['HTTP_ORIGIN']) ? \esc_url_raw(\wp_unslash($_SERVER['HTTP_ORIGIN'])) : '';
+
+		// Define allowed origins (WordPress Playground and local development)
+		$allowedOrigins = [
+			'https://playground.wordpress.net',
+			'https://wasm.wordpress.net',
+		];
+
+		// Allow same-origin requests (current site)
+		$siteUrl = \get_site_url();
+		if ($siteUrl) {
+			$allowedOrigins[] = $siteUrl;
+		}
+
+		// Allow local development origins
+		if (\defined('WP_DEBUG') && WP_DEBUG) {
+			// Allow localhost with any port
+			if ($origin && \preg_match('/^https?:\/\/localhost(:\d+)?$/', $origin)) {
+				$allowedOrigins[] = $origin;
+			}
+			// Allow 127.0.0.1 with any port
+			if ($origin && \preg_match('/^https?:\/\/127\.0\.0\.1(:\d+)?$/', $origin)) {
+				$allowedOrigins[] = $origin;
+			}
+		}
+
+		// Allow WordPress Playground dynamic subdomains (e.g., https://playground.wordpress.net/*)
+		// These are safe because they're official WordPress infrastructure
+		if ($origin && (
+			\str_starts_with($origin, 'https://playground.wordpress.net') ||
+			\str_starts_with($origin, 'https://wasm.wordpress.net')
+		)) {
+			$allowedOrigins[] = $origin;
+		}
+
+		// Apply filter to allow developers to add custom allowed origins
+		$allowedOrigins = \apply_filters('aether_site_exporter_cors_allowed_origins', $allowedOrigins);
+
+		// Check if the request origin is in the allowed list
+		if ($origin && \in_array($origin, $allowedOrigins, true)) {
+			\header('Access-Control-Allow-Origin: ' . $origin);
+			\header('Access-Control-Allow-Credentials: true');
+		} elseif (!$origin) {
+			// No origin header (same-origin request or non-browser client)
+			// Allow it but don't send CORS headers
+			return;
+		} else {
+			// Origin not allowed - don't send CORS headers
+			// The browser will block the request
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Blocked CORS request from disallowed origin: %s',
+					$origin
+				));
+			}
+			return;
+		}
+
 		\header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 		\header('Access-Control-Allow-Headers: Content-Type, Authorization, X-WP-Nonce');
 		\header('Access-Control-Max-Age: 86400'); // Cache preflight for 24 hours.
