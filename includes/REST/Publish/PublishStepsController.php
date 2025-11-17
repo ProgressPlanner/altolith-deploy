@@ -277,9 +277,15 @@ class PublishStepsController
 		$baseUrl = '';
 
 		// Priority order:
-		// 1. custom_domain (if configured - this is the public-facing URL)
-		// 2. base_url from provider configuration
+		// 1. public_url (local filesystem - where the static site will be accessed)
+		// 2. custom_domain (R2/S3 - this is the public-facing URL)
+		// 3. base_url from provider configuration
 		if (
+			isset($settings['providers'][$staticSiteProviderId]['public_url']) &&
+			! empty($settings['providers'][$staticSiteProviderId]['public_url'])
+		) {
+			$baseUrl = $settings['providers'][$staticSiteProviderId]['public_url'];
+		} elseif (
 			isset($settings['providers'][$staticSiteProviderId]['custom_domain']) &&
 			! empty($settings['providers'][$staticSiteProviderId]['custom_domain'])
 		) {
