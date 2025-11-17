@@ -184,18 +184,6 @@ class Plugin
 		);
 	}
 
-	/**
-	 * Enqueue Publish Site button assets.
-	 *
-	 * @return void
-	 */
-	public function enqueuePublishButton(): void
-	{
-		// Only load for users who can manage options.
-		if (! \current_user_can('manage_options')) {
-			return;
-		}
-	}
 
 	/**
 	 * Enqueue admin bar assets globally.
@@ -819,10 +807,11 @@ class Plugin
 
 		// Allow WordPress Playground dynamic subdomains (e.g., https://playground.wordpress.net/*)
 		// These are safe because they're official WordPress infrastructure
-		if ($origin && (
+		$isPlaygroundOrigin = $origin && (
 			\str_starts_with($origin, 'https://playground.wordpress.net') ||
 			\str_starts_with($origin, 'https://wasm.wordpress.net')
-		)) {
+		);
+		if ($isPlaygroundOrigin) {
 			$allowedOrigins[] = $origin;
 		}
 
