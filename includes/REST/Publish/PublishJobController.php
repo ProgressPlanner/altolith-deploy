@@ -212,7 +212,7 @@ class PublishJobController
 
 		// Security: Whitelist allowed fields to prevent overwriting critical server-controlled fields
 		$allowedFields = ['message', 'progress', 'deployment_url', 'completedAt', 'currentStep'];
-		
+
 		// Recursively sanitize array values.
 		$sanitizeArrayRecursive = function ($data) use (&$sanitizeArrayRecursive) {
 			if (\is_array($data)) {

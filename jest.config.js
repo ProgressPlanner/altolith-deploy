@@ -1,7 +1,12 @@
 module.exports = {
 	testEnvironment: 'jsdom',
 	roots: [ '<rootDir>/tests/js', '<rootDir>/assets/src' ],
-	testMatch: [ '**/__tests__/**/*.js', '**/?(*.)+(spec|test).js', '**/__tests__/**/*.jsx', '**/?(*.)+(spec|test).jsx' ],
+	testMatch: [
+		'**/__tests__/**/*.js',
+		'**/?(*.)+(spec|test).js',
+		'**/__tests__/**/*.jsx',
+		'**/?(*.)+(spec|test).jsx',
+	],
 	collectCoverageFrom: [
 		'assets/src/**/*.{js,jsx}',
 		'!assets/src/**/*.test.{js,jsx}',
@@ -16,7 +21,10 @@ module.exports = {
 		'\\.(css|less|scss|sass)$': 'identity-obj-proxy',
 	},
 	transform: {
-		'^.+\\.(js|jsx)$': [ 'babel-jest', { configFile: './babel.config.js' } ],
+		'^.+\\.(js|jsx)$': [
+			'babel-jest',
+			{ configFile: './babel.config.js' },
+		],
 	},
 	transformIgnorePatterns: [
 		'node_modules/(?!(p-retry|retry|is-network-error|parse5)/)',

@@ -6,7 +6,7 @@
  * Scaffolds a new Aether provider from the template.
  * Usage: npm run create-provider <provider-name>
  *
- * @package Aether
+ * @package
  */
 
 const fs = require( 'fs' );
@@ -52,10 +52,7 @@ const className = toPascalCase( providerName ) + 'Provider';
 const displayName = toTitleCase( providerName );
 
 // Paths
-const templateDir = path.join(
-	__dirname,
-	'../assets/src/providers/_template'
-);
+const templateDir = path.join( __dirname, '../assets/src/providers/_template' );
 const targetDir = path.join(
 	__dirname,
 	'../assets/src/providers',
@@ -132,7 +129,9 @@ function copyDirectory( src, dest, replacements ) {
 			let content = fs.readFileSync( srcPath, 'utf8' );
 
 			// Apply replacements
-			for ( const [ search, replace ] of Object.entries( replacements ) ) {
+			for ( const [ search, replace ] of Object.entries(
+				replacements
+			) ) {
 				content = content.split( search ).join( replace );
 			}
 
@@ -142,7 +141,7 @@ function copyDirectory( src, dest, replacements ) {
 	}
 }
 
-function updateProviderLoader( providerName ) {
+function updateProviderLoader( name ) {
 	const loaderPath = path.join(
 		__dirname,
 		'../assets/src/providers/utils/providerLoader.js'
@@ -151,9 +150,7 @@ function updateProviderLoader( providerName ) {
 	let content = fs.readFileSync( loaderPath, 'utf8' );
 
 	// Add to loadAllProviders array
-	const arrayMatch = content.match(
-		/loadProviders\(\s*\[([\s\S]*?)\]\s*\)/
-	);
+	const arrayMatch = content.match( /loadProviders\(\s*\[([\s\S]*?)\]\s*\)/ );
 
 	if ( arrayMatch ) {
 		const arrayContent = arrayMatch[ 1 ];
@@ -163,10 +160,12 @@ function updateProviderLoader( providerName ) {
 			.filter( Boolean );
 
 		// Add new provider if not already there
-		if ( ! providers.includes( providerName ) ) {
-			providers.push( providerName );
+		if ( ! providers.includes( name ) ) {
+			providers.push( name );
 
-			const newArray = providers.map( ( p ) => `\t\t'${ p }'` ).join( ',\n' );
+			const newArray = providers
+				.map( ( p ) => `\t\t'${ p }'` )
+				.join( ',\n' );
 
 			content = content.replace(
 				/loadProviders\(\s*\[([\s\S]*?)\]\s*\)/,
@@ -182,28 +181,28 @@ function updateProviderLoader( providerName ) {
 	return false;
 }
 
-function createTestFile( providerName, className ) {
-	const testDir = path.join( __dirname, '../tests/js/providers', providerName );
+function createTestFile( name, clsName ) {
+	const testDir = path.join( __dirname, '../tests/js/providers', name );
 	fs.mkdirSync( testDir, { recursive: true } );
 
 	const testContent = `/**
- * ${ className } Tests
+ * ${ clsName } Tests
  *
  * @package Aether
  */
 
-import { ${ className } } from '../../../../assets/src/providers/${ providerName }/${ className }';
+import { ${ clsName } } from '../../../../assets/src/providers/${ name }/${ clsName }';
 
-describe( '${ className }', () => {
+describe( '${ clsName }', () => {
 	let provider;
 
 	beforeEach( () => {
-		provider = new ${ className }();
+		provider = new ${ clsName }();
 	} );
 
 	describe( 'Metadata', () => {
 		it( 'should return correct ID', () => {
-			expect( provider.getId() ).toBe( '${ providerName }' );
+			expect( provider.getId() ).toBe( '${ name }' );
 		} );
 
 		it( 'should return correct name', () => {
@@ -300,8 +299,11 @@ describe( '${ className }', () => {
 			.filter( Boolean );
 
 		if ( selectedCapabilities.length > 0 ) {
-			replacements[ '// CAP_STORAGE,      // Object storage\n\t\t\t// CAP_EDGE,         // Edge computing/workers\n\t\t\t// CAP_MEDIA,        // Media offloading\n\t\t\t// CAP_STATIC_SITE,  // Static site hosting' ] =
-				selectedCapabilities.map( ( cap ) => `\t\t\t${ cap },` ).join( '\n' );
+			replacements[
+				'// CAP_STORAGE,      // Object storage\n\t\t\t// CAP_EDGE,         // Edge computing/workers\n\t\t\t// CAP_MEDIA,        // Media offloading\n\t\t\t// CAP_STATIC_SITE,  // Static site hosting'
+			] = selectedCapabilities
+				.map( ( cap ) => `\t\t\t${ cap },` )
+				.join( '\n' );
 		}
 
 		// Copy template directory
@@ -316,7 +318,9 @@ describe( '${ className }', () => {
 		if ( loaderUpdated ) {
 			console.log( '✅ Added provider to loadAllProviders()' );
 		} else {
-			console.log( '⚠️  Could not automatically update providerLoader.js' );
+			console.log(
+				'⚠️  Could not automatically update providerLoader.js'
+			);
 			console.log(
 				`   Please manually add '${ providerName }' to the loadAllProviders() array`
 			);
@@ -333,9 +337,15 @@ describe( '${ className }', () => {
 		console.log( `1. Edit ${ targetDir }/${ className }.js` );
 		console.log( '2. Implement required methods (marked with TODO)' );
 		console.log( '3. Update configuration fields for your provider' );
-		console.log( '4. Implement validation, connection test, and deployment logic' );
-		console.log( `5. Write tests in tests/js/providers/${ providerName }/` );
-		console.log( '6. Add provider to webpack config (if needed for separate bundle)' );
+		console.log(
+			'4. Implement validation, connection test, and deployment logic'
+		);
+		console.log(
+			`5. Write tests in tests/js/providers/${ providerName }/`
+		);
+		console.log(
+			'6. Add provider to webpack config (if needed for separate bundle)'
+		);
 		console.log( '7. Test in WordPress admin' );
 		console.log( '8. Update documentation' );
 		console.log( '\nFiles created:' );
@@ -343,7 +353,9 @@ describe( '${ className }', () => {
 		console.log( `  - ${ className }.js` );
 		console.log( '  - index.js' );
 		console.log( '  - README.md' );
-		console.log( `- tests/js/providers/${ providerName }/${ className }.test.js` );
+		console.log(
+			`- tests/js/providers/${ providerName }/${ className }.test.js`
+		);
 		console.log( '\nHappy coding! 🎉' );
 	} catch ( error ) {
 		console.error( '\n❌ Error creating provider:', error.message );

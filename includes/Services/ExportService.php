@@ -11,7 +11,6 @@
 namespace Aether\SiteExporter\Services;
 
 use Aether\SiteExporter\Plugin;
-use Aether\SiteExporter\Core\ZipHelper;
 use Aether\SiteExporter\Sync\JobStateManager;
 
 \defined('ABSPATH') || exit;
@@ -89,9 +88,11 @@ class ExportService
 
 		// Security: Reject paths with path traversal sequences, absolute paths, or null bytes.
 		// CRITICAL: Validate BEFORE any filesystem operations.
-		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $exportDir) ||
-		    \preg_match('#^[/\\\\]#', $exportDir) ||
-		    \strpos($exportDir, "\0") !== false) {
+		if (
+			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $exportDir) ||
+			\preg_match('#^[/\\\\]#', $exportDir) ||
+			\strpos($exportDir, "\0") !== false
+		) {
 			return new \WP_Error(
 				'invalid_export_path',
 				\__('Invalid export path: path traversal not allowed', 'aether-site-exporter'),
@@ -116,8 +117,10 @@ class ExportService
 			// Validate the existing ancestor is within ABSPATH
 			$realCheckDir = \realpath($checkDir);
 			$realAbspath = \realpath(ABSPATH);
-			if (false === $realCheckDir || false === $realAbspath ||
-			    0 !== \strpos($realCheckDir, $realAbspath)) {
+			if (
+				false === $realCheckDir || false === $realAbspath ||
+				0 !== \strpos($realCheckDir, $realAbspath)
+			) {
 				return new \WP_Error(
 					'invalid_export_directory',
 					\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
@@ -128,8 +131,10 @@ class ExportService
 			// Parent exists, validate it's within ABSPATH
 			$realParent = \realpath($parentDir);
 			$realAbspath = \realpath(ABSPATH);
-			if (false === $realParent || false === $realAbspath ||
-			    0 !== \strpos($realParent, $realAbspath)) {
+			if (
+				false === $realParent || false === $realAbspath ||
+				0 !== \strpos($realParent, $realAbspath)
+			) {
 				return new \WP_Error(
 					'invalid_export_directory',
 					\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
@@ -207,10 +212,11 @@ class ExportService
 				// Update progress more granularly for better UX, especially for small file counts
 				// Update every N files OR every 1% (whichever is more frequent)
 				// Use float division to prevent overflow
+				// $updateInterval is always >= 1 due to max(1, ...)
 				$updateInterval = \max(1, (int) \floor((float) $totalFiles / 100.0));
 
 				// Prevent modulo by zero and handle overflow in modulo operation
-				if ($updateInterval > 0 && $processedFiles % $updateInterval === 0) {
+				if ($processedFiles % $updateInterval === 0) {
 					// Use float math to prevent integer overflow on large file counts
 					// Cast to float before division to ensure accurate calculation
 					$progressFloat = \min(100.0, ((float) $processedFiles / (float) $totalFiles) * 100.0);
@@ -272,9 +278,12 @@ class ExportService
 				}
 
 				// Security: Validate slug doesn't contain path traversal or null bytes
-				if (!\is_string($slug) ||
+				// phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf -- Defensive type check for security
+				if (
+					!\is_string($slug) ||
 					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
-					\strpos($slug, "\0") !== false) {
+					\strpos($slug, "\0") !== false
+				) {
 					continue;
 				}
 
@@ -286,7 +295,7 @@ class ExportService
 			}
 		} else {
 			// Fallback: Use PHP-based detection (includes ALL active plugins).
-			$customAssets = $this->plugin->getAllCustomAssets() ?? [];
+			$customAssets = $this->plugin->getAllCustomAssets();
 			foreach ($customAssets as $asset) {
 				if ('plugin' === $asset['type']) {
 					// Skip 'aether' plugin - it's added separately in blueprint from aether.zip URL.
@@ -310,9 +319,12 @@ class ExportService
 			// For now, check if directory exists in themes directory.
 			foreach ($customAssetSlugs as $slug) {
 				// Security: Validate slug doesn't contain path traversal or null bytes
-				if (!\is_string($slug) ||
+				// phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf -- Defensive type check for security
+				if (
+					!\is_string($slug) ||
 					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
-					\strpos($slug, "\0") !== false) {
+					\strpos($slug, "\0") !== false
+				) {
 					continue;
 				}
 
@@ -448,7 +460,7 @@ class ExportService
 		// Patterns are generated once from composer.json, package.json, etc.
 		// Pass through recursion to avoid regenerating on every subdirectory.
 		if (null === $excludePatterns && $shouldExcludeDevFiles && '' === $relativePath) {
-			$excludePatterns = ZipHelper::getExclusionPatterns($sourceDir, true);
+			$excludePatterns = self::getExclusionPatterns($sourceDir, true);
 		}
 		if (null === $excludePatterns) {
 			$excludePatterns = [];
@@ -563,7 +575,7 @@ class ExportService
 		}
 
 		// Count files in custom plugins.
-		$customAssets = $this->plugin->getAllCustomAssets() ?? [];
+		$customAssets = $this->plugin->getAllCustomAssets();
 		foreach ($customAssets as $asset) {
 			if ('plugin' === $asset['type']) {
 				$pluginDir = WP_PLUGIN_DIR . '/' . $asset['slug'];
@@ -729,5 +741,67 @@ class ExportService
 		}
 
 		return false;
+	}
+
+		/**
+	 * Get exclusion patterns for development files and large dependencies.
+	 *
+	 * This method generates patterns for files/folders that should typically
+	 * be excluded from production zips: .git, node_modules, vendor, etc.
+	 *
+	 * @param string $sourceDir Source directory path to check for large folders.
+	 * @param bool   $autoExclude Enable automatic exclusion of .git and large vendor folders.
+	 * @return string[] Array of exclusion patterns.
+	 */
+	public static function getExclusionPatterns($sourceDir, $autoExclude = true)
+	{
+		$excludePatterns = [];
+
+		if (! $autoExclude) {
+			return $excludePatterns;
+		}
+
+		// Exclude .git directories.
+		$excludePatterns[] = '/.git/';
+		$excludePatterns[] = '/.git';
+
+		// Always exclude development-only folders.
+		$excludePatterns[] = '/.github/';
+		$excludePatterns[] = '/.github';
+		$excludePatterns[] = '/tests/';
+		$excludePatterns[] = '/tests';
+		$excludePatterns[] = '/Test/';
+		$excludePatterns[] = '/Test';
+		$excludePatterns[] = '/.vscode/';
+		$excludePatterns[] = '/.vscode';
+		$excludePatterns[] = '/.idea/';
+		$excludePatterns[] = '/.idea';
+
+		// Exclude development config files.
+		$excludePatterns[] = '/phpcs.xml';
+		$excludePatterns[] = '/phpunit.xml';
+		$excludePatterns[] = '/.phpcs.xml';
+		$excludePatterns[] = '/.phpunit.xml';
+		$excludePatterns[] = '/composer.json';
+		$excludePatterns[] = '/composer.lock';
+		$excludePatterns[] = '/package.json';
+		$excludePatterns[] = '/package-lock.json';
+		$excludePatterns[] = '/yarn.lock';
+		$excludePatterns[] = '/.eslintrc';
+		$excludePatterns[] = '/.eslintrc.js';
+		$excludePatterns[] = '/.eslintrc.json';
+		$excludePatterns[] = '/.editorconfig';
+		$excludePatterns[] = '/.gitignore';
+		$excludePatterns[] = '/.gitattributes';
+
+		// Always exclude vendor and node_modules directories.
+		// These are development dependencies and should never be in production zips.
+		// Pattern will match at any directory level (e.g., /path/to/vendor/, /path/to/node_modules/).
+		$excludePatterns[] = '/vendor/';
+		$excludePatterns[] = '/vendor';
+		$excludePatterns[] = '/node_modules/';
+		$excludePatterns[] = '/node_modules';
+
+		return $excludePatterns;
 	}
 }

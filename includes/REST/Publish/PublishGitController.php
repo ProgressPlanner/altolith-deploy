@@ -204,11 +204,12 @@ class PublishGitController
 
 		// Security: Never send decrypted credentials to client
 		// Store config internally but only return sanitized/safe values
+		// Since we validated $personalAccessToken is not empty above, hasToken is always true
 		$gitConfig = [
 			'gitUrl' => $gitUrl,
 			'branch' => $branch,
 			// Do NOT include personalAccessToken in response - it should never leave the server
-			'hasToken' => !empty($personalAccessToken), // Only indicate if token exists
+			'hasToken' => true, // Token exists (validated above)
 		];
 
 		return \rest_ensure_response([

@@ -6,7 +6,6 @@ This directory contains all JavaScript/React source code for the Aether WordPres
 
 ```
 assets/src/
-├── admin-bar/           # WordPress admin bar integration
 ├── admin-common/        # Shared admin UI components
 ├── admin-settings/      # Plugin settings page
 ├── components/          # Shared React components
@@ -74,7 +73,6 @@ npm run test:js
 Webpack builds multiple entry points from `assets/src/`:
 
 - **admin-settings.js** - Settings page UI
-- **admin-bar.js** - Admin bar publish button
 - **publish.js** - Publish workflow modal
 - **provider-cloudflare-r2.js** - Cloudflare R2 provider
 - **provider-cloudflare.js** - Cloudflare Workers provider

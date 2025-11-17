@@ -93,7 +93,10 @@ export async function executeWorkflow(
 			// If any steps failed, throw error with details
 			if ( errors.length > 0 ) {
 				const errorMessages = errors
-					.map( ( { stepId, error } ) => `${ stepId }: ${ error.message }` )
+					.map(
+						( { stepId, error } ) =>
+							`${ stepId }: ${ error.message }`
+					)
 					.join( ', ' );
 				throw new Error(
 					`${ errors.length } step(s) failed: ${ errorMessages }`

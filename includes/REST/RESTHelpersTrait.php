@@ -237,7 +237,8 @@ trait RESTHelpersTrait
 	public function sanitizeExceptionMessage(string $message): string
 	{
 		// Remove absolute paths - replace with [PATH]
-		$message = \preg_replace('#' . \preg_quote(ABSPATH, '#') . '[^\s]*#', '[PATH]', $message);
+		$result = \preg_replace('#' . \preg_quote(ABSPATH, '#') . '[^\s]*#', '[PATH]', $message);
+		$message = \is_string($result) ? $result : $message;
 
 		// Remove common sensitive patterns
 		$patterns = [
@@ -251,69 +252,10 @@ trait RESTHelpersTrait
 		];
 
 		foreach ($patterns as $pattern => $replacement) {
-			$message = \preg_replace($pattern, $replacement, $message);
+			$result = \preg_replace($pattern, $replacement, $message);
+			$message = \is_string($result) ? $result : $message;
 		}
 
 		return $message;
-	}
-
-	/**
-	 * Send CORS headers for REST responses.
-	 *
-	 * Handles cross-origin requests for WordPress Playground iframe contexts.
-	 * Only allows whitelisted origins to prevent CSRF attacks.
-	 *
-	 * @return void
-	 */
-	public function sendCorsHeaders(): void
-	{
-		// Get the origin from the request
-		// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
-		$origin = isset($_SERVER['HTTP_ORIGIN']) ? \esc_url_raw(\wp_unslash($_SERVER['HTTP_ORIGIN'])) : '';
-
-		// Security: Whitelist of allowed origins for CORS with credentials.
-		// Only allow requests from the same site or WordPress Playground.
-		$allowedOrigins = [
-			\site_url(),
-			\home_url(),
-			'https://playground.wordpress.net',
-		];
-
-		/**
-		 * Filter the list of allowed CORS origins.
-		 *
-		 * Allows plugins to add additional trusted origins.
-		 *
-		 * @param array<string> $allowedOrigins Array of allowed origin URLs.
-		 */
-		$allowedOrigins = \apply_filters('aether_site_exporter_cors_allowed_origins', $allowedOrigins);
-
-		// Normalize origins by removing trailing slashes AND converting to lowercase
-		// Prevents case-sensitivity bypass (e.g., Playground.WordPress.Net)
-		$normalizedAllowedOrigins = \array_map(function ($url) {
-			return \strtolower(\rtrim($url, '/'));
-		}, $allowedOrigins);
-
-		$normalizedOrigin = \strtolower(\rtrim($origin, '/'));
-
-		// Validate origin is in whitelist
-		if ($origin && \in_array($normalizedOrigin, $normalizedAllowedOrigins, true)) {
-			// Security: Use normalized origin in header to prevent header injection
-			// This ensures we send back the exact whitelisted URL, not user-controlled input
-			$safeOrigin = $normalizedOrigin;
-
-			// Find the matching allowed origin to preserve original casing for response
-			$matchIndex = \array_search($normalizedOrigin, $normalizedAllowedOrigins, true);
-			if (false !== $matchIndex) {
-				$safeOrigin = $allowedOrigins[$matchIndex];
-			}
-
-			// Only set CORS headers for whitelisted origins
-			\header('Access-Control-Allow-Origin: ' . \esc_url_raw($safeOrigin));
-			\header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-			\header('Access-Control-Allow-Headers: Content-Type, Authorization, X-WP-Nonce');
-			\header('Access-Control-Allow-Credentials: true');
-		}
-		// Do not send any CORS headers if origin is not whitelisted
 	}
 }

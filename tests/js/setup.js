@@ -90,7 +90,14 @@ jest.mock( '@wordpress/components', () => {
 	// eslint-disable-next-line no-shadow
 	const React = require( 'react' );
 	return {
-		Button: ( { children, onClick, disabled, isBusy, variant, ...props } ) => (
+		Button: ( {
+			children,
+			onClick,
+			disabled,
+			isBusy,
+			variant,
+			...props
+		} ) => (
 			<button
 				onClick={ onClick }
 				disabled={ disabled || isBusy }

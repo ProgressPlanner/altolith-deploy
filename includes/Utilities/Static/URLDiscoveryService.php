@@ -146,6 +146,8 @@ class URLDiscoveryService
 		);
 
 		// Check if get_posts() failed (can return WP_Error on database failure).
+		// phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf -- Defensive check, get_posts with fields=ids returns array
+		/** @phpstan-ignore-next-line -- Defensive check, get_posts with fields=ids returns array */
 		if (\is_wp_error($posts)) {
 			return;
 		}
@@ -172,6 +174,8 @@ class URLDiscoveryService
 		);
 
 		// Check if get_posts() failed (can return WP_Error on database failure).
+		// phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedIf -- Defensive check, get_posts with fields=ids returns array
+		/** @phpstan-ignore-next-line -- Defensive check, get_posts with fields=ids returns array */
 		if (\is_wp_error($pages)) {
 			return;
 		}
@@ -250,8 +254,8 @@ class URLDiscoveryService
 		);
 
 		// Create archive URLs for each month that has posts
-		// get_results() returns NULL on database error, so check for both NULL and array
-		if (\is_array($monthsWithPosts) && null !== $monthsWithPosts) {
+		// get_results() returns array on success, null on error
+		if (\is_array($monthsWithPosts)) {
 			foreach ($monthsWithPosts as $monthData) {
 				$archiveUrl = \get_month_link($monthData->year, $monthData->month);
 				if ($archiveUrl) {

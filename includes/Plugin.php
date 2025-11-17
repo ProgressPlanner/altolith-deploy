@@ -40,13 +40,6 @@ class Plugin
 	private AssetDiscoveryService $assetDiscovery;
 
 	/**
-	 * Settings Repository instance.
-	 *
-	 * @var Core\SettingsRepository
-	 */
-	private Core\SettingsRepository $settingsRepository;
-
-	/**
 	 * Cached numbered chunks to avoid repeated filesystem scans.
 	 *
 	 * @var array<string>|null
@@ -97,9 +90,6 @@ class Plugin
 
 		// Initialize asset discovery service.
 		$this->assetDiscovery = new AssetDiscoveryService();
-
-		// Initialize settings repository.
-		$this->settingsRepository = new Core\SettingsRepository();
 
 		// Initialize admin.
 		if (\is_admin()) {
@@ -185,122 +175,6 @@ class Plugin
 	}
 
 
-	/**
-	 * Enqueue admin bar assets globally.
-	 *
-	 * Enqueues React components and JavaScript needed for admin bar publish functionality.
-	 *
-	 * @return void
-	 */
-	public function enqueueAdminBarAssets(): void
-	{
-		// Only load for users who can manage options.
-		if (! \current_user_can('manage_options')) {
-			return;
-		}
-
-		// Enqueue WordPress components styles (required for Modal).
-		\wp_enqueue_style('wp-components');
-
-		// Enqueue publish React build (contains PublishProgressModal component).
-		$publishAssetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/publish.asset.php';
-		$publishAsset     = \file_exists($publishAssetFile) ? require $publishAssetFile : [
-			'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n' ],
-			'version'      => AETHER_SITE_EXPORTER_VERSION,
-		];
-
-		// Enqueue required webpack chunks FIRST (before main script)
-		$this->enqueueWebpackChunks('aether-export');
-
-		// Get chunk handles for dependencies (discovered dynamically)
-		$chunkHandles = $this->getChunkHandles([ 'common', 'vendor', 'isomorphic-git-vendor' ], true);
-
-		\wp_enqueue_script(
-			'aether-export',
-			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/export.js',
-			\array_merge($publishAsset['dependencies'], $chunkHandles),
-			$publishAsset['version'],
-			true
-		);
-
-		// Enqueue admin bar JavaScript (handles button clicks and modal mounting).
-		$adminBarAssetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-bar.asset.php';
-		$adminBarAsset     = \file_exists($adminBarAssetFile) ? require $adminBarAssetFile : [
-			'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n', 'wp-hooks' ],
-			'version'      => AETHER_SITE_EXPORTER_VERSION,
-		];
-
-		// WordPress doesn't expose ReactJSXRuntime, so we need to provide it
-		// wp-element includes React, but webpack expects window.ReactJSXRuntime
-		\wp_add_inline_script(
-			'wp-element',
-			'
-			(function() {
-				if (typeof window.ReactJSXRuntime !== "undefined") {
-					return; // Already defined
-				}
-				
-				// WordPress provides React through wp.element
-				// Create JSX runtime polyfill using React.createElement
-				if (typeof window.wp !== "undefined" && window.wp.element && window.wp.element.createElement) {
-					const React = window.wp.element;
-					window.ReactJSXRuntime = {
-						jsx: function(type, props, key) {
-							if (props && props.children !== undefined) {
-								const { children, ...restProps } = props;
-								return React.createElement(type, { key, ...restProps }, children);
-							}
-							return React.createElement(type, { key, ...props });
-						},
-						jsxs: function(type, props, key) {
-							if (props && props.children !== undefined) {
-								const { children, ...restProps } = props;
-								const childrenArray = Array.isArray(children) ? children : [children];
-								return React.createElement(type, { key, ...restProps }, ...childrenArray);
-							}
-							return React.createElement(type, { key, ...props });
-						},
-						Fragment: React.Fragment || (function() {
-							return function Fragment(props) {
-								return React.createElement(React.Fragment || "div", props, props.children);
-							};
-						})()
-					};
-				}
-			})();
-			'
-		);
-
-		// Remove react-jsx-runtime from dependencies (WordPress doesn't provide it, we polyfill it)
-		$dependencies = \array_filter($adminBarAsset['dependencies'], function ($dep) {
-			return $dep !== 'react-jsx-runtime';
-		});
-
-		\wp_enqueue_script(
-			'aether-admin-bar',
-			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin-bar.js',
-			$dependencies,
-			$adminBarAsset['version'],
-			true
-		);
-
-
-		// Output meta tags for REST API configuration.
-		\add_action('wp_head', [ $this, 'outputRestApiMetaTags' ]);
-		\add_action('admin_head', [ $this, 'outputRestApiMetaTags' ]);
-	}
-
-	/**
-	 * Output REST API meta tags for JavaScript.
-	 *
-	 * Shared helper method for outputting REST API configuration meta tags.
-	 *
-	 * @return void
-	 */
-	public function outputRestApiMetaTags(): void
-	{
-		$this->outputMetaTags();
-	}
 
 	/**
 	 * Output meta tags for REST API configuration.
@@ -427,7 +301,6 @@ class Plugin
 		// Named chunks (common, vendor, etc.) are stable, numbered chunks need discovery
 		$chunkMap = [
 			'aether-export' => [ 'common', 'vendor', 'isomorphic-git-vendor' ],
-			'aether-admin-bar' => [ 'common', 'vendor', 'isomorphic-git-vendor' ],
 			'aether-admin-settings' => [ 'common', 'vendor' ],
 		];
 
@@ -440,7 +313,7 @@ class Plugin
 
 		// Add numbered chunks (typically the PublishProgressModal chunk)
 		// Scripts that need PublishProgressModal should include numbered chunks
-		if (\in_array($scriptHandle, [ 'aether-export', 'aether-admin-bar' ], true)) {
+		if ($scriptHandle === 'aether-export') {
 			$chunks = \array_merge($numberedChunks, $chunks);
 		}
 
@@ -527,118 +400,6 @@ class Plugin
 		);
 	}
 
-	/**
-	 * Register filter for provider script data attributes.
-	 *
-	 * Adds data-provider-id attribute to provider script tags for JavaScript identification.
-	 * Called once during initialization to avoid repeated filter registration.
-	 *
-	 * @return void
-	 */
-	private function registerProviderScriptFilter(): void
-	{
-		// Provider mapping: internal ID -> script handle (matches webpack entry names)
-		$providerScripts = [
-			'cloudflare-r2'      => 'provider-cloudflare-r2',
-			'cloudflare'         => 'provider-cloudflare',
-			'cloudflare-workers' => 'provider-cloudflare',
-			'gitlab'             => 'provider-gitlab',
-			'gitlab-pages'       => 'provider-gitlab-pages',
-		];
-
-		\add_filter('script_loader_tag', function ($tag, $handle) use ($providerScripts) {
-			// Find provider ID for this script handle
-			foreach ($providerScripts as $providerId => $scriptHandle) {
-				if ($handle === $scriptHandle) {
-					// Add data-provider-id attribute to help JavaScript identify this script
-					$tag = \str_replace('<script ', '<script data-provider-id="' . \esc_attr($providerId) . '" ', $tag);
-					break;
-				}
-			}
-			return $tag;
-		}, 10, 2);
-	}
-
-	/**
-	 * Enqueue provider scripts conditionally.
-	 *
-	 * Enqueues provider scripts based on configured providers.
-	 * On admin settings page, providers are imported directly in JavaScript
-	 * (see assets/src/admin-settings/index.js), so PHP enqueuing is skipped.
-	 *
-	 * @param string $hook Current admin page hook.
-	 * @return void
-	 */
-	public function enqueueProviderScripts(string $hook): void
-	{
-		// On admin settings page, providers are imported directly in JavaScript
-		// (see assets/src/admin-settings/index.js), so skip PHP enqueuing here
-		// Hook format: toplevel_page_{pageSlug} or {parentSlug}_page_{pageSlug}
-		$isAdminSettings = \str_contains($hook, 'aether-site-exporter') || \str_contains($hook, 'aether-settings');
-
-		// Skip enqueuing on admin settings page - providers are imported directly
-		if ($isAdminSettings) {
-			return;
-		}
-
-		// Get configured providers from settings
-		$settings = $this->settingsRepository->getAll();
-		$configuredProviders = [];
-
-		if (! empty($settings['activeProvider'])) {
-			$configuredProviders[] = $settings['activeProvider'];
-		}
-
-		// Check for edge provider from provider_types
-		$providerTypes = $settings['provider_types'] ?? [];
-		if (! empty($providerTypes['edge'])) {
-			$edgeProvider = $providerTypes['edge'];
-			if (! \in_array($edgeProvider, $configuredProviders, true)) {
-				$configuredProviders[] = $edgeProvider;
-			}
-		}
-
-		// Provider mapping: internal ID -> script handle (matches webpack entry names)
-		$providerScripts = [
-			'cloudflare-r2'      => 'provider-cloudflare-r2',
-			'cloudflare'         => 'provider-cloudflare',
-			'cloudflare-workers' => 'provider-cloudflare',
-			'gitlab'             => 'provider-gitlab',
-			'gitlab-pages'       => 'provider-gitlab-pages',
-		];
-
-		// Determine which providers to enqueue
-		$providersToEnqueue = $configuredProviders; // Only configured providers
-
-		// Enqueue provider scripts
-		$pluginUrl = AETHER_SITE_EXPORTER_PLUGIN_URL;
-		$pluginDir = AETHER_SITE_EXPORTER_PLUGIN_DIR;
-
-		foreach ($providersToEnqueue as $providerId) {
-			if (! isset($providerScripts[ $providerId ])) {
-				continue;
-			}
-
-			$scriptHandle = $providerScripts[ $providerId ];
-			$assetFile    = $pluginDir . "assets/build/{$scriptHandle}.asset.php";
-			$asset        = \file_exists($assetFile)
-				? require $assetFile
-				: [
-					'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n', 'wp-hooks' ],
-					'version'      => AETHER_SITE_EXPORTER_VERSION,
-				];
-
-			\wp_enqueue_script(
-				$scriptHandle,
-				$pluginUrl . "assets/build/{$scriptHandle}.js",
-				$asset['dependencies'],
-				$asset['version'],
-				true
-			);
-		}
-
-		// Global variables are set by enqueueAdminCommon(), no need to set them here
-	}
 
 
 	/**
@@ -983,122 +744,5 @@ class Plugin
 	public function getAllCustomAssets(): array
 	{
 		return $this->assetDiscovery->getAllCustomAssets();
-	}
-
-	/**
-	 * Add static site link to admin bar.
-	 *
-	 * @param \WP_Admin_Bar $wpAdminBar WordPress admin bar instance.
-	 * @return void
-	 */
-	public function addAdminBarMenu($wpAdminBar): void
-	{
-		// Only show for users who can manage options.
-		if (! \current_user_can('manage_options')) {
-			return;
-		}
-
-		// Add Publish button (will trigger modal via JavaScript).
-		$wpAdminBar->add_node(
-			[
-				'id'     => 'aether-export',
-				'parent' => 'top-secondary',
-				'title'  => \__('Publish', 'aether-site-exporter'),
-				'href'   => '#',
-				'meta'   => [
-					'class' => 'aether-adminbar-button aether-export-button',
-					'title' => \__('Publish your site to static hosting', 'aether-site-exporter'),
-				],
-			]
-		);
-
-		// Get deployment URL from settings.
-		$settings = \get_option('aether_site_exporter_settings', []);
-		$deploymentUrl = $settings['deployment_url'] ?? '';
-
-		// If no deployment URL in settings, try to get it from the most recent completed job
-		if (empty($deploymentUrl)) {
-			$stateManager = new \Aether\SiteExporter\Sync\JobStateManager();
-			$recentJobs = $stateManager->getAllJobs(10);
-
-			foreach ($recentJobs as $jobData) {
-				// getAllJobs returns array of arrays with jobId and status data
-				$jobStatus = $jobData;
-				$jobId = $jobStatus['jobId'] ?? '';
-
-				// Look for a completed job
-				if (($jobStatus['status'] ?? '') === 'complete') {
-					$providerTypes = $settings['provider_types'] ?? [];
-					$staticSiteProviderId = $providerTypes['static_site'] ?? '';
-
-					// Get base URL from provider config
-					if (!empty($staticSiteProviderId) && isset($settings['providers'][$staticSiteProviderId])) {
-						$providerConfig = $settings['providers'][$staticSiteProviderId];
-
-						// Check for URLs in priority order (URLs are not encrypted)
-						$baseUrl = '';
-						if (!empty($providerConfig['custom_domain'])) {
-							$baseUrl = $providerConfig['custom_domain'];
-						} elseif (!empty($providerConfig['worker_endpoint'])) {
-							$baseUrl = $providerConfig['worker_endpoint'];
-						} elseif (!empty($providerConfig['public_url'])) {
-							$baseUrl = $providerConfig['public_url'];
-						}
-
-						if (!empty($baseUrl)) {
-							$deploymentUrl = \rtrim($baseUrl, '/') . '/';
-							// Save it for future use
-							$settings['deployment_url'] = $deploymentUrl;
-							\update_option('aether_site_exporter_settings', $settings);
-							break;
-						}
-					}
-				}
-			}
-
-			// Fallback: Use provider URLs if no completed job found
-			if (empty($deploymentUrl)) {
-				$providerTypes = $settings['provider_types'] ?? [];
-				$staticSiteProviderId = $providerTypes['static_site'] ?? '';
-
-				if (!empty($staticSiteProviderId) && isset($settings['providers'][$staticSiteProviderId])) {
-					$providerConfig = $settings['providers'][$staticSiteProviderId];
-					// Check for URLs (URLs are not encrypted)
-					$baseUrl = '';
-					if (!empty($providerConfig['custom_domain'])) {
-						$baseUrl = $providerConfig['custom_domain'];
-					} elseif (!empty($providerConfig['worker_endpoint'])) {
-						$baseUrl = $providerConfig['worker_endpoint'];
-					} elseif (!empty($providerConfig['public_url'])) {
-						$baseUrl = $providerConfig['public_url'];
-					}
-
-					if (!empty($baseUrl)) {
-						$deploymentUrl = \rtrim($baseUrl, '/') . '/';
-						$settings['deployment_url'] = $deploymentUrl;
-						\update_option('aether_site_exporter_settings', $settings);
-					}
-				}
-			}
-		}
-
-		$deploymentUrl = \is_string($deploymentUrl) ? $deploymentUrl : '';
-
-		// Add View Static Site button (always show, but disable if no URL).
-		$wpAdminBar->add_node(
-			[
-				'id'     => 'aether-view-site',
-				'parent' => 'top-secondary',
-				'title'  => \__('View Static Site', 'aether-site-exporter'),
-				'href'   => !empty($deploymentUrl) ? $deploymentUrl : '#',
-				'meta'   => [
-					'target' => !empty($deploymentUrl) ? '_blank' : '',
-					'class'  => 'aether-adminbar-button aether-view-site-button' . (empty($deploymentUrl) ? ' aether-disabled' : ''),
-					'title'  => !empty($deploymentUrl)
-						? \__('View your deployed static site', 'aether-site-exporter')
-						: \__('Publish your site first to view the static site', 'aether-site-exporter'),
-				],
-			]
-		);
 	}
 }

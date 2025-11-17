@@ -218,8 +218,14 @@ export default function useAssetDiscovery() {
 			// Check each asset against WordPress.org
 			// Method is configurable via filters (default: PHP server-side)
 			const items = [
-				...activePlugins.map( ( p ) => ( { ...p, assetType: 'plugin' } ) ),
-				...activeThemes.map( ( t ) => ( { ...t, assetType: 'theme' } ) ),
+				...activePlugins.map( ( p ) => ( {
+					...p,
+					assetType: 'plugin',
+				} ) ),
+				...activeThemes.map( ( t ) => ( {
+					...t,
+					assetType: 'theme',
+				} ) ),
 			];
 
 			// Check all assets in parallel

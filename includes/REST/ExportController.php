@@ -390,8 +390,9 @@ class ExportController
 
 		// Register shutdown function to guarantee cleanup even if readfile() fails
 		// This prevents resource leaks from connection aborts, disk errors, etc.
-		\register_shutdown_function(function() use ($zipPath, $jobId) {
+		\register_shutdown_function(function () use ($zipPath, $jobId) {
 			// Clean up file and transient regardless of success/failure
+			// File may have been deleted between check and cleanup
 			if (\file_exists($zipPath)) {
 				@\unlink($zipPath);
 			}

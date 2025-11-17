@@ -217,7 +217,8 @@ class SettingsController
 			$maxProviders = 50; // Maximum 50 provider configurations
 			$maxConfigSize = 100; // Maximum 100 fields per provider config (recursive count)
 
-			if (\is_array($value) && \count($value) > $maxProviders) {
+			// $value is guaranteed to be array from PHPDoc above
+			if (\count($value) > $maxProviders) {
 				return new WP_Error(
 					'too_many_providers',
 					\sprintf(
@@ -234,7 +235,7 @@ class SettingsController
 					return new WP_Error(
 						'provider_config_too_large',
 						\sprintf(
-							\__('Provider configuration "%s" is too large. Maximum allowed fields: %d', 'aether-site-exporter'),
+							\__('Provider configuration "%1$s" is too large. Maximum allowed fields: %2$d', 'aether-site-exporter'),
 							\sanitize_text_field((string) $providerId),
 							$maxConfigSize
 						),

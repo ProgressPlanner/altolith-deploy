@@ -55,6 +55,7 @@ class CredentialEncryption
 
 		// Generate new random key (32 bytes = 256 bits).
 		// Use cryptographically secure random bytes generation
+		$keyBinary = null;
 		if (\function_exists('random_bytes')) {
 			// PHP 7+: random_bytes() is cryptographically secure
 			try {
@@ -69,10 +70,11 @@ class CredentialEncryption
 		}
 
 		// Fallback for older PHP or if random_bytes failed
-		if (null === $randomBytes) {
+		if (null === $keyBinary) {
 			if (\function_exists('openssl_random_pseudo_bytes')) {
 				$strongUsed = false;
 				$randomBytes = \openssl_random_pseudo_bytes(32, $strongUsed);
+				/** @phpstan-ignore-next-line -- openssl_random_pseudo_bytes returns string|false, defensive check */
 				if (!$strongUsed || false === $randomBytes) {
 					// OpenSSL didn't use strong algorithm, last resort
 					throw new \Exception('Unable to generate cryptographically secure random bytes');

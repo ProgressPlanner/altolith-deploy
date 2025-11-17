@@ -1,5 +1,5 @@
-const defaultConfig = require('@wordpress/scripts/config/webpack.config');
-const { RawSource } = require('webpack-sources');
+const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
+const { RawSource } = require( 'webpack-sources' );
 
 // Allow disabling minification via environment variable for easier debugging
 // By default, minification is disabled for easier debugging
@@ -8,45 +8,54 @@ const shouldMinify = process.env.MINIFY === 'true';
 
 // Plugin to remove source map references from node_modules
 class RemoveSourceMapPlugin {
-	apply(compiler) {
-		compiler.hooks.compilation.tap('RemoveSourceMapPlugin', (compilation) => {
-			// Use processAssets hook instead of emit to avoid deprecation warning
-			// PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE is the appropriate stage for modifying assets
-			compilation.hooks.processAssets.tap(
-				{
-					name: 'RemoveSourceMapPlugin',
-					stage: compilation.constructor.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
-				},
-				() => {
-					// Process all chunks
-					compilation.chunks.forEach((chunk) => {
-						chunk.files.forEach((filename) => {
-							// Only process JS files
-							if (filename.endsWith('.js')) {
-								const asset = compilation.getAsset(filename);
-								if (asset) {
-									// Get source as string (handles both Source objects and strings)
-									const sourceObj = asset.source;
-									let source = typeof sourceObj === 'string' 
-										? sourceObj 
-										: sourceObj.source();
+	apply( compiler ) {
+		compiler.hooks.compilation.tap(
+			'RemoveSourceMapPlugin',
+			( compilation ) => {
+				// Use processAssets hook instead of emit to avoid deprecation warning
+				// PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE is the appropriate stage for modifying assets
+				compilation.hooks.processAssets.tap(
+					{
+						name: 'RemoveSourceMapPlugin',
+						stage: compilation.constructor
+							.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+					},
+					() => {
+						// Process all chunks
+						compilation.chunks.forEach( ( chunk ) => {
+							chunk.files.forEach( ( filename ) => {
+								// Only process JS files
+								if ( filename.endsWith( '.js' ) ) {
+									const asset =
+										compilation.getAsset( filename );
+									if ( asset ) {
+										// Get source as string (handles both Source objects and strings)
+										const sourceObj = asset.source;
+										let source =
+											typeof sourceObj === 'string'
+												? sourceObj
+												: sourceObj.source();
 
-									// Remove source map references from node_modules code
-									// This regex matches //# sourceMappingURL=...map at the end of lines
-									source = source.replace(
-										/\/\/# sourceMappingURL=[^\n]*\.map$/gm,
-										''
-									);
+										// Remove source map references from node_modules code
+										// This regex matches //# sourceMappingURL=...map at the end of lines
+										source = source.replace(
+											/\/\/# sourceMappingURL=[^\n]*\.map$/gm,
+											''
+										);
 
-									// Update asset using the new API with proper Source object
-									compilation.updateAsset(filename, new RawSource(source));
+										// Update asset using the new API with proper Source object
+										compilation.updateAsset(
+											filename,
+											new RawSource( source )
+										);
+									}
 								}
-							}
-						});
-					});
-				}
-			);
-		});
+							} );
+						} );
+					}
+				);
+			}
+		);
 	}
 }
 
@@ -55,12 +64,11 @@ module.exports = {
 	entry: {
 		'admin-settings': './assets/src/admin-settings/index.js',
 		'admin-common': './assets/src/admin-common/index.js',
-		'export': './assets/src/publish/index.js',
-		'admin-bar': './assets/src/admin-bar/AdminBarPublish.js',
+		export: './assets/src/publish/index.js',
 	},
 	output: {
 		...defaultConfig.output,
-		path: require('path').resolve(__dirname, 'assets/build'),
+		path: require( 'path' ).resolve( __dirname, 'assets/build' ),
 		publicPath: '', // Will be set dynamically via __webpack_public_path__ in entry points
 		// Prevent webpack from creating chunk files - all code goes into entry bundles
 		chunkFilename: undefined,
@@ -75,7 +83,7 @@ module.exports = {
 		runtimeChunk: false,
 	},
 	performance: {
-		// Increase size limits for large bundles (publish.js and admin-bar.js are complex features)
+		// Increase size limits for large bundles (publish.js is a complex feature)
 		// These bundles are acceptable for admin-only functionality
 		maxAssetSize: 500000, // 500 KiB
 		maxEntrypointSize: 500000, // 500 KiB
@@ -108,8 +116,5 @@ module.exports = {
 			os: false,
 		},
 	},
-	plugins: [
-		...defaultConfig.plugins,
-		new RemoveSourceMapPlugin(),
-	],
+	plugins: [ ...defaultConfig.plugins, new RemoveSourceMapPlugin() ],
 };

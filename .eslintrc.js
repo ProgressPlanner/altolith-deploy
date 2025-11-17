@@ -20,6 +20,52 @@ module.exports = {
 	},
 	overrides: [
 		{
+			// Node.js config files (webpack.config.js, jest.config.js, babel.config.js, etc.)
+			files: [
+				'webpack.config.js',
+				'jest.config.js',
+				'babel.config.js',
+				'*.config.js',
+				'scripts/**/*.js',
+				'bin/**/*.js',
+			],
+			env: {
+				node: true,
+			},
+			rules: {
+				'@wordpress/no-unsafe-wp-apis': 'off', // Config files don't use WordPress APIs
+				'jsdoc/require-param': 'off', // Relax JSDoc for config files
+				'jsdoc/require-returns': 'off',
+				'import/no-extraneous-dependencies': 'off', // Config files may use dev dependencies
+			},
+		},
+		{
+			// Cloudflare Workers (run in Workers runtime, not browser or Node)
+			files: [ 'assets/workers/**/*.js' ],
+			env: {
+				worker: true,
+			},
+			globals: {
+				Request: 'readonly',
+				Response: 'readonly',
+				Headers: 'readonly',
+				URL: 'readonly',
+				URLSearchParams: 'readonly',
+				fetch: 'readonly',
+				caches: 'readonly',
+				crypto: 'readonly',
+				atob: 'readonly',
+				btoa: 'readonly',
+				TextEncoder: 'readonly',
+				TextDecoder: 'readonly',
+			},
+			rules: {
+				'@wordpress/no-unsafe-wp-apis': 'off', // Workers don't use WordPress APIs
+				'jsdoc/check-tag-names': 'off', // Allow 'returns' instead of 'return' in JSDoc
+			},
+		},
+		{
+			// Test files
 			files: [
 				'tests/**/*.test.js',
 				'tests/**/*.spec.js',

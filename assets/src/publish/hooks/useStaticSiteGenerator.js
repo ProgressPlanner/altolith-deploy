@@ -684,7 +684,9 @@ export function useStaticSiteGenerator( onProgress ) {
 			// These URLs will be fetched and uploaded immediately without caching
 			if ( urlCache.size < urls.length ) {
 				debug(
-					`Processing ${ urls.length - urlCache.size } uncached URLs directly (cache limit reached)`
+					`Processing ${
+						urls.length - urlCache.size
+					} uncached URLs directly (cache limit reached)`
 				);
 
 				for ( let i = urlCache.size; i < urls.length; i++ ) {

@@ -1,0 +1,11 @@
+# Build output
+assets/build/**
+coverage/**
+
+# Dependencies
+node_modules/**
+vendor/**
+
+# Generated files
+*.min.js
+

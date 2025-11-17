@@ -16,7 +16,6 @@ use Aether\SiteExporter\REST\RESTHelpersTrait;
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Services\ExportService;
 use Aether\SiteExporter\Services\BlueprintBundleGenerator;
-use Aether\SiteExporter\Utilities\Static\HTMLGeneratorService;
 use Aether\SiteExporter\Utilities\Static\URLDiscoveryService;
 use Aether\SiteExporter\Utilities\HTTPClient;
 use WP_REST_Request;
@@ -360,13 +359,16 @@ class PublishStepsController
 				@\set_time_limit(120); // 2 minutes
 
 				// Verify the timeout was actually set (may fail in safe mode or with max_execution_time)
-				// ini_get('max_execution_time') returns the current limit
+				// ini_get('max_execution_time') returns the current limit (string|false)
 				$currentLimit = @\ini_get('max_execution_time');
-				if (false !== $currentLimit && (int) $currentLimit < 120 && (int) $currentLimit !== 0) {
+				/** @phpstan-ignore-next-line -- ini_get can return false, defensive check */
+				$currentLimitInt = \is_string($currentLimit) ? (int) $currentLimit : false;
+				/** @phpstan-ignore-next-line -- $currentLimitInt can be false, defensive check */
+				if (false !== $currentLimitInt && $currentLimitInt < 120 && $currentLimitInt !== 0) {
 					// Timeout increase failed (0 means unlimited, so that's OK)
 					\error_log(\sprintf(
 						'Aether: set_time_limit() call did not increase timeout (current: %d, requested: 120)',
-						(int) $currentLimit
+						$currentLimitInt
 					));
 				}
 			} else {

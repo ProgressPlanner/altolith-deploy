@@ -43,34 +43,6 @@ import { MediaOffloadModal } from '../components/MediaOffloadModal';
 - File count display
 - Auto-closes after completion
 
-### AdminBarPublishModal
-
-Wrapper for PublishProgressModal when triggered from admin bar.
-
-**Location:** `AdminBarPublishModal.js`
-
-**Usage:**
-```javascript
-import { AdminBarPublishModal } from '../components/AdminBarPublishModal';
-
-<AdminBarPublishModal
-    onUnmount={handleCleanup}
-/>
-```
-
-**Props:**
-- `onUnmount` (function) - Called when modal unmounts (for cleanup)
-
-**Responsibilities:**
-- Manages modal open/close state
-- Handles publish completion
-- Updates admin bar "View Site" button with deployment URL
-- Cleanup with animation delay
-
-**Internal:**
-- Uses `PublishProgressModal` from `../publish/components/`
-- Calls `updateViewSiteButton()` helper on completion
-
 ## Component Guidelines
 
 ### File Structure

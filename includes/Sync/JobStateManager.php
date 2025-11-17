@@ -310,6 +310,7 @@ class JobStateManager
 			$limitValue
 		);
 
+		// phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- Query is prepared above, $wpdb->options is WordPress core table name
 		$results = $wpdb->get_results($query, ARRAY_A);
 
 		$jobs = [];

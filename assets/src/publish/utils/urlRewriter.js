@@ -215,7 +215,8 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 	// Public URLs need /static/ prefix, worker endpoints add it internally.
 	// Worker endpoints contain .workers.dev.
 	// Local URLs with paths (like localhost:10003/static) should NOT get prefix - they already have the path.
-	let isPublicUrl = normalizedStaticUrl && ! normalizedStaticUrl.includes( '.workers.dev' );
+	let isPublicUrl =
+		normalizedStaticUrl && ! normalizedStaticUrl.includes( '.workers.dev' );
 
 	// If the static URL has a pathname component (other than /), don't add /static prefix
 	// Example: http://localhost:10003/static already has /static in the path

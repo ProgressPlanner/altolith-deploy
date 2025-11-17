@@ -7,8 +7,8 @@
     "build": "MINIFY=true wp-scripts build",
     "build:dev": "MINIFY=false wp-scripts build",
     "start": "wp-scripts start",
-    "lint:js": "wp-scripts lint-js 'assets/src/**/*.js'",
-    "lint:js:fix": "wp-scripts lint-js 'assets/src/**/*.js' --fix",
+    "lint:js": "wp-scripts lint-js '**/*.js'",
+    "lint:js:fix": "wp-scripts lint-js '**/*.js' --fix",
     "test:js": "node --max-old-space-size=4096 node_modules/.bin/jest",
     "test:js:watch": "node --max-old-space-size=4096 node_modules/.bin/jest --watch",
     "test:js:coverage": "node --max-old-space-size=4096 node_modules/.bin/jest --coverage"

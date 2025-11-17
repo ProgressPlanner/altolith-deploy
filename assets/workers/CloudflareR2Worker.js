@@ -44,7 +44,10 @@ export default {
 		if ( request.method === 'GET' ) {
 			// Check if this is a Git proxy request (info/refs endpoint)
 			const url = new URL( request.url );
-			if ( url.pathname.endsWith( '/info/refs' ) && url.searchParams.has( 'service' ) ) {
+			if (
+				url.pathname.endsWith( '/info/refs' ) &&
+				url.searchParams.has( 'service' )
+			) {
 				return handleGitProxy( request, env, debugInfo );
 			}
 
@@ -152,17 +155,17 @@ export default {
 				return handleBatchCopy( request, env, debugInfo, startTime );
 			}
 
-		if ( action === 'batch-delete' ) {
-			return handleBatchDelete( request, env, debugInfo, startTime );
-		}
+			if ( action === 'batch-delete' ) {
+				return handleBatchDelete( request, env, debugInfo, startTime );
+			}
 
-		if ( action === 'list' ) {
-			return handleList( request, env, debugInfo, startTime );
-		}
+			if ( action === 'list' ) {
+				return handleList( request, env, debugInfo, startTime );
+			}
 
-		if ( action === 'download' ) {
-			return handleDownload( request, env, debugInfo, startTime );
-		}
+			if ( action === 'download' ) {
+				return handleDownload( request, env, debugInfo, startTime );
+			}
 
 			if ( uploadId ) {
 				return handleChunkUpload( request, env, debugInfo, startTime );
@@ -1137,10 +1140,9 @@ async function handleDownload( request, env, debugInfo, startTime ) {
 				...CORS_HEADERS,
 				'Content-Type': contentType,
 				'Content-Length': object.size.toString(),
-				'ETag': object.etag,
+				ETag: object.etag,
 				'Cache-Control':
-					object.httpMetadata?.cacheControl ||
-					'public, max-age=3600',
+					object.httpMetadata?.cacheControl || 'public, max-age=3600',
 			},
 		} );
 	} catch ( error ) {
@@ -1657,9 +1659,9 @@ async function handleCFImagesTest( request, env, debugInfo, startTime ) {
 /**
  * Handle WordPress.org plugin/theme check
  * Proxies HEAD requests to wordpress.org to bypass CORS restrictions
- * @param {Request} request Request object
- * @param {Object} env Worker environment variables
- * @param {Object} debugInfo Debug information object
+ * @param {Request} request   Request object
+ * @param {Object}  env       Worker environment variables
+ * @param {Object}  debugInfo Debug information object
  * @return {Promise<Response>} Response indicating if asset exists on WordPress.org
  */
 async function handleWordPressOrgCheck( request, env, debugInfo ) {
@@ -1783,9 +1785,9 @@ function getContentType( path ) {
  * Proxies Git protocol requests to bypass CORS restrictions.
  * Based on: https://gist.github.com/tomlarkworthy/cf1d4ceabeabdb6d1628575ab3a83acf
  *
- * @param {Request} request Request object.
- * @param {Object} env Worker environment variables.
- * @param {Object} debugInfo Debug information object.
+ * @param {Request} request   Request object.
+ * @param {Object}  env       Worker environment variables.
+ * @param {Object}  debugInfo Debug information object.
  * @return {Promise<Response>} Proxied Git response.
  */
 async function handleGitProxy( request, env, debugInfo ) {
@@ -1829,7 +1831,10 @@ async function handleGitProxy( request, env, debugInfo ) {
 
 		let isAllowedHost = false;
 		for ( const allowedHost of allowedHosts ) {
-			if ( hostname === allowedHost || hostname.endsWith( '.' + allowedHost ) ) {
+			if (
+				hostname === allowedHost ||
+				hostname.endsWith( '.' + allowedHost )
+			) {
 				isAllowedHost = true;
 				break;
 			}
@@ -1859,7 +1864,11 @@ async function handleGitProxy( request, env, debugInfo ) {
 		// The pathname contains the Git URL path (without https://)
 		let gitUrl = '';
 		if ( pathname.endsWith( '/info/refs' ) ) {
-			gitUrl = 'https://' + pathname.slice( 1 ).replace( '/info/refs', '' ) + '/info/refs' + url.search;
+			gitUrl =
+				'https://' +
+				pathname.slice( 1 ).replace( '/info/refs', '' ) +
+				'/info/refs' +
+				url.search;
 		} else if ( pathname.endsWith( '/git-upload-pack' ) ) {
 			gitUrl = 'https://' + pathname.slice( 1 );
 		} else if ( pathname.endsWith( '/git-receive-pack' ) ) {
@@ -1904,7 +1913,10 @@ async function handleGitProxy( request, env, debugInfo ) {
 			const gitHostname = gitUrlObj.hostname.toLowerCase();
 			let gitHostAllowed = false;
 			for ( const allowedHost of allowedHosts ) {
-				if ( gitHostname === allowedHost || gitHostname.endsWith( '.' + allowedHost ) ) {
+				if (
+					gitHostname === allowedHost ||
+					gitHostname.endsWith( '.' + allowedHost )
+				) {
 					gitHostAllowed = true;
 					break;
 				}
@@ -1952,15 +1964,21 @@ async function handleGitProxy( request, env, debugInfo ) {
 						request.headers.get( 'Origin' ) || '*',
 					'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 					'Access-Control-Allow-Headers':
-						request.headers.get( 'Access-Control-Request-Headers' ) ||
-						'*',
-					'Vary': 'Origin',
+						request.headers.get(
+							'Access-Control-Request-Headers'
+						) || '*',
+					Vary: 'Origin',
 				},
 			} );
 		}
 
 		// Strip headers that shouldn't be forwarded to Git repository
-		const headersToStrip = [ 'host', 'origin', 'referer', 'content-length' ];
+		const headersToStrip = [
+			'host',
+			'origin',
+			'referer',
+			'content-length',
+		];
 		const forwardHeaders = new Headers( request.headers );
 		headersToStrip.forEach( ( header ) => {
 			forwardHeaders.delete( header );
@@ -1981,7 +1999,7 @@ async function handleGitProxy( request, env, debugInfo ) {
 			'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 			'Access-Control-Allow-Headers':
 				request.headers.get( 'Access-Control-Request-Headers' ) || '*',
-			'Vary': 'Origin',
+			Vary: 'Origin',
 		};
 
 		const responseHeaders = new Headers( gitResponse.headers );
