@@ -133,7 +133,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 									}
 									onChange( id, newValue );
 								} }
-								__nextHasNoMarginBottom={ true }
+								__nextHasNoMarginBottom={ false }
 							/>
 						);
 					} ) }
