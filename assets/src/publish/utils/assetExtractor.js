@@ -852,7 +852,7 @@ function getAssetType( url ) {
  * Get asset local path for an asset URL.
  *
  * @param {string} url Asset URL.
- * @return {string} Local file path (relative to static root).
+ * @return {string|null} Local file path (relative to static root), or null if invalid.
  */
 export function getAssetLocalPath( url ) {
 	// Extract pathname from URL.
@@ -875,6 +875,13 @@ export function getAssetLocalPath( url ) {
 	// Playground URLs contain scope prefix like /scope:12345/wp-content/...
 	// This must be stripped to get the actual file path: wp-content/...
 	path = stripPlaygroundScope( path );
+
+	// Safeguard: If path is empty after stripping Playground scope,
+	// this is an invalid asset URL (e.g., just a scope prefix with no actual path).
+	// Return null to signal this should be skipped.
+	if ( ! path || path === '' ) {
+		return null;
+	}
 
 	return path;
 }

@@ -298,6 +298,16 @@ export function useStaticSiteGenerator( onProgress ) {
 
 						// Get asset path and storage key.
 						const assetPath = getAssetLocalPath( assetUrl );
+
+						// Skip invalid assets (empty path after Playground scope stripping)
+						if ( assetPath === null ) {
+							debugWarn(
+								`Skipping invalid asset URL (empty path after scope stripping): ${ assetUrl }`
+							);
+							assetTracker.markFailed( assetUrl );
+							continue;
+						}
+
 						const assetKey = assetPath;
 
 						// Create blob with appropriate content type.
