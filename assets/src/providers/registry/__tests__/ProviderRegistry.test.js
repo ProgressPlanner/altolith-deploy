@@ -5,11 +5,7 @@
  */
 
 import { ProviderRegistry } from '../ProviderRegistry';
-import {
-	AbstractProvider,
-	CAP_STORAGE,
-	CAP_EDGE,
-} from '../../base/AbstractProvider';
+import { AbstractProvider } from '../../base/AbstractProvider';
 
 // Mock @wordpress/hooks
 jest.mock( '@wordpress/hooks', () => ( {
@@ -41,8 +37,6 @@ class MockProvider extends AbstractProvider {
 }
 
 class MockStorageProvider extends AbstractProvider {
-	capabilities = [ CAP_STORAGE ];
-
 	getId() {
 		return 'mock-storage';
 	}
@@ -65,8 +59,6 @@ class MockStorageProvider extends AbstractProvider {
 }
 
 class MockEdgeProvider extends AbstractProvider {
-	capabilities = [ CAP_EDGE ];
-
 	getId() {
 		return 'mock-edge';
 	}
@@ -283,25 +275,21 @@ describe( 'ProviderRegistry', () => {
 			registry.register( 'mock-edge', MockEdgeProvider );
 		} );
 
-		test( 'returns providers with specific capability', () => {
-			const storageProviders = registry.getByCapability( CAP_STORAGE );
-
-			expect( storageProviders ).toHaveLength( 1 );
-			expect( storageProviders[ 0 ].getId() ).toBe( 'mock-storage' );
-		} );
-
-		test( 'returns empty array for unsupported capability', () => {
-			const mediaProviders = registry.getByCapability( 'media' );
-
-			expect( mediaProviders ).toEqual( [] );
-		} );
-
-		test( 'filters providers correctly', () => {
-			const edgeProviders = registry.getByCapability( CAP_EDGE );
-
-			expect( edgeProviders ).toHaveLength( 1 );
-			expect( edgeProviders[ 0 ].getId() ).toBe( 'mock-edge' );
-		} );
+		// TODO: Update tests for deployment types system (getByCapability removed)
+		// test( 'returns providers with specific capability', () => {
+		// 	const storageProviders = registry.getByCapability( CAP_STORAGE );
+		// 	expect( storageProviders ).toHaveLength( 1 );
+		// 	expect( storageProviders[ 0 ].getId() ).toBe( 'mock-storage' );
+		// } );
+		// test( 'returns empty array for unsupported capability', () => {
+		// 	const mediaProviders = registry.getByCapability( 'media' );
+		// 	expect( mediaProviders ).toEqual( [] );
+		// } );
+		// test( 'filters providers correctly', () => {
+		// 	const edgeProviders = registry.getByCapability( CAP_EDGE );
+		// 	expect( edgeProviders ).toHaveLength( 1 );
+		// 	expect( edgeProviders[ 0 ].getId() ).toBe( 'mock-edge' );
+		// } );
 	} );
 
 	describe( 'Get Providers by Type', () => {

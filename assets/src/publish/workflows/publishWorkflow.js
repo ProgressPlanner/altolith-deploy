@@ -228,6 +228,8 @@ export function getCumulativeProgress( stepId ) {
  * @return {Array} Original workflow unchanged.
  */
 export function filterWorkflowByExportTypes( workflow, exportTypes = [] ) {
+	// eslint-disable-next-line no-unused-vars
+	const _unused = exportTypes;
 	// Simply return the full workflow - no filtering needed
 	// Individual steps will check provider deployment_types and handle appropriately
 	return workflow;

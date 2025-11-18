@@ -34,7 +34,36 @@ export default function ProviderForm( {
 	onSubmit,
 	onChange,
 } ) {
-	const [ values, setValues ] = useState( initialValues );
+	// Initialize values with field defaults merged with initialValues
+	const initializeValues = () => {
+		const defaults = {};
+		fields.forEach( ( field ) => {
+			// Use defaultValue if provided, otherwise use empty defaults based on field type
+			if ( field.defaultValue !== undefined ) {
+				defaults[ field.id ] = field.defaultValue;
+			} else if ( field.type === 'checkbox-group' ) {
+				// Ensure checkbox-group fields are always arrays (even if empty)
+				defaults[ field.id ] = [];
+			} else if ( field.type === 'checkbox' ) {
+				defaults[ field.id ] = false;
+			}
+		} );
+
+		// Merge defaults with initialValues, but treat null/undefined as "not set"
+		// This ensures that null values from backend don't override defaults
+		const merged = { ...defaults };
+		Object.keys( initialValues ).forEach( ( key ) => {
+			const value = initialValues[ key ];
+			// Only use initialValues if it's not null or undefined
+			if ( value !== null && value !== undefined ) {
+				merged[ key ] = value;
+			}
+		} );
+
+		return merged;
+	};
+
+	const [ values, setValues ] = useState( initializeValues );
 	const [ errors, setErrors ] = useState( {} );
 	const [ saving, setSaving ] = useState( false );
 	const [ success, setSuccess ] = useState( false );
@@ -43,7 +72,8 @@ export default function ProviderForm( {
 
 	// Update values when initialValues change
 	useEffect( () => {
-		setValues( initialValues );
+		setValues( initializeValues() );
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [ initialValues ] );
 
 	const handleFieldChange = ( fieldId, value ) => {
@@ -69,8 +99,36 @@ export default function ProviderForm( {
 		setError( null );
 		setSuccess( false );
 
+		// Ensure all fields are included in values (even if not touched)
+		// This prevents fields from being omitted when saving
+		const completeValues = { ...values };
+		fields.forEach( ( field ) => {
+			// Handle undefined or null values (null shouldn't happen due to initialization, but be defensive)
+			if (
+				completeValues[ field.id ] === undefined ||
+				completeValues[ field.id ] === null
+			) {
+				// Use defaultValue if available, otherwise use type-specific defaults
+				if ( field.defaultValue !== undefined ) {
+					completeValues[ field.id ] = field.defaultValue;
+				} else if ( field.type === 'checkbox-group' ) {
+					completeValues[ field.id ] = [];
+				} else if ( field.type === 'checkbox' ) {
+					completeValues[ field.id ] = false;
+				}
+			}
+
+			// Ensure checkbox-group fields are always arrays (defensive check)
+			if (
+				field.type === 'checkbox-group' &&
+				! Array.isArray( completeValues[ field.id ] )
+			) {
+				completeValues[ field.id ] = [];
+			}
+		} );
+
 		// Client-side validation
-		const validation = validateConfig( values, fields );
+		const validation = validateConfig( completeValues, fields );
 		if ( ! validation.valid ) {
 			setErrors( validation.errors );
 			setSaving( false );
@@ -80,7 +138,7 @@ export default function ProviderForm( {
 		try {
 			// Call custom onSubmit if provided
 			if ( onSubmit ) {
-				await onSubmit( values );
+				await onSubmit( completeValues );
 			} else {
 				// Default: save to settings using /aether/site-exporter/settings endpoint
 				// Get current providers settings
@@ -96,7 +154,7 @@ export default function ProviderForm( {
 				const currentProviders = settingsResponse.value || {};
 				const updatedProviders = {
 					...currentProviders,
-					[ providerId ]: values,
+					[ providerId ]: completeValues,
 				};
 
 				// Save updated providers object

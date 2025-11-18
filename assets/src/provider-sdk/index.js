@@ -4,7 +4,7 @@
  * Public API for building provider plugins.
  * Exposed as window.AetherProviderSDK for external provider plugins.
  *
- * @package Aether
+ * @package
  */
 
 // Core abstractions

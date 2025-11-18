@@ -12,12 +12,12 @@ import { applyFilters } from '@wordpress/hooks';
 /**
  * Upload site archive step handler (stateless).
  *
- * @param {Object}   context                           Execution context.
- * @param {Function} context.handleSiteArchiveUpload   Archive upload function.
- * @param {Array}    context.blueprintBundleProviders  Array of provider IDs that support blueprint bundle deployment.
- * @param {string}   context.providerId                (Legacy) Single provider ID for backwards compatibility.
- * @param {Function} context.setStatusMessage          Status message updater.
- * @param {Object}   context.blueprintBundle           Blueprint bundle data from generateBlueprint step.
+ * @param {Object}   context                          Execution context.
+ * @param {Function} context.handleSiteArchiveUpload  Archive upload function.
+ * @param {Array}    context.blueprintBundleProviders Array of provider IDs that support blueprint bundle deployment.
+ * @param {string}   context.providerId               (Legacy) Single provider ID for backwards compatibility.
+ * @param {Function} context.setStatusMessage         Status message updater.
+ * @param {Object}   context.blueprintBundle          Blueprint bundle data from generateBlueprint step.
  * @return {Promise<Object>} Step result.
  */
 export async function uploadSiteArchiveHandler( context ) {
@@ -29,12 +29,12 @@ export async function uploadSiteArchiveHandler( context ) {
 	} = context;
 
 	// Use blueprintBundleProviders if available, fallback to single providerId
-	const providers =
-		blueprintBundleProviders.length > 0
-			? blueprintBundleProviders
-			: providerId
-			? [ providerId ]
-			: [];
+	let providers = [];
+	if ( blueprintBundleProviders.length > 0 ) {
+		providers = blueprintBundleProviders;
+	} else if ( providerId ) {
+		providers = [ providerId ];
+	}
 
 	if ( providers.length === 0 ) {
 		setStatusMessage(
@@ -86,10 +86,7 @@ export async function uploadSiteArchiveHandler( context ) {
 
 			// Upload blueprint-bundle.zip directly
 			// Pass entire context so upload handler has access to blueprintBundle data
-			await handleSiteArchiveUpload(
-				providerIdItem,
-				deploymentConfig
-			);
+			await handleSiteArchiveUpload( providerIdItem, deploymentConfig );
 
 			return {
 				providerId: providerIdItem,
@@ -125,9 +122,7 @@ export async function uploadSiteArchiveHandler( context ) {
 	}
 
 	if ( failedUploads.length === providers.length ) {
-		throw new Error(
-			'Failed to upload blueprint bundle to any provider'
-		);
+		throw new Error( 'Failed to upload blueprint bundle to any provider' );
 	}
 
 	return {

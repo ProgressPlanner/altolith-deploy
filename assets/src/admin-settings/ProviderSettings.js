@@ -174,9 +174,7 @@ export default function ProviderSettings() {
 									{ metadata.icon }
 								</span>
 							) }
-							<h3 style={ cardHeaderStyle }>
-								{ metadata.name }
-							</h3>
+							<h3 style={ cardHeaderStyle }>{ metadata.name }</h3>
 						</div>
 
 						{ metadata.description && (

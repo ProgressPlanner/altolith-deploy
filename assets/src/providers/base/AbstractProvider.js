@@ -8,7 +8,6 @@
  */
 
 import { applyFilters, doAction } from '@wordpress/hooks';
-import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 import { buildDeploymentTypesField } from '../utils/configFieldBuilder';
 
 /**
@@ -156,9 +155,9 @@ export class AbstractProvider {
 		 *
 		 * Allows modification of what deployment types a provider supports.
 		 *
-		 * @param {Array<string>} supported    Array of deployment type constants.
-		 * @param {string}        providerId   Provider ID.
-		 * @param {Object}        provider     Provider instance.
+		 * @param {Array<string>} supported  Array of deployment type constants.
+		 * @param {string}        providerId Provider ID.
+		 * @param {Object}        provider   Provider instance.
 		 *
 		 * @example
 		 * import { addFilter } from '@wordpress/hooks';
@@ -611,8 +610,7 @@ export class AbstractProvider {
 		}
 
 		// Add provider-specific fields
-		const providerFields =
-			this.getProviderSpecificConfigFields?.() || [];
+		const providerFields = this.getProviderSpecificConfigFields?.() || [];
 		fields.push( ...providerFields );
 
 		/**
@@ -620,9 +618,9 @@ export class AbstractProvider {
 		 *
 		 * Allows modification of the fields array for a provider.
 		 *
-		 * @param {Array<Object>} fields      Array of field definitions.
-		 * @param {string}        providerId  Provider ID.
-		 * @param {Object}        provider    Provider instance.
+		 * @param {Array<Object>} fields     Array of field definitions.
+		 * @param {string}        providerId Provider ID.
+		 * @param {Object}        provider   Provider instance.
 		 *
 		 * @example
 		 * import { addFilter } from '@wordpress/hooks';

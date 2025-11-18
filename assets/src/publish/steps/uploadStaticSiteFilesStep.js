@@ -12,14 +12,14 @@ import { applyFilters } from '@wordpress/hooks';
 /**
  * Upload static site files step handler.
  *
- * @param {Object}   context                        Execution context.
- * @param {Function} context.processStaticSiteUrls  Static site generator function.
- * @param {Array}    context.staticSiteProviders    Array of provider IDs that support static site deployment.
- * @param {string}   context.providerId             (Legacy) Single provider ID for backwards compatibility.
- * @param {Object}   context.currentStatus          Current job status.
- * @param {string}   context.siteUrl                WordPress site URL.
- * @param {Function} context.setStatusMessage       Status message updater.
- * @param {Function} context.removeMessage          Message remover.
+ * @param {Object}   context                       Execution context.
+ * @param {Function} context.processStaticSiteUrls Static site generator function.
+ * @param {Array}    context.staticSiteProviders   Array of provider IDs that support static site deployment.
+ * @param {string}   context.providerId            (Legacy) Single provider ID for backwards compatibility.
+ * @param {Object}   context.currentStatus         Current job status.
+ * @param {string}   context.siteUrl               WordPress site URL.
+ * @param {Function} context.setStatusMessage      Status message updater.
+ * @param {Function} context.removeMessage         Message remover.
  * @return {Promise<Object>} Step result with uploaded files.
  */
 export async function uploadStaticSiteFilesHandler( context ) {
@@ -54,12 +54,12 @@ export async function uploadStaticSiteFilesHandler( context ) {
 	}
 
 	// Use staticSiteProviders if available, fallback to single providerId
-	const providers =
-		staticSiteProviders.length > 0
-			? staticSiteProviders
-			: providerId
-			? [ providerId ]
-			: [];
+	let providers = [];
+	if ( staticSiteProviders.length > 0 ) {
+		providers = staticSiteProviders;
+	} else if ( providerId ) {
+		providers = [ providerId ];
+	}
 
 	if ( providers.length === 0 ) {
 		setStatusMessage(
@@ -157,7 +157,7 @@ export async function uploadStaticSiteFilesHandler( context ) {
 	/**
 	 * Filter the upload result before returning.
 	 *
-	 * @param {Object} result   The aggregated upload result object.
+	 * @param {Object} result    The aggregated upload result object.
 	 * @param {Array}  providers Array of provider IDs used for upload.
 	 *
 	 * @example
@@ -180,10 +180,8 @@ export async function uploadStaticSiteFilesHandler( context ) {
 			successCount: successfulUploads.length,
 			failureCount: failedUploads.length,
 			// Legacy fields for backwards compatibility
-			staticFiles:
-				successfulUploads[ 0 ]?.value?.uploadedFiles || [],
-			filesUploaded:
-				successfulUploads[ 0 ]?.value?.filesUploaded || 0,
+			staticFiles: successfulUploads[ 0 ]?.value?.uploadedFiles || [],
+			filesUploaded: successfulUploads[ 0 ]?.value?.filesUploaded || 0,
 		},
 		providers
 	);

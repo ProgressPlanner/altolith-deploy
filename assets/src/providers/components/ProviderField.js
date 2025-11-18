@@ -80,7 +80,16 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 
 	// Handle toggle group fields (checkbox group with multiple selection)
 	if ( type === 'checkbox-group' && options.length > 0 ) {
-		const currentValue = Array.isArray( value ) ? value : [];
+		// Use defaultValue if value is undefined or null
+		let resolvedValue = [];
+		if ( value !== undefined && value !== null ) {
+			resolvedValue = value;
+		} else if ( field.defaultValue !== undefined ) {
+			resolvedValue = field.defaultValue;
+		}
+		const currentValue = Array.isArray( resolvedValue )
+			? resolvedValue
+			: [];
 
 		return (
 			<div
@@ -120,17 +129,27 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 								onChange={ ( checked ) => {
 									let newValue;
 									if ( checked ) {
-										// Add to array
-										newValue = [
-											...currentValue,
-											optionValue,
-										];
+										// Add to array if not already present (prevent duplicates)
+										if (
+											! currentValue.includes(
+												optionValue
+											)
+										) {
+											newValue = [
+												...currentValue,
+												optionValue,
+											];
+										} else {
+											// Already in array, no change needed
+											return;
+										}
 									} else {
 										// Remove from array
 										newValue = currentValue.filter(
 											( v ) => v !== optionValue
 										);
 									}
+
 									onChange( id, newValue );
 								} }
 								style={ { margin: '0.25rem 0' } }

@@ -296,14 +296,11 @@ export function usePublishController( publishState ) {
 				DEPLOYMENT_TYPES.EDGE_FUNCTIONS
 			);
 
-			debug(
-				'[Workflow] Providers by deployment type:',
-				{
-					staticSite: staticSiteProviders,
-					blueprintBundle: blueprintBundleProviders,
-					edgeFunctions: edgeFunctionProviders,
-				}
-			);
+			debug( '[Workflow] Providers by deployment type:', {
+				staticSite: staticSiteProviders,
+				blueprintBundle: blueprintBundleProviders,
+				edgeFunctions: edgeFunctionProviders,
+			} );
 
 			// Build context object with all dependencies for step handlers
 			const workflowContext = {

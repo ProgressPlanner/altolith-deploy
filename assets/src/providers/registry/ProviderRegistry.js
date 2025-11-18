@@ -250,7 +250,8 @@ class ProviderRegistry {
 			.map( ( providerId ) => this.get( providerId ) )
 			.filter(
 				( provider ) =>
-					provider && provider.supportsDeploymentType( deploymentType )
+					provider &&
+					provider.supportsDeploymentType( deploymentType )
 			);
 	}
 

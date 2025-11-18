@@ -183,4 +183,88 @@ After fix, users should be able to:
 
 ---
 
+## Bug #4: Only last deployment_type value saves to database (PHP sanitization bug)
+
+**Date:** November 18, 2025
+**Severity:** Critical (blocks core functionality - deployment types broken)
+**Status:** ✅ Fixed
+
+### Symptoms
+- Users can check multiple deployment type checkboxes
+- Frontend correctly creates array: `["static_site", "blueprint_bundle"]`
+- Frontend correctly submits to API: `["static_site", "blueprint_bundle"]`
+- Database only saves last value: `["blueprint_bundle"]`
+- Export fails with "No providers enabled for blueprint bundle" or "No providers enabled for static site deployment"
+
+### Root Cause
+The `sanitizeConfig()` method in `SettingsController.php` (line 435-436) was processing `deployment_types` arrays recursively BEFORE applying the special validation logic:
+
+**Order of Operations (WRONG)**:
+1. Line 435: Detect `$value` is an array → `if (\is_array($value))`
+2. Line 436: Recursively sanitize the array as if it's a nested object
+3. During recursion, array `["static_site", "blueprint_bundle"]` is treated as `[0 => "static_site", 1 => "blueprint_bundle"]`
+4. Each element gets processed separately, last element overwrites previous
+5. Line 464-480: Special `deployment_types` validation runs, but TOO LATE - array already corrupted
+
+The recursive call on line 436 was treating the simple string array as a nested associative array, processing each numeric key separately and causing only the last value to persist.
+
+### Investigation Results
+Console logs from frontend proved JavaScript was working perfectly:
+```
+[ProviderField] New value to save: ["static_site", "blueprint_bundle"] ✓
+[ProviderForm] Submitting to API: {deployment_types: ["static_site", "blueprint_bundle"]} ✓
+[ProviderForm] Save successful: {deployment_types: ["static_site", "blueprint_bundle"]} ✓
+```
+
+Database check revealed corruption happened in PHP:
+```bash
+wp option get aether_site_exporter_settings --format=json
+# Result: {"deployment_types": ["blueprint_bundle"]}  # Only last value!
+```
+
+### Fix
+Moved the `deployment_types` special validation to occur BEFORE the generic array recursion (line 435-451). Key changes:
+
+1. **Check for `deployment_types` FIRST** (before `if (\is_array($value))`)
+2. **Use `array_map('sanitize_text_field', $value)`** to sanitize each string element
+3. **Skip recursive `sanitizeConfig()` call** using `continue` statement
+4. **Preserve array structure** instead of treating it as a nested object
+
+```php
+// NEW: Handle deployment_types BEFORE generic array processing
+if ($sanitizedKey === 'deployment_types') {
+    $validDeploymentTypes = ['static_site', 'blueprint_bundle', 'edge_functions'];
+
+    if (!\is_array($value)) {
+        $sanitized[$sanitizedKey] = [];
+    } else {
+        // Sanitize each element, then filter to valid values
+        $sanitizedValues = \array_map('sanitize_text_field', $value);
+        $sanitized[$sanitizedKey] = \array_values(
+            \array_intersect($sanitizedValues, $validDeploymentTypes)
+        );
+    }
+    // Skip the rest of the loop
+    continue;
+}
+
+// Generic array handling happens AFTER deployment_types is already handled
+if (\is_array($value)) {
+    $sanitized[$sanitizedKey] = $this->sanitizeConfig($value, $depth + 1);
+}
+```
+
+### Files Changed
+- `/includes/REST/SettingsController.php` - Moved deployment_types validation before array recursion (lines 435-451)
+
+### Testing
+After fix, users should be able to:
+1. Check multiple deployment type checkboxes (Static Site AND Blueprint Bundle)
+2. Save settings successfully
+3. Reload page - both checkboxes remain checked
+4. Verify in database: `wp option get aether_site_exporter_settings`
+5. Export successfully without "No providers enabled" errors
+
+---
+
 *Fixes applied: November 18, 2025*

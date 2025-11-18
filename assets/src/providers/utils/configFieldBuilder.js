@@ -20,7 +20,6 @@
 
 import { __ } from '@wordpress/i18n';
 import {
-	DEPLOYMENT_TYPES,
 	DEPLOYMENT_TYPE_LABELS,
 	DEPLOYMENT_TYPE_DESCRIPTIONS,
 } from '../../constants/deploymentTypes';
