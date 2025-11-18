@@ -121,11 +121,6 @@ class SettingsController
 		$key = $request->get_param('key');
 		$settings = \get_option('aether_site_exporter_settings', []);
 
-		// Ensure provider_types exists in settings (even if empty)
-		if (!isset($settings['provider_types']) || !\is_array($settings['provider_types'])) {
-			$settings['provider_types'] = [];
-		}
-
 		// If no key specified, return all settings.
 		if (empty($key)) {
 			// Decrypt provider settings if present
@@ -409,27 +404,22 @@ class SettingsController
 				}
 			}
 
-			// Special validation for export_types - ensure it's an array with valid values
-			if ($sanitizedKey === 'export_types') {
-				$validExportTypes = [ 'static_site', 'blueprint_bundle' ];
+			// Special validation for deployment_types - ensure it's an array with valid values
+			if ($sanitizedKey === 'deployment_types') {
+				$validDeploymentTypes = [ 'static_site', 'blueprint_bundle', 'edge_functions' ];
 
 				// Ensure it's an array
 				if (!\is_array($sanitized[ $sanitizedKey ])) {
-					$sanitized[ $sanitizedKey ] = [ 'static_site', 'blueprint_bundle' ];
+					$sanitized[ $sanitizedKey ] = [];
 				} else {
 					// Filter to only valid values
 					$sanitized[ $sanitizedKey ] = \array_intersect(
 						$sanitized[ $sanitizedKey ],
-						$validExportTypes
+						$validDeploymentTypes
 					);
 
 					// Re-index array (array_intersect preserves keys)
 					$sanitized[ $sanitizedKey ] = \array_values($sanitized[ $sanitizedKey ]);
-
-					// If no valid values remain, use defaults
-					if (empty($sanitized[ $sanitizedKey ])) {
-						$sanitized[ $sanitizedKey ] = [ 'static_site', 'blueprint_bundle' ];
-					}
 				}
 			}
 		}
