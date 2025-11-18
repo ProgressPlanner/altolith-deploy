@@ -1267,7 +1267,7 @@ class PublishStepsController
 		}
 
 		// Verify wp-content.zip exists
-		if (!file_exists($zipPath)) {
+		if (!\file_exists($zipPath)) {
 			return new WP_Error(
 				'archive_not_found',
 				\__('Archive file not found', 'aether-site-exporter'),
@@ -1329,7 +1329,7 @@ class PublishStepsController
 
 		// Get bundle URL (convert absolute path to URL)
 		$bundleUrl = \str_replace(ABSPATH, \trailingslashit(\site_url()), $bundlePath);
-		$bundleSize = filesize($bundlePath);
+		$bundleSize = \filesize($bundlePath);
 
 		$bundleResult = [
 			'bundlePath' => $bundlePath,

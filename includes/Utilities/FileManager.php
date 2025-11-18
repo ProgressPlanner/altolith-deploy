@@ -50,15 +50,15 @@ class FileManager
 	 */
 	public static function fileExistsAndAccessible($filePath)
 	{
-		if (! file_exists($filePath)) {
+		if (! \file_exists($filePath)) {
 			return false;
 		}
 
-		if (! is_file($filePath)) {
+		if (! \is_file($filePath)) {
 			return false;
 		}
 
-		if (! is_readable($filePath)) {
+		if (! \is_readable($filePath)) {
 			return false;
 		}
 
@@ -81,9 +81,9 @@ class FileManager
 		}
 
 		// Log persistence issue
-		if (defined('WP_DEBUG') && WP_DEBUG) {
-			error_log(
-				sprintf(
+		if (\defined('WP_DEBUG') && WP_DEBUG) {
+			\error_log(
+				\sprintf(
 					'Aether File Manager: File missing before %s: %s (may indicate ephemeral filesystem)',
 					$operation,
 					$filePath
@@ -111,7 +111,7 @@ class FileManager
 				return false;
 			}
 
-			$content = @file_get_contents($filePath);
+			$content = @\file_get_contents($filePath);
 
 			if (false !== $content) {
 				return $content;
@@ -119,13 +119,13 @@ class FileManager
 
 			// Wait before retry (except on last attempt)
 			if ($attempt < $maxRetries - 1) {
-				usleep(self::RETRY_DELAY_MS * 1000);
+				\usleep(self::RETRY_DELAY_MS * 1000);
 			}
 		}
 
 		// Log persistent failure
-		error_log(
-			sprintf(
+		\error_log(
+			\sprintf(
 				'Aether File Manager: Failed to read file after %d attempts: %s',
 				$maxRetries,
 				$filePath
@@ -148,11 +148,11 @@ class FileManager
 	public static function writeFileWithRetry($filePath, $content, $maxRetries = self::MAX_RETRIES)
 	{
 		// Ensure directory exists
-		$directory = dirname($filePath);
-		if (! file_exists($directory)) {
-			if (! wp_mkdir_p($directory)) {
-				error_log(
-					sprintf(
+		$directory = \dirname($filePath);
+		if (! \file_exists($directory)) {
+			if (! \wp_mkdir_p($directory)) {
+				\error_log(
+					\sprintf(
 						'Aether File Manager: Failed to create directory: %s',
 						$directory
 					)
@@ -162,7 +162,7 @@ class FileManager
 		}
 
 		for ($attempt = 0; $attempt < $maxRetries; $attempt++) {
-			$result = @file_put_contents($filePath, $content);
+			$result = @\file_put_contents($filePath, $content);
 
 			if (false !== $result) {
 				// Verify the write succeeded
@@ -173,13 +173,13 @@ class FileManager
 
 			// Wait before retry (except on last attempt)
 			if ($attempt < $maxRetries - 1) {
-				usleep(self::RETRY_DELAY_MS * 1000);
+				\usleep(self::RETRY_DELAY_MS * 1000);
 			}
 		}
 
 		// Log persistent failure
-		error_log(
-			sprintf(
+		\error_log(
+			\sprintf(
 				'Aether File Manager: Failed to write file after %d attempts: %s',
 				$maxRetries,
 				$filePath
@@ -199,14 +199,14 @@ class FileManager
 	 */
 	public static function deleteFile($filePath)
 	{
-		if (! file_exists($filePath)) {
+		if (! \file_exists($filePath)) {
 			// Already deleted or never existed
 			return true;
 		}
 
-		if (! is_file($filePath)) {
-			error_log(
-				sprintf(
+		if (! \is_file($filePath)) {
+			\error_log(
+				\sprintf(
 					'Aether File Manager: Cannot delete non-file: %s',
 					$filePath
 				)
@@ -214,11 +214,11 @@ class FileManager
 			return false;
 		}
 
-		$result = @unlink($filePath);
+		$result = @\unlink($filePath);
 
 		if (! $result) {
-			error_log(
-				sprintf(
+			\error_log(
+				\sprintf(
 					'Aether File Manager: Failed to delete file: %s',
 					$filePath
 				)
@@ -227,9 +227,9 @@ class FileManager
 		}
 
 		// Verify deletion
-		if (file_exists($filePath)) {
-			error_log(
-				sprintf(
+		if (\file_exists($filePath)) {
+			\error_log(
+				\sprintf(
 					'Aether File Manager: File still exists after deletion: %s (may indicate filesystem issue)',
 					$filePath
 				)
@@ -254,8 +254,8 @@ class FileManager
 			return false;
 		}
 
-		$size = @filesize($filePath);
-		$mtime = @filemtime($filePath);
+		$size = @\filesize($filePath);
+		$mtime = @\filemtime($filePath);
 
 		if (false === $size || false === $mtime) {
 			return false;
@@ -264,7 +264,7 @@ class FileManager
 		return [
 			'size'  => $size,
 			'mtime' => $mtime,
-			'age'   => time() - $mtime,
+			'age'   => \time() - $mtime,
 			'path'  => $filePath,
 		];
 	}
@@ -300,18 +300,18 @@ class FileManager
 	 */
 	public static function trackFile($filePath, $fileType = 'unknown', $metadata = [])
 	{
-		$trackingKey = 'aether_file_' . md5($filePath);
+		$trackingKey = 'aether_file_' . \md5($filePath);
 
 		$trackingData = [
 			'path'      => $filePath,
 			'type'      => $fileType,
-			'created'   => time(),
+			'created'   => \time(),
 			'metadata'  => $metadata,
 			'exists'    => self::fileExistsAndAccessible($filePath),
 		];
 
 		// Store for 24 hours
-		return set_transient($trackingKey, $trackingData, 86400);
+		return \set_transient($trackingKey, $trackingData, 86400);
 	}
 
 	/**
@@ -322,8 +322,8 @@ class FileManager
 	 */
 	public static function getTrackedFile($filePath)
 	{
-		$trackingKey = 'aether_file_' . md5($filePath);
-		return get_transient($trackingKey);
+		$trackingKey = 'aether_file_' . \md5($filePath);
+		return \get_transient($trackingKey);
 	}
 
 	/**
@@ -334,8 +334,8 @@ class FileManager
 	 */
 	public static function untrackFile($filePath)
 	{
-		$trackingKey = 'aether_file_' . md5($filePath);
-		return delete_transient($trackingKey);
+		$trackingKey = 'aether_file_' . \md5($filePath);
+		return \delete_transient($trackingKey);
 	}
 
 	/**
@@ -365,13 +365,13 @@ class FileManager
 
 		// Log persistence issue
 		if ($existedBefore && ! $existsNow) {
-			if (defined('WP_DEBUG') && WP_DEBUG) {
-				error_log(
-					sprintf(
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(
+					\sprintf(
 						'Aether File Manager: File persistence issue detected - file disappeared: %s (type: %s, age: %d seconds)',
 						$filePath,
 						$tracking['type'],
-						time() - $tracking['created']
+						\time() - $tracking['created']
 					)
 				);
 			}
@@ -382,7 +382,7 @@ class FileManager
 			'exists'        => $existsNow,
 			'existed_before' => $existedBefore,
 			'persisted'     => $persisted,
-			'age'           => time() - $tracking['created'],
+			'age'           => \time() - $tracking['created'],
 			'type'          => $tracking['type'],
 			'message'       => $persisted ? 'File persisted' : 'File disappeared',
 		];
@@ -412,11 +412,11 @@ class FileManager
 
 		foreach ($transients as $transientName) {
 			// Remove _transient_ prefix
-			$key = str_replace('_transient_', '', $transientName);
-			$data = get_transient($key);
+			$key = \str_replace('_transient_', '', $transientName);
+			$data = \get_transient($key);
 
 			if (false === $data || ! isset($data['path'])) {
-				delete_transient($key);
+				\delete_transient($key);
 				$cleaned++;
 				continue;
 			}
@@ -424,7 +424,7 @@ class FileManager
 			// Check if file still exists
 			if (! self::fileExistsAndAccessible($data['path'])) {
 				// File is gone, remove tracking
-				delete_transient($key);
+				\delete_transient($key);
 				$cleaned++;
 			}
 		}
@@ -464,8 +464,8 @@ class FileManager
 	public static function copyFile($source, $destination)
 	{
 		if (! self::fileExistsAndAccessible($source)) {
-			error_log(
-				sprintf(
+			\error_log(
+				\sprintf(
 					'Aether File Manager: Source file does not exist: %s',
 					$source
 				)
@@ -474,11 +474,11 @@ class FileManager
 		}
 
 		// Ensure destination directory exists
-		$destDir = dirname($destination);
-		if (! file_exists($destDir)) {
-			if (! wp_mkdir_p($destDir)) {
-				error_log(
-					sprintf(
+		$destDir = \dirname($destination);
+		if (! \file_exists($destDir)) {
+			if (! \wp_mkdir_p($destDir)) {
+				\error_log(
+					\sprintf(
 						'Aether File Manager: Failed to create destination directory: %s',
 						$destDir
 					)
@@ -487,11 +487,11 @@ class FileManager
 			}
 		}
 
-		$result = @copy($source, $destination);
+		$result = @\copy($source, $destination);
 
 		if (! $result) {
-			error_log(
-				sprintf(
+			\error_log(
+				\sprintf(
 					'Aether File Manager: Failed to copy file from %s to %s',
 					$source,
 					$destination
@@ -502,8 +502,8 @@ class FileManager
 
 		// Verify copy succeeded
 		if (! self::fileExistsAndAccessible($destination)) {
-			error_log(
-				sprintf(
+			\error_log(
+				\sprintf(
 					'Aether File Manager: File copy verification failed: %s',
 					$destination
 				)

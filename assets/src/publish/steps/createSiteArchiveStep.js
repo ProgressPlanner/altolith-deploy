@@ -53,7 +53,7 @@ export async function createSiteArchiveHandler( context ) {
 		);
 	}
 
-	const { zipPath, progressId, totalFiles } = initResponse.data;
+	const { zipPath, progressId } = initResponse.data;
 	const progress = initResponse.progress || {};
 
 	// Store initial progress in IndexedDB
@@ -79,10 +79,7 @@ export async function createSiteArchiveHandler( context ) {
 
 	let currentProgress = dbResponse.progress || progress;
 	await progressCache.update( progressId, currentProgress );
-	setStepProgress(
-		'createSiteArchive',
-		currentProgress.overall || 0
-	);
+	setStepProgress( 'createSiteArchive', currentProgress.overall || 0 );
 
 	// Step 3: Add uploads in batches
 	const uploadsBatchesResponse = await apiFetch( {
@@ -156,8 +153,7 @@ export async function createSiteArchiveHandler( context ) {
 	if ( ! pluginsListResponse.success ) {
 		await progressCache.clear( progressId );
 		throw new Error(
-			pluginsListResponse.message ||
-				'Failed to get plugins list'
+			pluginsListResponse.message || 'Failed to get plugins list'
 		);
 	}
 
@@ -168,7 +164,9 @@ export async function createSiteArchiveHandler( context ) {
 		for ( let i = 0; i < plugins.length; i++ ) {
 			const pluginSlug = plugins[ i ];
 			setStatusMessage(
-				`Adding plugin: ${ pluginSlug } (${ i + 1 }/${ totalPlugins })...`,
+				`Adding plugin: ${ pluginSlug } (${
+					i + 1
+				}/${ totalPlugins })...`,
 				'progress',
 				'createSiteArchive'
 			);
@@ -222,8 +220,7 @@ export async function createSiteArchiveHandler( context ) {
 	if ( ! themesListResponse.success ) {
 		await progressCache.clear( progressId );
 		throw new Error(
-			themesListResponse.message ||
-				'Failed to get themes list'
+			themesListResponse.message || 'Failed to get themes list'
 		);
 	}
 
@@ -265,11 +262,7 @@ export async function createSiteArchiveHandler( context ) {
 			);
 		}
 	} else {
-		setStatusMessage(
-			'No themes to add',
-			'progress',
-			'createSiteArchive'
-		);
+		setStatusMessage( 'No themes to add', 'progress', 'createSiteArchive' );
 	}
 
 	// Step 6: Add mu-plugins in batches
@@ -329,7 +322,11 @@ export async function createSiteArchiveHandler( context ) {
 	}
 
 	// Step 7: Finalize archive
-	setStatusMessage( 'Finalizing archive...', 'progress', 'createSiteArchive' );
+	setStatusMessage(
+		'Finalizing archive...',
+		'progress',
+		'createSiteArchive'
+	);
 	const finalizeResponse = await apiFetch( {
 		path: '/aether/site-exporter/publish/createArchive/finalize',
 		method: 'POST',

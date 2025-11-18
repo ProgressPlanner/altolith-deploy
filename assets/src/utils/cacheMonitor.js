@@ -186,7 +186,8 @@ export class CacheMonitor {
 			results.wporg = await this.caches.wporg.clear();
 			results.manifest = await this.caches.manifest.clear();
 			results.uploadProgress = await this.caches.uploadProgress.clear();
-			results.archiveProgress = await this.caches.archiveProgress.clearAll();
+			results.archiveProgress =
+				await this.caches.archiveProgress.clearAll();
 
 			console.log( '[CacheMonitor] All caches cleared:', results );
 		} catch ( error ) {
@@ -281,7 +282,8 @@ export class CacheMonitor {
 			results.wporg = await this.caches.wporg.cleanup();
 			results.manifest = await this.caches.manifest.cleanup();
 			results.uploadProgress = await this.caches.uploadProgress.cleanup();
-			results.archiveProgress = await this.caches.archiveProgress.cleanup();
+			results.archiveProgress =
+				await this.caches.archiveProgress.cleanup();
 
 			const total =
 				results.wporg +

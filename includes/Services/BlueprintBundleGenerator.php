@@ -82,7 +82,7 @@ class BlueprintBundleGenerator
 		$bundlePath = \trailingslashit($realOutputDir) . $bundleFilename;
 
 		// Remove existing bundle if it exists
-		if (file_exists($bundlePath)) {
+		if (\file_exists($bundlePath)) {
 			\wp_delete_file($bundlePath);
 		}
 
@@ -123,7 +123,7 @@ class BlueprintBundleGenerator
 
 		// Re-validate file size after addFile() to prevent TOCTOU race condition
 		// File could have been modified between initial filesize() check and addFile() call
-		clearstatcache(true, $realWpContentPath);
+		\clearstatcache(true, $realWpContentPath);
 		$wpContentSizeAfter = \filesize($realWpContentPath);
 		if (false === $wpContentSizeAfter || $wpContentSizeAfter > $maxSize) {
 			$zip->close();
@@ -155,7 +155,7 @@ class BlueprintBundleGenerator
 	 */
 	public function getBundleSize(string $bundlePath): string
 	{
-		if (!file_exists($bundlePath)) {
+		if (!\file_exists($bundlePath)) {
 			return '0 B';
 		}
 
@@ -175,7 +175,7 @@ class BlueprintBundleGenerator
 	 */
 	public function validateBundle(string $bundlePath): bool
 	{
-		if (!file_exists($bundlePath)) {
+		if (!\file_exists($bundlePath)) {
 			return false;
 		}
 

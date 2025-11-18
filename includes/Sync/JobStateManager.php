@@ -201,7 +201,7 @@ class JobStateManager
 
 			// Security: Use JSON instead of serialization to prevent object injection
 			$status = \json_decode($currentValue, true);
-			if (!is_array($status)) {
+			if (!\is_array($status)) {
 				return [
 					'shouldRetry' => false,
 					'retryCount'  => 0,
@@ -244,7 +244,7 @@ class JobStateManager
 			// Retry with exponential backoff
 			$casAttempt++;
 			if ($casAttempt < $maxCASAttempts) {
-				\usleep(50000 * (2 ** min($casAttempt, 4))); // Exponential backoff: 50ms, 100ms, 200ms, 400ms, 800ms
+				\usleep(50000 * (2 ** \min($casAttempt, 4))); // Exponential backoff: 50ms, 100ms, 200ms, 400ms, 800ms
 			}
 		}
 

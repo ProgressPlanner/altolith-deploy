@@ -309,7 +309,7 @@ class ExportController
 					'export',
 					[
 						'job_id'    => $jobId,
-						'expires'   => time() + self::EXPORT_JOB_EXPIRATION,
+						'expires'   => \time() + self::EXPORT_JOB_EXPIRATION,
 					]
 				);
 			}
