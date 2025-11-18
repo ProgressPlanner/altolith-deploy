@@ -10,6 +10,7 @@ namespace Aether\SiteExporter\REST;
 
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Services\ExportService;
+use AetherSiteExporter\Utilities\FileManager;
 use AetherSiteExporter\Utilities\TempDirectoryManager;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -301,11 +302,24 @@ class ExportController
 			$status['status'] = 'complete';
 			\set_transient($jobId, $status, self::EXPORT_JOB_EXPIRATION);
 
+			// Track export file for persistence monitoring
+			if (isset($status['zipPath'])) {
+				FileManager::trackFile(
+					$status['zipPath'],
+					'export',
+					[
+						'job_id'    => $jobId,
+						'expires'   => time() + self::EXPORT_JOB_EXPIRATION,
+					]
+				);
+			}
+
 			return \rest_ensure_response(
 				[
 					'success' => true,
 					'status'  => 'complete',
 					'message' => \__('Export complete', 'aether-site-exporter'),
+					'warning' => FileManager::getEphemeralStorageWarning('export'),
 				]
 			);
 		}
@@ -389,10 +403,21 @@ class ExportController
 
 		$zipPath = $status['zipPath'];
 
-		if (! \file_exists($zipPath)) {
+		// Verify file exists with persistence check
+		if (!FileManager::verifyFileExists($zipPath, 'export-download')) {
+			// Check if file was tracked and disappeared
+			$persistence = FileManager::verifyFilePersistence($zipPath);
+
+			$errorMessage = \__('Export file not found. ', 'aether-site-exporter');
+			if ($persistence['tracked'] && !$persistence['persisted']) {
+				$errorMessage .= \__('The file may not have persisted across sessions. Please regenerate the export and download immediately.', 'aether-site-exporter');
+			} else {
+				$errorMessage .= \__('The file may have been cleaned up. Please regenerate the export.', 'aether-site-exporter');
+			}
+
 			return new WP_Error(
 				'file_not_found',
-				\__('Export file not found', 'aether-site-exporter'),
+				$errorMessage,
 				[ 'status' => 404 ]
 			);
 		}
@@ -407,10 +432,8 @@ class ExportController
 		// This prevents resource leaks from connection aborts, disk errors, etc.
 		\register_shutdown_function(function () use ($zipPath, $jobId) {
 			// Clean up file and transient regardless of success/failure
-			// File may have been deleted between check and cleanup
-			if (\file_exists($zipPath)) {
-				@\unlink($zipPath);
-			}
+			FileManager::deleteFile($zipPath);
+			FileManager::untrackFile($zipPath);
 			\delete_transient($jobId);
 		});
 

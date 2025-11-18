@@ -10,6 +10,7 @@
 
 namespace Aether\SiteExporter\REST;
 
+use AetherSiteExporter\Utilities\FileManager;
 use AetherSiteExporter\Utilities\PathValidator;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -299,6 +300,17 @@ class LocalStorageController
 					[ 'status' => 500 ]
 				);
 			}
+
+			// Track file for persistence monitoring
+			FileManager::trackFile(
+				$fullPath,
+				'upload',
+				[
+					'key'          => $key,
+					'original_name' => $file['name'] ?? 'unknown',
+					'size'         => $file['size'] ?? 0,
+				]
+			);
 		} else {
 			return new WP_Error(
 				'invalid_file',
@@ -312,6 +324,7 @@ class LocalStorageController
 				'success' => true,
 				'message' => \__('File uploaded successfully.', 'aether-site-exporter'),
 				'path'    => $key,
+				'warning' => FileManager::getEphemeralStorageWarning('upload'),
 			],
 			200
 		);
@@ -380,8 +393,8 @@ class LocalStorageController
 			);
 		}
 
-		// Check if file exists
-		if (!\file_exists($fullPath)) {
+		// Verify file exists before deletion
+		if (!FileManager::verifyFileExists($fullPath, 'delete')) {
 			return new WP_Error(
 				'file_not_found',
 				\__('File not found.', 'aether-site-exporter'),
@@ -389,14 +402,17 @@ class LocalStorageController
 			);
 		}
 
-		// Delete file
-		if (!\unlink($fullPath)) {
+		// Delete file using FileManager
+		if (!FileManager::deleteFile($fullPath)) {
 			return new WP_Error(
 				'delete_failed',
 				\__('Failed to delete file.', 'aether-site-exporter'),
 				[ 'status' => 500 ]
 			);
 		}
+
+		// Untrack file
+		FileManager::untrackFile($fullPath);
 
 		return new WP_REST_Response(
 			[
@@ -524,21 +540,21 @@ class LocalStorageController
 			);
 		}
 
-		// Check if file exists
-		if (!\file_exists($fullPath)) {
+		// Verify file exists and persistence
+		if (!FileManager::verifyFileExists($fullPath, 'download')) {
 			return new WP_Error(
 				'file_not_found',
-				\__('File not found.', 'aether-site-exporter'),
+				\__('File not found. It may have been cleaned up or not persisted across sessions.', 'aether-site-exporter'),
 				[ 'status' => 404 ]
 			);
 		}
 
-		// Read and return file
-		$content = \file_get_contents($fullPath);
-		if ($content === false) {
+		// Read file with retry logic for transient filesystem issues
+		$content = FileManager::readFileWithRetry($fullPath);
+		if (false === $content) {
 			return new WP_Error(
 				'read_failed',
-				\__('Failed to read file.', 'aether-site-exporter'),
+				\__('Failed to read file. The file may be temporarily unavailable.', 'aether-site-exporter'),
 				[ 'status' => 500 ]
 			);
 		}
