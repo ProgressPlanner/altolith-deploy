@@ -1,7 +1,9 @@
 /**
  * IndexedDB Wrapper - Abstract storage interface for browser persistent storage
  *
- * Provides a simple, promise-based API for storing data in IndexedDB.
+ * Uses the `idb` library (by Jake Archibald) as a foundation, providing a
+ * simple, promise-based API for storing data in IndexedDB.
+ *
  * Works in all modern browsers including WordPress Playground WASM environment.
  *
  * Features:
@@ -9,11 +11,14 @@
  * - Automatic database initialization
  * - Promise-based async API
  * - Error handling and quota management
- * - Support for multiple stores
+ * - Support for multiple stores and indexes
  * - Automatic cleanup of expired data
+ * - Built on battle-tested `idb` library (9.8M weekly downloads)
  */
 
 /* global indexedDB, IDBKeyRange */
+
+import { openDB } from 'idb';
 
 /**
  * IndexedDB database instance cache
@@ -39,13 +44,13 @@ const DEFAULT_CONFIG = {
 };
 
 /**
- * Open IndexedDB database with configuration
+ * Open IndexedDB database with configuration using idb library
  *
  * @param {Object} config         - Database configuration
  * @param {string} config.dbName  - Database name
  * @param {number} config.version - Database version
  * @param {Object} config.stores  - Object stores configuration
- * @return {Promise<IDBDatabase>} Database instance
+ * @return {Promise<Object>} Database instance
  */
 async function openDatabase( config = DEFAULT_CONFIG ) {
 	const cacheKey = `${ config.dbName }_v${ config.version }`;
@@ -55,58 +60,49 @@ async function openDatabase( config = DEFAULT_CONFIG ) {
 		return dbInstances.get( cacheKey );
 	}
 
-	return new Promise( ( resolve, reject ) => {
-		const request = indexedDB.open( config.dbName, config.version );
+	try {
+		const db = await openDB( config.dbName, config.version, {
+			upgrade( database ) {
+				// Create object stores based on configuration
+				Object.entries( config.stores ).forEach(
+					( [ storeName, storeConfig ] ) => {
+						// Delete existing store if it exists (for upgrades)
+						if ( database.objectStoreNames.contains( storeName ) ) {
+							database.deleteObjectStore( storeName );
+						}
 
-		request.onerror = () => {
-			reject(
-				new Error(
-					`Failed to open IndexedDB: ${
-						request.error?.message || 'Unknown error'
-					}`
-				)
-			);
-		};
-
-		request.onsuccess = () => {
-			const db = request.result;
-			dbInstances.set( cacheKey, db );
-			resolve( db );
-		};
-
-		request.onupgradeneeded = ( event ) => {
-			const db = event.target.result;
-
-			// Create object stores based on configuration
-			Object.entries( config.stores ).forEach(
-				( [ storeName, storeConfig ] ) => {
-					// Delete existing store if it exists (for upgrades)
-					if ( db.objectStoreNames.contains( storeName ) ) {
-						db.deleteObjectStore( storeName );
-					}
-
-					// Create new store
-					const store = db.createObjectStore( storeName, {
-						keyPath: storeConfig.keyPath,
-						autoIncrement: storeConfig.autoIncrement || false,
-					} );
-
-					// Create indexes
-					if ( storeConfig.indexes ) {
-						storeConfig.indexes.forEach( ( index ) => {
-							store.createIndex( index.name, index.keyPath, {
-								unique: index.unique || false,
-							} );
+						// Create new store
+						const store = database.createObjectStore( storeName, {
+							keyPath: storeConfig.keyPath,
+							autoIncrement: storeConfig.autoIncrement || false,
 						} );
+
+						// Create indexes
+						if ( storeConfig.indexes ) {
+							storeConfig.indexes.forEach( ( index ) => {
+								store.createIndex( index.name, index.keyPath, {
+									unique: index.unique || false,
+								} );
+							} );
+						}
 					}
-				}
-			);
-		};
-	} );
+				);
+			},
+		} );
+
+		dbInstances.set( cacheKey, db );
+		return db;
+	} catch ( error ) {
+		throw new Error(
+			`Failed to open IndexedDB: ${ error.message || 'Unknown error' }`
+		);
+	}
 }
 
 /**
  * IndexedDB Store - Abstract interface for a single object store
+ *
+ * Provides a simple key-value API on top of idb library
  */
 export class IndexedDBStore {
 	/**
@@ -124,25 +120,13 @@ export class IndexedDBStore {
 	/**
 	 * Ensure database is initialized
 	 *
-	 * @return {Promise<IDBDatabase>} Database instance
+	 * @return {Promise<Object>} Database instance
 	 */
 	async ensureDatabase() {
 		if ( ! this.db ) {
 			this.db = await openDatabase( this.config );
 		}
 		return this.db;
-	}
-
-	/**
-	 * Get transaction for the store
-	 *
-	 * @param {string} mode - Transaction mode ('readonly' or 'readwrite')
-	 * @return {Promise<IDBObjectStore>} Object store instance
-	 */
-	async getStore( mode = 'readonly' ) {
-		const db = await this.ensureDatabase();
-		const transaction = db.transaction( [ this.storeName ], mode );
-		return transaction.objectStore( this.storeName );
 	}
 
 	/**
@@ -153,17 +137,9 @@ export class IndexedDBStore {
 	 */
 	async get( key ) {
 		try {
-			const store = await this.getStore( 'readonly' );
-			return new Promise( ( resolve, reject ) => {
-				const request = store.get( key );
-				request.onsuccess = () => resolve( request.result || null );
-				request.onerror = () =>
-					reject(
-						new Error(
-							`Failed to get key "${ key }": ${ request.error?.message }`
-						)
-					);
-			} );
+			const db = await this.ensureDatabase();
+			const result = await db.get( this.storeName, key );
+			return result || null;
 		} catch ( error ) {
 			console.error( `[IndexedDB] Error getting key "${ key }":`, error );
 			return null;
@@ -178,17 +154,9 @@ export class IndexedDBStore {
 	 */
 	async getAll( limit = undefined ) {
 		try {
-			const store = await this.getStore( 'readonly' );
-			return new Promise( ( resolve, reject ) => {
-				const request = store.getAll( undefined, limit );
-				request.onsuccess = () => resolve( request.result || [] );
-				request.onerror = () =>
-					reject(
-						new Error(
-							`Failed to get all values: ${ request.error?.message }`
-						)
-					);
-			} );
+			const db = await this.ensureDatabase();
+			const result = await db.getAll( this.storeName, undefined, limit );
+			return result || [];
 		} catch ( error ) {
 			console.error( '[IndexedDB] Error getting all values:', error );
 			return [];
@@ -202,17 +170,9 @@ export class IndexedDBStore {
 	 */
 	async getAllKeys() {
 		try {
-			const store = await this.getStore( 'readonly' );
-			return new Promise( ( resolve, reject ) => {
-				const request = store.getAllKeys();
-				request.onsuccess = () => resolve( request.result || [] );
-				request.onerror = () =>
-					reject(
-						new Error(
-							`Failed to get all keys: ${ request.error?.message }`
-						)
-					);
-			} );
+			const db = await this.ensureDatabase();
+			const result = await db.getAllKeys( this.storeName );
+			return result || [];
 		} catch ( error ) {
 			console.error( '[IndexedDB] Error getting all keys:', error );
 			return [];
@@ -229,7 +189,7 @@ export class IndexedDBStore {
 	 */
 	async set( key, value, metadata = {} ) {
 		try {
-			const store = await this.getStore( 'readwrite' );
+			const db = await this.ensureDatabase();
 			const data = {
 				key,
 				value,
@@ -237,27 +197,18 @@ export class IndexedDBStore {
 				...metadata,
 			};
 
-			return new Promise( ( resolve, reject ) => {
-				const request = store.put( data );
-				request.onsuccess = () => resolve( true );
-				request.onerror = () => {
-					// Check for quota exceeded error
-					if (
-						request.error?.name === 'QuotaExceededError' ||
-						request.error?.name === 'NS_ERROR_DOM_QUOTA_REACHED'
-					) {
-						console.warn(
-							'[IndexedDB] Storage quota exceeded. Consider cleaning up old data.'
-						);
-					}
-					reject(
-						new Error(
-							`Failed to set key "${ key }": ${ request.error?.message }`
-						)
-					);
-				};
-			} );
+			await db.put( this.storeName, data );
+			return true;
 		} catch ( error ) {
+			// Check for quota exceeded error
+			if (
+				error.name === 'QuotaExceededError' ||
+				error.message?.includes( 'quota' )
+			) {
+				console.warn(
+					'[IndexedDB] Storage quota exceeded. Consider cleaning up old data.'
+				);
+			}
 			console.error( `[IndexedDB] Error setting key "${ key }":`, error );
 			return false;
 		}
@@ -271,17 +222,9 @@ export class IndexedDBStore {
 	 */
 	async delete( key ) {
 		try {
-			const store = await this.getStore( 'readwrite' );
-			return new Promise( ( resolve, reject ) => {
-				const request = store.delete( key );
-				request.onsuccess = () => resolve( true );
-				request.onerror = () =>
-					reject(
-						new Error(
-							`Failed to delete key "${ key }": ${ request.error?.message }`
-						)
-					);
-			} );
+			const db = await this.ensureDatabase();
+			await db.delete( this.storeName, key );
+			return true;
 		} catch ( error ) {
 			console.error(
 				`[IndexedDB] Error deleting key "${ key }":`,
@@ -298,17 +241,9 @@ export class IndexedDBStore {
 	 */
 	async clear() {
 		try {
-			const store = await this.getStore( 'readwrite' );
-			return new Promise( ( resolve, reject ) => {
-				const request = store.clear();
-				request.onsuccess = () => resolve( true );
-				request.onerror = () =>
-					reject(
-						new Error(
-							`Failed to clear store: ${ request.error?.message }`
-						)
-					);
-			} );
+			const db = await this.ensureDatabase();
+			await db.clear( this.storeName );
+			return true;
 		} catch ( error ) {
 			console.error( '[IndexedDB] Error clearing store:', error );
 			return false;
@@ -322,17 +257,9 @@ export class IndexedDBStore {
 	 */
 	async count() {
 		try {
-			const store = await this.getStore( 'readonly' );
-			return new Promise( ( resolve, reject ) => {
-				const request = store.count();
-				request.onsuccess = () => resolve( request.result || 0 );
-				request.onerror = () =>
-					reject(
-						new Error(
-							`Failed to count items: ${ request.error?.message }`
-						)
-					);
-			} );
+			const db = await this.ensureDatabase();
+			const result = await db.count( this.storeName );
+			return result || 0;
 		} catch ( error ) {
 			console.error( '[IndexedDB] Error counting items:', error );
 			return 0;
@@ -348,19 +275,13 @@ export class IndexedDBStore {
 	 */
 	async getByIndex( indexName, indexValue ) {
 		try {
-			const store = await this.getStore( 'readonly' );
-			const index = store.index( indexName );
-
-			return new Promise( ( resolve, reject ) => {
-				const request = index.getAll( indexValue );
-				request.onsuccess = () => resolve( request.result || [] );
-				request.onerror = () =>
-					reject(
-						new Error(
-							`Failed to get by index "${ indexName }": ${ request.error?.message }`
-						)
-					);
-			} );
+			const db = await this.ensureDatabase();
+			const result = await db.getAllFromIndex(
+				this.storeName,
+				indexName,
+				indexValue
+			);
+			return result || [];
 		} catch ( error ) {
 			console.error(
 				`[IndexedDB] Error getting by index "${ indexName }":`,
@@ -373,39 +294,36 @@ export class IndexedDBStore {
 	/**
 	 * Delete items older than specified age
 	 *
+	 * Uses the timestamp index to efficiently find and delete old items.
+	 *
 	 * @param {number} maxAgeMs - Maximum age in milliseconds
 	 * @return {Promise<number>} Number of items deleted
 	 */
 	async deleteOlderThan( maxAgeMs ) {
 		try {
-			const store = await this.getStore( 'readwrite' );
-			const index = store.index( 'timestamp' );
+			const db = await this.ensureDatabase();
 			const cutoffTime = Date.now() - maxAgeMs;
 
-			return new Promise( ( resolve, reject ) => {
-				const request = index.openCursor(
-					IDBKeyRange.upperBound( cutoffTime )
-				);
-				let deletedCount = 0;
+			// Use transaction for atomic delete operation
+			const tx = db.transaction( this.storeName, 'readwrite' );
+			const store = tx.objectStore( this.storeName );
+			const index = store.index( 'timestamp' );
 
-				request.onsuccess = ( event ) => {
-					const cursor = event.target.result;
-					if ( cursor ) {
-						cursor.delete();
-						deletedCount++;
-						cursor.continue();
-					} else {
-						resolve( deletedCount );
-					}
-				};
+			let deletedCount = 0;
 
-				request.onerror = () =>
-					reject(
-						new Error(
-							`Failed to delete old items: ${ request.error?.message }`
-						)
-					);
-			} );
+			// Get cursor for items with timestamp <= cutoffTime
+			let cursor = await index.openCursor(
+				IDBKeyRange.upperBound( cutoffTime )
+			);
+
+			while ( cursor ) {
+				await cursor.delete();
+				deletedCount++;
+				cursor = await cursor.continue();
+			}
+
+			await tx.done;
+			return deletedCount;
 		} catch ( error ) {
 			console.error( '[IndexedDB] Error deleting old items:', error );
 			return 0;
@@ -447,7 +365,11 @@ export class IndexedDBStore {
  */
 export function isIndexedDBAvailable() {
 	try {
-		return typeof indexedDB !== 'undefined' && indexedDB !== null;
+		return (
+			typeof indexedDB !== 'undefined' &&
+			indexedDB !== null &&
+			typeof openDB === 'function'
+		);
 	} catch ( error ) {
 		return false;
 	}
@@ -460,19 +382,32 @@ export function isIndexedDBAvailable() {
  * @return {Promise<boolean>} True if successful
  */
 export async function deleteDatabase( dbName ) {
-	return new Promise( ( resolve, reject ) => {
-		const request = indexedDB.deleteDatabase( dbName );
-		request.onsuccess = () => {
-			dbInstances.delete( dbName );
-			resolve( true );
-		};
-		request.onerror = () =>
-			reject(
-				new Error(
-					`Failed to delete database: ${ request.error?.message }`
-				)
-			);
-	} );
+	try {
+		// Remove from cache
+		const cacheKeys = Array.from( dbInstances.keys() ).filter( ( key ) =>
+			key.startsWith( dbName )
+		);
+		cacheKeys.forEach( ( key ) => dbInstances.delete( key ) );
+
+		// Delete database
+		await new Promise( ( resolve, reject ) => {
+			const request = indexedDB.deleteDatabase( dbName );
+			request.onsuccess = () => resolve( true );
+			request.onerror = () =>
+				reject(
+					new Error(
+						`Failed to delete database: ${
+							request.error?.message || 'Unknown error'
+						}`
+					)
+				);
+		} );
+
+		return true;
+	} catch ( error ) {
+		console.error( '[IndexedDB] Error deleting database:', error );
+		return false;
+	}
 }
 
 export default IndexedDBStore;
