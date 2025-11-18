@@ -10,6 +10,7 @@
 
 namespace Aether\SiteExporter\REST;
 
+use AetherSiteExporter\Utilities\PathValidator;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -223,38 +224,13 @@ class LocalStorageController
 		$fullPath = $uploadDir . '/' . $cleanKey;
 		$fileDir = \dirname($fullPath);
 
-		// Security: Validate parent exists and is within ABSPATH BEFORE creating any directories
-		// This prevents TOCTOU race condition with symlink attacks
-		$realAbspath = \realpath(ABSPATH);
-		if (false === $realAbspath) {
+		// Security: Validate path using universal PathValidator
+		// Works in all environments including WordPress Playground
+		$validation = PathValidator::validatePath($fullPath, ABSPATH, false);
+		if (!$validation['valid']) {
 			return new WP_Error(
-				'invalid_abspath',
-				\__('Invalid WordPress installation path.', 'aether-site-exporter'),
-				[ 'status' => 500 ]
-			);
-		}
-
-		// Find the first existing ancestor directory
-		$checkDir = $fileDir;
-		while (!\is_dir($checkDir) && \strlen($checkDir) > \strlen(ABSPATH)) {
-			$checkDir = \dirname($checkDir);
-		}
-
-		// Validate the existing ancestor is within ABSPATH
-		$realCheckDir = \realpath($checkDir);
-		if (false === $realCheckDir || 0 !== \strpos($realCheckDir, $realAbspath)) {
-			return new WP_Error(
-				'path_outside_abspath',
-				\__('File path must be within WordPress installation.', 'aether-site-exporter'),
-				[ 'status' => 400 ]
-			);
-		}
-
-		// Check for symlinks in the path to prevent symlink attacks
-		if (\is_link($checkDir)) {
-			return new WP_Error(
-				'symlink_detected',
-				\__('Symlinks are not allowed in upload path.', 'aether-site-exporter'),
+				'invalid_path',
+				\sprintf(\__('Invalid file path: %s', 'aether-site-exporter'), $validation['error']),
 				[ 'status' => 400 ]
 			);
 		}
@@ -304,45 +280,8 @@ class LocalStorageController
 			}
 		}
 
-		// Final validation after directory creation
-		// Note: realpath() requires the path to exist, so this should work now
-		$realFileDir = \realpath($fileDir);
-		if (false === $realFileDir) {
-			// Debug logging to understand why realpath failed
-			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf(
-					'Aether: realpath() failed for directory: %s (exists: %s, readable: %s)',
-					$fileDir,
-					\is_dir($fileDir) ? 'yes' : 'no',
-					\is_readable($fileDir) ? 'yes' : 'no'
-				));
-			}
-
-			// Don't delete the directory we just created - it might still be usable
-			// Instead, try using the non-resolved path
-			$realFileDir = $fileDir;
-		}
-
-		// Verify the resolved path is within ABSPATH
-		if (0 !== \strpos($realFileDir, $realAbspath)) {
-			// This indicates a security issue - path escaped ABSPATH
-			return new WP_Error(
-				'path_validation_failed',
-				\__('File path validation failed: path is outside WordPress installation.', 'aether-site-exporter'),
-				[ 'status' => 400 ]
-			);
-		}
-
-		$realFullPath = $realFileDir . '/' . \basename($fullPath);
-
 		// Verify directory exists before attempting file move
-		if (!\is_dir($realFileDir)) {
-			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf(
-					'Aether: Directory disappeared before file move: %s',
-					$realFileDir
-				));
-			}
+		if (!\is_dir($fileDir)) {
 			return new WP_Error(
 				'directory_missing',
 				\__('Upload directory does not exist.', 'aether-site-exporter'),
@@ -353,7 +292,7 @@ class LocalStorageController
 		// Move uploaded file to target location
 		if (isset($file['tmp_name']) && \is_uploaded_file($file['tmp_name'])) {
 			// Handle actual uploaded file
-			if (!\move_uploaded_file($file['tmp_name'], $realFullPath)) {
+			if (!\move_uploaded_file($file['tmp_name'], $fullPath)) {
 				return new WP_Error(
 					'upload_failed',
 					\__('Failed to move uploaded file.', 'aether-site-exporter'),
@@ -419,7 +358,7 @@ class LocalStorageController
 		}
 
 		// Security: Validate static_path to prevent path traversal.
-		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $staticPath) || \preg_match('#^[/\\\\]#', $staticPath)) {
+		if (!PathValidator::isSafePath($staticPath)) {
 			return new WP_Error(
 				'invalid_static_path',
 				\__('Invalid static path: path traversal not allowed.', 'aether-site-exporter'),
@@ -431,18 +370,18 @@ class LocalStorageController
 		$uploadDir = \rtrim(ABSPATH, '/') . '/' . $staticPath;
 		$fullPath = $uploadDir . '/' . \ltrim($key, '/');
 
-		// Security: Validate path
-		$realUploadDir = \realpath($uploadDir);
-		if ($realUploadDir === false) {
+		// Security: Validate path using universal PathValidator
+		$validation = PathValidator::validatePath($fullPath, ABSPATH, false);
+		if (!$validation['valid']) {
 			return new WP_Error(
-				'directory_not_found',
-				\__('Upload directory not found.', 'aether-site-exporter'),
-				[ 'status' => 404 ]
+				'invalid_path',
+				\sprintf(\__('Invalid file path: %s', 'aether-site-exporter'), $validation['error']),
+				[ 'status' => 400 ]
 			);
 		}
 
-		$realFullPath = \realpath($fullPath);
-		if ($realFullPath === false || \strpos($realFullPath, $realUploadDir) !== 0) {
+		// Check if file exists
+		if (!\file_exists($fullPath)) {
 			return new WP_Error(
 				'file_not_found',
 				\__('File not found.', 'aether-site-exporter'),
@@ -451,7 +390,7 @@ class LocalStorageController
 		}
 
 		// Delete file
-		if (!\unlink($realFullPath)) {
+		if (!\unlink($fullPath)) {
 			return new WP_Error(
 				'delete_failed',
 				\__('Failed to delete file.', 'aether-site-exporter'),
@@ -575,18 +514,18 @@ class LocalStorageController
 		$uploadDir = \rtrim(ABSPATH, '/') . '/' . $staticPath;
 		$fullPath = $uploadDir . '/' . \ltrim($key, '/');
 
-		// Security: Validate path
-		$realUploadDir = \realpath($uploadDir);
-		if ($realUploadDir === false) {
+		// Security: Validate path using universal PathValidator
+		$validation = PathValidator::validatePath($fullPath, ABSPATH, false);
+		if (!$validation['valid']) {
 			return new WP_Error(
-				'directory_not_found',
-				\__('Upload directory not found.', 'aether-site-exporter'),
-				[ 'status' => 404 ]
+				'invalid_path',
+				\sprintf(\__('Invalid file path: %s', 'aether-site-exporter'), $validation['error']),
+				[ 'status' => 400 ]
 			);
 		}
 
-		$realFullPath = \realpath($fullPath);
-		if ($realFullPath === false || \strpos($realFullPath, $realUploadDir) !== 0) {
+		// Check if file exists
+		if (!\file_exists($fullPath)) {
 			return new WP_Error(
 				'file_not_found',
 				\__('File not found.', 'aether-site-exporter'),
@@ -595,7 +534,7 @@ class LocalStorageController
 		}
 
 		// Read and return file
-		$content = \file_get_contents($realFullPath);
+		$content = \file_get_contents($fullPath);
 		if ($content === false) {
 			return new WP_Error(
 				'read_failed',
