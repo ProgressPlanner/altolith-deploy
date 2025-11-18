@@ -20,7 +20,7 @@ The Aether Site Exporter plugin is now **fully compatible** with WordPress Playg
 | **Phase 3: File Persistence** | ✅ COMPLETE | `FileManager` with tracking |
 | **Phase 4: Post Limits** | ✅ COMPLETE | Configurable limits |
 | **Phase 5: Path Validation** | ✅ COMPLETE | `PathValidator` utility |
-| **Phase 6: Cache Config** | ⏳ OPTIONAL | Low priority |
+| **Phase 6: Cache Config** | ✅ COMPLETE | IndexedDB implementation |
 | **Phase 7: Documentation** | ✅ COMPLETE | README updated |
 | **Real-world Testing** | ⏸️ PENDING | Requires Playground instance |
 
@@ -804,10 +804,10 @@ set_transient('aether_job_' . $jobId, $state, 30 * MINUTE_IN_SECONDS);
 - ✅ Error messages are user-friendly
 
 ### Nice to Have (Phase 6-7)
-- ✅ Cache size configurable for power users
+- ✅ Unlimited caching via IndexedDB (better than configurable!)
 - ✅ Comprehensive Playground documentation
-- ✅ All tests pass in Playground environment
-- ✅ Performance comparable to regular hosting
+- ⏸️ All tests pass in Playground environment (pending testing)
+- ⏸️ Performance comparable to regular hosting (pending testing)
 
 ---
 
@@ -864,13 +864,27 @@ All critical compatibility issues have been resolved using a **universal impleme
 - Prevents timeout on large sites
 - User can configure via settings
 
-#### 6. Integration Points
+#### 6. IndexedDB Cache System
+**Files:** `assets/src/utils/indexedDB.js`, `assets/src/utils/staticSiteCache.js`
+- Replaces in-memory Map with IndexedDB for unlimited caching
+- Previous limit: 500 URLs in RAM
+- New limit: Browser storage quota (typically 50MB-1GB+)
+- Features:
+  - `IndexedDBStore` - Generic key-value storage with indexes
+  - `StaticSiteCache` - Specialized for HTML/asset caching
+  - Automatic cleanup (24-hour expiration)
+  - Fallback to in-memory cache if IndexedDB unavailable
+  - Storage health monitoring
+  - Session-based cache isolation
+
+#### 7. Integration Points
 **Updated files:**
 - `includes/Services/ExportService.php` - Uses TempDirectoryManager
 - `includes/REST/ExportController.php` - File tracking + persistence validation
 - `includes/REST/LocalStorageController.php` - PathValidator + FileManager
 - `includes/Plugin.php` - Cleanup via TempDirectoryManager
 - `assets/src/utils/useAssetDiscovery.js` - Handles `exists: null`
+- `assets/src/publish/hooks/useStaticSiteGenerator.js` - IndexedDB cache
 
 ### Design Principles
 
@@ -890,10 +904,10 @@ The Aether Site Exporter plugin is now **fully compatible** with WordPress Playg
 3. ✅ File persistence validation - `FileManager` with tracking
 4. ✅ Path validation - `PathValidator` with fallbacks
 5. ✅ Post limits - Configurable via settings
+6. ✅ Unlimited caching - IndexedDB implementation
 
 **Remaining work:**
 - Real-world Playground testing (critical)
-- Optional: Cache size configuration (low priority)
 - Optional: Admin UI notices (low priority)
 
 **Recommendation:** Deploy to WordPress Playground for real-world testing. The plugin should work reliably in both traditional hosting and Playground environments.
