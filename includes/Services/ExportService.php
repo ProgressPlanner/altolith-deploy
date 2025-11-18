@@ -12,6 +12,7 @@ namespace Aether\SiteExporter\Services;
 
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Sync\JobStateManager;
+use AetherSiteExporter\Utilities\TempDirectoryManager;
 
 \defined('ABSPATH') || exit;
 
@@ -58,21 +59,19 @@ class ExportService
 		// Note: WordPress Playground requires SQLite database.
 		// This method assumes SQLite is being used.
 
-		// Ensure file.php is loaded for wp_tempnam() function.
-		// REST API context doesn't automatically load admin files.
-		if (! \function_exists('wp_tempnam')) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
+		// WordPress Playground Compatibility:
+		// Use TempDirectoryManager instead of sys_get_temp_dir() because
+		// WordPress Playground's WASM environment may not have /tmp access.
+		// This uses wp-content/uploads/aether-temp instead.
+		$tempZipPath = TempDirectoryManager::getTempFilePath('wp-content-complete-', '.zip');
+
+		if (false === $tempZipPath) {
+			return new \WP_Error(
+				'temp_directory_unavailable',
+				\__('Could not create temporary directory for export. Please check file permissions.', 'aether-site-exporter'),
+				['status' => 500]
+			);
 		}
-
-		// Create temporary file with unique name in system temp directory.
-		// wp_tempnam() uses sys_get_temp_dir() to avoid permission issues.
-		// We create in temp first, then move atomically to final location.
-		$tempZipPath = \wp_tempnam('wp-content-complete-');
-
-		// wp_tempnam creates an empty file - remove it so we can use the path for a zip.
-		// Append .zip extension for proper file type identification.
-		@\unlink($tempZipPath);
-		$tempZipPath .= '.zip';
 
 		// Get export path from settings.
 		$settings = \get_option('aether_site_exporter_settings', []);

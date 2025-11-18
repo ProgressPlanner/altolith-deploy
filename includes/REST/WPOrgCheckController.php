@@ -4,7 +4,13 @@
  * WordPress.org Check Controller
  *
  * REST API endpoint to check if plugins/themes exist on WordPress.org.
- * Server-side implementation avoids CORS issues.
+ *
+ * Note: External API calls (wp_remote_*) don't work in all environments
+ * (e.g., WordPress Playground blocks them). This endpoint relies on the
+ * 'aether_site_exporter_wporg_check_response' filter for actual checks.
+ *
+ * Implementations should use browser-based fetch() or CORS proxies
+ * to perform the actual WordPress.org API calls.
  *
  * @package Aether\SiteExporter
  */
@@ -64,6 +70,27 @@ class WPOrgCheckController extends WP_REST_Controller
 	/**
 	 * Check if a plugin or theme exists on WordPress.org
 	 *
+	 * This endpoint doesn't make external HTTP calls directly because they
+	 * don't work in all environments. Instead, it relies on the filter hook
+	 * to provide the response.
+	 *
+	 * Filter Hook: 'aether_site_exporter_wporg_check_response'
+	 *
+	 * @param null|array $response Default null, return array to provide response
+	 * @param string     $slug     Plugin or theme slug
+	 * @param string     $type     'plugin' or 'theme'
+	 *
+	 * Expected response format:
+	 * [
+	 *   'success'    => true,
+	 *   'exists'     => bool,
+	 *   'slug'       => string,
+	 *   'type'       => string,
+	 *   'method'     => string,   // e.g., 'browser-fetch', 'cors-proxy'
+	 *   'cached'     => bool,
+	 *   'checked_at' => string,   // ISO 8601 format
+	 * ]
+	 *
 	 * @param WP_REST_Request $request Full details about the request.
 	 * @return WP_REST_Response|WP_Error Response object on success, or WP_Error object on failure.
 	 */
@@ -72,120 +99,39 @@ class WPOrgCheckController extends WP_REST_Controller
 		$slug = $request->get_param('slug');
 		$type = $request->get_param('type');
 
-		// Allow plugins to completely override the check logic
-		$customResponse = \apply_filters(
+		/**
+		 * Filter WordPress.org check response
+		 *
+		 * Use this filter to provide WordPress.org API check results.
+		 * Since external HTTP calls don't work in all environments,
+		 * implementations should use browser-based fetch() or CORS proxies.
+		 *
+		 * @param null|array $response Default null, return array to provide response
+		 * @param string     $slug     Plugin or theme slug
+		 * @param string     $type     'plugin' or 'theme'
+		 */
+		$response = \apply_filters(
 			'aether_site_exporter_wporg_check_response',
 			null,
 			$slug,
 			$type
 		);
 
-		if (null !== $customResponse) {
-			return \rest_ensure_response($customResponse);
+		// If no filter provided a response, return default "unknown" response
+		if (null === $response) {
+			$response = [
+				'success'    => true,
+				'exists'     => null, // null = unknown/unable to check
+				'slug'       => $slug,
+				'type'       => $type,
+				'method'     => 'none',
+				'cached'     => false,
+				'checked_at' => \gmdate('Y-m-d\TH:i:s\Z'),
+				'message'    => 'WordPress.org check not available. Use browser-based fetch or CORS proxy.',
+			];
 		}
 
-		// Perform the WordPress.org API check
-		$result = $this->checkWporgApi($slug, $type);
-
-		if (\is_wp_error($result)) {
-			return $result;
-		}
-
-		return \rest_ensure_response($result);
-	}
-
-	/**
-	 * Check WordPress.org API to see if asset exists
-	 *
-	 * @param string $slug Plugin or theme slug.
-	 * @param string $type 'plugin' or 'theme'.
-	 * @return array<string, mixed>|WP_Error Response array or WP_Error on failure.
-	 */
-	private function checkWporgApi(string $slug, string $type): array|WP_Error
-	{
-		// Construct WordPress.org API URL
-		$apiUrl = $this->getWporgApiUrl($slug, $type);
-
-		// Make HTTP request
-		$response = \wp_remote_get(
-			$apiUrl,
-			[
-				'timeout' => 10,
-				'headers' => [
-					'Accept' => 'application/json',
-				],
-			]
-		);
-
-		// Check for HTTP errors
-		if (\is_wp_error($response)) {
-			return new WP_Error(
-				'wporg_api_error',
-				\sprintf('Failed to connect to WordPress.org API: %s', $response->get_error_message()),
-				[ 'status' => 500 ]
-			);
-		}
-
-		$statusCode = \wp_remote_retrieve_response_code($response);
-		$body       = \wp_remote_retrieve_body($response);
-
-		// Parse JSON response with depth limit to prevent DoS attacks
-		try {
-			$data = \json_decode($body, true, 10, \JSON_THROW_ON_ERROR);
-		} catch (\JsonException $e) {
-			return new WP_Error(
-				'wporg_api_invalid_json',
-				\sprintf('Invalid JSON response from WordPress.org API: %s', $e->getMessage()),
-				[ 'status' => 500 ]
-			);
-		}
-
-		// Validate decoded data is an array
-		if (!\is_array($data)) {
-			return new WP_Error(
-				'wporg_api_invalid_json',
-				'Invalid JSON response from WordPress.org API',
-				[ 'status' => 500 ]
-			);
-		}
-
-		// Determine if asset exists
-		// WordPress.org returns 'error' field if not found, or 'slug' field if found
-		$exists = ! isset($data['error']) && ( isset($data['slug']) || isset($data['name']) );
-
-		// Build standardized response
-		return [
-			'success'    => true,
-			'exists'     => $exists,
-			'slug'       => $slug,
-			'type'       => $type,
-			'method'     => 'php',
-			'cached'     => false,
-			'checked_at' => \gmdate('Y-m-d\TH:i:s\Z'),
-		];
-	}
-
-	/**
-	 * Get WordPress.org API URL for slug and type
-	 *
-	 * @param string $slug Plugin or theme slug.
-	 * @param string $type 'plugin' or 'theme'.
-	 * @return string API URL.
-	 */
-	private function getWporgApiUrl(string $slug, string $type): string
-	{
-		if ('theme' === $type) {
-			return \sprintf(
-				'https://api.wordpress.org/themes/info/1.2/?action=theme_information&request[slug]=%s',
-				\rawurlencode($slug)
-			);
-		}
-
-		// Default to plugin
-		return \sprintf(
-			'https://api.wordpress.org/plugins/info/1.0/%s.json',
-			\rawurlencode($slug)
-		);
+		return \rest_ensure_response($response);
 	}
 
 	/**

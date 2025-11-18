@@ -10,6 +10,7 @@ namespace Aether\SiteExporter\REST;
 
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Services\ExportService;
+use AetherSiteExporter\Utilities\TempDirectoryManager;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -121,9 +122,16 @@ class ExportController
 		// Generate job ID.
 		$jobId = 'export_' . \time() . '_' . \wp_generate_password(8, false);
 
-		// Create temp zip file path.
-		$tempDir = \sys_get_temp_dir();
-		$zipPath = $tempDir . '/wp-content-export-' . $jobId . '.zip';
+		// Create temp zip file path using managed temp directory.
+		$zipPath = TempDirectoryManager::getTempFilePath('wp-content-export-' . $jobId . '-', '.zip');
+
+		if (false === $zipPath) {
+			return new WP_Error(
+				'temp_directory_unavailable',
+				\__('Could not create temporary directory for export. Please check file permissions.', 'aether-site-exporter'),
+				['status' => 500]
+			);
+		}
 
 		// Initialize empty zip (don't add anything yet to avoid memory issues).
 		$zip = new \ZipArchive();

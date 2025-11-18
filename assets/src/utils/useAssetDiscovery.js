@@ -127,6 +127,12 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 			exists = data.exists;
 		}
 
+		// Handle null exists (unknown/unable to check)
+		// Treat as false (not from WordPress.org) to be safe
+		if ( exists === null ) {
+			exists = false;
+		}
+
 		// Cache the result
 		wporgCache.set( cacheKey, exists );
 

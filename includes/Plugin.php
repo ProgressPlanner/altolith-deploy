@@ -11,6 +11,7 @@ namespace Aether\SiteExporter;
 \defined('ABSPATH') || exit;
 use Aether\SiteExporter\Admin\PluginDependencyManager;
 use Aether\SiteExporter\Sync\Blueprint\AssetDiscoveryService;
+use AetherSiteExporter\Utilities\TempDirectoryManager;
 
 use function Aether\SiteExporter\getStorageConfig;
 /**
@@ -760,7 +761,7 @@ class Plugin
 	 * Cleanup expired temporary export files.
 	 *
 	 * Runs daily via WordPress 'wp_scheduled_delete' action.
-	 * Removes temporary export zip files older than 1 hour to prevent disk exhaustion.
+	 * Removes temporary export files older than 1 hour to prevent disk exhaustion.
 	 *
 	 * Security: Prevents attackers from filling disk space with abandoned export files.
 	 *
@@ -768,29 +769,9 @@ class Plugin
 	 */
 	public function cleanupExpiredExports(): void
 	{
-		$tempDir = \sys_get_temp_dir();
-		$pattern = $tempDir . '/wp-content-export-*.zip';
-
-		// Use glob to find all export files (returns array or false)
-		$files = \glob($pattern);
-
-		if (false === $files) {
-			return;
-		}
-
-		foreach ($files as $file) {
-			// Skip if file doesn't exist (may have been deleted between glob and check)
-			if (! \file_exists($file)) {
-				continue;
-			}
-
-			// Delete files older than 1 hour (3600 seconds)
-			// Export jobs expire after 10 minutes, so 1 hour provides safety margin
-			$fileAge = \time() - \filemtime($file);
-			if ($fileAge > 3600) {
-				// Suppress errors - file may be deleted by another process
-				@\unlink($file);
-			}
-		}
+		// Use TempDirectoryManager for cleanup (works in all environments).
+		// Removes files older than 1 hour (3600 seconds).
+		// Export jobs expire after 10 minutes, so 1 hour provides safety margin.
+		TempDirectoryManager::cleanupExpiredFiles(3600);
 	}
 }
