@@ -115,6 +115,10 @@ export class IndexedDBStore {
 		this.storeName = storeName;
 		this.config = config;
 		this.db = null;
+		// Get the keyPath for this store from config
+		this.keyPath =
+			config.stores?.[ storeName ]?.keyPath ||
+			DEFAULT_CONFIG.stores.cache.keyPath;
 	}
 
 	/**
@@ -190,9 +194,16 @@ export class IndexedDBStore {
 	async set( key, value, metadata = {} ) {
 		try {
 			const db = await this.ensureDatabase();
+
+			// For object values, spread properties; for primitives, use value property
+			const valueData =
+				typeof value === 'object' && value !== null
+					? { ...value }
+					: { value };
+
 			const data = {
-				key,
-				value,
+				[ this.keyPath ]: key,
+				...valueData,
 				timestamp: Date.now(),
 				...metadata,
 			};
