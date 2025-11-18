@@ -82,6 +82,67 @@ Exports are stored in `wp-content/aether-exports/` directory. Each export is con
 
 Exports can be downloaded as ZIP archives directly from the WordPress admin interface.
 
+## 🌐 WordPress Playground Compatibility
+
+This plugin is designed to work universally across all WordPress environments, including **WordPress Playground** (browser-based WASM environment).
+
+### Universal Architecture
+
+The plugin uses a universal implementation approach - no environment detection, no conditional code paths. All features work identically in traditional hosting and WordPress Playground.
+
+### Key Compatibility Features
+
+- **Universal Temp Directory**: Uses `wp-content/uploads/aether-temp` instead of system temp directory
+- **Universal Path Validation**: Works without `realpath()` in WASM environments
+- **Configurable Post Limits**: Prevents timeouts on large sites (default: 10,000 posts)
+- **Browser-Based Generation**: Static site generation runs in browser to avoid PHP timeouts
+- **WordPress.org API**: Uses filter-based approach for asset detection
+- **Memory Protection**: 500-URL cache limit prevents browser memory exhaustion
+
+### Configuration
+
+#### Post Discovery Limit
+
+For large sites, configure the post discovery limit to prevent timeouts:
+
+```php
+// Add to wp-config.php or theme functions.php
+add_filter( 'option_aether_site_exporter_settings', function( $settings ) {
+    $settings['max_posts_for_discovery'] = 5000; // Adjust as needed (100-50000)
+    return $settings;
+} );
+```
+
+#### WordPress.org Asset Detection
+
+Implement custom WordPress.org API checking using the filter hook:
+
+```php
+add_filter( 'aether_site_exporter_wporg_check_response', function( $response, $slug, $type ) {
+    // Implement custom checking logic here
+    // Use browser-based fetch() or CORS proxy
+    return [
+        'success'    => true,
+        'exists'     => true/false,
+        'slug'       => $slug,
+        'type'       => $type,
+        'method'     => 'custom',
+        'cached'     => false,
+        'checked_at' => gmdate( 'Y-m-d\TH:i:s\Z' ),
+    ];
+}, 10, 3 );
+```
+
+### Limitations
+
+- **Temporary Storage**: Files in `wp-content/uploads/aether-temp` are cleaned up after 1 hour
+- **Post Limits**: Default limit of 10,000 posts/pages for URL discovery
+- **WordPress.org API**: Requires custom implementation via filter hook
+
+### Technical Details
+
+See [PLAYGROUND_COMPATIBILITY.md](PLAYGROUND_COMPATIBILITY.md) for comprehensive technical documentation.
+
 ## 🛠 Development
 
 ### Build Commands
