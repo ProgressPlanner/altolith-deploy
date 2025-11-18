@@ -188,7 +188,7 @@ describe( 'blueprintStepBuilders', () => {
 			// Assert - INTENDED: Steps must be in correct order
 			// buildBlueprintSteps only builds: importWordPressFiles, WordPress.org plugins, WordPress.org themes
 			// Aether install, defineWpConfigConsts, and Aether activation are added by filters elsewhere
-			
+
 			// 1. importWordPressFiles (bundled resource)
 			expect( steps[ 0 ].step ).toBe( 'importWordPressFiles' );
 			expect( steps[ 0 ].wordPressFilesZip.resource ).toBe( 'bundled' );
@@ -198,7 +198,9 @@ describe( 'blueprintStepBuilders', () => {
 
 			// 2. installPlugin (WordPress.org plugins)
 			expect( steps[ 1 ].step ).toBe( 'installPlugin' );
-			expect( steps[ 1 ].pluginData.resource ).toBe( 'wordpress.org/plugins' );
+			expect( steps[ 1 ].pluginData.resource ).toBe(
+				'wordpress.org/plugins'
+			);
 			expect( steps[ 1 ].pluginData.slug ).toBe( 'akismet' );
 			expect( steps[ 2 ].step ).toBe( 'installPlugin' );
 			expect( steps[ 2 ].pluginData.slug ).toBe( 'jetpack' );

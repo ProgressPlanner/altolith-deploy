@@ -479,5 +479,4 @@ class ProviderConfigController
 			[ 'status' => 501 ]
 		);
 	}
-
 }

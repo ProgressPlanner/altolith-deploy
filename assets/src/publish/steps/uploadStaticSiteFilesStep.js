@@ -7,7 +7,7 @@
  * @package
  */
 
-import { doAction, applyFilters } from '@wordpress/hooks';
+import { applyFilters } from '@wordpress/hooks';
 
 /**
  * Upload static site files step handler.
@@ -73,7 +73,11 @@ export async function uploadStaticSiteFilesHandler( context ) {
 	 *   return [...urls, { url: '/custom-page/', type: 'page' }];
 	 * });
 	 */
-	const filteredUrls = applyFilters( 'aether.upload.urls', urlsArray, providerId );
+	const filteredUrls = applyFilters(
+		'aether.upload.urls',
+		urlsArray,
+		providerId
+	);
 
 	// Process ALL URLs and upload static files
 	const result = await processStaticSiteUrls(

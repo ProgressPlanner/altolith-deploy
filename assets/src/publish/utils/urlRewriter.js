@@ -48,7 +48,7 @@ export function resolveRelative( url, baseUrl ) {
 		0,
 		base.pathname.lastIndexOf( '/' )
 	);
-	let resolvedUrl = base.origin + baseDir + '/' + url;
+	const resolvedUrl = base.origin + baseDir + '/' + url;
 
 	/**
 	 * Filter resolved URL after relative-to-absolute conversion.
@@ -135,7 +135,12 @@ export function isExternal( url, siteUrl ) {
 	 *     return isExternal;
 	 * });
 	 */
-	return applyFilters( 'aether.url.is_external', isExternalUrl, url, siteUrl );
+	return applyFilters(
+		'aether.url.is_external',
+		isExternalUrl,
+		url,
+		siteUrl
+	);
 }
 
 /**
@@ -487,7 +492,8 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 				rewrittenUrl = staticUrlObj.origin + basePath + staticPath;
 			} catch {
 				// If URL parsing fails, fall back to simple concatenation
-				rewrittenUrl = normalizedStaticUrl.replace( /\/$/, '' ) + staticPath;
+				rewrittenUrl =
+					normalizedStaticUrl.replace( /\/$/, '' ) + staticPath;
 			}
 		} else {
 			rewrittenUrl = staticPath;
@@ -498,10 +504,10 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 		 *
 		 * Allows customization of the final rewritten URL.
 		 *
-		 * @param {string} rewrittenUrl      Final rewritten URL.
-		 * @param {string} url               Original URL.
-		 * @param {string} contextUrl        Context URL for resolution.
-		 * @param {string} siteUrl           Site URL.
+		 * @param {string} rewrittenUrl        Final rewritten URL.
+		 * @param {string} url                 Original URL.
+		 * @param {string} contextUrl          Context URL for resolution.
+		 * @param {string} siteUrl             Site URL.
 		 * @param {string} normalizedStaticUrl Static URL (if configured).
 		 *
 		 * @example

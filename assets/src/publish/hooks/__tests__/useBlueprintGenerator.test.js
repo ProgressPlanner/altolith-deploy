@@ -369,7 +369,6 @@ describe( 'useBlueprintGenerator', () => {
 				'/wp-content.zip'
 			);
 		} );
-
 	} );
 
 	describe( 'Error Handling', () => {
@@ -389,5 +388,4 @@ describe( 'useBlueprintGenerator', () => {
 			).rejects.toThrow( 'Network error checking WordPress.org' );
 		} );
 	} );
-
 } );

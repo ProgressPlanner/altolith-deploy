@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Temporary Directory Manager for WordPress Playground Compatibility
  *
@@ -16,8 +17,8 @@ namespace AetherSiteExporter\Utilities;
  *
  * Manages temporary file storage compatible with WordPress Playground.
  */
-class TempDirectoryManager {
-
+class TempDirectoryManager
+{
 	/**
 	 * Get the temporary directory path
 	 *
@@ -26,7 +27,8 @@ class TempDirectoryManager {
 	 *
 	 * @return string Absolute path to temp directory
 	 */
-	public static function getTempDirectory() {
+	public static function getTempDirectory()
+	{
 		/**
 		 * Filter the temporary directory path
 		 *
@@ -52,30 +54,31 @@ class TempDirectoryManager {
 	 *
 	 * @return bool True on success, false on failure
 	 */
-	public static function ensureTempDirectoryExists() {
+	public static function ensureTempDirectoryExists()
+	{
 		$tempDir = self::getTempDirectory();
 
 		// Directory already exists and is writable
-		if ( file_exists( $tempDir ) && is_writable( $tempDir ) ) {
+		if (file_exists($tempDir) && is_writable($tempDir)) {
 			return true;
 		}
 
 		// Attempt to create directory
-		if ( ! file_exists( $tempDir ) ) {
-			if ( ! wp_mkdir_p( $tempDir ) ) {
-				error_log( 'Aether Site Exporter: Failed to create temp directory: ' . $tempDir );
+		if (! file_exists($tempDir)) {
+			if (! wp_mkdir_p($tempDir)) {
+				error_log('Aether Site Exporter: Failed to create temp directory: ' . $tempDir);
 				return false;
 			}
 		}
 
 		// Verify writability
-		if ( ! is_writable( $tempDir ) ) {
-			error_log( 'Aether Site Exporter: Temp directory is not writable: ' . $tempDir );
+		if (! is_writable($tempDir)) {
+			error_log('Aether Site Exporter: Temp directory is not writable: ' . $tempDir);
 			return false;
 		}
 
 		// Add .htaccess to prevent direct access
-		self::addDirectoryProtection( $tempDir );
+		self::addDirectoryProtection($tempDir);
 
 		return true;
 	}
@@ -86,11 +89,12 @@ class TempDirectoryManager {
 	 * @param string $directory Directory to protect
 	 * @return bool True on success, false on failure
 	 */
-	private static function addDirectoryProtection( $directory ) {
+	private static function addDirectoryProtection($directory)
+	{
 		$htaccessFile = $directory . '/.htaccess';
 
 		// Already exists
-		if ( file_exists( $htaccessFile ) ) {
+		if (file_exists($htaccessFile)) {
 			return true;
 		}
 
@@ -98,10 +102,10 @@ class TempDirectoryManager {
 		$htaccessContent .= "Order deny,allow\n";
 		$htaccessContent .= "Deny from all\n";
 
-		$result = file_put_contents( $htaccessFile, $htaccessContent );
+		$result = file_put_contents($htaccessFile, $htaccessContent);
 
-		if ( false === $result ) {
-			error_log( 'Aether Site Exporter: Failed to create .htaccess in temp directory' );
+		if (false === $result) {
+			error_log('Aether Site Exporter: Failed to create .htaccess in temp directory');
 			return false;
 		}
 
@@ -117,19 +121,20 @@ class TempDirectoryManager {
 	 * @param string $extension File extension (default: empty)
 	 * @return string|false Full path to temp file, or false on failure
 	 */
-	public static function getTempFilePath( $prefix = 'aether-', $extension = '' ) {
-		if ( ! self::ensureTempDirectoryExists() ) {
+	public static function getTempFilePath($prefix = 'aether-', $extension = '')
+	{
+		if (! self::ensureTempDirectoryExists()) {
 			return false;
 		}
 
 		$tempDir = self::getTempDirectory();
 
 		// Generate unique filename
-		$filename = $prefix . wp_generate_password( 12, false ) . '-' . time();
+		$filename = $prefix . wp_generate_password(12, false) . '-' . time();
 
-		if ( ! empty( $extension ) ) {
+		if (! empty($extension)) {
 			// Ensure extension starts with dot
-			$extension = '.' . ltrim( $extension, '.' );
+			$extension = '.' . ltrim($extension, '.');
 			$filename .= $extension;
 		}
 
@@ -137,16 +142,16 @@ class TempDirectoryManager {
 
 		// Ensure file doesn't already exist (extremely unlikely)
 		$counter = 0;
-		while ( file_exists( $fullPath ) && $counter < 100 ) {
-			$filename = $prefix . wp_generate_password( 12, false ) . '-' . time() . '-' . ++$counter;
-			if ( ! empty( $extension ) ) {
+		while (file_exists($fullPath) && $counter < 100) {
+			$filename = $prefix . wp_generate_password(12, false) . '-' . time() . '-' . ++$counter;
+			if (! empty($extension)) {
 				$filename .= $extension;
 			}
 			$fullPath = $tempDir . '/' . $filename;
 		}
 
-		if ( file_exists( $fullPath ) ) {
-			error_log( 'Aether Site Exporter: Could not generate unique temp file path' );
+		if (file_exists($fullPath)) {
+			error_log('Aether Site Exporter: Could not generate unique temp file path');
 			return false;
 		}
 
@@ -158,13 +163,14 @@ class TempDirectoryManager {
 	 *
 	 * Removes files older than the specified age.
 	 *
-	 * @param int $max_age_seconds Maximum age in seconds (default: 24 hours)
+	 * @param int $maxAgeSeconds Maximum age in seconds (default: 24 hours)
 	 * @return int Number of files deleted
 	 */
-	public static function cleanupExpiredFiles( $max_age_seconds = 86400 ) {
+	public static function cleanupExpiredFiles($maxAgeSeconds = 86400)
+	{
 		$tempDir = self::getTempDirectory();
 
-		if ( ! file_exists( $tempDir ) || ! is_dir( $tempDir ) ) {
+		if (! file_exists($tempDir) || ! is_dir($tempDir)) {
 			return 0;
 		}
 
@@ -172,36 +178,36 @@ class TempDirectoryManager {
 		$currentTime = time();
 
 		try {
-			$files = new \DirectoryIterator( $tempDir );
+			$files = new \DirectoryIterator($tempDir);
 
-			foreach ( $files as $file ) {
+			foreach ($files as $file) {
 				// Skip . and .. and .htaccess
-				if ( $file->isDot() || $file->getFilename() === '.htaccess' ) {
+				if ($file->isDot() || $file->getFilename() === '.htaccess') {
 					continue;
 				}
 
 				// Check file age
 				$fileAge = $currentTime - $file->getMTime();
 
-				if ( $fileAge > $max_age_seconds ) {
+				if ($fileAge > $maxAgeSeconds) {
 					$filePath = $file->getPathname();
 
-					if ( $file->isFile() ) {
-						if ( @unlink( $filePath ) ) {
+					if ($file->isFile()) {
+						if (@unlink($filePath)) {
 							$deletedCount++;
 						} else {
-							error_log( 'Aether Site Exporter: Failed to delete expired temp file: ' . $filePath );
+							error_log('Aether Site Exporter: Failed to delete expired temp file: ' . $filePath);
 						}
-					} elseif ( $file->isDir() ) {
+					} elseif ($file->isDir()) {
 						// Recursively delete directory
-						if ( self::deleteDirectory( $filePath ) ) {
+						if (self::deleteDirectory($filePath)) {
 							$deletedCount++;
 						}
 					}
 				}
 			}
-		} catch ( \Exception $e ) {
-			error_log( 'Aether Site Exporter: Error during temp file cleanup: ' . $e->getMessage() );
+		} catch (\Exception $e) {
+			error_log('Aether Site Exporter: Error during temp file cleanup: ' . $e->getMessage());
 		}
 
 		return $deletedCount;
@@ -213,28 +219,29 @@ class TempDirectoryManager {
 	 * @param string $directory Directory path to delete
 	 * @return bool True on success, false on failure
 	 */
-	private static function deleteDirectory( $directory ) {
-		if ( ! file_exists( $directory ) || ! is_dir( $directory ) ) {
+	private static function deleteDirectory($directory)
+	{
+		if (! file_exists($directory) || ! is_dir($directory)) {
 			return false;
 		}
 
 		try {
 			$files = new \RecursiveIteratorIterator(
-				new \RecursiveDirectoryIterator( $directory, \RecursiveDirectoryIterator::SKIP_DOTS ),
+				new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS),
 				\RecursiveIteratorIterator::CHILD_FIRST
 			);
 
-			foreach ( $files as $file ) {
-				if ( $file->isDir() ) {
-					@rmdir( $file->getRealPath() );
+			foreach ($files as $file) {
+				if ($file->isDir()) {
+					@rmdir($file->getRealPath());
 				} else {
-					@unlink( $file->getRealPath() );
+					@unlink($file->getRealPath());
 				}
 			}
 
-			return @rmdir( $directory );
-		} catch ( \Exception $e ) {
-			error_log( 'Aether Site Exporter: Error deleting directory: ' . $e->getMessage() );
+			return @rmdir($directory);
+		} catch (\Exception $e) {
+			error_log('Aether Site Exporter: Error deleting directory: ' . $e->getMessage());
 			return false;
 		}
 	}
@@ -245,33 +252,34 @@ class TempDirectoryManager {
 	 * @param string $filePath Full path to the file
 	 * @return bool True on success, false on failure
 	 */
-	public static function deleteFile( $filePath ) {
+	public static function deleteFile($filePath)
+	{
 		// Verify file is in our temp directory
 		$tempDir = self::getTempDirectory();
-		$realTempDir = realpath( $tempDir );
-		$realFilePath = realpath( $filePath );
+		$realTempDir = realpath($tempDir);
+		$realFilePath = realpath($filePath);
 
 		// If realpath fails, fall back to string comparison
-		if ( false === $realTempDir || false === $realFilePath ) {
+		if (false === $realTempDir || false === $realFilePath) {
 			// Normalize paths for comparison
-			$tempDir = wp_normalize_path( $tempDir );
-			$filePath = wp_normalize_path( $filePath );
+			$tempDir = wp_normalize_path($tempDir);
+			$filePath = wp_normalize_path($filePath);
 
-			if ( strpos( $filePath, $tempDir ) !== 0 ) {
-				error_log( 'Aether Site Exporter: Attempted to delete file outside temp directory: ' . $filePath );
+			if (strpos($filePath, $tempDir) !== 0) {
+				error_log('Aether Site Exporter: Attempted to delete file outside temp directory: ' . $filePath);
 				return false;
 			}
 		} else {
 			// Use realpath comparison
-			if ( strpos( $realFilePath, $realTempDir ) !== 0 ) {
-				error_log( 'Aether Site Exporter: Attempted to delete file outside temp directory: ' . $filePath );
+			if (strpos($realFilePath, $realTempDir) !== 0) {
+				error_log('Aether Site Exporter: Attempted to delete file outside temp directory: ' . $filePath);
 				return false;
 			}
 		}
 
 		// Delete file
-		if ( file_exists( $filePath ) && is_file( $filePath ) ) {
-			return @unlink( $filePath );
+		if (file_exists($filePath) && is_file($filePath)) {
+			return @unlink($filePath);
 		}
 
 		return false;
@@ -284,10 +292,11 @@ class TempDirectoryManager {
 	 *
 	 * @return int Total size in bytes
 	 */
-	public static function getTempDirectorySize() {
+	public static function getTempDirectorySize()
+	{
 		$tempDir = self::getTempDirectory();
 
-		if ( ! file_exists( $tempDir ) || ! is_dir( $tempDir ) ) {
+		if (! file_exists($tempDir) || ! is_dir($tempDir)) {
 			return 0;
 		}
 
@@ -295,16 +304,16 @@ class TempDirectoryManager {
 
 		try {
 			$files = new \RecursiveIteratorIterator(
-				new \RecursiveDirectoryIterator( $tempDir, \RecursiveDirectoryIterator::SKIP_DOTS )
+				new \RecursiveDirectoryIterator($tempDir, \RecursiveDirectoryIterator::SKIP_DOTS)
 			);
 
-			foreach ( $files as $file ) {
-				if ( $file->isFile() ) {
+			foreach ($files as $file) {
+				if ($file->isFile()) {
 					$totalSize += $file->getSize();
 				}
 			}
-		} catch ( \Exception $e ) {
-			error_log( 'Aether Site Exporter: Error calculating temp directory size: ' . $e->getMessage() );
+		} catch (\Exception $e) {
+			error_log('Aether Site Exporter: Error calculating temp directory size: ' . $e->getMessage());
 		}
 
 		return $totalSize;
@@ -315,29 +324,30 @@ class TempDirectoryManager {
 	 *
 	 * @return bool True if accessible, false otherwise
 	 */
-	public static function isTempDirectoryAccessible() {
+	public static function isTempDirectoryAccessible()
+	{
 		$tempDir = self::getTempDirectory();
 
 		// Check if we can create the directory
-		if ( ! self::ensureTempDirectoryExists() ) {
+		if (! self::ensureTempDirectoryExists()) {
 			return false;
 		}
 
 		// Try to write a test file
-		$testFile = $tempDir . '/test-' . wp_generate_password( 8, false ) . '.tmp';
+		$testFile = $tempDir . '/test-' . wp_generate_password(8, false) . '.tmp';
 		$testContent = 'test';
 
-		$result = @file_put_contents( $testFile, $testContent );
+		$result = @file_put_contents($testFile, $testContent);
 
-		if ( false === $result ) {
+		if (false === $result) {
 			return false;
 		}
 
 		// Try to read it back
-		$readContent = @file_get_contents( $testFile );
+		$readContent = @file_get_contents($testFile);
 
 		// Clean up
-		@unlink( $testFile );
+		@unlink($testFile);
 
 		return ( $readContent === $testContent );
 	}

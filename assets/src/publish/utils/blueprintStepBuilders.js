@@ -136,7 +136,7 @@ export function buildAetherActivationStep() {
 export function buildBlueprintSteps( config ) {
 	const { wporgPlugins = [], wporgThemes = [] } = config;
 
-	let steps = [];
+	const steps = [];
 
 	// Step 1: Import WordPress files (wp-content.zip from bundle).
 	steps.push( buildImportFilesStep() );
@@ -177,7 +177,7 @@ export function buildBlueprintSteps( config ) {
  * @return {Object} Complete blueprint JSON.
  */
 export function buildBlueprintJson( steps ) {
-	let blueprint = {
+	const blueprint = {
 		$schema: 'https://playground.wordpress.net/blueprint-schema.json',
 		landingPage: '/wp-login.php',
 		preferredVersions: {

@@ -214,7 +214,11 @@ async function executeStep(
 		 *   console.log('Blueprint generated:', result.blueprint);
 		 * });
 		 */
-		doAction( `aether.publish.step.${ stepId }.after`, filteredResult, context );
+		doAction(
+			`aether.publish.step.${ stepId }.after`,
+			filteredResult,
+			context
+		);
 
 		return filteredResult;
 	} catch ( error ) {

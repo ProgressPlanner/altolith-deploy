@@ -38,7 +38,10 @@ describe( 'isFromWordPressOrg', () => {
 			exists: true,
 		} );
 
-		const result = await isFromWordPressOrg( 'twentytwentyfour-test-1', 'theme' );
+		const result = await isFromWordPressOrg(
+			'twentytwentyfour-test-1',
+			'theme'
+		);
 
 		expect( result ).toBe( true );
 		expect( apiFetch ).toHaveBeenCalledWith( {
@@ -85,7 +88,7 @@ describe( 'isFromWordPressOrg', () => {
 	it( 'returns false on CORS error', async () => {
 		// Clear any previous mocks
 		apiFetch.mockClear();
-		
+
 		apiFetch.mockRejectedValueOnce( new TypeError( 'CORS error' ) );
 
 		const result = await isFromWordPressOrg( 'test-plugin-cors', 'plugin' );
@@ -112,7 +115,7 @@ describe( 'useAssetDiscovery', () => {
 		it( 'discovers custom plugins and themes', async () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
-			
+
 			// Mock apiFetch for config and assets endpoints
 			// Note: apiFetch is called multiple times:
 			// 1. Config endpoint
@@ -190,7 +193,9 @@ describe( 'useAssetDiscovery', () => {
 			} );
 			// Should not include wporg assets
 			expect( customAssets ).not.toContainEqual(
-				expect.objectContaining( { slug: 'akismet-test-2/akismet-test-2' } )
+				expect.objectContaining( {
+					slug: 'akismet-test-2/akismet-test-2',
+				} )
 			);
 			expect( customAssets ).not.toContainEqual(
 				expect.objectContaining( { slug: 'twentytwentyfour-test-2' } )
@@ -231,7 +236,7 @@ describe( 'useAssetDiscovery', () => {
 		it( 'handles errors gracefully', async () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
-			
+
 			// Mock apiFetch to return config and assets, then fail on wporg check
 			apiFetch
 				.mockResolvedValueOnce( {
@@ -269,7 +274,7 @@ describe( 'useAssetDiscovery', () => {
 		it( 'returns only WordPress.org assets for blueprint', async () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
-			
+
 			// Mock apiFetch for config and assets endpoints
 			apiFetch
 				.mockResolvedValueOnce( {
@@ -337,7 +342,7 @@ describe( 'useAssetDiscovery', () => {
 		it( 'excludes built-in Playground plugins', async () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
-			
+
 			apiFetch
 				.mockResolvedValueOnce( {
 					wporgCheckMethod: 'php',
@@ -388,7 +393,7 @@ describe( 'useAssetDiscovery', () => {
 		it( 'only includes active plugins', async () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
-			
+
 			apiFetch
 				.mockResolvedValueOnce( {
 					wporgCheckMethod: 'php',

@@ -104,7 +104,9 @@ describe( 'discoverAssetsStep', () => {
 				'discoverAssets'
 			);
 			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
-				expect.stringContaining( 'These will be included in the blueprint bundle' ),
+				expect.stringContaining(
+					'These will be included in the blueprint bundle'
+				),
 				'success',
 				'discoverAssets'
 			);
@@ -139,7 +141,9 @@ describe( 'discoverAssetsStep', () => {
 				'discoverAssets'
 			);
 			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
-				expect.stringContaining( 'These will be included in the blueprint bundle' ),
+				expect.stringContaining(
+					'These will be included in the blueprint bundle'
+				),
 				'success',
 				'discoverAssets'
 			);
@@ -169,7 +173,9 @@ describe( 'discoverAssetsStep', () => {
 				'discoverAssets'
 			);
 			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
-				expect.stringContaining( 'These will be included in the blueprint bundle' ),
+				expect.stringContaining(
+					'These will be included in the blueprint bundle'
+				),
 				'success',
 				'discoverAssets'
 			);

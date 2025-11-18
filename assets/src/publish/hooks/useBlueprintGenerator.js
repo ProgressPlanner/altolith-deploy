@@ -41,18 +41,17 @@ export function useBlueprintGenerator() {
 			}
 			const assetsResponse = await assetDiscovery.getBlueprintAssets();
 
-			let { plugins: wporgPlugins, themes: wporgThemes } =
-				assetsResponse;
+			let { plugins: wporgPlugins, themes: wporgThemes } = assetsResponse;
 
 			/**
 			 * Filter discovered WordPress.org assets.
 			 *
 			 * Allows modification of detected plugins and themes before blueprint generation.
 			 *
-			 * @param {Object}        assets            Discovered assets object.
-			 * @param {Array<string>} assets.plugins    WordPress.org plugin slugs.
-			 * @param {Array<string>} assets.themes     WordPress.org theme slugs.
-			 * @param {Object}        assetsResponse    Full asset discovery response.
+			 * @param {Object}        assets         Discovered assets object.
+			 * @param {Array<string>} assets.plugins WordPress.org plugin slugs.
+			 * @param {Array<string>} assets.themes  WordPress.org theme slugs.
+			 * @param {Object}        assetsResponse Full asset discovery response.
 			 *
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
