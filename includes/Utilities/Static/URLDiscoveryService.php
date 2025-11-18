@@ -132,15 +132,21 @@ class URLDiscoveryService
 	 */
 	private function addCommonWordpressUrls(): void
 	{
-		// Query all published blog posts for static site generation.
+		// Get max posts limit from settings (configurable for large sites)
+		$settings = \get_option('aether_site_exporter_settings', []);
+		$maxPosts = isset($settings['max_posts_for_discovery']) ? (int) $settings['max_posts_for_discovery'] : 10000;
+
+		// Enforce reasonable bounds (100 minimum, 50000 maximum)
+		$maxPosts = \max(100, \min(50000, $maxPosts));
+
+		// Query published blog posts for static site generation.
 		// Using 'fields' => 'ids' for performance - we only need IDs to generate permalinks,
 		// not full post objects. This significantly reduces memory usage for large sites.
-		// posts_per_page => -1 retrieves all posts (no pagination limit).
 		$posts = \get_posts(
 			[
 				'post_type'      => 'post',
 				'post_status'    => 'publish',
-				'posts_per_page' => -1,
+				'posts_per_page' => $maxPosts,
 				'fields'         => 'ids',
 			]
 		);
@@ -164,11 +170,12 @@ class URLDiscoveryService
 		// Query all published pages (hierarchical content).
 		// Pages are separate from posts and typically used for static content (About, Contact, etc).
 		// Same performance optimization as posts - only fetch IDs.
+		// Use same limit as posts (already loaded above)
 		$pages = \get_posts(
 			[
 				'post_type'      => 'page',
 				'post_status'    => 'publish',
-				'posts_per_page' => -1,
+				'posts_per_page' => $maxPosts,
 				'fields'         => 'ids',
 			]
 		);
