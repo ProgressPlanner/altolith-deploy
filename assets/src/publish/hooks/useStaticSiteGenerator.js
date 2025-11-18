@@ -24,6 +24,7 @@ import {
 import { createAssetTracker } from '../utils/assetTracker';
 import { debug, debugWarn } from '../../utils/debug';
 import { calculateFileHash } from '../../utils/fileHash';
+import StaticSiteCache from '../../utils/staticSiteCache';
 import {
 	fetchManifest,
 	updateManifestEntry,
@@ -110,13 +111,32 @@ export function useStaticSiteGenerator( onProgress ) {
 			}
 
 			// Cache for processed HTML and discovered assets
-			// Memory protection: Limit cache size to prevent browser memory exhaustion on large sites
-			const MAX_CACHE_SIZE = 500; // Max URLs to cache in memory at once
-			const urlCache = new Map();
+			// Using IndexedDB for unlimited caching (instead of RAM-limited Map)
+			const cache = new StaticSiteCache();
 			const allUniqueAssets = new Set(); // Track unique assets across all URLs
 
+			// Log cache health
+			const cacheHealth = await cache.getHealth();
+			if ( cacheHealth.usingFallback ) {
+				debugWarn(
+					'[Aether] IndexedDB not available, using in-memory fallback (500 URL limit)'
+				);
+			}
+			if ( cacheHealth.recommendations.length > 0 ) {
+				cacheHealth.recommendations.forEach( ( rec ) =>
+					debugWarn( `[Aether] ${ rec }` )
+				);
+			}
+
+			// Clean up old caches before starting
+			const cleanedCount = await cache.cleanup();
+			if ( cleanedCount > 0 ) {
+				debug(
+					`[Aether] Cleaned up ${ cleanedCount } old cache entries`
+				);
+			}
+
 			// Pre-scan: Fetch all URLs, extract assets, count total files
-			let cacheWarningShown = false;
 			for ( let i = 0; i < urls.length; i++ ) {
 				const url = urls[ i ];
 
@@ -158,21 +178,6 @@ export function useStaticSiteGenerator( onProgress ) {
 						allUniqueAssets.add( assetUrl );
 					}
 
-					// Memory protection: If cache exceeds limit, skip caching but continue processing
-					// This prevents memory exhaustion on very large sites (>500 pages)
-					if ( urlCache.size >= MAX_CACHE_SIZE ) {
-						if ( ! cacheWarningShown ) {
-							debugWarn(
-								`[Aether] URL cache limit reached (${ MAX_CACHE_SIZE }). ` +
-									`Remaining URLs will be processed without caching. ` +
-									`This may result in duplicate asset fetches but prevents memory exhaustion.`
-							);
-							cacheWarningShown = true;
-						}
-						// Skip caching but continue loop to count assets
-						continue;
-					}
-
 					// Process HTML and cache it
 					const processedHtml = processHtml(
 						html,
@@ -181,11 +186,9 @@ export function useStaticSiteGenerator( onProgress ) {
 						staticSiteUrl
 					);
 
-					// Cache processed HTML and asset URLs for upload phase
-					urlCache.set( url, {
-						processedHtml,
-						assetUrls,
-					} );
+					// Cache processed HTML and asset URLs in IndexedDB
+					// No size limit - IndexedDB can handle thousands of URLs
+					await cache.set( url, processedHtml, assetUrls );
 				} catch ( error ) {
 					// Log failure silently (network errors are expected for some URLs)
 					// Use debugWarn instead of letting error propagate to avoid console noise
@@ -202,20 +205,21 @@ export function useStaticSiteGenerator( onProgress ) {
 			}
 
 			// Calculate total files: HTML files + unique assets
+			const cacheStats = await cache.getStats();
 			const totalFilesToUpload =
-				urlCache.size + // HTML files successfully fetched
+				cacheStats.sessionCached + // HTML files successfully cached
 				allUniqueAssets.size; // Unique assets across all pages
 
 			debug( 'Pre-scan complete:', {
 				urlsScanned: urls.length,
-				urlsSuccessful: urlCache.size,
+				urlsSuccessful: cacheStats.sessionCached,
 				uniqueAssets: allUniqueAssets.size,
 				totalFilesToUpload,
 			} );
 
 			if ( setStatusMessage ) {
 				setStatusMessage(
-					`Pre-scan complete: ${ urlCache.size } HTML files, ${ allUniqueAssets.size } assets`,
+					`Pre-scan complete: ${ cacheStats.sessionCached } HTML files, ${ allUniqueAssets.size } assets`,
 					'success',
 					'scanFiles'
 				);
@@ -435,8 +439,18 @@ export function useStaticSiteGenerator( onProgress ) {
 				}
 			};
 
+			// Get all cached URLs from IndexedDB
+			const cachedUrls = await cache.getAllUrls();
+
 			// Process each URL sequentially and upload files
-			for ( const [ url, cached ] of urlCache.entries() ) {
+			for ( const url of cachedUrls ) {
+				const cached = await cache.get( url );
+				if ( ! cached ) {
+					debugWarn(
+						`[Aether] Cache miss for URL: ${ url } - skipping`
+					);
+					continue;
+				}
 				const { processedHtml, assetUrls } = cached;
 
 				try {
@@ -680,113 +694,13 @@ export function useStaticSiteGenerator( onProgress ) {
 				}
 			}
 
-			// Memory protection: Process any remaining uncached URLs (if cache limit was reached)
-			// These URLs will be fetched and uploaded immediately without caching
-			if ( urlCache.size < urls.length ) {
+			// Clean up cache for this session
+			// Cache will be automatically cleaned up after 24 hours anyway
+			const cacheCleanedCount = await cache.clearSession();
+			if ( cacheCleanedCount > 0 ) {
 				debug(
-					`Processing ${
-						urls.length - urlCache.size
-					} uncached URLs directly (cache limit reached)`
+					`[Aether] Cleared ${ cacheCleanedCount } cache entries from this session`
 				);
-
-				for ( let i = urlCache.size; i < urls.length; i++ ) {
-					const url = urls[ i ];
-
-					try {
-						// Update UI to show current progress
-						if ( setStatusMessage ) {
-							setStatusMessage(
-								`Uploading files (${
-									filesUploaded + 1
-								}/${ totalFilesToUpload })`,
-								'progress',
-								'uploadFilesProgress'
-							);
-						}
-
-						// Fetch and process HTML directly (no caching)
-						const htmlResponse = await fetch( url, {
-							method: 'GET',
-							credentials: 'omit',
-							headers: {
-								'User-Agent': 'Aether Static Site Generator',
-							},
-						} );
-
-						if ( htmlResponse.status !== 200 ) {
-							debugWarn(
-								`[Aether] Skipping uncached URL with non-200 status: ${ url } (HTTP ${ htmlResponse.status })`
-							);
-							failures.urlsFailed++;
-							failures.failedUrls.push( {
-								url,
-								reason: `Failed to fetch HTML: HTTP ${ htmlResponse.status } ${ htmlResponse.statusText }`,
-							} );
-							continue;
-						}
-
-						const html = await htmlResponse.text();
-						const processedHtml = processHtml(
-							html,
-							url,
-							siteUrl,
-							staticSiteUrl
-						);
-
-						// Upload HTML file immediately
-						const htmlPath = getStaticFilePath( url );
-						const htmlKey = htmlPath;
-						const htmlBlob = new Blob( [ processedHtml ], {
-							type: 'text/html',
-						} );
-
-						const htmlUploadResult = await storageService.upload(
-							htmlKey,
-							htmlBlob,
-							{
-								contentType: 'text/html',
-							}
-						);
-
-						if ( htmlUploadResult.success ) {
-							filesUploaded++;
-							failures.urlsSucceeded++;
-
-							uploadedFiles.push( {
-								storageKey: htmlKey,
-								relativePath: htmlPath,
-								contentType: 'text/html',
-							} );
-
-							// Extract and upload assets
-							const assetUrls = await extractAssetsFromHtml(
-								html,
-								url,
-								siteUrl
-							);
-							await processAssets( assetUrls );
-						}
-
-						// Report progress
-						if ( onProgress ) {
-							onProgress(
-								filesUploaded,
-								totalFilesToUpload,
-								null
-							);
-						}
-					} catch ( error ) {
-						debugWarn(
-							`[Aether] Error processing uncached URL: ${ url }`,
-							error.message
-						);
-						failures.urlsFailed++;
-						failures.failedUrls.push( {
-							url,
-							reason: error.message,
-						} );
-					}
-				}
 			}
 
 			// Upload final manifest with cleanup
