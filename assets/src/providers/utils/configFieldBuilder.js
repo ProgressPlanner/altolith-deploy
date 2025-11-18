@@ -18,6 +18,13 @@
  * @package
  */
 
+import { __ } from '@wordpress/i18n';
+import {
+	DEPLOYMENT_TYPES,
+	DEPLOYMENT_TYPE_LABELS,
+	DEPLOYMENT_TYPE_DESCRIPTIONS,
+} from '../../constants/deploymentTypes';
+
 /**
  * ConfigFieldBuilder class
  *
@@ -376,6 +383,40 @@ export class ConfigFieldBuilder {
 	static buildAll( builders ) {
 		return builders.map( ( builder ) => builder.build() );
 	}
+}
+
+/**
+ * Build deployment types checkbox field for a provider.
+ *
+ * Creates a checkbox-group field showing only the deployment types
+ * that the provider supports. Returns null if provider supports no types.
+ *
+ * @param {Object} provider Provider instance with getSupportedDeploymentTypes() method.
+ * @return {Object|null} Field configuration object or null if no supported types
+ */
+export function buildDeploymentTypesField( provider ) {
+	const supportedTypes = provider.getSupportedDeploymentTypes();
+
+	if ( ! supportedTypes || supportedTypes.length === 0 ) {
+		return null; // No deployment types = no field
+	}
+
+	return {
+		id: 'deployment_types',
+		type: 'checkbox-group',
+		label: __( 'Deployment Types', 'aether-site-exporter' ),
+		help: __(
+			'Select which types of deployments to use this provider for',
+			'aether-site-exporter'
+		),
+		required: false,
+		options: supportedTypes.map( ( type ) => ( {
+			value: type,
+			label: DEPLOYMENT_TYPE_LABELS[ type ] || type,
+			description: DEPLOYMENT_TYPE_DESCRIPTIONS[ type ] || '',
+		} ) ),
+		defaultValue: supportedTypes, // All supported types enabled by default
+	};
 }
 
 export default ConfigFieldBuilder;

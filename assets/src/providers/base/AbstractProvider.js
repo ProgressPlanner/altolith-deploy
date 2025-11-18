@@ -8,14 +8,8 @@
  */
 
 import { applyFilters, doAction } from '@wordpress/hooks';
-
-/**
- * Provider capability constants
- */
-export const CAP_STORAGE = 'storage';
-export const CAP_EDGE = 'edge';
-export const CAP_MEDIA = 'media';
-export const CAP_STATIC_SITE = 'staticSite';
+import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
+import { buildDeploymentTypesField } from '../utils/configFieldBuilder';
 
 /**
  * Abstract base class for providers.
@@ -29,13 +23,6 @@ export class AbstractProvider {
 	 * @type {Object}
 	 */
 	config = {};
-
-	/**
-	 * Provider capabilities.
-	 *
-	 * @type {Array<string>}
-	 */
-	capabilities = [];
 
 	/**
 	 * Registered provider ID (overrides getId() if set).
@@ -142,22 +129,87 @@ export class AbstractProvider {
 	}
 
 	/**
-	 * Get the capabilities this provider supports.
+	 * Get the deployment types this provider supports.
 	 *
-	 * @return {Array<string>} Array of capability constants
+	 * Must be overridden by subclasses to declare what deployment types
+	 * they can handle (e.g., static sites, blueprint bundles, edge functions).
+	 *
+	 * @abstract
+	 * @return {Array<string>} Array of DEPLOYMENT_TYPES constants
 	 */
-	getCapabilities() {
-		return this.capabilities;
+	getSupportedDeploymentTypes() {
+		return []; // Default: support nothing (must override)
 	}
 
 	/**
-	 * Check if this provider supports a specific capability.
+	 * Get supported deployment types with filter applied.
 	 *
-	 * @param {string} capability Capability constant to check.
+	 * Allows external modification of supported deployment types via hooks.
+	 *
+	 * @return {Array<string>} Filtered array of deployment types
+	 */
+	getDeploymentTypesWithFilter() {
+		const supported = this.getSupportedDeploymentTypes();
+
+		/**
+		 * Filter supported deployment types for a provider.
+		 *
+		 * Allows modification of what deployment types a provider supports.
+		 *
+		 * @param {Array<string>} supported    Array of deployment type constants.
+		 * @param {string}        providerId   Provider ID.
+		 * @param {Object}        provider     Provider instance.
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.provider.supported_deployment_types', 'my-plugin',
+		 *     (supported, providerId, provider) => {
+		 *         if (providerId === 'my-provider') {
+		 *             supported.push('custom_type');
+		 *         }
+		 *         return supported;
+		 *     }
+		 * );
+		 */
+		return applyFilters(
+			'aether.provider.supported_deployment_types',
+			supported,
+			this.getId(),
+			this
+		);
+	}
+
+	/**
+	 * Check if provider supports a specific deployment type.
+	 *
+	 * @param {string} type Deployment type constant to check.
 	 * @return {boolean} True if supported, false otherwise
 	 */
-	supportsCapability( capability ) {
-		return this.getCapabilities().includes( capability );
+	supportsDeploymentType( type ) {
+		return this.getDeploymentTypesWithFilter().includes( type );
+	}
+
+	/**
+	 * Get enabled deployment types from provider configuration.
+	 *
+	 * Returns the deployment types the user has chosen to use this provider for.
+	 *
+	 * @return {Array<string>} Array of enabled deployment types
+	 */
+	getEnabledDeploymentTypes() {
+		const config = this.config || {};
+		return config.deployment_types || [];
+	}
+
+	/**
+	 * Check if a deployment type is enabled in provider settings.
+	 *
+	 * @param {string} type Deployment type constant to check.
+	 * @return {boolean} True if enabled, false otherwise
+	 */
+	isDeploymentTypeEnabled( type ) {
+		return this.getEnabledDeploymentTypes().includes( type );
 	}
 
 	/**
@@ -485,6 +537,24 @@ export class AbstractProvider {
 					}
 					continue;
 
+				case 'checkbox-group':
+					// Ensure value is an array and filter to valid options
+					if ( ! Array.isArray( value ) ) {
+						value = [];
+					} else {
+						// Validate against allowed options if defined
+						const allowedOptions = ( field.options || [] ).map(
+							( opt ) => opt.value
+						);
+						if ( allowedOptions.length > 0 ) {
+							value = value.filter( ( v ) =>
+								allowedOptions.includes( v )
+							);
+						}
+					}
+					sanitized[ fieldId ] = value;
+					continue;
+
 				default:
 					value = String( value ).trim();
 					break;
@@ -526,12 +596,68 @@ export class AbstractProvider {
 	/**
 	 * Get configuration fields for this provider.
 	 *
-	 * Must be overridden by subclasses.
+	 * Automatically includes deployment types field, then adds provider-specific fields.
+	 * Subclasses should override getProviderSpecificConfigFields() instead of this method.
+	 *
+	 * @return {Array<Object>} Array of field definitions
+	 */
+	getConfigFields() {
+		const fields = [];
+
+		// Add deployment types field automatically
+		const deploymentTypesField = buildDeploymentTypesField( this );
+		if ( deploymentTypesField ) {
+			fields.push( deploymentTypesField );
+		}
+
+		// Add provider-specific fields
+		const providerFields =
+			this.getProviderSpecificConfigFields?.() || [];
+		fields.push( ...providerFields );
+
+		/**
+		 * Filter provider configuration fields.
+		 *
+		 * Allows modification of the fields array for a provider.
+		 *
+		 * @param {Array<Object>} fields      Array of field definitions.
+		 * @param {string}        providerId  Provider ID.
+		 * @param {Object}        provider    Provider instance.
+		 *
+		 * @example
+		 * import { addFilter } from '@wordpress/hooks';
+		 *
+		 * addFilter('aether.provider.config_fields', 'my-plugin',
+		 *     (fields, providerId, provider) => {
+		 *         if (providerId === 'my-provider') {
+		 *             fields.push({
+		 *                 id: 'custom_field',
+		 *                 type: 'text',
+		 *                 label: 'Custom Field'
+		 *             });
+		 *         }
+		 *         return fields;
+		 *     }
+		 * );
+		 */
+		return applyFilters(
+			'aether.provider.config_fields',
+			fields,
+			this.getId(),
+			this
+		);
+	}
+
+	/**
+	 * Get provider-specific configuration fields.
+	 *
+	 * Override this method in subclasses to define fields specific to your provider.
+	 * Do not override getConfigFields() directly.
 	 *
 	 * @abstract
 	 * @return {Array<Object>} Array of field definitions
 	 */
-	getConfigFields() {
+	getProviderSpecificConfigFields() {
 		return [];
 	}
 
@@ -595,7 +721,7 @@ export class AbstractProvider {
 			type: this.getType(),
 			description: this.getDescription(),
 			icon: this.getIcon(),
-			capabilities: this.getCapabilities(),
+			supportedDeploymentTypes: this.getDeploymentTypesWithFilter(),
 			configFields: this.getConfigFields(),
 			settingsUrl: this.getSettingsUrl(),
 			documentationUrl: this.getDocumentationUrl(),
