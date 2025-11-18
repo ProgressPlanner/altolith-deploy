@@ -75,10 +75,10 @@ class WPOrgCheckController extends WP_REST_Controller
 	 * to provide the response.
 	 *
 	 * Filter Hook: 'aether_site_exporter_wporg_check_response'
-	 *
-	 * @param null|array $response Default null, return array to provide response
-	 * @param string     $slug     Plugin or theme slug
-	 * @param string     $type     'plugin' or 'theme'
+	 * Filter parameters:
+	 *   - null|array $response Default null, return array to provide response
+	 *   - string     $slug     Plugin or theme slug
+	 *   - string     $type     'plugin' or 'theme'
 	 *
 	 * Expected response format:
 	 * [

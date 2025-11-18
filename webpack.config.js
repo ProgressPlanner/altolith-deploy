@@ -82,8 +82,7 @@ module.exports = {
 		splitChunks: false,
 		// Disable runtime chunk (prevents webpack runtime from being split)
 		runtimeChunk: false,
-		// Explicitly disable all chunk-related optimizations
-		chunkIds: false,
+		// Use deterministic module IDs for consistent builds
 		moduleIds: 'deterministic',
 	},
 	performance: {

@@ -246,7 +246,7 @@ class FileManager
 	 * Returns file size, modification time, and age.
 	 *
 	 * @param string $filePath Path to file
-	 * @return array|false Array with metadata or false on failure
+	 * @return array<string, mixed>|false Array with metadata or false on failure
 	 */
 	public static function getFileMetadata($filePath)
 	{
@@ -293,9 +293,9 @@ class FileManager
 	 * Stores file metadata in transients for tracking across requests.
 	 * Useful in ephemeral filesystems.
 	 *
-	 * @param string $filePath Path to file
-	 * @param string $fileType Type of file (export, upload, temp, etc)
-	 * @param array  $metadata Additional metadata to store
+	 * @param string                $filePath Path to file
+	 * @param string                $fileType Type of file (export, upload, temp, etc)
+	 * @param array<string, mixed>  $metadata Additional metadata to store
 	 * @return bool True on success
 	 */
 	public static function trackFile($filePath, $fileType = 'unknown', $metadata = [])
@@ -318,7 +318,7 @@ class FileManager
 	 * Get tracked file information
 	 *
 	 * @param string $filePath Path to file
-	 * @return array|false Tracking data or false if not tracked
+	 * @return array<string, mixed>|false Tracking data or false if not tracked
 	 */
 	public static function getTrackedFile($filePath)
 	{
@@ -344,7 +344,7 @@ class FileManager
 	 * Checks if a tracked file still exists and logs persistence issues.
 	 *
 	 * @param string $filePath Path to file
-	 * @return array Status information
+	 * @return array<string, mixed> Status information
 	 */
 	public static function verifyFilePersistence($filePath)
 	{

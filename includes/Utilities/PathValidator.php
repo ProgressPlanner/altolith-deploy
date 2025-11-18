@@ -212,7 +212,7 @@ class PathValidator
 	 * @param string $path          The full path to validate
 	 * @param string $basePath      The base directory path must be within
 	 * @param bool   $allowSymlinks Whether to allow symlinks (default: false)
-	 * @return array Array with 'valid' (bool) and 'error' (string) keys
+	 * @return array<string, mixed> Array with 'valid' (bool) and 'error' (string) keys
 	 */
 	public static function validatePath($path, $basePath, $allowSymlinks = false)
 	{

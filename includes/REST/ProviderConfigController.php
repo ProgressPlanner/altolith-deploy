@@ -34,15 +34,6 @@ class ProviderConfigController
 	use EncryptionHelper;
 
 	/**
-	 * Maximum JSON decode depth for API responses.
-	 *
-	 * Prevents DoS attacks via deeply nested JSON while supporting complex API responses.
-	 *
-	 * @var int
-	 */
-	private const JSON_DECODE_MAX_DEPTH = 10;
-
-	/**
 	 * Register REST routes.
 	 *
 	 * @return void
