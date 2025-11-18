@@ -819,4 +819,933 @@ class ExportService
 
 		return $excludePatterns;
 	}
+
+	/**
+	 * Initialize archive creation.
+	 *
+	 * Creates empty zip file, counts total files, and returns phase configuration.
+	 *
+	 * @param array<string>|null $customAssetSlugs Optional array of custom plugin/theme slugs.
+	 * @return array<string, mixed>|\WP_Error Result with zipPath, progressId, totalFiles, and phase list.
+	 */
+	public function initArchive(?array $customAssetSlugs = null)
+	{
+		// Create temp zip file path.
+		$tempZipPath = TempDirectoryManager::getTempFilePath('wp-content-complete-', '.zip');
+
+		if (false === $tempZipPath) {
+			return new \WP_Error(
+				'temp_directory_unavailable',
+				\__('Could not create temporary directory for export. Please check file permissions.', 'aether-site-exporter'),
+				['status' => 500]
+			);
+		}
+
+		// Initialize zip archive.
+		$zip = new \ZipArchive();
+		if (true !== $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
+			return new \WP_Error(
+				'zip_create_failed',
+				\__('Failed to create site export zip', 'aether-site-exporter'),
+				['status' => 500]
+			);
+		}
+		$zip->close();
+
+		// Count total files for progress tracking.
+		$totalFiles = $this->countTotalFilesForPhases($customAssetSlugs);
+
+		// Generate progress ID.
+		$progressId = 'aether_site_exporter_archive_' . \time() . '_' . \wp_generate_password(8, false);
+
+		// Get phase lists.
+		$plugins = $this->getPluginsList($customAssetSlugs);
+		$themes = $this->getThemesList($customAssetSlugs);
+		$uploadsBatches = $this->getUploadsBatches();
+		$muPluginsBatches = $this->getMuPluginsBatches();
+
+		return [
+			'success' => true,
+			'data' => [
+				'zipPath' => $tempZipPath,
+				'progressId' => $progressId,
+				'totalFiles' => $totalFiles,
+			],
+			'progress' => [
+				'overall' => 0,
+				'phase' => 'init',
+				'filesProcessed' => 0,
+				'totalFiles' => $totalFiles,
+				'phases' => [
+					'database' => ['status' => 'pending', 'filesProcessed' => 0],
+					'uploads' => ['status' => 'pending', 'batches' => \count($uploadsBatches), 'completedBatches' => 0, 'filesProcessed' => 0],
+					'plugins' => ['status' => 'pending', 'items' => $plugins, 'completedItems' => [], 'filesProcessed' => 0],
+					'themes' => ['status' => 'pending', 'items' => $themes, 'completedItems' => [], 'filesProcessed' => 0],
+					'mu-plugins' => ['status' => 'pending', 'batches' => \count($muPluginsBatches), 'completedBatches' => 0, 'filesProcessed' => 0],
+				],
+			],
+		];
+	}
+
+	/**
+	 * Add database file to zip.
+	 *
+	 * @param string $zipPath Path to zip file.
+	 * @param array<string, mixed> $currentProgress Current progress state.
+	 * @return array<string, mixed>|\WP_Error Result with progress info.
+	 */
+	public function addDatabaseToZip(string $zipPath, array $currentProgress = [])
+	{
+		$zip = new \ZipArchive();
+		if (true !== $zip->open($zipPath, \ZipArchive::CREATE)) {
+			return new \WP_Error(
+				'zip_open_failed',
+				\__('Failed to open zip file', 'aether-site-exporter'),
+				['status' => 500]
+			);
+		}
+
+		$filesProcessed = $currentProgress['filesProcessed'] ?? 0;
+		$totalFiles = $currentProgress['totalFiles'] ?? 1;
+
+		// Add database file.
+		$filesAdded = 0;
+		$dbPath = $this->getDatabasePath();
+		if (false !== $dbPath && \file_exists($dbPath)) {
+			$dbRelativePath = 'wp-content/database/' . \basename($dbPath);
+			$zip->addFile($dbPath, $dbRelativePath);
+			$filesAdded = 1;
+			$filesProcessed++;
+		}
+
+		$zip->close();
+
+		$phases = $currentProgress['phases'] ?? [];
+		$phases['database'] = ['status' => 'completed', 'filesProcessed' => $filesAdded];
+		$overallProgress = $this->calculateOverallProgress($filesProcessed, $totalFiles, $phases);
+
+		return [
+			'success' => true,
+			'data' => [
+				'zipPath' => $zipPath,
+				'filesAdded' => $filesAdded,
+			],
+			'progress' => [
+				'overall' => $overallProgress,
+				'phase' => 'database',
+				'subPhase' => 'database',
+				'phaseProgress' => 100,
+				'filesProcessed' => $filesProcessed,
+				'totalFiles' => $totalFiles,
+				'phases' => $phases,
+			],
+		];
+	}
+
+	/**
+	 * Get list of upload file batches.
+	 *
+	 * @return array<int, array<string, mixed>> List of batches with file paths.
+	 */
+	public function getUploadsBatches(): array
+	{
+		$uploadsDir = WP_CONTENT_DIR . '/uploads';
+		if (!\is_dir($uploadsDir)) {
+			return [];
+		}
+
+		$files = $this->getFilesInDirectory($uploadsDir);
+		$offloadedFiles = $this->getOffloadedFilePaths();
+		$offloadedFilesSet = \array_flip($offloadedFiles);
+
+		// Filter out offloaded files.
+		$files = \array_filter($files, function ($filePath) use ($offloadedFilesSet) {
+			$realPath = \realpath($filePath);
+			return false !== $realPath && !isset($offloadedFilesSet[$realPath]);
+		});
+
+		return $this->createBatches($files, 100, 50 * 1024 * 1024); // 100 files or 50MB
+	}
+
+	/**
+	 * Add batch of upload files to zip.
+	 *
+	 * @param string $zipPath Path to zip file.
+	 * @param int $batchIndex Batch index.
+	 * @param array<string, mixed> $currentProgress Current progress state.
+	 * @return array<string, mixed>|\WP_Error Result with progress info.
+	 */
+	public function addUploadsBatchToZip(string $zipPath, int $batchIndex, array $currentProgress = [])
+	{
+		$batches = $this->getUploadsBatches();
+		if (!isset($batches[$batchIndex])) {
+			return new \WP_Error(
+				'invalid_batch_index',
+				\__('Invalid batch index', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		$zip = new \ZipArchive();
+		if (true !== $zip->open($zipPath, \ZipArchive::CREATE)) {
+			return new \WP_Error(
+				'zip_open_failed',
+				\__('Failed to open zip file', 'aether-site-exporter'),
+				['status' => 500]
+			);
+		}
+
+		$batch = $batches[$batchIndex];
+		$filesProcessed = $currentProgress['filesProcessed'] ?? 0;
+		$totalFiles = $currentProgress['totalFiles'] ?? 1;
+		$phases = $currentProgress['phases'] ?? [];
+		$uploadsPhase = $phases['uploads'] ?? ['status' => 'pending', 'batches' => \count($batches), 'completedBatches' => 0, 'filesProcessed' => 0];
+
+		$filesAdded = 0;
+		$uploadsDir = WP_CONTENT_DIR . '/uploads';
+		$realUploadsDir = \realpath($uploadsDir);
+
+		foreach ($batch['files'] as $filePath) {
+			$realFilePath = \realpath($filePath);
+			if (false === $realFilePath || false === $realUploadsDir || 0 !== \strpos($realFilePath, $realUploadsDir . DIRECTORY_SEPARATOR)) {
+				continue;
+			}
+
+			$relativePath = \substr($realFilePath, \strlen($realUploadsDir) + 1);
+			$zipFilePath = 'wp-content/uploads/' . $relativePath;
+
+			// Check exclusion patterns.
+			$excludePatterns = self::getExclusionPatterns($uploadsDir, false);
+			$excluded = false;
+			foreach ($excludePatterns as $pattern) {
+				if (false !== \strpos($filePath, $pattern)) {
+					$excluded = true;
+					break;
+				}
+			}
+
+			if (!$excluded) {
+				$zip->addFile($filePath, $zipFilePath);
+				$filesAdded++;
+				$filesProcessed++;
+			}
+		}
+
+		$zip->close();
+
+		$currentBatchCount = \count($batches);
+		$completedBatches = ($uploadsPhase['completedBatches'] ?? 0) + 1;
+		$uploadsPhase['completedBatches'] = $completedBatches;
+		$uploadsPhase['filesProcessed'] = ($uploadsPhase['filesProcessed'] ?? 0) + $filesAdded;
+		// Update batch count if it has changed (shouldn't happen, but be safe)
+		$uploadsPhase['batches'] = $currentBatchCount;
+		$uploadsPhase['status'] = $completedBatches >= $currentBatchCount ? 'completed' : 'in-progress';
+		$phases['uploads'] = $uploadsPhase;
+
+		$phaseProgress = $currentBatchCount > 0 ? (int) \round(($completedBatches / $currentBatchCount) * 100) : 100;
+		$overallProgress = $this->calculateOverallProgress($filesProcessed, $totalFiles, $phases);
+
+		return [
+			'success' => true,
+			'data' => [
+				'zipPath' => $zipPath,
+				'filesAdded' => $filesAdded,
+				'batchIndex' => $batchIndex,
+			],
+			'progress' => [
+				'overall' => $overallProgress,
+				'phase' => 'uploads',
+				'subPhase' => "uploads:batch-{$batchIndex}",
+				'phaseProgress' => $phaseProgress,
+				'filesProcessed' => $filesProcessed,
+				'totalFiles' => $totalFiles,
+				'phases' => $phases,
+			],
+		];
+	}
+
+	/**
+	 * Get list of plugins to add.
+	 *
+	 * @param array<string>|null $customAssetSlugs Optional array of custom plugin/theme slugs.
+	 * @return array<string> List of plugin slugs.
+	 */
+	public function getPluginsList(?array $customAssetSlugs = null): array
+	{
+		$plugins = [];
+
+		if (null !== $customAssetSlugs) {
+			foreach ($customAssetSlugs as $slug) {
+				if ('aether' === $slug || !\is_string($slug)) {
+					continue;
+				}
+
+				$slug = \sanitize_file_name($slug);
+				if (
+					empty($slug) ||
+					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
+					\strpos($slug, "\0") !== false ||
+					$slug === '.' ||
+					$slug === '..'
+				) {
+					continue;
+				}
+
+				$pluginDir = WP_PLUGIN_DIR . '/' . $slug;
+				if (\is_dir($pluginDir)) {
+					$plugins[] = $slug;
+				}
+			}
+		} else {
+			$customAssets = $this->plugin->getAllCustomAssets();
+			foreach ($customAssets as $asset) {
+				if ('plugin' === $asset['type'] && 'aether' !== $asset['slug']) {
+					$plugins[] = $asset['slug'];
+				}
+			}
+		}
+
+		return $plugins;
+	}
+
+	/**
+	 * Add single plugin to zip.
+	 *
+	 * @param string $zipPath Path to zip file.
+	 * @param string $pluginSlug Plugin slug.
+	 * @param array<string, mixed> $currentProgress Current progress state.
+	 * @return array<string, mixed>|\WP_Error Result with progress info.
+	 */
+	public function addPluginToZip(string $zipPath, string $pluginSlug, array $currentProgress = [])
+	{
+		// Security: Sanitize and validate slug.
+		$pluginSlug = \sanitize_file_name($pluginSlug);
+		if (
+			empty($pluginSlug) ||
+			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $pluginSlug) ||
+			\strpos($pluginSlug, "\0") !== false ||
+			$pluginSlug === '.' ||
+			$pluginSlug === '..'
+		) {
+			return new \WP_Error(
+				'invalid_plugin_slug',
+				\__('Invalid plugin slug', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		$pluginDir = WP_PLUGIN_DIR . '/' . $pluginSlug;
+		if (!\is_dir($pluginDir)) {
+			return new \WP_Error(
+				'plugin_not_found',
+				\__('Plugin directory not found', 'aether-site-exporter'),
+				['status' => 404]
+			);
+		}
+
+		$zip = new \ZipArchive();
+		if (true !== $zip->open($zipPath, \ZipArchive::CREATE)) {
+			return new \WP_Error(
+				'zip_open_failed',
+				\__('Failed to open zip file', 'aether-site-exporter'),
+				['status' => 500]
+			);
+		}
+
+		$filesProcessed = $currentProgress['filesProcessed'] ?? 0;
+		$totalFiles = $currentProgress['totalFiles'] ?? 1;
+		$phases = $currentProgress['phases'] ?? [];
+		$pluginsPhase = $phases['plugins'] ?? ['status' => 'pending', 'items' => [], 'completedItems' => [], 'filesProcessed' => 0];
+
+		$filesAdded = 0;
+		$excludePatterns = self::getExclusionPatterns($pluginDir, true);
+		$this->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $pluginSlug, '', $excludePatterns, null, function () use (&$filesAdded, &$filesProcessed) {
+			$filesAdded++;
+			$filesProcessed++;
+		});
+
+		$zip->close();
+
+		$completedItems = $pluginsPhase['completedItems'] ?? [];
+		$completedItems[] = $pluginSlug;
+		$pluginsPhase['completedItems'] = $completedItems;
+		$pluginsPhase['filesProcessed'] = ($pluginsPhase['filesProcessed'] ?? 0) + $filesAdded;
+		$pluginsPhase['status'] = \count($completedItems) >= \count($pluginsPhase['items'] ?? []) ? 'completed' : 'in-progress';
+		$phases['plugins'] = $pluginsPhase;
+
+		$phaseProgress = \count($pluginsPhase['items'] ?? []) > 0 ? (int) \round((\count($completedItems) / \count($pluginsPhase['items'])) * 100) : 100;
+		$overallProgress = $this->calculateOverallProgress($filesProcessed, $totalFiles, $phases);
+
+		return [
+			'success' => true,
+			'data' => [
+				'zipPath' => $zipPath,
+				'filesAdded' => $filesAdded,
+				'pluginSlug' => $pluginSlug,
+			],
+			'progress' => [
+				'overall' => $overallProgress,
+				'phase' => 'plugins',
+				'subPhase' => "plugin:{$pluginSlug}",
+				'phaseProgress' => $phaseProgress,
+				'filesProcessed' => $filesProcessed,
+				'totalFiles' => $totalFiles,
+				'phases' => $phases,
+			],
+		];
+	}
+
+	/**
+	 * Get list of themes to add.
+	 *
+	 * @param array<string>|null $customAssetSlugs Optional array of custom plugin/theme slugs.
+	 * @return array<string> List of theme slugs.
+	 */
+	public function getThemesList(?array $customAssetSlugs = null): array
+	{
+		$themes = [];
+
+		if (null !== $customAssetSlugs) {
+			foreach ($customAssetSlugs as $slug) {
+				if (!\is_string($slug)) {
+					continue;
+				}
+
+				$slug = \sanitize_file_name($slug);
+				if (
+					empty($slug) ||
+					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
+					\strpos($slug, "\0") !== false ||
+					$slug === '.' ||
+					$slug === '..'
+				) {
+					continue;
+				}
+
+				$themeDir = \get_theme_root() . '/' . $slug;
+				if (\is_dir($themeDir)) {
+					$themes[] = $slug;
+				}
+			}
+		} else {
+			$customAssets = $this->plugin->getAllCustomAssets();
+			foreach ($customAssets as $asset) {
+				if ('theme' === $asset['type']) {
+					$themes[] = $asset['slug'];
+				}
+			}
+		}
+
+		return $themes;
+	}
+
+	/**
+	 * Add single theme to zip.
+	 *
+	 * @param string $zipPath Path to zip file.
+	 * @param string $themeSlug Theme slug.
+	 * @param array<string, mixed> $currentProgress Current progress state.
+	 * @return array<string, mixed>|\WP_Error Result with progress info.
+	 */
+	public function addThemeToZip(string $zipPath, string $themeSlug, array $currentProgress = [])
+	{
+		// Security: Sanitize and validate slug.
+		$themeSlug = \sanitize_file_name($themeSlug);
+		if (
+			empty($themeSlug) ||
+			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $themeSlug) ||
+			\strpos($themeSlug, "\0") !== false ||
+			$themeSlug === '.' ||
+			$themeSlug === '..'
+		) {
+			return new \WP_Error(
+				'invalid_theme_slug',
+				\__('Invalid theme slug', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		$themeDir = \get_theme_root() . '/' . $themeSlug;
+		if (!\is_dir($themeDir)) {
+			return new \WP_Error(
+				'theme_not_found',
+				\__('Theme directory not found', 'aether-site-exporter'),
+				['status' => 404]
+			);
+		}
+
+		$zip = new \ZipArchive();
+		if (true !== $zip->open($zipPath, \ZipArchive::CREATE)) {
+			return new \WP_Error(
+				'zip_open_failed',
+				\__('Failed to open zip file', 'aether-site-exporter'),
+				['status' => 500]
+			);
+		}
+
+		$filesProcessed = $currentProgress['filesProcessed'] ?? 0;
+		$totalFiles = $currentProgress['totalFiles'] ?? 1;
+		$phases = $currentProgress['phases'] ?? [];
+		$themesPhase = $phases['themes'] ?? ['status' => 'pending', 'items' => [], 'completedItems' => [], 'filesProcessed' => 0];
+
+		$filesAdded = 0;
+		$excludePatterns = self::getExclusionPatterns($themeDir, true);
+		$this->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $themeSlug, '', $excludePatterns, null, function () use (&$filesAdded, &$filesProcessed) {
+			$filesAdded++;
+			$filesProcessed++;
+		});
+
+		$zip->close();
+
+		$completedItems = $themesPhase['completedItems'] ?? [];
+		$completedItems[] = $themeSlug;
+		$themesPhase['completedItems'] = $completedItems;
+		$themesPhase['filesProcessed'] = ($themesPhase['filesProcessed'] ?? 0) + $filesAdded;
+		$themesPhase['status'] = \count($completedItems) >= \count($themesPhase['items'] ?? []) ? 'completed' : 'in-progress';
+		$phases['themes'] = $themesPhase;
+
+		$phaseProgress = \count($themesPhase['items'] ?? []) > 0 ? (int) \round((\count($completedItems) / \count($themesPhase['items'])) * 100) : 100;
+		$overallProgress = $this->calculateOverallProgress($filesProcessed, $totalFiles, $phases);
+
+		return [
+			'success' => true,
+			'data' => [
+				'zipPath' => $zipPath,
+				'filesAdded' => $filesAdded,
+				'themeSlug' => $themeSlug,
+			],
+			'progress' => [
+				'overall' => $overallProgress,
+				'phase' => 'themes',
+				'subPhase' => "theme:{$themeSlug}",
+				'phaseProgress' => $phaseProgress,
+				'filesProcessed' => $filesProcessed,
+				'totalFiles' => $totalFiles,
+				'phases' => $phases,
+			],
+		];
+	}
+
+	/**
+	 * Get list of mu-plugin file batches.
+	 *
+	 * @return array<int, array<string, mixed>> List of batches with file paths.
+	 */
+	public function getMuPluginsBatches(): array
+	{
+		$mupluginsDir = WP_CONTENT_DIR . '/mu-plugins';
+		if (!\is_dir($mupluginsDir)) {
+			return [];
+		}
+
+		$files = $this->getFilesInDirectory($mupluginsDir);
+		return $this->createBatches($files, 50, 25 * 1024 * 1024); // 50 files or 25MB
+	}
+
+	/**
+	 * Add batch of mu-plugin files to zip.
+	 *
+	 * @param string $zipPath Path to zip file.
+	 * @param int $batchIndex Batch index.
+	 * @param array<string, mixed> $currentProgress Current progress state.
+	 * @return array<string, mixed>|\WP_Error Result with progress info.
+	 */
+	public function addMuPluginsBatchToZip(string $zipPath, int $batchIndex, array $currentProgress = [])
+	{
+		$batches = $this->getMuPluginsBatches();
+		if (!isset($batches[$batchIndex])) {
+			return new \WP_Error(
+				'invalid_batch_index',
+				\__('Invalid batch index', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		$zip = new \ZipArchive();
+		if (true !== $zip->open($zipPath, \ZipArchive::CREATE)) {
+			return new \WP_Error(
+				'zip_open_failed',
+				\__('Failed to open zip file', 'aether-site-exporter'),
+				['status' => 500]
+			);
+		}
+
+		$batch = $batches[$batchIndex];
+		$filesProcessed = $currentProgress['filesProcessed'] ?? 0;
+		$totalFiles = $currentProgress['totalFiles'] ?? 1;
+		$phases = $currentProgress['phases'] ?? [];
+		$muPluginsPhase = $phases['mu-plugins'] ?? ['status' => 'pending', 'batches' => \count($batches), 'completedBatches' => 0, 'filesProcessed' => 0];
+
+		$filesAdded = 0;
+		$mupluginsDir = WP_CONTENT_DIR . '/mu-plugins';
+		$realMupluginsDir = \realpath($mupluginsDir);
+
+		foreach ($batch['files'] as $filePath) {
+			$realFilePath = \realpath($filePath);
+			if (false === $realFilePath || false === $realMupluginsDir || 0 !== \strpos($realFilePath, $realMupluginsDir . DIRECTORY_SEPARATOR)) {
+				continue;
+			}
+
+			$relativePath = \substr($realFilePath, \strlen($realMupluginsDir) + 1);
+			$zipFilePath = 'wp-content/mu-plugins/' . $relativePath;
+
+			// Check exclusion patterns.
+			$excludePatterns = self::getExclusionPatterns($mupluginsDir, true);
+			$excluded = false;
+			foreach ($excludePatterns as $pattern) {
+				if (false !== \strpos($filePath, $pattern)) {
+					$excluded = true;
+					break;
+				}
+			}
+
+			if (!$excluded) {
+				$zip->addFile($filePath, $zipFilePath);
+				$filesAdded++;
+				$filesProcessed++;
+			}
+		}
+
+		$zip->close();
+
+		$currentBatchCount = \count($batches);
+		$completedBatches = ($muPluginsPhase['completedBatches'] ?? 0) + 1;
+		$muPluginsPhase['completedBatches'] = $completedBatches;
+		$muPluginsPhase['filesProcessed'] = ($muPluginsPhase['filesProcessed'] ?? 0) + $filesAdded;
+		// Update batch count if it has changed (shouldn't happen, but be safe)
+		$muPluginsPhase['batches'] = $currentBatchCount;
+		$muPluginsPhase['status'] = $completedBatches >= $currentBatchCount ? 'completed' : 'in-progress';
+		$phases['mu-plugins'] = $muPluginsPhase;
+
+		$phaseProgress = $currentBatchCount > 0 ? (int) \round(($completedBatches / $currentBatchCount) * 100) : 100;
+		$overallProgress = $this->calculateOverallProgress($filesProcessed, $totalFiles, $phases);
+
+		return [
+			'success' => true,
+			'data' => [
+				'zipPath' => $zipPath,
+				'filesAdded' => $filesAdded,
+				'batchIndex' => $batchIndex,
+			],
+			'progress' => [
+				'overall' => $overallProgress,
+				'phase' => 'mu-plugins',
+				'subPhase' => "mu-plugins:batch-{$batchIndex}",
+				'phaseProgress' => $phaseProgress,
+				'filesProcessed' => $filesProcessed,
+				'totalFiles' => $totalFiles,
+				'phases' => $phases,
+			],
+		];
+	}
+
+	/**
+	 * Finalize archive (close zip and move to final location).
+	 *
+	 * @param string $zipPath Path to temp zip file.
+	 * @return array<string, mixed>|\WP_Error Final result with zipPath and zipSize.
+	 */
+	public function finalizeArchive(string $zipPath)
+	{
+		// Get export path from settings.
+		$settings = \get_option('aether_site_exporter_settings', []);
+		$exportPath = $settings['providers']['local-filesystem']['export_path'] ?? 'blueprint-bundle/bundle.zip';
+
+		// Security: Validate export_path.
+		if (!\is_string($exportPath) || \strpos($exportPath, "\0") !== false) {
+			$exportPath = 'blueprint-bundle/bundle.zip';
+		}
+
+		$exportDir = \dirname($exportPath);
+		if (
+			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $exportDir) ||
+			\preg_match('#^[/\\\\]#', $exportDir) ||
+			\strpos($exportDir, "\0") !== false
+		) {
+			return new \WP_Error(
+				'invalid_export_path',
+				\__('Invalid export path: path traversal not allowed', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		$fullExportDir = \rtrim(ABSPATH, '/') . '/' . \ltrim($exportDir, '/');
+		if (!\is_dir($fullExportDir)) {
+			$created = \wp_mkdir_p($fullExportDir);
+			if (!$created) {
+				return new \WP_Error(
+					'directory_creation_failed',
+					\__('Failed to create export directory', 'aether-site-exporter'),
+					['status' => 500]
+				);
+			}
+		}
+
+		$realExportDir = \realpath($fullExportDir);
+		$realAbspath = \realpath(ABSPATH);
+		if (false === $realExportDir || false === $realAbspath || 0 !== \strpos($realExportDir, $realAbspath)) {
+			return new \WP_Error(
+				'invalid_export_directory',
+				\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		$finalZipPath = $realExportDir . '/wp-content.zip';
+
+		// Close zip if still open.
+		$zip = new \ZipArchive();
+		if ($zip->open($zipPath) === true) {
+			$zip->close();
+		}
+
+		// Move zip to final location.
+		if (!\rename($zipPath, $finalZipPath)) {
+			@\unlink($zipPath);
+			return new \WP_Error(
+				'zip_move_failed',
+				\__('Failed to move zip file to final location', 'aether-site-exporter'),
+				['status' => 500]
+			);
+		}
+
+		$zipSize = \filesize($finalZipPath);
+
+		return [
+			'success' => true,
+			'zipPath' => $finalZipPath,
+			'zipUrl' => 'wp-content/wp-content.zip',
+			'zipSize' => $zipSize,
+		];
+	}
+
+	/**
+	 * Count total files for all phases.
+	 *
+	 * Counts files that will actually be added (excludes offloaded files and exclusion patterns).
+	 *
+	 * @param array<string>|null $customAssetSlugs Optional array of custom plugin/theme slugs.
+	 * @return int Total number of files.
+	 */
+	private function countTotalFilesForPhases(?array $customAssetSlugs = null): int
+	{
+		$count = 0;
+
+		// Count database file.
+		$dbPath = $this->getDatabasePath();
+		if (false !== $dbPath && \file_exists($dbPath)) {
+			$count++;
+		}
+
+		// Count uploads files (excluding offloaded files).
+		$uploadsDir = WP_CONTENT_DIR . '/uploads';
+		if (\is_dir($uploadsDir)) {
+			$files = $this->getFilesInDirectory($uploadsDir);
+			$offloadedFiles = $this->getOffloadedFilePaths();
+			$offloadedFilesSet = \array_flip($offloadedFiles);
+			$files = \array_filter($files, function ($filePath) use ($offloadedFilesSet) {
+				$realPath = \realpath($filePath);
+				return false !== $realPath && !isset($offloadedFilesSet[$realPath]);
+			});
+			$count += \count($files);
+		}
+
+		// Count plugin files (excluding dev files).
+		$plugins = $this->getPluginsList($customAssetSlugs);
+		foreach ($plugins as $slug) {
+			$pluginDir = WP_PLUGIN_DIR . '/' . $slug;
+			if (\is_dir($pluginDir)) {
+				$count += $this->countFilesInDirectoryWithExclusions($pluginDir, true);
+			}
+		}
+
+		// Count theme files (excluding dev files).
+		$themes = $this->getThemesList($customAssetSlugs);
+		foreach ($themes as $slug) {
+			$themeDir = \get_theme_root() . '/' . $slug;
+			if (\is_dir($themeDir)) {
+				$count += $this->countFilesInDirectoryWithExclusions($themeDir, true);
+			}
+		}
+
+		// Count mu-plugins files (excluding dev files).
+		$mupluginsDir = WP_CONTENT_DIR . '/mu-plugins';
+		if (\is_dir($mupluginsDir)) {
+			$count += $this->countFilesInDirectoryWithExclusions($mupluginsDir, true);
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Count files in directory with exclusion patterns applied.
+	 *
+	 * @param string $dir Directory path.
+	 * @param bool $excludeDevFiles Whether to exclude development files.
+	 * @return int Number of files (excluding matched patterns).
+	 */
+	private function countFilesInDirectoryWithExclusions(string $dir, bool $excludeDevFiles = false): int
+	{
+		$count = 0;
+		$realDir = \realpath($dir);
+
+		if (false === $realDir || !\is_dir($realDir)) {
+			return 0;
+		}
+
+		$excludePatterns = $excludeDevFiles ? self::getExclusionPatterns($dir, true) : [];
+
+		$files = \scandir($realDir);
+		if (false === $files) {
+			return 0;
+		}
+
+		// Sort for consistency
+		\sort($files);
+
+		foreach ($files as $file) {
+			if ('.' === $file || '..' === $file) {
+				continue;
+			}
+
+			$filePath = $realDir . '/' . $file;
+			$realFilePath = \realpath($filePath);
+
+			if (false === $realFilePath || 0 !== \strpos($realFilePath, $realDir . DIRECTORY_SEPARATOR)) {
+				continue;
+			}
+
+			// Check exclusion patterns
+			$excluded = false;
+			if (!empty($excludePatterns)) {
+				foreach ($excludePatterns as $pattern) {
+					if (false !== \strpos($realFilePath, $pattern)) {
+						$excluded = true;
+						break;
+					}
+				}
+			}
+
+			if ($excluded) {
+				continue;
+			}
+
+			if (\is_dir($realFilePath)) {
+				// Recurse into subdirectory.
+				$count += $this->countFilesInDirectoryWithExclusions($realFilePath, $excludeDevFiles);
+			} else {
+				// Count regular file.
+				$count++;
+			}
+		}
+
+		return $count;
+	}
+
+	/**
+	 * Get all files in a directory recursively.
+	 *
+	 * @param string $dir Directory path.
+	 * @return array<string> List of file paths (sorted for consistency).
+	 */
+	private function getFilesInDirectory(string $dir): array
+	{
+		$files = [];
+		$realDir = \realpath($dir);
+
+		if (false === $realDir || !\is_dir($realDir)) {
+			return [];
+		}
+
+		$items = \scandir($realDir);
+		if (false === $items) {
+			return [];
+		}
+
+		// Sort items for consistent ordering
+		\sort($items);
+
+		foreach ($items as $item) {
+			if ('.' === $item || '..' === $item) {
+				continue;
+			}
+
+			$itemPath = $realDir . '/' . $item;
+			$realItemPath = \realpath($itemPath);
+
+			if (false === $realItemPath || 0 !== \strpos($realItemPath, $realDir . DIRECTORY_SEPARATOR)) {
+				continue;
+			}
+
+			if (\is_dir($realItemPath)) {
+				$files = \array_merge($files, $this->getFilesInDirectory($realItemPath));
+			} else {
+				$files[] = $realItemPath;
+			}
+		}
+
+		// Sort final file list for consistent batch creation
+		\sort($files);
+
+		return $files;
+	}
+
+	/**
+	 * Create batches from file list.
+	 *
+	 * @param array<string> $files List of file paths.
+	 * @param int $maxFiles Maximum files per batch.
+	 * @param int $maxSize Maximum size per batch in bytes.
+	 * @return array<int, array<string, mixed>> List of batches.
+	 */
+	private function createBatches(array $files, int $maxFiles, int $maxSize): array
+	{
+		$batches = [];
+		$currentBatch = ['files' => [], 'size' => 0];
+		$batchIndex = 0;
+
+		foreach ($files as $filePath) {
+			$fileSize = \file_exists($filePath) ? \filesize($filePath) : 0;
+
+			// Start new batch if current batch is full.
+			if (
+				\count($currentBatch['files']) >= $maxFiles ||
+				($currentBatch['size'] + $fileSize) > $maxSize
+			) {
+				if (!empty($currentBatch['files'])) {
+					$batches[$batchIndex] = $currentBatch;
+					$batchIndex++;
+				}
+				$currentBatch = ['files' => [], 'size' => 0];
+			}
+
+			$currentBatch['files'][] = $filePath;
+			$currentBatch['size'] += $fileSize;
+		}
+
+		// Add final batch if it has files.
+		if (!empty($currentBatch['files'])) {
+			$batches[$batchIndex] = $currentBatch;
+		}
+
+		return $batches;
+	}
+
+	/**
+	 * Calculate overall progress percentage.
+	 *
+	 * @param int $filesProcessed Files processed so far.
+	 * @param int $totalFiles Total files expected.
+	 * @param array<string, mixed> $phases Phase status information.
+	 * @return int Overall progress (0-100).
+	 */
+	private function calculateOverallProgress(int $filesProcessed, int $totalFiles, array $phases): int
+	{
+		if ($totalFiles <= 0) {
+			return 100;
+		}
+
+		$progress = (int) \round(($filesProcessed / $totalFiles) * 100);
+		return \min(100, \max(0, $progress));
+	}
 }

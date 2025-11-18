@@ -23,6 +23,7 @@
 import { getWpOrgCache } from './wporgCache';
 import { getManifestCache } from './manifestCache';
 import { getUploadProgressCache } from './uploadProgressCache';
+import { getArchiveProgressCache } from './archiveProgressCache';
 import { deleteDatabase, isIndexedDBAvailable } from './indexedDB';
 
 /**
@@ -39,6 +40,7 @@ export class CacheMonitor {
 			wporg: getWpOrgCache(),
 			manifest: getManifestCache(),
 			uploadProgress: getUploadProgressCache(),
+			archiveProgress: getArchiveProgressCache(),
 		};
 	}
 
@@ -63,6 +65,7 @@ export class CacheMonitor {
 			stats.wporg = await this.caches.wporg.getStats();
 			stats.manifest = await this.caches.manifest.getStats();
 			stats.uploadProgress = await this.caches.uploadProgress.getStats();
+			// Archive progress cache doesn't have getStats, skip for now
 
 			// Calculate totals
 			stats.total = {
@@ -176,12 +179,14 @@ export class CacheMonitor {
 			wporg: false,
 			manifest: false,
 			uploadProgress: false,
+			archiveProgress: false,
 		};
 
 		try {
 			results.wporg = await this.caches.wporg.clear();
 			results.manifest = await this.caches.manifest.clear();
 			results.uploadProgress = await this.caches.uploadProgress.clear();
+			results.archiveProgress = await this.caches.archiveProgress.clearAll();
 
 			console.log( '[CacheMonitor] All caches cleared:', results );
 		} catch ( error ) {
@@ -194,7 +199,7 @@ export class CacheMonitor {
 	/**
 	 * Clear specific cache
 	 *
-	 * @param {string} cacheName Cache name (wporg, manifest, uploadProgress)
+	 * @param {string} cacheName Cache name (wporg, manifest, uploadProgress, archiveProgress)
 	 * @return {Promise<boolean>} True if cleared successfully
 	 */
 	async clearCache( cacheName ) {
@@ -204,7 +209,10 @@ export class CacheMonitor {
 		}
 
 		try {
-			const result = await this.caches[ cacheName ].clear();
+			// Archive progress cache uses clearAll() instead of clear()
+			const clearMethod =
+				cacheName === 'archiveProgress' ? 'clearAll' : 'clear';
+			const result = await this.caches[ cacheName ][ clearMethod ]();
 			console.log(
 				`[CacheMonitor] Cleared ${ cacheName } cache:`,
 				result
@@ -232,6 +240,7 @@ export class CacheMonitor {
 			manifest: false,
 			providerConfigs: false,
 			uploadProgress: false,
+			archiveProgress: false,
 		};
 
 		try {
@@ -242,6 +251,9 @@ export class CacheMonitor {
 			);
 			results.uploadProgress = await deleteDatabase(
 				'aether-upload-progress'
+			);
+			results.archiveProgress = await deleteDatabase(
+				'aether-archive-progress'
 			);
 
 			console.log( '[CacheMonitor] All databases deleted:', results );
@@ -262,15 +274,20 @@ export class CacheMonitor {
 			wporg: 0,
 			manifest: 0,
 			uploadProgress: 0,
+			archiveProgress: 0,
 		};
 
 		try {
 			results.wporg = await this.caches.wporg.cleanup();
 			results.manifest = await this.caches.manifest.cleanup();
 			results.uploadProgress = await this.caches.uploadProgress.cleanup();
+			results.archiveProgress = await this.caches.archiveProgress.cleanup();
 
 			const total =
-				results.wporg + results.manifest + results.uploadProgress;
+				results.wporg +
+				results.manifest +
+				results.uploadProgress +
+				results.archiveProgress;
 
 			console.log(
 				`[CacheMonitor] Cleanup complete: ${ total } entries removed`,

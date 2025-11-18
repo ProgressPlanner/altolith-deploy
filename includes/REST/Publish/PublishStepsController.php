@@ -101,6 +101,127 @@ class PublishStepsController
 			]
 		);
 
+		// Initialize archive (modular approach).
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/init',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'initArchive' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Add database phase.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/phase/database',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'addDatabasePhase' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Get uploads batches.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/phase/uploads/batches',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'getUploadsBatches' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Add uploads batch.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/phase/uploads/batch',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'addUploadsBatch' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Get plugins list.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/phase/plugins/list',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'getPluginsList' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Add plugin.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/phase/plugins/add',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'addPlugin' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Get themes list.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/phase/themes/list',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'getThemesList' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Add theme.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/phase/themes/add',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'addTheme' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Get mu-plugins batches.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/phase/mu-plugins/batches',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'getMuPluginsBatches' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Add mu-plugins batch.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/phase/mu-plugins/batch',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'addMuPluginsBatch' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Finalize archive.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/publish/createArchive/finalize',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'finalizeArchive' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
 		// Get archive progress (stateless).
 		\register_rest_route(
 			$this->getNamespace(),
@@ -708,6 +829,352 @@ class PublishStepsController
 	}
 
 	/**
+	 * Initialize archive creation (modular approach).
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function initArchive(WP_REST_Request $request)
+	{
+		$jsonParams = $request->get_json_params();
+		$customAssets = $jsonParams['custom_assets'] ?? null;
+
+		if ($customAssets !== null && !\is_array($customAssets)) {
+			return new WP_Error(
+				'invalid_custom_assets',
+				\__('custom_assets must be an array of plugin/theme slugs', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		$exportService = new ExportService($this->plugin);
+		$result = $exportService->initArchive($customAssets);
+
+		if (\is_wp_error($result)) {
+			return $result;
+		}
+
+		return \rest_ensure_response($result);
+	}
+
+	/**
+	 * Add database phase.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function addDatabasePhase(WP_REST_Request $request)
+	{
+		$jsonParams = $request->get_json_params();
+		$zipPath = $jsonParams['zipPath'] ?? '';
+		$currentProgress = $jsonParams['progress'] ?? [];
+
+		if (empty($zipPath)) {
+			return new WP_Error(
+				'missing_zip_path',
+				\__('zipPath is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		$exportService = new ExportService($this->plugin);
+		$result = $exportService->addDatabaseToZip($zipPath, $currentProgress);
+
+		if (\is_wp_error($result)) {
+			return $result;
+		}
+
+		return \rest_ensure_response($result);
+	}
+
+	/**
+	 * Get uploads batches.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function getUploadsBatches(WP_REST_Request $request)
+	{
+		$exportService = new ExportService($this->plugin);
+		$batches = $exportService->getUploadsBatches();
+
+		return \rest_ensure_response([
+			'success' => true,
+			'data' => [
+				'batches' => \count($batches),
+				'batchList' => \array_keys($batches),
+			],
+		]);
+	}
+
+	/**
+	 * Add uploads batch.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function addUploadsBatch(WP_REST_Request $request)
+	{
+		$jsonParams = $request->get_json_params();
+		$zipPath = $jsonParams['zipPath'] ?? '';
+		$batchIndex = isset($jsonParams['batch']) ? (int) $jsonParams['batch'] : -1;
+		$currentProgress = $jsonParams['progress'] ?? [];
+
+		if (empty($zipPath)) {
+			return new WP_Error(
+				'missing_zip_path',
+				\__('zipPath is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		if ($batchIndex < 0) {
+			return new WP_Error(
+				'missing_batch_index',
+				\__('batch index is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		$exportService = new ExportService($this->plugin);
+		$result = $exportService->addUploadsBatchToZip($zipPath, $batchIndex, $currentProgress);
+
+		if (\is_wp_error($result)) {
+			return $result;
+		}
+
+		return \rest_ensure_response($result);
+	}
+
+	/**
+	 * Get plugins list.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function getPluginsList(WP_REST_Request $request)
+	{
+		// Support both query params and JSON body for flexibility.
+		$customAssets = $request->get_param('custom_assets');
+		if (null === $customAssets) {
+			$jsonParams = $request->get_json_params();
+			$customAssets = $jsonParams['custom_assets'] ?? null;
+		}
+		if (\is_string($customAssets)) {
+			$customAssets = \json_decode($customAssets, true);
+		}
+
+		$exportService = new ExportService($this->plugin);
+		$plugins = $exportService->getPluginsList($customAssets);
+
+		return \rest_ensure_response([
+			'success' => true,
+			'data' => [
+				'plugins' => $plugins,
+			],
+		]);
+	}
+
+	/**
+	 * Add plugin.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function addPlugin(WP_REST_Request $request)
+	{
+		$jsonParams = $request->get_json_params();
+		$zipPath = $jsonParams['zipPath'] ?? '';
+		$pluginSlug = $jsonParams['slug'] ?? '';
+		$currentProgress = $jsonParams['progress'] ?? [];
+
+		if (empty($zipPath)) {
+			return new WP_Error(
+				'missing_zip_path',
+				\__('zipPath is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		if (empty($pluginSlug)) {
+			return new WP_Error(
+				'missing_plugin_slug',
+				\__('slug is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		$exportService = new ExportService($this->plugin);
+		$result = $exportService->addPluginToZip($zipPath, $pluginSlug, $currentProgress);
+
+		if (\is_wp_error($result)) {
+			return $result;
+		}
+
+		return \rest_ensure_response($result);
+	}
+
+	/**
+	 * Get themes list.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function getThemesList(WP_REST_Request $request)
+	{
+		// Support both query params and JSON body for flexibility.
+		$customAssets = $request->get_param('custom_assets');
+		if (null === $customAssets) {
+			$jsonParams = $request->get_json_params();
+			$customAssets = $jsonParams['custom_assets'] ?? null;
+		}
+		if (\is_string($customAssets)) {
+			$customAssets = \json_decode($customAssets, true);
+		}
+
+		$exportService = new ExportService($this->plugin);
+		$themes = $exportService->getThemesList($customAssets);
+
+		return \rest_ensure_response([
+			'success' => true,
+			'data' => [
+				'themes' => $themes,
+			],
+		]);
+	}
+
+	/**
+	 * Add theme.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function addTheme(WP_REST_Request $request)
+	{
+		$jsonParams = $request->get_json_params();
+		$zipPath = $jsonParams['zipPath'] ?? '';
+		$themeSlug = $jsonParams['slug'] ?? '';
+		$currentProgress = $jsonParams['progress'] ?? [];
+
+		if (empty($zipPath)) {
+			return new WP_Error(
+				'missing_zip_path',
+				\__('zipPath is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		if (empty($themeSlug)) {
+			return new WP_Error(
+				'missing_theme_slug',
+				\__('slug is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		$exportService = new ExportService($this->plugin);
+		$result = $exportService->addThemeToZip($zipPath, $themeSlug, $currentProgress);
+
+		if (\is_wp_error($result)) {
+			return $result;
+		}
+
+		return \rest_ensure_response($result);
+	}
+
+	/**
+	 * Get mu-plugins batches.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function getMuPluginsBatches(WP_REST_Request $request)
+	{
+		$exportService = new ExportService($this->plugin);
+		$batches = $exportService->getMuPluginsBatches();
+
+		return \rest_ensure_response([
+			'success' => true,
+			'data' => [
+				'batches' => \count($batches),
+				'batchList' => \array_keys($batches),
+			],
+		]);
+	}
+
+	/**
+	 * Add mu-plugins batch.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function addMuPluginsBatch(WP_REST_Request $request)
+	{
+		$jsonParams = $request->get_json_params();
+		$zipPath = $jsonParams['zipPath'] ?? '';
+		$batchIndex = isset($jsonParams['batch']) ? (int) $jsonParams['batch'] : -1;
+		$currentProgress = $jsonParams['progress'] ?? [];
+
+		if (empty($zipPath)) {
+			return new WP_Error(
+				'missing_zip_path',
+				\__('zipPath is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		if ($batchIndex < 0) {
+			return new WP_Error(
+				'missing_batch_index',
+				\__('batch index is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		$exportService = new ExportService($this->plugin);
+		$result = $exportService->addMuPluginsBatchToZip($zipPath, $batchIndex, $currentProgress);
+
+		if (\is_wp_error($result)) {
+			return $result;
+		}
+
+		return \rest_ensure_response($result);
+	}
+
+	/**
+	 * Finalize archive.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|WP_Error
+	 */
+	public function finalizeArchive(WP_REST_Request $request)
+	{
+		$jsonParams = $request->get_json_params();
+		$zipPath = $jsonParams['zipPath'] ?? '';
+
+		if (empty($zipPath)) {
+			return new WP_Error(
+				'missing_zip_path',
+				\__('zipPath is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+
+		$exportService = new ExportService($this->plugin);
+		$result = $exportService->finalizeArchive($zipPath);
+
+		if (\is_wp_error($result)) {
+			return $result;
+		}
+
+		return \rest_ensure_response([
+			'success' => true,
+			'data' => $result,
+			'message' => \__('Archive finalized successfully', 'aether-site-exporter'),
+		]);
+	}
+
+	/**
 	 * Get archive creation progress (stateless).
 	 *
 	 * @param WP_REST_Request $request Request object.
@@ -725,19 +1192,15 @@ class PublishStepsController
 			);
 		}
 
-		$progress = \get_transient($progressId);
-
-		if (false === $progress) {
-			return new WP_Error(
-				'progress_not_found',
-				\__('Progress ID not found or expired', 'aether-site-exporter'),
-				['status' => 404]
-			);
-		}
-
+		// Note: Progress is now tracked in frontend (React state + IndexedDB)
+		// This endpoint is kept for backward compatibility but returns empty progress
+		// Frontend should manage progress state internally
 		return \rest_ensure_response([
 			'success' => true,
-			'data' => $progress,
+			'data' => [
+				'progress' => 0,
+				'message' => 'Progress is tracked in frontend',
+			],
 		]);
 	}
 
