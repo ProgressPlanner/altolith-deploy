@@ -14,13 +14,31 @@ jest.mock( '@wordpress/hooks', () => ( {
 	doAction: jest.fn(),
 } ) );
 
+// Mock IndexedDB store
+const mockIndexedDBStore = {
+	get: jest.fn(),
+	set: jest.fn(),
+	delete: jest.fn(),
+	clear: jest.fn(),
+};
+
+jest.mock( '../../../utils/indexedDB', () => {
+	return {
+		__esModule: true,
+		default: jest.fn( () => mockIndexedDBStore ),
+	};
+} );
+
 describe( 'ConfigStorage', () => {
 	let storage;
 
 	beforeEach( () => {
 		storage = new ConfigStorage( 'test-provider' );
 		jest.clearAllMocks();
-		localStorage.clear();
+		mockIndexedDBStore.get.mockResolvedValue( null );
+		mockIndexedDBStore.set.mockResolvedValue( true );
+		mockIndexedDBStore.delete.mockResolvedValue( true );
+		mockIndexedDBStore.clear.mockResolvedValue( true );
 	} );
 
 	describe( 'Provider Config Isolation', () => {
@@ -102,15 +120,15 @@ describe( 'ConfigStorage', () => {
 				config: cachedConfig,
 				timestamp: Date.now() - 1000, // 1 second ago (not stale)
 			};
-			localStorage.setItem(
-				'aetherProviderConfigTest-provider',
-				JSON.stringify( cacheData )
-			);
+			mockIndexedDBStore.get.mockResolvedValue( cacheData );
 
 			const config = await storage.load();
 
 			expect( config ).toEqual( cachedConfig );
 			expect( apiFetch ).not.toHaveBeenCalled();
+			expect( mockIndexedDBStore.get ).toHaveBeenCalledWith(
+				'provider:test-provider'
+			);
 		} );
 
 		test( 'fetches from API if cache is stale', async () => {
@@ -118,10 +136,7 @@ describe( 'ConfigStorage', () => {
 				config: { api_key: 'stale-key' },
 				timestamp: Date.now() - 6 * 60 * 1000, // 6 minutes ago (stale)
 			};
-			localStorage.setItem(
-				'aetherProviderConfigTest-provider',
-				JSON.stringify( staleCache )
-			);
+			mockIndexedDBStore.get.mockResolvedValue( staleCache );
 
 			apiFetch.mockResolvedValue( {
 				config: { api_key: 'fresh-key' },
@@ -131,6 +146,9 @@ describe( 'ConfigStorage', () => {
 
 			expect( config ).toEqual( { api_key: 'fresh-key' } );
 			expect( apiFetch ).toHaveBeenCalled();
+			expect( mockIndexedDBStore.delete ).toHaveBeenCalledWith(
+				'provider:test-provider'
+			);
 		} );
 
 		test( 'updates cache after successful save', async () => {
@@ -144,12 +162,11 @@ describe( 'ConfigStorage', () => {
 			await storage.save( config );
 
 			// Verify cache was updated
-			const cached = localStorage.getItem(
-				'aetherProviderConfigTest-provider'
+			expect( mockIndexedDBStore.set ).toHaveBeenCalledWith(
+				'provider:test-provider',
+				{ config },
+				{ providerId: 'test-provider' }
 			);
-			expect( cached ).toBeTruthy();
-			const cacheData = JSON.parse( cached );
-			expect( cacheData.config ).toEqual( config );
 		} );
 	} );
 } );
