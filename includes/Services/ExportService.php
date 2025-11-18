@@ -12,7 +12,7 @@ namespace Aether\SiteExporter\Services;
 
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Sync\JobStateManager;
-use AetherSiteExporter\Utilities\TempDirectoryManager;
+use Aether\SiteExporter\Utilities\TempDirectoryManager;
 
 \defined('ABSPATH') || exit;
 

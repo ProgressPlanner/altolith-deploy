@@ -7,10 +7,10 @@
  * like WordPress Playground. Provides validation, error handling,
  * and fallback mechanisms.
  *
- * @package AetherSiteExporter
+ * @package Aether\SiteExporter
  */
 
-namespace AetherSiteExporter\Utilities;
+namespace Aether\SiteExporter\Utilities;
 
 /**
  * Class FileManager

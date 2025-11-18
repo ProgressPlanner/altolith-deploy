@@ -11,7 +11,7 @@ namespace Aether\SiteExporter;
 \defined('ABSPATH') || exit;
 use Aether\SiteExporter\Admin\PluginDependencyManager;
 use Aether\SiteExporter\Sync\Blueprint\AssetDiscoveryService;
-use AetherSiteExporter\Utilities\TempDirectoryManager;
+use Aether\SiteExporter\Utilities\TempDirectoryManager;
 
 use function Aether\SiteExporter\getStorageConfig;
 /**

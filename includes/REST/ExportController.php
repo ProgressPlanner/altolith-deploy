@@ -10,8 +10,8 @@ namespace Aether\SiteExporter\REST;
 
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Services\ExportService;
-use AetherSiteExporter\Utilities\FileManager;
-use AetherSiteExporter\Utilities\TempDirectoryManager;
+use Aether\SiteExporter\Utilities\FileManager;
+use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;

@@ -10,8 +10,8 @@
 
 namespace Aether\SiteExporter\REST;
 
-use AetherSiteExporter\Utilities\FileManager;
-use AetherSiteExporter\Utilities\PathValidator;
+use Aether\SiteExporter\Utilities\FileManager;
+use Aether\SiteExporter\Utilities\PathValidator;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;

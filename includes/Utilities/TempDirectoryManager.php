@@ -7,10 +7,10 @@
  * may not return an accessible directory. This class provides a reliable
  * temporary directory using WordPress uploads folder.
  *
- * @package AetherSiteExporter
+ * @package Aether\SiteExporter
  */
 
-namespace AetherSiteExporter\Utilities;
+namespace Aether\SiteExporter\Utilities;
 
 /**
  * Class TempDirectoryManager
