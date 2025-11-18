@@ -21,34 +21,10 @@ import {
 
 // Mock dependencies
 jest.mock( '../../../utils/useAssetDiscovery' );
-jest.mock( '@wordpress/hooks', () => {
-	const {
-		buildAetherInstallStep,
-		buildDefineConstsStep,
-		buildAetherActivationStep,
-	} = require( '../../utils/blueprintStepBuilders' );
-	return {
-		applyFilters: jest.fn( ( hook, value, ...args ) => {
-			// Add Aether steps when filtering blueprint steps
-			if ( hook === 'aether.blueprint.steps' ) {
-				const steps = [ ...value ];
-				// Insert Aether install after importWordPressFiles
-				const importIndex = steps.findIndex(
-					( s ) => s.step === 'importWordPressFiles'
-				);
-				if ( importIndex !== -1 ) {
-					steps.splice( importIndex + 1, 0, buildAetherInstallStep() );
-					steps.splice( importIndex + 2, 0, buildDefineConstsStep() );
-				}
-				// Add Aether activation at the end
-				steps.push( buildAetherActivationStep() );
-				return steps;
-			}
-			return value;
-		} ),
-		doAction: jest.fn(),
-	};
-} );
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
 
 describe( 'useBlueprintGenerator', () => {
 	let mockGetBlueprintAssets;
@@ -336,11 +312,8 @@ describe( 'useBlueprintGenerator', () => {
 
 			// Assert - INTENDED: Steps must be in specific order
 			// 1. importWordPressFiles
-			// 2. installPlugin (Aether)
-			// 3. defineWpConfigConsts
-			// 4. installPlugin steps (WordPress.org)
-			// 5. installTheme steps (WordPress.org)
-			// 6. activatePlugin (Aether)
+			// 2. installPlugin steps (WordPress.org)
+			// 3. installTheme steps (WordPress.org)
 			const validation = validateBlueprintSteps( blueprint.steps, {
 				wporgPlugins: mockAssetDiscovery.withWporgAssets.plugins,
 				wporgThemes: mockAssetDiscovery.withWporgAssets.themes,
@@ -369,10 +342,8 @@ describe( 'useBlueprintGenerator', () => {
 			// Assert - INTENDED: Correct number of each step type
 			const counts = countStepsByType( blueprint.steps );
 			expect( counts.importWordPressFiles ).toBe( 1 );
-			expect( counts.installPlugin ).toBe( 4 ); // 1 Aether + 3 WordPress.org plugins
+			expect( counts.installPlugin ).toBe( 3 ); // 3 WordPress.org plugins
 			expect( counts.installTheme ).toBe( 1 ); // 1 WordPress.org theme
-			expect( counts.activatePlugin ).toBe( 1 ); // 1 Aether activation
-			expect( counts.defineWpConfigConsts ).toBe( 1 );
 		} );
 
 		it( 'should include importWordPressFiles step first', async () => {
@@ -399,47 +370,6 @@ describe( 'useBlueprintGenerator', () => {
 			);
 		} );
 
-		it( 'should include Aether activation step last', async () => {
-			// Arrange
-			mockGetBlueprintAssets.mockResolvedValue(
-				mockAssetDiscovery.withNoWporgAssets
-			);
-
-			const { result } = renderHook( () => useBlueprintGenerator() );
-
-			// Act
-			let blueprint;
-			await act( async () => {
-				blueprint = await result.current.generateBlueprint();
-			} );
-
-			// Assert - INTENDED: Last step must activate Aether
-			const lastStep = blueprint.steps[ blueprint.steps.length - 1 ];
-			expect( lastStep.step ).toBe( 'activatePlugin' );
-			expect( lastStep.pluginPath ).toBe( 'aether/aether.php' );
-		} );
-
-		it( 'should include defineWpConfigConsts step', async () => {
-			// Arrange
-			mockGetBlueprintAssets.mockResolvedValue(
-				mockAssetDiscovery.withNoWporgAssets
-			);
-
-			const { result } = renderHook( () => useBlueprintGenerator() );
-
-			// Act
-			let blueprint;
-			await act( async () => {
-				blueprint = await result.current.generateBlueprint();
-			} );
-
-			// Assert - INTENDED: defineWpConfigConsts must set AETHER_PLAYGROUND_SITE
-			const defineStep = blueprint.steps.find(
-				( step ) => step.step === 'defineWpConfigConsts'
-			);
-			expect( defineStep ).toBeDefined();
-			expect( defineStep.consts.AETHER_PLAYGROUND_SITE ).toBe( true );
-		} );
 	} );
 
 	describe( 'Error Handling', () => {
@@ -460,75 +390,4 @@ describe( 'useBlueprintGenerator', () => {
 		} );
 	} );
 
-	describe( 'Aether Plugin Handling', () => {
-		it( 'should install Aether from bundled resources', async () => {
-			// Arrange
-			mockGetBlueprintAssets.mockResolvedValue(
-				mockAssetDiscovery.withNoWporgAssets
-			);
-
-			const { result } = renderHook( () => useBlueprintGenerator() );
-
-			// Act
-			let blueprint;
-			await act( async () => {
-				blueprint = await result.current.generateBlueprint();
-			} );
-
-			// Assert - INTENDED: Aether must be installed as bundled resource
-			const aetherInstallStep = blueprint.steps.find(
-				( step ) =>
-					step.step === 'installPlugin' &&
-					step.pluginData?.url?.includes( 'aether.zip' )
-			);
-			expect( aetherInstallStep ).toBeDefined();
-			expect( aetherInstallStep.pluginData.url ).toBeDefined();
-		} );
-
-		it( 'should include cache-busting in Aether URL', async () => {
-			// Arrange
-			mockGetBlueprintAssets.mockResolvedValue(
-				mockAssetDiscovery.withNoWporgAssets
-			);
-
-			const { result } = renderHook( () => useBlueprintGenerator() );
-
-			// Act
-			let blueprint;
-			await act( async () => {
-				blueprint = await result.current.generateBlueprint();
-			} );
-
-			// Assert - INTENDED: Aether URL must have cache-busting parameter
-			const aetherInstallStep = blueprint.steps.find(
-				( step ) =>
-					step.step === 'installPlugin' &&
-					step.pluginData?.url?.includes( 'aether.zip' )
-			);
-			expect( aetherInstallStep.pluginData.url ).toMatch( /\?v=\d+/ );
-		} );
-
-		it( 'should activate Aether plugin', async () => {
-			// Arrange
-			mockGetBlueprintAssets.mockResolvedValue(
-				mockAssetDiscovery.withNoWporgAssets
-			);
-
-			const { result } = renderHook( () => useBlueprintGenerator() );
-
-			// Act
-			let blueprint;
-			await act( async () => {
-				blueprint = await result.current.generateBlueprint();
-			} );
-
-			// Assert - INTENDED: Aether must be activated
-			const aetherActivateStep = blueprint.steps.find(
-				( step ) =>
-					step.step === 'activatePlugin' &&
-					step.pluginPath === 'aether/aether.php'
-			);
-			expect( aetherActivateStep ).toBeDefined();
-		} );
-	} );
 } );

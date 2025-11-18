@@ -14,14 +14,10 @@ jest.mock( '../api' );
 describe( 'isFromWordPressOrg', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
-		// Clear the cache by accessing it through the module
-		// Since wporgCache is private, we need to test with fresh slugs or clear via resetModules
-		// For now, use unique slugs in each test to avoid cache collisions
 	} );
 
 	it( 'returns true for existing WordPress.org plugin', async () => {
 		// Use 'php' method (default) which uses apiFetch
-		// Use unique slug to avoid cache collisions
 		apiFetch.mockResolvedValueOnce( {
 			success: true,
 			exists: true,
@@ -37,7 +33,6 @@ describe( 'isFromWordPressOrg', () => {
 
 	it( 'returns true for existing WordPress.org theme', async () => {
 		// Use 'php' method (default) which uses apiFetch
-		// Use unique slug to avoid cache collisions
 		apiFetch.mockResolvedValueOnce( {
 			success: true,
 			exists: true,

@@ -156,11 +156,8 @@ export function validateBlueprintSteps( steps, expectedStepConfig ) {
 
 	// Expected step order:
 	// 1. importWordPressFiles (wp-content.zip)
-	// 2. installPlugin (Aether)
-	// 3. defineWpConfigConsts
-	// 4. installPlugin steps (WordPress.org plugins)
-	// 5. installTheme steps (WordPress.org themes)
-	// 6. activatePlugin (Aether)
+	// 2. installPlugin steps (WordPress.org plugins)
+	// 3. installTheme steps (WordPress.org themes)
 
 	let currentIndex = 0;
 
@@ -206,47 +203,7 @@ export function validateBlueprintSteps( steps, expectedStepConfig ) {
 	}
 	currentIndex++;
 
-	// Step 2: installPlugin (Aether)
-	if (
-		! steps[ currentIndex ] ||
-		steps[ currentIndex ].step !== 'installPlugin'
-	) {
-		errors.push(
-			`Step ${ currentIndex }: Expected installPlugin (Aether), got ${ steps[ currentIndex ]?.step }`
-		);
-	} else {
-		const step = steps[ currentIndex ];
-		if (
-			! step.pluginData ||
-			! step.pluginData.url ||
-			! step.pluginData.url.includes( 'aether.zip' )
-		) {
-			errors.push(
-				`Step ${ currentIndex }: Aether plugin must have url containing 'aether.zip'`
-			);
-		}
-	}
-	currentIndex++;
-
-	// Step 3: defineWpConfigConsts
-	if (
-		! steps[ currentIndex ] ||
-		steps[ currentIndex ].step !== 'defineWpConfigConsts'
-	) {
-		errors.push(
-			`Step ${ currentIndex }: Expected defineWpConfigConsts, got ${ steps[ currentIndex ]?.step }`
-		);
-	} else {
-		const step = steps[ currentIndex ];
-		if ( ! step.consts || ! step.consts.AETHER_PLAYGROUND_SITE ) {
-			errors.push(
-				`Step ${ currentIndex }: defineWpConfigConsts must define AETHER_PLAYGROUND_SITE`
-			);
-		}
-	}
-	currentIndex++;
-
-	// Step 4: installPlugin steps (WordPress.org plugins)
+	// Step 2: installPlugin steps (WordPress.org plugins)
 	const expectedPluginCount = expectedStepConfig.wporgPlugins?.length || 0;
 	for ( let i = 0; i < expectedPluginCount; i++ ) {
 		const step = steps[ currentIndex ];
@@ -292,7 +249,7 @@ export function validateBlueprintSteps( steps, expectedStepConfig ) {
 		currentIndex++;
 	}
 
-	// Step 5: installTheme steps (WordPress.org themes)
+	// Step 3: installTheme steps (WordPress.org themes)
 	const expectedThemeCount = expectedStepConfig.wporgThemes?.length || 0;
 	for ( let i = 0; i < expectedThemeCount; i++ ) {
 		const step = steps[ currentIndex ];
@@ -325,24 +282,6 @@ export function validateBlueprintSteps( steps, expectedStepConfig ) {
 		}
 		currentIndex++;
 	}
-
-	// Step 6: activatePlugin (Aether)
-	if (
-		! steps[ currentIndex ] ||
-		steps[ currentIndex ].step !== 'activatePlugin'
-	) {
-		errors.push(
-			`Step ${ currentIndex }: Expected activatePlugin (Aether), got ${ steps[ currentIndex ]?.step }`
-		);
-	} else {
-		const step = steps[ currentIndex ];
-		if ( step.pluginPath !== 'aether/aether.php' ) {
-			errors.push(
-				`Step ${ currentIndex }: activatePlugin must have pluginPath 'aether/aether.php'`
-			);
-		}
-	}
-	currentIndex++;
 
 	// Check no extra steps
 	if ( steps.length > currentIndex ) {
