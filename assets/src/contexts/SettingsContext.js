@@ -26,8 +26,6 @@ export const SettingsContext = createContext( {
 	settings: {},
 	loading: true,
 	error: null,
-	provider_types: {},
-	setProviderType: () => {},
 	refetch: () => {},
 	invalidateCache: () => {},
 } );
@@ -38,9 +36,8 @@ export const SettingsContext = createContext( {
  * Wraps the application to provide global settings state.
  * Features:
  * - Single API fetch shared across all consumers
- * - Optimistic updates for provider selection
  * - Automatic cache invalidation on updates
- * - Error handling with rollback
+ * - Error handling
  * - Loading state management
  *
  * @param {Object}      props          Component props
@@ -84,72 +81,6 @@ export function SettingsProvider( { children } ) {
 	}, [] );
 
 	/**
-	 * Set a specific provider type
-	 *
-	 * Uses optimistic updates for instant UI feedback,
-	 * then saves to API and rolls back on error.
-	 *
-	 * @param {string} providerTypeKey Provider type key (edge, storage, staticSite, media)
-	 * @param {string} providerId      Provider ID to set
-	 * @return {Promise<boolean>} True if successful, false on error
-	 */
-	const setProviderType = useCallback(
-		async ( providerTypeKey, providerId ) => {
-			// Store previous state for rollback
-			const previousSettings = settings;
-			const previousProviderTypes = settings.provider_types || {};
-
-			// Optimistic update
-			const updatedProviderTypes = {
-				...previousProviderTypes,
-				[ providerTypeKey ]: providerId || null,
-			};
-
-			setSettings( ( prev ) => ( {
-				...prev,
-				provider_types: updatedProviderTypes,
-			} ) );
-
-			// Clear error state
-			setError( null );
-
-			try {
-				// Save to API
-				const response = await apiFetch( {
-					path: '/aether/site-exporter/settings',
-					method: 'POST',
-					data: {
-						key: 'provider_types',
-						value: updatedProviderTypes,
-					},
-				} );
-
-				if ( ! response.success ) {
-					throw new Error(
-						response.message || 'Failed to save provider selection'
-					);
-				}
-
-				// Invalidate cache for settings endpoint
-				invalidateAPICache( '/aether/site-exporter/settings' );
-
-				return true;
-			} catch ( err ) {
-				const errorMessage =
-					err.message || 'Failed to save provider selection';
-				setError( errorMessage );
-				debugError( 'Provider type save error:', err );
-
-				// Rollback to previous state
-				setSettings( previousSettings );
-
-				return false;
-			}
-		},
-		[ settings ]
-	);
-
-	/**
 	 * Invalidate cache and refetch settings
 	 */
 	const invalidateCache = useCallback( () => {
@@ -164,36 +95,16 @@ export function SettingsProvider( { children } ) {
 		fetchSettings();
 	}, [ fetchSettings ] );
 
-	/**
-	 * Extract provider types from settings
-	 */
-	// eslint-disable-next-line camelcase
-	const provider_types = useMemo( () => {
-		return settings.provider_types || {};
-	}, [ settings ] );
-
 	// Provide context value
 	const value = useMemo(
 		() => ( {
 			settings,
 			loading,
 			error,
-			// eslint-disable-next-line camelcase
-			provider_types,
-			setProviderType,
 			refetch: fetchSettings,
 			invalidateCache,
 		} ),
-		[
-			settings,
-			loading,
-			error,
-			// eslint-disable-next-line camelcase
-			provider_types,
-			setProviderType,
-			fetchSettings,
-			invalidateCache,
-		]
+		[ settings, loading, error, fetchSettings, invalidateCache ]
 	);
 
 	return (
