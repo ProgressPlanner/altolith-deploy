@@ -167,7 +167,9 @@ describe( 'ManifestCache', () => {
 		test( 'prevents concurrent cleanup', async () => {
 			mockIndexedDBStore.deleteOlderThan.mockImplementation(
 				() =>
-					new Promise( ( resolve ) => setTimeout( () => resolve( 2 ), 10 ) )
+					new Promise( ( resolve ) =>
+						setTimeout( () => resolve( 2 ), 10 )
+					)
 			);
 
 			const cleanup1Promise = cache.cleanup();

@@ -48,7 +48,11 @@ describe( 'FileHashCache', () => {
 
 	describe( 'Cache Key Generation', () => {
 		test( 'generates cache key with all metadata', () => {
-			const key = cache.getCacheKey( 'path/to/file.jpg', 1024, 1699876543 );
+			const key = cache.getCacheKey(
+				'path/to/file.jpg',
+				1024,
+				1699876543
+			);
 			expect( key ).toBe( 'path/to/file.jpg:1024:1699876543' );
 		} );
 
@@ -90,7 +94,11 @@ describe( 'FileHashCache', () => {
 		test( 'returns null for cache miss', async () => {
 			mockIndexedDBStore.get.mockResolvedValue( null );
 
-			const result = await cache.get( 'path/to/file.jpg', 1024, 1699876543 );
+			const result = await cache.get(
+				'path/to/file.jpg',
+				1024,
+				1699876543
+			);
 
 			expect( result ).toBeNull();
 		} );
@@ -102,7 +110,11 @@ describe( 'FileHashCache', () => {
 			};
 			mockIndexedDBStore.get.mockResolvedValue( cachedData );
 
-			const result = await cache.get( 'path/to/file.jpg', 1024, 1699876543 );
+			const result = await cache.get(
+				'path/to/file.jpg',
+				1024,
+				1699876543
+			);
 
 			expect( result ).toBe( 'abc123' );
 		} );
@@ -114,7 +126,11 @@ describe( 'FileHashCache', () => {
 			};
 			mockIndexedDBStore.get.mockResolvedValue( cachedData );
 
-			const result = await cache.get( 'path/to/file.jpg', 1024, 1699876543 );
+			const result = await cache.get(
+				'path/to/file.jpg',
+				1024,
+				1699876543
+			);
 
 			expect( result ).toBeNull();
 			expect( mockIndexedDBStore.delete ).toHaveBeenCalled();

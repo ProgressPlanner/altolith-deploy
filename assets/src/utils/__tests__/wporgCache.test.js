@@ -144,7 +144,9 @@ describe( 'WpOrgCache', () => {
 		test( 'prevents concurrent cleanup', async () => {
 			mockIndexedDBStore.deleteOlderThan.mockImplementation(
 				() =>
-					new Promise( ( resolve ) => setTimeout( () => resolve( 3 ), 10 ) )
+					new Promise( ( resolve ) =>
+						setTimeout( () => resolve( 3 ), 10 )
+					)
 			);
 
 			const cleanup1Promise = cache.cleanup();
