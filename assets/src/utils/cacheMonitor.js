@@ -270,9 +270,7 @@ export class CacheMonitor {
 			results.uploadProgress = await this.caches.uploadProgress.cleanup();
 
 			const total =
-				results.wporg +
-				results.manifest +
-				results.uploadProgress;
+				results.wporg + results.manifest + results.uploadProgress;
 
 			console.log(
 				`[CacheMonitor] Cleanup complete: ${ total } entries removed`,
