@@ -21,22 +21,22 @@ let metadataCache = null;
  * @return {Promise<Array<Object>>} Array of provider metadata objects
  */
 export async function getProviderMetadata() {
-	if (metadataCache) {
+	if ( metadataCache ) {
 		return metadataCache;
 	}
 
 	try {
-		const response = await apiFetch({
+		const response = await apiFetch( {
 			path: '/aether/site-exporter/providers',
-		});
+		} );
 
-		if (response.success && response.providers) {
+		if ( response.success && response.providers ) {
 			metadataCache = response.providers;
 			return response.providers;
 		}
-	} catch (error) {
+	} catch ( error ) {
 		// eslint-disable-next-line no-console
-		console.error('[Aether] Failed to fetch provider metadata:', error);
+		console.error( '[Aether] Failed to fetch provider metadata:', error );
 	}
 
 	return [];
@@ -48,19 +48,19 @@ export async function getProviderMetadata() {
  * @param {string} deploymentType Deployment type
  * @return {Promise<Array<Object>>} Array of provider metadata objects
  */
-export async function getProvidersByDeploymentType(deploymentType) {
+export async function getProvidersByDeploymentType( deploymentType ) {
 	try {
-		const response = await apiFetch({
-			path: `/aether/site-exporter/providers/by-deployment-type/${deploymentType}`,
-		});
+		const response = await apiFetch( {
+			path: `/aether/site-exporter/providers/by-deployment-type/${ deploymentType }`,
+		} );
 
-		if (response.success && response.providers) {
+		if ( response.success && response.providers ) {
 			return response.providers;
 		}
-	} catch (error) {
+	} catch ( error ) {
 		// eslint-disable-next-line no-console
 		console.error(
-			`[Aether] Failed to fetch providers for deployment type ${deploymentType}:`,
+			`[Aether] Failed to fetch providers for deployment type ${ deploymentType }:`,
 			error
 		);
 	}
@@ -74,19 +74,19 @@ export async function getProvidersByDeploymentType(deploymentType) {
  * @param {string} providerId Provider ID
  * @return {Promise<Object|null>} Provider metadata or null if not found
  */
-export async function getProviderById(providerId) {
+export async function getProviderById( providerId ) {
 	try {
-		const response = await apiFetch({
-			path: `/aether/site-exporter/providers/${providerId}`,
-		});
+		const response = await apiFetch( {
+			path: `/aether/site-exporter/providers/${ providerId }`,
+		} );
 
-		if (response.success && response.provider) {
+		if ( response.success && response.provider ) {
 			return response.provider;
 		}
-	} catch (error) {
+	} catch ( error ) {
 		// eslint-disable-next-line no-console
 		console.error(
-			`[Aether] Failed to fetch provider ${providerId}:`,
+			`[Aether] Failed to fetch provider ${ providerId }:`,
 			error
 		);
 	}
@@ -104,4 +104,3 @@ export async function getProviderById(providerId) {
 export function clearMetadataCache() {
 	metadataCache = null;
 }
-

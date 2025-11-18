@@ -81,7 +81,7 @@ export function useStaticSiteGenerator( onProgress ) {
 
 				if ( staticSiteProviderId ) {
 					const configResponse = await apiFetch( {
-						path: `/aether/site-exporter/providers/${staticSiteProviderId}/config`,
+						path: `/aether/site-exporter/providers/${ staticSiteProviderId }/config`,
 					} );
 					if ( configResponse.success && configResponse.config ) {
 						providerConfig = configResponse.config;

@@ -18,8 +18,8 @@ import apiFetch from '@wordpress/api-fetch';
  */
 export async function getDefaultProvider() {
 	// Try filter first (allows customization).
-	const filtered = applyFilters('aether.provider.getDefault', null);
-	if (filtered) {
+	const filtered = applyFilters( 'aether.provider.getDefault', null );
+	if ( filtered ) {
 		return filtered;
 	}
 
@@ -31,42 +31,55 @@ export async function getDefaultProvider() {
 		const registry = ProviderRegistry.getInstance();
 		const allIds = registry.getAllIds();
 
-		if (allIds.length > 0) {
+		if ( allIds.length > 0 ) {
 			// Find provider that supports static_site, or use first provider
-			for (const providerId of allIds) {
-				const provider = registry.get(providerId);
+			for ( const providerId of allIds ) {
+				const provider = registry.get( providerId );
 				if (
 					provider &&
 					provider.getSupportedDeploymentTypes &&
-					provider.getSupportedDeploymentTypes().includes('static_site')
+					provider
+						.getSupportedDeploymentTypes()
+						.includes( 'static_site' )
 				) {
 					return providerId;
 				}
 			}
 			// Fallback to first provider
-			return allIds[0];
+			return allIds[ 0 ];
 		}
-	} catch (error) {
+	} catch ( error ) {
 		// eslint-disable-next-line no-console
-		console.warn('[Aether] Failed to check JS registry for default provider:', error);
+		console.warn(
+			'[Aether] Failed to check JS registry for default provider:',
+			error
+		);
 	}
 
 	// Fallback: Get from REST API (which queries PHP registry).
 	try {
-		const response = await apiFetch({
+		const response = await apiFetch( {
 			path: '/aether/site-exporter/providers',
-		});
+		} );
 
-		if (response.success && response.providers && response.providers.length > 0) {
+		if (
+			response.success &&
+			response.providers &&
+			response.providers.length > 0
+		) {
 			// Return first provider that supports static_site, or first provider.
 			const staticSiteProvider = response.providers.find(
-				(p) => p.deployment_types && p.deployment_types.includes('static_site')
+				( p ) =>
+					p.deployment_types &&
+					p.deployment_types.includes( 'static_site' )
 			);
-			return staticSiteProvider ? staticSiteProvider.id : response.providers[0].id;
+			return staticSiteProvider
+				? staticSiteProvider.id
+				: response.providers[ 0 ].id;
 		}
-	} catch (error) {
+	} catch ( error ) {
 		// eslint-disable-next-line no-console
-		console.error('[Aether] Failed to fetch default provider:', error);
+		console.error( '[Aether] Failed to fetch default provider:', error );
 	}
 
 	return null;
@@ -78,14 +91,14 @@ export async function getDefaultProvider() {
  * @param {string} deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
  * @return {Promise<string|null>} Provider ID or null if none found
  */
-export async function getProviderForDeploymentType(deploymentType) {
+export async function getProviderForDeploymentType( deploymentType ) {
 	// Try filter first (allows customization).
 	const filtered = applyFilters(
 		'aether.provider.getForDeploymentType',
 		null,
 		deploymentType
 	);
-	if (filtered) {
+	if ( filtered ) {
 		return filtered;
 	}
 
@@ -98,45 +111,46 @@ export async function getProviderForDeploymentType(deploymentType) {
 		const allIds = registry.getAllIds();
 
 		// Find provider that supports the deployment type
-		for (const providerId of allIds) {
-			const provider = registry.get(providerId);
+		for ( const providerId of allIds ) {
+			const provider = registry.get( providerId );
 			if (
 				provider &&
 				provider.getSupportedDeploymentTypes &&
-				provider.getSupportedDeploymentTypes().includes(deploymentType)
+				provider
+					.getSupportedDeploymentTypes()
+					.includes( deploymentType )
 			) {
 				return providerId;
 			}
 		}
-	} catch (error) {
+	} catch ( error ) {
 		// eslint-disable-next-line no-console
 		console.warn(
-			`[Aether] Failed to check JS registry for deployment type ${deploymentType}:`,
+			`[Aether] Failed to check JS registry for deployment type ${ deploymentType }:`,
 			error
 		);
 	}
 
 	// Fallback: Get from REST API.
 	try {
-		const response = await apiFetch({
-			path: `/aether/site-exporter/providers/by-deployment-type/${deploymentType}`,
-		});
+		const response = await apiFetch( {
+			path: `/aether/site-exporter/providers/by-deployment-type/${ deploymentType }`,
+		} );
 
 		if (
 			response.success &&
 			response.providers &&
 			response.providers.length > 0
 		) {
-			return response.providers[0].id;
+			return response.providers[ 0 ].id;
 		}
-	} catch (error) {
+	} catch ( error ) {
 		// eslint-disable-next-line no-console
 		console.error(
-			`[Aether] Failed to fetch provider for deployment type ${deploymentType}:`,
+			`[Aether] Failed to fetch provider for deployment type ${ deploymentType }:`,
 			error
 		);
 	}
 
 	return null;
 }
-

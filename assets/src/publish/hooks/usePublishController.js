@@ -82,7 +82,7 @@ export function usePublishController( publishState ) {
 				// Use provider ID passed from executeSteps (avoids redundant settings fetch).
 				// Get default provider if none configured
 				let fetchedStorageProviderId = providerId;
-				if (!fetchedStorageProviderId) {
+				if ( ! fetchedStorageProviderId ) {
 					const { getDefaultProvider } = await import(
 						'../../providers/utils/providerDiscovery'
 					);
