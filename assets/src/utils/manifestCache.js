@@ -26,6 +26,13 @@
 import IndexedDBStore from './indexedDB';
 
 /**
+ * Cache schema version
+ * Increment this when making breaking changes to cache structure.
+ * This will automatically invalidate old cached data.
+ */
+const CACHE_SCHEMA_VERSION = 2; // Incremented for IndexedDB keyPath fix
+
+/**
  * Cache configuration
  */
 const MANIFEST_CACHE_CONFIG = {
@@ -84,8 +91,21 @@ export class ManifestCache {
 		try {
 			const cached = await this.store.get( cacheKey );
 
-			// Check if cache entry exists and is not expired
+			// Check if cache entry exists
 			if ( cached && cached.timestamp ) {
+				// Check schema version - invalidate if mismatched
+				if (
+					cached.schemaVersion !== undefined &&
+					cached.schemaVersion !== CACHE_SCHEMA_VERSION
+				) {
+					console.log(
+						`[ManifestCache] Cache schema version mismatch for ${ providerId } (cached: ${ cached.schemaVersion }, current: ${ CACHE_SCHEMA_VERSION }). Invalidating cache.`
+					);
+					await this.store.delete( cacheKey );
+					return null;
+				}
+
+				// Check if cache is expired
 				const age = Date.now() - cached.timestamp;
 
 				if ( age < CACHE_EXPIRATION_MS ) {
@@ -121,6 +141,7 @@ export class ManifestCache {
 				{ manifest },
 				{
 					providerId,
+					schemaVersion: CACHE_SCHEMA_VERSION,
 				}
 			);
 			return true;

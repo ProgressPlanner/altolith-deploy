@@ -52,18 +52,6 @@ export function useStaticSiteGenerator( onProgress ) {
 			blueprintData,
 			removeMessage = null
 		) => {
-			// Debug: Log URLs received for processing
-			console.log( '[useStaticSiteGenerator] URLs received for export:', {
-				totalUrls: urls.length,
-				urls,
-				hasHomepage: urls.some(
-					( url ) =>
-						url === siteUrl ||
-						url === siteUrl + '/' ||
-						url.endsWith( '/' ) === false
-				),
-			} );
-
 			// Create asset tracker to prevent duplicate uploads.
 			const assetTracker = createAssetTracker();
 
@@ -149,13 +137,6 @@ export function useStaticSiteGenerator( onProgress ) {
 			for ( let i = 0; i < urls.length; i++ ) {
 				const url = urls[ i ];
 
-				console.log(
-					`[useStaticSiteGenerator] Processing URL ${ i + 1 }/${
-						urls.length
-					}:`,
-					url
-				);
-
 				try {
 					// Fetch HTML content directly from URL (as anonymous visitor).
 					const htmlResponse = await fetch( url, {
@@ -165,14 +146,6 @@ export function useStaticSiteGenerator( onProgress ) {
 							'User-Agent': 'Aether Static Site Generator',
 						},
 					} );
-
-					console.log(
-						`[useStaticSiteGenerator] Fetched URL - Status: ${
-							htmlResponse.status
-						}, Content-Type: ${ htmlResponse.headers.get(
-							'content-type'
-						) }`
-					);
 
 					if ( htmlResponse.status !== 200 ) {
 						// Log failure silently (non-200 responses are expected for some URLs)
