@@ -236,7 +236,10 @@ export function useStaticSiteGenerator( onProgress ) {
 						'fetchManifest'
 					);
 				}
-				manifest = await fetchManifest( storageService );
+				manifest = await fetchManifest(
+					storageService,
+					staticSiteProviderId
+				);
 				const manifestEntryCount = Object.keys( manifest ).length;
 				if ( setStatusMessage ) {
 					setStatusMessage(
@@ -639,7 +642,11 @@ export function useStaticSiteGenerator( onProgress ) {
 								'Periodic manifest save:',
 								filesUploaded + ' files'
 							);
-							await uploadManifest( storageService, manifest );
+							await uploadManifest(
+								storageService,
+								manifest,
+								staticSiteProviderId
+							);
 						} catch ( error ) {
 							debugWarn(
 								'Periodic manifest save failed:',
@@ -692,7 +699,11 @@ export function useStaticSiteGenerator( onProgress ) {
 								'Periodic manifest save:',
 								filesUploaded + ' files'
 							);
-							await uploadManifest( storageService, manifest );
+							await uploadManifest(
+								storageService,
+								manifest,
+								staticSiteProviderId
+							);
 						} catch ( error ) {
 							debugWarn(
 								'Periodic manifest save failed:',
@@ -741,7 +752,11 @@ export function useStaticSiteGenerator( onProgress ) {
 					`Manifest cleanup: ${ beforeCleanupCount } entries → ${ afterCleanupCount } entries (${ removedCount } removed, ${ currentFileKeys.size } current files)`
 				);
 
-				await uploadManifest( storageService, cleanedManifest );
+				await uploadManifest(
+					storageService,
+					cleanedManifest,
+					staticSiteProviderId
+				);
 
 				// Add success message after manifest update
 				if ( setStatusMessage ) {
