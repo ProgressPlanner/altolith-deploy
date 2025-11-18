@@ -134,7 +134,7 @@ class WPOrgCheckController extends WP_REST_Controller
 	 *
 	 * @param string $slug Plugin or theme slug.
 	 * @param string $type 'plugin' or 'theme'.
-	 * @return array Response array.
+	 * @return array<string, mixed> Response array.
 	 */
 	private function checkWordPressOrgAPI(string $slug, string $type): array
 	{
