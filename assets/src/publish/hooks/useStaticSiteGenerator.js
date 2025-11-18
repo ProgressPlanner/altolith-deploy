@@ -52,6 +52,18 @@ export function useStaticSiteGenerator( onProgress ) {
 			blueprintData,
 			removeMessage = null
 		) => {
+			// Debug: Log URLs received for processing
+			console.log( '[useStaticSiteGenerator] URLs received for export:', {
+				totalUrls: urls.length,
+				urls,
+				hasHomepage: urls.some(
+					( url ) =>
+						url === siteUrl ||
+						url === siteUrl + '/' ||
+						url.endsWith( '/' ) === false
+				),
+			} );
+
 			// Create asset tracker to prevent duplicate uploads.
 			const assetTracker = createAssetTracker();
 

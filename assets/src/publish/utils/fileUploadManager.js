@@ -192,15 +192,6 @@ export async function uploadFilesWithProgress( {
 					);
 				}
 
-				// Debug: Log before upload
-				console.log( '[fileUploadManager] About to upload:', {
-					key,
-					displayName,
-					contentType,
-					blobSize: blob?.size,
-					keyIsEmpty: ! key || key === '',
-				} );
-
 				// Upload file with progress tracking
 				const uploadResult = await storageService.upload( key, blob, {
 					contentType,

@@ -22,17 +22,6 @@ import { createSuccessResponse, createErrorResponse } from './standardResponse';
  */
 export async function uploadFile( staticPath, key, file, options = {} ) {
 	try {
-		// Debug: Log upload parameters
-		console.log( '[filesystemAdapter] uploadFile called:', {
-			staticPath,
-			key,
-			fileName: file?.name,
-			fileSize: file?.size,
-			keyType: typeof key,
-			keyLength: key?.length,
-			isEmpty: ! key || key === '',
-		} );
-
 		// Validate key parameter
 		if ( ! key || key === '' ) {
 			const error = new Error(
@@ -40,7 +29,6 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 					file?.name || 'unknown'
 				}, staticPath: ${ staticPath }`
 			);
-			console.error( '[filesystemAdapter] ERROR:', error );
 			return createErrorResponse( error.message );
 		}
 
