@@ -8,7 +8,8 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { AbstractProvider, CAP_STORAGE } from '../base/AbstractProvider';
+import { AbstractProvider } from '../base/AbstractProvider';
+import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 
 /**
  * LocalFilesystemProvider class
@@ -23,16 +24,6 @@ export class LocalFilesystemProvider extends AbstractProvider {
 	 * @type {string}
 	 */
 	static ID = 'local-filesystem';
-
-	/**
-	 * Provider capabilities.
-	 *
-	 * LocalFilesystem only supports storage (CAP_STORAGE).
-	 * It does not support edge computing, media offloading, or static site hosting.
-	 *
-	 * @type {Array<string>}
-	 */
-	capabilities = [ CAP_STORAGE ];
 
 	/**
 	 * Get the unique provider identifier.
@@ -83,36 +74,28 @@ export class LocalFilesystemProvider extends AbstractProvider {
 	}
 
 	/**
-	 * Get configuration fields for this provider.
+	 * Get deployment types this provider supports.
+	 *
+	 * LocalFilesystem supports static sites and blueprint bundles.
+	 *
+	 * @return {Array<string>} Array of DEPLOYMENT_TYPES constants
+	 */
+	getSupportedDeploymentTypes() {
+		return [
+			DEPLOYMENT_TYPES.STATIC_SITE,
+			DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE,
+		];
+	}
+
+	/**
+	 * Get provider-specific configuration fields.
 	 *
 	 * LocalFilesystem provider has minimal configuration since it uses local storage.
 	 *
 	 * @return {Array<Object>} Array of field definitions
 	 */
-	getConfigFields() {
+	getProviderSpecificConfigFields() {
 		return [
-			{
-				id: 'export_types',
-				label: __( 'Export Types', 'aether' ),
-				type: 'checkbox-group',
-				required: false,
-				secure: false,
-				options: [
-					{
-						value: 'static_site',
-						label: __( 'Static Site', 'aether' ),
-					},
-					{
-						value: 'blueprint_bundle',
-						label: __( 'Blueprint Bundle', 'aether' ),
-					},
-				],
-				defaultValue: [ 'static_site', 'blueprint_bundle' ],
-				help: __(
-					'Select which types of exports to generate. You can choose one or both.',
-					'aether'
-				),
-			},
 			{
 				id: 'export_path',
 				label: __( 'Blueprint-bundle file path', 'aether' ),
@@ -211,15 +194,6 @@ export class LocalFilesystemProvider extends AbstractProvider {
 	 */
 	async sanitizeConfig( config ) {
 		const sanitized = await super.sanitizeConfig( config );
-
-		// Sanitize export_types - ensure it's an array with defaults
-		if (
-			! sanitized.export_types ||
-			! Array.isArray( sanitized.export_types ) ||
-			sanitized.export_types.length === 0
-		) {
-			sanitized.export_types = [ 'static_site', 'blueprint_bundle' ];
-		}
 
 		// Sanitize export_path - default to 'blueprint-bundle/bundle.zip' if empty
 		if ( sanitized.export_path ) {

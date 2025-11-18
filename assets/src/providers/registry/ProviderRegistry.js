@@ -238,19 +238,19 @@ class ProviderRegistry {
 	}
 
 	/**
-	 * Get providers by capability.
+	 * Get providers that support a specific deployment type.
 	 *
-	 * @param {string} capability Capability constant (e.g., 'storage', 'edge').
-	 * @return {Array<Object>} Array of provider instances
+	 * @param {string} deploymentType Deployment type constant (e.g., 'static_site', 'blueprint_bundle').
+	 * @return {Array<Object>} Array of provider instances that support the deployment type
 	 */
-	getByCapability( capability ) {
+	getByDeploymentType( deploymentType ) {
 		this.autoDiscover();
 
 		return this.getAllIds()
 			.map( ( providerId ) => this.get( providerId ) )
 			.filter(
 				( provider ) =>
-					provider && provider.supportsCapability( capability )
+					provider && provider.supportsDeploymentType( deploymentType )
 			);
 	}
 
