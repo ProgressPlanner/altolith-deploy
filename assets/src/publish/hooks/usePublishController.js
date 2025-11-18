@@ -17,6 +17,7 @@ import apiFetch from '../../utils/api';
 import { calculateOverallProgress } from '../utils/progressManager';
 import { ProviderRegistry } from '../../providers/registry/ProviderRegistry';
 import { debug, debugError } from '../../utils/debug';
+import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 import {
 	PUBLISH_WORKFLOW,
 	STEP_HANDLERS,
@@ -260,15 +261,62 @@ export function usePublishController( publishState ) {
 			// Get current site URL for static site generation
 			const siteUrl = config.playgroundUrl || window.location.origin;
 
-			// Get providerId for step handlers
+			// Get providerId for backwards compatibility
 			const providerId = fetchedStaticSiteProviderId || storageProviderId;
+
+			// Get provider registry
+			const registry = ProviderRegistry.getInstance();
+
+			// Helper function to get providers for a specific deployment type
+			const getProvidersForDeploymentType = ( deploymentType ) => {
+				const allProviderIds = registry.getAllIds();
+
+				return allProviderIds.filter( ( providerIdToCheck ) => {
+					const provider = registry.get( providerIdToCheck );
+					if ( ! provider ) {
+						return false;
+					}
+
+					// Check if provider supports AND has enabled this deployment type
+					return (
+						provider.supportsDeploymentType( deploymentType ) &&
+						provider.isDeploymentTypeEnabled( deploymentType )
+					);
+				} );
+			};
+
+			// Get arrays of providers for each deployment type
+			const staticSiteProviders = getProvidersForDeploymentType(
+				DEPLOYMENT_TYPES.STATIC_SITE
+			);
+			const blueprintBundleProviders = getProvidersForDeploymentType(
+				DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE
+			);
+			const edgeFunctionProviders = getProvidersForDeploymentType(
+				DEPLOYMENT_TYPES.EDGE_FUNCTIONS
+			);
+
+			debug(
+				'[Workflow] Providers by deployment type:',
+				{
+					staticSite: staticSiteProviders,
+					blueprintBundle: blueprintBundleProviders,
+					edgeFunctions: edgeFunctionProviders,
+				}
+			);
 
 			// Build context object with all dependencies for step handlers
 			const workflowContext = {
 				// API and state
 				api,
 				siteUrl,
-				providerId,
+				providerId, // Legacy: single provider ID for backwards compat
+				registry, // Provider registry instance
+
+				// NEW: Provider arrays by deployment type
+				staticSiteProviders,
+				blueprintBundleProviders,
+				edgeFunctionProviders,
 
 				// Hooks and utilities
 				processStaticSiteUrls,

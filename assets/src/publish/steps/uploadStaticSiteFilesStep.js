@@ -12,13 +12,14 @@ import { applyFilters } from '@wordpress/hooks';
 /**
  * Upload static site files step handler.
  *
- * @param {Object}   context                       Execution context.
- * @param {Function} context.processStaticSiteUrls Static site generator function.
- * @param {Object}   context.currentStatus         Current job status.
- * @param {string}   context.siteUrl               WordPress site URL.
- * @param {string}   context.providerId            Storage/static-site provider ID.
- * @param {Function} context.setStatusMessage      Status message updater.
- * @param {Function} context.removeMessage         Message remover.
+ * @param {Object}   context                        Execution context.
+ * @param {Function} context.processStaticSiteUrls  Static site generator function.
+ * @param {Array}    context.staticSiteProviders    Array of provider IDs that support static site deployment.
+ * @param {string}   context.providerId             (Legacy) Single provider ID for backwards compatibility.
+ * @param {Object}   context.currentStatus          Current job status.
+ * @param {string}   context.siteUrl                WordPress site URL.
+ * @param {Function} context.setStatusMessage       Status message updater.
+ * @param {Function} context.removeMessage          Message remover.
  * @return {Promise<Object>} Step result with uploaded files.
  */
 export async function uploadStaticSiteFilesHandler( context ) {
@@ -29,16 +30,11 @@ export async function uploadStaticSiteFilesHandler( context ) {
 		blueprintData, // From generateBlueprintHandler (workflow) or currentStatus (tests)
 		currentStatus, // Legacy support for tests
 		siteUrl,
-		providerId,
+		staticSiteProviders = [], // NEW: Array of provider IDs
+		providerId, // LEGACY: Keep for backwards compat
 		setStatusMessage,
 		removeMessage,
 	} = context;
-
-	setStatusMessage(
-		'Uploading static site files…',
-		'progress',
-		'uploadStaticSiteFiles'
-	);
 
 	// Support both new format (urls directly in context) and old format (currentStatus.urls for tests)
 	const urlsArray = urls || currentStatus?.urls;
@@ -57,18 +53,41 @@ export async function uploadStaticSiteFilesHandler( context ) {
 		);
 	}
 
+	// Use staticSiteProviders if available, fallback to single providerId
+	const providers =
+		staticSiteProviders.length > 0
+			? staticSiteProviders
+			: providerId
+			? [ providerId ]
+			: [];
+
+	if ( providers.length === 0 ) {
+		setStatusMessage(
+			'No providers enabled for static site deployment',
+			'warning',
+			'uploadStaticSiteFiles'
+		);
+		return { skipped: true, reason: 'no_providers' };
+	}
+
+	setStatusMessage(
+		`Uploading static site to ${ providers.length } provider(s)…`,
+		'progress',
+		'uploadStaticSiteFiles'
+	);
+
 	/**
 	 * Filter the URLs before processing for static site upload.
 	 *
 	 * Allows modification of URLs that will be fetched and uploaded.
 	 *
-	 * @param {Array}  urls       Array of URL objects to process.
-	 * @param {string} providerId The provider ID being used for upload.
+	 * @param {Array} urls      Array of URL objects to process.
+	 * @param {Array} providers Array of provider IDs being used for upload.
 	 *
 	 * @example
 	 * import { addFilter } from '@wordpress/hooks';
 	 *
-	 * addFilter('aether.upload.urls', 'my-provider', (urls, providerId) => {
+	 * addFilter('aether.upload.urls', 'my-provider', (urls, providers) => {
 	 *   // Add custom URL
 	 *   return [...urls, { url: '/custom-page/', type: 'page' }];
 	 * });
@@ -76,36 +95,75 @@ export async function uploadStaticSiteFilesHandler( context ) {
 	const filteredUrls = applyFilters(
 		'aether.upload.urls',
 		urlsArray,
-		providerId
+		providers // Pass array instead of single ID
 	);
 
-	// Process ALL URLs and upload static files
-	const result = await processStaticSiteUrls(
-		filteredUrls,
-		siteUrlForStatic,
-		providerId,
-		siteUrl,
-		setStatusMessage,
-		blueprintDataForStatic,
-		removeMessage
+	// Upload to ALL providers in parallel
+	const uploadPromises = providers.map( async ( providerIdItem ) => {
+		try {
+			const result = await processStaticSiteUrls(
+				filteredUrls,
+				siteUrlForStatic,
+				providerIdItem,
+				siteUrl,
+				setStatusMessage,
+				blueprintDataForStatic,
+				removeMessage
+			);
+
+			return {
+				providerId: providerIdItem,
+				success: true,
+				filesUploaded: result.filesUploaded || 0,
+				uploadedFiles: result.uploadedFiles || [],
+			};
+		} catch ( error ) {
+			return {
+				providerId: providerIdItem,
+				success: false,
+				error: error.message,
+			};
+		}
+	} );
+
+	const results = await Promise.allSettled( uploadPromises );
+
+	// Aggregate results
+	const successfulUploads = results.filter(
+		( r ) => r.status === 'fulfilled' && r.value.success
+	);
+	const failedUploads = results.filter(
+		( r ) =>
+			r.status === 'rejected' ||
+			( r.status === 'fulfilled' && ! r.value.success )
 	);
 
-	setStatusMessage(
-		`Uploaded static site files (${ result.filesUploaded || 0 } files)`,
-		'success',
-		'uploadStaticSiteFiles'
-	);
+	if ( successfulUploads.length > 0 ) {
+		const totalFiles = successfulUploads.reduce(
+			( sum, r ) => sum + ( r.value.filesUploaded || 0 ),
+			0
+		);
+		setStatusMessage(
+			`Uploaded static site to ${ successfulUploads.length }/${ providers.length } provider(s) (${ totalFiles } files)`,
+			failedUploads.length > 0 ? 'warning' : 'success',
+			'uploadStaticSiteFiles'
+		);
+	}
+
+	if ( failedUploads.length === providers.length ) {
+		throw new Error( 'Failed to upload static site to any provider' );
+	}
 
 	/**
 	 * Filter the upload result before returning.
 	 *
-	 * @param {Object} result     The upload result object.
-	 * @param {string} providerId The provider ID used for upload.
+	 * @param {Object} result   The aggregated upload result object.
+	 * @param {Array}  providers Array of provider IDs used for upload.
 	 *
 	 * @example
 	 * import { addFilter} from '@wordpress/hooks';
 	 *
-	 * addFilter('aether.upload.result', 'my-provider', (result, providerId) => {
+	 * addFilter('aether.upload.result', 'my-provider', (result, providers) => {
 	 *   return {
 	 *     ...result,
 	 *     customMetadata: 'added by my provider'
@@ -115,10 +173,19 @@ export async function uploadStaticSiteFilesHandler( context ) {
 	const filteredResult = applyFilters(
 		'aether.upload.result',
 		{
-			staticFiles: result.uploadedFiles || [],
-			filesUploaded: result.filesUploaded || 0,
+			providers,
+			results: results.map( ( r ) =>
+				r.status === 'fulfilled' ? r.value : r.reason
+			),
+			successCount: successfulUploads.length,
+			failureCount: failedUploads.length,
+			// Legacy fields for backwards compatibility
+			staticFiles:
+				successfulUploads[ 0 ]?.value?.uploadedFiles || [],
+			filesUploaded:
+				successfulUploads[ 0 ]?.value?.filesUploaded || 0,
 		},
-		providerId
+		providers
 	);
 
 	return filteredResult;

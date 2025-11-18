@@ -217,14 +217,22 @@ export function getCumulativeProgress( stepId ) {
 /**
  * Filter workflow based on export types configuration.
  *
- * Removes steps that are not needed based on the export_types setting.
- * Redistributes progress weights to maintain 100% total.
+ * @deprecated No longer filters workflow - always returns original workflow unchanged.
+ * The new architecture uses deployment_types in provider config instead of global export_types.
+ * Upload steps automatically skip providers that don't have the deployment type enabled.
  *
- * @param {Array} workflow    The workflow to filter.
- * @param {Array} exportTypes Array of export types ('static_site', 'blueprint_bundle').
- * @return {Array} Filtered workflow with adjusted progress weights.
+ * Kept for backwards compatibility in case external code calls this function.
+ *
+ * @param {Array} workflow    The workflow (returned unchanged).
+ * @param {Array} exportTypes Array of export types (ignored).
+ * @return {Array} Original workflow unchanged.
  */
 export function filterWorkflowByExportTypes( workflow, exportTypes = [] ) {
+	// Simply return the full workflow - no filtering needed
+	// Individual steps will check provider deployment_types and handle appropriately
+	return workflow;
+
+	/* OLD IMPLEMENTATION - REMOVED
 	// Default to both if empty or invalid
 	if ( ! Array.isArray( exportTypes ) || exportTypes.length === 0 ) {
 		return workflow;
@@ -289,4 +297,5 @@ export function filterWorkflowByExportTypes( workflow, exportTypes = [] ) {
 	}
 
 	return filteredWorkflow;
+	*/
 }
