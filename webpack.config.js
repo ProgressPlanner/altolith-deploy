@@ -65,7 +65,6 @@ module.exports = {
 		'admin-settings': './assets/src/admin-settings/index.js',
 		'admin-common': './assets/src/admin-common/index.js',
 		export: './assets/src/publish/index.js',
-		'provider-sdk': './assets/src/provider-sdk/index.js',
 	},
 	output: {
 		...defaultConfig.output,
@@ -74,12 +73,6 @@ module.exports = {
 		// Prevent webpack from creating chunk files - all code goes into entry bundles
 		// Setting chunkFilename to undefined ensures no chunk files are created
 		chunkFilename: undefined,
-		// For provider-sdk, expose as UMD library
-		library: {
-			name: 'AetherProviderSDK',
-			type: 'window', // Expose on window object
-			export: 'default',
-		},
 	},
 	optimization: {
 		...defaultConfig.optimization,

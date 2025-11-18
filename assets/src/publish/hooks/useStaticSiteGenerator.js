@@ -69,12 +69,23 @@ export function useStaticSiteGenerator( onProgress ) {
 			// Get provider configuration
 			let providerConfig = {};
 			try {
-				const settingsResponse = await apiFetch( {
-					path: '/aether/site-exporter/settings?key=providers',
-				} );
-				if ( settingsResponse.success && settingsResponse.value ) {
-					providerConfig =
-						settingsResponse.value[ 'local-filesystem' ] || {};
+				// Get provider for static_site deployment type
+				// Dynamic import to avoid circular dependencies
+				const providerDiscovery = await import(
+					'../../providers/utils/providerDiscovery'
+				);
+				const staticSiteProviderId =
+					await providerDiscovery.getProviderForDeploymentType(
+						'static_site'
+					);
+
+				if ( staticSiteProviderId ) {
+					const configResponse = await apiFetch( {
+						path: `/aether/site-exporter/providers/${staticSiteProviderId}/config`,
+					} );
+					if ( configResponse.success && configResponse.config ) {
+						providerConfig = configResponse.config;
+					}
 				}
 			} catch ( error ) {
 				debug( 'Failed to load provider configuration:', error );

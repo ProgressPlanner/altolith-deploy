@@ -24,6 +24,7 @@ use WP_REST_Response;
 use WP_Error;
 use Aether\SiteExporter\Utilities\CredentialEncryption;
 use Aether\SiteExporter\Utilities\EncryptionHelper;
+use Aether\SiteExporter\Providers\ProviderRegistry;
 
 /**
  * Provider configuration REST endpoints.
@@ -108,17 +109,52 @@ class ProviderConfigController
 	{
 		$providerId = \sanitize_key($request->get_param('provider_id'));
 
-		// Get provider config from aether_settings (where settings are actually stored)
-		$settings = \get_option('aether_site_exporter_settings', []);
-		$providers = $settings['providers'] ?? [];
-		$config = $providers[ $providerId ] ?? [];
+		// Get provider instance from registry.
+		$registry = ProviderRegistry::getInstance();
+		$provider = $registry->get($providerId);
 
-		if (empty($config)) {
+		if (! $provider) {
 			return new WP_Error(
-				'restProviderNotConfigured',
-				\__('Provider is not configured.', 'aether-site-exporter'),
+				'provider_not_found',
+				\sprintf(\__('Provider not found: %s', 'aether-site-exporter'), $providerId),
 				[ 'status' => 404 ]
 			);
+		}
+
+		// Get config using provider's get callbacks.
+		$config = [];
+		$settings = $provider->getSettings();
+		foreach ($settings as $field) {
+			$fieldName = $field['name'] ?? '';
+			if (empty($fieldName)) {
+				continue;
+			}
+
+			// Handle nested field names like 'foo[bar]'.
+			if (\preg_match('/^([^[]+)\[([^\]]+)\]$/', $fieldName, $matches)) {
+				$parentKey = $matches[1];
+				$childKey = $matches[2];
+				if (! isset($config[$parentKey]) || ! \is_array($config[$parentKey])) {
+					$config[$parentKey] = [];
+				}
+				if (isset($field['get']) && \is_callable($field['get'])) {
+					try {
+						$config[$parentKey][$childKey] = \call_user_func($field['get']);
+					} catch (\Exception $e) {
+						// If get callback fails, use empty value
+						$config[$parentKey][$childKey] = '';
+					}
+				}
+			} else {
+				if (isset($field['get']) && \is_callable($field['get'])) {
+					try {
+						$config[$fieldName] = \call_user_func($field['get']);
+					} catch (\Exception $e) {
+						// If get callback fails, use empty value
+						$config[$fieldName] = '';
+					}
+				}
+			}
 		}
 
 		// Decrypt sensitive fields for client.
@@ -174,6 +210,18 @@ class ProviderConfigController
 			return new WP_Error('invalid_config', \__('Config must be an object.', 'aether-site-exporter'), [ 'status' => 400 ]);
 		}
 
+		// Get provider instance from registry.
+		$registry = ProviderRegistry::getInstance();
+		$provider = $registry->get($providerId);
+
+		if (! $provider) {
+			return new WP_Error(
+				'provider_not_found',
+				\sprintf(\__('Provider not found: %s', 'aether-site-exporter'), $providerId),
+				[ 'status' => 404 ]
+			);
+		}
+
 		/**
 		 * Filter provider configuration before saving.
 		 *
@@ -192,8 +240,89 @@ class ProviderConfigController
 		 */
 		$config = \apply_filters('aether_provider_config_save', $config, $providerId);
 
-		// Sanitize and encrypt.
-		$sanitized = $this->sanitizeConfig($config);
+		// Use provider's sanitize and set callbacks.
+		$settings = $provider->getSettings();
+		$sanitized = [];
+
+		foreach ($settings as $field) {
+			$fieldName = $field['name'] ?? '';
+			if (empty($fieldName)) {
+				continue;
+			}
+
+			// Handle nested field names like 'foo[bar]'.
+			if (\preg_match('/^([^[]+)\[([^\]]+)\]$/', $fieldName, $matches)) {
+				$parentKey = $matches[1];
+				$childKey = $matches[2];
+				$value = $config[$parentKey][$childKey] ?? null;
+
+				// Sanitize using provider's callback.
+				if (isset($field['sanitize_callback']) && \is_callable($field['sanitize_callback'])) {
+					try {
+						$value = \call_user_func($field['sanitize_callback'], $value);
+					} catch (\Exception $e) {
+						// If sanitization fails, skip this field
+						continue;
+					}
+				}
+
+				// Save using provider's set callback.
+				if (isset($field['set']) && \is_callable($field['set'])) {
+					try {
+						\call_user_func($field['set'], $value);
+					} catch (\Exception $e) {
+						// Log error but continue with other fields
+						if (\defined('WP_DEBUG') && WP_DEBUG) {
+							\error_log(\sprintf(
+								'Aether: Failed to save field %s[%s] for provider %s: %s',
+								$parentKey,
+								$childKey,
+								$providerId,
+								$e->getMessage()
+							));
+						}
+					}
+				}
+
+				// Also store in sanitized array for encryption.
+				if (! isset($sanitized[$parentKey]) || ! \is_array($sanitized[$parentKey])) {
+					$sanitized[$parentKey] = [];
+				}
+				$sanitized[$parentKey][$childKey] = $value;
+			} else {
+				$value = $config[$fieldName] ?? null;
+
+				// Sanitize using provider's callback.
+				if (isset($field['sanitize_callback']) && \is_callable($field['sanitize_callback'])) {
+					try {
+						$value = \call_user_func($field['sanitize_callback'], $value);
+					} catch (\Exception $e) {
+						// If sanitization fails, skip this field
+						continue;
+					}
+				}
+
+				// Save using provider's set callback.
+				if (isset($field['set']) && \is_callable($field['set'])) {
+					try {
+						\call_user_func($field['set'], $value);
+					} catch (\Exception $e) {
+						// Log error but continue with other fields
+						if (\defined('WP_DEBUG') && WP_DEBUG) {
+							\error_log(\sprintf(
+								'Aether: Failed to save field %s for provider %s: %s',
+								$fieldName,
+								$providerId,
+								$e->getMessage()
+							));
+						}
+					}
+				}
+
+				// Also store in sanitized array for encryption.
+				$sanitized[$fieldName] = $value;
+			}
+		}
 
 		/**
 		 * Filter provider-specific configuration after sanitization.
@@ -214,19 +343,14 @@ class ProviderConfigController
 		 */
 		$sanitized = \apply_filters("aether_provider_{$providerId}_sanitize", $sanitized, $providerId);
 
+		// Encrypt sensitive fields and save to options for backward compatibility.
 		$encrypted = $this->encryptSensitiveFields($sanitized);
-
-		// Save to aether_settings['providers'][providerId]
-		$settings = \get_option('aether_site_exporter_settings', []);
-		if (! isset($settings['providers']) || ! \is_array($settings['providers'])) {
-			$settings['providers'] = [];
+		$settingsOption = \get_option('aether_site_exporter_settings', []);
+		if (! isset($settingsOption['providers']) || ! \is_array($settingsOption['providers'])) {
+			$settingsOption['providers'] = [];
 		}
-		$settings['providers'][$providerId] = $encrypted;
-		$result = \update_option('aether_site_exporter_settings', $settings);
-
-		if (! $result && \get_option('aether_site_exporter_settings') !== $settings) {
-			return new WP_Error('save_failed', \__('Failed to save provider configuration.', 'aether-site-exporter'), [ 'status' => 500 ]);
-		}
+		$settingsOption['providers'][$providerId] = $encrypted;
+		\update_option('aether_site_exporter_settings', $settingsOption);
 
 		/**
 		 * Action fired after provider configuration is saved.
@@ -430,8 +554,21 @@ class ProviderConfigController
 	{
 		$providerId = \sanitize_key($request->get_param('provider_id'));
 
-		// For local filesystem provider, verify export directory is writable
-		if ($providerId === 'local-filesystem') {
+		// Get provider instance from registry.
+		$registry = ProviderRegistry::getInstance();
+		$provider = $registry->get($providerId);
+
+		if (! $provider) {
+			return new WP_Error(
+				'provider_not_found',
+				\sprintf(\__('Provider not found: %s', 'aether-site-exporter'), $providerId),
+				[ 'status' => 404 ]
+			);
+		}
+
+		// For local filesystem provider, verify export directory is writable.
+		// This check is provider-specific, so we check by provider type.
+		if ($provider->getType() === 'local-storage') {
 			$exportDir = \trailingslashit(WP_CONTENT_DIR) . 'aether-exports';
 
 			// Check if directory exists and is writable

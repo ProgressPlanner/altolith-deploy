@@ -193,12 +193,22 @@ export class AbstractProvider {
 	 * Get enabled deployment types from provider configuration.
 	 *
 	 * Returns the deployment types the user has chosen to use this provider for.
+	 * If not set in config, defaults to all supported deployment types.
 	 *
 	 * @return {Array<string>} Array of enabled deployment types
 	 */
 	getEnabledDeploymentTypes() {
 		const config = this.config || {};
-		return config.deployment_types || [];
+		// If deployment_types is set in config, use it
+		if (
+			config.deployment_types &&
+			Array.isArray( config.deployment_types ) &&
+			config.deployment_types.length > 0
+		) {
+			return config.deployment_types;
+		}
+		// Otherwise, default to all supported deployment types
+		return this.getSupportedDeploymentTypes();
 	}
 
 	/**

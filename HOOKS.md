@@ -744,6 +744,130 @@ addFilter('aether.blueprint.generated', 'my-plugin', (blueprint) => {
 
 All PHP hooks use WordPress's native `add_filter()` and `add_action()` functions.
 
+### Provider Registration
+
+#### `aether_providers`
+
+**Type**: Filter
+**Location**: `includes/Providers/ProviderRegistry.php`
+
+Registers provider instances. This is the primary way to register providers in PHP.
+
+**Parameters**:
+- `$providers` (array): Array of `BaseProvider` instances
+
+**Example**:
+```php
+add_filter('aether_providers', function($providers) {
+    $providers[] = new MyCustomProvider();
+    return $providers;
+});
+```
+
+**Provider Class Structure**:
+```php
+class MyCustomProvider extends \Aether\SiteExporter\Providers\BaseProvider {
+    public function getId(): string {
+        return 'my-custom-provider';
+    }
+    
+    public function getName(): string {
+        return 'My Custom Provider';
+    }
+    
+    public function getDescription(): string {
+        return 'Description of my provider';
+    }
+    
+    public function getDeploymentTypes(): array {
+        return ['static_site', 'blueprint_bundle'];
+    }
+    
+    public function getSettings(): array {
+        return [
+            [
+                'type' => 'text',
+                'label' => 'API Key',
+                'name' => 'api_key',
+                'sanitize_callback' => function($value) {
+                    return sanitize_text_field($value);
+                },
+                'get' => function() {
+                    $settings = get_option('aether_site_exporter_settings', []);
+                    return $settings['providers']['my-custom-provider']['api_key'] ?? '';
+                },
+                'set' => function($value) {
+                    $settings = get_option('aether_site_exporter_settings', []);
+                    if (!isset($settings['providers'])) {
+                        $settings['providers'] = [];
+                    }
+                    $settings['providers']['my-custom-provider']['api_key'] = $value;
+                    update_option('aether_site_exporter_settings', $settings);
+                },
+            ],
+        ];
+    }
+    
+    public function registerRoutes(): void {
+        // Register custom REST API endpoints if needed
+        register_rest_route('aether/v1', '/providers/my-custom-provider/custom-endpoint', [
+            'methods' => 'GET',
+            'callback' => [$this, 'handleCustomEndpoint'],
+            'permission_callback' => '__return_true',
+        ]);
+    }
+}
+```
+
+---
+
+#### `aether_get_default_provider`
+
+**Type**: Filter
+**Location**: `includes/Plugin.php`
+
+Filters the default provider ID. Used when no provider is explicitly configured.
+
+**Parameters**:
+- `$providerId` (string|null): Default provider ID (null if not set)
+
+**Returns**: (string) Provider ID
+
+**Example**:
+```php
+add_filter('aether_get_default_provider', function($providerId) {
+    // Return custom default provider
+    return 'my-custom-provider';
+});
+```
+
+---
+
+#### `aether_get_provider_for_deployment_type`
+
+**Type**: Filter
+**Location**: `includes/Plugin.php`
+
+Filters the provider ID for a specific deployment type.
+
+**Parameters**:
+- `$providerId` (string|null): Provider ID (null if not set)
+- `$deploymentType` (string): Deployment type (e.g., 'static_site', 'blueprint_bundle')
+
+**Returns**: (string) Provider ID
+
+**Example**:
+```php
+add_filter('aether_get_provider_for_deployment_type', function($providerId, $deploymentType) {
+    if ($deploymentType === 'static_site') {
+        return 'my-static-site-provider';
+    }
+    return $providerId;
+}, 10, 2);
+```
+
+---
+
 ### Provider Configuration
 
 #### `aether_provider_config_validate`
@@ -1130,37 +1254,10 @@ add_action('aether_publish_job_deleted', function($job_id, $request) {
 
 ### Creating a Custom Provider
 
-**JavaScript** (`my-provider.js`):
+Providers require both PHP and JavaScript components:
 
-```javascript
-import { AbstractProvider } from '@wordpress/aether-site-exporter';
-import { addFilter } from '@wordpress/hooks';
-
-class MyCustomProvider extends AbstractProvider {
-    getId() {
-        return 'my-provider';
-    }
-
-    getName() {
-        return 'My Custom Provider';
-    }
-
-    // Implement required methods...
-}
-
-// Add custom validation
-addFilter('aether.provider.config.validate', 'my-provider', (errors, config, providerId) => {
-    if (providerId === 'my-provider') {
-        if (!config.apiKey) {
-            errors.apiKey = 'API key is required';
-        }
-    }
-    return errors;
-});
-
-// Register provider
-export default MyCustomProvider;
-```
+1. **PHP Class**: Handles registration, settings management, and REST API endpoints
+2. **JavaScript Class**: Handles upload/deployment implementation
 
 **PHP** (`my-provider-plugin.php`):
 
@@ -1171,23 +1268,111 @@ export default MyCustomProvider;
  * Description: Custom deployment provider for Aether Site Exporter
  */
 
-// Add server-side validation
-add_filter('aether_provider_config_validate', function($errors, $config, $provider_id) {
-    if ($provider_id === 'my-provider') {
-        if (empty($config['api_key'])) {
-            $errors->add('missing_api_key', 'API key is required');
-        }
-    }
-    return $errors;
-}, 10, 3);
+use Aether\SiteExporter\Providers\BaseProvider;
 
-// Handle deployment
-add_action('aether_publish_after_upload', function($file_path, $remote_url, $config) {
-    if ($config['provider'] === 'my-provider') {
-        // Perform custom post-upload tasks
-        // Invalidate CDN cache, trigger webhooks, etc.
+class MyCustomProvider extends BaseProvider {
+    public function getId(): string {
+        return 'my-custom-provider';
     }
-}, 10, 3);
+    
+    public function getName(): string {
+        return 'My Custom Provider';
+    }
+    
+    public function getDescription(): string {
+        return 'Custom deployment provider';
+    }
+    
+    public function getDeploymentTypes(): array {
+        return ['static_site', 'blueprint_bundle'];
+    }
+    
+    public function getSettings(): array {
+        return [
+            [
+                'type' => 'text',
+                'label' => 'API Key',
+                'name' => 'api_key',
+                'sanitize_callback' => function($value) {
+                    return sanitize_text_field($value);
+                },
+                'get' => function() {
+                    $settings = get_option('aether_site_exporter_settings', []);
+                    return $settings['providers']['my-custom-provider']['api_key'] ?? '';
+                },
+                'set' => function($value) {
+                    $settings = get_option('aether_site_exporter_settings', []);
+                    if (!isset($settings['providers'])) {
+                        $settings['providers'] = [];
+                    }
+                    $settings['providers']['my-custom-provider']['api_key'] = $value;
+                    update_option('aether_site_exporter_settings', $settings);
+                },
+            ],
+        ];
+    }
+    
+    public function registerRoutes(): void {
+        // Register custom REST endpoints if needed
+        register_rest_route('aether/v1', '/providers/my-custom-provider/custom', [
+            'methods' => 'GET',
+            'callback' => [$this, 'handleCustomRequest'],
+            'permission_callback' => '__return_true',
+        ]);
+    }
+}
+
+// Register provider
+add_filter('aether_providers', function($providers) {
+    $providers[] = new MyCustomProvider();
+    return $providers;
+});
+```
+
+**JavaScript** (`my-provider.js`):
+
+```javascript
+import { AbstractProvider } from '../providers/base/AbstractProvider';
+import { addAction } from '@wordpress/hooks';
+import ProviderRegistry from '../providers/registry/ProviderRegistry';
+
+class MyCustomProvider extends AbstractProvider {
+    getId() {
+        return 'my-custom-provider';
+    }
+
+    getName() {
+        return 'My Custom Provider';
+    }
+
+    // Implement required methods for upload/deployment...
+    async uploadFile(file, path) {
+        // Custom upload logic
+    }
+}
+
+// Register JavaScript provider
+ProviderRegistry.register('my-custom-provider', MyCustomProvider);
+
+// Also register via hook for auto-discovery
+addAction('aether.providers.register', 'my-plugin/my-custom-provider', (registry) => {
+    registry.register('my-custom-provider', MyCustomProvider);
+});
+```
+
+**Enqueue JavaScript** (`my-provider-plugin.php`):
+
+```php
+add_action('admin_enqueue_scripts', function() {
+    // Enqueue your provider's JavaScript file
+    wp_enqueue_script(
+        'my-custom-provider',
+        plugin_dir_url(__FILE__) . 'assets/my-provider.js',
+        ['aether-admin-common'], // Dependencies
+        '1.0.0',
+        true
+    );
+});
 ```
 
 ---

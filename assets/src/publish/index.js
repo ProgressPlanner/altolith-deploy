@@ -27,9 +27,8 @@ import { PublishProvider } from '../contexts/PublishContext';
 import DevTools from '../components/DevTools';
 import { debugWarn } from '../utils/debug';
 
-// Import local-filesystem provider to ensure it's registered
-// This is the default/fallback provider
-import '../providers/local-filesystem/index';
+// Providers are registered via PHP using the 'aether_providers' filter.
+// JavaScript providers register via 'aether.providers.register' hook.
 
 // Load providers dynamically to reduce initial bundle size
 // Don't wait for providers to load - render immediately

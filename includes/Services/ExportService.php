@@ -13,6 +13,7 @@ namespace Aether\SiteExporter\Services;
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Sync\JobStateManager;
 use Aether\SiteExporter\Utilities\TempDirectoryManager;
+use Aether\SiteExporter\Providers\ProviderRegistry;
 
 \defined('ABSPATH') || exit;
 
@@ -73,9 +74,20 @@ class ExportService
 			);
 		}
 
-		// Get export path from settings.
-		$settings = \get_option('aether_site_exporter_settings', []);
-		$exportPath = $settings['providers']['local-filesystem']['export_path'] ?? 'blueprint-bundle/bundle.zip';
+		// Get export path from provider registry.
+		$registry = ProviderRegistry::getInstance();
+		$provider = $registry->getForDeploymentType('blueprint_bundle');
+		$exportPath = 'blueprint-bundle/bundle.zip';
+		
+		if ($provider) {
+			$settings = $provider->getSettings();
+			foreach ($settings as $field) {
+				if (($field['name'] ?? '') === 'export_path' && isset($field['get']) && \is_callable($field['get'])) {
+					$exportPath = \call_user_func($field['get']);
+					break;
+				}
+			}
+		}
 
 		// Security: Validate export_path is a string and doesn't contain null bytes
 		if (!\is_string($exportPath) || \strpos($exportPath, "\0") !== false) {
@@ -1447,9 +1459,20 @@ class ExportService
 	 */
 	public function finalizeArchive(string $zipPath)
 	{
-		// Get export path from settings.
-		$settings = \get_option('aether_site_exporter_settings', []);
-		$exportPath = $settings['providers']['local-filesystem']['export_path'] ?? 'blueprint-bundle/bundle.zip';
+		// Get export path from provider registry.
+		$registry = ProviderRegistry::getInstance();
+		$provider = $registry->getForDeploymentType('blueprint_bundle');
+		$exportPath = 'blueprint-bundle/bundle.zip';
+		
+		if ($provider) {
+			$settings = $provider->getSettings();
+			foreach ($settings as $field) {
+				if (($field['name'] ?? '') === 'export_path' && isset($field['get']) && \is_callable($field['get'])) {
+					$exportPath = \call_user_func($field['get']);
+					break;
+				}
+			}
+		}
 
 		// Security: Validate export_path.
 		if (!\is_string($exportPath) || \strpos($exportPath, "\0") !== false) {

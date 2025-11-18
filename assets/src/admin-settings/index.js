@@ -31,9 +31,8 @@ import AdminSettings from './AdminSettings';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { PublishProvider } from '../contexts/PublishContext';
 
-// Import local-filesystem provider to ensure it's registered
-// This is the default/fallback provider and must always be available
-import '../providers/local-filesystem/index';
+// Providers are registered via PHP using the 'aether_providers' filter.
+// JavaScript providers register via 'aether.providers.register' hook.
 
 /**
  * Initialize admin settings page.

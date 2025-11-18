@@ -80,9 +80,14 @@ export function usePublishController( publishState ) {
 		async ( providerId, context ) => {
 			try {
 				// Use provider ID passed from executeSteps (avoids redundant settings fetch).
-				// Default to 'local-filesystem' if no provider configured
-				const fetchedStorageProviderId =
-					providerId || 'local-filesystem';
+				// Get default provider if none configured
+				let fetchedStorageProviderId = providerId;
+				if (!fetchedStorageProviderId) {
+					const { getDefaultProvider } = await import(
+						'../../providers/utils/providerDiscovery'
+					);
+					fetchedStorageProviderId = await getDefaultProvider();
+				}
 
 				// Get provider instance from registry to check upload strategy
 				const registry = ProviderRegistry.getInstance();

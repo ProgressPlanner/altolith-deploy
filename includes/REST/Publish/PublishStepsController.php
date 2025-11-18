@@ -18,6 +18,7 @@ use Aether\SiteExporter\Services\ExportService;
 use Aether\SiteExporter\Services\BlueprintBundleGenerator;
 use Aether\SiteExporter\Utilities\Static\URLDiscoveryService;
 use Aether\SiteExporter\Utilities\HTTPClient;
+use Aether\SiteExporter\Providers\ProviderRegistry;
 use WP_REST_Request;
 use WP_Error;
 
@@ -448,49 +449,64 @@ class PublishStepsController
 	 */
 	private function getStaticSiteUrl(): string
 	{
-		// Get provider settings.
-		$settings = \get_option('aether_site_exporter_settings', []);
-		$providerTypes = $settings['provider_types'] ?? [];
-		$staticSiteProviderId = $providerTypes['static_site'] ?? '';
+		// Get provider from registry for static_site deployment type.
+		$registry = ProviderRegistry::getInstance();
+		$provider = $registry->getForDeploymentType('static_site');
 
-		// Fallback: If no static site provider type is set, use the first available provider
-		// that supports static_site export (typically 'local-filesystem')
-		if (empty($staticSiteProviderId) && !empty($settings['providers'])) {
-			foreach ($settings['providers'] as $providerId => $config) {
-				if (isset($config['export_types']) && \is_array($config['export_types']) && \in_array('static_site', $config['export_types'], true)) {
-					$staticSiteProviderId = $providerId;
-					break;
-				}
-			}
-		}
-
-		// If no static site provider is configured, use relative URLs.
-		if (empty($staticSiteProviderId)) {
+		// If no provider is configured, use relative URLs.
+		if (! $provider) {
 			return '';
 		}
 
-		// Try to get base URL from provider configuration.
+		// Try to get base URL from provider configuration using get callbacks.
 		$baseUrl = '';
+		$settings = $provider->getSettings();
 
 		// Priority order:
 		// 1. public_url (local filesystem - where the static site will be accessed)
 		// 2. custom_domain (R2/S3 - this is the public-facing URL)
 		// 3. base_url from provider configuration
-		if (
-			isset($settings['providers'][$staticSiteProviderId]['public_url']) &&
-			! empty($settings['providers'][$staticSiteProviderId]['public_url'])
-		) {
-			$baseUrl = $settings['providers'][$staticSiteProviderId]['public_url'];
-		} elseif (
-			isset($settings['providers'][$staticSiteProviderId]['custom_domain']) &&
-			! empty($settings['providers'][$staticSiteProviderId]['custom_domain'])
-		) {
-			$baseUrl = $settings['providers'][$staticSiteProviderId]['custom_domain'];
-		} elseif (
-			isset($settings['providers'][$staticSiteProviderId]['base_url']) &&
-			! empty($settings['providers'][$staticSiteProviderId]['base_url'])
-		) {
-			$baseUrl = $settings['providers'][$staticSiteProviderId]['base_url'];
+		foreach ($settings as $field) {
+			$fieldName = $field['name'] ?? '';
+			if (empty($fieldName)) {
+				continue;
+			}
+
+			if ($fieldName === 'public_url' && isset($field['get']) && \is_callable($field['get'])) {
+				$value = \call_user_func($field['get']);
+				if (! empty($value)) {
+					$baseUrl = $value;
+					break;
+				}
+			}
+		}
+
+		// Try custom_domain if public_url not found.
+		if (empty($baseUrl)) {
+			foreach ($settings as $field) {
+				$fieldName = $field['name'] ?? '';
+				if ($fieldName === 'custom_domain' && isset($field['get']) && \is_callable($field['get'])) {
+					$value = \call_user_func($field['get']);
+					if (! empty($value)) {
+						$baseUrl = $value;
+						break;
+					}
+				}
+			}
+		}
+
+		// Try base_url as fallback.
+		if (empty($baseUrl)) {
+			foreach ($settings as $field) {
+				$fieldName = $field['name'] ?? '';
+				if ($fieldName === 'base_url' && isset($field['get']) && \is_callable($field['get'])) {
+					$value = \call_user_func($field['get']);
+					if (! empty($value)) {
+						$baseUrl = $value;
+						break;
+					}
+				}
+			}
 		}
 
 		// If no base URL found, return empty string (will use relative URLs).
@@ -1295,9 +1311,20 @@ class PublishStepsController
 		 */
 		$blueprintData = \apply_filters('aether_blueprint_data', $blueprintData, $archiveResult);
 
-		// Get bundle filename from settings
-		$settings = \get_option('aether_site_exporter_settings', []);
-		$exportPath = $settings['providers']['local-filesystem']['export_path'] ?? 'blueprint-bundle/bundle.zip';
+		// Get bundle filename from provider registry.
+		$registry = ProviderRegistry::getInstance();
+		$provider = $registry->getForDeploymentType('blueprint_bundle');
+		$exportPath = 'blueprint-bundle/bundle.zip';
+		
+		if ($provider) {
+			$settings = $provider->getSettings();
+			foreach ($settings as $field) {
+				if (($field['name'] ?? '') === 'export_path' && isset($field['get']) && \is_callable($field['get'])) {
+					$exportPath = \call_user_func($field['get']);
+					break;
+				}
+			}
+		}
 		$bundleFilename = \basename($exportPath);
 
 		/**

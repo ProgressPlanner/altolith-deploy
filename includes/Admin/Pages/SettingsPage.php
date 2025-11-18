@@ -42,21 +42,6 @@ class SettingsPage extends BaseAdminPage
 		// Enqueue WordPress components styles (required for Modal and other components).
 		\wp_enqueue_style('wp-components');
 
-		// Enqueue Provider SDK first (priority - must load before admin-settings).
-		// This SDK is used by external provider plugins to extend the system.
-		$sdkAssetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/provider-sdk.asset.php';
-		if (\file_exists($sdkAssetFile)) {
-			$sdkAsset = require $sdkAssetFile;
-
-			\wp_enqueue_script(
-				'aether-provider-sdk',
-				AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/provider-sdk.js',
-				$sdkAsset['dependencies'],
-				$sdkAsset['version'],
-				true
-			);
-		}
-
 		// Enqueue React build.
 		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-settings.asset.php';
 		$asset     = \file_exists($assetFile) ? require $assetFile : [
