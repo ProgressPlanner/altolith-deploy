@@ -70,9 +70,8 @@ class WPOrgCheckController extends WP_REST_Controller
 	/**
 	 * Check if a plugin or theme exists on WordPress.org
 	 *
-	 * This endpoint doesn't make external HTTP calls directly because they
-	 * don't work in all environments. Instead, it relies on the filter hook
-	 * to provide the response.
+	 * Checks WordPress.org API using wp_remote_get(). If that fails (e.g., in
+	 * WordPress Playground), clients should fallback to CORS proxy method.
 	 *
 	 * Filter Hook: 'aether_site_exporter_wporg_check_response'
 	 * Filter parameters:
@@ -86,7 +85,7 @@ class WPOrgCheckController extends WP_REST_Controller
 	 *   'exists'     => bool,
 	 *   'slug'       => string,
 	 *   'type'       => string,
-	 *   'method'     => string,   // e.g., 'browser-fetch', 'cors-proxy'
+	 *   'method'     => string,   // e.g., 'wp-api', 'browser-fetch', 'cors-proxy'
 	 *   'cached'     => bool,
 	 *   'checked_at' => string,   // ISO 8601 format
 	 * ]
@@ -102,9 +101,8 @@ class WPOrgCheckController extends WP_REST_Controller
 		/**
 		 * Filter WordPress.org check response
 		 *
-		 * Use this filter to provide WordPress.org API check results.
-		 * Since external HTTP calls don't work in all environments,
-		 * implementations should use browser-based fetch() or CORS proxies.
+		 * Use this filter to override the default WordPress.org API check.
+		 * Useful for custom implementations or testing.
 		 *
 		 * @param null|array $response Default null, return array to provide response
 		 * @param string     $slug     Plugin or theme slug
@@ -117,21 +115,127 @@ class WPOrgCheckController extends WP_REST_Controller
 			$type
 		);
 
-		// If no filter provided a response, return default "unknown" response
-		if (null === $response) {
-			$response = [
+		// If filter provided a response, use it
+		if (null !== $response) {
+			return \rest_ensure_response($response);
+		}
+
+		// Otherwise, check WordPress.org API directly
+		$response = $this->checkWordPressOrgAPI($slug, $type);
+
+		return \rest_ensure_response($response);
+	}
+
+	/**
+	 * Check WordPress.org API for plugin/theme existence
+	 *
+	 * Makes actual API call to WordPress.org. This may fail in some
+	 * environments (e.g., WordPress Playground WASM).
+	 *
+	 * @param string $slug Plugin or theme slug.
+	 * @param string $type 'plugin' or 'theme'.
+	 * @return array Response array.
+	 */
+	private function checkWordPressOrgAPI(string $slug, string $type): array
+	{
+		// Build API URL based on type
+		if ('plugin' === $type) {
+			$url = \sprintf(
+				'https://api.wordpress.org/plugins/info/1.2/?action=plugin_information&slug=%s',
+				\urlencode($slug)
+			);
+		} else {
+			$url = \sprintf(
+				'https://api.wordpress.org/themes/info/1.2/?action=theme_information&slug=%s',
+				\urlencode($slug)
+			);
+		}
+
+		// Make API request
+		$responseData = \wp_remote_get(
+			$url,
+			[
+				'timeout' => 10,
+				'headers' => [
+					'Accept' => 'application/json',
+				],
+			]
+		);
+
+		// Check for WP_Error
+		if (\is_wp_error($responseData)) {
+			return [
 				'success'    => true,
-				'exists'     => null, // null = unknown/unable to check
+				'exists'     => null, // null = unable to check
 				'slug'       => $slug,
 				'type'       => $type,
-				'method'     => 'none',
+				'method'     => 'wp-api',
 				'cached'     => false,
 				'checked_at' => \gmdate('Y-m-d\TH:i:s\Z'),
-				'message'    => 'WordPress.org check not available. Use browser-based fetch or CORS proxy.',
+				'error'      => $responseData->get_error_message(),
+				'message'    => 'WordPress.org API check failed. Client should fallback to CORS proxy.',
 			];
 		}
 
-		return \rest_ensure_response($response);
+		// Get response code
+		$responseCode = \wp_remote_retrieve_response_code($responseData);
+		$body         = \wp_remote_retrieve_body($responseData);
+
+		// 404 = doesn't exist
+		if (404 === $responseCode) {
+			return [
+				'success'    => true,
+				'exists'     => false,
+				'slug'       => $slug,
+				'type'       => $type,
+				'method'     => 'wp-api',
+				'cached'     => false,
+				'checked_at' => \gmdate('Y-m-d\TH:i:s\Z'),
+			];
+		}
+
+		// 200 = exists (verify JSON is valid)
+		if (200 === $responseCode) {
+			$data = \json_decode($body, true);
+
+			// Check if response contains error (e.g., closed plugin)
+			if (isset($data['error'])) {
+				return [
+					'success'    => true,
+					'exists'     => false,
+					'slug'       => $slug,
+					'type'       => $type,
+					'method'     => 'wp-api',
+					'cached'     => false,
+					'checked_at' => \gmdate('Y-m-d\TH:i:s\Z'),
+					'reason'     => $data['error'],
+				];
+			}
+
+			// Valid response - plugin/theme exists
+			return [
+				'success'    => true,
+				'exists'     => true,
+				'slug'       => $slug,
+				'type'       => $type,
+				'method'     => 'wp-api',
+				'cached'     => false,
+				'checked_at' => \gmdate('Y-m-d\TH:i:s\Z'),
+			];
+		}
+
+		// Other status codes - unable to determine
+		return [
+			'success'     => true,
+			'exists'      => null,
+			'slug'        => $slug,
+			'type'        => $type,
+			'method'      => 'wp-api',
+			'cached'      => false,
+			'checked_at'  => \gmdate('Y-m-d\TH:i:s\Z'),
+			'message'     => 'Unexpected response from WordPress.org API',
+			'statusCode'  => $responseCode,
+		];
 	}
 
 	/**

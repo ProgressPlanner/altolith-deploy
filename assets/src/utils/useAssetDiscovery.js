@@ -52,9 +52,49 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 		return cached;
 	}
 
+	// Try PHP method first, then fallback to CORS proxy
+	let result = await checkWithMethod( normalizedSlug, type, 'php', config );
+
+	// If PHP method returned null (unable to check), try CORS proxy fallback
+	if ( result === null ) {
+		debugWarn(
+			`PHP WordPress.org check returned null for ${ type } "${ slug }", trying CORS proxy fallback`
+		);
+		result = await checkWithMethod(
+			normalizedSlug,
+			type,
+			'cors-proxy',
+			config
+		);
+	}
+
+	// If still null after fallback, treat as false
+	if ( result === null ) {
+		debugWarn(
+			`All WordPress.org check methods failed for ${ type } "${ slug }", treating as custom asset`
+		);
+		result = false;
+	}
+
+	// Cache the result (only if we got a definitive answer)
+	if ( result !== null ) {
+		await cache.set( normalizedSlug, type, result );
+	}
+
+	return result;
+}
+
+/**
+ * Check WordPress.org using specific method
+ *
+ * @param {string} slug   - Normalized plugin/theme slug
+ * @param {string} type   - 'plugin' or 'theme'
+ * @param {string} method - 'php', 'cors-proxy', or 'direct'
+ * @param {Object} config - Configuration object
+ * @return {Promise<boolean|null>} True if exists, false if doesn't exist, null if unable to check
+ */
+async function checkWithMethod( slug, type, method, config = {} ) {
 	try {
-		// Get check method from config (defaults to 'php')
-		const method = config.wporgCheckMethod || 'php';
 		let checkUrl;
 
 		switch ( method ) {
@@ -63,7 +103,7 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 				checkUrl =
 					config.corsProxyUrl || 'https://cfp.s12y.org/check-wporg';
 				checkUrl += `?slug=${ encodeURIComponent(
-					normalizedSlug
+					slug
 				) }&type=${ encodeURIComponent( type ) }`;
 				break;
 
@@ -71,11 +111,11 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 				// Direct WordPress.org API calls (will fail in browsers due to CORS)
 				if ( type === 'theme' ) {
 					checkUrl = `https://api.wordpress.org/themes/info/1.2/?action=theme_information&request[slug]=${ encodeURIComponent(
-						normalizedSlug
+						slug
 					) }`;
 				} else {
 					checkUrl = `https://api.wordpress.org/plugins/info/1.0/${ encodeURIComponent(
-						normalizedSlug
+						slug
 					) }.json`;
 				}
 				break;
@@ -85,7 +125,7 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 				// PHP server-side method (default, no CORS issues)
 				// apiFetch expects path without /wp-json prefix
 				checkUrl = `/aether/site-exporter/check-wporg?slug=${ encodeURIComponent(
-					normalizedSlug
+					slug
 				) }&type=${ encodeURIComponent( type ) }`;
 				break;
 		}
@@ -123,27 +163,16 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 			exists = data.exists;
 		}
 
-		// Handle null exists (unknown/unable to check)
-		// Treat as false (not from WordPress.org) to be safe
-		if ( exists === null ) {
-			exists = false;
-		}
-
-		// Cache the result in persistent storage
-		await cache.set( normalizedSlug, type, exists );
-
+		// Return the result (could be true, false, or null)
+		// null means "unable to check" and should trigger fallback
 		return exists;
 	} catch ( error ) {
-		// Network error - assume not from WordPress.org
+		// Network/API error - return null to indicate unable to check
 		debugWarn(
-			`Failed to check WordPress.org for ${ type } "${ slug }":`,
+			`Failed to check WordPress.org for ${ type } "${ slug }" using ${ method } method:`,
 			error
 		);
-
-		// Cache the failure as false to avoid retrying (7-day TTL)
-		await cache.set( normalizedSlug, type, false );
-
-		return false;
+		return null;
 	}
 }
 
