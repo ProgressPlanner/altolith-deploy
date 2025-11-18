@@ -267,10 +267,29 @@ export function usePublishController( publishState ) {
 			// Get provider registry
 			const registry = ProviderRegistry.getInstance();
 
-			// Helper function to get providers for a specific deployment type
-			const getProvidersForDeploymentType = ( deploymentType ) => {
-				const allProviderIds = registry.getAllIds();
+			// Load configs for all providers first (in parallel)
+			const allProviderIds = registry.getAllIds();
+			await Promise.all(
+				allProviderIds.map( async ( providerIdToCheck ) => {
+					const provider = registry.get( providerIdToCheck );
+					if ( provider ) {
+						try {
+							await provider.getConfig();
+						} catch ( error ) {
+							// If config loading fails, log but continue
+							// Provider will be treated as not enabled for any deployment type
+							debugError(
+								`Failed to load config for provider ${ providerIdToCheck }:`,
+								error
+							);
+						}
+					}
+				} )
+			);
 
+			// Helper function to get providers for a specific deployment type
+			// (configs are already loaded, so this is synchronous)
+			const getProvidersForDeploymentType = ( deploymentType ) => {
 				return allProviderIds.filter( ( providerIdToCheck ) => {
 					const provider = registry.get( providerIdToCheck );
 					if ( ! provider ) {
