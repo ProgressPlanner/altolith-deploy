@@ -17,6 +17,12 @@ import {
 	forceHttps,
 } from '../urlRewriter';
 
+// Mock @wordpress/hooks
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
+
 describe( 'normalize', () => {
 	test( 'preserves HTTP protocol for internal URLs', () => {
 		const siteUrl = 'http://localhost:10003';

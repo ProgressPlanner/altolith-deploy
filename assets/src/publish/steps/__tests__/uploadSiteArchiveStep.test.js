@@ -8,6 +8,12 @@
 
 import { uploadSiteArchiveHandler } from '../uploadSiteArchiveStep';
 
+// Mock @wordpress/hooks
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
+
 describe( 'uploadSiteArchiveStep', () => {
 	describe( 'uploadSiteArchiveHandler', () => {
 		test( 'INTENDED: uploads site archive successfully', async () => {
@@ -25,10 +31,14 @@ describe( 'uploadSiteArchiveStep', () => {
 
 			const result = await uploadSiteArchiveHandler( context );
 
-			// INTENDED: handleSiteArchiveUpload called with providerId and context
+			// INTENDED: handleSiteArchiveUpload called with providerId and deploymentConfig (filtered context)
 			expect( mockHandleSiteArchiveUpload ).toHaveBeenCalledWith(
 				'local-filesystem',
-				context
+				expect.objectContaining( {
+					handleSiteArchiveUpload: mockHandleSiteArchiveUpload,
+					providerId: 'local-filesystem',
+					setStatusMessage: mockSetStatusMessage,
+				} )
 			);
 
 			// INTENDED: Status messages set

@@ -11,6 +11,12 @@ import {
 	CAP_EDGE,
 } from '../../base/AbstractProvider';
 
+// Mock @wordpress/hooks
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
+
 // Mock provider class for testing
 class MockProvider extends AbstractProvider {
 	getId() {

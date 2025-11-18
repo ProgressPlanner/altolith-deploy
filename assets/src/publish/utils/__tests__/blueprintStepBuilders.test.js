@@ -186,6 +186,9 @@ describe( 'blueprintStepBuilders', () => {
 			const steps = buildBlueprintSteps( config );
 
 			// Assert - INTENDED: Steps must be in correct order
+			// buildBlueprintSteps only builds: importWordPressFiles, WordPress.org plugins, WordPress.org themes
+			// Aether install, defineWpConfigConsts, and Aether activation are added by filters elsewhere
+			
 			// 1. importWordPressFiles (bundled resource)
 			expect( steps[ 0 ].step ).toBe( 'importWordPressFiles' );
 			expect( steps[ 0 ].wordPressFilesZip.resource ).toBe( 'bundled' );
@@ -193,26 +196,16 @@ describe( 'blueprintStepBuilders', () => {
 				'/wp-content.zip'
 			);
 
-			// 2. installPlugin (Aether)
+			// 2. installPlugin (WordPress.org plugins)
 			expect( steps[ 1 ].step ).toBe( 'installPlugin' );
-			expect( steps[ 1 ].pluginData.url ).toContain( 'aether.zip' );
+			expect( steps[ 1 ].pluginData.resource ).toBe( 'wordpress.org/plugins' );
+			expect( steps[ 1 ].pluginData.slug ).toBe( 'akismet' );
+			expect( steps[ 2 ].step ).toBe( 'installPlugin' );
+			expect( steps[ 2 ].pluginData.slug ).toBe( 'jetpack' );
 
-			// 3. defineWpConfigConsts
-			expect( steps[ 2 ].step ).toBe( 'defineWpConfigConsts' );
-
-			// 4. installPlugin (WordPress.org plugins)
-			expect( steps[ 3 ].step ).toBe( 'installPlugin' );
-			expect( steps[ 3 ].pluginData.slug ).toBe( 'akismet' );
-			expect( steps[ 4 ].step ).toBe( 'installPlugin' );
-			expect( steps[ 4 ].pluginData.slug ).toBe( 'jetpack' );
-
-			// 5. installTheme (WordPress.org themes)
-			expect( steps[ 5 ].step ).toBe( 'installTheme' );
-			expect( steps[ 5 ].themeData.slug ).toBe( 'twentytwentyfour' );
-
-			// 6. activatePlugin (Aether)
-			expect( steps[ 6 ].step ).toBe( 'activatePlugin' );
-			expect( steps[ 6 ].pluginPath ).toBe( 'aether/aether.php' );
+			// 3. installTheme (WordPress.org themes)
+			expect( steps[ 3 ].step ).toBe( 'installTheme' );
+			expect( steps[ 3 ].themeData.slug ).toBe( 'twentytwentyfour' );
 		} );
 
 		it( 'should handle no WordPress.org assets', () => {
@@ -225,12 +218,10 @@ describe( 'blueprintStepBuilders', () => {
 			// Act
 			const steps = buildBlueprintSteps( config );
 
-			// Assert - INTENDED: Only core steps (no WordPress.org install steps)
-			expect( steps ).toHaveLength( 4 ); // import, aether install, define consts, aether activate
+			// Assert - INTENDED: Only importWordPressFiles step (no WordPress.org install steps)
+			// Aether install, defineWpConfigConsts, and Aether activation are added by filters elsewhere
+			expect( steps ).toHaveLength( 1 );
 			expect( steps[ 0 ].step ).toBe( 'importWordPressFiles' );
-			expect( steps[ 1 ].step ).toBe( 'installPlugin' ); // Aether
-			expect( steps[ 2 ].step ).toBe( 'defineWpConfigConsts' );
-			expect( steps[ 3 ].step ).toBe( 'activatePlugin' ); // Aether
 		} );
 
 		it( 'should handle missing wporgPlugins', () => {
@@ -243,7 +234,8 @@ describe( 'blueprintStepBuilders', () => {
 			const steps = buildBlueprintSteps( config );
 
 			// Assert - INTENDED: Should not fail with undefined plugins
-			expect( steps ).toHaveLength( 4 ); // import, aether install, define consts, aether activate
+			expect( steps ).toHaveLength( 1 ); // Only importWordPressFiles
+			expect( steps[ 0 ].step ).toBe( 'importWordPressFiles' );
 		} );
 
 		it( 'should handle missing wporgThemes', () => {
@@ -256,7 +248,8 @@ describe( 'blueprintStepBuilders', () => {
 			const steps = buildBlueprintSteps( config );
 
 			// Assert - INTENDED: Should not fail with undefined themes
-			expect( steps ).toHaveLength( 4 ); // import, aether install, define consts, aether activate
+			expect( steps ).toHaveLength( 1 ); // Only importWordPressFiles
+			expect( steps[ 0 ].step ).toBe( 'importWordPressFiles' );
 		} );
 	} );
 

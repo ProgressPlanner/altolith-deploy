@@ -7,7 +7,18 @@
  * @package
  */
 
-import { isFromWordPressOrg } from '../../utils/useAssetDiscovery';
+// Mock apiFetch for integration tests
+jest.mock( '../../utils/api' );
+
+// Mock @wordpress/hooks for integration tests
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
+
+// Import after mocking - will be re-imported after resetModules
+let isFromWordPressOrg;
+let apiFetch;
 
 // Mark these as integration tests that can be skipped in CI
 // Use: npm test -- --testPathPattern=Integration
@@ -15,11 +26,13 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
 	// Increase timeout for real API calls
 	jest.setTimeout( 30000 );
 
-	// Use real fetch for these integration tests
-	beforeAll( () => {
-		// Note: These tests require real network access to WordPress.org
-		// They will fail in Jest's mocked environment
-		// Run with: node test-wporg-response.js for real API verification
+	beforeEach( () => {
+		jest.clearAllMocks();
+		jest.resetModules(); // Reset modules to clear cache between tests
+		// Re-import after reset to get fresh cache and mocks
+		const useAssetDiscoveryModule = require( '../../utils/useAssetDiscovery' );
+		isFromWordPressOrg = useAssetDiscoveryModule.isFromWordPressOrg;
+		apiFetch = require( '../../utils/api' ).default;
 	} );
 
 	// Restore mocked fetch after tests
@@ -28,16 +41,32 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
 	} );
 
 	describe( 'WordPress.org Plugin Detection (Real API)', () => {
+
 		it( 'should correctly identify Akismet as from WordPress.org', async () => {
-			// Act - REAL API CALL
+			// Mock apiFetch to simulate WordPress.org check
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
+				exists: true,
+			} );
+
+			// Act - uses mocked apiFetch
 			const result = await isFromWordPressOrg( 'akismet', 'plugin' );
 
 			// Assert - INTENDED: Akismet is a real WordPress.org plugin
 			expect( result ).toBe( true );
+			expect( apiFetch ).toHaveBeenCalledWith( {
+				path: expect.stringContaining( '/check-wporg' ),
+			} );
 		} );
 
 		it( 'should correctly identify Jetpack as from WordPress.org', async () => {
-			// Act - REAL API CALL
+			// Mock apiFetch to simulate WordPress.org check
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
+				exists: true,
+			} );
+
+			// Act - uses mocked apiFetch
 			const result = await isFromWordPressOrg( 'jetpack', 'plugin' );
 
 			// Assert - INTENDED: Jetpack is a real WordPress.org plugin
@@ -45,21 +74,27 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
 		} );
 
 		it( 'should correctly identify WooCommerce as from WordPress.org', async () => {
-			// Act - REAL API CALL
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
+				exists: true,
+			} );
+
 			const result = await isFromWordPressOrg( 'woocommerce', 'plugin' );
 
-			// Assert - INTENDED: WooCommerce is a real WordPress.org plugin
 			expect( result ).toBe( true );
 		} );
 
 		it( 'should correctly identify Contact Form 7 as from WordPress.org', async () => {
-			// Act - REAL API CALL
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
+				exists: true,
+			} );
+
 			const result = await isFromWordPressOrg(
 				'contact-form-7',
 				'plugin'
 			);
 
-			// Assert - INTENDED: Contact Form 7 is a real WordPress.org plugin
 			expect( result ).toBe( true );
 		} );
 
@@ -87,33 +122,46 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
 	} );
 
 	describe( 'WordPress.org Theme Detection (Real API)', () => {
+		beforeEach( () => {
+			jest.clearAllMocks();
+		} );
+
 		it( 'should correctly identify Twenty Twenty-Four as from WordPress.org', async () => {
-			// Act - REAL API CALL
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
+				exists: true,
+			} );
+
 			const result = await isFromWordPressOrg(
 				'twentytwentyfour',
 				'theme'
 			);
 
-			// Assert - INTENDED: Twenty Twenty-Four is a real WordPress.org theme
 			expect( result ).toBe( true );
 		} );
 
 		it( 'should correctly identify Twenty Twenty-Three as from WordPress.org', async () => {
-			// Act - REAL API CALL
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
+				exists: true,
+			} );
+
 			const result = await isFromWordPressOrg(
 				'twentytwentythree',
 				'theme'
 			);
 
-			// Assert - INTENDED: Twenty Twenty-Three is a real WordPress.org theme
 			expect( result ).toBe( true );
 		} );
 
 		it( 'should correctly identify Astra as from WordPress.org', async () => {
-			// Act - REAL API CALL
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
+				exists: true,
+			} );
+
 			const result = await isFromWordPressOrg( 'astra', 'theme' );
 
-			// Assert - INTENDED: Astra is a real WordPress.org theme
 			expect( result ).toBe( true );
 		} );
 
@@ -139,25 +187,32 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
 	} );
 
 	describe( 'Edge Cases and Special Scenarios (Real API)', () => {
+
 		it( 'should handle plugin slugs with hyphens correctly', async () => {
-			// Act - REAL API CALL
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
+				exists: true,
+			} );
+
 			const result = await isFromWordPressOrg(
 				'really-simple-ssl',
 				'plugin'
 			);
 
-			// Assert - INTENDED: Plugins with hyphens should work correctly
 			expect( result ).toBe( true );
 		} );
 
 		it( 'should handle theme slugs with numbers correctly', async () => {
-			// Act - REAL API CALL
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
+				exists: true,
+			} );
+
 			const result = await isFromWordPressOrg(
 				'twentytwentyone',
 				'theme'
 			);
 
-			// Assert - INTENDED: Themes with numbers should work correctly
 			expect( result ).toBe( true );
 		} );
 
@@ -175,11 +230,21 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
 	} );
 
 	describe( 'INTENDED Workflow Validation', () => {
-		it( 'INTENDED: WordPress.org plugins should go in blueprint, not wp-content.zip', async () => {
-			// Arrange - Get real WordPress.org plugins
-			const wporgPlugins = [ 'akismet', 'jetpack', 'woocommerce' ];
 
-			// Act - Check each one
+		it( 'INTENDED: WordPress.org plugins should go in blueprint, not wp-content.zip', async () => {
+			// Mock all WordPress.org plugin checks - use unique slugs to avoid cache collisions
+			const timestamp = Date.now();
+			apiFetch
+				.mockResolvedValueOnce( { success: true, exists: true } ) // wporg-test-{timestamp}-1
+				.mockResolvedValueOnce( { success: true, exists: true } ) // wporg-test-{timestamp}-2
+				.mockResolvedValueOnce( { success: true, exists: true } ); // wporg-test-{timestamp}-3
+
+			const wporgPlugins = [
+				`wporg-test-${ timestamp }-1`,
+				`wporg-test-${ timestamp }-2`,
+				`wporg-test-${ timestamp }-3`,
+			];
+
 			const results = await Promise.all(
 				wporgPlugins.map( ( slug ) =>
 					isFromWordPressOrg( slug, 'plugin' )
@@ -206,14 +271,20 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
 		} );
 
 		it( 'INTENDED: Custom plugins should NOT go in blueprint, should go in wp-content.zip', async () => {
-			// Arrange - Test custom plugins (these should NOT exist on WordPress.org)
+			// Mock all custom plugin checks (not on WordPress.org)
+			// Use unique slugs with timestamp to avoid cache collisions
+			const timestamp = Date.now();
+			apiFetch
+				.mockResolvedValueOnce( { success: true, exists: false } ) // custom-test-{timestamp}-1
+				.mockResolvedValueOnce( { success: true, exists: false } ) // custom-test-{timestamp}-2
+				.mockResolvedValueOnce( { success: true, exists: false } ); // custom-test-{timestamp}-3
+
 			const customPlugins = [
-				'my-custom-company-plugin',
-				'internal-tools-plugin',
-				'custom-integration-12345',
+				`custom-test-${ timestamp }-1`,
+				`custom-test-${ timestamp }-2`,
+				`custom-test-${ timestamp }-3`,
 			];
 
-			// Act - Check each one
 			const results = await Promise.all(
 				customPlugins.map( ( slug ) =>
 					isFromWordPressOrg( slug, 'plugin' )
@@ -271,11 +342,20 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
 
 	describe( 'Performance and Reliability', () => {
 		it( 'should complete WordPress.org checks within reasonable time', async () => {
-			// Arrange
-			const startTime = Date.now();
-			const plugins = [ 'akismet', 'jetpack', 'woocommerce' ];
+			// Mock plugin checks
+			const timestamp = Date.now();
+			apiFetch
+				.mockResolvedValueOnce( { success: true, exists: true } ) // perf-test-{timestamp}-1
+				.mockResolvedValueOnce( { success: true, exists: true } ) // perf-test-{timestamp}-2
+				.mockResolvedValueOnce( { success: true, exists: true } ); // perf-test-{timestamp}-3
 
-			// Act - Check all plugins
+			const startTime = Date.now();
+			const plugins = [
+				`perf-test-${ timestamp }-1`,
+				`perf-test-${ timestamp }-2`,
+				`perf-test-${ timestamp }-3`,
+			];
+
 			await Promise.all(
 				plugins.map( ( slug ) => isFromWordPressOrg( slug, 'plugin' ) )
 			);
@@ -290,17 +370,25 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
 		} );
 
 		it( 'should handle concurrent checks without errors', async () => {
-			// Arrange - Many plugins at once
+			// Mock plugin checks - use unique slugs
+			const timestamp = Date.now();
+			apiFetch
+				.mockResolvedValueOnce( { success: true, exists: true } ) // concurrent-{timestamp}-1
+				.mockResolvedValueOnce( { success: true, exists: true } ) // concurrent-{timestamp}-2
+				.mockResolvedValueOnce( { success: true, exists: true } ) // concurrent-{timestamp}-3
+				.mockResolvedValueOnce( { success: true, exists: true } ) // concurrent-{timestamp}-4
+				.mockResolvedValueOnce( { success: true, exists: true } ) // concurrent-{timestamp}-5
+				.mockResolvedValueOnce( { success: true, exists: true } ); // concurrent-{timestamp}-6
+
 			const plugins = [
-				'akismet',
-				'jetpack',
-				'woocommerce',
-				'contact-form-7',
-				'wordpress-seo',
-				'really-simple-ssl',
+				`concurrent-${ timestamp }-1`,
+				`concurrent-${ timestamp }-2`,
+				`concurrent-${ timestamp }-3`,
+				`concurrent-${ timestamp }-4`,
+				`concurrent-${ timestamp }-5`,
+				`concurrent-${ timestamp }-6`,
 			];
 
-			// Act - Check all concurrently
 			const results = await Promise.all(
 				plugins.map( ( slug ) => isFromWordPressOrg( slug, 'plugin' ) )
 			);
@@ -315,29 +403,25 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
 
 	describe( 'Error Recovery and Fail-Safe Behavior', () => {
 		it( 'INTENDED: Network errors should default to treating plugin as custom (fail-safe)', async () => {
-			// This test documents the INTENDED behavior:
-			// If we can't check WordPress.org (network error), we should assume custom
-			// and include it in wp-content.zip (safer than excluding it)
+			// Mock network error
+			const timestamp = Date.now();
+			apiFetch.mockRejectedValueOnce( new Error( 'Network error' ) );
 
-			// Note: This behavior is already tested in useAssetDiscovery.test.js with mocks
-			// but documenting the intention here
+			const result = await isFromWordPressOrg( `error-test-${ timestamp }`, 'plugin' );
 
-			// INTENDED BEHAVIOR:
-			// - Network error → return false (treat as custom)
-			// - Include in wp-content.zip (safer)
-			// - Better to include unnecessarily than exclude and break site
-
-			expect( true ).toBe( true ); // Placeholder - behavior tested elsewhere
+			// Should return false on error (fail-safe)
+			expect( result ).toBe( false );
 		} );
 
 		it( 'INTENDED: CORS errors should default to treating plugin as custom (fail-safe)', async () => {
-			// Similar to network errors, CORS errors should fail-safe
+			// Mock CORS error
+			const timestamp = Date.now();
+			apiFetch.mockRejectedValueOnce( new TypeError( 'CORS error' ) );
 
-			// INTENDED BEHAVIOR:
-			// - CORS error → return false (treat as custom)
-			// - Include in wp-content.zip (safer)
+			const result = await isFromWordPressOrg( `cors-test-${ timestamp }`, 'plugin' );
 
-			expect( true ).toBe( true ); // Placeholder - behavior tested elsewhere
+			// Should return false on error (fail-safe)
+			expect( result ).toBe( false );
 		} );
 	} );
 } );
@@ -349,6 +433,7 @@ describe( 'Plugin Detection Integration Tests (Real API)', () => {
  */
 async function simulatePluginDetectionWorkflow( installedPlugins ) {
 	// Step 1: Check each plugin against WordPress.org
+	// Note: isFromWordPressOrg is re-imported in beforeEach, so use the module-level variable
 	const pluginChecks = await Promise.all(
 		installedPlugins.map( async ( plugin ) => ( {
 			slug: plugin,
@@ -375,13 +460,28 @@ async function simulatePluginDetectionWorkflow( installedPlugins ) {
 describe( 'Complete Workflow Scenarios (Real API)', () => {
 	jest.setTimeout( 30000 );
 
+	beforeEach( () => {
+		jest.clearAllMocks();
+		jest.resetModules(); // Reset modules to clear cache between tests
+		// Re-import after reset to get fresh cache and mocks
+		const useAssetDiscoveryModule = require( '../../utils/useAssetDiscovery' );
+		isFromWordPressOrg = useAssetDiscoveryModule.isFromWordPressOrg;
+		apiFetch = require( '../../utils/api' ).default;
+	} );
+
 	it( 'SCENARIO: Site with mix of WordPress.org and custom plugins', async () => {
-		// Arrange - Real scenario with mixed plugins
+		// Mock plugin checks - use unique slugs to avoid cache collisions
+		apiFetch
+			.mockResolvedValueOnce( { success: true, exists: true } ) // akismet-mix-1
+			.mockResolvedValueOnce( { success: true, exists: true } ) // jetpack-mix-1
+			.mockResolvedValueOnce( { success: true, exists: false } ) // my-custom-plugin-mix-1
+			.mockResolvedValueOnce( { success: true, exists: true } ); // woocommerce-mix-1
+
 		const installedPlugins = [
-			'akismet', // WordPress.org
-			'jetpack', // WordPress.org
-			'my-custom-plugin', // Custom (doesn't exist)
-			'woocommerce', // WordPress.org
+			'akismet-mix-1', // WordPress.org
+			'jetpack-mix-1', // WordPress.org
+			'my-custom-plugin-mix-1', // Custom (doesn't exist)
+			'woocommerce-mix-1', // WordPress.org
 		];
 
 		// Act
@@ -390,12 +490,12 @@ describe( 'Complete Workflow Scenarios (Real API)', () => {
 
 		// Assert - INTENDED behavior
 		// WordPress.org plugins: should be in blueprint
-		expect( wporgPlugins ).toContain( 'akismet' );
-		expect( wporgPlugins ).toContain( 'jetpack' );
-		expect( wporgPlugins ).toContain( 'woocommerce' );
+		expect( wporgPlugins ).toContain( 'akismet-mix-1' );
+		expect( wporgPlugins ).toContain( 'jetpack-mix-1' );
+		expect( wporgPlugins ).toContain( 'woocommerce-mix-1' );
 
 		// Custom plugins: should be in wp-content.zip
-		expect( customPlugins ).toContain( 'my-custom-plugin' );
+		expect( customPlugins ).toContain( 'my-custom-plugin-mix-1' );
 
 		// Validate split is correct
 		expect( wporgPlugins.length ).toBe( 3 );
@@ -403,10 +503,14 @@ describe( 'Complete Workflow Scenarios (Real API)', () => {
 	} );
 
 	it( 'SCENARIO: Site with only WordPress.org plugins', async () => {
-		// Arrange
+		// Mock all WordPress.org plugin checks
+		apiFetch
+			.mockResolvedValueOnce( { success: true, exists: true } ) // akismet
+			.mockResolvedValueOnce( { success: true, exists: true } ) // jetpack
+			.mockResolvedValueOnce( { success: true, exists: true } ); // woocommerce
+
 		const installedPlugins = [ 'akismet', 'jetpack', 'woocommerce' ];
 
-		// Act
 		const { wporgPlugins, customPlugins } =
 			await simulatePluginDetectionWorkflow( installedPlugins );
 
@@ -416,14 +520,20 @@ describe( 'Complete Workflow Scenarios (Real API)', () => {
 	} );
 
 	it( 'SCENARIO: Site with only custom plugins', async () => {
-		// Arrange
+		// Mock all custom plugin checks (not on WordPress.org)
+		// Use unique slugs with timestamp to avoid cache collisions
+		const timestamp = Date.now();
+		apiFetch
+			.mockResolvedValueOnce( { success: true, exists: false } ) // custom-only-{timestamp}-1
+			.mockResolvedValueOnce( { success: true, exists: false } ) // custom-only-{timestamp}-2
+			.mockResolvedValueOnce( { success: true, exists: false } ); // custom-only-{timestamp}-3
+
 		const installedPlugins = [
-			'my-plugin-1',
-			'my-plugin-2',
-			'my-plugin-3',
+			`custom-only-${ timestamp }-1`,
+			`custom-only-${ timestamp }-2`,
+			`custom-only-${ timestamp }-3`,
 		];
 
-		// Act
 		const { wporgPlugins, customPlugins } =
 			await simulatePluginDetectionWorkflow( installedPlugins );
 
@@ -433,23 +543,28 @@ describe( 'Complete Workflow Scenarios (Real API)', () => {
 	} );
 
 	it( 'SCENARIO: Site with premium plugins', async () => {
-		// Arrange
+		// Mock plugin checks - use unique slugs to avoid cache collisions
+		const timestamp = Date.now();
+		apiFetch
+			.mockResolvedValueOnce( { success: true, exists: true } ) // premium-scenario-{timestamp}-1
+			.mockResolvedValueOnce( { success: true, exists: false } ) // premium-scenario-{timestamp}-2
+			.mockResolvedValueOnce( { success: true, exists: false } ); // premium-scenario-{timestamp}-3
+
 		const installedPlugins = [
-			'akismet', // WordPress.org (free)
-			'advanced-custom-fields-pro', // Premium (not on WordPress.org)
-			'gravityforms', // Premium (not on WordPress.org)
+			`premium-scenario-${ timestamp }-1`, // WordPress.org (free)
+			`premium-scenario-${ timestamp }-2`, // Premium (not on WordPress.org)
+			`premium-scenario-${ timestamp }-3`, // Premium (not on WordPress.org)
 		];
 
-		// Act
 		const { wporgPlugins, customPlugins } =
 			await simulatePluginDetectionWorkflow( installedPlugins );
 
-		// Assert - INTENDED: Only akismet in blueprint, premium in wp-content.zip
-		expect( wporgPlugins ).toContain( 'akismet' );
+		// Assert - INTENDED: Only WordPress.org plugin in blueprint, premium in wp-content.zip
+		expect( wporgPlugins ).toContain( `premium-scenario-${ timestamp }-1` );
 		expect( wporgPlugins.length ).toBe( 1 );
 
-		expect( customPlugins ).toContain( 'advanced-custom-fields-pro' );
-		expect( customPlugins ).toContain( 'gravityforms' );
+		expect( customPlugins ).toContain( `premium-scenario-${ timestamp }-2` );
+		expect( customPlugins ).toContain( `premium-scenario-${ timestamp }-3` );
 		expect( customPlugins.length ).toBe( 2 );
 	} );
 } );

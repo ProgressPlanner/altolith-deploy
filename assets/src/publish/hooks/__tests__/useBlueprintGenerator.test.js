@@ -21,10 +21,34 @@ import {
 
 // Mock dependencies
 jest.mock( '../../../utils/useAssetDiscovery' );
-jest.mock( '@wordpress/hooks', () => ( {
-	applyFilters: jest.fn( ( hook, value ) => value ),
-	doAction: jest.fn(),
-} ) );
+jest.mock( '@wordpress/hooks', () => {
+	const {
+		buildAetherInstallStep,
+		buildDefineConstsStep,
+		buildAetherActivationStep,
+	} = require( '../../utils/blueprintStepBuilders' );
+	return {
+		applyFilters: jest.fn( ( hook, value, ...args ) => {
+			// Add Aether steps when filtering blueprint steps
+			if ( hook === 'aether.blueprint.steps' ) {
+				const steps = [ ...value ];
+				// Insert Aether install after importWordPressFiles
+				const importIndex = steps.findIndex(
+					( s ) => s.step === 'importWordPressFiles'
+				);
+				if ( importIndex !== -1 ) {
+					steps.splice( importIndex + 1, 0, buildAetherInstallStep() );
+					steps.splice( importIndex + 2, 0, buildDefineConstsStep() );
+				}
+				// Add Aether activation at the end
+				steps.push( buildAetherActivationStep() );
+				return steps;
+			}
+			return value;
+		} ),
+		doAction: jest.fn(),
+	};
+} );
 
 describe( 'useBlueprintGenerator', () => {
 	let mockGetBlueprintAssets;

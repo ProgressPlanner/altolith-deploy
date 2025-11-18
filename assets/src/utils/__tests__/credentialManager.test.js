@@ -162,7 +162,7 @@ describe( 'credentialManager', () => {
 	describe( 'clearAllCredentials', () => {
 		test( 'clears all cached credentials', async () => {
 			const provider1 = 'local-filesystem';
-			const provider2 = 'local-filesystem';
+			const provider2 = 's3';
 			const mockCredentials = {
 				access_key_id: 'test-key',
 			};

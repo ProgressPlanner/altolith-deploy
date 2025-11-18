@@ -8,6 +8,12 @@
 
 import { uploadStaticSiteFilesHandler } from '../uploadStaticSiteFilesStep';
 
+// Mock @wordpress/hooks
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
+
 describe( 'uploadStaticSiteFilesStep', () => {
 	describe( 'uploadStaticSiteFilesHandler', () => {
 		test( 'INTENDED: uploads static site files successfully', async () => {
@@ -38,8 +44,12 @@ describe( 'uploadStaticSiteFilesStep', () => {
 			const result = await uploadStaticSiteFilesHandler( context );
 
 			// INTENDED: processStaticSiteUrls called with correct parameters
+			// Note: URLs are filtered through applyFilters, so they may be modified
 			expect( mockProcessStaticSiteUrls ).toHaveBeenCalledWith(
-				[ 'https://example.com/', 'https://example.com/about/' ],
+				expect.arrayContaining( [
+					'https://example.com/',
+					'https://example.com/about/',
+				] ),
 				'https://static.example.com',
 				'local-filesystem',
 				'https://example.com',

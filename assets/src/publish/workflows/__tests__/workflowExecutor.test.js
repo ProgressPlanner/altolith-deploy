@@ -10,6 +10,12 @@ import {
 	validateWorkflowStructure,
 } from '../workflowExecutor';
 
+// Mock @wordpress/hooks
+jest.mock( '@wordpress/hooks', () => ( {
+	applyFilters: jest.fn( ( hook, value ) => value ),
+	doAction: jest.fn(),
+} ) );
+
 describe( 'workflowExecutor', () => {
 	describe( 'executeWorkflow', () => {
 		test( 'executes sequential workflow successfully', async () => {
@@ -42,8 +48,8 @@ describe( 'workflowExecutor', () => {
 				} )
 			);
 
-			// State accumulated
-			expect( state ).toEqual( {
+			// State accumulated (may include cumulativeProgress)
+			expect( state ).toMatchObject( {
 				step1Data: 'data1',
 				step2Data: 'data2',
 			} );
