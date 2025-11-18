@@ -11,7 +11,6 @@
 import { useState, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Card, CardBody, Spinner } from '@wordpress/components';
-import ProviderRegistry from '../providers/registry/ProviderRegistry';
 import ProviderForm from '../providers/components/ProviderForm';
 import apiFetch from '../utils/api';
 import { colors, spacing, fontWeight } from '../utils/styles';
@@ -28,40 +27,50 @@ export default function ProviderSettings() {
 	const [ loading, setLoading ] = useState( true );
 
 	useEffect( () => {
-		// Get all providers from registry
-		// ProviderRegistry is already the singleton instance
-		const allProviderIds = ProviderRegistry.getAllIds();
-
-		// Get metadata for all providers
-		const providerMetadata = allProviderIds
-			.map( ( id ) => {
-				const provider = ProviderRegistry.get( id );
-				if ( ! provider ) {
-					return null;
-				}
-				return {
-					id,
-					provider,
-					metadata: provider.getMetadata(),
-				};
-			} )
-			.filter( Boolean );
-
-		setProviders( providerMetadata );
-
-		// Load existing configurations
-		const loadConfigs = async () => {
+		// Fetch providers from REST API (PHP registry is source of truth)
+		const loadProviders = async () => {
 			try {
-				const response = await apiFetch( {
+				// Fetch provider metadata from REST API
+				const providersResponse = await apiFetch( {
+					path: '/aether/site-exporter/providers',
+				} );
+
+				if ( providersResponse.success && providersResponse.providers ) {
+					// Transform REST API response to match component expectations
+					const providerMetadata = providersResponse.providers.map(
+						( provider ) => ( {
+							id: provider.id,
+							metadata: {
+								name: provider.name,
+								description: provider.description,
+								supportedDeploymentTypes: provider.deployment_types || [],
+								type: provider.type,
+								icon: '', // Icon not provided by PHP, can be added later if needed
+							},
+							// Transform settings_fields: map 'name' to 'id' for ProviderForm compatibility
+							settingsFields: ( provider.settings_fields || [] ).map(
+								( field ) => ( {
+									...field,
+									id: field.name, // ProviderForm expects 'id' field
+								} )
+							),
+						} )
+					);
+
+					setProviders( providerMetadata );
+				}
+
+				// Load existing configurations
+				const configsResponse = await apiFetch( {
 					path: '/aether/site-exporter/settings?key=providers',
 				} );
 
-				if ( response.success && response.value ) {
-					setConfigs( response.value );
+				if ( configsResponse.success && configsResponse.value ) {
+					setConfigs( configsResponse.value );
 				}
 			} catch ( error ) {
 				console.error(
-					'Failed to load provider configurations:',
+					'Failed to load providers or configurations:',
 					error
 				);
 			} finally {
@@ -69,7 +78,7 @@ export default function ProviderSettings() {
 			}
 		};
 
-		loadConfigs();
+		loadProviders();
 	}, [] );
 
 	if ( loading ) {
@@ -159,7 +168,7 @@ export default function ProviderSettings() {
 				) }
 			</p>
 
-			{ providers.map( ( { id, provider, metadata } ) => (
+			{ providers.map( ( { id, metadata, settingsFields } ) => (
 				<Card key={ id } style={ { marginBottom: spacing.lg } }>
 					<CardBody>
 						<div
@@ -216,7 +225,7 @@ export default function ProviderSettings() {
 						{ /* Provider configuration form */ }
 						<ProviderForm
 							providerId={ id }
-							fields={ provider.getConfigFields() }
+							fields={ settingsFields }
 							initialValues={ configs[ id ] || {} }
 						/>
 					</CardBody>

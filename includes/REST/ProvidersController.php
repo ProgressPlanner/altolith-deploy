@@ -155,11 +155,34 @@ class ProvidersController
 		$settings = $provider->getSettings();
 		$settingsFields = [];
 		foreach ($settings as $field) {
-			$settingsFields[] = [
+			// Include all field properties needed by the frontend
+			$fieldData = [
 				'type' => $field['type'] ?? 'text',
 				'label' => $field['label'] ?? '',
 				'name' => $field['name'] ?? '',
 			];
+
+			// Include optional field properties
+			if (isset($field['description'])) {
+				$fieldData['description'] = $field['description'];
+			}
+			if (isset($field['options'])) {
+				$fieldData['options'] = $field['options'];
+			}
+			if (isset($field['defaultValue'])) {
+				$fieldData['defaultValue'] = $field['defaultValue'];
+			}
+			if (isset($field['required'])) {
+				$fieldData['required'] = $field['required'];
+			}
+			if (isset($field['placeholder'])) {
+				$fieldData['placeholder'] = $field['placeholder'];
+			}
+			if (isset($field['sensitive'])) {
+				$fieldData['sensitive'] = $field['sensitive'];
+			}
+
+			$settingsFields[] = $fieldData;
 		}
 
 		return [

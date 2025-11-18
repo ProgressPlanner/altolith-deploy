@@ -12,7 +12,7 @@ import apiFetch from '@wordpress/api-fetch';
 /**
  * Get default provider ID.
  *
- * Uses filter to allow customization, falls back to JavaScript registry, then REST API.
+ * Uses filter to allow customization, then queries REST API (PHP registry).
  *
  * @return {Promise<string|null>} Default provider ID or null if none available
  */
@@ -23,40 +23,7 @@ export async function getDefaultProvider() {
 		return filtered;
 	}
 
-	// Try JavaScript registry first (more efficient).
-	try {
-		const { default: ProviderRegistry } = await import(
-			'../registry/ProviderRegistry'
-		);
-		const registry = ProviderRegistry.getInstance();
-		const allIds = registry.getAllIds();
-
-		if ( allIds.length > 0 ) {
-			// Find provider that supports static_site, or use first provider
-			for ( const providerId of allIds ) {
-				const provider = registry.get( providerId );
-				if (
-					provider &&
-					provider.getSupportedDeploymentTypes &&
-					provider
-						.getSupportedDeploymentTypes()
-						.includes( 'static_site' )
-				) {
-					return providerId;
-				}
-			}
-			// Fallback to first provider
-			return allIds[ 0 ];
-		}
-	} catch ( error ) {
-		// eslint-disable-next-line no-console
-		console.warn(
-			'[Aether] Failed to check JS registry for default provider:',
-			error
-		);
-	}
-
-	// Fallback: Get from REST API (which queries PHP registry).
+	// Get from REST API (which queries PHP registry).
 	try {
 		const response = await apiFetch( {
 			path: '/aether/site-exporter/providers',
@@ -102,36 +69,7 @@ export async function getProviderForDeploymentType( deploymentType ) {
 		return filtered;
 	}
 
-	// Try JavaScript registry first (more efficient).
-	try {
-		const { default: ProviderRegistry } = await import(
-			'../registry/ProviderRegistry'
-		);
-		const registry = ProviderRegistry.getInstance();
-		const allIds = registry.getAllIds();
-
-		// Find provider that supports the deployment type
-		for ( const providerId of allIds ) {
-			const provider = registry.get( providerId );
-			if (
-				provider &&
-				provider.getSupportedDeploymentTypes &&
-				provider
-					.getSupportedDeploymentTypes()
-					.includes( deploymentType )
-			) {
-				return providerId;
-			}
-		}
-	} catch ( error ) {
-		// eslint-disable-next-line no-console
-		console.warn(
-			`[Aether] Failed to check JS registry for deployment type ${ deploymentType }:`,
-			error
-		);
-	}
-
-	// Fallback: Get from REST API.
+	// Get from REST API (which queries PHP registry).
 	try {
 		const response = await apiFetch( {
 			path: `/aether/site-exporter/providers/by-deployment-type/${ deploymentType }`,

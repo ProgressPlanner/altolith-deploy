@@ -18,7 +18,8 @@ import {
 	Spinner,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { doAction } from '@wordpress/hooks';
+import { applyFilters } from '@wordpress/hooks';
+import apiFetch from '../utils/api';
 import { colors, spacing, fontSize, createFlexStyle } from '../utils/styles';
 
 /**
@@ -405,48 +406,68 @@ export function ProviderSettings( { provider, onSave } ) {
 						</Button>
 
 						{ /* Optional: Test connection button */ }
-						{ provider.testConnection && (
-							<Button
-								className="aether-provider-settings__test-button"
-								variant="secondary"
-								disabled={
-									isSaving || Object.keys( errors ).length > 0
-								}
-								onClick={ async () => {
-									try {
-										const result =
-											await provider.testConnection(
-												config
-											);
-										if ( result.success ) {
-											setSaveSuccess( true );
-											setSaveError( null );
-										} else {
-											setSaveError(
-												result.error ||
-													__(
-														'Connection test failed',
-														'aether'
-													)
-											);
-										}
-									} catch ( error ) {
+						<Button
+							className="aether-provider-settings__test-button"
+							variant="secondary"
+							disabled={
+								isSaving || Object.keys( errors ).length > 0
+							}
+							onClick={ async () => {
+								try {
+									// Use hook-based test connection
+									// Providers register handlers via aether.provider.test filter
+									const testHandler = applyFilters(
+										'aether.provider.test',
+										null,
+										provider.id,
+										config
+									);
+
+									let result;
+									if ( testHandler && typeof testHandler === 'function' ) {
+										// Custom handler registered
+										result = await testHandler( config );
+									} else {
+										// Fallback to REST API endpoint
+										const response = await apiFetch( {
+											path: `/aether/site-exporter/providers/${ provider.id }/test`,
+											method: 'POST',
+											data: { config },
+										} );
+										result = {
+											success: response.success || false,
+											error: response.error || response.message || null,
+										};
+									}
+
+									if ( result.success ) {
+										setSaveSuccess( true );
+										setSaveError( null );
+									} else {
 										setSaveError(
-											error.message ||
+											result.error ||
 												__(
 													'Connection test failed',
 													'aether'
 												)
 										);
 									}
-								} }
-							>
-								{ __(
-									'Test Connection',
-									'aether-site-exporter'
-								) }
-							</Button>
-						) }
+								} catch ( error ) {
+									setSaveError(
+										error.message ||
+											__(
+												'Connection test failed',
+												'aether'
+											)
+									);
+								}
+							} }
+						>
+							{ __(
+								'Test Connection',
+								'aether-site-exporter'
+							) }
+						</Button>
 					</div>
 				) }
 			</form>

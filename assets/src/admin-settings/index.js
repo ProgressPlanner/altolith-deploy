@@ -32,7 +32,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import { PublishProvider } from '../contexts/PublishContext';
 
 // Providers are registered via PHP using the 'aether_providers' filter.
-// JavaScript providers register via 'aether.providers.register' hook.
+// JavaScript providers register implementation hooks (aether.provider.upload, aether.provider.test, etc.).
 
 /**
  * Initialize admin settings page.

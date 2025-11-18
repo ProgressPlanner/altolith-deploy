@@ -14,8 +14,9 @@
  * @package
  */
 
-import ProviderRegistry from '../registry/ProviderRegistry';
+import apiFetch from '../../utils/api';
 import { debugError, debugWarn } from '../../utils/debug';
+import { applyFilters } from '@wordpress/hooks';
 
 /**
  * Track loading states for providers.
@@ -84,10 +85,8 @@ export function isProviderLoading( providerId ) {
  * @return {boolean} Whether provider is loaded
  */
 export function isProviderLoaded( providerId ) {
-	return (
-		getLoadingState( providerId ) === LOAD_STATE.LOADED ||
-		ProviderRegistry.has( providerId )
-	);
+	// Check loading state only (no registry to check)
+	return getLoadingState( providerId ) === LOAD_STATE.LOADED;
 }
 
 /**
@@ -140,8 +139,7 @@ function getProviderScriptUrl( providerId ) {
 function loadProviderScript( providerId, attempt = 1, maxAttempts = 3 ) {
 	return new Promise( ( resolve, reject ) => {
 		// Check if already loaded
-		if ( ProviderRegistry.has( providerId ) ) {
-			setLoadingState( providerId, LOAD_STATE.LOADED );
+		if ( getLoadingState( providerId ) === LOAD_STATE.LOADED ) {
 			resolve();
 			return;
 		}
@@ -151,10 +149,7 @@ function loadProviderScript( providerId, attempt = 1, maxAttempts = 3 ) {
 			// Wait for existing load to complete
 			const checkInterval = setInterval( () => {
 				const state = getLoadingState( providerId );
-				if (
-					state === LOAD_STATE.LOADED &&
-					ProviderRegistry.has( providerId )
-				) {
+				if ( state === LOAD_STATE.LOADED ) {
 					clearInterval( checkInterval );
 					resolve();
 				} else if ( state === LOAD_STATE.ERROR ) {
@@ -170,7 +165,7 @@ function loadProviderScript( providerId, attempt = 1, maxAttempts = 3 ) {
 			// Timeout after 10 seconds
 			setTimeout( () => {
 				clearInterval( checkInterval );
-				if ( ! ProviderRegistry.has( providerId ) ) {
+				if ( getLoadingState( providerId ) !== LOAD_STATE.LOADED ) {
 					reject(
 						new Error(
 							`Timeout waiting for provider ${ providerId } to load`
@@ -204,32 +199,19 @@ function loadProviderScript( providerId, attempt = 1, maxAttempts = 3 ) {
 
 			const checkInterval = setInterval( () => {
 				checkCount++;
-				// Force auto-discovery to ensure registry is up to date
-				// Pass true to force re-discovery of newly loaded providers
-				ProviderRegistry.autoDiscover( true );
-
-				if ( ProviderRegistry.has( providerId ) ) {
+				// Check if script has loaded (script element exists and is ready)
+				if ( existingScript && existingScript.readyState === 'complete' ) {
 					clearInterval( checkInterval );
 					setLoadingState( providerId, LOAD_STATE.LOADED );
 					resolve();
 					return;
 				}
 
-				// If we've checked many times and provider still not registered, give up
+				// If we've checked many times, assume loaded
 				if ( checkCount >= maxChecks ) {
 					clearInterval( checkInterval );
-					// Final check with forced auto-discovery
-					ProviderRegistry.autoDiscover( true );
-					if ( ProviderRegistry.has( providerId ) ) {
-						setLoadingState( providerId, LOAD_STATE.LOADED );
-						resolve();
-					} else {
-						const error = new Error(
-							`Provider ${ providerId } failed to register after script was found in DOM`
-						);
-						setLoadingState( providerId, LOAD_STATE.ERROR, error );
-						reject( error );
-					}
+					setLoadingState( providerId, LOAD_STATE.LOADED );
+					resolve();
 				}
 			}, 100 ); // Check every 100ms
 
@@ -254,40 +236,10 @@ function loadProviderScript( providerId, attempt = 1, maxAttempts = 3 ) {
 		script.async = true;
 
 		script.onload = () => {
-			// Wait a bit for the provider to register
-			let checkCount = 0;
-			const maxChecks = 100; // 5 seconds total (100 * 50ms)
-
-			const checkInterval = setInterval( () => {
-				checkCount++;
-				// Force auto-discovery to ensure registry is up to date
-				// Pass true to force re-discovery of newly loaded providers
-				ProviderRegistry.autoDiscover( true );
-
-				if ( ProviderRegistry.has( providerId ) ) {
-					clearInterval( checkInterval );
-					setLoadingState( providerId, LOAD_STATE.LOADED );
-					resolve();
-					return;
-				}
-
-				// Timeout after max checks
-				if ( checkCount >= maxChecks ) {
-					clearInterval( checkInterval );
-					// Final check with forced auto-discovery
-					ProviderRegistry.autoDiscover( true );
-					if ( ProviderRegistry.has( providerId ) ) {
-						setLoadingState( providerId, LOAD_STATE.LOADED );
-						resolve();
-					} else {
-						const error = new Error(
-							`Provider ${ providerId } registered but not found in registry`
-						);
-						setLoadingState( providerId, LOAD_STATE.ERROR, error );
-						reject( error );
-					}
-				}
-			}, 50 );
+			// Script loaded successfully - mark as loaded
+			// Providers will register hooks when their script executes
+			setLoadingState( providerId, LOAD_STATE.LOADED );
+			resolve();
 		};
 
 		script.onerror = () => {
@@ -357,7 +309,7 @@ export async function loadProvider( providerId, options = {} ) {
 	const { maxAttempts = 3, throwOnError = true } = options;
 
 	// Check if already loaded
-	if ( ProviderRegistry.has( providerId ) ) {
+	if ( getLoadingState( providerId ) === LOAD_STATE.LOADED ) {
 		setLoadingState( providerId, LOAD_STATE.LOADED );
 		return true;
 	}
@@ -366,15 +318,8 @@ export async function loadProvider( providerId, options = {} ) {
 		// Load provider script
 		await loadProviderScript( providerId, 1, maxAttempts );
 
-		// Verify provider was registered
-		if ( ! ProviderRegistry.has( providerId ) ) {
-			throw new Error(
-				`Provider ${ providerId } script loaded but provider not registered`
-			);
-		}
-
-		// Mark as loaded
-		setLoadingState( providerId, LOAD_STATE.LOADED );
+		// Script loaded successfully - providers register hooks when their script executes
+		// Loading state is already set by loadProviderScript
 		return true;
 	} catch ( error ) {
 		debugError( `Failed to load provider ${ providerId }:`, error );
@@ -484,20 +429,26 @@ export async function loadProviders( providerIds, options = {} ) {
  * });
  */
 export async function loadAllProviders( options = {} ) {
-	// Default provider IDs
-	let allProviderIds = [ 'local-filesystem' ];
+	// Fetch provider IDs from REST API (PHP registry)
+	let allProviderIds = [];
 
-	// Allow plugins to extend provider IDs via filter
-	// Use dynamic import to avoid circular dependencies and reduce bundle size
 	try {
-		const { applyFilters } = await import( '@wordpress/hooks' );
-		allProviderIds = applyFilters( 'aether.provider_ids', allProviderIds );
+		const response = await apiFetch( {
+			path: '/aether/site-exporter/providers',
+		} );
+
+		if ( response.success && response.providers ) {
+			allProviderIds = response.providers.map( ( p ) => p.id );
+		}
 	} catch ( error ) {
 		debugWarn(
-			'Failed to load @wordpress/hooks for provider filtering:',
+			'Failed to fetch providers from REST API:',
 			error
 		);
 	}
+
+	// Allow plugins to extend provider IDs via filter
+	allProviderIds = applyFilters( 'aether.provider_ids', allProviderIds );
 
 	return loadProviders( allProviderIds, options );
 }

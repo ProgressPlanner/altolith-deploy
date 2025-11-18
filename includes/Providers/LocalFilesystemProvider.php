@@ -80,26 +80,51 @@ class LocalFilesystemProvider extends BaseProvider
 	 */
 	public function getSettings(): array
 	{
+		// Get supported deployment types for this provider
+		$supportedTypes = $this->getDeploymentTypes();
+
+		// Map deployment types to option labels
+		$deploymentTypeLabels = [
+			'static_site' => \__('Static Site', 'aether-site-exporter'),
+			'blueprint_bundle' => \__('Blueprint Bundle', 'aether-site-exporter'),
+			'edge_functions' => \__('Edge Functions', 'aether-site-exporter'),
+		];
+
+		// Build options array only for supported deployment types
+		$deploymentTypeOptions = [];
+		foreach ($supportedTypes as $type) {
+			if (isset($deploymentTypeLabels[$type])) {
+				$deploymentTypeOptions[] = [
+					'value' => $type,
+					'label' => $deploymentTypeLabels[$type],
+				];
+			}
+		}
+
 		return [
 			[
 				'type' => 'checkbox-group',
 				'label' => \__('Deployment Types', 'aether-site-exporter'),
 				'name' => 'deployment_types',
-				'sanitize_callback' => function ($value) {
+				'description' => \__('Select which types of exports this provider should handle.', 'aether-site-exporter'),
+				'options' => $deploymentTypeOptions,
+				'defaultValue' => $supportedTypes, // Default to all supported types
+				'sanitize_callback' => function ($value) use ($supportedTypes) {
 					if (! \is_array($value)) {
-						return ['static_site', 'blueprint_bundle'];
+						return $supportedTypes; // Default to all supported types
 					}
-					$validTypes = ['static_site', 'blueprint_bundle', 'edge_functions'];
-					return \array_values(\array_intersect($value, $validTypes));
+					// Only allow values that are in supported types
+					return \array_values(\array_intersect($value, $supportedTypes));
 				},
-				'get' => function () {
+				'get' => function () use ($supportedTypes) {
 					$settings = \get_option('aether_site_exporter_settings', []);
 					$deploymentTypes = $settings['providers'][self::PROVIDER_ID]['deployment_types'] ?? null;
-					// Default to both static_site and blueprint_bundle if not set
+					// Default to all supported types if not set
 					if (! \is_array($deploymentTypes) || empty($deploymentTypes)) {
-						return ['static_site', 'blueprint_bundle'];
+						return $supportedTypes;
 					}
-					return $deploymentTypes;
+					// Ensure only supported types are returned
+					return \array_values(\array_intersect($deploymentTypes, $supportedTypes));
 				},
 				'set' => function ($value) {
 					$settings = \get_option('aether_site_exporter_settings', []);
@@ -222,4 +247,3 @@ class LocalFilesystemProvider extends BaseProvider
 		return true;
 	}
 }
-

@@ -15,8 +15,8 @@ import { useConfig } from '../../hooks/useConfig';
 import { PUBLISH_STEPS } from '../utils/steps';
 import apiFetch from '../../utils/api';
 import { calculateOverallProgress } from '../utils/progressManager';
-import { ProviderRegistry } from '../../providers/registry/ProviderRegistry';
 import { debug, debugError } from '../../utils/debug';
+import { doAction, applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 import {
 	PUBLISH_WORKFLOW,
@@ -89,35 +89,45 @@ export function usePublishController( publishState ) {
 					fetchedStorageProviderId = await getDefaultProvider();
 				}
 
-				// Get provider instance from registry to check upload strategy
-				const registry = ProviderRegistry.getInstance();
-
-				// Debug: Check what providers are registered
-				debug( '[Aether] Registry provider count:', registry.count() );
-				debug( '[Aether] All provider IDs:', registry.getAllIds() );
-				debug(
-					'[Aether] Looking for provider:',
-					fetchedStorageProviderId
-				);
-
-				const provider = registry.getProvider(
-					fetchedStorageProviderId
-				);
-
-				if ( ! provider ) {
-					debug(
-						'[Aether] Provider not found. Available providers:',
-						registry.getAllIds()
-					);
-					throw new Error(
-						`Provider not found: ${ fetchedStorageProviderId }. Available: ${ registry
-							.getAllIds()
-							.join( ', ' ) }`
+				// Fetch provider metadata from REST API to check upload strategy
+				let providerMetadata = null;
+				try {
+					const providerResponse = await apiFetch( {
+						path: `/aether/site-exporter/providers/${ fetchedStorageProviderId }`,
+					} );
+					if ( providerResponse.success && providerResponse.provider ) {
+						providerMetadata = providerResponse.provider;
+					}
+				} catch ( error ) {
+					debugError(
+						`[Aether] Failed to fetch provider metadata for ${ fetchedStorageProviderId }:`,
+						error
 					);
 				}
 
-				// Determine upload strategy from provider
-				const uploadStrategy = provider.getUploadStrategy();
+				if ( ! providerMetadata ) {
+					throw new Error(
+						`Provider not found: ${ fetchedStorageProviderId }`
+					);
+				}
+
+				// Determine upload strategy from provider type or use hook
+				// Git providers have type 'git-hosting', local has type 'local-storage'
+				let uploadStrategy = 'storage'; // Default
+				if ( providerMetadata.type === 'git-hosting' ) {
+					uploadStrategy = 'git';
+				} else if ( providerMetadata.type === 'local-storage' ) {
+					uploadStrategy = 'direct';
+				}
+
+				// Allow providers to override upload strategy via filter
+				const filteredStrategy = applyFilters(
+					'aether.provider.upload_strategy',
+					uploadStrategy,
+					fetchedStorageProviderId,
+					providerMetadata
+				);
+				uploadStrategy = filteredStrategy;
 
 				let gitConfig = null;
 				if ( uploadStrategy === 'git' ) {
@@ -173,15 +183,35 @@ export function usePublishController( publishState ) {
 						blueprintBundlePath
 					);
 
-					// Call provider's uploadFile method
-					const uploadResult = await provider.uploadFile(
-						blueprintBundlePath,
-						'blueprint-bundle.zip'
+					// Use hook-based upload instead of provider method
+					// Get upload handler for this provider via filter
+					const uploadHandler = applyFilters(
+						'aether.provider.upload',
+						null,
+						fetchedStorageProviderId,
+						{
+							filePath: blueprintBundlePath,
+							fileName: 'blueprint-bundle.zip',
+							context: context,
+						}
 					);
 
-					if ( ! uploadResult.success ) {
+					if ( ! uploadHandler || typeof uploadHandler !== 'function' ) {
 						throw new Error(
-							uploadResult.error ||
+							`No upload handler registered for provider: ${ fetchedStorageProviderId }`
+						);
+					}
+
+					// Call the upload handler
+					const uploadResult = await uploadHandler(
+						blueprintBundlePath,
+						'blueprint-bundle.zip',
+						context
+					);
+
+					if ( ! uploadResult || ! uploadResult.success ) {
+						throw new Error(
+							uploadResult?.error ||
 								'Failed to upload blueprint bundle'
 						);
 					}
@@ -269,56 +299,32 @@ export function usePublishController( publishState ) {
 			// Get providerId for backwards compatibility
 			const providerId = fetchedStaticSiteProviderId || storageProviderId;
 
-			// Get provider registry
-			const registry = ProviderRegistry.getInstance();
-
-			// Load configs for all providers first (in parallel)
-			const allProviderIds = registry.getAllIds();
-			await Promise.all(
-				allProviderIds.map( async ( providerIdToCheck ) => {
-					const provider = registry.get( providerIdToCheck );
-					if ( provider ) {
-						try {
-							await provider.getConfig();
-						} catch ( error ) {
-							// If config loading fails, log but continue
-							// Provider will be treated as not enabled for any deployment type
-							debugError(
-								`Failed to load config for provider ${ providerIdToCheck }:`,
-								error
-							);
-						}
+			// Fetch providers for each deployment type from REST API (PHP registry)
+			const getProvidersForDeploymentType = async ( deploymentType ) => {
+				try {
+					const response = await apiFetch( {
+						path: `/aether/site-exporter/providers/by-deployment-type/${ deploymentType }`,
+					} );
+					if ( response.success && response.providers ) {
+						// Return array of provider IDs
+						return response.providers.map( ( p ) => p.id );
 					}
-				} )
-			);
-
-			// Helper function to get providers for a specific deployment type
-			// (configs are already loaded, so this is synchronous)
-			const getProvidersForDeploymentType = ( deploymentType ) => {
-				return allProviderIds.filter( ( providerIdToCheck ) => {
-					const provider = registry.get( providerIdToCheck );
-					if ( ! provider ) {
-						return false;
-					}
-
-					// Check if provider supports AND has enabled this deployment type
-					return (
-						provider.supportsDeploymentType( deploymentType ) &&
-						provider.isDeploymentTypeEnabled( deploymentType )
+				} catch ( error ) {
+					debugError(
+						`Failed to fetch providers for deployment type ${ deploymentType }:`,
+						error
 					);
-				} );
+				}
+				return [];
 			};
 
-			// Get arrays of providers for each deployment type
-			const staticSiteProviders = getProvidersForDeploymentType(
-				DEPLOYMENT_TYPES.STATIC_SITE
-			);
-			const blueprintBundleProviders = getProvidersForDeploymentType(
-				DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE
-			);
-			const edgeFunctionProviders = getProvidersForDeploymentType(
-				DEPLOYMENT_TYPES.EDGE_FUNCTIONS
-			);
+			// Get arrays of providers for each deployment type (in parallel)
+			const [ staticSiteProviders, blueprintBundleProviders, edgeFunctionProviders ] =
+				await Promise.all( [
+					getProvidersForDeploymentType( DEPLOYMENT_TYPES.STATIC_SITE ),
+					getProvidersForDeploymentType( DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE ),
+					getProvidersForDeploymentType( DEPLOYMENT_TYPES.EDGE_FUNCTIONS ),
+				] );
 
 			debug( '[Workflow] Providers by deployment type:', {
 				staticSite: staticSiteProviders,
@@ -332,9 +338,8 @@ export function usePublishController( publishState ) {
 				api,
 				siteUrl,
 				providerId, // Legacy: single provider ID for backwards compat
-				registry, // Provider registry instance
 
-				// NEW: Provider arrays by deployment type
+				// Provider arrays by deployment type (from PHP registry via REST API)
 				staticSiteProviders,
 				blueprintBundleProviders,
 				edgeFunctionProviders,

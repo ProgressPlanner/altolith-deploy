@@ -14,7 +14,7 @@ import {
 	useCallback,
 	useMemo,
 } from '@wordpress/element';
-import { ProviderRegistry } from '../providers/registry/ProviderRegistry';
+import apiFetch from '../utils/api';
 import { debugError } from '../utils/debug';
 
 /**
@@ -23,7 +23,6 @@ import { debugError } from '../utils/debug';
  * @type {Object}
  */
 export const ProviderContext = createContext( {
-	registry: null,
 	providers: [],
 	providerIds: [],
 	loading: true,
@@ -59,26 +58,36 @@ export function ProviderProvider( { children } ) {
 	const [ loading, setLoading ] = useState( true );
 	const [ error, setError ] = useState( null );
 
-	// Get singleton registry instance
-	const registry = useMemo( () => {
-		return ProviderRegistry.getInstance();
-	}, [] );
-
 	/**
-	 * Load providers from registry
+	 * Load providers from REST API (PHP registry)
 	 */
-	const loadProviders = useCallback( () => {
+	const loadProviders = useCallback( async () => {
 		setLoading( true );
 		setError( null );
 
 		try {
-			// Get all provider IDs
-			const ids = registry.getAllIds();
-			setProviderIds( ids );
+			// Fetch providers from REST API
+			const response = await apiFetch( {
+				path: '/aether/site-exporter/providers',
+			} );
 
-			// Get all provider metadata
-			const metadata = registry.getAllMetadata();
-			setProviders( metadata );
+			if ( response.success && response.providers ) {
+				// Transform to match expected format
+				const providerMetadata = response.providers.map( ( p ) => ( {
+					id: p.id,
+					name: p.name,
+					description: p.description,
+					type: p.type,
+					supportedDeploymentTypes: p.deployment_types || [],
+					configured: p.configured || false,
+				} ) );
+
+				setProviderIds( providerMetadata.map( ( p ) => p.id ) );
+				setProviders( providerMetadata );
+			} else {
+				setProviderIds( [] );
+				setProviders( [] );
+			}
 
 			setLoading( false );
 		} catch ( err ) {
@@ -87,29 +96,23 @@ export function ProviderProvider( { children } ) {
 			setLoading( false );
 			debugError( 'Provider loading error:', err );
 		}
-	}, [ registry ] );
+	}, [] );
 
 	/**
-	 * Get a provider instance by ID
+	 * Get a provider metadata by ID
 	 *
 	 * @param {string} providerId Provider ID
-	 * @param {Object} config     Optional config
-	 * @return {Object|null} Provider instance or null
+	 * @return {Object|null} Provider metadata or null
 	 */
 	const getProvider = useCallback(
-		( providerId, config = {} ) => {
+		( providerId ) => {
 			if ( ! providerId ) {
 				return null;
 			}
 
-			try {
-				return registry.getProvider( providerId, config );
-			} catch ( err ) {
-				debugError( `Failed to get provider ${ providerId }:`, err );
-				return null;
-			}
+			return providers.find( ( p ) => p.id === providerId ) || null;
 		},
-		[ registry ]
+		[ providers ]
 	);
 
 	/**
@@ -120,17 +123,12 @@ export function ProviderProvider( { children } ) {
 	 */
 	const getProvidersByCapability = useCallback(
 		( capability ) => {
-			try {
-				return registry.getByCapability( capability );
-			} catch ( err ) {
-				debugError(
-					`Failed to get providers by capability ${ capability }:`,
-					err
-				);
-				return [];
-			}
+			// Filter providers by deployment type (capability)
+			return providers.filter( ( p ) =>
+				p.supportedDeploymentTypes?.includes( capability )
+			);
 		},
-		[ registry ]
+		[ providers ]
 	);
 
 	/**
@@ -141,14 +139,9 @@ export function ProviderProvider( { children } ) {
 	 */
 	const getProvidersByType = useCallback(
 		( type ) => {
-			try {
-				return registry.getByType( type );
-			} catch ( err ) {
-				debugError( `Failed to get providers by type ${ type }:`, err );
-				return [];
-			}
+			return providers.filter( ( p ) => p.type === type );
 		},
-		[ registry ]
+		[ providers ]
 	);
 
 	/**
@@ -195,9 +188,9 @@ export function ProviderProvider( { children } ) {
 	 */
 	const providerExists = useCallback(
 		( providerId ) => {
-			return registry.has( providerId );
+			return providerIds.includes( providerId );
 		},
-		[ registry ]
+		[ providerIds ]
 	);
 
 	/**
@@ -217,7 +210,6 @@ export function ProviderProvider( { children } ) {
 	// Provide context value
 	const value = useMemo(
 		() => ( {
-			registry,
 			providers,
 			providerIds,
 			loading,
@@ -232,7 +224,6 @@ export function ProviderProvider( { children } ) {
 			refresh: loadProviders,
 		} ),
 		[
-			registry,
 			providers,
 			providerIds,
 			loading,
