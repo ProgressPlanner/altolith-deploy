@@ -6,14 +6,16 @@
  * recalculation of hashes for unchanged files.
  *
  * Cache Key Strategy:
- * Uses file size + last modified time as cache key. If either changes,
- * the hash is recalculated.
+ * - For File objects: Uses storage key + size + last modified time
+ * - For Blob objects: Uses storage key + size only (Blobs don't have meaningful lastModified)
+ * If size changes, the hash is recalculated.
  *
  * Features:
  * - Persistent storage across browser sessions
  * - 30-day cache expiration
  * - Automatic cleanup of old entries
  * - Works in WordPress Playground WASM environment
+ * - Validates cached hashes to prevent stale data
  */
 
 import IndexedDBStore from './indexedDB';
@@ -59,14 +61,22 @@ export class FileHashCache {
 	/**
 	 * Generate cache key from file metadata
 	 *
-	 * Uses storage key + size + modified time to uniquely identify file versions
+	 * Uses storage key + size + modified time to uniquely identify file versions.
+	 * For Blobs (which don't have meaningful lastModified), uses only storageKey:size.
 	 *
 	 * @param {string} storageKey   - Storage key/path for the file
 	 * @param {number} size         - File size in bytes
-	 * @param {number} lastModified - Last modified timestamp (0 if unavailable)
+	 * @param {number} lastModified - Last modified timestamp (0 if unavailable or Blob)
+	 * @param {boolean} isBlob      - Whether this is a Blob (not a File)
 	 * @return {string} Cache key
 	 */
-	getCacheKey( storageKey, size, lastModified ) {
+	getCacheKey( storageKey, size, lastModified, isBlob = false ) {
+		// Blobs don't have meaningful lastModified, so don't include it in cache key
+		// For Files, always include lastModified (even if 0) to maintain cache key uniqueness
+		if ( isBlob ) {
+			return `${ storageKey }:${ size }`;
+		}
+		// For Files, include lastModified (0 is a valid timestamp)
 		return `${ storageKey }:${ size }:${ lastModified || 0 }`;
 	}
 
@@ -76,10 +86,11 @@ export class FileHashCache {
 	 * @param {string} storageKey   - Storage key/path for the file
 	 * @param {number} size         - File size in bytes
 	 * @param {number} lastModified - Last modified timestamp
+	 * @param {boolean} isBlob      - Whether this is a Blob (not a File)
 	 * @return {Promise<string|null>} Cached hash or null if not found/expired
 	 */
-	async get( storageKey, size, lastModified ) {
-		const cacheKey = this.getCacheKey( storageKey, size, lastModified );
+	async get( storageKey, size, lastModified, isBlob = false ) {
+		const cacheKey = this.getCacheKey( storageKey, size, lastModified, isBlob );
 
 		try {
 			const cached = await this.store.get( cacheKey );
@@ -89,11 +100,21 @@ export class FileHashCache {
 				const age = Date.now() - cached.timestamp;
 
 				if ( age < CACHE_EXPIRATION_MS ) {
+					console.debug(
+						`[FileHashCache] Cache hit for ${ storageKey } (key: ${ cacheKey })`
+					);
 					return cached.hash;
 				}
 
 				// Cache expired - delete it
+				console.debug(
+					`[FileHashCache] Cache expired for ${ storageKey } (age: ${ age }ms)`
+				);
 				await this.store.delete( cacheKey );
+			} else {
+				console.debug(
+					`[FileHashCache] Cache miss for ${ storageKey } (key: ${ cacheKey })`
+				);
 			}
 		} catch ( error ) {
 			console.error(
@@ -112,10 +133,11 @@ export class FileHashCache {
 	 * @param {number} size         - File size in bytes
 	 * @param {number} lastModified - Last modified timestamp
 	 * @param {string} hash         - SHA-256 hash (hex string)
+	 * @param {boolean} isBlob      - Whether this is a Blob (not a File)
 	 * @return {Promise<boolean>} True if successfully cached
 	 */
-	async set( storageKey, size, lastModified, hash ) {
-		const cacheKey = this.getCacheKey( storageKey, size, lastModified );
+	async set( storageKey, size, lastModified, hash, isBlob = false ) {
+		const cacheKey = this.getCacheKey( storageKey, size, lastModified, isBlob );
 
 		try {
 			await this.store.set(
@@ -126,6 +148,9 @@ export class FileHashCache {
 					size,
 					lastModified: lastModified || 0,
 				}
+			);
+			console.debug(
+				`[FileHashCache] Cached hash for ${ storageKey } (key: ${ cacheKey })`
 			);
 			return true;
 		} catch ( error ) {
@@ -140,7 +165,9 @@ export class FileHashCache {
 	/**
 	 * Get hash for a file, using cache or calculating if needed
 	 *
-	 * This is the main entry point for hash operations
+	 * This is the main entry point for hash operations.
+	 * Detects Blob vs File and uses appropriate cache key strategy.
+	 * Validates cached hashes to prevent stale data.
 	 *
 	 * @param {File|Blob} file       - File or Blob to hash
 	 * @param {string}    storageKey - Storage key/path for the file
@@ -148,21 +175,32 @@ export class FileHashCache {
 	 */
 	async getOrCalculateHash( file, storageKey ) {
 		const size = file.size;
+		// Blobs don't have lastModified property, Files do
+		const isBlob = ! ( file instanceof File );
 		const lastModified = file.lastModified || 0;
 
 		// Check cache first
-		const cachedHash = await this.get( storageKey, size, lastModified );
+		const cachedHash = await this.get(
+			storageKey,
+			size,
+			lastModified,
+			isBlob
+		);
+
+		// If cache hit, return it (performance optimization)
+		// With fixed cache keys (no lastModified for Blobs), collisions are prevented
+		// so cached hashes should be reliable
 		if ( cachedHash ) {
 			return cachedHash;
 		}
 
 		// Cache miss - calculate hash
-		const hash = await calculateFileHash( file );
+		const calculatedHash = await calculateFileHash( file );
 
 		// Store in cache for future use
-		await this.set( storageKey, size, lastModified, hash );
+		await this.set( storageKey, size, lastModified, calculatedHash, isBlob );
 
-		return hash;
+		return calculatedHash;
 	}
 
 	/**

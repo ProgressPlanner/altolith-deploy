@@ -47,17 +47,43 @@ describe( 'FileHashCache', () => {
 	} );
 
 	describe( 'Cache Key Generation', () => {
-		test( 'generates cache key with all metadata', () => {
+		test( 'generates cache key with all metadata for Files', () => {
 			const key = cache.getCacheKey(
 				'path/to/file.jpg',
 				1024,
-				1699876543
+				1699876543,
+				false // isBlob = false (File)
 			);
 			expect( key ).toBe( 'path/to/file.jpg:1024:1699876543' );
 		} );
 
-		test( 'handles missing lastModified with 0', () => {
-			const key = cache.getCacheKey( 'path/to/file.jpg', 1024, 0 );
+		test( 'generates cache key without lastModified for Blobs', () => {
+			const key = cache.getCacheKey(
+				'path/to/file.jpg',
+				1024,
+				0,
+				true // isBlob = true
+			);
+			expect( key ).toBe( 'path/to/file.jpg:1024' );
+		} );
+
+		test( 'handles missing lastModified for Blobs', () => {
+			const key = cache.getCacheKey(
+				'path/to/file.jpg',
+				1024,
+				0,
+				true // isBlob = true
+			);
+			expect( key ).toBe( 'path/to/file.jpg:1024' );
+		} );
+
+		test( 'handles missing lastModified for Files (uses 0)', () => {
+			const key = cache.getCacheKey(
+				'path/to/file.jpg',
+				1024,
+				0,
+				false // isBlob = false (File)
+			);
 			expect( key ).toBe( 'path/to/file.jpg:1024:0' );
 		} );
 
@@ -65,28 +91,49 @@ describe( 'FileHashCache', () => {
 			const key1 = cache.getCacheKey(
 				'path/to/file.jpg',
 				1024,
-				1699876543
+				1699876543,
+				false
 			);
 			const key2 = cache.getCacheKey(
 				'path/to/file.jpg',
 				2048,
-				1699876543
+				1699876543,
+				false
 			);
 			expect( key1 ).not.toBe( key2 );
 		} );
 
-		test( 'generates different keys for different timestamps', () => {
+		test( 'generates different keys for different timestamps (Files only)', () => {
 			const key1 = cache.getCacheKey(
 				'path/to/file.jpg',
 				1024,
-				1699876543
+				1699876543,
+				false // File
 			);
 			const key2 = cache.getCacheKey(
 				'path/to/file.jpg',
 				1024,
-				1699876999
+				1699876999,
+				false // File
 			);
 			expect( key1 ).not.toBe( key2 );
+		} );
+
+		test( 'generates same key for Blobs regardless of lastModified', () => {
+			const key1 = cache.getCacheKey(
+				'path/to/file.jpg',
+				1024,
+				1699876543,
+				true // Blob
+			);
+			const key2 = cache.getCacheKey(
+				'path/to/file.jpg',
+				1024,
+				1699876999,
+				true // Blob
+			);
+			expect( key1 ).toBe( key2 );
+			expect( key1 ).toBe( 'path/to/file.jpg:1024' );
 		} );
 	} );
 
@@ -136,8 +183,14 @@ describe( 'FileHashCache', () => {
 			expect( mockIndexedDBStore.delete ).toHaveBeenCalled();
 		} );
 
-		test( 'sets hash with metadata', async () => {
-			await cache.set( 'path/to/file.jpg', 1024, 1699876543, 'abc123' );
+		test( 'sets hash with metadata for Files', async () => {
+			await cache.set(
+				'path/to/file.jpg',
+				1024,
+				1699876543,
+				'abc123',
+				false // isBlob = false (File)
+			);
 
 			expect( mockIndexedDBStore.set ).toHaveBeenCalledWith(
 				'path/to/file.jpg:1024:1699876543',
@@ -149,21 +202,44 @@ describe( 'FileHashCache', () => {
 				}
 			);
 		} );
+
+		test( 'sets hash with metadata for Blobs (no lastModified in key)', async () => {
+			await cache.set(
+				'path/to/file.jpg',
+				1024,
+				0,
+				'abc123',
+				true // isBlob = true
+			);
+
+			expect( mockIndexedDBStore.set ).toHaveBeenCalledWith(
+				'path/to/file.jpg:1024',
+				{ hash: 'abc123' },
+				{
+					storageKey: 'path/to/file.jpg',
+					size: 1024,
+					lastModified: 0,
+				}
+			);
+		} );
 	} );
 
 	describe( 'getOrCalculateHash', () => {
-		test( 'returns cached hash if available', async () => {
+		test( 'returns cached hash if available (File)', async () => {
 			const cachedData = {
 				hash: 'cached-hash',
 				timestamp: Date.now() - 1000,
 			};
 			mockIndexedDBStore.get.mockResolvedValue( cachedData );
 
-			// Create mock file with size and lastModified
-			const file = {
-				size: 1024,
-				lastModified: 1699876543,
-			};
+			// Create mock File with size and lastModified
+			const file = new File( [ 'content' ], 'file.txt', {
+				type: 'text/plain',
+			} );
+			Object.defineProperty( file, 'lastModified', {
+				value: 1699876543,
+				writable: false,
+			} );
 
 			const hash = await cache.getOrCalculateHash(
 				file,
@@ -174,15 +250,41 @@ describe( 'FileHashCache', () => {
 			expect( calculateFileHash ).not.toHaveBeenCalled();
 		} );
 
-		test( 'calculates and caches hash on miss', async () => {
+		test( 'returns cached hash if available (Blob)', async () => {
+			const cachedData = {
+				hash: 'cached-hash',
+				timestamp: Date.now() - 1000,
+			};
+			mockIndexedDBStore.get.mockResolvedValue( cachedData );
+
+			// Create mock Blob (no lastModified property)
+			const blob = new Blob( [ 'content' ], { type: 'text/plain' } );
+
+			const hash = await cache.getOrCalculateHash(
+				blob,
+				'path/to/file.txt'
+			);
+
+			expect( hash ).toBe( 'cached-hash' );
+			expect( calculateFileHash ).not.toHaveBeenCalled();
+			// Should use Blob cache key (no lastModified) - format: storageKey:size
+			expect( mockIndexedDBStore.get ).toHaveBeenCalledWith(
+				`path/to/file.txt:${ blob.size }`
+			);
+		} );
+
+		test( 'calculates and caches hash on miss (File)', async () => {
 			mockIndexedDBStore.get.mockResolvedValue( null );
 			calculateFileHash.mockResolvedValue( 'new-hash' );
 
-			// Create mock file with size and lastModified
-			const file = {
-				size: 1024,
-				lastModified: 1699876543,
-			};
+			// Create mock File with size and lastModified
+			const file = new File( [ 'content' ], 'file.txt', {
+				type: 'text/plain',
+			} );
+			Object.defineProperty( file, 'lastModified', {
+				value: 1699876543,
+				writable: false,
+			} );
 
 			const hash = await cache.getOrCalculateHash(
 				file,
@@ -194,28 +296,27 @@ describe( 'FileHashCache', () => {
 			expect( mockIndexedDBStore.set ).toHaveBeenCalled();
 		} );
 
-		test( 'handles files without lastModified', async () => {
+		test( 'calculates and caches hash on miss (Blob)', async () => {
 			mockIndexedDBStore.get.mockResolvedValue( null );
 			calculateFileHash.mockResolvedValue( 'new-hash' );
 
-			// Create mock file without lastModified
-			const file = {
-				size: 1024,
-				// No lastModified property
-			};
+			// Create mock Blob (no lastModified property)
+			const blob = new Blob( [ 'content' ], { type: 'text/plain' } );
 
 			const hash = await cache.getOrCalculateHash(
-				file,
+				blob,
 				'path/to/file.txt'
 			);
 
 			expect( hash ).toBe( 'new-hash' );
+			expect( calculateFileHash ).toHaveBeenCalledWith( blob );
+			// Should cache with Blob key (no lastModified)
 			expect( mockIndexedDBStore.set ).toHaveBeenCalledWith(
-				'path/to/file.txt:1024:0',
+				expect.stringMatching( /^path\/to\/file\.txt:\d+$/ ), // storageKey:size (no lastModified)
 				{ hash: 'new-hash' },
 				expect.objectContaining( {
 					storageKey: 'path/to/file.txt',
-					size: 1024,
+					size: blob.size,
 					lastModified: 0,
 				} )
 			);
@@ -273,7 +374,8 @@ describe( 'FileHashCache', () => {
 			const result = await cache.get(
 				'path/to/file.jpg',
 				1024,
-				1699876543
+				1699876543,
+				false // isBlob = false (File)
 			);
 
 			expect( result ).toBeNull();
@@ -288,7 +390,8 @@ describe( 'FileHashCache', () => {
 				'path/to/file.jpg',
 				1024,
 				1699876543,
-				'abc123'
+				'abc123',
+				false // isBlob = false (File)
 			);
 
 			expect( result ).toBe( false );
