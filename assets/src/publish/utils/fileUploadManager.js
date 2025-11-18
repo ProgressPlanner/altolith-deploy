@@ -12,7 +12,7 @@
  */
 
 import { createConcurrencyLimiter } from '../../utils/concurrencyLimiter';
-import { getFileHashCache } from '../../utils/fileHashCache';
+import { calculateFileHash } from '../../utils/fileHash';
 import { shouldSkipUpload } from '../../utils/manifestManager';
 import { debugWarn } from '../../utils/debug';
 
@@ -104,11 +104,7 @@ export async function uploadFilesWithProgress( {
 					if ( existingEntry && existingEntry.size === fileSize ) {
 						// Stage 2: Calculate hash if size matches
 						try {
-							const hashCache = getFileHashCache();
-							fileHash = await hashCache.getOrCalculateHash(
-								blob,
-								key
-							);
+							fileHash = await calculateFileHash( blob );
 							shouldSkip = customShouldSkipUpload
 								? customShouldSkipUpload(
 										manifest,
@@ -165,11 +161,7 @@ export async function uploadFilesWithProgress( {
 				// Calculate hash if not already calculated (for manifest update)
 				if ( ! fileHash && ! skipHashCheck ) {
 					try {
-						const hashCache = getFileHashCache();
-						fileHash = await hashCache.getOrCalculateHash(
-							blob,
-							key
-						);
+						fileHash = await calculateFileHash( blob );
 					} catch ( error ) {
 						debugWarn( 'Failed to calculate hash:', error );
 						fileHash = null;
@@ -353,8 +345,7 @@ export async function uploadSingleFileWithProgress( {
 			if ( existingEntry && existingEntry.size === fileSize ) {
 				// Stage 2: Calculate hash if size matches
 				try {
-					const hashCache = getFileHashCache();
-					fileHash = await hashCache.getOrCalculateHash( blob, key );
+					fileHash = await calculateFileHash( blob );
 					shouldSkip = customShouldSkipUpload
 						? customShouldSkipUpload(
 								manifest,
@@ -396,8 +387,7 @@ export async function uploadSingleFileWithProgress( {
 		// Calculate hash if not already calculated (for manifest update)
 		if ( ! fileHash && ! skipHashCheck ) {
 			try {
-				const hashCache = getFileHashCache();
-				fileHash = await hashCache.getOrCalculateHash( blob, key );
+				fileHash = await calculateFileHash( blob );
 			} catch ( error ) {
 				debugWarn( 'Failed to calculate hash:', error );
 				fileHash = null;

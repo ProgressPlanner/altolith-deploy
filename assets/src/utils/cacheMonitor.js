@@ -21,7 +21,6 @@
  */
 
 import { getWpOrgCache } from './wporgCache';
-import { getFileHashCache } from './fileHashCache';
 import { getManifestCache } from './manifestCache';
 import { getUploadProgressCache } from './uploadProgressCache';
 import { deleteDatabase, isIndexedDBAvailable } from './indexedDB';
@@ -38,7 +37,6 @@ export class CacheMonitor {
 	constructor() {
 		this.caches = {
 			wporg: getWpOrgCache(),
-			fileHash: getFileHashCache(),
 			manifest: getManifestCache(),
 			uploadProgress: getUploadProgressCache(),
 		};
@@ -63,7 +61,6 @@ export class CacheMonitor {
 
 		try {
 			stats.wporg = await this.caches.wporg.getStats();
-			stats.fileHash = await this.caches.fileHash.getStats();
 			stats.manifest = await this.caches.manifest.getStats();
 			stats.uploadProgress = await this.caches.uploadProgress.getStats();
 
@@ -71,7 +68,6 @@ export class CacheMonitor {
 			stats.total = {
 				totalEntries:
 					( stats.wporg.totalCached || 0 ) +
-					( stats.fileHash.totalCached || 0 ) +
 					( stats.manifest.totalCached || 0 ) +
 					( stats.uploadProgress.totalSessions || 0 ),
 				memoryCached: stats.wporg.memoryCached || 0,
@@ -115,9 +111,6 @@ export class CacheMonitor {
 		output += 'WordPress.org API Cache:\n';
 		output += `  Total cached: ${ stats.wporg.totalCached || 0 }\n`;
 		output += `  Memory cached: ${ stats.wporg.memoryCached || 0 }\n\n`;
-
-		output += 'File Hash Cache:\n';
-		output += `  Total cached: ${ stats.fileHash.totalCached || 0 }\n\n`;
 
 		output += 'Manifest Cache:\n';
 		output += `  Total cached: ${ stats.manifest.totalCached || 0 }\n\n`;
@@ -181,14 +174,12 @@ export class CacheMonitor {
 	async clearAll() {
 		const results = {
 			wporg: false,
-			fileHash: false,
 			manifest: false,
 			uploadProgress: false,
 		};
 
 		try {
 			results.wporg = await this.caches.wporg.clear();
-			results.fileHash = await this.caches.fileHash.clear();
 			results.manifest = await this.caches.manifest.clear();
 			results.uploadProgress = await this.caches.uploadProgress.clear();
 
@@ -203,7 +194,7 @@ export class CacheMonitor {
 	/**
 	 * Clear specific cache
 	 *
-	 * @param {string} cacheName Cache name (wporg, fileHash, manifest, uploadProgress)
+	 * @param {string} cacheName Cache name (wporg, manifest, uploadProgress)
 	 * @return {Promise<boolean>} True if cleared successfully
 	 */
 	async clearCache( cacheName ) {
@@ -238,7 +229,6 @@ export class CacheMonitor {
 	async deleteAllDatabases() {
 		const results = {
 			wporg: false,
-			fileHash: false,
 			manifest: false,
 			providerConfigs: false,
 			uploadProgress: false,
@@ -246,7 +236,6 @@ export class CacheMonitor {
 
 		try {
 			results.wporg = await deleteDatabase( 'aether-wporg-cache' );
-			results.fileHash = await deleteDatabase( 'aether-hash-cache' );
 			results.manifest = await deleteDatabase( 'aether-manifest-cache' );
 			results.providerConfigs = await deleteDatabase(
 				'aether-provider-configs'
@@ -271,20 +260,17 @@ export class CacheMonitor {
 	async cleanupAll() {
 		const results = {
 			wporg: 0,
-			fileHash: 0,
 			manifest: 0,
 			uploadProgress: 0,
 		};
 
 		try {
 			results.wporg = await this.caches.wporg.cleanup();
-			results.fileHash = await this.caches.fileHash.cleanup();
 			results.manifest = await this.caches.manifest.cleanup();
 			results.uploadProgress = await this.caches.uploadProgress.cleanup();
 
 			const total =
 				results.wporg +
-				results.fileHash +
 				results.manifest +
 				results.uploadProgress;
 

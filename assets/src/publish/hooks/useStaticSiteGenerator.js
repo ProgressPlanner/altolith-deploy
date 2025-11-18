@@ -23,7 +23,7 @@ import {
 } from '../utils/assetExtractor';
 import { createAssetTracker } from '../utils/assetTracker';
 import { debug, debugWarn } from '../../utils/debug';
-import { getFileHashCache } from '../../utils/fileHashCache';
+import { calculateFileHash } from '../../utils/fileHash';
 import StaticSiteCache from '../../utils/staticSiteCache';
 import {
 	fetchManifest,
@@ -324,12 +324,8 @@ export function useStaticSiteGenerator( onProgress ) {
 						) {
 							// Size matches - calculate hash to verify
 							try {
-								const hashCache = getFileHashCache();
 								const assetHash =
-									await hashCache.getOrCalculateHash(
-										assetBlob,
-										assetKey
-									);
+									await calculateFileHash( assetBlob );
 								if (
 									shouldSkipUpload(
 										manifest,
@@ -497,11 +493,7 @@ export function useStaticSiteGenerator( onProgress ) {
 					if ( existingEntry && existingEntry.size === htmlSize ) {
 						// Stage 2: Calculate hash if size matches
 						try {
-							const hashCache = getFileHashCache();
-							htmlHash = await hashCache.getOrCalculateHash(
-								htmlBlob,
-								htmlKey
-							);
+							htmlHash = await calculateFileHash( htmlBlob );
 							shouldSkip = shouldSkipUpload(
 								manifest,
 								htmlKey,
@@ -561,11 +553,7 @@ export function useStaticSiteGenerator( onProgress ) {
 					// Calculate hash if not already calculated
 					if ( ! htmlHash ) {
 						try {
-							const hashCache = getFileHashCache();
-							htmlHash = await hashCache.getOrCalculateHash(
-								htmlBlob,
-								htmlKey
-							);
+							htmlHash = await calculateFileHash( htmlBlob );
 						} catch ( error ) {
 							debugWarn( 'Failed to calculate hash:', error );
 							htmlHash = null;
