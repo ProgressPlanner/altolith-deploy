@@ -10,12 +10,7 @@
 import { useState, useCallback } from '@wordpress/element';
 import { debugWarn } from './debug';
 import apiFetch from './api';
-
-/**
- * Cache for WordPress.org existence checks to avoid duplicate requests
- * @type {Map<string, boolean>}
- */
-const wporgCache = new Map();
+import { getWpOrgCache } from './wporgCache';
 
 /**
  * Normalize plugin slug to directory name only.
@@ -50,10 +45,11 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 	const normalizedSlug =
 		type === 'plugin' ? normalizePluginSlug( slug ) : slug;
 
-	// Check cache first
-	const cacheKey = `${ type }:${ normalizedSlug }`;
-	if ( wporgCache.has( cacheKey ) ) {
-		return wporgCache.get( cacheKey );
+	// Check persistent cache first (IndexedDB + memory)
+	const cache = getWpOrgCache();
+	const cached = await cache.get( normalizedSlug, type );
+	if ( cached !== null ) {
+		return cached;
 	}
 
 	try {
@@ -133,8 +129,8 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 			exists = false;
 		}
 
-		// Cache the result
-		wporgCache.set( cacheKey, exists );
+		// Cache the result in persistent storage
+		await cache.set( normalizedSlug, type, exists );
 
 		return exists;
 	} catch ( error ) {
@@ -144,8 +140,8 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 			error
 		);
 
-		// Cache the failure as false to avoid retrying
-		wporgCache.set( cacheKey, false );
+		// Cache the failure as false to avoid retrying (7-day TTL)
+		await cache.set( normalizedSlug, type, false );
 
 		return false;
 	}
