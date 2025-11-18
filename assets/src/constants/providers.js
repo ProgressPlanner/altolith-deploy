@@ -30,40 +30,39 @@ export const PROVIDER_IDS = {
  * Provider Types
  *
  * Categories of providers by their primary function.
+ * Note: These are provider "types" (getType()), not capabilities.
  */
 export const PROVIDER_TYPES = {
 	/**
-	 * Storage providers (local filesystem, etc.)
+	 * Local storage type
 	 * @constant {string}
 	 */
-	STORAGE: 'storage',
+	LOCAL_STORAGE: 'local-storage',
 
 	/**
-	 * Static site hosting providers
+	 * Cloud storage type
 	 * @constant {string}
 	 */
-	STATIC_SITE: 'static-site',
+	CLOUD_STORAGE: 'cloud-storage',
+
+	/**
+	 * Git hosting type
+	 * @constant {string}
+	 */
+	GIT_HOSTING: 'git-hosting',
+
+	/**
+	 * Static site hosting type
+	 * @constant {string}
+	 */
+	STATIC_HOSTING: 'static-hosting',
+
+	/**
+	 * Edge computing type
+	 * @constant {string}
+	 */
+	EDGE_COMPUTING: 'edge-computing',
 };
-
-/**
- * Provider Categorizations
- *
- * Arrays of provider IDs grouped by characteristics.
- */
-
-/**
- * Storage-based providers (local filesystem, etc.)
- * These providers use storage for static sites
- * @constant {string[]}
- */
-export const STORAGE_PROVIDERS = [ PROVIDER_IDS.LOCAL_FILESYSTEM ];
-
-/**
- * Static site hosting providers
- * These providers support static site hosting
- * @constant {string[]}
- */
-export const STATIC_SITE_PROVIDERS = [ PROVIDER_IDS.LOCAL_FILESYSTEM ];
 
 /**
  * Provider Configuration Keys
@@ -129,17 +128,18 @@ export const PROVIDER_STATUS = {
 /**
  * Provider Internal Keys
  *
- * Internal setting keys used to map providers to capabilities.
+ * Internal setting keys (deprecated - providers now use deployment_types config).
+ * Kept for backwards compatibility during migration.
  */
 export const PROVIDER_INTERNAL_KEYS = {
 	/**
-	 * Storage provider key
+	 * @deprecated Use deployment_types config instead
 	 * @constant {string}
 	 */
 	STORAGE_PROVIDER: 'storageProvider',
 
 	/**
-	 * Static site provider key
+	 * @deprecated Use deployment_types config instead
 	 * @constant {string}
 	 */
 	STATIC_SITE_PROVIDER: 'staticSiteProvider',
@@ -194,32 +194,8 @@ export const PROVIDER_ERROR_CODES = {
 	UPLOAD_FAILED: 'upload_failed',
 
 	/**
-	 * Capability not supported
+	 * Deployment type not supported
 	 * @constant {string}
 	 */
-	CAPABILITY_NOT_SUPPORTED: 'capability_not_supported',
+	DEPLOYMENT_TYPE_NOT_SUPPORTED: 'deployment_type_not_supported',
 };
-
-/**
- * Helper Functions
- */
-
-/**
- * Check if provider is a storage provider
- *
- * @param {string} providerId - Provider ID to check
- * @return {boolean} True if provider uses storage
- */
-export function isStorageProvider( providerId ) {
-	return STORAGE_PROVIDERS.includes( providerId );
-}
-
-/**
- * Check if provider supports static sites
- *
- * @param {string} providerId - Provider ID to check
- * @return {boolean} True if provider supports static site hosting
- */
-export function isStaticSiteProvider( providerId ) {
-	return STATIC_SITE_PROVIDERS.includes( providerId );
-}
