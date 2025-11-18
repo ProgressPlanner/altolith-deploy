@@ -48,17 +48,11 @@ class PublishPage extends BaseAdminPage
 			'version'      => AETHER_SITE_EXPORTER_VERSION,
 		];
 
-		// Enqueue required webpack chunks FIRST (before main script)
-		$plugin = \Aether\SiteExporter\Plugin::getInstance();
-		$plugin->enqueueWebpackChunks('aether-export');
-
-		// Get chunk handles for dependencies (discovered dynamically)
-		$chunkHandles = $plugin->getChunkHandles([ 'common', 'vendor' ], true);
-
+		// Webpack is configured to never create chunks - all code is bundled into single files
 		\wp_enqueue_script(
 			'aether-export',
 			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/export.js',
-			\array_merge($asset['dependencies'], $chunkHandles),
+			$asset['dependencies'],
 			$asset['version'],
 			true
 		);

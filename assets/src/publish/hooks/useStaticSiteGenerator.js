@@ -35,9 +35,6 @@ import {
 import { uploadFilesWithProgress } from '../utils/fileUploadManager';
 import apiFetch from '../../utils/api';
 
-// WordPress Playground root URL constant removed - not currently used
-// const AETHER_PLAYGROUND_ROOT_URL = 'https://static-wp.s12y.org/index.html';
-
 /**
  * Process URLs and upload static site files.
  *

@@ -4,8 +4,8 @@
  * @package
  */
 
-// Set webpack publicPath before any imports to ensure chunks load correctly
-// This must be set before any dynamic imports or chunk loading
+// Set webpack publicPath before any imports (for asset loading)
+// Note: Webpack is configured to never create chunks - all code is bundled into single files
 // eslint-disable-next-line camelcase, no-undef
 if ( typeof __webpack_public_path__ !== 'undefined' ) {
 	const pluginUrlMeta = document.querySelector(

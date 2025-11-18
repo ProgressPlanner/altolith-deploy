@@ -470,10 +470,6 @@ class SettingsController
 		return $maxDepth;
 	}
 
-		// Encryption helper methods now provided by EncryptionHelper trait
-
-
-
 	/**
 	 * Get playground notice state.
 	 *

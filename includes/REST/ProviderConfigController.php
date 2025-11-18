@@ -375,9 +375,6 @@ class ProviderConfigController
 		return \apply_filters('aether_provider_config_sanitize', $sanitized, $config, $depth);
 	}
 
-	// Encryption helper methods now provided by EncryptionHelper trait
-
-
 	/**
 	 * Get provider status (configured or not).
 	 *

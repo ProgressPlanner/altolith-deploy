@@ -97,9 +97,9 @@ class Settings
 		$result = \update_option('aether_site_exporter_settings', $settings);
 
 		// Force cache refresh by calling get_storage_config with bypass_cache.
-		if ($result && \function_exists('\Aether\getStorageConfig')) {
+		if ($result) {
 			// Get fresh settings to ensure cache is updated.
-			\Aether\getStorageConfig(true);
+			\Aether\SiteExporter\getStorageConfig(true);
 		}
 
 		return $result;

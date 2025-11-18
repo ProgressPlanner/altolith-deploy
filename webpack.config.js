@@ -71,6 +71,7 @@ module.exports = {
 		path: require( 'path' ).resolve( __dirname, 'assets/build' ),
 		publicPath: '', // Will be set dynamically via __webpack_public_path__ in entry points
 		// Prevent webpack from creating chunk files - all code goes into entry bundles
+		// Setting chunkFilename to undefined ensures no chunk files are created
 		chunkFilename: undefined,
 	},
 	optimization: {
@@ -81,6 +82,9 @@ module.exports = {
 		splitChunks: false,
 		// Disable runtime chunk (prevents webpack runtime from being split)
 		runtimeChunk: false,
+		// Explicitly disable all chunk-related optimizations
+		chunkIds: false,
+		moduleIds: 'deterministic',
 	},
 	performance: {
 		// Increase size limits for large bundles (publish.js is a complex feature)
