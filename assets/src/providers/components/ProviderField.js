@@ -90,7 +90,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 			>
 				{ label && (
 					<div className="components-base-control__label">
-						{ label }
+						<strong>{ label }</strong>
 						{ required && (
 							<span className="components-base-control__label__required">
 								*
@@ -133,7 +133,8 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 									}
 									onChange( id, newValue );
 								} }
-								__nextHasNoMarginBottom={ false }
+								style={ { margin: '0.25rem 0' } }
+								__nextHasNoMarginBottom={ true }
 							/>
 						);
 					} ) }
