@@ -118,9 +118,8 @@ export async function uploadStaticSiteFilesHandler( context ) {
 				const providerResponse = await apiFetch( {
 					path: `/aether/site-exporter/providers/${ providerIdItem }`,
 				} );
-				if ( providerResponse.success && providerResponse.provider ) {
-					const providerConfig =
-						providerResponse.provider.config || {};
+				if ( providerResponse.success && providerResponse.config ) {
+					const providerConfig = providerResponse.config || {};
 					// Get deployment URL from provider config (same logic as AbstractProvider.getDeploymentUrl)
 					if ( providerConfig.pages_url ) {
 						providerDeploymentUrl = providerConfig.pages_url;
