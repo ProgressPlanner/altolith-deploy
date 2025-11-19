@@ -4,6 +4,7 @@
  * @package
  */
 
+// eslint-disable-next-line import/no-unresolved
 import { ProviderRegistry } from '../ProviderRegistry';
 import { AbstractProvider } from '../../base/AbstractProvider';
 

@@ -21,14 +21,14 @@ const provider = new LocalFilesystemProvider();
 addFilter(
 	'aether.provider.upload',
 	'aether/local-filesystem',
-	( handler, providerId, uploadData ) => {
+	( handler, providerId ) => {
 		// Only handle requests for this provider
 		if ( providerId !== 'local-filesystem' ) {
 			return handler; // Return existing handler or null
 		}
 
 		// Return upload handler function
-		return async ( filePath, fileName, context ) => {
+		return async ( filePath, fileName ) => {
 			return await provider.uploadFile( filePath, fileName );
 		};
 	},

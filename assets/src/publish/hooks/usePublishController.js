@@ -16,7 +16,7 @@ import { PUBLISH_STEPS } from '../utils/steps';
 import apiFetch from '../../utils/api';
 import { calculateOverallProgress } from '../utils/progressManager';
 import { debug, debugError } from '../../utils/debug';
-import { doAction, applyFilters } from '@wordpress/hooks';
+import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 import {
 	PUBLISH_WORKFLOW,
@@ -95,7 +95,10 @@ export function usePublishController( publishState ) {
 					const providerResponse = await apiFetch( {
 						path: `/aether/site-exporter/providers/${ fetchedStorageProviderId }`,
 					} );
-					if ( providerResponse.success && providerResponse.provider ) {
+					if (
+						providerResponse.success &&
+						providerResponse.provider
+					) {
 						providerMetadata = providerResponse.provider;
 					}
 				} catch ( error ) {
@@ -192,11 +195,14 @@ export function usePublishController( publishState ) {
 						{
 							filePath: blueprintBundlePath,
 							fileName: 'blueprint-bundle.zip',
-							context: context,
+							context,
 						}
 					);
 
-					if ( ! uploadHandler || typeof uploadHandler !== 'function' ) {
+					if (
+						! uploadHandler ||
+						typeof uploadHandler !== 'function'
+					) {
 						throw new Error(
 							`No upload handler registered for provider: ${ fetchedStorageProviderId }`
 						);
@@ -319,12 +325,19 @@ export function usePublishController( publishState ) {
 			};
 
 			// Get arrays of providers for each deployment type (in parallel)
-			const [ staticSiteProviders, blueprintBundleProviders, edgeFunctionProviders ] =
-				await Promise.all( [
-					getProvidersForDeploymentType( DEPLOYMENT_TYPES.STATIC_SITE ),
-					getProvidersForDeploymentType( DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE ),
-					getProvidersForDeploymentType( DEPLOYMENT_TYPES.EDGE_FUNCTIONS ),
-				] );
+			const [
+				staticSiteProviders,
+				blueprintBundleProviders,
+				edgeFunctionProviders,
+			] = await Promise.all( [
+				getProvidersForDeploymentType( DEPLOYMENT_TYPES.STATIC_SITE ),
+				getProvidersForDeploymentType(
+					DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE
+				),
+				getProvidersForDeploymentType(
+					DEPLOYMENT_TYPES.EDGE_FUNCTIONS
+				),
+			] );
 
 			debug( '[Workflow] Providers by deployment type:', {
 				staticSite: staticSiteProviders,

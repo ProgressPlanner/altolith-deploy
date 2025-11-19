@@ -128,7 +128,10 @@ export function ProviderSettings( { provider, onSave } ) {
 			setIsSaving( false );
 
 			// Trigger WordPress hook for other components
-			doAction(
+			const { doAction: triggerAction } = await import(
+				'@wordpress/hooks'
+			);
+			triggerAction(
 				'aether.admin.provider.settings.saved',
 				provider.getId()
 			);
@@ -424,7 +427,10 @@ export function ProviderSettings( { provider, onSave } ) {
 									);
 
 									let result;
-									if ( testHandler && typeof testHandler === 'function' ) {
+									if (
+										testHandler &&
+										typeof testHandler === 'function'
+									) {
 										// Custom handler registered
 										result = await testHandler( config );
 									} else {
@@ -436,7 +442,10 @@ export function ProviderSettings( { provider, onSave } ) {
 										} );
 										result = {
 											success: response.success || false,
-											error: response.error || response.message || null,
+											error:
+												response.error ||
+												response.message ||
+												null,
 										};
 									}
 
@@ -463,10 +472,7 @@ export function ProviderSettings( { provider, onSave } ) {
 								}
 							} }
 						>
-							{ __(
-								'Test Connection',
-								'aether-site-exporter'
-							) }
+							{ __( 'Test Connection', 'aether-site-exporter' ) }
 						</Button>
 					</div>
 				) }

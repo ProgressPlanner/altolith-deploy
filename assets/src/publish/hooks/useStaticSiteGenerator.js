@@ -74,14 +74,18 @@ export function useStaticSiteGenerator( onProgress ) {
 				const providerDiscovery = await import(
 					'../../providers/utils/providerDiscovery'
 				);
-				const staticSiteProviderId =
+				const discoveredStaticSiteProviderId =
 					await providerDiscovery.getProviderForDeploymentType(
 						'static_site'
 					);
 
-				if ( staticSiteProviderId ) {
+				// Use discovered provider ID if available, otherwise fall back to parameter
+				const providerIdToUse =
+					discoveredStaticSiteProviderId || staticSiteProviderId;
+
+				if ( providerIdToUse ) {
 					const configResponse = await apiFetch( {
-						path: `/aether/site-exporter/providers/${ staticSiteProviderId }/config`,
+						path: `/aether/site-exporter/providers/${ providerIdToUse }/config`,
 					} );
 					if ( configResponse.success && configResponse.config ) {
 						providerConfig = configResponse.config;
