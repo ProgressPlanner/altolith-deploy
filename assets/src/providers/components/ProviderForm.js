@@ -14,7 +14,12 @@ import {
 	useCallback,
 	memo,
 } from '@wordpress/element';
-import { Button, Notice } from '@wordpress/components';
+import {
+	Button,
+	Notice,
+	__experimentalToolsPanel as ToolsPanel,
+	__experimentalToolsPanelItem as ToolsPanelItem,
+} from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
 import apiFetch from '../../utils/api';
@@ -332,46 +337,95 @@ function ProviderForm( {
 					);
 				};
 
+				// Helper function to get default value for a field
+				const getFieldDefault = ( field ) => {
+					if ( field.defaultValue !== undefined ) {
+						return field.defaultValue;
+					}
+					if ( field.type === 'checkbox-group' ) {
+						return [];
+					}
+					if ( field.type === 'checkbox' ) {
+						return false;
+					}
+					return '';
+				};
+
+				// Helper function to check if a field has a value
+				const hasFieldValue = ( field ) => {
+					const value = values[ field.id ];
+					const defaultValue = getFieldDefault( field );
+
+					// If value is undefined or null, it doesn't have a value
+					if ( value === undefined || value === null ) {
+						return false;
+					}
+
+					// For arrays, check if it's not empty and different from default
+					if ( Array.isArray( value ) ) {
+						return (
+							value.length > 0 &&
+							JSON.stringify( value ) !==
+								JSON.stringify( defaultValue )
+						);
+					}
+
+					// For checkboxes, check if value is different from default (true vs false)
+					if ( field.type === 'checkbox' ) {
+						return value !== defaultValue;
+					}
+
+					// For other types, check if value is not empty and different from default
+					return value !== '' && value !== defaultValue;
+				};
+
+				// Helper function to reset a field to its default
+				const resetField = ( fieldId ) => {
+					const field = fields.find( ( f ) => f.id === fieldId );
+					if ( ! field ) {
+						return;
+					}
+					const defaultValue = getFieldDefault( field );
+					handleFieldChange( fieldId, defaultValue );
+				};
+
 				return (
 					<>
 						{ /* Render regular fields */ }
 						{ regularFields.map( renderField ) }
 
-						{ /* Render advanced fields in details element */ }
+						{ /* Render advanced fields in ToolsPanel */ }
 						{ advancedFields.length > 0 && (
-							<details
-								style={ {
-									marginTop: spacing.md,
-									padding: spacing.md,
-									border: `1px solid ${ colors.borderLighter }`,
-									borderRadius: borderRadius.sm,
-									backgroundColor: colors.backgroundLighter,
-								} }
+							<ToolsPanel
+								label={ __(
+									'Advanced settings',
+									'aether-site-exporter'
+								) }
 							>
-								<summary
-									style={ {
-										cursor: 'pointer',
-										fontWeight: fontWeight.medium,
-										color: colors.text,
-										padding: spacing.sm,
-										marginBottom: spacing.sm,
-										userSelect: 'none',
-									} }
-								>
-									{ __(
-										'Advanced settings',
-										'aether-site-exporter'
-									) }
-								</summary>
-								<div
-									style={ {
-										paddingTop: spacing.sm,
-										...createFlexStyle( 'column', spacing.md ),
-									} }
-								>
-									{ advancedFields.map( renderField ) }
-								</div>
-							</details>
+								{ advancedFields.map( ( field ) => {
+									const isHidden = isFieldHidden( field );
+									return (
+										<ToolsPanelItem
+											key={ field.id }
+											hasValue={ () =>
+												hasFieldValue( field )
+											}
+											label={ field.label || field.name }
+											onDeselect={ () =>
+												resetField( field.id )
+											}
+										>
+											<ProviderField
+												field={ field }
+												value={ values[ field.id ] }
+												onChange={ handleFieldChange }
+												errors={ errors }
+												isHidden={ isHidden }
+											/>
+										</ToolsPanelItem>
+									);
+								} ) }
+							</ToolsPanel>
 						) }
 					</>
 				);
