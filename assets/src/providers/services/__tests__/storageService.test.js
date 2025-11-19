@@ -71,6 +71,62 @@ describe( 'StorageService', () => {
 			);
 			expect( testService.baseUrl ).toBe( '' );
 		} );
+
+		test( 'should initialize providerId from config', () => {
+			const configWithProviderId = {
+				base_url: 'https://example.com',
+				provider_id: 'cloudflare-r2'
+			};
+			const testService = new StorageService(
+				mockStaticPath,
+				mockJobId,
+				configWithProviderId
+			);
+			expect( testService.providerId ).toBe( 'cloudflare-r2' );
+		} );
+
+		test( 'should set providerId to null if not provided', () => {
+			expect( service.providerId ).toBeNull();
+		} );
+	} );
+
+	describe( '_prefixKey()', () => {
+		test( 'should not prefix key when providerId is null', () => {
+			const key = 'static/index.html';
+			expect( service._prefixKey( key ) ).toBe( key );
+		} );
+
+		test( 'should prefix key with providerId', () => {
+			const configWithProviderId = {
+				base_url: 'https://example.com',
+				provider_id: 'cloudflare-r2',
+			};
+			const testService = new StorageService(
+				mockStaticPath,
+				mockJobId,
+				configWithProviderId
+			);
+			const key = 'static/index.html';
+			expect( testService._prefixKey( key ) ).toBe(
+				'cloudflare-r2/static/index.html'
+			);
+		} );
+
+		test( 'should not double-prefix key', () => {
+			const configWithProviderId = {
+				base_url: 'https://example.com',
+				provider_id: 'cloudflare-r2',
+			};
+			const testService = new StorageService(
+				mockStaticPath,
+				mockJobId,
+				configWithProviderId
+			);
+			const key = 'cloudflare-r2/static/index.html';
+			expect( testService._prefixKey( key ) ).toBe(
+				'cloudflare-r2/static/index.html'
+			);
+		} );
 	} );
 
 	describe( 'upload()', () => {
@@ -107,6 +163,42 @@ describe( 'StorageService', () => {
 			expect( result.url ).toBe(
 				'https://cdn.example.com/test-file.txt'
 			);
+		} );
+
+		test( 'should upload with prefixed key when providerId is set', async () => {
+			const configWithProviderId = {
+				base_url: 'https://example.com',
+				provider_id: 'cloudflare-r2',
+			};
+			const testService = new StorageService(
+				mockStaticPath,
+				mockJobId,
+				configWithProviderId
+			);
+			const mockFile = new Blob( [ 'test content' ], {
+				type: 'text/plain',
+			} );
+			const mockKey = 'static/index.html';
+
+			uploadFile.mockResolvedValue( { success: true } );
+			getObjectUrl.mockReturnValue(
+				'https://example.com/cloudflare-r2/static/index.html'
+			);
+
+			const result = await testService.upload( mockKey, mockFile );
+
+			expect( uploadFile ).toHaveBeenCalledWith(
+				mockStaticPath,
+				'cloudflare-r2/static/index.html',
+				mockFile,
+				{
+					contentType: 'text/plain',
+					cacheControl: '',
+					onProgress: null,
+					jobId: mockJobId,
+				}
+			);
+			expect( result.success ).toBe( true );
 		} );
 
 		test( 'should handle upload failure', async () => {
