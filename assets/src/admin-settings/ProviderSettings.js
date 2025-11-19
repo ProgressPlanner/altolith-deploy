@@ -236,27 +236,27 @@ export default function ProviderSettings( {
 		[ renameProviderInstance, onConfigsUpdate ]
 	);
 
-	const handleModalClose = useCallback( async () => {
+	const handleModalSave = useCallback(
+		( instanceId, updatedConfig ) => {
+			// Update local state immediately for reactivity
+			const updatedConfigs = {
+				...localConfigs,
+				[ instanceId ]: updatedConfig,
+			};
+			setLocalConfigs( updatedConfigs );
+
+			// Also update parent state
+			if ( onConfigsUpdate ) {
+				onConfigsUpdate( updatedConfigs );
+			}
+		},
+		[ localConfigs, onConfigsUpdate ]
+	);
+
+	const handleModalClose = useCallback( () => {
 		setIsConfigModalOpen( false );
 		setSelectedInstanceId( null );
-
-		// Refresh configs from backend after modal closes
-		// This ensures the card displays updated deployment_types immediately
-		try {
-			const configsResponse = await apiFetch( {
-				path: '/aether/site-exporter/settings?key=providers',
-			} );
-
-			if ( configsResponse.success && configsResponse.value ) {
-				onConfigsUpdate( configsResponse.value );
-			}
-		} catch ( error ) {
-			console.error(
-				'Failed to refresh configs after modal close:',
-				error
-			);
-		}
-	}, [ onConfigsUpdate ] );
+	}, [] );
 
 	if ( loading ) {
 		return (
@@ -437,6 +437,7 @@ export default function ProviderSettings( {
 				<ProviderConfigModal
 					isOpen={ isConfigModalOpen }
 					onClose={ handleModalClose }
+					onSave={ handleModalSave }
 					provider={ {
 						id: selectedProvider.id,
 						metadata: {

@@ -43,6 +43,9 @@ export class StorageService {
 	 * Ensures isolated storage paths for each provider.
 	 * Example: 'static/index.html' → 'cloudflare-r2/static/index.html'
 	 *
+	 * Note: Local filesystem providers don't need prefixing since they use
+	 * different base paths (static/, static2/, static3/) for isolation.
+	 *
 	 * @param {string} key Original storage key.
 	 * @return {string} Prefixed storage key.
 	 */
@@ -50,6 +53,13 @@ export class StorageService {
 		if ( ! this.providerId ) {
 			return key;
 		}
+
+		// Skip prefixing for local-filesystem providers
+		// They use different base paths for isolation (e.g., static/, static2/, static3/)
+		if ( this.providerId.startsWith( 'local-filesystem:' ) ) {
+			return key;
+		}
+
 		// Don't double-prefix
 		if ( key.startsWith( this.providerId + '/' ) ) {
 			return key;

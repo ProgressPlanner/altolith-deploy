@@ -24,6 +24,7 @@ import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
  * @param {Object}   props.provider      Provider metadata.
  * @param {Object}   props.initialConfig Initial configuration values.
  * @param {string}   props.instanceId    Instance ID for saving config.
+ * @param {Function} props.onSave        Callback called after successful save with updated config.
  * @return {JSX.Element} Rendered modal component.
  */
 export default function ProviderConfigModal( {
@@ -32,6 +33,7 @@ export default function ProviderConfigModal( {
 	provider,
 	initialConfig = {},
 	instanceId,
+	onSave,
 } ) {
 	const [ config, setConfig ] = useState( initialConfig );
 	const [ hasChanges, setHasChanges ] = useState( false );
@@ -169,7 +171,13 @@ export default function ProviderConfigModal( {
 			}
 
 			setHasChanges( false );
-			// Close modal after 2 seconds - parent will refresh configs
+
+			// Notify parent of successful save with updated config for immediate reactivity
+			if ( onSave ) {
+				onSave( instanceId, updatedConfig );
+			}
+
+			// Close modal after 2 seconds
 			closeTimeoutRef.current = setTimeout( () => {
 				onClose();
 				closeTimeoutRef.current = null;

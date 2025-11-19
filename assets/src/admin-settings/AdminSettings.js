@@ -16,6 +16,7 @@ import {
 	spacing,
 	fontWeight,
 	createFlexStyle,
+	fontSize,
 	borderRadius,
 } from '../utils/styles';
 import apiFetch from '../utils/api';
@@ -72,126 +73,94 @@ export default function AdminSettings() {
 		maxWidth: '100%',
 	};
 
-	const headingStyle = {
+	const headerStyle = {
+		display: 'flex',
+		alignItems: 'center',
+		justifyContent: 'space-between',
 		marginBottom: spacing.xl,
+		gap: spacing.md,
+	};
+
+	const headingStyle = {
+		margin: 0,
 		fontSize: '1.75rem',
 		fontWeight: fontWeight.semibold,
 		color: colors.text,
-	};
-
-	const layoutStyle = {
-		display: 'flex',
-		gap: spacing.xl,
-		alignItems: 'flex-start',
-	};
-
-	const mainContentStyle = {
 		flex: 1,
-		minWidth: 0, // Prevents flex item from overflowing
-	};
-
-	const sidebarStyle = {
-		width: '300px',
-		flexShrink: 0,
-	};
-
-	const sidebarContentStyle = {
-		...createFlexStyle( 'column', spacing.lg ),
-		position: 'sticky',
-		top: spacing.lg,
 	};
 
 	const sectionsStyle = {
 		...createFlexStyle( 'column', spacing.lg ),
 	};
 
-	const buttonStyle = {
-		width: '100%',
-		borderRadius: borderRadius.md,
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
+	const exportButtonStyle = {
+		fontSize: fontSize.lg,
 		fontWeight: fontWeight.semibold,
-		fontSize: '1rem',
+		padding: `${ spacing.md } ${ spacing.xl }`,
+		borderRadius: borderRadius.md,
+		backgroundColor: colors.success,
+		borderColor: colors.success,
 		color: colors.white,
 	};
 
 	return (
 		<div className="aether-admin-settings" style={ containerStyle }>
-			<h1
-				className="aether-admin-settings__heading"
-				style={ headingStyle }
+			<div
+				className="aether-admin-settings__header"
+				style={ headerStyle }
 			>
-				{ __(
-					'Aether Site Exporter Settings',
-					'aether-site-exporter'
-				) }
-			</h1>
+				<h1
+					className="aether-admin-settings__heading"
+					style={ headingStyle }
+				>
+					{ __(
+						'Aether Site Exporter Settings',
+						'aether-site-exporter'
+					) }
+				</h1>
+				<Button
+					className="aether-admin-settings__export-button"
+					variant="primary"
+					onClick={ () => setIsExportModalOpen( true ) }
+					style={ exportButtonStyle }
+				>
+					{ __( 'Export Site', 'aether-site-exporter' ) }
+				</Button>
+			</div>
 
 			<div
-				className="aether-admin-settings__layout"
-				style={ layoutStyle }
+				className="aether-admin-settings__sections"
+				style={ sectionsStyle }
 			>
-				{ /* Main Content */ }
-				<div
-					className="aether-admin-settings__main"
-					style={ mainContentStyle }
+				<Notice
+					className="aether-admin-settings__notice aether-admin-settings__notice--info"
+					status="info"
+					isDismissible={ false }
 				>
-					<div
-						className="aether-admin-settings__sections"
-						style={ sectionsStyle }
+					{ __(
+						'Aether Site Exporter allows you to export your WordPress site as a complete package.',
+						'aether-site-exporter'
+					) }
+				</Notice>
+
+				{ /* Dynamic notices */ }
+				{ notices.map( ( notice ) => (
+					<Notice
+						key={ notice.id }
+						className={ `aether-admin-settings__notice aether-admin-settings__notice--${ notice.status }` }
+						status={ notice.status }
+						isDismissible={ notice.isDismissible }
+						onRemove={ () => removeNotice( notice.id ) }
 					>
-						<Notice
-							className="aether-admin-settings__notice aether-admin-settings__notice--info"
-							status="info"
-							isDismissible={ false }
-						>
-							{ __(
-								'Aether Site Exporter allows you to export your WordPress site as a complete package.',
-								'aether-site-exporter'
-							) }
-						</Notice>
+						{ notice.message }
+					</Notice>
+				) ) }
 
-						{ /* Dynamic notices */ }
-						{ notices.map( ( notice ) => (
-							<Notice
-								key={ notice.id }
-								className={ `aether-admin-settings__notice aether-admin-settings__notice--${ notice.status }` }
-								status={ notice.status }
-								isDismissible={ notice.isDismissible }
-								onRemove={ () => removeNotice( notice.id ) }
-							>
-								{ notice.message }
-							</Notice>
-						) ) }
-
-						<ProviderSettings
-							providerConfigs={ providerConfigs }
-							onConfigsUpdate={ handleConfigsUpdate }
-							onNotice={ addNotice }
-						/>
-					</div>
-				</div>
-
-				{ /* Sidebar */ }
-				<div
-					className="aether-admin-settings__sidebar"
-					style={ sidebarStyle }
-				>
-					<div
-						className="aether-admin-settings__sidebar-content"
-						style={ sidebarContentStyle }
-					>
-						<Button
-							className="aether-admin-settings__export-button"
-							variant="primary"
-							onClick={ () => setIsExportModalOpen( true ) }
-							style={ buttonStyle }
-						>
-							{ __( 'Export Site', 'aether-site-exporter' ) }
-						</Button>
-					</div>
-				</div>
+				<ProviderSettings
+					providerConfigs={ providerConfigs }
+					onConfigsUpdate={ handleConfigsUpdate }
+					onNotice={ addNotice }
+				/>
 			</div>
 
 			<PublishProgressModal
