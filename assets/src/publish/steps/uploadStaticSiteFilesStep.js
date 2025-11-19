@@ -104,9 +104,12 @@ export async function uploadStaticSiteFilesHandler( context ) {
 		}
 	);
 
-	// Upload to ALL providers in parallel
-	// CRITICAL: Each provider needs its own deployment URL for HTML rewriting
-	const uploadPromises = providers.map( async ( providerIdItem ) => {
+	// IMPORTANT: To avoid race conditions when multiple providers fetch the same URLs,
+	// we need to run providers sequentially, not in parallel.
+	// This ensures each provider gets a complete set of files without interference.
+	const uploadResults = [];
+
+	for ( const providerIdItem of providers ) {
 		try {
 			// Fetch provider-specific deployment URL
 			// Each provider may have a different public URL (e.g., custom domain, worker endpoint)
@@ -149,22 +152,29 @@ export async function uploadStaticSiteFilesHandler( context ) {
 				removeMessage
 			);
 
-			return {
-				providerId: providerIdItem,
-				success: true,
-				filesUploaded: result.filesUploaded || 0,
-				uploadedFiles: result.uploadedFiles || [],
-			};
+			uploadResults.push( {
+				status: 'fulfilled',
+				value: {
+					providerId: providerIdItem,
+					success: true,
+					filesUploaded: result.filesUploaded || 0,
+					uploadedFiles: result.uploadedFiles || [],
+				}
+			} );
 		} catch ( error ) {
-			return {
-				providerId: providerIdItem,
-				success: false,
-				error: error.message,
-			};
+			uploadResults.push( {
+				status: 'rejected',
+				value: {
+					providerId: providerIdItem,
+					success: false,
+					error: error.message,
+				}
+			} );
 		}
-	} );
+	}
 
-	const results = await Promise.allSettled( uploadPromises );
+	// Use the uploadResults array we built sequentially
+	const results = uploadResults;
 
 	// Aggregate results
 	const successfulUploads = results.filter(

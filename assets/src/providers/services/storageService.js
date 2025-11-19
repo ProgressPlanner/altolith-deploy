@@ -206,7 +206,10 @@ export class StorageService {
 	 * @return {Promise<Blob|null>} Manifest blob or null if not found.
 	 */
 	async downloadManifest() {
-		const manifestKey = 'file-manifest.json';
+		// Use provider-specific manifest filename to ensure isolation between providers
+		const manifestKey = this.providerId
+			? `file-manifest-${ this.providerId }.json`
+			: 'file-manifest.json';
 		const prefixedManifestKey = this._prefixKey( manifestKey );
 
 		try {
@@ -229,7 +232,10 @@ export class StorageService {
 	 * @return {Promise<Object>} Result with success and optional error.
 	 */
 	async uploadManifest( blob ) {
-		const manifestKey = 'file-manifest.json';
+		// Use provider-specific manifest filename to ensure isolation between providers
+		const manifestKey = this.providerId
+			? `file-manifest-${ this.providerId }.json`
+			: 'file-manifest.json';
 
 		const result = await this.upload( manifestKey, blob, {
 			contentType: 'application/json',
