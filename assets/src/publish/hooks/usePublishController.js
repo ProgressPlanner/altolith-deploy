@@ -301,39 +301,44 @@ export function usePublishController( publishState ) {
 			// Get providerId for backwards compatibility
 			const providerId = fetchedStaticSiteProviderId || storageProviderId;
 
-			// Fetch providers for each deployment type from REST API (PHP registry)
-			const getProvidersForDeploymentType = async ( deploymentType ) => {
+			// Get enabled provider instances for each deployment type from settings
+			const getEnabledInstancesForDeploymentType = ( deploymentType ) => {
 				try {
-					const response = await apiFetch( {
-						path: `/aether/site-exporter/providers/by-deployment-type/${ deploymentType }`,
-					} );
-					if ( response.success && response.providers ) {
-						// Return array of provider IDs
-						return response.providers.map( ( p ) => p.id );
-					}
+					// Get all provider configs from settings
+					const providerConfigs = settingsResponse.settings?.providers || {};
+
+					// Filter enabled instances that support this deployment type
+					return Object.entries( providerConfigs )
+						.filter( ( [ instanceId, config ] ) => {
+							// Check if enabled (default to true if not specified)
+							const isEnabled = config.enabled !== false;
+
+							// Check if supports this deployment type
+							const deploymentTypes = config.deployment_types || [];
+							const supportsType = deploymentTypes.includes( deploymentType );
+
+							return isEnabled && supportsType;
+						} )
+						.map( ( [ instanceId ] ) => instanceId );
 				} catch ( error ) {
 					debugError(
-						`Failed to fetch providers for deployment type ${ deploymentType }:`,
+						`Failed to get instances for deployment type ${ deploymentType }:`,
 						error
 					);
+					return [];
 				}
-				return [];
 			};
 
-			// Get arrays of providers for each deployment type (in parallel)
-			const [
-				staticSiteProviders,
-				blueprintBundleProviders,
-				edgeFunctionProviders,
-			] = await Promise.all( [
-				getProvidersForDeploymentType( DEPLOYMENT_TYPES.STATIC_SITE ),
-				getProvidersForDeploymentType(
-					DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE
-				),
-				getProvidersForDeploymentType(
-					DEPLOYMENT_TYPES.EDGE_FUNCTIONS
-				),
-			] );
+			// Get arrays of instance IDs for each deployment type
+			const staticSiteProviders = getEnabledInstancesForDeploymentType(
+				DEPLOYMENT_TYPES.STATIC_SITE
+			);
+			const blueprintBundleProviders = getEnabledInstancesForDeploymentType(
+				DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE
+			);
+			const edgeFunctionProviders = getEnabledInstancesForDeploymentType(
+				DEPLOYMENT_TYPES.EDGE_FUNCTIONS
+			);
 
 			debug( '[Workflow] Providers by deployment type:', {
 				staticSite: staticSiteProviders,
