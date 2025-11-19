@@ -7,9 +7,10 @@
  * @package
  */
 
-import { useState, useEffect } from '@wordpress/element';
+import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
 import { Button, Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import { doAction } from '@wordpress/hooks';
 import apiFetch from '../../utils/api';
 import { validateConfig } from '../../utils/validation';
 import ProviderField from './ProviderField';
@@ -70,13 +71,18 @@ export default function ProviderForm( {
 	const [ error, setError ] = useState( null );
 	const { showSuccess, clearSuccess } = useSuccessTimeout();
 
+	// Refs for hook container elements
+	const beforeFieldsRef = useRef( null );
+	const afterFieldsRef = useRef( null );
+	const actionsRef = useRef( null );
+
 	// Update values when initialValues change
 	useEffect( () => {
 		setValues( initializeValues() );
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [ initialValues ] );
 
-	const handleFieldChange = ( fieldId, value ) => {
+	const handleFieldChange = useCallback( ( fieldId, value ) => {
 		const newValues = {
 			...values,
 			[ fieldId ]: value,
@@ -91,7 +97,33 @@ export default function ProviderForm( {
 		if ( onChange ) {
 			onChange( newValues );
 		}
-	};
+	}, [ values, onChange, clearSuccess ] );
+
+	// Trigger hooks when values or other state changes
+	useEffect( () => {
+		const hookContext = {
+			providerId,
+			values,
+			onChange: handleFieldChange,
+			errors,
+			saving,
+		};
+
+		// Trigger before_fields hook
+		if ( beforeFieldsRef.current ) {
+			doAction( 'aether.provider.form.before_fields', hookContext );
+		}
+
+		// Trigger after_fields hook
+		if ( afterFieldsRef.current ) {
+			doAction( 'aether.provider.form.after_fields', hookContext );
+		}
+
+		// Trigger actions hook
+		if ( actionsRef.current ) {
+			doAction( 'aether.provider.form.actions', hookContext );
+		}
+	}, [ providerId, values, handleFieldChange, errors, saving ] );
 
 	const handleSubmit = async ( e ) => {
 		e.preventDefault();
@@ -229,12 +261,22 @@ export default function ProviderForm( {
 				</Notice>
 			) }
 
+			{ /* Hook: before_fields */ }
+			<div
+				ref={ beforeFieldsRef }
+				className="aether-provider-form__before-fields"
+				data-provider-id={ providerId }
+			/>
+
 			{ fields.map( ( field ) => {
 				// Determine if field should be hidden
 				let isHidden = false;
 
 				// Always hide deployment_types field (managed in sidebar)
 				if ( field.name === 'deployment_types' ) {
+					isHidden = true;
+				} else if ( field.hidden === true ) {
+					// Hide fields marked as hidden in provider settings
 					isHidden = true;
 				} else if ( field.deploymentType ) {
 					// Hide fields with deploymentType if that type is not in current deployment_types
@@ -261,6 +303,13 @@ export default function ProviderForm( {
 				);
 			} ) }
 
+			{ /* Hook: after_fields */ }
+			<div
+				ref={ afterFieldsRef }
+				className="aether-provider-form__after-fields"
+				data-provider-id={ providerId }
+			/>
+
 			<div
 				className="aether-provider-form__actions"
 				style={ actionsStyle }
@@ -276,6 +325,13 @@ export default function ProviderForm( {
 						? __( 'Saving…', 'aether-site-exporter' )
 						: __( 'Save Settings', 'aether-site-exporter' ) }
 				</Button>
+
+				{ /* Hook: actions */ }
+				<div
+					ref={ actionsRef }
+					className="aether-provider-form__actions-hook"
+					data-provider-id={ providerId }
+				/>
 			</div>
 		</form>
 	);
