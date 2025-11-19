@@ -318,17 +318,8 @@ export default function ProviderSettings( {
 		setIsModalOpen( false );
 		// Clear selected provider to unmount the modal immediately
 		setSelectedProvider( null );
-		// Reload configs to get latest values after a short delay
-		// This ensures the modal is fully closed before reloading
-		setTimeout( () => {
-			apiFetch( {
-				path: '/aether/site-exporter/settings?key=providers',
-			} ).then( ( response ) => {
-				if ( response.success && response.value && onConfigsUpdate ) {
-					onConfigsUpdate( response.value );
-				}
-			} );
-		}, 100 );
+		// No need to reload configs since the modal doesn't modify them
+		// The configs are already current from sidebar changes
 	};
 
 	if ( loading ) {
