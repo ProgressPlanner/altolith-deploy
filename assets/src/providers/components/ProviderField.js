@@ -46,6 +46,14 @@ export default function ProviderField( {
 	const error = errors?.[ id ];
 	const help = error || description;
 
+	// Password manager prevention attributes for all text inputs
+	const passwordManagerPreventionAttrs = {
+		autoComplete: 'off',
+		'data-lpignore': 'true',
+		'data-1p-ignore': 'true',
+		'data-form-type': 'other',
+	};
+
 	// Base style for field wrapper
 	const fieldWrapperStyle = {
 		display: isHidden ? 'none' : undefined,
@@ -221,6 +229,7 @@ export default function ProviderField( {
 					onChange={ ( newValue ) => onChange( id, newValue ) }
 					placeholder={ placeholder }
 					required={ required }
+					{ ...passwordManagerPreventionAttrs }
 				/>
 			</div>
 		);
@@ -245,6 +254,7 @@ export default function ProviderField( {
 					required={ required }
 					__next40pxDefaultSize={ true }
 					__nextHasNoMarginBottom={ true }
+					{ ...passwordManagerPreventionAttrs }
 				/>
 			</div>
 		);
@@ -269,6 +279,7 @@ export default function ProviderField( {
 					required={ required }
 					__next40pxDefaultSize={ true }
 					__nextHasNoMarginBottom={ true }
+					{ ...passwordManagerPreventionAttrs }
 				/>
 			</div>
 		);
@@ -293,6 +304,7 @@ export default function ProviderField( {
 					required={ required }
 					__next40pxDefaultSize={ true }
 					__nextHasNoMarginBottom={ true }
+					{ ...passwordManagerPreventionAttrs }
 				/>
 			</div>
 		);
@@ -315,6 +327,7 @@ export default function ProviderField( {
 				required={ required }
 				__next40pxDefaultSize={ true }
 				__nextHasNoMarginBottom={ true }
+				{ ...passwordManagerPreventionAttrs }
 			/>
 		</div>
 	);
