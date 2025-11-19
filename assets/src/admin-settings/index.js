@@ -30,6 +30,10 @@ import { render } from '@wordpress/element';
 import AdminSettings from './AdminSettings';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { PublishProvider } from '../contexts/PublishContext';
+import { initializeErrorHandlers } from '../utils/errorHandler';
+
+// Initialize global error handlers
+initializeErrorHandlers();
 
 // Providers are registered via PHP using the 'aether_providers' filter.
 // JavaScript providers register implementation hooks (aether.provider.upload, aether.provider.test, etc.).
