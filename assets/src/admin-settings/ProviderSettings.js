@@ -36,6 +36,95 @@ export default function ProviderSettings( {
 	const [ filterType, setFilterType ] = useState( 'all' );
 	const configs = providerConfigs;
 
+	// Continuous reactive dependency validation
+	// Automatically disable providers if their dependencies become unsatisfied
+	useEffect( () => {
+		if ( providers.length === 0 || Object.keys( configs ).length === 0 ) {
+			return;
+		}
+
+		const validateAndDisableProviders = async () => {
+			const { areAllDependenciesSatisfied } = await import(
+				'./utils/dependencyValidation'
+			);
+
+			// Check all providers for unsatisfied dependencies
+			const providersToDisable = [];
+			const updatedConfigs = { ...configs };
+
+			providers.forEach( ( provider ) => {
+				const providerConfig = configs[ provider.id ] || {};
+				const isEnabled = providerConfig.enabled !== false;
+
+				// Only check enabled providers
+				if ( isEnabled ) {
+					const allDependenciesSatisfied =
+						areAllDependenciesSatisfied(
+							provider,
+							providers,
+							configs
+						);
+
+					if ( ! allDependenciesSatisfied ) {
+						// Mark for disabling
+						providersToDisable.push( provider.id );
+						updatedConfigs[ provider.id ] = {
+							...providerConfig,
+							enabled: false,
+						};
+					}
+				}
+			} );
+
+			// If any providers need to be disabled, save the updated configs
+			if ( providersToDisable.length > 0 ) {
+				try {
+					// Get current providers settings
+					const settingsResponse = await apiFetch( {
+						path: '/aether/site-exporter/settings?key=providers',
+					} );
+
+					if ( settingsResponse.success ) {
+						const currentProviders = settingsResponse.value || {};
+						const updatedProviders = {
+							...currentProviders,
+						};
+
+						// Update disabled providers
+						providersToDisable.forEach( ( providerId ) => {
+							updatedProviders[ providerId ] = {
+								...updatedProviders[ providerId ],
+								enabled: false,
+							};
+						} );
+
+						// Save updated providers object
+						const saveResponse = await apiFetch( {
+							path: '/aether/site-exporter/settings',
+							method: 'POST',
+							data: {
+								key: 'providers',
+								value: updatedProviders,
+							},
+						} );
+
+						if ( saveResponse.success && onConfigsUpdate ) {
+							onConfigsUpdate( updatedProviders );
+						}
+					}
+				} catch ( error ) {
+					console.error(
+						'Failed to disable providers with unsatisfied dependencies:',
+						error
+					);
+				}
+			}
+		};
+
+		validateAndDisableProviders();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [ JSON.stringify( configs ), providers.length ] );
+
 	// Reload providers when deployment types change (to get updated settings fields)
 	// Extract deployment types from configs to watch for changes
 	const deploymentTypesByProvider = Object.keys( configs ).reduce(
@@ -69,6 +158,7 @@ export default function ProviderSettings( {
 								supportedDeploymentTypes:
 									provider.deployment_types || [],
 								type: provider.type,
+								dependencies: provider.dependencies || [],
 								icon: '',
 							},
 							settingsFields: (
@@ -231,6 +321,51 @@ export default function ProviderSettings( {
 
 	const handleToggleProvider = async ( providerId, enabled ) => {
 		try {
+			// If enabling, check dependencies first
+			if ( enabled ) {
+				const provider = providers.find( ( p ) => p.id === providerId );
+				if ( provider ) {
+					const {
+						areAllDependenciesSatisfied,
+						getUnsatisfiedDependencies,
+					} = await import( './utils/dependencyValidation' );
+
+					const allDependenciesSatisfied =
+						areAllDependenciesSatisfied(
+							provider,
+							providers,
+							configs
+						);
+
+					if ( ! allDependenciesSatisfied ) {
+						const unsatisfied = getUnsatisfiedDependencies(
+							provider,
+							providers,
+							configs
+						);
+						const dependencyNames = unsatisfied
+							.map( ( depId ) => {
+								const depProvider = providers.find(
+									( p ) => p.id === depId
+								);
+								return depProvider?.name || depId;
+							} )
+							.join( ', ' );
+
+						// eslint-disable-next-line no-alert
+						alert(
+							// eslint-disable-next-line @wordpress/i18n-no-variables
+							__(
+								'Cannot enable provider: Missing required dependencies: ' +
+									dependencyNames,
+								'aether-site-exporter'
+							)
+						);
+						return;
+					}
+				}
+			}
+
 			// Get current config for this provider
 			const currentConfig = configs[ providerId ] || {};
 
@@ -457,6 +592,8 @@ export default function ProviderSettings( {
 								onConfigure={ () =>
 									handleConfigureProvider( provider )
 								}
+								allProviders={ providers }
+								allProviderConfigs={ configs }
 							/>
 						);
 					} ) }
