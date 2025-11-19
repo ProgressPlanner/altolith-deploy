@@ -34,6 +34,27 @@ export class StorageService {
 		this.jobId = jobId;
 		this.config = config;
 		this.baseUrl = config.public_url || config.base_url || '';
+		this.providerId = config.provider_id || null;
+	}
+
+	/**
+	 * Add provider prefix to a storage key.
+	 *
+	 * Ensures isolated storage paths for each provider.
+	 * Example: 'static/index.html' → 'cloudflare-r2/static/index.html'
+	 *
+	 * @param {string} key Original storage key.
+	 * @return {string} Prefixed storage key.
+	 */
+	_prefixKey( key ) {
+		if ( ! this.providerId ) {
+			return key;
+		}
+		// Don't double-prefix
+		if ( key.startsWith( this.providerId + '/' ) ) {
+			return key;
+		}
+		return `${ this.providerId }/${ key }`;
 	}
 
 	/**
@@ -59,7 +80,8 @@ export class StorageService {
 			jobId: this.jobId,
 		};
 
-		const result = await uploadFile( this.staticPath, key, file, options );
+		const prefixedKey = this._prefixKey( key );
+		const result = await uploadFile( this.staticPath, prefixedKey, file, options );
 
 		if ( ! result.success ) {
 			return result;
@@ -81,7 +103,8 @@ export class StorageService {
 	 * @return {Promise<Object>} Result array with 'success' and optional 'error'.
 	 */
 	async delete( key ) {
-		return deleteFile( this.staticPath, key, { jobId: this.jobId } );
+		const prefixedKey = this._prefixKey( key );
+		return deleteFile( this.staticPath, prefixedKey, { jobId: this.jobId } );
 	}
 
 	/**
@@ -92,7 +115,9 @@ export class StorageService {
 	 * @return {Promise<Object>} Result array with 'success' and optional 'error'.
 	 */
 	async copy( sourceKey, destKey ) {
-		return copyFile( this.staticPath, sourceKey, destKey );
+		const prefixedSourceKey = this._prefixKey( sourceKey );
+		const prefixedDestKey = this._prefixKey( destKey );
+		return copyFile( this.staticPath, prefixedSourceKey, prefixedDestKey );
 	}
 
 	/**
@@ -117,7 +142,8 @@ export class StorageService {
 	 * @return {Promise<Object>} Result array with 'success', 'objects' array, and optional 'error'.
 	 */
 	async listObjects( prefix = '', limit = 1000 ) {
-		return listObjectsFromAdapter( this.staticPath, prefix, limit );
+		const prefixedPrefix = this._prefixKey( prefix );
+		return listObjectsFromAdapter( this.staticPath, prefixedPrefix, limit );
 	}
 
 	/**
@@ -164,11 +190,12 @@ export class StorageService {
 	 */
 	async downloadManifest() {
 		const manifestKey = 'file-manifest.json';
+		const prefixedManifestKey = this._prefixKey( manifestKey );
 
 		try {
 			const blob = await downloadFileFromAdapter(
 				this.staticPath,
-				manifestKey,
+				prefixedManifestKey,
 				{ jobId: this.jobId }
 			);
 			return blob;
