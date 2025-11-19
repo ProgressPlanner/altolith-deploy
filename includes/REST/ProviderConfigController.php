@@ -250,6 +250,11 @@ class ProviderConfigController
 				continue;
 			}
 
+			// Skip hidden fields - they're not editable and shouldn't be saved from form submissions
+			if (isset($field['hidden']) && $field['hidden'] === true) {
+				continue;
+			}
+
 			// Handle nested field names like 'foo[bar]'.
 			if (\preg_match('/^([^[]+)\[([^\]]+)\]$/', $fieldName, $matches)) {
 				$parentKey = $matches[1];

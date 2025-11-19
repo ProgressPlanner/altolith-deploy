@@ -95,11 +95,17 @@ class ProviderRegistry
 	/**
 	 * Get a provider by ID.
 	 *
+	 * Re-discovers providers to ensure all providers registered via the filter
+	 * are included, even if they were registered after the registry was first
+	 * instantiated.
+	 *
 	 * @param string $providerId Provider ID
 	 * @return BaseProvider|null Provider instance or null if not found
 	 */
 	public function get(string $providerId): ?BaseProvider
 	{
+		// Re-discover providers to catch any that were registered after initial discovery
+		$this->discoverProviders();
 		return $this->providers[$providerId] ?? null;
 	}
 
@@ -132,11 +138,17 @@ class ProviderRegistry
 	/**
 	 * Get providers that support a specific deployment type.
 	 *
+	 * Re-discovers providers to ensure all providers registered via the filter
+	 * are included, even if they were registered after the registry was first
+	 * instantiated.
+	 *
 	 * @param string $deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
 	 * @return array<BaseProvider> Array of providers that support the deployment type
 	 */
 	public function getByDeploymentType(string $deploymentType): array
 	{
+		// Re-discover providers to catch any that were registered after initial discovery
+		$this->discoverProviders();
 		$supported = [];
 		foreach ($this->providers as $provider) {
 			if (\in_array($deploymentType, $provider->getDeploymentTypes(), true)) {
@@ -149,6 +161,10 @@ class ProviderRegistry
 	/**
 	 * Get default provider.
 	 *
+	 * Re-discovers providers to ensure all providers registered via the filter
+	 * are included, even if they were registered after the registry was first
+	 * instantiated.
+	 *
 	 * Returns the first provider that supports static_site deployment,
 	 * or the first registered provider if none found.
 	 *
@@ -156,6 +172,8 @@ class ProviderRegistry
 	 */
 	public function getDefault(): ?BaseProvider
 	{
+		// Re-discover providers to catch any that were registered after initial discovery
+		$this->discoverProviders();
 		// Try to get provider for static_site deployment first
 		$staticSiteProviders = $this->getByDeploymentType('static_site');
 		if (! empty($staticSiteProviders)) {
@@ -187,11 +205,17 @@ class ProviderRegistry
 	/**
 	 * Check if a provider is registered.
 	 *
+	 * Re-discovers providers to ensure all providers registered via the filter
+	 * are included, even if they were registered after the registry was first
+	 * instantiated.
+	 *
 	 * @param string $providerId Provider ID
 	 * @return bool True if registered
 	 */
 	public function has(string $providerId): bool
 	{
+		// Re-discover providers to catch any that were registered after initial discovery
+		$this->discoverProviders();
 		return isset($this->providers[$providerId]);
 	}
 
