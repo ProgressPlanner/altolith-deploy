@@ -76,7 +76,16 @@ class ProvidersController
 
 		$metadata = [];
 		foreach ($providers as $provider) {
-			$metadata[] = $this->getProviderMetadata($provider);
+			try {
+				$metadata[] = $this->getProviderMetadata($provider);
+			} catch (\Throwable $e) {
+				// Log error but continue processing other providers
+				\error_log(\sprintf(
+					'Aether: Error getting metadata for provider %s: %s',
+					$provider->getId(),
+					$e->getMessage()
+				));
+			}
 		}
 
 		return new WP_REST_Response(

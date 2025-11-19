@@ -61,14 +61,13 @@ class ProviderRegistry
 	/**
 	 * Discover and register all providers via filter.
 	 *
+	 * Can be called multiple times to discover providers registered after
+	 * initial discovery. Duplicate providers (same ID) are skipped.
+	 *
 	 * @return void
 	 */
 	private function discoverProviders(): void
 	{
-		if ($this->discovered) {
-			return;
-		}
-
 		/**
 		 * Filter to register providers.
 		 *
@@ -79,7 +78,11 @@ class ProviderRegistry
 
 		foreach ($providers as $provider) {
 			if ($provider instanceof BaseProvider) {
-				$this->register($provider);
+				// Only register if not already registered (prevent duplicates)
+				$providerId = $provider->getId();
+				if (! isset($this->providers[$providerId])) {
+					$this->register($provider);
+				}
 			}
 		}
 
@@ -112,10 +115,16 @@ class ProviderRegistry
 	/**
 	 * Get all registered providers.
 	 *
+	 * Re-discovers providers if not yet discovered to ensure all providers
+	 * registered via the filter are included, even if they were registered
+	 * after the registry was first instantiated.
+	 *
 	 * @return array<string, BaseProvider> Array of provider instances keyed by ID
 	 */
 	public function getAll(): array
 	{
+		// Re-discover providers to catch any that were registered after initial discovery
+		$this->discoverProviders();
 		return $this->providers;
 	}
 
