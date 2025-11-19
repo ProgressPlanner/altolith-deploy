@@ -7,6 +7,7 @@
  * @package
  */
 
+import { memo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button, ToggleControl } from '@wordpress/components';
 import { colors, spacing, fontWeight, borderRadius } from '../../utils/styles';
@@ -29,7 +30,7 @@ import {
  * @param {Object}   props.allProviderConfigs Object mapping all provider IDs to configs.
  * @return {JSX.Element} Rendered card component.
  */
-export default function ProviderCard( {
+function ProviderCard( {
 	provider,
 	config = {},
 	enabled = false,
@@ -298,3 +299,15 @@ export default function ProviderCard( {
 		</div>
 	);
 }
+
+// Memoize component to prevent unnecessary re-renders when parent updates
+// Only re-render if provider.id, config, enabled, or dependencies change
+export default memo( ProviderCard, ( prevProps, nextProps ) => {
+	return (
+		prevProps.provider.id === nextProps.provider.id &&
+		JSON.stringify( prevProps.config ) ===
+			JSON.stringify( nextProps.config ) &&
+		prevProps.enabled === nextProps.enabled &&
+		prevProps.allProviders.length === nextProps.allProviders.length
+	);
+} );

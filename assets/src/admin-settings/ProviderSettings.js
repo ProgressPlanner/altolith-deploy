@@ -8,7 +8,7 @@
  * @package
  */
 
-import { useState, useEffect } from '@wordpress/element';
+import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Spinner, SearchControl } from '@wordpress/components';
 import ProviderCard from './components/ProviderCard';
@@ -152,7 +152,7 @@ export default function ProviderSettings( {
 		return config && Object.keys( config ).length > 0;
 	} ).length;
 
-	const handleToggleProvider = async ( providerId, enabled ) => {
+	const handleToggleProvider = useCallback( async ( providerId, enabled ) => {
 		try {
 			// If enabling, check dependencies first
 			if ( enabled ) {
@@ -208,9 +208,9 @@ export default function ProviderSettings( {
 		} catch ( error ) {
 			console.error( 'Failed to toggle provider:', error );
 		}
-	};
+	}, [ providers, configs, toggleProviderEnabled, onConfigsUpdate ] );
 
-	const handleConfigureProvider = async ( provider ) => {
+	const handleConfigureProvider = useCallback( async ( provider ) => {
 		// Reload provider metadata to get updated settings fields based on current deployment types
 		try {
 			const providerResponse = await apiFetch( {
@@ -241,15 +241,15 @@ export default function ProviderSettings( {
 			setSelectedProvider( provider );
 			setIsModalOpen( true );
 		}
-	};
+	}, [] );
 
-	const handleModalClose = () => {
+	const handleModalClose = useCallback( () => {
 		setIsModalOpen( false );
 		// Clear selected provider to unmount the modal immediately
 		setSelectedProvider( null );
 		// No need to reload configs since the modal doesn't modify them
 		// The configs are already current from sidebar changes
-	};
+	}, [] );
 
 	if ( loading ) {
 		return (

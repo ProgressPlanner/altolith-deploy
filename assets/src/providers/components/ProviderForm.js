@@ -7,7 +7,7 @@
  * @package
  */
 
-import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
+import { useState, useEffect, useRef, useCallback, memo } from '@wordpress/element';
 import { Button, Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
@@ -28,7 +28,7 @@ import { colors, spacing, createFlexStyle } from '../../utils/styles';
  * @param {Function} props.onChange      Optional change handler.
  * @return {JSX.Element} Rendered form component.
  */
-export default function ProviderForm( {
+function ProviderForm( {
 	providerId,
 	fields = [],
 	initialValues = {},
@@ -336,3 +336,14 @@ export default function ProviderForm( {
 		</form>
 	);
 }
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-render if providerId, fields array length, or initialValues change
+export default memo( ProviderForm, ( prevProps, nextProps ) => {
+	return (
+		prevProps.providerId === nextProps.providerId &&
+		prevProps.fields.length === nextProps.fields.length &&
+		JSON.stringify( prevProps.initialValues ) ===
+			JSON.stringify( nextProps.initialValues )
+	);
+} );

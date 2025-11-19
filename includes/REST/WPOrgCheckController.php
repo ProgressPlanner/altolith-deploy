@@ -17,7 +17,6 @@
 
 namespace Aether\SiteExporter\REST;
 
-use WP_REST_Controller;
 use WP_REST_Server;
 use WP_Error;
 use WP_REST_Request;
@@ -30,21 +29,9 @@ use WP_REST_Response;
  *
  * @since 1.0.0
  */
-class WPOrgCheckController extends WP_REST_Controller
+class WPOrgCheckController
 {
-	/**
-	 * Namespace for REST routes
-	 *
-	 * @var string
-	 */
-	protected $namespace = 'aether/site-exporter';
-
-	/**
-	 * REST base for this controller
-	 *
-	 * @var string
-	 */
-	protected $rest_base = 'check-wporg';
+	use RESTHelpersTrait;
 
 	/**
 	 * Register routes
@@ -54,13 +41,13 @@ class WPOrgCheckController extends WP_REST_Controller
 	public function registerRoutes(): void
 	{
 		\register_rest_route(
-			$this->namespace,
-			'/' . $this->rest_base,
+			$this->getNamespace(),
+			'/check-wporg',
 			[
 				[
 					'methods'             => WP_REST_Server::READABLE,
 					'callback'            => [ $this, 'checkItem' ],
-					'permission_callback' => [ $this, 'checkPermissions' ],
+					'permission_callback' => [ $this, 'permissionCheck' ],
 					'args'                => $this->getCheckParams(),
 				],
 			]
@@ -236,21 +223,6 @@ class WPOrgCheckController extends WP_REST_Controller
 			'message'     => 'Unexpected response from WordPress.org API',
 			'statusCode'  => $responseCode,
 		];
-	}
-
-	/**
-	 * Check permissions
-	 *
-	 * Require user to be logged in.
-	 * WordPress.org data is public, but we require authentication to prevent abuse.
-	 *
-	 * @param WP_REST_Request $request Full details about the request.
-	 * @return bool True if user is logged in.
-	 */
-	public function checkPermissions($request): bool
-	{
-		// Security: Require manage_options to prevent abuse and DoS attacks
-		return \current_user_can('manage_options');
 	}
 
 	/**
