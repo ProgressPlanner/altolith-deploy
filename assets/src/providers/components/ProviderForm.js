@@ -401,6 +401,7 @@ function ProviderForm( {
 									'Advanced settings',
 									'aether-site-exporter'
 								) }
+								hasInnerWrapper={ false }
 							>
 								{ advancedFields.map( ( field ) => {
 									const isHidden = isFieldHidden( field );
