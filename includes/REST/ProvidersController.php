@@ -219,6 +219,10 @@ class ProvidersController
 			if (isset($field['hidden'])) {
 				$fieldData['hidden'] = (bool) $field['hidden'];
 			}
+			// Include is_advanced property if present (defaults to false)
+			if (isset($field['is_advanced'])) {
+				$fieldData['is_advanced'] = (bool) $field['is_advanced'];
+			}
 
 			$settingsFields[] = $fieldData;
 		}
