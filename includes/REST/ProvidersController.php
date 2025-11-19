@@ -231,7 +231,6 @@ class ProvidersController
 			'deployment_types' => $provider->getDeploymentTypes(), // Always return supported types for UI
 			'dependencies' => $provider->getDependencies(), // Provider dependencies (provider IDs)
 			'settings_fields' => $settingsFields,
-			'configured' => $provider->isConfigured(),
 		];
 	}
 }

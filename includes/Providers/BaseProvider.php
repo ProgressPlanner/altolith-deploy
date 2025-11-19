@@ -164,28 +164,6 @@ abstract class BaseProvider
 	}
 
 	/**
-	 * Check if provider is configured.
-	 *
-	 * Default implementation checks if any settings field has a value.
-	 * Providers can override for custom logic.
-	 *
-	 * @return bool True if configured, false otherwise
-	 */
-	public function isConfigured(): bool
-	{
-		$settings = $this->getSettings();
-		foreach ($settings as $field) {
-			if (isset($field['get']) && \is_callable($field['get'])) {
-				$value = \call_user_func($field['get']);
-				if (! empty($value)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * Get provider dependencies.
 	 *
 	 * Returns an array of provider IDs that this provider depends on.
