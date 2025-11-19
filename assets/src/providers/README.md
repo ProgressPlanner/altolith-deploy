@@ -454,13 +454,6 @@ npm run test:js -- providers/local-filesystem
 6. **Add tests:** Create unit tests in `tests/js/providers/`
 7. **Update build config:** Add entry point if needed
 
-### Template (Coming in Phase 2)
-
-```bash
-# Generate new provider from template
-npm run create-provider my-provider
-```
-
 ## Related Documentation
 
 - [Main README](../README.md) - Source code overview
