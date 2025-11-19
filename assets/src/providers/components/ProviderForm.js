@@ -287,7 +287,7 @@ function ProviderForm( {
 			{ ( () => {
 				// Helper function to determine if field should be hidden
 				const isFieldHidden = ( field ) => {
-					// Always hide deployment_types field (managed in sidebar)
+					// Always hide deployment_types field (managed in modal)
 					if ( field.name === 'deployment_types' ) {
 						return true;
 					}
@@ -298,7 +298,7 @@ function ProviderForm( {
 					if ( field.deploymentType ) {
 						// Hide fields with deploymentType if that type is not in current deployment_types
 						// Check both values.deployment_types and initialValues.deployment_types
-						// to handle real-time updates when deployment types change in sidebar
+						// to handle real-time updates when deployment types change in modal
 						const currentDeploymentTypes =
 							values.deployment_types ||
 							initialValues.deployment_types ||
