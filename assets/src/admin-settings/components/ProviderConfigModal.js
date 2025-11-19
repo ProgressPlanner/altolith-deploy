@@ -42,10 +42,6 @@ export default function ProviderConfigModal( {
 	const beforeFormRef = useRef( null );
 	const afterFormRef = useRef( null );
 
-	// Get current deployment types from initialConfig for visibility logic
-	// eslint-disable-next-line camelcase
-	const currentDeploymentTypes = initialConfig.deployment_types || [];
-
 	const handleFormChange = useCallback(
 		( newValues ) => {
 			// Include deployment_types in the merged config
@@ -264,8 +260,16 @@ export default function ProviderConfigModal( {
 			className="aether-provider-config-modal"
 		>
 			{ description && (
-				<div className="aether-provider-config-modal__header" style={ headerStyle }>
-					<p className="aether-provider-config-modal__description" style={ descriptionStyle }>{ description }</p>
+				<div
+					className="aether-provider-config-modal__header"
+					style={ headerStyle }
+				>
+					<p
+						className="aether-provider-config-modal__description"
+						style={ descriptionStyle }
+					>
+						{ description }
+					</p>
 				</div>
 			) }
 
@@ -282,15 +286,24 @@ export default function ProviderConfigModal( {
 
 			{ /* Deployment Types Section */ }
 			{ supportedDeploymentTypes.length > 0 && (
-				<div className="aether-provider-config-modal__deployment-types" style={ deploymentTypesSectionStyle }>
-					<div className="aether-provider-config-modal__deployment-types-title" style={ sectionTitleStyle }>
+				<div
+					className="aether-provider-config-modal__deployment-types"
+					style={ deploymentTypesSectionStyle }
+				>
+					<div
+						className="aether-provider-config-modal__deployment-types-title"
+						style={ sectionTitleStyle }
+					>
 						{ __( 'Deployment Types', 'aether-site-exporter' ) }
 					</div>
-					<p className="aether-provider-config-modal__deployment-types-description" style={ {
-						fontSize: '0.875rem',
-						color: colors.textSecondary,
-						marginBottom: spacing.md,
-					} }>
+					<p
+						className="aether-provider-config-modal__deployment-types-description"
+						style={ {
+							fontSize: '0.875rem',
+							color: colors.textSecondary,
+							marginBottom: spacing.md,
+						} }
+					>
 						{ __(
 							'Select which deployment types this provider instance should handle.',
 							'aether-site-exporter'
@@ -330,9 +343,9 @@ export default function ProviderConfigModal( {
 				fields={ settingsFields }
 				initialValues={ {
 					...config,
-					// Include deployment_types in initialValues for visibility logic
+					// Include deployment_types in initialValues for reactive field visibility
 					// eslint-disable-next-line camelcase
-					deployment_types: currentDeploymentTypes,
+					deployment_types: config.deployment_types || [],
 				} }
 				onChange={ handleFormChange }
 				onSubmit={ handleFormSubmit }

@@ -169,9 +169,17 @@ export default function ProviderInstanceCard( {
 	return (
 		<div className="aether-provider-instance-card" style={ cardStyle }>
 			{ /* Provider Type Tag */ }
-			<div className="aether-provider-instance-card__type-tag" style={ providerTypeTagStyle }>{ provider.name }</div>
+			<div
+				className="aether-provider-instance-card__type-tag"
+				style={ providerTypeTagStyle }
+			>
+				{ provider.name }
+			</div>
 
-			<div className="aether-provider-instance-card__header" style={ headerStyle }>
+			<div
+				className="aether-provider-instance-card__header"
+				style={ headerStyle }
+			>
 				{ isEditing ? (
 					<>
 						<input
@@ -213,7 +221,12 @@ export default function ProviderInstanceCard( {
 						>
 							{ instance.config.instance_name }
 						</div>
-						<span className={`aether-provider-instance-card__status aether-provider-instance-card__status--${instance.config.enabled ? 'enabled' : 'disabled'}`} style={ statusBadgeStyle }>
+						<span
+							className={ `aether-provider-instance-card__status aether-provider-instance-card__status--${
+								instance.config.enabled ? 'enabled' : 'disabled'
+							}` }
+							style={ statusBadgeStyle }
+						>
 							{ instance.config.enabled
 								? __( 'Enabled', 'aether-site-exporter' )
 								: __( 'Disabled', 'aether-site-exporter' ) }
@@ -234,7 +247,10 @@ export default function ProviderInstanceCard( {
 				/>
 			</div>
 
-			<div className="aether-provider-instance-card__actions" style={ actionsStyle }>
+			<div
+				className="aether-provider-instance-card__actions"
+				style={ actionsStyle }
+			>
 				<Button
 					className="aether-provider-instance-card__configure-button"
 					variant="secondary"

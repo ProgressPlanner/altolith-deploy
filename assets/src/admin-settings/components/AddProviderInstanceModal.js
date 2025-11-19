@@ -97,7 +97,10 @@ export default function AddProviderInstanceModal( {
 			onRequestClose={ handleClose }
 			size="medium"
 		>
-			<div className="aether-add-provider-instance-modal__form" style={ formStyle }>
+			<div
+				className="aether-add-provider-instance-modal__form"
+				style={ formStyle }
+			>
 				<SelectControl
 					className="aether-add-provider-instance-modal__provider-select"
 					label={ __( 'Provider Type', 'aether-site-exporter' ) }
@@ -147,8 +150,15 @@ export default function AddProviderInstanceModal( {
 					/>
 				) }
 
-				<div className="aether-add-provider-instance-modal__actions" style={ actionsStyle }>
-					<Button className="aether-add-provider-instance-modal__cancel-button" variant="tertiary" onClick={ handleClose }>
+				<div
+					className="aether-add-provider-instance-modal__actions"
+					style={ actionsStyle }
+				>
+					<Button
+						className="aether-add-provider-instance-modal__cancel-button"
+						variant="tertiary"
+						onClick={ handleClose }
+					>
 						{ __( 'Cancel', 'aether-site-exporter' ) }
 					</Button>
 					<Button

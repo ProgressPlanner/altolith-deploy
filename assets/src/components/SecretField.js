@@ -71,7 +71,10 @@ export default function SecretField( {
 
 	return (
 		<div className="aether-secret-field" style={ containerStyle }>
-			<div className="aether-secret-field__wrapper" style={ inputWrapperStyle }>
+			<div
+				className="aether-secret-field__wrapper"
+				style={ inputWrapperStyle }
+			>
 				<TextControl
 					className="aether-secret-field__input"
 					label={ label }

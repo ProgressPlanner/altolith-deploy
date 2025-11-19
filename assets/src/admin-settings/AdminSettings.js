@@ -109,10 +109,19 @@ export default function AdminSettings() {
 				) }
 			</h1>
 
-			<div className="aether-admin-settings__layout" style={ layoutStyle }>
+			<div
+				className="aether-admin-settings__layout"
+				style={ layoutStyle }
+			>
 				{ /* Main Content */ }
-				<div className="aether-admin-settings__main" style={ mainContentStyle }>
-					<div className="aether-admin-settings__sections" style={ sectionsStyle }>
+				<div
+					className="aether-admin-settings__main"
+					style={ mainContentStyle }
+				>
+					<div
+						className="aether-admin-settings__sections"
+						style={ sectionsStyle }
+					>
 						<Notice
 							className="aether-admin-settings__notice aether-admin-settings__notice--info"
 							status="info"
@@ -132,8 +141,14 @@ export default function AdminSettings() {
 				</div>
 
 				{ /* Sidebar */ }
-				<div className="aether-admin-settings__sidebar" style={ sidebarStyle }>
-					<div className="aether-admin-settings__sidebar-content" style={ sidebarContentStyle }>
+				<div
+					className="aether-admin-settings__sidebar"
+					style={ sidebarStyle }
+				>
+					<div
+						className="aether-admin-settings__sidebar-content"
+						style={ sidebarContentStyle }
+					>
 						<Button
 							className="aether-admin-settings__export-button"
 							variant="primary"

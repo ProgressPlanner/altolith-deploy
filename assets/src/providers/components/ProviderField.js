@@ -122,7 +122,9 @@ export default function ProviderField( {
 			>
 				{ label && (
 					<div className="aether-provider-field__label components-base-control__label">
-						<strong className="aether-provider-field__label-text">{ label }</strong>
+						<strong className="aether-provider-field__label-text">
+							{ label }
+						</strong>
 						{ required && (
 							<span className="aether-provider-field__label-required components-base-control__label__required">
 								*
@@ -131,7 +133,9 @@ export default function ProviderField( {
 					</div>
 				) }
 				{ help && (
-					<p className="aether-provider-field__help components-base-control__help">{ help }</p>
+					<p className="aether-provider-field__help components-base-control__help">
+						{ help }
+					</p>
 				) }
 				{ error && (
 					<p className="aether-provider-field__error aether-provider-field__error--message components-base-control__help components-base-control__help--error">
