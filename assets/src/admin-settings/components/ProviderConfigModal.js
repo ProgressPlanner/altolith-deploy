@@ -37,11 +37,8 @@ export default function ProviderConfigModal( {
 	// Reset config when modal opens/closes or provider changes
 	useEffect( () => {
 		if ( isOpen ) {
-			// Remove deployment_types from config since it's managed in sidebar
-			// eslint-disable-next-line camelcase
-			const { deployment_types, ...configWithoutDeploymentTypes } =
-				initialConfig;
-			setConfig( configWithoutDeploymentTypes );
+			// Keep deployment_types in config for visibility logic, but don't show it in form
+			setConfig( initialConfig );
 			setHasChanges( false );
 			setSaveError( null );
 		} else if ( closeTimeoutRef.current ) {
@@ -58,10 +55,9 @@ export default function ProviderConfigModal( {
 	const { id, metadata, settingsFields } = provider;
 	const { name, description } = metadata;
 
-	// Filter out deployment_types field - it's now managed in the sidebar
-	const filteredSettingsFields = settingsFields.filter(
-		( field ) => field.name !== 'deployment_types'
-	);
+	// Get current deployment types from initialConfig for visibility logic
+	// eslint-disable-next-line camelcase
+	const currentDeploymentTypes = initialConfig.deployment_types || [];
 
 	const headerStyle = {
 		marginBottom: spacing.md,
@@ -82,7 +78,16 @@ export default function ProviderConfigModal( {
 	};
 
 	const handleFormChange = ( newValues ) => {
-		setConfig( newValues );
+		// Preserve deployment_types from current config (it's hidden in form but managed in sidebar)
+		// eslint-disable-next-line camelcase
+		const deploymentTypes = config.deployment_types;
+		setConfig( {
+			...newValues,
+			// eslint-disable-next-line camelcase
+			...( deploymentTypes !== undefined && {
+				deployment_types: deploymentTypes,
+			} ),
+		} );
 		setHasChanges( true );
 	};
 
@@ -108,10 +113,13 @@ export default function ProviderConfigModal( {
 			const deploymentTypes = currentConfig.deployment_types;
 
 			// Merge form values with enabled state and deployment_types
+			// Always preserve deployment_types if it exists in current config (even if empty array)
 			const updatedConfig = {
 				...values,
 				enabled,
-				...( deploymentTypes && { deployment_types: deploymentTypes } ),
+				...( 'deployment_types' in currentConfig
+					? { deployment_types: deploymentTypes }
+					: {} ),
 			};
 
 			// Save with enabled state preserved
@@ -193,8 +201,13 @@ export default function ProviderConfigModal( {
 
 			<ProviderForm
 				providerId={ id }
-				fields={ filteredSettingsFields }
-				initialValues={ config }
+				fields={ settingsFields }
+				initialValues={ {
+					...config,
+					// Include deployment_types in initialValues for visibility logic
+					// eslint-disable-next-line camelcase
+					deployment_types: currentDeploymentTypes,
+				} }
 				onChange={ handleFormChange }
 				onSubmit={ handleFormSubmit }
 			/>

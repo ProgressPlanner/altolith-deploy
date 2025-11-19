@@ -182,16 +182,9 @@ class ProvidersController
 			}
 		}
 
-		// Filter settings fields based on deployment types
+		// Include all settings fields (no filtering - fields will be hidden via CSS)
 		$settingsFields = [];
 		foreach ($settings as $field) {
-			// If field has a deploymentType, only include it if that deployment type is enabled
-			if (isset($field['deploymentType'])) {
-				if (!\in_array($field['deploymentType'], $deploymentTypes, true)) {
-					continue; // Skip this field if its deployment type is not enabled
-				}
-			}
-
 			// Include all field properties needed by the frontend
 			$fieldData = [
 				'type' => $field['type'] ?? 'text',
@@ -217,6 +210,10 @@ class ProvidersController
 			}
 			if (isset($field['sensitive'])) {
 				$fieldData['sensitive'] = $field['sensitive'];
+			}
+			// Include deploymentType property if present (for CSS-based hiding)
+			if (isset($field['deploymentType'])) {
+				$fieldData['deploymentType'] = $field['deploymentType'];
 			}
 
 			$settingsFields[] = $fieldData;

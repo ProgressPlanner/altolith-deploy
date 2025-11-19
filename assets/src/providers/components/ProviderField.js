@@ -22,9 +22,16 @@ import SecretField from '../../components/SecretField';
  * @param {*}        props.value    Current field value.
  * @param {Function} props.onChange Change handler.
  * @param {Object}   props.errors   Validation errors object.
+ * @param {boolean}  props.isHidden Whether field should be hidden via CSS.
  * @return {JSX.Element} Rendered field component.
  */
-export default function ProviderField( { field, value, onChange, errors } ) {
+export default function ProviderField( {
+	field,
+	value,
+	onChange,
+	errors,
+	isHidden = false,
+} ) {
 	const {
 		id,
 		label,
@@ -39,6 +46,11 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 	const error = errors?.[ id ];
 	const help = error || description;
 
+	// Base style for field wrapper
+	const fieldWrapperStyle = {
+		display: isHidden ? 'none' : undefined,
+	};
+
 	// Handle sensitive fields (passwords, API keys, etc.)
 	if ( sensitive || type === 'password' ) {
 		return (
@@ -46,6 +58,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
 				}` }
+				style={ fieldWrapperStyle }
 			>
 				<SecretField
 					label={ label }
@@ -66,6 +79,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
 				}` }
+				style={ fieldWrapperStyle }
 			>
 				<CheckboxControl
 					label={ label }
@@ -96,6 +110,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
 				}` }
+				style={ fieldWrapperStyle }
 			>
 				{ label && (
 					<div className="components-base-control__label">
@@ -174,6 +189,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
 				}` }
+				style={ fieldWrapperStyle }
 			>
 				<SelectControl
 					label={ label }
@@ -196,6 +212,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
 				}` }
+				style={ fieldWrapperStyle }
 			>
 				<TextareaControl
 					label={ label }
@@ -216,6 +233,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
 				}` }
+				style={ fieldWrapperStyle }
 			>
 				<TextControl
 					label={ label }
@@ -239,6 +257,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
 				}` }
+				style={ fieldWrapperStyle }
 			>
 				<TextControl
 					label={ label }
@@ -262,6 +281,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
 				}` }
+				style={ fieldWrapperStyle }
 			>
 				<TextControl
 					label={ label }
@@ -284,6 +304,7 @@ export default function ProviderField( { field, value, onChange, errors } ) {
 			className={ `aether-provider-field aether-provider-field--${ type } ${
 				error ? 'aether-provider-field--error' : ''
 			}` }
+			style={ fieldWrapperStyle }
 		>
 			<TextControl
 				label={ label }

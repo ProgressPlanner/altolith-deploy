@@ -229,15 +229,37 @@ export default function ProviderForm( {
 				</Notice>
 			) }
 
-			{ fields.map( ( field ) => (
-				<ProviderField
-					key={ field.id }
-					field={ field }
-					value={ values[ field.id ] }
-					onChange={ handleFieldChange }
-					errors={ errors }
-				/>
-			) ) }
+			{ fields.map( ( field ) => {
+				// Determine if field should be hidden
+				let isHidden = false;
+
+				// Always hide deployment_types field (managed in sidebar)
+				if ( field.name === 'deployment_types' ) {
+					isHidden = true;
+				} else if ( field.deploymentType ) {
+					// Hide fields with deploymentType if that type is not in current deployment_types
+					// Check both values.deployment_types and initialValues.deployment_types
+					// to handle real-time updates when deployment types change in sidebar
+					const currentDeploymentTypes =
+						values.deployment_types ||
+						initialValues.deployment_types ||
+						[];
+					isHidden = ! currentDeploymentTypes.includes(
+						field.deploymentType
+					);
+				}
+
+				return (
+					<ProviderField
+						key={ field.id }
+						field={ field }
+						value={ values[ field.id ] }
+						onChange={ handleFieldChange }
+						errors={ errors }
+						isHidden={ isHidden }
+					/>
+				);
+			} ) }
 
 			<div
 				className="aether-provider-form__actions"
