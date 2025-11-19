@@ -169,6 +169,14 @@ export function ProviderSettings( { provider, onSave } ) {
 		const value = config[ id ] || '';
 		const error = errors[ id ];
 
+		// Password manager prevention attributes for all text inputs
+		const passwordManagerPreventionAttrs = {
+			autoComplete: 'off',
+			'data-lpignore': 'true',
+			'data-1p-ignore': 'true',
+			'data-form-type': 'other',
+		};
+
 		const commonProps = {
 			key: id,
 			label: required ? `${ label } *` : label,
@@ -191,6 +199,7 @@ export function ProviderSettings( { provider, onSave } ) {
 						type={ type }
 						placeholder={ placeholder }
 						className={ className }
+						{ ...passwordManagerPreventionAttrs }
 					/>
 				);
 
@@ -198,10 +207,14 @@ export function ProviderSettings( { provider, onSave } ) {
 				return (
 					<TextControl
 						{ ...commonProps }
-						type="password"
+						type="text"
 						placeholder={ placeholder }
 						className={ className }
-						autoComplete="off"
+						style={ {
+							WebkitTextSecurity: 'disc',
+							textSecurity: 'disc',
+						} }
+						{ ...passwordManagerPreventionAttrs }
 					/>
 				);
 
@@ -212,6 +225,7 @@ export function ProviderSettings( { provider, onSave } ) {
 						placeholder={ placeholder }
 						rows={ 4 }
 						className={ className }
+						{ ...passwordManagerPreventionAttrs }
 					/>
 				);
 
@@ -253,6 +267,7 @@ export function ProviderSettings( { provider, onSave } ) {
 						{ ...commonProps }
 						placeholder={ placeholder }
 						className={ className }
+						{ ...passwordManagerPreventionAttrs }
 					/>
 				);
 		}
