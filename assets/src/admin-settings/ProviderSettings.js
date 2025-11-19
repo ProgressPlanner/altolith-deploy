@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Spinner, Button } from '@wordpress/components';
-import ProviderSection from './components/ProviderSection';
+import ProviderInstanceCard from './components/ProviderInstanceCard';
 import ProviderConfigModal from './components/ProviderConfigModal';
 import AddProviderInstanceModal from './components/AddProviderInstanceModal';
 import apiFetch from '../utils/api';
@@ -85,23 +85,20 @@ export default function ProviderSettings( {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [] );
 
-	// Group instances by provider type
-	const instancesByProviderType = {};
-	Object.entries( configs ).forEach( ( [ instanceId, config ] ) => {
-		const providerType =
-			config.provider_type || instanceId.split( ':' )[ 0 ];
-		if ( ! instancesByProviderType[ providerType ] ) {
-			instancesByProviderType[ providerType ] = [];
-		}
-		instancesByProviderType[ providerType ].push( {
-			instanceId,
-			config,
-		} );
-	} );
+	// Create flat list of all instances with provider metadata
+	const allInstances = Object.entries( configs ).map(
+		( [ instanceId, config ] ) => {
+			const providerType =
+				config.provider_type || instanceId.split( ':' )[ 0 ];
+			const provider = providers.find( ( p ) => p.id === providerType );
 
-	const handleCreateInstance = useCallback( async () => {
-		setIsAddModalOpen( true );
-	}, [] );
+			return {
+				instanceId,
+				config,
+				provider: provider || { name: providerType, id: providerType },
+			};
+		}
+	);
 
 	const handleCreateInstanceConfirm = useCallback(
 		async ( providerType, instanceName ) => {
@@ -287,23 +284,57 @@ export default function ProviderSettings( {
 				</span>
 			</div>
 
-			{ /* Provider Sections */ }
-			{ providers.map( ( provider ) => {
-				const instances = instancesByProviderType[ provider.id ] || [];
-
-				return (
-					<ProviderSection
-						key={ provider.id }
-						provider={ provider }
-						instances={ instances }
-						onCreateInstance={ handleCreateInstance }
-						onConfigureInstance={ handleConfigureInstance }
-						onToggleInstance={ handleToggleInstance }
-						onDeleteInstance={ handleDeleteInstance }
-						onRenameInstance={ handleRenameInstance }
-					/>
-				);
-			} ) }
+			{ /* Flat Grid of All Provider Instances */ }
+			{ allInstances.length > 0 ? (
+				<div
+					style={ {
+						display: 'grid',
+						gridTemplateColumns:
+							'repeat(auto-fill, minmax(300px, 1fr))',
+						gap: spacing.md,
+					} }
+				>
+					{ allInstances.map( ( instance ) => (
+						<ProviderInstanceCard
+							key={ instance.instanceId }
+							provider={ instance.provider }
+							instance={ {
+								instanceId: instance.instanceId,
+								config: instance.config,
+							} }
+							onConfigure={ () =>
+								handleConfigureInstance( instance.instanceId )
+							}
+							onToggle={ ( enabled ) =>
+								handleToggleInstance(
+									instance.instanceId,
+									enabled
+								)
+							}
+							onDelete={ () =>
+								handleDeleteInstance( instance.instanceId )
+							}
+							onRename={ handleRenameInstance }
+						/>
+					) ) }
+				</div>
+			) : (
+				<div
+					style={ {
+						padding: spacing.xl,
+						textAlign: 'center',
+						color: colors.textSecondary,
+						fontSize: '0.875rem',
+						border: `1px dashed ${ colors.borderLight }`,
+						borderRadius: '8px',
+					} }
+				>
+					{ __(
+						'No provider instances configured. Click "Add Provider Instance" to create one.',
+						'aether-site-exporter'
+					) }
+				</div>
+			) }
 
 			{ /* Configuration Modal */ }
 			{ selectedProvider && selectedInstance && (

@@ -183,11 +183,7 @@ export function useProviderSettings() {
 	 */
 	const toggleProviderEnabled = useCallback(
 		async ( providerId, enabled ) => {
-			return updateProviderConfig(
-				providerId,
-				{ enabled },
-				{ preserveDeploymentTypes: true }
-			);
+			return updateProviderConfig( providerId, { enabled } );
 		},
 		[ updateProviderConfig ]
 	);

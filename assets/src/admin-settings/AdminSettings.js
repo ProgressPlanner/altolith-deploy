@@ -11,7 +11,6 @@ import { __ } from '@wordpress/i18n';
 import { Notice, Button } from '@wordpress/components';
 import PublishProgressModal from '../publish/components/PublishProgressModal';
 import ProviderSettings from './ProviderSettings';
-import GlobalDeploymentTypes from './components/GlobalDeploymentTypes';
 import {
 	colors,
 	spacing,
@@ -138,11 +137,6 @@ export default function AdminSettings() {
 						>
 							{ __( 'Export Site', 'aether-site-exporter' ) }
 						</Button>
-
-						<GlobalDeploymentTypes
-							providerConfigs={ providerConfigs }
-							onConfigsUpdate={ handleConfigsUpdate }
-						/>
 					</div>
 				</div>
 			</div>

@@ -16,6 +16,7 @@ import { colors, spacing, fontWeight } from '../../utils/styles';
  * Provider Instance Card Component.
  *
  * @param {Object}   props             Component props.
+ * @param {Object}   props.provider    Provider metadata.
  * @param {Object}   props.instance    Instance config.
  * @param {Function} props.onConfigure Callback to configure instance.
  * @param {Function} props.onToggle    Callback to toggle enabled state.
@@ -24,6 +25,7 @@ import { colors, spacing, fontWeight } from '../../utils/styles';
  * @return {JSX.Element} Rendered component.
  */
 export default function ProviderInstanceCard( {
+	provider,
 	instance,
 	onConfigure,
 	onToggle,
@@ -144,14 +146,6 @@ export default function ProviderInstanceCard( {
 		fontWeight: fontWeight.medium,
 	};
 
-	const metaStyle = {
-		fontSize: '0.75rem',
-		color: colors.textTertiary,
-		display: 'flex',
-		flexDirection: 'column',
-		gap: spacing.xs,
-	};
-
 	const actionsStyle = {
 		display: 'flex',
 		gap: spacing.sm,
@@ -159,8 +153,24 @@ export default function ProviderInstanceCard( {
 		borderTop: `1px solid ${ colors.borderLight }`,
 	};
 
+	const providerTypeTagStyle = {
+		fontSize: '0.7rem',
+		fontWeight: fontWeight.medium,
+		padding: `${ spacing.xs } ${ spacing.sm }`,
+		borderRadius: '4px',
+		backgroundColor: colors.primary,
+		color: '#ffffff',
+		textTransform: 'uppercase',
+		letterSpacing: '0.5px',
+		display: 'inline-block',
+		marginBottom: spacing.sm,
+	};
+
 	return (
 		<div style={ cardStyle }>
+			{ /* Provider Type Tag */ }
+			<div style={ providerTypeTagStyle }>{ provider.name }</div>
+
 			<div style={ headerStyle }>
 				{ isEditing ? (
 					<>
@@ -208,22 +218,6 @@ export default function ProviderInstanceCard( {
 						</span>
 					</>
 				) }
-			</div>
-
-			<div style={ metaStyle }>
-				<div>
-					<strong>{ __( 'ID:', 'aether-site-exporter' ) }</strong>{ ' ' }
-					<code
-						style={ {
-							fontSize: '0.7rem',
-							backgroundColor: colors.surfaceAlt,
-							padding: '2px 4px',
-							borderRadius: '3px',
-						} }
-					>
-						{ instance.instanceId }
-					</code>
-				</div>
 			</div>
 
 			<div>

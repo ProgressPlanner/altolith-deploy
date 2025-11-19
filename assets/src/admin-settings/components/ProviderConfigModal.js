@@ -7,12 +7,13 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
-import { Modal, Notice } from '@wordpress/components';
+import { Modal, Notice, CheckboxControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
 import ProviderForm from '../../providers/components/ProviderForm';
 import apiFetch from '../../utils/api';
-import { colors, spacing } from '../../utils/styles';
+import { colors, spacing, fontWeight } from '../../utils/styles';
+import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 
 /**
  * Provider Configuration Modal Component.
@@ -45,19 +46,34 @@ export default function ProviderConfigModal( {
 
 	const handleFormChange = useCallback(
 		( newValues ) => {
-			// Preserve deployment_types from current config (it's hidden in form but managed in sidebar)
-			// eslint-disable-next-line camelcase
-			const deploymentTypes = config.deployment_types;
+			// Include deployment_types in the merged config
 			setConfig( {
 				...newValues,
 				// eslint-disable-next-line camelcase
-				...( deploymentTypes !== undefined && {
-					deployment_types: deploymentTypes,
-				} ),
+				deployment_types: config.deployment_types || [],
 			} );
 			setHasChanges( true );
 		},
 		[ config.deployment_types ]
+	);
+
+	const handleDeploymentTypeToggle = useCallback(
+		( deploymentType, checked ) => {
+			setConfig( ( prevConfig ) => {
+				const currentTypes = prevConfig.deployment_types || [];
+				const newTypes = checked
+					? [ ...currentTypes, deploymentType ]
+					: currentTypes.filter( ( t ) => t !== deploymentType );
+
+				return {
+					...prevConfig,
+					// eslint-disable-next-line camelcase
+					deployment_types: newTypes,
+				};
+			} );
+			setHasChanges( true );
+		},
+		[]
 	);
 
 	// Reset config when modal opens/closes or provider changes
@@ -126,18 +142,13 @@ export default function ProviderConfigModal( {
 			const providerConfigs = configResponse.value || {};
 			const currentConfig = providerConfigs[ id ] || {};
 			const enabled = currentConfig.enabled !== false; // Default to enabled
-			// Preserve deployment_types (managed in sidebar)
-			// eslint-disable-next-line camelcase
-			const deploymentTypes = currentConfig.deployment_types;
 
-			// Merge form values with enabled state and deployment_types
-			// Always preserve deployment_types if it exists in current config (even if empty array)
+			// Include deployment_types from config state (managed in modal checkboxes)
 			const updatedConfig = {
 				...values,
 				enabled,
-				...( 'deployment_types' in currentConfig
-					? { deployment_types: deploymentTypes }
-					: {} ),
+				// eslint-disable-next-line camelcase
+				deployment_types: config.deployment_types || [],
 			};
 
 			// Save with enabled state preserved
@@ -210,6 +221,41 @@ export default function ProviderConfigModal( {
 		margin: 0,
 	};
 
+	const sectionTitleStyle = {
+		fontSize: '1rem',
+		fontWeight: fontWeight.semibold,
+		color: colors.text,
+		marginTop: spacing.lg,
+		marginBottom: spacing.md,
+	};
+
+	const deploymentTypesSectionStyle = {
+		padding: spacing.md,
+		backgroundColor: colors.surfaceAlt,
+		borderRadius: '6px',
+		border: `1px solid ${ colors.borderLight }`,
+		marginBottom: spacing.lg,
+	};
+
+	// Get supported deployment types from provider metadata
+	const supportedDeploymentTypes = metadata.supportedDeploymentTypes || [];
+
+	// Deployment type labels
+	const deploymentTypeLabels = {
+		[ DEPLOYMENT_TYPES.STATIC_SITE ]: __(
+			'Static Site',
+			'aether-site-exporter'
+		),
+		[ DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE ]: __(
+			'Blueprint Bundle',
+			'aether-site-exporter'
+		),
+		[ DEPLOYMENT_TYPES.EDGE_FUNCTIONS ]: __(
+			'Edge Functions',
+			'aether-site-exporter'
+		),
+	};
+
 	return (
 		<Modal
 			title={ name }
@@ -231,6 +277,44 @@ export default function ProviderConfigModal( {
 				>
 					{ saveError }
 				</Notice>
+			) }
+
+			{ /* Deployment Types Section */ }
+			{ supportedDeploymentTypes.length > 0 && (
+				<div style={ deploymentTypesSectionStyle }>
+					<div style={ sectionTitleStyle }>
+						{ __( 'Deployment Types', 'aether-site-exporter' ) }
+					</div>
+					<p
+						style={ {
+							fontSize: '0.875rem',
+							color: colors.textSecondary,
+							marginBottom: spacing.md,
+						} }
+					>
+						{ __(
+							'Select which deployment types this provider instance should handle.',
+							'aether-site-exporter'
+						) }
+					</p>
+					{ supportedDeploymentTypes.map( ( deploymentType ) => (
+						<CheckboxControl
+							key={ deploymentType }
+							label={ deploymentTypeLabels[ deploymentType ] }
+							checked={
+								config.deployment_types?.includes(
+									deploymentType
+								) || false
+							}
+							onChange={ ( checked ) =>
+								handleDeploymentTypeToggle(
+									deploymentType,
+									checked
+								)
+							}
+						/>
+					) ) }
+				</div>
 			) }
 
 			{ /* Hook: before_form */ }
