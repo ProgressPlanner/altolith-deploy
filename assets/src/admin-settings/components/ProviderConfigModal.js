@@ -6,9 +6,10 @@
  * @package
  */
 
-import { useState, useEffect, useRef } from '@wordpress/element';
+import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
 import { Modal, Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import { doAction } from '@wordpress/hooks';
 import ProviderForm from '../../providers/components/ProviderForm';
 import apiFetch from '../../utils/api';
 import { colors, spacing, fontWeight } from '../../utils/styles';
@@ -34,19 +35,9 @@ export default function ProviderConfigModal( {
 	const [ saveError, setSaveError ] = useState( null );
 	const closeTimeoutRef = useRef( null );
 
-	// Reset config when modal opens/closes or provider changes
-	useEffect( () => {
-		if ( isOpen ) {
-			// Keep deployment_types in config for visibility logic, but don't show it in form
-			setConfig( initialConfig );
-			setHasChanges( false );
-			setSaveError( null );
-		} else if ( closeTimeoutRef.current ) {
-			// Clear timeout if modal is closed
-			clearTimeout( closeTimeoutRef.current );
-			closeTimeoutRef.current = null;
-		}
-	}, [ isOpen, initialConfig, provider ] );
+	// Refs for hook container elements
+	const beforeFormRef = useRef( null );
+	const afterFormRef = useRef( null );
 
 	if ( ! provider ) {
 		return null;
@@ -77,7 +68,7 @@ export default function ProviderConfigModal( {
 		margin: 0,
 	};
 
-	const handleFormChange = ( newValues ) => {
+	const handleFormChange = useCallback( ( newValues ) => {
 		// Preserve deployment_types from current config (it's hidden in form but managed in sidebar)
 		// eslint-disable-next-line camelcase
 		const deploymentTypes = config.deployment_types;
@@ -89,7 +80,45 @@ export default function ProviderConfigModal( {
 			} ),
 		} );
 		setHasChanges( true );
-	};
+	}, [ config.deployment_types ] );
+
+	// Reset config when modal opens/closes or provider changes
+	useEffect( () => {
+		if ( isOpen ) {
+			// Keep deployment_types in config for visibility logic, but don't show it in form
+			setConfig( initialConfig );
+			setHasChanges( false );
+			setSaveError( null );
+		} else if ( closeTimeoutRef.current ) {
+			// Clear timeout if modal is closed
+			clearTimeout( closeTimeoutRef.current );
+			closeTimeoutRef.current = null;
+		}
+	}, [ isOpen, initialConfig, provider ] );
+
+	// Trigger hooks when modal is open and config/provider changes
+	useEffect( () => {
+		if ( ! isOpen || ! provider ) {
+			return;
+		}
+
+		const hookContext = {
+			providerId: id,
+			provider,
+			config,
+			onConfigChange: handleFormChange,
+		};
+
+		// Trigger before_form hook
+		if ( beforeFormRef.current ) {
+			doAction( 'aether.provider.modal.before_form', hookContext );
+		}
+
+		// Trigger after_form hook
+		if ( afterFormRef.current ) {
+			doAction( 'aether.provider.modal.after_form', hookContext );
+		}
+	}, [ isOpen, id, provider, config, handleFormChange ] );
 
 	const handleFormSubmit = async ( values ) => {
 		// ProviderForm handles the save, but we need to preserve the enabled state
@@ -199,6 +228,13 @@ export default function ProviderConfigModal( {
 				</Notice>
 			) }
 
+			{ /* Hook: before_form */ }
+			<div
+				ref={ beforeFormRef }
+				className="aether-provider-modal__before-form"
+				data-provider-id={ id }
+			/>
+
 			<ProviderForm
 				providerId={ id }
 				fields={ settingsFields }
@@ -210,6 +246,13 @@ export default function ProviderConfigModal( {
 				} }
 				onChange={ handleFormChange }
 				onSubmit={ handleFormSubmit }
+			/>
+
+			{ /* Hook: after_form */ }
+			<div
+				ref={ afterFormRef }
+				className="aether-provider-modal__after-form"
+				data-provider-id={ id }
 			/>
 		</Modal>
 	);
