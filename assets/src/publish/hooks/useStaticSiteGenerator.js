@@ -15,6 +15,7 @@
  */
 
 import { useCallback } from '@wordpress/element';
+import { doAction, applyFilters } from '@wordpress/hooks';
 import { StorageService } from '../../providers/services/storageService';
 import { processHtml, getStaticFilePath } from '../utils/htmlProcessor';
 import {
@@ -107,13 +108,93 @@ export function useStaticSiteGenerator( onProgress ) {
 				staticPath,
 			} );
 
-			// Create storage service (jobId no longer needed for path)
-			const storageService = new StorageService( staticPath, '', config );
+			/**
+			 * Filter storage service configuration before creation.
+			 *
+			 * Allows providers to customize storage service configuration.
+			 *
+			 * @param {Object} config              Storage service configuration.
+			 * @param {string} staticPath          Static files path.
+			 * @param {string} staticSiteProviderId Provider ID.
+			 * @param {Object} providerConfig      Provider configuration.
+			 *
+			 * @example
+			 * import { addFilter } from '@wordpress/hooks';
+			 *
+			 * addFilter('aether.storage.service.config', 'my-provider', (config, staticPath, providerId, providerConfig) => {
+			 *   return {
+			 *     ...config,
+			 *     customOption: 'value'
+			 *   };
+			 * });
+			 */
+			const filteredConfig = applyFilters(
+				'aether.storage.service.config',
+				config,
+				staticPath,
+				staticSiteProviderId,
+				providerConfig
+			);
+
+			/**
+			 * Filter storage service creation.
+			 *
+			 * Allows providers to override StorageService creation with custom implementation.
+			 *
+			 * @param {StorageService|null} storageService Storage service instance or null to use default.
+			 * @param {string}              staticPath     Static files path.
+			 * @param {Object}              config         Storage service configuration.
+			 * @param {string}              providerId    Provider ID.
+			 *
+			 * @example
+			 * import { addFilter } from '@wordpress/hooks';
+			 *
+			 * addFilter('aether.storage.service.create', 'my-provider', (service, staticPath, config, providerId) => {
+			 *   if (providerId === 'my-provider') {
+			 *     return new CustomStorageService(staticPath, config);
+			 *   }
+			 *   return service; // Use default
+			 * });
+			 */
+			let storageService = applyFilters(
+				'aether.storage.service.create',
+				null,
+				staticPath,
+				filteredConfig,
+				staticSiteProviderId
+			);
+
+			// Create storage service if not overridden by filter
+			if ( ! storageService ) {
+				storageService = new StorageService( staticPath, '', filteredConfig );
+			}
 
 			const totalUrls = urls.length;
 
 			// PHASE 1: Pre-scan all URLs to discover total file count
 			// This allows us to report accurate progress (X of Y files) instead of growing totals
+
+			/**
+			 * Action fired before pre-scan phase starts.
+			 *
+			 * @param {Array}  urls                URLs to scan.
+			 * @param {string} staticSiteProviderId Provider ID.
+			 * @param {Object} providerConfig      Provider configuration.
+			 *
+			 * @example
+			 * import { addAction } from '@wordpress/hooks';
+			 *
+			 * addAction('aether.static.pre_scan.before', 'my-provider', (urls, providerId, config) => {
+			 *   console.log('Starting pre-scan for', urls.length, 'URLs');
+			 * });
+			 */
+			doAction(
+				'aether.static.pre_scan.before',
+				urls,
+				staticSiteProviderId,
+				providerConfig
+			);
+
 			if ( setStatusMessage ) {
 				setStatusMessage(
 					'Scanning files to upload…',
@@ -191,8 +272,37 @@ export function useStaticSiteGenerator( onProgress ) {
 					}
 
 					// Process HTML and cache it
-					const processedHtml = processHtml(
+					/**
+					 * Filter HTML before processing.
+					 *
+					 * Allows providers to modify HTML before URL rewriting and processing.
+					 *
+					 * @param {string} html              Raw HTML content.
+					 * @param {string} url               Page URL.
+					 * @param {string} siteUrl           Site URL.
+					 * @param {string} staticSiteUrl     Static site deployment URL.
+					 * @param {string} staticSiteProviderId Provider ID.
+					 *
+					 * @example
+					 * import { addFilter } from '@wordpress/hooks';
+					 *
+					 * addFilter('aether.static.html.process', 'my-provider', (html, url, siteUrl, staticSiteUrl, providerId) => {
+					 *   // Add custom meta tag
+					 *   return html.replace('</head>', '<meta name="custom" content="value" /></head>');
+					 * });
+					 */
+					let processedHtml = applyFilters(
+						'aether.static.html.process',
 						html,
+						url,
+						siteUrl,
+						staticSiteUrl,
+						staticSiteProviderId
+					);
+
+					// Process HTML (URL rewriting, admin bar removal, etc.)
+					processedHtml = processHtml(
+						processedHtml,
 						url,
 						siteUrl,
 						staticSiteUrl
@@ -229,6 +339,34 @@ export function useStaticSiteGenerator( onProgress ) {
 				totalFilesToUpload,
 			} );
 
+			/**
+			 * Action fired after pre-scan phase completes.
+			 *
+			 * @param {Object} stats                Pre-scan statistics.
+			 * @param {number} stats.urlsScanned    Total URLs scanned.
+			 * @param {number} stats.urlsSuccessful URLs successfully cached.
+			 * @param {number} stats.uniqueAssets   Unique assets discovered.
+			 * @param {number} stats.totalFiles     Total files to upload.
+			 * @param {string} staticSiteProviderId Provider ID.
+			 *
+			 * @example
+			 * import { addAction } from '@wordpress/hooks';
+			 *
+			 * addAction('aether.static.pre_scan.after', 'my-provider', (stats, providerId) => {
+			 *   console.log('Pre-scan complete:', stats);
+			 * });
+			 */
+			doAction(
+				'aether.static.pre_scan.after',
+				{
+					urlsScanned: urls.length,
+					urlsSuccessful: cacheStats.sessionCached,
+					uniqueAssets: allUniqueAssets.size,
+					totalFiles: totalFilesToUpload,
+				},
+				staticSiteProviderId
+			);
+
 			if ( setStatusMessage ) {
 				setStatusMessage(
 					`Pre-scan complete: ${ cacheStats.sessionCached } HTML files, ${ allUniqueAssets.size } assets`,
@@ -248,10 +386,41 @@ export function useStaticSiteGenerator( onProgress ) {
 						'fetchManifest'
 					);
 				}
-				manifest = await fetchManifest(
+
+				/**
+				 * Filter manifest before fetching.
+				 *
+				 * Allows providers to customize manifest fetching or provide custom manifest.
+				 *
+				 * @param {Object|null} manifest            Manifest object or null to fetch from storage.
+				 * @param {Object}     storageService      Storage service instance.
+				 * @param {string}     staticSiteProviderId Provider ID.
+				 *
+				 * @example
+				 * import { addFilter } from '@wordpress/hooks';
+				 *
+				 * addFilter('aether.manifest.fetch', 'my-provider', (manifest, storageService, providerId) => {
+				 *   // Return custom manifest or null to use default fetching
+				 *   if (providerId === 'my-provider') {
+				 *     return { custom: 'manifest' };
+				 *   }
+				 *   return manifest; // Use default
+				 * });
+				 */
+				manifest = applyFilters(
+					'aether.manifest.fetch',
+					null,
 					storageService,
 					staticSiteProviderId
 				);
+
+				// If filter returned null, fetch from storage
+				if ( manifest === null ) {
+					manifest = await fetchManifest(
+						storageService,
+						staticSiteProviderId
+					);
+				}
 				const manifestEntryCount = Object.keys( manifest ).length;
 				if ( setStatusMessage ) {
 					setStatusMessage(
@@ -326,13 +495,55 @@ export function useStaticSiteGenerator( onProgress ) {
 						const assetKey = assetPath;
 
 						// Create blob with appropriate content type.
-						const assetBlob = new Blob( [ assetContent ], {
+						let assetBlob = new Blob( [ assetContent ], {
 							type: contentType,
 						} );
 
+						/**
+						 * Filter asset before processing.
+						 *
+						 * Allows providers to modify asset blob, path, or metadata before upload.
+						 *
+						 * @param {Object} assetData            Asset data object.
+						 * @param {Blob}   assetData.blob       Asset blob.
+						 * @param {string} assetData.path       Asset local path.
+						 * @param {string} assetData.key        Storage key.
+						 * @param {string} assetData.contentType Content type.
+						 * @param {string} assetData.url        Original asset URL.
+						 * @param {string} staticSiteProviderId Provider ID.
+						 *
+						 * @example
+						 * import { addFilter } from '@wordpress/hooks';
+						 *
+						 * addFilter('aether.static.asset.process', 'my-provider', (assetData, providerId) => {
+						 *   // Modify asset blob
+						 *   return {
+						 *     ...assetData,
+						 *     blob: new Blob([assetData.blob], { type: 'image/webp' })
+						 *   };
+						 * });
+						 */
+						const filteredAssetData = applyFilters(
+							'aether.static.asset.process',
+							{
+								blob: assetBlob,
+								path: assetPath,
+								key: assetKey,
+								contentType,
+								url: assetUrl,
+							},
+							staticSiteProviderId
+						);
+
+						// Use filtered asset data
+						assetBlob = filteredAssetData.blob || assetBlob;
+						const finalAssetPath = filteredAssetData.path || assetPath;
+						const finalAssetKey = filteredAssetData.key || assetKey;
+						const finalContentType = filteredAssetData.contentType || contentType;
+
 						// Step 3: Check manifest BEFORE adding to upload queue
 						// This prevents unnecessary uploads for assets that already exist in manifest
-						const existingEntry = manifest[ assetKey ];
+						const existingEntry = manifest[ finalAssetKey ];
 						if (
 							existingEntry &&
 							existingEntry.size === assetBlob.size
@@ -344,7 +555,7 @@ export function useStaticSiteGenerator( onProgress ) {
 								if (
 									shouldSkipUpload(
 										manifest,
-										assetKey,
+										finalAssetKey,
 										assetBlob.size,
 										assetHash
 									)
@@ -355,9 +566,9 @@ export function useStaticSiteGenerator( onProgress ) {
 									filesUploaded++;
 									filesSkipped++;
 									uploadedFiles.push( {
-										storageKey: assetKey,
-										relativePath: assetPath,
-										contentType,
+										storageKey: finalAssetKey,
+										relativePath: finalAssetPath,
+										contentType: finalContentType,
 									} );
 									continue; // Skip adding to assetData
 								}
@@ -373,10 +584,10 @@ export function useStaticSiteGenerator( onProgress ) {
 
 						assetData.push( {
 							assetUrl,
-							assetPath,
-							assetKey,
+							assetPath: finalAssetPath,
+							assetKey: finalAssetKey,
 							assetBlob,
-							contentType,
+							contentType: finalContentType,
 						} );
 					} catch ( error ) {
 						// Failed to fetch asset silently (network errors are expected).
@@ -452,6 +663,22 @@ export function useStaticSiteGenerator( onProgress ) {
 								result.hash,
 								contentType
 							);
+
+							/**
+							 * Filter manifest after asset entry update.
+							 *
+							 * Allows providers to modify manifest after asset entry is updated.
+							 *
+							 * @param {Object} manifest            Manifest object.
+							 * @param {string} storageKey         Storage key that was updated.
+							 * @param {string} staticSiteProviderId Provider ID.
+							 */
+							manifest = applyFilters(
+								'aether.manifest.update',
+								manifest,
+								assetKey,
+								staticSiteProviderId
+							);
 						}
 
 						// Track uploaded asset file for manifest generation.
@@ -466,6 +693,27 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			// Get all cached URLs from IndexedDB
 			const cachedUrls = await cache.getAllUrls();
+
+			/**
+			 * Action fired before upload phase starts.
+			 *
+			 * @param {Array}  cachedUrls            URLs to upload.
+			 * @param {number} totalFilesToUpload    Total files to upload.
+			 * @param {string} staticSiteProviderId Provider ID.
+			 *
+			 * @example
+			 * import { addAction } from '@wordpress/hooks';
+			 *
+			 * addAction('aether.static.upload.before', 'my-provider', (urls, totalFiles, providerId) => {
+			 *   console.log('Starting upload phase:', totalFiles, 'files');
+			 * });
+			 */
+			doAction(
+				'aether.static.upload.before',
+				cachedUrls,
+				totalFilesToUpload,
+				staticSiteProviderId
+			);
 
 			// Process each URL sequentially and upload files
 			for ( const url of cachedUrls ) {
@@ -643,6 +891,33 @@ export function useStaticSiteGenerator( onProgress ) {
 							htmlHash,
 							'text/html'
 						);
+
+						/**
+						 * Filter manifest after entry update.
+						 *
+						 * Allows providers to modify manifest after entry is updated.
+						 *
+						 * @param {Object} manifest            Manifest object.
+						 * @param {string} storageKey         Storage key that was updated.
+						 * @param {string} staticSiteProviderId Provider ID.
+						 *
+						 * @example
+						 * import { addFilter } from '@wordpress/hooks';
+						 *
+						 * addFilter('aether.manifest.update', 'my-provider', (manifest, storageKey, providerId) => {
+						 *   // Add custom metadata to manifest entry
+						 *   if (manifest[storageKey]) {
+						 *     manifest[storageKey].customMetadata = 'value';
+						 *   }
+						 *   return manifest;
+						 * });
+						 */
+						manifest = applyFilters(
+							'aether.manifest.update',
+							manifest,
+							htmlKey,
+							staticSiteProviderId
+						);
 					}
 
 					// Periodic manifest save for crash recovery (every 50 files)
@@ -751,10 +1026,35 @@ export function useStaticSiteGenerator( onProgress ) {
 					uploadedFiles.map( ( file ) => file.storageKey )
 				);
 				const beforeCleanupCount = Object.keys( manifest ).length;
-				const cleanedManifest = cleanupManifest(
+				let cleanedManifest = cleanupManifest(
 					manifest,
 					currentFileKeys
 				);
+
+				/**
+				 * Filter manifest before final cleanup and upload.
+				 *
+				 * Allows providers to customize manifest cleanup logic.
+				 *
+				 * @param {Object} manifest            Cleaned manifest object.
+				 * @param {Set}    currentFileKeys     Set of current file keys.
+				 * @param {string} staticSiteProviderId Provider ID.
+				 *
+				 * @example
+				 * import { addFilter } from '@wordpress/hooks';
+				 *
+				 * addFilter('aether.manifest.cleanup', 'my-provider', (manifest, currentFileKeys, providerId) => {
+				 *   // Keep additional entries
+				 *   return { ...manifest, 'custom-file.html': { size: 100, hash: 'abc' } };
+				 * });
+				 */
+				cleanedManifest = applyFilters(
+					'aether.manifest.cleanup',
+					cleanedManifest,
+					currentFileKeys,
+					staticSiteProviderId
+				);
+
 				const afterCleanupCount = Object.keys( cleanedManifest ).length;
 				const removedCount = beforeCleanupCount - afterCleanupCount;
 
@@ -800,6 +1100,35 @@ export function useStaticSiteGenerator( onProgress ) {
 			if ( removeMessage ) {
 				removeMessage( 'uploadFilesProgress' );
 			}
+
+			/**
+			 * Action fired after upload phase completes.
+			 *
+			 * @param {Object} result                Upload result statistics.
+			 * @param {number} result.filesUploaded  Files uploaded.
+			 * @param {number} result.filesSkipped   Files skipped.
+			 * @param {number} result.urlsSucceeded  URLs succeeded.
+			 * @param {number} result.urlsFailed     URLs failed.
+			 * @param {string} staticSiteProviderId Provider ID.
+			 *
+			 * @example
+			 * import { addAction } from '@wordpress/hooks';
+			 *
+			 * addAction('aether.static.upload.after', 'my-provider', (result, providerId) => {
+			 *   console.log('Upload phase complete:', result);
+			 * });
+			 */
+			doAction(
+				'aether.static.upload.after',
+				{
+					filesUploaded,
+					filesSkipped,
+					urlsSucceeded: failures.urlsSucceeded,
+					urlsFailed: failures.urlsFailed,
+					assetsUploaded: assetTracker.getCount(),
+				},
+				staticSiteProviderId
+			);
 
 			// Return comprehensive result object.
 			// Used by usePublishController to track success/failure and update job status.
