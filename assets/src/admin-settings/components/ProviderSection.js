@@ -23,6 +23,7 @@ import { colors, spacing, fontWeight } from '../../utils/styles';
  * @param {Function} props.onConfigureInstance  Callback to configure instance.
  * @param {Function} props.onToggleInstance     Callback to toggle instance enabled.
  * @param {Function} props.onDeleteInstance     Callback to delete instance.
+ * @param {Function} props.onRenameInstance     Callback to rename instance.
  * @return {JSX.Element} Rendered component.
  */
 export default function ProviderSection( {
@@ -32,6 +33,7 @@ export default function ProviderSection( {
 	onConfigureInstance,
 	onToggleInstance,
 	onDeleteInstance,
+	onRenameInstance,
 } ) {
 	const [ isExpanded, setIsExpanded ] = useState( true );
 
@@ -160,6 +162,7 @@ export default function ProviderSection( {
 								onDelete={ () =>
 									onDeleteInstance( instance.instanceId )
 								}
+								onRename={ onRenameInstance }
 							/>
 						) ) }
 					</div>

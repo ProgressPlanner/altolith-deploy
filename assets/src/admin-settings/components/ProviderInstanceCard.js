@@ -21,6 +21,7 @@ import { colors, spacing, fontWeight } from '../../utils/styles';
  * @param {Function} props.onConfigure Callback to configure instance.
  * @param {Function} props.onToggle    Callback to toggle enabled state.
  * @param {Function} props.onDelete    Callback to delete instance.
+ * @param {Function} props.onRename    Callback to rename instance.
  * @return {JSX.Element} Rendered component.
  */
 export default function ProviderInstanceCard( {
@@ -29,6 +30,7 @@ export default function ProviderInstanceCard( {
 	onConfigure,
 	onToggle,
 	onDelete,
+	onRename,
 } ) {
 	const [ isEditing, setIsEditing ] = useState( false );
 	const [ editedName, setEditedName ] = useState(
@@ -44,15 +46,29 @@ export default function ProviderInstanceCard( {
 		}
 	}, [ isEditing ] );
 
-	const handleNameSave = () => {
+	const handleNameSave = async () => {
 		if ( editedName.trim() === '' ) {
 			setEditedName( instance.config.instance_name || '' );
 			setIsEditing( false );
 			return;
 		}
 
-		// TODO: Save the new name via API
-		// For now, just update local state
+		// Don't save if name hasn't changed
+		if ( editedName === instance.config.instance_name ) {
+			setIsEditing( false );
+			return;
+		}
+
+		// Save the new name via API
+		if ( onRename ) {
+			try {
+				await onRename( instance.instanceId, editedName );
+			} catch ( error ) {
+				console.error( 'Failed to rename instance:', error );
+				// Revert to original name on error
+				setEditedName( instance.config.instance_name || '' );
+			}
+		}
 		setIsEditing( false );
 	};
 

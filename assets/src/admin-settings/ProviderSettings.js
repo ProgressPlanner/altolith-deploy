@@ -41,6 +41,7 @@ export default function ProviderSettings( {
 		toggleProviderEnabled,
 		createProviderInstance,
 		deleteProviderInstance,
+		renameProviderInstance,
 	} = useProviderSettings();
 
 	useEffect( () => {
@@ -167,6 +168,26 @@ export default function ProviderSettings( {
 		[ deleteProviderInstance, onConfigsUpdate ]
 	);
 
+	const handleRenameInstance = useCallback(
+		async ( instanceId, newName ) => {
+			try {
+				const updatedProviders = await renameProviderInstance(
+					instanceId,
+					newName
+				);
+
+				// Update parent configs state
+				if ( onConfigsUpdate ) {
+					onConfigsUpdate( updatedProviders );
+				}
+			} catch ( error ) {
+				console.error( 'Failed to rename instance:', error );
+				throw error;
+			}
+		},
+		[ renameProviderInstance, onConfigsUpdate ]
+	);
+
 	const handleModalClose = useCallback( () => {
 		setIsConfigModalOpen( false );
 		setSelectedInstanceId( null );
@@ -282,6 +303,7 @@ export default function ProviderSettings( {
 						onConfigureInstance={ handleConfigureInstance }
 						onToggleInstance={ handleToggleInstance }
 						onDeleteInstance={ handleDeleteInstance }
+						onRenameInstance={ handleRenameInstance }
 					/>
 				);
 			} ) }
