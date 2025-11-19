@@ -11,6 +11,7 @@
  * @package
  */
 
+import { doAction, applyFilters } from '@wordpress/hooks';
 import { createConcurrencyLimiter } from '../../utils/concurrencyLimiter';
 import { calculateFileHash } from '../../utils/fileHash';
 import { shouldSkipUpload } from '../../utils/manifestManager';
@@ -96,6 +97,29 @@ export async function uploadFilesWithProgress( {
 			let shouldSkip = false;
 
 			try {
+				/**
+				 * Action fired before each file upload.
+				 *
+				 * @param {Object} fileData            File data object.
+				 * @param {string} fileData.key        Storage key.
+				 * @param {Blob}   fileData.blob       File blob.
+				 * @param {string} fileData.contentType Content type.
+				 * @param {string} fileData.displayName Display name.
+				 *
+				 * @example
+				 * import { addAction } from '@wordpress/hooks';
+				 *
+				 * addAction('aether.upload.file.before', 'my-provider', (fileData) => {
+				 *   console.log('About to upload:', fileData.key);
+				 * });
+				 */
+				doAction( 'aether.upload.file.before', {
+					key,
+					blob,
+					contentType,
+					displayName,
+				} );
+
 				// Hash checking and skip logic (if enabled)
 				if ( ! skipHashCheck && manifest ) {
 					const fileSize = blob.size;
@@ -104,7 +128,36 @@ export async function uploadFilesWithProgress( {
 					if ( existingEntry && existingEntry.size === fileSize ) {
 						// Stage 2: Calculate hash if size matches
 						try {
-							fileHash = await calculateFileHash( blob );
+							/**
+							 * Filter hash calculation for files.
+							 *
+							 * Allows providers to customize hash calculation or provide pre-calculated hash.
+							 *
+							 * @param {string|null} hash      Calculated hash or null to use default calculation.
+							 * @param {Blob}        blob      File blob.
+							 * @param {string}      key       Storage key.
+							 * @param {Object}      manifest  Manifest object.
+							 *
+							 * @example
+							 * import { addFilter } from '@wordpress/hooks';
+							 *
+							 * addFilter('aether.upload.hash.calculate', 'my-provider', (hash, blob, key, manifest) => {
+							 *   // Return pre-calculated hash or null to use default
+							 *   if (key.startsWith('custom/')) {
+							 *     return 'pre-calculated-hash';
+							 *   }
+							 *   return hash; // Use default calculation
+							 * });
+							 */
+							const filteredHash = applyFilters(
+								'aether.upload.hash.calculate',
+								null,
+								blob,
+								key,
+								manifest
+							);
+
+							fileHash = filteredHash || ( await calculateFileHash( blob ) );
 							shouldSkip = customShouldSkipUpload
 								? customShouldSkipUpload(
 										manifest,
@@ -161,7 +214,24 @@ export async function uploadFilesWithProgress( {
 				// Calculate hash if not already calculated (for manifest update)
 				if ( ! fileHash && ! skipHashCheck ) {
 					try {
-						fileHash = await calculateFileHash( blob );
+						/**
+						 * Filter hash calculation for files (when not already calculated).
+						 *
+						 * Allows providers to customize hash calculation.
+						 *
+						 * @param {string|null} hash      Calculated hash or null to use default calculation.
+						 * @param {Blob}        blob      File blob.
+						 * @param {string}      key       Storage key.
+						 * @param {Object}      manifest  Manifest object.
+						 */
+						const filteredHash = applyFilters(
+							'aether.upload.hash.calculate',
+							null,
+							blob,
+							key,
+							manifest
+						);
+						fileHash = filteredHash || ( await calculateFileHash( blob ) );
 					} catch ( error ) {
 						debugWarn( 'Failed to calculate hash:', error );
 						fileHash = null;
@@ -184,8 +254,8 @@ export async function uploadFilesWithProgress( {
 					);
 				}
 
-				// Upload file with progress tracking
-				const uploadResult = await storageService.upload( key, blob, {
+				// Prepare upload options
+				let uploadOptions = {
 					contentType,
 					cacheControl:
 						metadata.cacheControl ||
@@ -205,7 +275,41 @@ export async function uploadFilesWithProgress( {
 							);
 						}
 					},
-				} );
+				};
+
+				/**
+				 * Filter upload options before file upload.
+				 *
+				 * Allows providers to modify upload options (contentType, cacheControl, metadata, etc.).
+				 *
+				 * @param {Object} uploadOptions      Upload options object.
+				 * @param {string} key                Storage key.
+				 * @param {Blob}   blob               File blob.
+				 * @param {string} contentType        Content type.
+				 * @param {Object} metadata            File metadata.
+				 *
+				 * @example
+				 * import { addFilter } from '@wordpress/hooks';
+				 *
+				 * addFilter('aether.upload.file.options', 'my-provider', (options, key, blob, contentType, metadata) => {
+				 *   return {
+				 *     ...options,
+				 *     cacheControl: 'public, max-age=86400',
+				 *     customHeader: 'value'
+				 *   };
+				 * });
+				 */
+				uploadOptions = applyFilters(
+					'aether.upload.file.options',
+					uploadOptions,
+					key,
+					blob,
+					contentType,
+					metadata
+				);
+
+				// Upload file with progress tracking
+				const uploadResult = await storageService.upload( key, blob, uploadOptions );
 
 				if ( uploadResult.success ) {
 					filesUploaded++;
@@ -226,14 +330,39 @@ export async function uploadFilesWithProgress( {
 						onProgress( totalProcessed, files.length, null );
 					}
 
-					results.push( {
+					const uploadResultData = {
 						key,
 						success: true,
 						skipped: false,
 						url: uploadResult.url,
 						hash: fileHash,
 						size: fileSize,
-					} );
+					};
+
+					/**
+					 * Action fired after each file upload succeeds.
+					 *
+					 * @param {Object} result            Upload result object.
+					 * @param {string} result.key        Storage key.
+					 * @param {string} result.url        Uploaded file URL.
+					 * @param {string} result.hash       File hash.
+					 * @param {number} result.size        File size.
+					 * @param {string} displayName       Display name.
+					 *
+					 * @example
+					 * import { addAction } from '@wordpress/hooks';
+					 *
+					 * addAction('aether.upload.file.after', 'my-provider', (result, displayName) => {
+					 *   console.log('File uploaded:', result.key, result.url);
+					 * });
+					 */
+					doAction(
+						'aether.upload.file.after',
+						uploadResultData,
+						displayName
+					);
+
+					results.push( uploadResultData );
 				} else {
 					// Upload failed
 					filesFailed++;
