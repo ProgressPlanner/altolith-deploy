@@ -15,6 +15,13 @@ import ProviderCard from './components/ProviderCard';
 import ProviderConfigModal from './components/ProviderConfigModal';
 import apiFetch from '../utils/api';
 import { colors, spacing, fontWeight, createGridStyle } from '../utils/styles';
+import {
+	areAllDependenciesSatisfied,
+	getUnsatisfiedDependencies,
+} from './utils/dependencyValidation';
+import { useDependencyValidation } from './hooks/useDependencyValidation';
+import { useProviderMetadataReload } from './hooks/useProviderMetadataReload';
+import { useProviderSettings } from '../hooks/useProviderSettings';
 
 /**
  * Provider Settings Component.
@@ -36,194 +43,20 @@ export default function ProviderSettings( {
 	const [ filterType, setFilterType ] = useState( 'all' );
 	const configs = providerConfigs;
 
-	// Continuous reactive dependency validation
-	// Automatically disable providers if their dependencies become unsatisfied
-	useEffect( () => {
-		if ( providers.length === 0 || Object.keys( configs ).length === 0 ) {
-			return;
-		}
+	// Initialize provider settings hook
+	const { toggleProviderEnabled } = useProviderSettings();
 
-		const validateAndDisableProviders = async () => {
-			const { areAllDependenciesSatisfied } = await import(
-				'./utils/dependencyValidation'
-			);
+	// Auto-disable providers when dependencies become unsatisfied
+	useDependencyValidation( providers, configs, onConfigsUpdate );
 
-			// Check all providers for unsatisfied dependencies
-			const providersToDisable = [];
-			const updatedConfigs = { ...configs };
-
-			providers.forEach( ( provider ) => {
-				const providerConfig = configs[ provider.id ] || {};
-				const isEnabled = providerConfig.enabled !== false;
-
-				// Only check enabled providers
-				if ( isEnabled ) {
-					const allDependenciesSatisfied =
-						areAllDependenciesSatisfied(
-							provider,
-							providers,
-							configs
-						);
-
-					if ( ! allDependenciesSatisfied ) {
-						// Mark for disabling
-						providersToDisable.push( provider.id );
-						updatedConfigs[ provider.id ] = {
-							...providerConfig,
-							enabled: false,
-						};
-					}
-				}
-			} );
-
-			// If any providers need to be disabled, save the updated configs
-			if ( providersToDisable.length > 0 ) {
-				try {
-					// Get current providers settings
-					const settingsResponse = await apiFetch( {
-						path: '/aether/site-exporter/settings?key=providers',
-					} );
-
-					if ( settingsResponse.success ) {
-						const currentProviders = settingsResponse.value || {};
-						const updatedProviders = {
-							...currentProviders,
-						};
-
-						// Update disabled providers
-						providersToDisable.forEach( ( providerId ) => {
-							updatedProviders[ providerId ] = {
-								...updatedProviders[ providerId ],
-								enabled: false,
-							};
-						} );
-
-						// Save updated providers object
-						const saveResponse = await apiFetch( {
-							path: '/aether/site-exporter/settings',
-							method: 'POST',
-							data: {
-								key: 'providers',
-								value: updatedProviders,
-							},
-						} );
-
-						if ( saveResponse.success && onConfigsUpdate ) {
-							onConfigsUpdate( updatedProviders );
-						}
-					}
-				} catch ( error ) {
-					console.error(
-						'Failed to disable providers with unsatisfied dependencies:',
-						error
-					);
-				}
-			}
-		};
-
-		validateAndDisableProviders();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [ JSON.stringify( configs ), providers.length ] );
-
-	// Reload providers when deployment types change (to get updated settings fields)
-	// Extract deployment types from configs to watch for changes
-	const deploymentTypesByProvider = Object.keys( configs ).reduce(
-		( acc, providerId ) => {
-			const deploymentTypes = configs[ providerId ]?.deployment_types;
-			if ( Array.isArray( deploymentTypes ) ) {
-				acc[ providerId ] = deploymentTypes.sort().join( ',' );
-			}
-			return acc;
-		},
-		{}
+	// Reload provider metadata when deployment types change
+	useProviderMetadataReload(
+		configs,
+		isModalOpen,
+		selectedProvider,
+		setProviders,
+		setSelectedProvider
 	);
-
-	useEffect( () => {
-		const reloadProviders = async () => {
-			try {
-				const providersResponse = await apiFetch( {
-					path: '/aether/site-exporter/providers',
-				} );
-
-				if (
-					providersResponse.success &&
-					providersResponse.providers
-				) {
-					const providerMetadata = providersResponse.providers.map(
-						( provider ) => ( {
-							id: provider.id,
-							metadata: {
-								name: provider.name,
-								description: provider.description,
-								supportedDeploymentTypes:
-									provider.deployment_types || [],
-								type: provider.type,
-								dependencies: provider.dependencies || [],
-								icon: '',
-							},
-							settingsFields: (
-								provider.settings_fields || []
-							).map( ( field ) => ( {
-								...field,
-								id: field.name,
-							} ) ),
-						} )
-					);
-
-					setProviders( providerMetadata );
-
-					// If a provider modal is open, update the selected provider with latest metadata
-					// This ensures the modal shows the correct fields when deployment types change
-					if ( selectedProvider && isModalOpen ) {
-						const updatedProvider = providerMetadata.find(
-							( p ) => p.id === selectedProvider.id
-						);
-						if ( updatedProvider ) {
-							// Reload the provider from the API to get filtered settings fields
-							try {
-								const providerResponse = await apiFetch( {
-									path: `/aether/site-exporter/providers/${ updatedProvider.id }`,
-								} );
-
-								if (
-									providerResponse.success &&
-									providerResponse.provider
-								) {
-									const refreshedProvider = {
-										...updatedProvider,
-										settingsFields: (
-											providerResponse.provider
-												.settings_fields || []
-										).map( ( field ) => ( {
-											...field,
-											id: field.name,
-										} ) ),
-									};
-									setSelectedProvider( refreshedProvider );
-								} else {
-									setSelectedProvider( updatedProvider );
-								}
-							} catch ( error ) {
-								console.error(
-									'Failed to refresh provider metadata:',
-									error
-								);
-								setSelectedProvider( updatedProvider );
-							}
-						}
-					}
-				}
-			} catch ( error ) {
-				console.error( 'Failed to reload providers:', error );
-			}
-		};
-
-		// Only reload if we have configs (not on initial mount)
-		if ( Object.keys( configs ).length > 0 ) {
-			reloadProviders();
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [ JSON.stringify( deploymentTypesByProvider ), isModalOpen ] );
 
 	useEffect( () => {
 		// Fetch providers from REST API (PHP registry is source of truth)
@@ -325,11 +158,7 @@ export default function ProviderSettings( {
 			if ( enabled ) {
 				const provider = providers.find( ( p ) => p.id === providerId );
 				if ( provider ) {
-					const {
-						areAllDependenciesSatisfied,
-						getUnsatisfiedDependencies,
-					} = await import( './utils/dependencyValidation' );
-
+					// Check dependencies before toggling
 					const allDependenciesSatisfied =
 						areAllDependenciesSatisfied(
 							provider,
@@ -348,7 +177,7 @@ export default function ProviderSettings( {
 								const depProvider = providers.find(
 									( p ) => p.id === depId
 								);
-								return depProvider?.name || depId;
+								return depProvider?.metadata?.name || depId;
 							} )
 							.join( ', ' );
 
@@ -366,46 +195,11 @@ export default function ProviderSettings( {
 				}
 			}
 
-			// Get current config for this provider
-			const currentConfig = configs[ providerId ] || {};
-
-			// Update enabled state
-			const updatedConfig = {
-				...currentConfig,
-				enabled,
-			};
-
-			// Get current providers settings
-			const settingsResponse = await apiFetch( {
-				path: '/aether/site-exporter/settings?key=providers',
-			} );
-
-			if ( ! settingsResponse.success ) {
-				throw new Error( 'Failed to load current settings' );
-			}
-
-			// Merge updated provider config
-			const currentProviders = settingsResponse.value || {};
-			const updatedProviders = {
-				...currentProviders,
-				[ providerId ]: updatedConfig,
-			};
-
-			// Save updated providers object
-			const saveResponse = await apiFetch( {
-				path: '/aether/site-exporter/settings',
-				method: 'POST',
-				data: {
-					key: 'providers',
-					value: updatedProviders,
-				},
-			} );
-
-			if ( ! saveResponse.success ) {
-				throw new Error(
-					saveResponse.message || 'Failed to save settings'
-				);
-			}
+			// Use the hook to toggle provider enabled state
+			const updatedProviders = await toggleProviderEnabled(
+				providerId,
+				enabled
+			);
 
 			// Update parent configs state
 			if ( onConfigsUpdate ) {
