@@ -24,11 +24,15 @@ describe( 'SecretField', () => {
 		expect( screen.getByLabelText( 'API Token' ) ).toBeInTheDocument();
 	} );
 
-	it( 'should render password input by default', () => {
+	it( 'should render text input with masking by default', () => {
 		render( <SecretField { ...defaultProps } /> );
 
 		const input = screen.getByLabelText( 'API Token' );
-		expect( input ).toHaveAttribute( 'type', 'password' );
+		expect( input ).toHaveAttribute( 'type', 'text' );
+		expect( input ).toHaveAttribute( 'autocomplete', 'off' );
+		expect( input ).toHaveAttribute( 'data-lpignore', 'true' );
+		expect( input ).toHaveAttribute( 'data-1p-ignore', 'true' );
+		expect( input ).toHaveAttribute( 'data-form-type', 'other' );
 	} );
 
 	it( 'should show value in input', () => {
@@ -44,10 +48,12 @@ describe( 'SecretField', () => {
 		const input = screen.getByLabelText( 'API Token' );
 		const toggleButton = screen.getByRole( 'button', { name: /show/i } );
 
-		expect( input ).toHaveAttribute( 'type', 'password' );
+		// Input should always be type="text", but masked when not visible
+		expect( input ).toHaveAttribute( 'type', 'text' );
 
 		fireEvent.click( toggleButton );
 
+		// After clicking show, input should still be type="text" but unmasked
 		expect( input ).toHaveAttribute( 'type', 'text' );
 		expect(
 			screen.getByRole( 'button', { name: /hide/i } )
