@@ -25,6 +25,10 @@ import {
 	borderRadius,
 	statusBadgeStyles,
 } from '../../utils/styles';
+import {
+	DEPLOYMENT_TYPES,
+	DEPLOYMENT_TYPE_LABELS,
+} from '../../constants/deploymentTypes';
 
 /**
  * Provider Instance Card Component.
@@ -118,8 +122,6 @@ export default function ProviderInstanceCard( {
 	const headerRowStyle = {
 		display: 'flex',
 		alignItems: 'center',
-		justifyContent: 'space-between',
-		gap: spacing.sm,
 	};
 
 	const nameStyle = {
@@ -144,19 +146,6 @@ export default function ProviderInstanceCard( {
 		transition: 'border-color 0.2s ease',
 	};
 
-	// Use WordPress statusBadgeStyles utility
-	const statusBadgeStyle = {
-		...statusBadgeStyles.base,
-		...( instance.config.enabled
-			? statusBadgeStyles.success
-			: {
-					background: colors.backgroundLighter,
-					color: colors.textSecondary,
-			  } ),
-		fontSize: fontSize.sm,
-		borderRadius: borderRadius.full,
-	};
-
 	const actionsStyle = {
 		display: 'flex',
 		gap: spacing.sm,
@@ -171,6 +160,58 @@ export default function ProviderInstanceCard( {
 		color: colors.textSecondary,
 		display: 'inline-block',
 		marginBottom: spacing.sm,
+	};
+
+	const deploymentTypesContainerStyle = {
+		display: 'flex',
+		flexWrap: 'wrap',
+		gap: spacing.xs,
+		marginTop: spacing.xs,
+	};
+
+	// Get enabled deployment types from instance config
+	// Use the latest instance.config to ensure reactivity when props update
+	const enabledDeploymentTypes = instance?.config?.deployment_types || [];
+
+	/**
+	 * Get color styling for a deployment type tag
+	 *
+	 * @param {string} deploymentType Deployment type identifier
+	 * @return {Object} Style object with backgroundColor and color
+	 */
+	const getDeploymentTypeTagStyle = ( deploymentType ) => {
+		const baseStyle = {
+			fontSize: fontSize.xs,
+			fontWeight: fontWeight.medium,
+			padding: '3px 8px',
+			borderRadius: borderRadius.sm,
+			display: 'inline-block',
+		};
+
+		// Assign different colors based on deployment type using WordPress statusBadgeStyles
+		switch ( deploymentType ) {
+			case DEPLOYMENT_TYPES.STATIC_SITE:
+				return {
+					...baseStyle,
+					...statusBadgeStyles.success,
+				};
+			case DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE:
+				return {
+					...baseStyle,
+					...statusBadgeStyles.info,
+				};
+			case DEPLOYMENT_TYPES.EDGE_FUNCTIONS:
+				return {
+					...baseStyle,
+					...statusBadgeStyles.warning,
+				};
+			default:
+				return {
+					...baseStyle,
+					backgroundColor: colors.backgroundLighter,
+					color: colors.textSecondary,
+				};
+		}
 	};
 
 	return (
@@ -214,57 +255,58 @@ export default function ProviderInstanceCard( {
 								/>
 							</>
 						) : (
-							<>
-								<div
-									className="aether-provider-instance-card__name"
-									style={ nameStyle }
-									onClick={ () => setIsEditing( true ) }
-									onKeyDown={ ( e ) => {
-										if (
-											e.key === 'Enter' ||
-											e.key === ' '
-										) {
-											setIsEditing( true );
-										}
-									} }
-									onMouseEnter={ ( e ) => {
-										e.currentTarget.style.backgroundColor =
-											colors.backgroundLighter;
-									} }
-									onMouseLeave={ ( e ) => {
-										e.currentTarget.style.backgroundColor =
-											'transparent';
-									} }
-									role="button"
-									tabIndex={ 0 }
-									title={ __(
-										'Click to edit name',
-										'aether-site-exporter'
-									) }
-								>
-									{ instance.config.instance_name }
-								</div>
-								<span
-									className={ `aether-provider-instance-card__status aether-provider-instance-card__status--${
-										instance.config.enabled
-											? 'enabled'
-											: 'disabled'
-									}` }
-									style={ statusBadgeStyle }
-								>
-									{ instance.config.enabled
-										? __(
-												'Enabled',
-												'aether-site-exporter'
-										  )
-										: __(
-												'Disabled',
-												'aether-site-exporter'
-										  ) }
-								</span>
-							</>
+							<div
+								className="aether-provider-instance-card__name"
+								style={ nameStyle }
+								onClick={ () => setIsEditing( true ) }
+								onKeyDown={ ( e ) => {
+									if ( e.key === 'Enter' || e.key === ' ' ) {
+										setIsEditing( true );
+									}
+								} }
+								onMouseEnter={ ( e ) => {
+									e.currentTarget.style.backgroundColor =
+										colors.backgroundLighter;
+								} }
+								onMouseLeave={ ( e ) => {
+									e.currentTarget.style.backgroundColor =
+										'transparent';
+								} }
+								role="button"
+								tabIndex={ 0 }
+								title={ __(
+									'Click to edit name',
+									'aether-site-exporter'
+								) }
+							>
+								{ instance.config.instance_name }
+							</div>
 						) }
 					</div>
+
+					{ /* Deployment Types Tags */ }
+					{ enabledDeploymentTypes.length > 0 && (
+						<div
+							className="aether-provider-instance-card__deployment-types"
+							style={ deploymentTypesContainerStyle }
+						>
+							{ enabledDeploymentTypes.map(
+								( deploymentType ) => (
+									<span
+										key={ deploymentType }
+										className={ `aether-provider-instance-card__deployment-type-tag aether-provider-instance-card__deployment-type-tag--${ deploymentType }` }
+										style={ getDeploymentTypeTagStyle(
+											deploymentType
+										) }
+									>
+										{ DEPLOYMENT_TYPE_LABELS[
+											deploymentType
+										] || deploymentType }
+									</span>
+								)
+							) }
+						</div>
+					) }
 				</div>
 			</CardHeader>
 

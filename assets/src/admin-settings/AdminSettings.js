@@ -23,6 +23,25 @@ import apiFetch from '../utils/api';
 export default function AdminSettings() {
 	const [ isExportModalOpen, setIsExportModalOpen ] = useState( false );
 	const [ providerConfigs, setProviderConfigs ] = useState( {} );
+	const [ notices, setNotices ] = useState( [] );
+
+	// Add notice helper
+	const addNotice = useCallback( ( message, status = 'error' ) => {
+		const id = Date.now();
+		setNotices( ( prev ) => [
+			...prev,
+			{ id, message, status, isDismissible: true },
+		] );
+		// Auto-dismiss after 5 seconds
+		setTimeout( () => {
+			setNotices( ( prev ) => prev.filter( ( n ) => n.id !== id ) );
+		}, 5000 );
+	}, [] );
+
+	// Remove notice helper
+	const removeNotice = useCallback( ( id ) => {
+		setNotices( ( prev ) => prev.filter( ( n ) => n.id !== id ) );
+	}, [] );
 
 	// Load provider configs on mount
 	useEffect( () => {
@@ -133,9 +152,23 @@ export default function AdminSettings() {
 							) }
 						</Notice>
 
+						{ /* Dynamic notices */ }
+						{ notices.map( ( notice ) => (
+							<Notice
+								key={ notice.id }
+								className={ `aether-admin-settings__notice aether-admin-settings__notice--${ notice.status }` }
+								status={ notice.status }
+								isDismissible={ notice.isDismissible }
+								onRemove={ () => removeNotice( notice.id ) }
+							>
+								{ notice.message }
+							</Notice>
+						) ) }
+
 						<ProviderSettings
 							providerConfigs={ providerConfigs }
 							onConfigsUpdate={ handleConfigsUpdate }
+							onNotice={ addNotice }
 						/>
 					</div>
 				</div>

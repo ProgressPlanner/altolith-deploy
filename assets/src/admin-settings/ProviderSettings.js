@@ -23,11 +23,13 @@ import { useProviderSettings } from '../hooks/useProviderSettings';
  * @param {Object}   props                 Component props.
  * @param {Object}   props.providerConfigs Provider configurations from parent.
  * @param {Function} props.onConfigsUpdate Callback to update parent configs.
+ * @param {Function} props.onNotice        Callback to show notices.
  * @return {JSX.Element} Rendered component.
  */
 export default function ProviderSettings( {
 	providerConfigs = {},
 	onConfigsUpdate,
+	onNotice,
 } ) {
 	const [ providers, setProviders ] = useState( [] );
 	const [ loading, setLoading ] = useState( true );
@@ -201,15 +203,17 @@ export default function ProviderSettings( {
 				setLocalConfigs( localConfigs );
 
 				// Show error notification
-				// TODO: Add user-visible error notification
-				alert(
-					`Failed to delete instance: ${
-						error.message || 'Unknown error'
-					}`
-				);
+				if ( onNotice ) {
+					onNotice(
+						`Failed to delete instance: ${
+							error.message || 'Unknown error'
+						}`,
+						'error'
+					);
+				}
 			}
 		},
-		[ deleteProviderInstance, onConfigsUpdate, localConfigs ]
+		[ deleteProviderInstance, onConfigsUpdate, localConfigs, onNotice ]
 	);
 
 	const handleRenameInstance = useCallback(
@@ -232,10 +236,27 @@ export default function ProviderSettings( {
 		[ renameProviderInstance, onConfigsUpdate ]
 	);
 
-	const handleModalClose = useCallback( () => {
+	const handleModalClose = useCallback( async () => {
 		setIsConfigModalOpen( false );
 		setSelectedInstanceId( null );
-	}, [] );
+
+		// Refresh configs from backend after modal closes
+		// This ensures the card displays updated deployment_types immediately
+		try {
+			const configsResponse = await apiFetch( {
+				path: '/aether/site-exporter/settings?key=providers',
+			} );
+
+			if ( configsResponse.success && configsResponse.value ) {
+				onConfigsUpdate( configsResponse.value );
+			}
+		} catch ( error ) {
+			console.error(
+				'Failed to refresh configs after modal close:',
+				error
+			);
+		}
+	}, [ onConfigsUpdate ] );
 
 	if ( loading ) {
 		return (
