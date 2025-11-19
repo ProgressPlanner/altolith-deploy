@@ -102,10 +102,12 @@ export function useStaticSiteGenerator( onProgress ) {
 			const config = {
 				public_url: siteUrl,
 				base_url: staticSiteUrl || siteUrl,
+				provider_id: staticSiteProviderId,
 			};
 
 			debug( 'Static site storage configuration:', {
 				staticPath,
+				providerId: staticSiteProviderId,
 			} );
 
 			/**
