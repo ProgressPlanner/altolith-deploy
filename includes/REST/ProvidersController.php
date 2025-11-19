@@ -224,7 +224,7 @@ class ProvidersController
 			'name' => $provider->getName(),
 			'description' => $provider->getDescription(),
 			'type' => $provider->getType(),
-			'deployment_types' => $deploymentTypes,
+			'deployment_types' => $provider->getDeploymentTypes(), // Always return supported types for UI
 			'settings_fields' => $settingsFields,
 			'configured' => $provider->isConfigured(),
 		];
