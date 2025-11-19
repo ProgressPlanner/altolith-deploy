@@ -9,8 +9,22 @@
 
 import { useState, useRef, useEffect } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { Button, ToggleControl } from '@wordpress/components';
-import { colors, spacing, fontWeight } from '../../utils/styles';
+import {
+	Button,
+	ToggleControl,
+	Card,
+	CardHeader,
+	CardBody,
+	CardFooter,
+} from '@wordpress/components';
+import {
+	colors,
+	spacing,
+	fontWeight,
+	fontSize,
+	borderRadius,
+	statusBadgeStyles,
+} from '../../utils/styles';
 
 /**
  * Provider Instance Card Component.
@@ -95,16 +109,6 @@ export default function ProviderInstanceCard( {
 		}
 	};
 
-	const cardStyle = {
-		border: `1px solid ${ colors.borderLight }`,
-		borderRadius: '6px',
-		padding: spacing.md,
-		backgroundColor: colors.surface,
-		display: 'flex',
-		flexDirection: 'column',
-		gap: spacing.md,
-	};
-
 	const headerStyle = {
 		display: 'flex',
 		alignItems: 'center',
@@ -113,165 +117,173 @@ export default function ProviderInstanceCard( {
 	};
 
 	const nameStyle = {
-		fontSize: '1rem',
+		fontSize: fontSize.base,
 		fontWeight: fontWeight.semibold,
 		color: colors.text,
 		cursor: 'pointer',
 		flex: 1,
 		padding: `${ spacing.xs } ${ spacing.sm }`,
-		borderRadius: '4px',
-		':hover': {
-			backgroundColor: colors.surfaceAlt,
-		},
+		borderRadius: borderRadius.sm,
+		transition: 'background-color 0.2s ease',
 	};
 
 	const nameInputStyle = {
-		fontSize: '1rem',
+		fontSize: fontSize.base,
 		fontWeight: fontWeight.semibold,
 		padding: `${ spacing.xs } ${ spacing.sm }`,
 		border: `2px solid ${ colors.primary }`,
-		borderRadius: '4px',
+		borderRadius: borderRadius.sm,
 		flex: 1,
 		outline: 'none',
+		transition: 'border-color 0.2s ease',
 	};
 
+	// Use WordPress statusBadgeStyles utility
 	const statusBadgeStyle = {
-		fontSize: '0.75rem',
-		padding: `${ spacing.xs } ${ spacing.sm }`,
-		borderRadius: '12px',
-		backgroundColor: instance.config.enabled
-			? colors.successLight
-			: colors.borderLight,
-		color: instance.config.enabled ? colors.success : colors.textSecondary,
-		fontWeight: fontWeight.medium,
+		...statusBadgeStyles.base,
+		...( instance.config.enabled
+			? statusBadgeStyles.success
+			: {
+					background: colors.backgroundLighter,
+					color: colors.textSecondary,
+			  } ),
+		fontSize: fontSize.sm,
+		borderRadius: borderRadius.full,
 	};
 
 	const actionsStyle = {
 		display: 'flex',
 		gap: spacing.sm,
-		paddingTop: spacing.sm,
-		borderTop: `1px solid ${ colors.borderLight }`,
 	};
 
 	const providerTypeTagStyle = {
-		fontSize: '0.7rem',
+		fontSize: fontSize.xs,
 		fontWeight: fontWeight.medium,
-		padding: `${ spacing.xs } ${ spacing.sm }`,
-		borderRadius: '4px',
-		backgroundColor: colors.primary,
-		color: '#ffffff',
-		textTransform: 'uppercase',
-		letterSpacing: '0.5px',
+		padding: '4px 8px',
+		borderRadius: borderRadius.sm,
+		backgroundColor: colors.backgroundLighter,
+		color: colors.textSecondary,
 		display: 'inline-block',
 		marginBottom: spacing.sm,
 	};
 
 	return (
-		<div className="aether-provider-instance-card" style={ cardStyle }>
-			{ /* Provider Type Tag */ }
-			<div
-				className="aether-provider-instance-card__type-tag"
-				style={ providerTypeTagStyle }
-			>
-				{ provider.name }
-			</div>
-
-			<div
-				className="aether-provider-instance-card__header"
-				style={ headerStyle }
-			>
-				{ isEditing ? (
-					<>
-						<input
-							ref={ inputRef }
-							className="aether-provider-instance-card__name-input"
-							type="text"
-							value={ editedName }
-							onChange={ ( e ) =>
-								setEditedName( e.target.value )
-							}
-							onBlur={ handleNameSave }
-							onKeyDown={ ( e ) => {
-								if ( e.key === 'Enter' ) {
-									handleNameSave();
-								} else if ( e.key === 'Escape' ) {
-									handleNameCancel();
-								}
-							} }
-							style={ nameInputStyle }
-						/>
-					</>
-				) : (
-					<>
-						<div
-							className="aether-provider-instance-card__name"
-							style={ nameStyle }
-							onClick={ () => setIsEditing( true ) }
-							onKeyDown={ ( e ) => {
-								if ( e.key === 'Enter' || e.key === ' ' ) {
-									setIsEditing( true );
-								}
-							} }
-							role="button"
-							tabIndex={ 0 }
-							title={ __(
-								'Click to edit name',
-								'aether-site-exporter'
-							) }
-						>
-							{ instance.config.instance_name }
-						</div>
-						<span
-							className={ `aether-provider-instance-card__status aether-provider-instance-card__status--${
-								instance.config.enabled ? 'enabled' : 'disabled'
-							}` }
-							style={ statusBadgeStyle }
-						>
-							{ instance.config.enabled
-								? __( 'Enabled', 'aether-site-exporter' )
-								: __( 'Disabled', 'aether-site-exporter' ) }
-						</span>
-					</>
-				) }
-			</div>
-
-			<div className="aether-provider-instance-card__toggle">
-				<ToggleControl
-					className="aether-provider-instance-card__toggle-control"
-					label={ __(
-						'Enable this instance',
-						'aether-site-exporter'
-					) }
-					checked={ instance.config.enabled !== false }
-					onChange={ onToggle }
-				/>
-			</div>
-
-			<div
-				className="aether-provider-instance-card__actions"
-				style={ actionsStyle }
-			>
-				<Button
-					className="aether-provider-instance-card__configure-button"
-					variant="secondary"
-					onClick={ onConfigure }
-					style={ { flex: 1 } }
+		<Card className="aether-provider-instance-card">
+			<CardHeader className="aether-provider-instance-card__header">
+				{ /* Provider Type Tag */ }
+				<div
+					className="aether-provider-instance-card__type-tag"
+					style={ providerTypeTagStyle }
 				>
-					{ __( 'Configure', 'aether-site-exporter' ) }
-				</Button>
-				<Button
-					className="aether-provider-instance-card__delete-button"
-					variant="secondary"
-					isDestructive
-					onClick={ handleDelete }
-					title={ __(
-						'Delete this instance',
-						'aether-site-exporter'
+					{ provider.name }
+				</div>
+
+				<div style={ headerStyle }>
+					{ isEditing ? (
+						<>
+							<input
+								ref={ inputRef }
+								className="aether-provider-instance-card__name-input"
+								type="text"
+								value={ editedName }
+								onChange={ ( e ) =>
+									setEditedName( e.target.value )
+								}
+								onBlur={ handleNameSave }
+								onKeyDown={ ( e ) => {
+									if ( e.key === 'Enter' ) {
+										handleNameSave();
+									} else if ( e.key === 'Escape' ) {
+										handleNameCancel();
+									}
+								} }
+								style={ nameInputStyle }
+							/>
+						</>
+					) : (
+						<>
+							<div
+								className="aether-provider-instance-card__name"
+								style={ nameStyle }
+								onClick={ () => setIsEditing( true ) }
+								onKeyDown={ ( e ) => {
+									if ( e.key === 'Enter' || e.key === ' ' ) {
+										setIsEditing( true );
+									}
+								} }
+								onMouseEnter={ ( e ) => {
+									e.currentTarget.style.backgroundColor =
+										colors.backgroundLighter;
+								} }
+								onMouseLeave={ ( e ) => {
+									e.currentTarget.style.backgroundColor =
+										'transparent';
+								} }
+								role="button"
+								tabIndex={ 0 }
+								title={ __(
+									'Click to edit name',
+									'aether-site-exporter'
+								) }
+							>
+								{ instance.config.instance_name }
+							</div>
+							<span
+								className={ `aether-provider-instance-card__status aether-provider-instance-card__status--${
+									instance.config.enabled ? 'enabled' : 'disabled'
+								}` }
+								style={ statusBadgeStyle }
+							>
+								{ instance.config.enabled
+									? __( 'Enabled', 'aether-site-exporter' )
+									: __( 'Disabled', 'aether-site-exporter' ) }
+							</span>
+						</>
 					) }
+				</div>
+			</CardHeader>
+
+			<CardBody className="aether-provider-instance-card__body">
+				<div className="aether-provider-instance-card__toggle">
+					<ToggleControl
+						className="aether-provider-instance-card__toggle-control"
+						label={ __(
+							'Enable this instance',
+							'aether-site-exporter'
+						) }
+						checked={ instance.config.enabled !== false }
+						onChange={ onToggle }
+					/>
+				</div>
+			</CardBody>
+
+			<CardFooter className="aether-provider-instance-card__footer">
+				<div
+					className="aether-provider-instance-card__actions"
+					style={ actionsStyle }
 				>
-					{ __( 'Delete', 'aether-site-exporter' ) }
-				</Button>
-			</div>
-		</div>
+					<Button
+						className="aether-provider-instance-card__configure-button"
+						variant="secondary"
+						onClick={ onConfigure }
+						style={ { flex: 1 } }
+					>
+						{ __( 'Configure', 'aether-site-exporter' ) }
+					</Button>
+					<Button
+						className="aether-provider-instance-card__delete-button"
+						variant="secondary"
+						isDestructive
+						onClick={ handleDelete }
+						title={ __(
+							'Delete this instance',
+							'aether-site-exporter'
+						) }
+					>
+						{ __( 'Delete', 'aether-site-exporter' ) }
+					</Button>
+				</div>
+			</CardFooter>
+		</Card>
 	);
 }

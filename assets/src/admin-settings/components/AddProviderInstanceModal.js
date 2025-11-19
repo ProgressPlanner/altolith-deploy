@@ -15,6 +15,7 @@ import {
 	TextControl,
 	SelectControl,
 } from '@wordpress/components';
+import { v4 as uuidv4 } from 'uuid';
 import { spacing } from '../../utils/styles';
 
 /**
@@ -24,7 +25,7 @@ import { spacing } from '../../utils/styles';
  * @param {boolean}  props.isOpen    Whether modal is open.
  * @param {Function} props.onClose   Callback to close modal.
  * @param {Array}    props.providers Array of available provider types.
- * @param {Function} props.onCreate  Callback to create instance (providerType, instanceName).
+ * @param {Function} props.onCreate  Callback to create instance (instanceId, providerType, instanceName).
  * @return {JSX.Element|null} Rendered component.
  */
 export default function AddProviderInstanceModal( {
@@ -42,9 +43,16 @@ export default function AddProviderInstanceModal( {
 			return;
 		}
 
+		// Generate UUID client-side for instant feedback
+		const instanceId = `${ selectedProviderType }:${ uuidv4() }`;
+
 		setIsCreating( true );
 		try {
-			await onCreate( selectedProviderType, instanceName.trim() );
+			await onCreate(
+				instanceId,
+				selectedProviderType,
+				instanceName.trim()
+			);
 			// Reset form and close
 			setSelectedProviderType( '' );
 			setInstanceName( '' );

@@ -265,6 +265,7 @@ class ProvidersController
 	{
 		$providerType = \sanitize_key($request->get_param('provider_type'));
 		$instanceName = \sanitize_text_field($request->get_param('instance_name'));
+		$clientInstanceId = $request->get_param('instance_id'); // Optional client-generated ID
 
 		// Verify provider type exists.
 		$registry = ProviderRegistry::getInstance();
@@ -278,8 +279,23 @@ class ProvidersController
 			);
 		}
 
-		// Generate new instance ID.
-		$instanceId = $registry->createInstanceId($providerType);
+		// Use client-provided instance ID if valid, otherwise generate server-side.
+		if ($clientInstanceId && \is_string($clientInstanceId)) {
+			// Validate format: provider_type:uuid
+			$parts = \explode(':', $clientInstanceId, 2);
+			if (\count($parts) === 2 && $parts[0] === $providerType && ! empty($parts[1])) {
+				$instanceId = \sanitize_text_field($clientInstanceId);
+			} else {
+				return new WP_Error(
+					'invalid_instance_id',
+					\__('Invalid instance ID format. Expected provider_type:uuid', 'aether-site-exporter'),
+					[ 'status' => 400 ]
+				);
+			}
+		} else {
+			// Generate new instance ID server-side (backward compatible).
+			$instanceId = $registry->createInstanceId($providerType);
+		}
 
 		// Create initial config with metadata.
 		$config = [

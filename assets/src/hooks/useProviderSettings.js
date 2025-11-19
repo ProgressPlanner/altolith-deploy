@@ -191,12 +191,13 @@ export function useProviderSettings() {
 	/**
 	 * Create a new provider instance
 	 *
+	 * @param {string} instanceId   Client-generated instance ID (provider_type:uuid)
 	 * @param {string} providerType Provider type (e.g., 'local-filesystem')
 	 * @param {string} instanceName User-friendly instance name
 	 * @return {Promise<Object>} Created instance info
 	 */
 	const createProviderInstance = useCallback(
-		async ( providerType, instanceName ) => {
+		async ( instanceId, providerType, instanceName ) => {
 			setLoading( true );
 			setError( null );
 
@@ -205,6 +206,7 @@ export function useProviderSettings() {
 					path: `/aether/site-exporter/providers/${ providerType }/instances`,
 					method: 'POST',
 					data: {
+						instance_id: instanceId,
 						instance_name: instanceName,
 					},
 				} );

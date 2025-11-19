@@ -34,7 +34,16 @@ export default function ProviderSettings( {
 	const [ selectedInstanceId, setSelectedInstanceId ] = useState( null );
 	const [ isConfigModalOpen, setIsConfigModalOpen ] = useState( false );
 	const [ isAddModalOpen, setIsAddModalOpen ] = useState( false );
-	const configs = providerConfigs;
+
+	// Local state for optimistic updates
+	const [ localConfigs, setLocalConfigs ] = useState( providerConfigs );
+
+	// Sync local state when parent prop changes
+	useEffect( () => {
+		setLocalConfigs( providerConfigs );
+	}, [ providerConfigs ] );
+
+	const configs = localConfigs;
 
 	// Initialize provider settings hook
 	const {
@@ -101,24 +110,54 @@ export default function ProviderSettings( {
 	);
 
 	const handleCreateInstanceConfirm = useCallback(
-		async ( providerType, instanceName ) => {
+		async ( instanceId, providerType, instanceName ) => {
+			// Get provider metadata for default deployment types
+			const provider = providers.find( ( p ) => p.id === providerType );
+			const defaultDeploymentTypes = provider?.deployment_types || [];
+
+			// Optimistically add the new instance to local state
+			const newInstance = {
+				provider_type: providerType,
+				instance_name: instanceName,
+				enabled: false,
+				deployment_types: defaultDeploymentTypes,
+			};
+
+			const optimisticConfigs = {
+				...localConfigs,
+				[ instanceId ]: newInstance,
+			};
+
+			setLocalConfigs( optimisticConfigs );
+
 			try {
-				await createProviderInstance( providerType, instanceName );
+				// Create instance in backend
+				await createProviderInstance(
+					instanceId,
+					providerType,
+					instanceName
+				);
 
-				// Reload configs
-				const configsResponse = await apiFetch( {
-					path: '/aether/site-exporter/settings?key=providers',
-				} );
-
-				if ( configsResponse.success && configsResponse.value ) {
-					onConfigsUpdate( configsResponse.value );
+				// Update parent state (persists the optimistic update)
+				if ( onConfigsUpdate ) {
+					onConfigsUpdate( optimisticConfigs );
 				}
 			} catch ( error ) {
 				console.error( 'Failed to create instance:', error );
+
+				// Rollback optimistic update on error
+				setLocalConfigs( localConfigs );
+
+				// Re-throw to show error in modal
 				throw error;
 			}
 		},
-		[ createProviderInstance, onConfigsUpdate ]
+		[
+			createProviderInstance,
+			onConfigsUpdate,
+			localConfigs,
+			providers,
+		]
 	);
 
 	const handleConfigureInstance = useCallback( async ( instanceId ) => {
@@ -147,19 +186,38 @@ export default function ProviderSettings( {
 
 	const handleDeleteInstance = useCallback(
 		async ( instanceId ) => {
-			try {
-				const updatedProviders =
-					await deleteProviderInstance( instanceId );
+			// Store the deleted instance for rollback
+			const deletedInstance = localConfigs[ instanceId ];
 
-				// Update parent configs state
+			// Optimistically remove from local state
+			const { [ instanceId ]: removed, ...remainingConfigs } =
+				localConfigs;
+			setLocalConfigs( remainingConfigs );
+
+			try {
+				// Delete from backend
+				await deleteProviderInstance( instanceId );
+
+				// Update parent state (persists the optimistic update)
 				if ( onConfigsUpdate ) {
-					onConfigsUpdate( updatedProviders );
+					onConfigsUpdate( remainingConfigs );
 				}
 			} catch ( error ) {
 				console.error( 'Failed to delete instance:', error );
+
+				// Rollback optimistic update on error
+				setLocalConfigs( localConfigs );
+
+				// Show error notification
+				// TODO: Add user-visible error notification
+				alert(
+					`Failed to delete instance: ${
+						error.message || 'Unknown error'
+					}`
+				);
 			}
 		},
-		[ deleteProviderInstance, onConfigsUpdate ]
+		[ deleteProviderInstance, onConfigsUpdate, localConfigs ]
 	);
 
 	const handleRenameInstance = useCallback(
