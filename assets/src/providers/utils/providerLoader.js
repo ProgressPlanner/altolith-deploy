@@ -200,7 +200,10 @@ function loadProviderScript( providerId, attempt = 1, maxAttempts = 3 ) {
 			const checkInterval = setInterval( () => {
 				checkCount++;
 				// Check if script has loaded (script element exists and is ready)
-				if ( existingScript && existingScript.readyState === 'complete' ) {
+				if (
+					existingScript &&
+					existingScript.readyState === 'complete'
+				) {
 					clearInterval( checkInterval );
 					setLoadingState( providerId, LOAD_STATE.LOADED );
 					resolve();
@@ -441,10 +444,7 @@ export async function loadAllProviders( options = {} ) {
 			allProviderIds = response.providers.map( ( p ) => p.id );
 		}
 	} catch ( error ) {
-		debugWarn(
-			'Failed to fetch providers from REST API:',
-			error
-		);
+		debugWarn( 'Failed to fetch providers from REST API:', error );
 	}
 
 	// Allow plugins to extend provider IDs via filter

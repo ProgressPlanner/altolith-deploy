@@ -38,7 +38,7 @@ export default function HowItWorks() {
 	};
 
 	const contentStyle = {
-		maxWidth: '60rem',
+		// maxWidth: '60rem',
 		paddingLeft: spacing.lg,
 		paddingRight: spacing.lg,
 		paddingTop: spacing.lg,
