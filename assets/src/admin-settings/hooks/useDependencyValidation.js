@@ -14,15 +14,11 @@ import { useProviderSettings } from '../../hooks/useProviderSettings';
 /**
  * Hook to validate and auto-disable providers with unsatisfied dependencies
  *
- * @param {Array}    providers        Array of provider metadata objects
- * @param {Object}   configs          Provider configurations object
- * @param {Function} onConfigsUpdate  Callback when configs are updated
+ * @param {Array}    providers       Array of provider metadata objects
+ * @param {Object}   configs         Provider configurations object
+ * @param {Function} onConfigsUpdate Callback when configs are updated
  */
-export function useDependencyValidation(
-	providers,
-	configs,
-	onConfigsUpdate
-) {
+export function useDependencyValidation( providers, configs, onConfigsUpdate ) {
 	const { updateMultipleProviders } = useProviderSettings();
 	const previousConfigsRef = useRef( null );
 
@@ -79,9 +75,8 @@ export function useDependencyValidation(
 			// If any providers need to be disabled, save the updated configs
 			if ( Object.keys( providersToDisable ).length > 0 ) {
 				try {
-					const updatedProviders = await updateMultipleProviders(
-						providersToDisable
-					);
+					const updatedProviders =
+						await updateMultipleProviders( providersToDisable );
 
 					if ( onConfigsUpdate ) {
 						onConfigsUpdate( updatedProviders );

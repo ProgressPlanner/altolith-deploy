@@ -13,10 +13,10 @@ import apiFetch from '../../utils/api';
 /**
  * Hook to reload provider metadata when deployment types change
  *
- * @param {Object} configs          Provider configurations object
- * @param {boolean} isModalOpen     Whether a provider modal is currently open
- * @param {Object} selectedProvider Currently selected provider
- * @param {Function} setProviders     Callback to update providers list
+ * @param {Object}   configs             Provider configurations object
+ * @param {boolean}  isModalOpen         Whether a provider modal is currently open
+ * @param {Object}   selectedProvider    Currently selected provider
+ * @param {Function} setProviders        Callback to update providers list
  * @param {Function} setSelectedProvider Callback to update selected provider
  */
 export function useProviderMetadataReload(
@@ -53,7 +53,10 @@ export function useProviderMetadataReload(
 		const deploymentTypesString = getDeploymentTypesString();
 
 		// Skip if deployment types haven't changed
-		if ( previousDeploymentTypesRef.current === deploymentTypesString && previousDeploymentTypesRef.current !== null ) {
+		if (
+			previousDeploymentTypesRef.current === deploymentTypesString &&
+			previousDeploymentTypesRef.current !== null
+		) {
 			return;
 		}
 

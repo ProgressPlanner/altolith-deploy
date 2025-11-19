@@ -49,19 +49,17 @@ export function useProviderSettings() {
 	/**
 	 * Update a single provider's configuration
 	 *
-	 * @param {string} providerId         Provider ID
-	 * @param {Object} updatedConfig      Updated configuration for the provider
-	 * @param {Object} options            Options
-	 * @param {boolean} options.preserveEnabled Preserve existing enabled state (default: false)
+	 * @param {string}  providerId                      Provider ID
+	 * @param {Object}  updatedConfig                   Updated configuration for the provider
+	 * @param {Object}  options                         Options
+	 * @param {boolean} options.preserveEnabled         Preserve existing enabled state (default: false)
 	 * @param {boolean} options.preserveDeploymentTypes Preserve existing deployment_types (default: false)
 	 * @return {Promise<Object>} Updated provider configurations
 	 */
 	const updateProviderConfig = useCallback(
 		async ( providerId, updatedConfig, options = {} ) => {
-			const {
-				preserveEnabled = false,
-				preserveDeploymentTypes = false,
-			} = options;
+			const { preserveEnabled = false, preserveDeploymentTypes = false } =
+				options;
 
 			setLoading( true );
 			setError( null );
@@ -179,8 +177,8 @@ export function useProviderSettings() {
 	/**
 	 * Toggle provider enabled state
 	 *
-	 * @param {string} providerId Provider ID
-	 * @param {boolean} enabled   New enabled state
+	 * @param {string}  providerId Provider ID
+	 * @param {boolean} enabled    New enabled state
 	 * @return {Promise<Object>} Updated provider configurations
 	 */
 	const toggleProviderEnabled = useCallback(

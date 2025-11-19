@@ -68,19 +68,22 @@ export default function ProviderConfigModal( {
 		margin: 0,
 	};
 
-	const handleFormChange = useCallback( ( newValues ) => {
-		// Preserve deployment_types from current config (it's hidden in form but managed in sidebar)
-		// eslint-disable-next-line camelcase
-		const deploymentTypes = config.deployment_types;
-		setConfig( {
-			...newValues,
+	const handleFormChange = useCallback(
+		( newValues ) => {
+			// Preserve deployment_types from current config (it's hidden in form but managed in sidebar)
 			// eslint-disable-next-line camelcase
-			...( deploymentTypes !== undefined && {
-				deployment_types: deploymentTypes,
-			} ),
-		} );
-		setHasChanges( true );
-	}, [ config.deployment_types ] );
+			const deploymentTypes = config.deployment_types;
+			setConfig( {
+				...newValues,
+				// eslint-disable-next-line camelcase
+				...( deploymentTypes !== undefined && {
+					deployment_types: deploymentTypes,
+				} ),
+			} );
+			setHasChanges( true );
+		},
+		[ config.deployment_types ]
+	);
 
 	// Reset config when modal opens/closes or provider changes
 	useEffect( () => {
