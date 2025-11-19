@@ -213,4 +213,3 @@ export function getCumulativeProgress( stepId ) {
 	}
 	return cumulative;
 }
-

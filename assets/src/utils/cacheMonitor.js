@@ -215,10 +215,7 @@ export class CacheMonitor {
 			const clearMethod =
 				cacheName === 'archiveProgress' ? 'clearAll' : 'clear';
 			const result = await this.caches[ cacheName ][ clearMethod ]();
-			debug(
-				`[CacheMonitor] Cleared ${ cacheName } cache:`,
-				result
-			);
+			debug( `[CacheMonitor] Cleared ${ cacheName } cache:`, result );
 			return result;
 		} catch ( error ) {
 			debugError(

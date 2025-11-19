@@ -28,12 +28,16 @@ export function filterNullishValues( obj ) {
 /**
  * Safely parse JSON with fallback value
  *
- * @param {string} jsonString  JSON string to parse
- * @param {*}      fallback    Fallback value if parsing fails (default: null)
- * @param {Function} validator Optional validator function to verify parsed value
+ * @param {string}   jsonString JSON string to parse
+ * @param {*}        fallback   Fallback value if parsing fails (default: null)
+ * @param {Function} validator  Optional validator function to verify parsed value
  * @return {*} Parsed value or fallback
  */
-export function parseJSONSafely( jsonString, fallback = null, validator = null ) {
+export function parseJSONSafely(
+	jsonString,
+	fallback = null,
+	validator = null
+) {
 	if ( ! jsonString || typeof jsonString !== 'string' ) {
 		return fallback;
 	}
@@ -124,8 +128,8 @@ export function deepMerge( target, source ) {
 /**
  * Debounce a function call
  *
- * @param {Function} func    Function to debounce
- * @param {number}   wait    Milliseconds to wait
+ * @param {Function} func      Function to debounce
+ * @param {number}   wait      Milliseconds to wait
  * @param {boolean}  immediate Execute on leading edge instead of trailing
  * @return {Function} Debounced function
  */

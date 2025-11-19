@@ -18,10 +18,7 @@ import { calculateOverallProgress } from '../utils/progressManager';
 import { debug, debugError } from '../../utils/debug';
 import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
-import {
-	PUBLISH_WORKFLOW,
-	STEP_HANDLERS,
-} from '../workflows/publishWorkflow';
+import { PUBLISH_WORKFLOW, STEP_HANDLERS } from '../workflows/publishWorkflow';
 import { executeWorkflow } from '../workflows/workflowExecutor';
 
 export function usePublishController( publishState ) {
