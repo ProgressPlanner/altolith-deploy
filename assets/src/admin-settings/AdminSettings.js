@@ -6,19 +6,46 @@
  * @package
  */
 
-import { useState } from '@wordpress/element';
+import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Notice, Button } from '@wordpress/components';
 import PublishProgressModal from '../publish/components/PublishProgressModal';
 import ProviderSettings from './ProviderSettings';
+import GlobalDeploymentTypes from './components/GlobalDeploymentTypes';
 import { colors, spacing, fontWeight, createFlexStyle } from '../utils/styles';
+import apiFetch from '../utils/api';
 
 export default function AdminSettings() {
 	const [ isExportModalOpen, setIsExportModalOpen ] = useState( false );
+	const [ providerConfigs, setProviderConfigs ] = useState( {} );
+
+	// Load provider configs on mount
+	useEffect( () => {
+		const loadConfigs = async () => {
+			try {
+				const configsResponse = await apiFetch( {
+					path: '/aether/site-exporter/settings?key=providers',
+				} );
+
+				if ( configsResponse.success && configsResponse.value ) {
+					setProviderConfigs( configsResponse.value );
+				}
+			} catch ( err ) {
+				console.error( 'Failed to load provider configs:', err );
+			}
+		};
+
+		loadConfigs();
+	}, [] );
+
+	// Callback to update configs when a provider is toggled or configured
+	const handleConfigsUpdate = useCallback( ( updatedConfigs ) => {
+		setProviderConfigs( updatedConfigs );
+	}, [] );
 
 	const containerStyle = {
 		padding: '1.25rem',
-		maxWidth: '60rem',
+		maxWidth: '100%',
 	};
 
 	const headingStyle = {
@@ -26,6 +53,28 @@ export default function AdminSettings() {
 		fontSize: '1.75rem',
 		fontWeight: fontWeight.semibold,
 		color: colors.text,
+	};
+
+	const layoutStyle = {
+		display: 'flex',
+		gap: spacing.xl,
+		alignItems: 'flex-start',
+	};
+
+	const mainContentStyle = {
+		flex: 1,
+		minWidth: 0, // Prevents flex item from overflowing
+	};
+
+	const sidebarStyle = {
+		width: '300px',
+		flexShrink: 0,
+	};
+
+	const sidebarContentStyle = {
+		...createFlexStyle( 'column', spacing.lg ),
+		position: 'sticky',
+		top: spacing.lg,
 	};
 
 	const sectionsStyle = {
@@ -44,26 +93,41 @@ export default function AdminSettings() {
 				) }
 			</h1>
 
-			<div
-				className="aether-admin-settings__sections"
-				style={ sectionsStyle }
-			>
-				<Notice status="info" isDismissible={ false }>
-					{ __(
-						'Aether Site Exporter allows you to export your WordPress site as a complete package.',
-						'aether-site-exporter'
-					) }
-				</Notice>
+			<div style={ layoutStyle }>
+				{ /* Main Content */ }
+				<div style={ mainContentStyle }>
+					<div style={ sectionsStyle }>
+						<Notice status="info" isDismissible={ false }>
+							{ __(
+								'Aether Site Exporter allows you to export your WordPress site as a complete package.',
+								'aether-site-exporter'
+							) }
+						</Notice>
 
-				<Button
-					variant="primary"
-					onClick={ () => setIsExportModalOpen( true ) }
-					style={ { marginTop: spacing.md } }
-				>
-					{ __( 'Export Site', 'aether-site-exporter' ) }
-				</Button>
+						<ProviderSettings
+							providerConfigs={ providerConfigs }
+							onConfigsUpdate={ handleConfigsUpdate }
+						/>
+					</div>
+				</div>
 
-				<ProviderSettings />
+				{ /* Sidebar */ }
+				<div style={ sidebarStyle }>
+					<div style={ sidebarContentStyle }>
+						<Button
+							variant="primary"
+							onClick={ () => setIsExportModalOpen( true ) }
+							style={ { width: '100%' } }
+						>
+							{ __( 'Export Site', 'aether-site-exporter' ) }
+						</Button>
+
+						<GlobalDeploymentTypes
+							providerConfigs={ providerConfigs }
+							onConfigsUpdate={ handleConfigsUpdate }
+						/>
+					</div>
+				</div>
 			</div>
 
 			<PublishProgressModal
