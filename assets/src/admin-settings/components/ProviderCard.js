@@ -11,16 +11,22 @@ import { __ } from '@wordpress/i18n';
 import { Button, ToggleControl } from '@wordpress/components';
 import { colors, spacing, fontWeight, borderRadius } from '../../utils/styles';
 import { DEPLOYMENT_TYPE_LABELS } from '../../constants/deploymentTypes';
+import {
+	areAllDependenciesSatisfied,
+	getUnsatisfiedDependencies,
+} from '../utils/dependencyValidation';
 
 /**
  * Provider Card Component.
  *
- * @param {Object}   props             Component props.
- * @param {Object}   props.provider    Provider metadata.
- * @param {Object}   props.config      Provider configuration.
- * @param {boolean}  props.enabled     Whether provider is enabled.
- * @param {Function} props.onToggle    Toggle enable/disable handler.
- * @param {Function} props.onConfigure Open configuration modal handler.
+ * @param {Object}   props                    Component props.
+ * @param {Object}   props.provider           Provider metadata.
+ * @param {Object}   props.config             Provider configuration.
+ * @param {boolean}  props.enabled            Whether provider is enabled.
+ * @param {Function} props.onToggle           Toggle enable/disable handler.
+ * @param {Function} props.onConfigure        Open configuration modal handler.
+ * @param {Array}    props.allProviders       Array of all provider metadata.
+ * @param {Object}   props.allProviderConfigs Object mapping all provider IDs to configs.
  * @return {JSX.Element} Rendered card component.
  */
 export default function ProviderCard( {
@@ -29,9 +35,32 @@ export default function ProviderCard( {
 	enabled = false,
 	onToggle,
 	onConfigure,
+	allProviders = [],
+	allProviderConfigs = {},
 } ) {
 	const { metadata } = provider;
-	const { name, description, supportedDeploymentTypes = [], type } = metadata;
+	const {
+		name,
+		description,
+		supportedDeploymentTypes = [],
+		type,
+		dependencies = [],
+	} = metadata;
+
+	// Check if all dependencies are satisfied
+	const allDependenciesSatisfied = areAllDependenciesSatisfied(
+		provider,
+		allProviders,
+		allProviderConfigs
+	);
+	const unsatisfiedDependencies = getUnsatisfiedDependencies(
+		provider,
+		allProviders,
+		allProviderConfigs
+	);
+
+	// Provider can only be enabled if all dependencies are satisfied
+	const canEnable = allDependenciesSatisfied;
 
 	// Check if provider is configured (has any non-default config values)
 	const isConfigured = config && Object.keys( config ).length > 0;
@@ -149,6 +178,50 @@ export default function ProviderCard( {
 				</div>
 			) }
 
+			{ /* Dependencies badges */ }
+			{ dependencies.length > 0 && (
+				<div style={ badgeContainerStyle }>
+					{ dependencies.map( ( dependencyId ) => {
+						const dependencyProvider = allProviders.find(
+							( p ) => p.id === dependencyId
+						);
+						const dependencyName =
+							dependencyProvider?.name || dependencyId;
+						const isSatisfied =
+							! unsatisfiedDependencies.includes( dependencyId );
+
+						return (
+							<span
+								key={ dependencyId }
+								style={ {
+									...badgeStyle,
+									backgroundColor: isSatisfied
+										? '#d5f0dd'
+										: '#fce8e6',
+									color: isSatisfied ? '#00833e' : '#d63638',
+									fontSize: '0.7rem',
+								} }
+								title={
+									isSatisfied
+										? __(
+												'Dependency satisfied',
+												'aether-site-exporter'
+										  )
+										: __(
+												'Dependency not satisfied',
+												'aether-site-exporter'
+										  )
+								}
+							>
+								{ __( 'Requires:', 'aether-site-exporter' ) }{ ' ' }
+								{ dependencyName }
+								{ isSatisfied ? ' ✓' : ' ✗' }
+							</span>
+						);
+					} ) }
+				</div>
+			) }
+
 			{ /* Status badges */ }
 			<div style={ badgeContainerStyle }>
 				<span
@@ -175,6 +248,32 @@ export default function ProviderCard( {
 				) }
 			</div>
 
+			{ /* Dependency warning */ }
+			{ ! canEnable && unsatisfiedDependencies.length > 0 && (
+				<div
+					style={ {
+						padding: spacing.sm,
+						backgroundColor: '#fce8e6',
+						borderLeft: `3px solid #d63638`,
+						borderRadius: '4px',
+						marginBottom: spacing.md,
+					} }
+				>
+					<p
+						style={ {
+							margin: 0,
+							fontSize: '0.875rem',
+							color: '#d63638',
+						} }
+					>
+						{ __(
+							'Cannot enable: Missing required dependencies.',
+							'aether-site-exporter'
+						) }
+					</p>
+				</div>
+			) }
+
 			{ /* Actions */ }
 			<div style={ actionsStyle }>
 				<ToggleControl
@@ -185,6 +284,7 @@ export default function ProviderCard( {
 					}
 					checked={ enabled }
 					onChange={ onToggle }
+					disabled={ ! canEnable && ! enabled }
 					__nextHasNoMarginBottom={ true }
 				/>
 				<Button
