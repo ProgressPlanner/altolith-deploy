@@ -24,6 +24,7 @@
  */
 
 import IndexedDBStore from './indexedDB';
+import { debug, debugError } from './debug';
 
 /**
  * Cache schema version
@@ -98,7 +99,7 @@ export class ManifestCache {
 					cached.schemaVersion !== undefined &&
 					cached.schemaVersion !== CACHE_SCHEMA_VERSION
 				) {
-					console.log(
+					debug(
 						`[ManifestCache] Cache schema version mismatch for ${ providerId } (cached: ${ cached.schemaVersion }, current: ${ CACHE_SCHEMA_VERSION }). Invalidating cache.`
 					);
 					await this.store.delete( cacheKey );
@@ -196,14 +197,14 @@ export class ManifestCache {
 					await this.store.deleteOlderThan( CACHE_EXPIRATION_MS );
 
 				if ( deleted > 0 ) {
-					console.log(
+					debug(
 						`[ManifestCache] Cleaned up ${ deleted } expired cache entries`
 					);
 				}
 
 				return deleted;
 			} catch ( error ) {
-				console.error( '[ManifestCache] Error during cleanup:', error );
+				debugError( '[ManifestCache] Error during cleanup:', error );
 				return 0;
 			} finally {
 				this.cleanupPromise = null;

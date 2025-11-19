@@ -15,6 +15,7 @@
  */
 
 import IndexedDBStore from './indexedDB';
+import { debug, debugError } from './debug';
 
 /**
  * Cache configuration
@@ -203,14 +204,14 @@ export class ArchiveProgressCache {
 					await this.store.deleteOlderThan( CACHE_EXPIRATION_MS );
 
 				if ( deleted > 0 ) {
-					console.log(
+					debug(
 						`[ArchiveProgressCache] Cleaned up ${ deleted } expired entries`
 					);
 				}
 
 				return deleted;
 			} catch ( error ) {
-				console.error(
+				debugError(
 					'[ArchiveProgressCache] Error during cleanup:',
 					error
 				);

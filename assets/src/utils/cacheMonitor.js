@@ -25,6 +25,7 @@ import { getManifestCache } from './manifestCache';
 import { getUploadProgressCache } from './uploadProgressCache';
 import { getArchiveProgressCache } from './archiveProgressCache';
 import { deleteDatabase, isIndexedDBAvailable } from './indexedDB';
+import { debug, debugError } from './debug';
 
 /**
  * Cache Monitor
@@ -95,7 +96,7 @@ export class CacheMonitor {
 				};
 			}
 		} catch ( error ) {
-			console.error( '[CacheMonitor] Error getting stats:', error );
+			debugError( '[CacheMonitor] Error getting stats:', error );
 		}
 
 		return stats;
@@ -166,7 +167,7 @@ export class CacheMonitor {
 	 */
 	async printStats() {
 		const formatted = await this.getFormattedStats();
-		console.log( formatted );
+		debug( formatted );
 	}
 
 	/**
@@ -189,9 +190,9 @@ export class CacheMonitor {
 			results.archiveProgress =
 				await this.caches.archiveProgress.clearAll();
 
-			console.log( '[CacheMonitor] All caches cleared:', results );
+			debug( '[CacheMonitor] All caches cleared:', results );
 		} catch ( error ) {
-			console.error( '[CacheMonitor] Error clearing caches:', error );
+			debugError( '[CacheMonitor] Error clearing caches:', error );
 		}
 
 		return results;
@@ -205,7 +206,7 @@ export class CacheMonitor {
 	 */
 	async clearCache( cacheName ) {
 		if ( ! this.caches[ cacheName ] ) {
-			console.error( `[CacheMonitor] Unknown cache: ${ cacheName }` );
+			debugError( `[CacheMonitor] Unknown cache: ${ cacheName }` );
 			return false;
 		}
 
@@ -214,13 +215,13 @@ export class CacheMonitor {
 			const clearMethod =
 				cacheName === 'archiveProgress' ? 'clearAll' : 'clear';
 			const result = await this.caches[ cacheName ][ clearMethod ]();
-			console.log(
+			debug(
 				`[CacheMonitor] Cleared ${ cacheName } cache:`,
 				result
 			);
 			return result;
 		} catch ( error ) {
-			console.error(
+			debugError(
 				`[CacheMonitor] Error clearing ${ cacheName } cache:`,
 				error
 			);
@@ -257,9 +258,9 @@ export class CacheMonitor {
 				'aether-archive-progress'
 			);
 
-			console.log( '[CacheMonitor] All databases deleted:', results );
+			debug( '[CacheMonitor] All databases deleted:', results );
 		} catch ( error ) {
-			console.error( '[CacheMonitor] Error deleting databases:', error );
+			debugError( '[CacheMonitor] Error deleting databases:', error );
 		}
 
 		return results;
@@ -291,12 +292,12 @@ export class CacheMonitor {
 				results.uploadProgress +
 				results.archiveProgress;
 
-			console.log(
+			debug(
 				`[CacheMonitor] Cleanup complete: ${ total } entries removed`,
 				results
 			);
 		} catch ( error ) {
-			console.error( '[CacheMonitor] Error during cleanup:', error );
+			debugError( '[CacheMonitor] Error during cleanup:', error );
 		}
 
 		return results;
