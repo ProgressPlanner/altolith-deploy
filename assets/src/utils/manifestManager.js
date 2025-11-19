@@ -14,10 +14,9 @@ import { debug, debugWarn } from './debug';
  * Fetch existing manifest from remote storage.
  *
  * @param {Object} storageService StorageService instance.
- * @param {string} providerId     Optional provider ID (not used, kept for API compatibility).
  * @return {Promise<Object>} Manifest object (empty object if not found).
  */
-export async function fetchManifest( storageService, providerId = 'default' ) {
+export async function fetchManifest( storageService ) {
 	const manifestKey = 'file-manifest.json';
 
 	try {
@@ -192,14 +191,9 @@ export function cleanupManifest( manifest, currentFiles ) {
  *
  * @param {Object} storageService StorageService instance.
  * @param {Object} manifest       Manifest object to upload.
- * @param {string} providerId     Optional provider ID (not used, kept for API compatibility).
  * @return {Promise<boolean>} True if upload succeeded.
  */
-export async function uploadManifest(
-	storageService,
-	manifest,
-	providerId = 'default'
-) {
+export async function uploadManifest( storageService, manifest ) {
 	const manifestKey = 'file-manifest.json';
 
 	try {
