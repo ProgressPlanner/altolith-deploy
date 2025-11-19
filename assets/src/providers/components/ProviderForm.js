@@ -7,7 +7,13 @@
  * @package
  */
 
-import { useState, useEffect, useRef, useCallback, memo } from '@wordpress/element';
+import {
+	useState,
+	useEffect,
+	useRef,
+	useCallback,
+	memo,
+} from '@wordpress/element';
 import { Button, Notice } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
@@ -15,7 +21,13 @@ import apiFetch from '../../utils/api';
 import { validateConfig } from '../../utils/validation';
 import ProviderField from './ProviderField';
 import { useSuccessTimeout } from '../../hooks/useSuccessTimeout';
-import { colors, spacing, createFlexStyle } from '../../utils/styles';
+import {
+	colors,
+	spacing,
+	fontWeight,
+	borderRadius,
+	createFlexStyle,
+} from '../../utils/styles';
 
 /**
  * Provider Form Component.
@@ -82,22 +94,25 @@ function ProviderForm( {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [ initialValues ] );
 
-	const handleFieldChange = useCallback( ( fieldId, value ) => {
-		const newValues = {
-			...values,
-			[ fieldId ]: value,
-		};
-		setValues( newValues );
-		setErrors( {} );
-		setError( null );
-		clearSuccess();
-		setSuccess( false );
+	const handleFieldChange = useCallback(
+		( fieldId, value ) => {
+			const newValues = {
+				...values,
+				[ fieldId ]: value,
+			};
+			setValues( newValues );
+			setErrors( {} );
+			setError( null );
+			clearSuccess();
+			setSuccess( false );
 
-		// Call onChange callback if provided
-		if ( onChange ) {
-			onChange( newValues );
-		}
-	}, [ values, onChange, clearSuccess ] );
+			// Call onChange callback if provided
+			if ( onChange ) {
+				onChange( newValues );
+			}
+		},
+		[ values, onChange, clearSuccess ]
+	);
 
 	// Trigger hooks when values or other state changes
 	useEffect( () => {
@@ -268,40 +283,99 @@ function ProviderForm( {
 				data-provider-id={ providerId }
 			/>
 
-			{ fields.map( ( field ) => {
-				// Determine if field should be hidden
-				let isHidden = false;
+			{ ( () => {
+				// Helper function to determine if field should be hidden
+				const isFieldHidden = ( field ) => {
+					// Always hide deployment_types field (managed in sidebar)
+					if ( field.name === 'deployment_types' ) {
+						return true;
+					}
+					if ( field.hidden === true ) {
+						// Hide fields marked as hidden in provider settings
+						return true;
+					}
+					if ( field.deploymentType ) {
+						// Hide fields with deploymentType if that type is not in current deployment_types
+						// Check both values.deployment_types and initialValues.deployment_types
+						// to handle real-time updates when deployment types change in sidebar
+						const currentDeploymentTypes =
+							values.deployment_types ||
+							initialValues.deployment_types ||
+							[];
+						return ! currentDeploymentTypes.includes(
+							field.deploymentType
+						);
+					}
+					return false;
+				};
 
-				// Always hide deployment_types field (managed in sidebar)
-				if ( field.name === 'deployment_types' ) {
-					isHidden = true;
-				} else if ( field.hidden === true ) {
-					// Hide fields marked as hidden in provider settings
-					isHidden = true;
-				} else if ( field.deploymentType ) {
-					// Hide fields with deploymentType if that type is not in current deployment_types
-					// Check both values.deployment_types and initialValues.deployment_types
-					// to handle real-time updates when deployment types change in sidebar
-					const currentDeploymentTypes =
-						values.deployment_types ||
-						initialValues.deployment_types ||
-						[];
-					isHidden = ! currentDeploymentTypes.includes(
-						field.deploymentType
+				// Separate fields into regular and advanced
+				const regularFields = fields.filter(
+					( field ) => ! field.is_advanced
+				);
+				const advancedFields = fields.filter(
+					( field ) => field.is_advanced === true
+				);
+
+				// Render field component
+				const renderField = ( field ) => {
+					const isHidden = isFieldHidden( field );
+					return (
+						<ProviderField
+							key={ field.id }
+							field={ field }
+							value={ values[ field.id ] }
+							onChange={ handleFieldChange }
+							errors={ errors }
+							isHidden={ isHidden }
+						/>
 					);
-				}
+				};
 
 				return (
-					<ProviderField
-						key={ field.id }
-						field={ field }
-						value={ values[ field.id ] }
-						onChange={ handleFieldChange }
-						errors={ errors }
-						isHidden={ isHidden }
-					/>
+					<>
+						{ /* Render regular fields */ }
+						{ regularFields.map( renderField ) }
+
+						{ /* Render advanced fields in details element */ }
+						{ advancedFields.length > 0 && (
+							<details
+								style={ {
+									marginTop: spacing.md,
+									padding: spacing.md,
+									border: `1px solid ${ colors.borderLighter }`,
+									borderRadius: borderRadius.sm,
+									backgroundColor: colors.backgroundLighter,
+								} }
+							>
+								<summary
+									style={ {
+										cursor: 'pointer',
+										fontWeight: fontWeight.medium,
+										color: colors.text,
+										padding: spacing.sm,
+										marginBottom: spacing.sm,
+										userSelect: 'none',
+									} }
+								>
+									{ __(
+										'Advanced settings',
+										'aether-site-exporter'
+									) }
+								</summary>
+								<div
+									style={ {
+										paddingTop: spacing.sm,
+										...createFlexStyle( 'column', spacing.md ),
+									} }
+								>
+									{ advancedFields.map( renderField ) }
+								</div>
+							</details>
+						) }
+					</>
 				);
-			} ) }
+			} )() }
 
 			{ /* Hook: after_fields */ }
 			<div
