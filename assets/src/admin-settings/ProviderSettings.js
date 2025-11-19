@@ -19,6 +19,7 @@ import {
 	areAllDependenciesSatisfied,
 	getUnsatisfiedDependencies,
 } from './utils/dependencyValidation';
+import { isProviderConfigured } from './utils/providerConfiguration';
 import { useDependencyValidation } from './hooks/useDependencyValidation';
 import { useProviderMetadataReload } from './hooks/useProviderMetadataReload';
 import { useProviderSettings } from '../hooks/useProviderSettings';
@@ -147,68 +148,74 @@ export default function ProviderSettings( {
 	const enabledCount = providers.filter(
 		( p ) => configs[ p.id ]?.enabled !== false
 	).length;
+	// Calculate configured count using JS logic based on required fields
 	const configuredCount = providers.filter( ( p ) => {
-		const config = configs[ p.id ];
-		return config && Object.keys( config ).length > 0;
+		const providerConfig = configs[ p.id ] || {};
+		return isProviderConfigured( p.settingsFields || [], providerConfig );
 	} ).length;
 
-	const handleToggleProvider = useCallback( async ( providerId, enabled ) => {
-		try {
-			// If enabling, check dependencies first
-			if ( enabled ) {
-				const provider = providers.find( ( p ) => p.id === providerId );
-				if ( provider ) {
-					// Check dependencies before toggling
-					const allDependenciesSatisfied =
-						areAllDependenciesSatisfied(
-							provider,
-							providers,
-							configs
-						);
+	const handleToggleProvider = useCallback(
+		async ( providerId, enabled ) => {
+			try {
+				// If enabling, check dependencies first
+				if ( enabled ) {
+					const provider = providers.find(
+						( p ) => p.id === providerId
+					);
+					if ( provider ) {
+						// Check dependencies before toggling
+						const allDependenciesSatisfied =
+							areAllDependenciesSatisfied(
+								provider,
+								providers,
+								configs
+							);
 
-					if ( ! allDependenciesSatisfied ) {
-						const unsatisfied = getUnsatisfiedDependencies(
-							provider,
-							providers,
-							configs
-						);
-						const dependencyNames = unsatisfied
-							.map( ( depId ) => {
-								const depProvider = providers.find(
-									( p ) => p.id === depId
-								);
-								return depProvider?.metadata?.name || depId;
-							} )
-							.join( ', ' );
+						if ( ! allDependenciesSatisfied ) {
+							const unsatisfied = getUnsatisfiedDependencies(
+								provider,
+								providers,
+								configs
+							);
+							const dependencyNames = unsatisfied
+								.map( ( depId ) => {
+									const depProvider = providers.find(
+										( p ) => p.id === depId
+									);
+									return depProvider?.metadata?.name || depId;
+								} )
+								.join( ', ' );
 
-						// eslint-disable-next-line no-alert
-						alert(
-							// eslint-disable-next-line @wordpress/i18n-no-variables
-							__(
-								'Cannot enable provider: Missing required dependencies: ' +
-									dependencyNames,
-								'aether-site-exporter'
-							)
-						);
-						return;
+							// eslint-disable-next-line no-alert
+							alert(
+								// eslint-disable-next-line @wordpress/i18n-no-variables
+								__(
+									'Cannot enable provider: Missing required dependencies: ' +
+										dependencyNames,
+									'aether-site-exporter'
+								)
+							);
+							return;
+						}
 					}
 				}
-			}
 
-			// Use the hook to toggle provider enabled state
-			const updatedProviders = await toggleProviderEnabled(
-				providerId,
-				enabled
-			);
+				// Use the hook to toggle provider enabled state
+				const updatedProviders = await toggleProviderEnabled(
+					providerId,
+					enabled
+				);
 
-			// Update parent configs state
-			if ( onConfigsUpdate ) {
-				onConfigsUpdate( updatedProviders );
+				// Update parent configs state
+				if ( onConfigsUpdate ) {
+					onConfigsUpdate( updatedProviders );
+				}
+			} catch ( error ) {
+				console.error( 'Failed to toggle provider:', error );
 			}
-		} catch ( error ) {
-			console.error( 'Failed to toggle provider:', error );
-		}
-	}, [ providers, configs, toggleProviderEnabled, onConfigsUpdate ] );
+		},
+		[ providers, configs, toggleProviderEnabled, onConfigsUpdate ]
+	);
 
 	const handleConfigureProvider = useCallback( async ( provider ) => {
 		// Reload provider metadata to get updated settings fields based on current deployment types
