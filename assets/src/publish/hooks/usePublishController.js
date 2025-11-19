@@ -21,7 +21,6 @@ import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 import {
 	PUBLISH_WORKFLOW,
 	STEP_HANDLERS,
-	filterWorkflowByExportTypes,
 } from '../workflows/publishWorkflow';
 import { executeWorkflow } from '../workflows/workflowExecutor';
 
@@ -368,26 +367,7 @@ export function usePublishController( publishState ) {
 				removeMessage,
 			};
 
-			// Get export_types from provider settings to determine which exports to run
-			const providerSettings =
-				settingsResponse.settings?.providers?.[ providerId ] || {};
-			const exportTypes = providerSettings.export_types || [
-				'static_site',
-				'blueprint_bundle',
-			];
-
-			debug( '[Workflow] Export types configured:', exportTypes );
-
-			// Filter workflow based on export types
-			const filteredWorkflow = filterWorkflowByExportTypes(
-				PUBLISH_WORKFLOW,
-				exportTypes
-			);
-
-			debug(
-				'[Workflow] Filtered workflow phases:',
-				filteredWorkflow.length
-			);
+			// Execute full workflow - individual steps check provider deployment_types
 
 			// Set up workflow lifecycle callbacks for UI updates
 			const workflowOptions = {
@@ -403,9 +383,9 @@ export function usePublishController( publishState ) {
 				},
 			};
 
-			// Execute the filtered workflow
+			// Execute the workflow
 			await executeWorkflow(
-				filteredWorkflow,
+				PUBLISH_WORKFLOW,
 				STEP_HANDLERS,
 				workflowContext,
 				workflowOptions

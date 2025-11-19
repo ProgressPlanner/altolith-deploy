@@ -65,18 +65,6 @@ export const PROVIDER_TYPES = {
 };
 
 /**
- * Provider Configuration Keys
- *
- * Standard configuration field names for local filesystem provider.
- */
-export const PROVIDER_CONFIG_KEYS = {
-	// URLs
-	ENDPOINT: 'endpoint',
-	CUSTOM_DOMAIN: 'custom_domain',
-	PUBLIC_URL: 'public_url',
-};
-
-/**
  * Provider Status Values
  *
  * Standard status values for provider connections.
@@ -123,26 +111,6 @@ export const PROVIDER_STATUS = {
 	 * @constant {string}
 	 */
 	DEPLOYED: 'deployed',
-};
-
-/**
- * Provider Internal Keys
- *
- * Internal setting keys (deprecated - providers now use deployment_types config).
- * Kept for backwards compatibility during migration.
- */
-export const PROVIDER_INTERNAL_KEYS = {
-	/**
-	 * @deprecated Use deployment_types config instead
-	 * @constant {string}
-	 */
-	STORAGE_PROVIDER: 'storageProvider',
-
-	/**
-	 * @deprecated Use deployment_types config instead
-	 * @constant {string}
-	 */
-	STATIC_SITE_PROVIDER: 'staticSiteProvider',
 };
 
 /**

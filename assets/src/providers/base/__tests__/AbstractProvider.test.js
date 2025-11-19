@@ -87,13 +87,6 @@ describe( 'AbstractProvider', () => {
 			expect( provider.getIcon() ).toBe( '📦' );
 		} );
 
-		// TODO: Update test for deployment types system (capabilities removed)
-		// test( 'returns capabilities', () => {
-		// 	const capabilities = provider.getCapabilities();
-		// 	expect( capabilities ).toContain( CAP_STORAGE );
-		// 	expect( capabilities ).toHaveLength( 1 );
-		// } );
-
 		test( 'returns settings URL', () => {
 			const url = provider.getSettingsUrl();
 
@@ -114,22 +107,11 @@ describe( 'AbstractProvider', () => {
 			expect( metadata ).toHaveProperty( 'type', 'test' );
 			expect( metadata ).toHaveProperty( 'description' );
 			expect( metadata ).toHaveProperty( 'icon' );
-			// expect( metadata ).toHaveProperty( 'capabilities' ); // Removed with capabilities system
 			expect( metadata ).toHaveProperty( 'configFields' );
 			expect( metadata ).toHaveProperty( 'settingsUrl' );
 			expect( metadata ).toHaveProperty( 'documentationUrl' );
 		} );
 	} );
-
-	// TODO: Update tests for deployment types system (capabilities removed)
-	// describe( 'Capability Checks', () => {
-	// 	test( 'supports storage capability', () => {
-	// 		expect( provider.supportsCapability( CAP_STORAGE ) ).toBe( true );
-	// 	} );
-	// 	test( 'does not support edge capability', () => {
-	// 		expect( provider.supportsCapability( CAP_EDGE ) ).toBe( false );
-	// 	} );
-	// } );
 
 	describe( 'Configuration Validation', () => {
 		test( 'validates required fields', async () => {

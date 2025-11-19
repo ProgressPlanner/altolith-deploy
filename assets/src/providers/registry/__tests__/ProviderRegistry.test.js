@@ -269,30 +269,6 @@ describe( 'ProviderRegistry', () => {
 		} );
 	} );
 
-	describe( 'Get Providers by Capability', () => {
-		beforeEach( () => {
-			registry.register( 'mock-provider', MockProvider );
-			registry.register( 'mock-storage', MockStorageProvider );
-			registry.register( 'mock-edge', MockEdgeProvider );
-		} );
-
-		// TODO: Update tests for deployment types system (getByCapability removed)
-		// test( 'returns providers with specific capability', () => {
-		// 	const storageProviders = registry.getByCapability( CAP_STORAGE );
-		// 	expect( storageProviders ).toHaveLength( 1 );
-		// 	expect( storageProviders[ 0 ].getId() ).toBe( 'mock-storage' );
-		// } );
-		// test( 'returns empty array for unsupported capability', () => {
-		// 	const mediaProviders = registry.getByCapability( 'media' );
-		// 	expect( mediaProviders ).toEqual( [] );
-		// } );
-		// test( 'filters providers correctly', () => {
-		// 	const edgeProviders = registry.getByCapability( CAP_EDGE );
-		// 	expect( edgeProviders ).toHaveLength( 1 );
-		// 	expect( edgeProviders[ 0 ].getId() ).toBe( 'mock-edge' );
-		// } );
-	} );
-
 	describe( 'Get Providers by Type', () => {
 		beforeEach( () => {
 			registry.register( 'mock-provider', MockProvider );
