@@ -83,12 +83,43 @@ export default function ProviderSettings( {
 					setProviders( providerMetadata );
 
 					// If a provider modal is open, update the selected provider with latest metadata
-					if ( selectedProvider ) {
+					// This ensures the modal shows the correct fields when deployment types change
+					if ( selectedProvider && isModalOpen ) {
 						const updatedProvider = providerMetadata.find(
 							( p ) => p.id === selectedProvider.id
 						);
 						if ( updatedProvider ) {
-							setSelectedProvider( updatedProvider );
+							// Reload the provider from the API to get filtered settings fields
+							try {
+								const providerResponse = await apiFetch( {
+									path: `/aether/site-exporter/providers/${ updatedProvider.id }`,
+								} );
+
+								if (
+									providerResponse.success &&
+									providerResponse.provider
+								) {
+									const refreshedProvider = {
+										...updatedProvider,
+										settingsFields: (
+											providerResponse.provider
+												.settings_fields || []
+										).map( ( field ) => ( {
+											...field,
+											id: field.name,
+										} ) ),
+									};
+									setSelectedProvider( refreshedProvider );
+								} else {
+									setSelectedProvider( updatedProvider );
+								}
+							} catch ( error ) {
+								console.error(
+									'Failed to refresh provider metadata:',
+									error
+								);
+								setSelectedProvider( updatedProvider );
+							}
 						}
 					}
 				}
@@ -102,7 +133,7 @@ export default function ProviderSettings( {
 			reloadProviders();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [ JSON.stringify( deploymentTypesByProvider ) ] );
+	}, [ JSON.stringify( deploymentTypesByProvider ), isModalOpen ] );
 
 	useEffect( () => {
 		// Fetch providers from REST API (PHP registry is source of truth)

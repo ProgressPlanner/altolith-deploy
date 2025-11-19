@@ -147,7 +147,14 @@ export default function GlobalDeploymentTypes( {
 		checked
 	) => {
 		const currentConfig = configs[ providerId ] || {};
-		const currentTypes = currentConfig.deployment_types || [];
+		// Get supported types for this provider
+		const provider = providers.find( ( p ) => p.id === providerId );
+		const supportedTypes = provider?.deployment_types || [];
+		// Determine current types: if explicitly set (even if empty array), use it; otherwise default to all supported types
+		const hasExplicitDeploymentTypes = 'deployment_types' in currentConfig;
+		const currentTypes = hasExplicitDeploymentTypes
+			? currentConfig.deployment_types || []
+			: supportedTypes; // Default to all supported types if not explicitly set
 		let newTypes;
 
 		if ( checked ) {
@@ -252,9 +259,13 @@ export default function GlobalDeploymentTypes( {
 					} )
 					.map( ( provider, index, filteredProviders ) => {
 						const providerConfig = configs[ provider.id ] || {};
-						const deploymentTypes =
-							providerConfig.deployment_types || [];
 						const supportedTypes = provider.deployment_types || [];
+						// Determine deployment types: if explicitly set (even if empty array), use it; otherwise default to all supported types
+						const hasExplicitDeploymentTypes =
+							'deployment_types' in providerConfig;
+						const deploymentTypes = hasExplicitDeploymentTypes
+							? providerConfig.deployment_types || []
+							: supportedTypes; // Default to all supported types if not explicitly set
 						const isLast = index === filteredProviders.length - 1;
 						const isSaving = saving[ provider.id ] || false;
 						const error = errors[ provider.id ];

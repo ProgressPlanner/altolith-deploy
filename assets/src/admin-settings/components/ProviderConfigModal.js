@@ -49,7 +49,7 @@ export default function ProviderConfigModal( {
 			clearTimeout( closeTimeoutRef.current );
 			closeTimeoutRef.current = null;
 		}
-	}, [ isOpen, initialConfig ] );
+	}, [ isOpen, initialConfig, provider ] );
 
 	if ( ! provider ) {
 		return null;
