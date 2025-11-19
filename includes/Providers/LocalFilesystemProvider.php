@@ -88,6 +88,7 @@ class LocalFilesystemProvider extends BaseProvider
 				'label' => \__('Blueprint-bundle file path', 'aether-site-exporter'),
 				'name' => 'export_path',
 				'deploymentType' => 'blueprint_bundle',
+				'required' => true,
 				'sanitize_callback' => function ($value) {
 					if (! \is_string($value)) {
 						return 'blueprint-bundle/bundle.zip';
@@ -123,6 +124,7 @@ class LocalFilesystemProvider extends BaseProvider
 				'label' => \__('Public URL', 'aether-site-exporter'),
 				'name' => 'public_url',
 				'deploymentType' => 'static_site',
+				'required' => true,
 				'sanitize_callback' => function ($value) {
 					if (empty($value)) {
 						return '';
@@ -150,6 +152,7 @@ class LocalFilesystemProvider extends BaseProvider
 				'label' => \__('Static Files Directory', 'aether-site-exporter'),
 				'name' => 'static_files_path',
 				'deploymentType' => 'static_site',
+				'required' => true,
 				'sanitize_callback' => function ($value) {
 					if (! \is_string($value)) {
 						return 'static/';
@@ -183,15 +186,4 @@ class LocalFilesystemProvider extends BaseProvider
 		];
 	}
 
-	/**
-	 * Check if provider is configured.
-	 *
-	 * Local filesystem is always considered configured since it doesn't require credentials.
-	 *
-	 * @return bool True if configured
-	 */
-	public function isConfigured(): bool
-	{
-		return true;
-	}
 }
