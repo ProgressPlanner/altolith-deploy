@@ -184,4 +184,18 @@ abstract class BaseProvider
 		}
 		return false;
 	}
+
+	/**
+	 * Get provider dependencies.
+	 *
+	 * Returns an array of provider IDs that this provider depends on.
+	 * A provider cannot be enabled unless all its dependencies are satisfied
+	 * (exist, are enabled, and are configured).
+	 *
+	 * @return array<string> Array of provider IDs this provider depends on
+	 */
+	public function getDependencies(): array
+	{
+		return [];
+	}
 }

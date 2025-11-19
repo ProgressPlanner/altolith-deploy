@@ -215,6 +215,10 @@ class ProvidersController
 			if (isset($field['deploymentType'])) {
 				$fieldData['deploymentType'] = $field['deploymentType'];
 			}
+			// Include hidden property if present (for hiding fields)
+			if (isset($field['hidden'])) {
+				$fieldData['hidden'] = (bool) $field['hidden'];
+			}
 
 			$settingsFields[] = $fieldData;
 		}
@@ -225,6 +229,7 @@ class ProvidersController
 			'description' => $provider->getDescription(),
 			'type' => $provider->getType(),
 			'deployment_types' => $provider->getDeploymentTypes(), // Always return supported types for UI
+			'dependencies' => $provider->getDependencies(), // Provider dependencies (provider IDs)
 			'settings_fields' => $settingsFields,
 			'configured' => $provider->isConfigured(),
 		];
