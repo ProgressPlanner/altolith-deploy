@@ -8,6 +8,7 @@
  */
 
 import { applyFilters } from '@wordpress/hooks';
+import apiFetch from '../../utils/api';
 
 /**
  * Upload static site files step handler.
@@ -38,10 +39,6 @@ export async function uploadStaticSiteFilesHandler( context ) {
 
 	// Support both new format (urls directly in context) and old format (currentStatus.urls for tests)
 	const urlsArray = urls || currentStatus?.urls;
-	const siteUrlForStatic =
-		staticSiteUrl !== undefined
-			? staticSiteUrl
-			: currentStatus?.staticSiteUrl ?? null;
 	const blueprintDataForStatic =
 		blueprintData !== undefined
 			? blueprintData
@@ -81,29 +78,69 @@ export async function uploadStaticSiteFilesHandler( context ) {
 	 *
 	 * Allows modification of URLs that will be fetched and uploaded.
 	 *
-	 * @param {Array} urls      Array of URL objects to process.
-	 * @param {Array} providers Array of provider IDs being used for upload.
+	 * @param {Array}  urls      Array of URL objects to process.
+	 * @param {Array}  providers Array of provider IDs being used for upload.
+	 * @param {Object} context    Enhanced context with workflow state and provider info.
 	 *
 	 * @example
 	 * import { addFilter } from '@wordpress/hooks';
 	 *
-	 * addFilter('aether.upload.urls', 'my-provider', (urls, providers) => {
+	 * addFilter('aether.upload.urls', 'my-provider', (urls, providers, context) => {
 	 *   // Add custom URL
+	 *   // context contains: siteUrl, blueprintData, staticSiteUrl, etc.
 	 *   return [...urls, { url: '/custom-page/', type: 'page' }];
 	 * });
 	 */
 	const filteredUrls = applyFilters(
 		'aether.upload.urls',
 		urlsArray,
-		providers // Pass array instead of single ID
+		providers, // Pass array instead of single ID
+		{
+			// Enhanced context for providers
+			siteUrl,
+			blueprintData: blueprintDataForStatic,
+			staticSiteUrl,
+			providers,
+		}
 	);
 
 	// Upload to ALL providers in parallel
+	// CRITICAL: Each provider needs its own deployment URL for HTML rewriting
 	const uploadPromises = providers.map( async ( providerIdItem ) => {
 		try {
+			// Fetch provider-specific deployment URL
+			// Each provider may have a different public URL (e.g., custom domain, worker endpoint)
+			let providerDeploymentUrl = staticSiteUrl || null;
+			try {
+				const providerResponse = await apiFetch( {
+					path: `/aether/site-exporter/providers/${ providerIdItem }`,
+				} );
+				if ( providerResponse.success && providerResponse.provider ) {
+					const providerConfig = providerResponse.provider.config || {};
+					// Get deployment URL from provider config (same logic as AbstractProvider.getDeploymentUrl)
+					if ( providerConfig.pages_url ) {
+						providerDeploymentUrl = providerConfig.pages_url;
+					} else if ( providerConfig.worker_endpoint ) {
+						providerDeploymentUrl = providerConfig.worker_endpoint;
+					} else if ( providerConfig.public_url ) {
+						providerDeploymentUrl = providerConfig.public_url;
+					}
+					// Allow filter to override deployment URL
+					providerDeploymentUrl = applyFilters(
+						'aether.provider.deployment_url',
+						providerDeploymentUrl,
+						providerConfig,
+						providerIdItem
+					);
+				}
+			} catch ( error ) {
+				// If we can't fetch provider config, fall back to shared staticSiteUrl
+				// This maintains backwards compatibility
+			}
+
 			const result = await processStaticSiteUrls(
 				filteredUrls,
-				siteUrlForStatic,
+				providerDeploymentUrl, // Provider-specific deployment URL
 				providerIdItem,
 				siteUrl,
 				setStatusMessage,
@@ -159,14 +196,16 @@ export async function uploadStaticSiteFilesHandler( context ) {
 	 *
 	 * @param {Object} result    The aggregated upload result object.
 	 * @param {Array}  providers Array of provider IDs used for upload.
+	 * @param {Object} context   Enhanced context with workflow state.
 	 *
 	 * @example
 	 * import { addFilter} from '@wordpress/hooks';
 	 *
-	 * addFilter('aether.upload.result', 'my-provider', (result, providers) => {
+	 * addFilter('aether.upload.result', 'my-provider', (result, providers, context) => {
 	 *   return {
 	 *     ...result,
-	 *     customMetadata: 'added by my provider'
+	 *     customMetadata: 'added by my provider',
+	 *     // context contains: siteUrl, blueprintData, etc.
 	 *   };
 	 * });
 	 */
@@ -183,7 +222,13 @@ export async function uploadStaticSiteFilesHandler( context ) {
 			staticFiles: successfulUploads[ 0 ]?.value?.uploadedFiles || [],
 			filesUploaded: successfulUploads[ 0 ]?.value?.filesUploaded || 0,
 		},
-		providers
+		providers,
+		{
+			// Enhanced context for providers
+			siteUrl,
+			blueprintData: blueprintDataForStatic,
+			staticSiteUrl,
+		}
 	);
 
 	return filteredResult;
