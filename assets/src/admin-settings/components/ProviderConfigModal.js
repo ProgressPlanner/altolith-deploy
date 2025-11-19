@@ -12,7 +12,7 @@ import { __ } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
 import ProviderForm from '../../providers/components/ProviderForm';
 import apiFetch from '../../utils/api';
-import { colors, spacing, fontWeight } from '../../utils/styles';
+import { colors, spacing } from '../../utils/styles';
 
 /**
  * Provider Configuration Modal Component.
@@ -52,14 +52,6 @@ export default function ProviderConfigModal( {
 
 	const headerStyle = {
 		marginBottom: spacing.md,
-	};
-
-	const titleStyle = {
-		fontSize: '1.25rem',
-		fontWeight: fontWeight.semibold,
-		color: colors.text,
-		margin: 0,
-		marginBottom: spacing.xs,
 	};
 
 	const descriptionStyle = {
@@ -214,12 +206,11 @@ export default function ProviderConfigModal( {
 			isFullScreen={ false }
 			className="aether-provider-config-modal"
 		>
-			<div style={ headerStyle }>
-				<h2 style={ titleStyle }>{ name }</h2>
-				{ description && (
+			{ description && (
+				<div style={ headerStyle }>
 					<p style={ descriptionStyle }>{ description }</p>
-				) }
-			</div>
+				</div>
+			) }
 
 			{ saveError && (
 				<Notice
