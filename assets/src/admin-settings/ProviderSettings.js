@@ -88,7 +88,8 @@ export default function ProviderSettings( {
 	// Group instances by provider type
 	const instancesByProviderType = {};
 	Object.entries( configs ).forEach( ( [ instanceId, config ] ) => {
-		const providerType = config.provider_type || instanceId.split( ':' )[ 0 ];
+		const providerType =
+			config.provider_type || instanceId.split( ':' )[ 0 ];
 		if ( ! instancesByProviderType[ providerType ] ) {
 			instancesByProviderType[ providerType ] = [];
 		}
@@ -98,12 +99,9 @@ export default function ProviderSettings( {
 		} );
 	} );
 
-	const handleCreateInstance = useCallback(
-		async ( providerType ) => {
-			setIsAddModalOpen( true );
-		},
-		[]
-	);
+	const handleCreateInstance = useCallback( async () => {
+		setIsAddModalOpen( true );
+	}, [] );
 
 	const handleCreateInstanceConfirm = useCallback(
 		async ( providerType, instanceName ) => {
@@ -153,9 +151,8 @@ export default function ProviderSettings( {
 	const handleDeleteInstance = useCallback(
 		async ( instanceId ) => {
 			try {
-				const updatedProviders = await deleteProviderInstance(
-					instanceId
-				);
+				const updatedProviders =
+					await deleteProviderInstance( instanceId );
 
 				// Update parent configs state
 				if ( onConfigsUpdate ) {

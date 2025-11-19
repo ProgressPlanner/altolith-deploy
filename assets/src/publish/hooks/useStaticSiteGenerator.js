@@ -115,10 +115,10 @@ export function useStaticSiteGenerator( onProgress ) {
 			 *
 			 * Allows providers to customize storage service configuration.
 			 *
-			 * @param {Object} config              Storage service configuration.
-			 * @param {string} staticPath          Static files path.
+			 * @param {Object} config               Storage service configuration.
+			 * @param {string} staticPath           Static files path.
 			 * @param {string} staticSiteProviderId Provider ID.
-			 * @param {Object} providerConfig      Provider configuration.
+			 * @param {Object} providerConfig       Provider configuration.
 			 *
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
@@ -146,7 +146,7 @@ export function useStaticSiteGenerator( onProgress ) {
 			 * @param {StorageService|null} storageService Storage service instance or null to use default.
 			 * @param {string}              staticPath     Static files path.
 			 * @param {Object}              config         Storage service configuration.
-			 * @param {string}              providerId    Provider ID.
+			 * @param {string}              providerId     Provider ID.
 			 *
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
@@ -168,7 +168,11 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			// Create storage service if not overridden by filter
 			if ( ! storageService ) {
-				storageService = new StorageService( staticPath, '', filteredConfig );
+				storageService = new StorageService(
+					staticPath,
+					'',
+					filteredConfig
+				);
 			}
 
 			const totalUrls = urls.length;
@@ -179,9 +183,9 @@ export function useStaticSiteGenerator( onProgress ) {
 			/**
 			 * Action fired before pre-scan phase starts.
 			 *
-			 * @param {Array}  urls                URLs to scan.
+			 * @param {Array}  urls                 URLs to scan.
 			 * @param {string} staticSiteProviderId Provider ID.
-			 * @param {Object} providerConfig      Provider configuration.
+			 * @param {Object} providerConfig       Provider configuration.
 			 *
 			 * @example
 			 * import { addAction } from '@wordpress/hooks';
@@ -279,9 +283,9 @@ export function useStaticSiteGenerator( onProgress ) {
 					 * Allows providers to modify HTML before caching.
 					 * NOTE: URL rewriting happens later during upload, per-provider.
 					 *
-					 * @param {string} html              Raw HTML content.
-					 * @param {string} url               Page URL.
-					 * @param {string} siteUrl           Site URL.
+					 * @param {string} html    Raw HTML content.
+					 * @param {string} url     Page URL.
+					 * @param {string} siteUrl Site URL.
 					 *
 					 * @example
 					 * import { addFilter } from '@wordpress/hooks';
@@ -383,9 +387,9 @@ export function useStaticSiteGenerator( onProgress ) {
 				 *
 				 * Allows providers to customize manifest fetching or provide custom manifest.
 				 *
-				 * @param {Object|null} manifest            Manifest object or null to fetch from storage.
-				 * @param {Object}     storageService      Storage service instance.
-				 * @param {string}     staticSiteProviderId Provider ID.
+				 * @param {Object|null} manifest             Manifest object or null to fetch from storage.
+				 * @param {Object}      storageService       Storage service instance.
+				 * @param {string}      staticSiteProviderId Provider ID.
 				 *
 				 * @example
 				 * import { addFilter } from '@wordpress/hooks';
@@ -495,13 +499,13 @@ export function useStaticSiteGenerator( onProgress ) {
 						 *
 						 * Allows providers to modify asset blob, path, or metadata before upload.
 						 *
-						 * @param {Object} assetData            Asset data object.
-						 * @param {Blob}   assetData.blob       Asset blob.
-						 * @param {string} assetData.path       Asset local path.
-						 * @param {string} assetData.key        Storage key.
+						 * @param {Object} assetData             Asset data object.
+						 * @param {Blob}   assetData.blob        Asset blob.
+						 * @param {string} assetData.path        Asset local path.
+						 * @param {string} assetData.key         Storage key.
 						 * @param {string} assetData.contentType Content type.
-						 * @param {string} assetData.url        Original asset URL.
-						 * @param {string} staticSiteProviderId Provider ID.
+						 * @param {string} assetData.url         Original asset URL.
+						 * @param {string} staticSiteProviderId  Provider ID.
 						 *
 						 * @example
 						 * import { addFilter } from '@wordpress/hooks';
@@ -528,9 +532,11 @@ export function useStaticSiteGenerator( onProgress ) {
 
 						// Use filtered asset data
 						assetBlob = filteredAssetData.blob || assetBlob;
-						const finalAssetPath = filteredAssetData.path || assetPath;
+						const finalAssetPath =
+							filteredAssetData.path || assetPath;
 						const finalAssetKey = filteredAssetData.key || assetKey;
-						const finalContentType = filteredAssetData.contentType || contentType;
+						const finalContentType =
+							filteredAssetData.contentType || contentType;
 
 						// Step 3: Check manifest BEFORE adding to upload queue
 						// This prevents unnecessary uploads for assets that already exist in manifest
@@ -660,8 +666,8 @@ export function useStaticSiteGenerator( onProgress ) {
 							 *
 							 * Allows providers to modify manifest after asset entry is updated.
 							 *
-							 * @param {Object} manifest            Manifest object.
-							 * @param {string} storageKey         Storage key that was updated.
+							 * @param {Object} manifest             Manifest object.
+							 * @param {string} storageKey           Storage key that was updated.
 							 * @param {string} staticSiteProviderId Provider ID.
 							 */
 							manifest = applyFilters(
@@ -688,8 +694,8 @@ export function useStaticSiteGenerator( onProgress ) {
 			/**
 			 * Action fired before upload phase starts.
 			 *
-			 * @param {Array}  cachedUrls            URLs to upload.
-			 * @param {number} totalFilesToUpload    Total files to upload.
+			 * @param {Array}  cachedUrls           URLs to upload.
+			 * @param {number} totalFilesToUpload   Total files to upload.
 			 * @param {string} staticSiteProviderId Provider ID.
 			 *
 			 * @example
@@ -735,10 +741,10 @@ export function useStaticSiteGenerator( onProgress ) {
 					 *
 					 * Allows providers to modify HTML before URL rewriting.
 					 *
-					 * @param {string} html                  Raw HTML content.
-					 * @param {string} url                   Page URL.
-					 * @param {string} siteUrl               Site URL.
-					 * @param {string} staticSiteUrl         Provider-specific deployment URL.
+					 * @param {string} html                 Raw HTML content.
+					 * @param {string} url                  Page URL.
+					 * @param {string} siteUrl              Site URL.
+					 * @param {string} staticSiteUrl        Provider-specific deployment URL.
 					 * @param {string} staticSiteProviderId Provider ID.
 					 *
 					 * @example
@@ -925,8 +931,8 @@ export function useStaticSiteGenerator( onProgress ) {
 						 *
 						 * Allows providers to modify manifest after entry is updated.
 						 *
-						 * @param {Object} manifest            Manifest object.
-						 * @param {string} storageKey         Storage key that was updated.
+						 * @param {Object} manifest             Manifest object.
+						 * @param {string} storageKey           Storage key that was updated.
 						 * @param {string} staticSiteProviderId Provider ID.
 						 *
 						 * @example
@@ -1064,8 +1070,8 @@ export function useStaticSiteGenerator( onProgress ) {
 				 *
 				 * Allows providers to customize manifest cleanup logic.
 				 *
-				 * @param {Object} manifest            Cleaned manifest object.
-				 * @param {Set}    currentFileKeys     Set of current file keys.
+				 * @param {Object} manifest             Cleaned manifest object.
+				 * @param {Set}    currentFileKeys      Set of current file keys.
 				 * @param {string} staticSiteProviderId Provider ID.
 				 *
 				 * @example
@@ -1132,11 +1138,11 @@ export function useStaticSiteGenerator( onProgress ) {
 			/**
 			 * Action fired after upload phase completes.
 			 *
-			 * @param {Object} result                Upload result statistics.
-			 * @param {number} result.filesUploaded  Files uploaded.
-			 * @param {number} result.filesSkipped   Files skipped.
-			 * @param {number} result.urlsSucceeded  URLs succeeded.
-			 * @param {number} result.urlsFailed     URLs failed.
+			 * @param {Object} result               Upload result statistics.
+			 * @param {number} result.filesUploaded Files uploaded.
+			 * @param {number} result.filesSkipped  Files skipped.
+			 * @param {number} result.urlsSucceeded URLs succeeded.
+			 * @param {number} result.urlsFailed    URLs failed.
 			 * @param {string} staticSiteProviderId Provider ID.
 			 *
 			 * @example

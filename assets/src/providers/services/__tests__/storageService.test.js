@@ -75,7 +75,7 @@ describe( 'StorageService', () => {
 		test( 'should initialize providerId from config', () => {
 			const configWithProviderId = {
 				base_url: 'https://example.com',
-				provider_id: 'cloudflare-r2'
+				provider_id: 'cloudflare-r2',
 			};
 			const testService = new StorageService(
 				mockStaticPath,

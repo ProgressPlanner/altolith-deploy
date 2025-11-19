@@ -305,21 +305,24 @@ export function usePublishController( publishState ) {
 			const getEnabledInstancesForDeploymentType = ( deploymentType ) => {
 				try {
 					// Get all provider configs from settings
-					const providerConfigs = settingsResponse.settings?.providers || {};
+					const providerConfigs =
+						settingsResponse.settings?.providers || {};
 
 					// Filter enabled instances that support this deployment type
 					return Object.entries( providerConfigs )
-						.filter( ( [ instanceId, config ] ) => {
+						.filter( ( [ , instanceConfig ] ) => {
 							// Check if enabled (default to true if not specified)
-							const isEnabled = config.enabled !== false;
+							const isEnabled = instanceConfig.enabled !== false;
 
 							// Check if supports this deployment type
-							const deploymentTypes = config.deployment_types || [];
-							const supportsType = deploymentTypes.includes( deploymentType );
+							const deploymentTypes =
+								instanceConfig.deployment_types || [];
+							const supportsType =
+								deploymentTypes.includes( deploymentType );
 
 							return isEnabled && supportsType;
 						} )
-						.map( ( [ instanceId ] ) => instanceId );
+						.map( ( [ id ] ) => id );
 				} catch ( error ) {
 					debugError(
 						`Failed to get instances for deployment type ${ deploymentType }:`,
@@ -333,9 +336,10 @@ export function usePublishController( publishState ) {
 			const staticSiteProviders = getEnabledInstancesForDeploymentType(
 				DEPLOYMENT_TYPES.STATIC_SITE
 			);
-			const blueprintBundleProviders = getEnabledInstancesForDeploymentType(
-				DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE
-			);
+			const blueprintBundleProviders =
+				getEnabledInstancesForDeploymentType(
+					DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE
+				);
 			const edgeFunctionProviders = getEnabledInstancesForDeploymentType(
 				DEPLOYMENT_TYPES.EDGE_FUNCTIONS
 			);

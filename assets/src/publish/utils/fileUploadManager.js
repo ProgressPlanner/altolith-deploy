@@ -100,9 +100,9 @@ export async function uploadFilesWithProgress( {
 				/**
 				 * Action fired before each file upload.
 				 *
-				 * @param {Object} fileData            File data object.
-				 * @param {string} fileData.key        Storage key.
-				 * @param {Blob}   fileData.blob       File blob.
+				 * @param {Object} fileData             File data object.
+				 * @param {string} fileData.key         Storage key.
+				 * @param {Blob}   fileData.blob        File blob.
 				 * @param {string} fileData.contentType Content type.
 				 * @param {string} fileData.displayName Display name.
 				 *
@@ -133,10 +133,10 @@ export async function uploadFilesWithProgress( {
 							 *
 							 * Allows providers to customize hash calculation or provide pre-calculated hash.
 							 *
-							 * @param {string|null} hash      Calculated hash or null to use default calculation.
-							 * @param {Blob}        blob      File blob.
-							 * @param {string}      key       Storage key.
-							 * @param {Object}      manifest  Manifest object.
+							 * @param {string|null} hash     Calculated hash or null to use default calculation.
+							 * @param {Blob}        blob     File blob.
+							 * @param {string}      key      Storage key.
+							 * @param {Object}      manifest Manifest object.
 							 *
 							 * @example
 							 * import { addFilter } from '@wordpress/hooks';
@@ -157,7 +157,9 @@ export async function uploadFilesWithProgress( {
 								manifest
 							);
 
-							fileHash = filteredHash || ( await calculateFileHash( blob ) );
+							fileHash =
+								filteredHash ||
+								( await calculateFileHash( blob ) );
 							shouldSkip = customShouldSkipUpload
 								? customShouldSkipUpload(
 										manifest,
@@ -219,10 +221,10 @@ export async function uploadFilesWithProgress( {
 						 *
 						 * Allows providers to customize hash calculation.
 						 *
-						 * @param {string|null} hash      Calculated hash or null to use default calculation.
-						 * @param {Blob}        blob      File blob.
-						 * @param {string}      key       Storage key.
-						 * @param {Object}      manifest  Manifest object.
+						 * @param {string|null} hash     Calculated hash or null to use default calculation.
+						 * @param {Blob}        blob     File blob.
+						 * @param {string}      key      Storage key.
+						 * @param {Object}      manifest Manifest object.
 						 */
 						const filteredHash = applyFilters(
 							'aether.upload.hash.calculate',
@@ -231,7 +233,8 @@ export async function uploadFilesWithProgress( {
 							key,
 							manifest
 						);
-						fileHash = filteredHash || ( await calculateFileHash( blob ) );
+						fileHash =
+							filteredHash || ( await calculateFileHash( blob ) );
 					} catch ( error ) {
 						debugWarn( 'Failed to calculate hash:', error );
 						fileHash = null;
@@ -282,11 +285,11 @@ export async function uploadFilesWithProgress( {
 				 *
 				 * Allows providers to modify upload options (contentType, cacheControl, metadata, etc.).
 				 *
-				 * @param {Object} uploadOptions      Upload options object.
-				 * @param {string} key                Storage key.
-				 * @param {Blob}   blob               File blob.
-				 * @param {string} contentType        Content type.
-				 * @param {Object} metadata            File metadata.
+				 * @param {Object} uploadOptions Upload options object.
+				 * @param {string} key           Storage key.
+				 * @param {Blob}   blob          File blob.
+				 * @param {string} contentType   Content type.
+				 * @param {Object} metadata      File metadata.
 				 *
 				 * @example
 				 * import { addFilter } from '@wordpress/hooks';
@@ -309,7 +312,11 @@ export async function uploadFilesWithProgress( {
 				);
 
 				// Upload file with progress tracking
-				const uploadResult = await storageService.upload( key, blob, uploadOptions );
+				const uploadResult = await storageService.upload(
+					key,
+					blob,
+					uploadOptions
+				);
 
 				if ( uploadResult.success ) {
 					filesUploaded++;
@@ -342,12 +349,12 @@ export async function uploadFilesWithProgress( {
 					/**
 					 * Action fired after each file upload succeeds.
 					 *
-					 * @param {Object} result            Upload result object.
-					 * @param {string} result.key        Storage key.
-					 * @param {string} result.url        Uploaded file URL.
-					 * @param {string} result.hash       File hash.
-					 * @param {number} result.size        File size.
-					 * @param {string} displayName       Display name.
+					 * @param {Object} result      Upload result object.
+					 * @param {string} result.key  Storage key.
+					 * @param {string} result.url  Uploaded file URL.
+					 * @param {string} result.hash File hash.
+					 * @param {number} result.size File size.
+					 * @param {string} displayName Display name.
 					 *
 					 * @example
 					 * import { addAction } from '@wordpress/hooks';

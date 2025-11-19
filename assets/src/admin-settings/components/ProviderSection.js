@@ -16,14 +16,14 @@ import { colors, spacing, fontWeight } from '../../utils/styles';
 /**
  * Provider Section Component.
  *
- * @param {Object}   props                      Component props.
- * @param {Object}   props.provider             Provider metadata (from PHP).
- * @param {Array}    props.instances            Array of instance configs for this provider type.
- * @param {Function} props.onCreateInstance     Callback to create new instance.
- * @param {Function} props.onConfigureInstance  Callback to configure instance.
- * @param {Function} props.onToggleInstance     Callback to toggle instance enabled.
- * @param {Function} props.onDeleteInstance     Callback to delete instance.
- * @param {Function} props.onRenameInstance     Callback to rename instance.
+ * @param {Object}   props                     Component props.
+ * @param {Object}   props.provider            Provider metadata (from PHP).
+ * @param {Array}    props.instances           Array of instance configs for this provider type.
+ * @param {Function} props.onCreateInstance    Callback to create new instance.
+ * @param {Function} props.onConfigureInstance Callback to configure instance.
+ * @param {Function} props.onToggleInstance    Callback to toggle instance enabled.
+ * @param {Function} props.onDeleteInstance    Callback to delete instance.
+ * @param {Function} props.onRenameInstance    Callback to rename instance.
  * @return {JSX.Element} Rendered component.
  */
 export default function ProviderSection( {
@@ -124,10 +124,7 @@ export default function ProviderSection( {
 					<div style={ headerMetaStyle }>
 						{ __( 'Instances:', 'aether-site-exporter' ) }{ ' ' }
 						{ instances.length } •{ ' ' }
-						{ __(
-							'Deployment Types:',
-							'aether-site-exporter'
-						) }{ ' ' }
+						{ __( 'Deployment Types:', 'aether-site-exporter' ) }{ ' ' }
 						{ provider.deployment_types.join( ', ' ) }
 					</div>
 				</div>

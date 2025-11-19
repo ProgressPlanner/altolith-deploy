@@ -237,7 +237,9 @@ export function useProviderSettings() {
 	 */
 	const renameProviderInstance = useCallback(
 		async ( instanceId, instanceName ) => {
-			return updateProviderConfig( instanceId, { instance_name: instanceName } );
+			return updateProviderConfig( instanceId, {
+				instance_name: instanceName,
+			} );
 		},
 		[ updateProviderConfig ]
 	);

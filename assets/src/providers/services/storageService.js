@@ -81,7 +81,12 @@ export class StorageService {
 		};
 
 		const prefixedKey = this._prefixKey( key );
-		const result = await uploadFile( this.staticPath, prefixedKey, file, options );
+		const result = await uploadFile(
+			this.staticPath,
+			prefixedKey,
+			file,
+			options
+		);
 
 		if ( ! result.success ) {
 			return result;
@@ -104,7 +109,9 @@ export class StorageService {
 	 */
 	async delete( key ) {
 		const prefixedKey = this._prefixKey( key );
-		return deleteFile( this.staticPath, prefixedKey, { jobId: this.jobId } );
+		return deleteFile( this.staticPath, prefixedKey, {
+			jobId: this.jobId,
+		} );
 	}
 
 	/**

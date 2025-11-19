@@ -9,17 +9,22 @@
 
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { Modal, Button, TextControl, SelectControl } from '@wordpress/components';
+import {
+	Modal,
+	Button,
+	TextControl,
+	SelectControl,
+} from '@wordpress/components';
 import { spacing } from '../../utils/styles';
 
 /**
  * Add Provider Instance Modal Component.
  *
- * @param {Object}   props             Component props.
- * @param {boolean}  props.isOpen      Whether modal is open.
- * @param {Function} props.onClose     Callback to close modal.
- * @param {Array}    props.providers   Array of available provider types.
- * @param {Function} props.onCreate    Callback to create instance (providerType, instanceName).
+ * @param {Object}   props           Component props.
+ * @param {boolean}  props.isOpen    Whether modal is open.
+ * @param {Function} props.onClose   Callback to close modal.
+ * @param {Array}    props.providers Array of available provider types.
+ * @param {Function} props.onCreate  Callback to create instance (providerType, instanceName).
  * @return {JSX.Element|null} Rendered component.
  */
 export default function AddProviderInstanceModal( {
@@ -99,7 +104,7 @@ export default function AddProviderInstanceModal( {
 					options={ [
 						{
 							label: __(
-								'Select a provider...',
+								'Select a provider…',
 								'aether-site-exporter'
 							),
 							value: '',
@@ -126,7 +131,10 @@ export default function AddProviderInstanceModal( {
 						onChange={ setInstanceName }
 						placeholder={ sprintf(
 							/* translators: %s: provider name */
-							__( 'e.g., "%s Production"', 'aether-site-exporter' ),
+							__(
+								'e.g., "%s Production"',
+								'aether-site-exporter'
+							),
 							selectedProvider?.name || 'My'
 						) }
 						help={ __(

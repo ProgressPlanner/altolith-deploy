@@ -8,7 +8,7 @@
  */
 
 import { useState, useRef, useEffect } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { Button, ToggleControl } from '@wordpress/components';
 import { colors, spacing, fontWeight } from '../../utils/styles';
 
@@ -16,7 +16,6 @@ import { colors, spacing, fontWeight } from '../../utils/styles';
  * Provider Instance Card Component.
  *
  * @param {Object}   props             Component props.
- * @param {Object}   props.provider    Provider metadata (from PHP).
  * @param {Object}   props.instance    Instance config.
  * @param {Function} props.onConfigure Callback to configure instance.
  * @param {Function} props.onToggle    Callback to toggle enabled state.
@@ -25,7 +24,6 @@ import { colors, spacing, fontWeight } from '../../utils/styles';
  * @return {JSX.Element} Rendered component.
  */
 export default function ProviderInstanceCard( {
-	provider,
 	instance,
 	onConfigure,
 	onToggle,
@@ -80,9 +78,13 @@ export default function ProviderInstanceCard( {
 	const handleDelete = () => {
 		// eslint-disable-next-line no-alert
 		const confirmed = confirm(
-			__(
-				`Are you sure you want to delete the instance "${ instance.config.instance_name }"? This cannot be undone.`,
-				'aether-site-exporter'
+			sprintf(
+				/* translators: %s: instance name */
+				__(
+					'Are you sure you want to delete the instance "%s"? This cannot be undone.',
+					'aether-site-exporter'
+				),
+				instance.config.instance_name
 			)
 		);
 
@@ -166,7 +168,9 @@ export default function ProviderInstanceCard( {
 							ref={ inputRef }
 							type="text"
 							value={ editedName }
-							onChange={ ( e ) => setEditedName( e.target.value ) }
+							onChange={ ( e ) =>
+								setEditedName( e.target.value )
+							}
 							onBlur={ handleNameSave }
 							onKeyDown={ ( e ) => {
 								if ( e.key === 'Enter' ) {
@@ -224,21 +228,31 @@ export default function ProviderInstanceCard( {
 
 			<div>
 				<ToggleControl
-					label={ __( 'Enable this instance', 'aether-site-exporter' ) }
+					label={ __(
+						'Enable this instance',
+						'aether-site-exporter'
+					) }
 					checked={ instance.config.enabled !== false }
 					onChange={ onToggle }
 				/>
 			</div>
 
 			<div style={ actionsStyle }>
-				<Button variant="secondary" onClick={ onConfigure } style={ { flex: 1 } }>
+				<Button
+					variant="secondary"
+					onClick={ onConfigure }
+					style={ { flex: 1 } }
+				>
 					{ __( 'Configure', 'aether-site-exporter' ) }
 				</Button>
 				<Button
 					variant="secondary"
 					isDestructive
 					onClick={ handleDelete }
-					title={ __( 'Delete this instance', 'aether-site-exporter' ) }
+					title={ __(
+						'Delete this instance',
+						'aether-site-exporter'
+					) }
 				>
 					{ __( 'Delete', 'aether-site-exporter' ) }
 				</Button>

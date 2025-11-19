@@ -80,7 +80,7 @@ export async function uploadStaticSiteFilesHandler( context ) {
 	 *
 	 * @param {Array}  urls      Array of URL objects to process.
 	 * @param {Array}  providers Array of provider IDs being used for upload.
-	 * @param {Object} context    Enhanced context with workflow state and provider info.
+	 * @param {Object} context   Enhanced context with workflow state and provider info.
 	 *
 	 * @example
 	 * import { addFilter } from '@wordpress/hooks';
@@ -116,7 +116,8 @@ export async function uploadStaticSiteFilesHandler( context ) {
 					path: `/aether/site-exporter/providers/${ providerIdItem }`,
 				} );
 				if ( providerResponse.success && providerResponse.provider ) {
-					const providerConfig = providerResponse.provider.config || {};
+					const providerConfig =
+						providerResponse.provider.config || {};
 					// Get deployment URL from provider config (same logic as AbstractProvider.getDeploymentUrl)
 					if ( providerConfig.pages_url ) {
 						providerDeploymentUrl = providerConfig.pages_url;
