@@ -177,7 +177,7 @@ export function useProviderSettings() {
 	/**
 	 * Toggle provider enabled state
 	 *
-	 * @param {string}  providerId Provider ID
+	 * @param {string}  providerId Provider ID (can be instance ID)
 	 * @param {boolean} enabled    New enabled state
 	 * @return {Promise<Object>} Updated provider configurations
 	 */
@@ -192,6 +192,88 @@ export function useProviderSettings() {
 		[ updateProviderConfig ]
 	);
 
+	/**
+	 * Create a new provider instance
+	 *
+	 * @param {string} providerType Provider type (e.g., 'local-filesystem')
+	 * @param {string} instanceName User-friendly instance name
+	 * @return {Promise<Object>} Created instance info
+	 */
+	const createProviderInstance = useCallback(
+		async ( providerType, instanceName ) => {
+			setLoading( true );
+			setError( null );
+
+			try {
+				const response = await apiFetch( {
+					path: `/aether/site-exporter/providers/${ providerType }/instances`,
+					method: 'POST',
+					data: {
+						instance_name: instanceName,
+					},
+				} );
+
+				if ( ! response.success ) {
+					throw new Error( 'Failed to create provider instance' );
+				}
+
+				setLoading( false );
+				return response;
+			} catch ( err ) {
+				setError( err.message );
+				setLoading( false );
+				throw err;
+			}
+		},
+		[]
+	);
+
+	/**
+	 * Rename a provider instance
+	 *
+	 * @param {string} instanceId   Instance ID
+	 * @param {string} instanceName New instance name
+	 * @return {Promise<Object>} Updated provider configurations
+	 */
+	const renameProviderInstance = useCallback(
+		async ( instanceId, instanceName ) => {
+			return updateProviderConfig( instanceId, { instance_name: instanceName } );
+		},
+		[ updateProviderConfig ]
+	);
+
+	/**
+	 * Delete a provider instance
+	 *
+	 * @param {string} instanceId Instance ID
+	 * @return {Promise<Object>} Updated provider configurations
+	 */
+	const deleteProviderInstance = useCallback(
+		async ( instanceId ) => {
+			setLoading( true );
+			setError( null );
+
+			try {
+				// Delete via REST API
+				await apiFetch( {
+					path: `/aether/site-exporter/providers/${ instanceId }/config`,
+					method: 'DELETE',
+				} );
+
+				// Fetch updated settings
+				const updatedProviders = await fetchProviderSettings();
+
+				setLoading( false );
+				return updatedProviders;
+			} catch ( err ) {
+				setError( err.message );
+				setLoading( false );
+				throw err;
+			}
+		},
+		[ fetchProviderSettings ]
+	);
+
 	return {
 		loading,
 		error,
@@ -199,5 +281,8 @@ export function useProviderSettings() {
 		updateProviderConfig,
 		updateMultipleProviders,
 		toggleProviderEnabled,
+		createProviderInstance,
+		renameProviderInstance,
+		deleteProviderInstance,
 	};
 }
