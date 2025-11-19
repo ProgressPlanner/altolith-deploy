@@ -41,10 +41,10 @@ class ProviderConfigController
 	 */
 	public function registerRoutes(): void
 	{
-		// Provider config CRUD.
+		// Provider config CRUD (instance_id format: provider_type:uuid).
 		\register_rest_route(
 			$this->getNamespace(),
-			'/providers/(?P<provider_id>[a-z0-9_-]+)/config',
+			'/providers/(?P<instance_id>[a-z0-9_:-]+)/config',
 			[
 				[
 					'methods'             => 'GET',
@@ -73,7 +73,7 @@ class ProviderConfigController
 		// Get provider status (configured or not).
 		\register_rest_route(
 			$this->getNamespace(),
-			'/providers/(?P<provider_id>[a-z0-9_-]+)/status',
+			'/providers/(?P<instance_id>[a-z0-9_:-]+)/status',
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'getStatus' ],
@@ -84,7 +84,7 @@ class ProviderConfigController
 		// Test provider connection.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/providers/(?P<provider_id>[a-z0-9_-]+)/test',
+			'/providers/(?P<instance_id>[a-z0-9_:-]+)/test',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'testConnection' ],
@@ -107,55 +107,23 @@ class ProviderConfigController
 	 */
 	public function getConfig(WP_REST_Request $request)
 	{
-		$providerId = \sanitize_key($request->get_param('provider_id'));
+		$instanceId = $request->get_param('instance_id');
 
-		// Get provider instance from registry.
+		// Get provider instance from registry using instance ID.
 		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->get($providerId);
+		$provider = $registry->getProviderForInstance($instanceId);
 
 		if (! $provider) {
 			return new WP_Error(
 				'provider_not_found',
-				\sprintf(\__('Provider not found: %s', 'aether-site-exporter'), $providerId),
+				\sprintf(\__('Provider not found for instance: %s', 'aether-site-exporter'), $instanceId),
 				[ 'status' => 404 ]
 			);
 		}
 
-		// Get config using provider's get callbacks.
-		$config = [];
-		$settings = $provider->getSettings();
-		foreach ($settings as $field) {
-			$fieldName = $field['name'] ?? '';
-			if (empty($fieldName)) {
-				continue;
-			}
-
-			// Handle nested field names like 'foo[bar]'.
-			if (\preg_match('/^([^[]+)\[([^\]]+)\]$/', $fieldName, $matches)) {
-				$parentKey = $matches[1];
-				$childKey = $matches[2];
-				if (! isset($config[$parentKey]) || ! \is_array($config[$parentKey])) {
-					$config[$parentKey] = [];
-				}
-				if (isset($field['get']) && \is_callable($field['get'])) {
-					try {
-						$config[$parentKey][$childKey] = \call_user_func($field['get']);
-					} catch (\Exception $e) {
-						// If get callback fails, use empty value
-						$config[$parentKey][$childKey] = '';
-					}
-				}
-			} else {
-				if (isset($field['get']) && \is_callable($field['get'])) {
-					try {
-						$config[$fieldName] = \call_user_func($field['get']);
-					} catch (\Exception $e) {
-						// If get callback fails, use empty value
-						$config[$fieldName] = '';
-					}
-				}
-			}
-		}
+		// Get config from database.
+		$settings = \get_option('aether_site_exporter_settings', []);
+		$config = $settings['providers'][$instanceId] ?? [];
 
 		// Decrypt sensitive fields for client.
 		$config = $this->decryptSensitiveFields($config);
@@ -163,28 +131,26 @@ class ProviderConfigController
 		/**
 		 * Filter provider configuration after loading.
 		 *
-		 * Allows modification of configuration before sending to client.
-		 *
 		 * @param array  $config      The provider configuration.
-		 * @param string $providerId  The provider ID.
+		 * @param string $instanceId  The instance ID.
 		 *
 		 * @example
-		 * add_filter('aether_provider_config_load', function($config, $providerId) {
-		 *     if ($providerId === 'my-provider') {
+		 * add_filter('aether_provider_config_load', function($config, $instanceId) {
+		 *     if (str_starts_with($instanceId, 'my-provider:')) {
 		 *         $config['custom_field'] = 'custom value';
 		 *     }
 		 *     return $config;
 		 * }, 10, 2);
 		 */
-		$config = \apply_filters('aether_provider_config_load', $config, $providerId);
+		$config = \apply_filters('aether_provider_config_load', $config, $instanceId);
 
 		/**
 		 * Action fired after provider configuration is loaded.
 		 *
-		 * @param string $providerId The provider ID.
+		 * @param string $instanceId The instance ID.
 		 * @param array  $config     The loaded configuration.
 		 */
-		\do_action('aether_provider_config_loaded', $providerId, $config);
+		\do_action('aether_provider_config_loaded', $instanceId, $config);
 
 		return new WP_REST_Response(
 			[
@@ -203,172 +169,71 @@ class ProviderConfigController
 	 */
 	public function saveConfig(WP_REST_Request $request)
 	{
-		$providerId = \sanitize_key($request->get_param('provider_id'));
+		$instanceId = $request->get_param('instance_id');
 		$config     = $request->get_param('config');
 
 		if (! \is_array($config)) {
 			return new WP_Error('invalid_config', \__('Config must be an object.', 'aether-site-exporter'), [ 'status' => 400 ]);
 		}
 
-		// Get provider instance from registry.
+		// Get provider instance from registry using instance ID.
 		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->get($providerId);
+		$provider = $registry->getProviderForInstance($instanceId);
 
 		if (! $provider) {
 			return new WP_Error(
 				'provider_not_found',
-				\sprintf(\__('Provider not found: %s', 'aether-site-exporter'), $providerId),
+				\sprintf(\__('Provider not found for instance: %s', 'aether-site-exporter'), $instanceId),
 				[ 'status' => 404 ]
 			);
+		}
+
+		// Ensure provider_type and instance_name are preserved.
+		$parsed = $registry->parseInstanceId($instanceId);
+		if ($parsed) {
+			$config['provider_type'] = $parsed['provider_type'];
 		}
 
 		/**
 		 * Filter provider configuration before saving.
 		 *
-		 * Allows modification of configuration before sanitization and encryption.
-		 *
 		 * @param array  $config      The provider configuration to save.
-		 * @param string $providerId  The provider ID.
+		 * @param string $instanceId  The instance ID.
 		 *
 		 * @example
-		 * add_filter('aether_provider_config_save', function($config, $providerId) {
-		 *     if ($providerId === 'my-provider') {
+		 * add_filter('aether_provider_config_save', function($config, $instanceId) {
+		 *     if (str_starts_with($instanceId, 'my-provider:')) {
 		 *         $config['custom_field'] = 'processed value';
 		 *     }
 		 *     return $config;
 		 * }, 10, 2);
 		 */
-		$config = \apply_filters('aether_provider_config_save', $config, $providerId);
+		$config = \apply_filters('aether_provider_config_save', $config, $instanceId);
 
-		// Use provider's sanitize and set callbacks.
-		$settings = $provider->getSettings();
-		$sanitized = [];
+		// Sanitize config recursively.
+		$sanitized = $this->sanitizeConfig($config);
 
-		foreach ($settings as $field) {
-			$fieldName = $field['name'] ?? '';
-			if (empty($fieldName)) {
-				continue;
-			}
-
-			// Skip hidden fields - they're not editable and shouldn't be saved from form submissions
-			if (isset($field['hidden']) && $field['hidden'] === true) {
-				continue;
-			}
-
-			// Handle nested field names like 'foo[bar]'.
-			if (\preg_match('/^([^[]+)\[([^\]]+)\]$/', $fieldName, $matches)) {
-				$parentKey = $matches[1];
-				$childKey = $matches[2];
-				$value = $config[$parentKey][$childKey] ?? null;
-
-				// Sanitize using provider's callback.
-				if (isset($field['sanitize_callback']) && \is_callable($field['sanitize_callback'])) {
-					try {
-						$value = \call_user_func($field['sanitize_callback'], $value);
-					} catch (\Exception $e) {
-						// If sanitization fails, skip this field
-						continue;
-					}
-				}
-
-				// Save using provider's set callback.
-				if (isset($field['set']) && \is_callable($field['set'])) {
-					try {
-						\call_user_func($field['set'], $value);
-					} catch (\Exception $e) {
-						// Log error but continue with other fields
-						if (\defined('WP_DEBUG') && WP_DEBUG) {
-							\error_log(\sprintf(
-								'Aether: Failed to save field %s[%s] for provider %s: %s',
-								$parentKey,
-								$childKey,
-								$providerId,
-								$e->getMessage()
-							));
-						}
-					}
-				}
-
-				// Also store in sanitized array for encryption.
-				if (! isset($sanitized[$parentKey]) || ! \is_array($sanitized[$parentKey])) {
-					$sanitized[$parentKey] = [];
-				}
-				$sanitized[$parentKey][$childKey] = $value;
-			} else {
-				$value = $config[$fieldName] ?? null;
-
-				// Sanitize using provider's callback.
-				if (isset($field['sanitize_callback']) && \is_callable($field['sanitize_callback'])) {
-					try {
-						$value = \call_user_func($field['sanitize_callback'], $value);
-					} catch (\Exception $e) {
-						// If sanitization fails, skip this field
-						continue;
-					}
-				}
-
-				// Save using provider's set callback.
-				if (isset($field['set']) && \is_callable($field['set'])) {
-					try {
-						\call_user_func($field['set'], $value);
-					} catch (\Exception $e) {
-						// Log error but continue with other fields
-						if (\defined('WP_DEBUG') && WP_DEBUG) {
-							\error_log(\sprintf(
-								'Aether: Failed to save field %s for provider %s: %s',
-								$fieldName,
-								$providerId,
-								$e->getMessage()
-							));
-						}
-					}
-				}
-
-				// Also store in sanitized array for encryption.
-				$sanitized[$fieldName] = $value;
-			}
-		}
-
-		/**
-		 * Filter provider-specific configuration after sanitization.
-		 *
-		 * Allows provider-specific sanitization logic before encryption.
-		 *
-		 * @param array  $sanitized  The sanitized configuration.
-		 * @param string $providerId The provider ID.
-		 *
-		 * @example
-		 * add_filter('aether_provider_my-provider_sanitize', function($config) {
-		 *     // Add provider-specific validation
-		 *     if (empty($config['required_field'])) {
-		 *         $config['required_field'] = 'default_value';
-		 *     }
-		 *     return $config;
-		 * });
-		 */
-		$sanitized = \apply_filters("aether_provider_{$providerId}_sanitize", $sanitized, $providerId);
-
-		// Encrypt sensitive fields and save to options for backward compatibility.
+		// Encrypt sensitive fields and save to options.
 		$encrypted = $this->encryptSensitiveFields($sanitized);
 		$settingsOption = \get_option('aether_site_exporter_settings', []);
 		if (! isset($settingsOption['providers']) || ! \is_array($settingsOption['providers'])) {
 			$settingsOption['providers'] = [];
 		}
-		$settingsOption['providers'][$providerId] = $encrypted;
+		$settingsOption['providers'][$instanceId] = $encrypted;
 		\update_option('aether_site_exporter_settings', $settingsOption);
 
 		/**
 		 * Action fired after provider configuration is saved.
 		 *
-		 * @param string $providerId The provider ID.
+		 * @param string $instanceId The instance ID.
 		 * @param array  $config     The saved configuration (decrypted for hook access).
 		 *
 		 * @example
-		 * add_action('aether_provider_config_saved', function($providerId, $config) {
-		 *     error_log("Provider {$providerId} configuration updated");
+		 * add_action('aether_provider_config_saved', function($instanceId, $config) {
+		 *     error_log("Instance {$instanceId} configuration updated");
 		 * }, 10, 2);
 		 */
-		\do_action('aether_provider_config_saved', $providerId, $sanitized);
+		\do_action('aether_provider_config_saved', $instanceId, $sanitized);
 
 		return new WP_REST_Response(
 			[
@@ -387,41 +252,41 @@ class ProviderConfigController
 	 */
 	public function deleteConfig(WP_REST_Request $request)
 	{
-		$providerId = \sanitize_key($request->get_param('provider_id'));
+		$instanceId = $request->get_param('instance_id');
 
 		/**
 		 * Action fired before provider configuration is deleted.
 		 *
 		 * Allows cleanup or validation before deletion.
 		 *
-		 * @param string $providerId The provider ID being deleted.
+		 * @param string $instanceId The instance ID being deleted.
 		 *
 		 * @example
-		 * add_action('aether_provider_config_before_delete', function($providerId) {
+		 * add_action('aether_provider_config_before_delete', function($instanceId) {
 		 *     // Clean up associated resources
-		 *     delete_option("my_provider_{$providerId}_cache");
+		 *     delete_option("my_provider_{$instanceId}_cache");
 		 * });
 		 */
-		\do_action('aether_provider_config_before_delete', $providerId);
+		\do_action('aether_provider_config_before_delete', $instanceId);
 
-		// Delete from aether_settings['providers'][providerId]
+		// Delete from aether_settings['providers'][instanceId]
 		$settings = \get_option('aether_site_exporter_settings', []);
-		if (isset($settings['providers'][$providerId])) {
-			unset($settings['providers'][$providerId]);
+		if (isset($settings['providers'][$instanceId])) {
+			unset($settings['providers'][$instanceId]);
 			\update_option('aether_site_exporter_settings', $settings);
 		}
 
 		/**
 		 * Action fired after provider configuration is deleted.
 		 *
-		 * @param string $providerId The provider ID that was deleted.
+		 * @param string $instanceId The instance ID that was deleted.
 		 *
 		 * @example
-		 * add_action('aether_provider_config_deleted', function($providerId) {
-		 *     error_log("Provider {$providerId} configuration removed");
+		 * add_action('aether_provider_config_deleted', function($instanceId) {
+		 *     error_log("Instance {$instanceId} configuration removed");
 		 * });
 		 */
-		\do_action('aether_provider_config_deleted', $providerId);
+		\do_action('aether_provider_config_deleted', $instanceId);
 
 		return new WP_REST_Response(
 			[
@@ -503,15 +368,15 @@ class ProviderConfigController
 	 */
 	public function getStatus(WP_REST_Request $request)
 	{
-		$providerId = \sanitize_key($request->get_param('provider_id'));
+		$instanceId = $request->get_param('instance_id');
 
 		// Check provider config in aether_settings (where settings are actually stored)
 		$settings = \get_option('aether_site_exporter_settings', []);
 		$providers = $settings['providers'] ?? [];
-		$config = $providers[ $providerId ] ?? [];
+		$config = $providers[ $instanceId ] ?? [];
 
 		// Check if provider is configured by verifying required fields exist
-		$configured = $this->isProviderConfigured($providerId, $config);
+		$configured = $this->isProviderConfigured($instanceId, $config);
 
 		return new WP_REST_Response(
 			[
@@ -525,11 +390,11 @@ class ProviderConfigController
 	/**
 	 * Check if provider has required configuration fields filled.
 	 *
-	 * @param string         $providerId Provider ID.
+	 * @param string         $instanceId Instance ID.
 	 * @param array<string, mixed> $config     Provider configuration.
 	 * @return bool True if configured, false otherwise.
 	 */
-	private function isProviderConfigured(string $providerId, array $config): bool
+	private function isProviderConfigured(string $instanceId, array $config): bool
 	{
 		if (empty($config)) {
 			return false;
@@ -538,9 +403,12 @@ class ProviderConfigController
 		// Decrypt config to check actual values (encrypted values are non-empty strings)
 		$decryptedConfig = $this->decryptSensitiveFields($config);
 
-		// For local filesystem provider, check if config has any non-empty values
+		// Check if config has any non-empty values (excluding meta fields)
 		$hasValues = false;
-		foreach ($decryptedConfig as $value) {
+		foreach ($decryptedConfig as $key => $value) {
+			if (\in_array($key, ['provider_type', 'instance_name'], true)) {
+				continue;
+			}
 			if (! empty($value) && ! \is_array($value)) {
 				$hasValues = true;
 				break;
@@ -557,16 +425,16 @@ class ProviderConfigController
 	 */
 	public function testConnection(WP_REST_Request $request)
 	{
-		$providerId = \sanitize_key($request->get_param('provider_id'));
+		$instanceId = $request->get_param('instance_id');
 
-		// Get provider instance from registry.
+		// Get provider instance from registry using instance ID.
 		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->get($providerId);
+		$provider = $registry->getProviderForInstance($instanceId);
 
 		if (! $provider) {
 			return new WP_Error(
 				'provider_not_found',
-				\sprintf(\__('Provider not found: %s', 'aether-site-exporter'), $providerId),
+				\sprintf(\__('Provider not found for instance: %s', 'aether-site-exporter'), $instanceId),
 				[ 'status' => 404 ]
 			);
 		}
@@ -605,7 +473,7 @@ class ProviderConfigController
 		// For other providers, return not implemented
 		return new WP_Error(
 			'not_implemented',
-			\sprintf(\__('Connection testing is not implemented for provider: %s', 'aether-site-exporter'), $providerId),
+			\sprintf(\__('Connection testing is not implemented for provider: %s', 'aether-site-exporter'), $provider->getId()),
 			[ 'status' => 501 ]
 		);
 	}

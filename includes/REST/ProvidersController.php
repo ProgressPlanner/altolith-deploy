@@ -61,6 +61,23 @@ class ProvidersController
 				'permission_callback' => [ $this, 'permissionCheck' ],
 			]
 		);
+
+		// Create new provider instance.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/providers/(?P<provider_type>[a-z0-9_-]+)/instances',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'createInstance' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+				'args'                => [
+					'instance_name' => [
+						'required' => true,
+						'type'     => 'string',
+					],
+				],
+			]
+		);
 	}
 
 	/**
@@ -236,5 +253,68 @@ class ProvidersController
 			'dependencies' => $provider->getDependencies(), // Provider dependencies (provider IDs)
 			'settings_fields' => $settingsFields,
 		];
+	}
+
+	/**
+	 * Create a new provider instance.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error Response or error.
+	 */
+	public function createInstance(WP_REST_Request $request)
+	{
+		$providerType = \sanitize_key($request->get_param('provider_type'));
+		$instanceName = \sanitize_text_field($request->get_param('instance_name'));
+
+		// Verify provider type exists.
+		$registry = ProviderRegistry::getInstance();
+		$provider = $registry->get($providerType);
+
+		if (! $provider) {
+			return new WP_Error(
+				'provider_not_found',
+				\sprintf(\__('Provider type not found: %s', 'aether-site-exporter'), $providerType),
+				[ 'status' => 404 ]
+			);
+		}
+
+		// Generate new instance ID.
+		$instanceId = $registry->createInstanceId($providerType);
+
+		// Create initial config with metadata.
+		$config = [
+			'provider_type' => $providerType,
+			'instance_name' => $instanceName,
+			'enabled' => false,
+			'deployment_types' => $provider->getDeploymentTypes(),
+		];
+
+		// Save to database.
+		$settings = \get_option('aether_site_exporter_settings', []);
+		if (! isset($settings['providers']) || ! \is_array($settings['providers'])) {
+			$settings['providers'] = [];
+		}
+		$settings['providers'][$instanceId] = $config;
+		\update_option('aether_site_exporter_settings', $settings);
+
+		/**
+		 * Action fired after provider instance is created.
+		 *
+		 * @param string $instanceId   The instance ID.
+		 * @param string $providerType The provider type.
+		 * @param string $instanceName The instance name.
+		 */
+		\do_action('aether_provider_instance_created', $instanceId, $providerType, $instanceName);
+
+		return new WP_REST_Response(
+			[
+				'success' => true,
+				'instance_id' => $instanceId,
+				'instance_name' => $instanceName,
+				'provider_type' => $providerType,
+				'message' => \__('Provider instance created successfully.', 'aether-site-exporter'),
+			],
+			201
+		);
 	}
 }

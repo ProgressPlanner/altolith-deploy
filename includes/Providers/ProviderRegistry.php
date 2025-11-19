@@ -228,4 +228,70 @@ class ProviderRegistry
 	{
 		return \count($this->providers);
 	}
+
+	/**
+	 * Parse instance ID into provider type and UUID.
+	 *
+	 * Instance IDs have format: {provider_type}:{uuid}
+	 * Example: "local-filesystem:a3f2c1b0-4e5d-6789-abcd-ef1234567890"
+	 *
+	 * @param string $instanceId Instance ID to parse
+	 * @return array{provider_type: string, uuid: string}|null Parsed components or null if invalid format
+	 */
+	public function parseInstanceId(string $instanceId): ?array
+	{
+		$parts = \explode(':', $instanceId, 2);
+		if (\count($parts) !== 2) {
+			return null;
+		}
+
+		return [
+			'provider_type' => $parts[0],
+			'uuid' => $parts[1],
+		];
+	}
+
+	/**
+	 * Get provider class for an instance ID.
+	 *
+	 * Extracts the provider type from the instance ID and returns the corresponding provider.
+	 *
+	 * @param string $instanceId Instance ID (format: {provider_type}:{uuid})
+	 * @return BaseProvider|null Provider instance or null if not found
+	 */
+	public function getProviderForInstance(string $instanceId): ?BaseProvider
+	{
+		$parsed = $this->parseInstanceId($instanceId);
+		if ($parsed === null) {
+			return null;
+		}
+
+		return $this->get($parsed['provider_type']);
+	}
+
+	/**
+	 * Create a new instance ID for a provider type.
+	 *
+	 * Generates a UUID v4 and combines it with the provider type.
+	 *
+	 * @param string $providerType Provider type (e.g., 'local-filesystem')
+	 * @return string Instance ID (format: {provider_type}:{uuid})
+	 */
+	public function createInstanceId(string $providerType): string
+	{
+		// Generate UUID v4
+		$uuid = \sprintf(
+			'%04x%04x-%04x-%04x-%04x-%04x%04x%04x',
+			\mt_rand(0, 0xffff),
+			\mt_rand(0, 0xffff),
+			\mt_rand(0, 0xffff),
+			\mt_rand(0, 0x0fff) | 0x4000,
+			\mt_rand(0, 0x3fff) | 0x8000,
+			\mt_rand(0, 0xffff),
+			\mt_rand(0, 0xffff),
+			\mt_rand(0, 0xffff)
+		);
+
+		return "{$providerType}:{$uuid}";
+	}
 }
