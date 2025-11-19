@@ -3,40 +3,22 @@
  *
  * Manages the file manifest JSON that tracks file sizes and hashes
  * for upload optimization. The manifest is stored remotely at
- * file-manifest.json and cached locally in IndexedDB.
- *
- * Performance: Local caching saves 2-5 seconds per publish by avoiding
- * remote manifest download on subsequent publishes within 1 hour.
+ * file-manifest.json in each provider's storage location.
  *
  * @package
  */
 
 import { debug, debugWarn } from './debug';
-import { getManifestCache } from './manifestCache';
 
 /**
- * Fetch existing manifest from remote storage with local caching.
- *
- * Checks local IndexedDB cache first (1-hour TTL), falls back to remote download.
- * Saves 2-5 seconds per publish by avoiding network round trip.
+ * Fetch existing manifest from remote storage.
  *
  * @param {Object} storageService StorageService instance.
- * @param {string} providerId     Optional provider ID for caching (defaults to 'default').
+ * @param {string} providerId     Optional provider ID (not used, kept for API compatibility).
  * @return {Promise<Object>} Manifest object (empty object if not found).
  */
 export async function fetchManifest( storageService, providerId = 'default' ) {
 	const manifestKey = 'file-manifest.json';
-
-	// Check cache first
-	const cache = getManifestCache();
-	const cachedManifest = await cache.get( providerId );
-	if ( cachedManifest ) {
-		debug( 'Manifest loaded from cache:', {
-			providerId,
-			fileCount: Object.keys( cachedManifest ).length,
-		} );
-		return cachedManifest;
-	}
 
 	try {
 		debug( 'Fetching manifest from remote:', manifestKey );
@@ -46,8 +28,6 @@ export async function fetchManifest( storageService, providerId = 'default' ) {
 
 		if ( ! manifestBlob ) {
 			debug( 'Manifest not found, starting with empty manifest' );
-			// Cache empty manifest to avoid repeated fetches
-			await cache.set( providerId, {} );
 			return {};
 		}
 
@@ -59,16 +39,11 @@ export async function fetchManifest( storageService, providerId = 'default' ) {
 			fileCount: Object.keys( manifest ).length,
 		} );
 
-		// Cache the manifest
-		await cache.set( providerId, manifest );
-
 		return manifest || {};
 	} catch ( error ) {
 		// If manifest doesn't exist (404) or other error, start with empty manifest.
 		if ( error.message && error.message.includes( '404' ) ) {
 			debug( 'Manifest not found (404), starting with empty manifest' );
-			// Cache empty manifest
-			await cache.set( providerId, {} );
 			return {};
 		}
 
@@ -76,7 +51,6 @@ export async function fetchManifest( storageService, providerId = 'default' ) {
 			'Failed to fetch manifest, starting with empty manifest:',
 			error
 		);
-		// Don't cache errors to allow retry on next publish
 		return {};
 	}
 }
@@ -214,11 +188,11 @@ export function cleanupManifest( manifest, currentFiles ) {
 }
 
 /**
- * Upload manifest to remote storage and update cache.
+ * Upload manifest to remote storage.
  *
  * @param {Object} storageService StorageService instance.
  * @param {Object} manifest       Manifest object to upload.
- * @param {string} providerId     Optional provider ID for cache invalidation (defaults to 'default').
+ * @param {string} providerId     Optional provider ID (not used, kept for API compatibility).
  * @return {Promise<boolean>} True if upload succeeded.
  */
 export async function uploadManifest(
@@ -245,11 +219,6 @@ export async function uploadManifest(
 
 		if ( result.success ) {
 			debug( 'Manifest uploaded successfully' );
-
-			// Update cache with new manifest
-			const cache = getManifestCache();
-			await cache.set( providerId, manifest );
-
 			return true;
 		}
 
