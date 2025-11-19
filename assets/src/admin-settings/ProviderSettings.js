@@ -1,27 +1,20 @@
 /**
- * Provider Settings Component
+ * Provider Settings Component (Instance-Based)
  *
- * Displays providers in a responsive grid layout with cards.
- * Each card shows provider summary with enable/disable toggle
- * and opens configuration in a modal.
+ * Displays provider types with their instances grouped together.
+ * Each provider type section can have multiple named instances.
  *
  * @package
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Spinner, SearchControl } from '@wordpress/components';
-import ProviderCard from './components/ProviderCard';
+import { Spinner, Button } from '@wordpress/components';
+import ProviderSection from './components/ProviderSection';
 import ProviderConfigModal from './components/ProviderConfigModal';
+import AddProviderInstanceModal from './components/AddProviderInstanceModal';
 import apiFetch from '../utils/api';
-import { colors, spacing, fontWeight, createGridStyle } from '../utils/styles';
-import {
-	areAllDependenciesSatisfied,
-	getUnsatisfiedDependencies,
-} from './utils/dependencyValidation';
-import { isProviderConfigured } from './utils/providerConfiguration';
-import { useDependencyValidation } from './hooks/useDependencyValidation';
-import { useProviderMetadataReload } from './hooks/useProviderMetadataReload';
+import { colors, spacing, fontWeight } from '../utils/styles';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 
 /**
@@ -38,26 +31,17 @@ export default function ProviderSettings( {
 } ) {
 	const [ providers, setProviders ] = useState( [] );
 	const [ loading, setLoading ] = useState( true );
-	const [ selectedProvider, setSelectedProvider ] = useState( null );
-	const [ isModalOpen, setIsModalOpen ] = useState( false );
-	const [ searchQuery, setSearchQuery ] = useState( '' );
-	const [ filterType, setFilterType ] = useState( 'all' );
+	const [ selectedInstanceId, setSelectedInstanceId ] = useState( null );
+	const [ isConfigModalOpen, setIsConfigModalOpen ] = useState( false );
+	const [ isAddModalOpen, setIsAddModalOpen ] = useState( false );
 	const configs = providerConfigs;
 
 	// Initialize provider settings hook
-	const { toggleProviderEnabled } = useProviderSettings();
-
-	// Auto-disable providers when dependencies become unsatisfied
-	useDependencyValidation( providers, configs, onConfigsUpdate );
-
-	// Reload provider metadata when deployment types change
-	useProviderMetadataReload(
-		configs,
-		isModalOpen,
-		selectedProvider,
-		setProviders,
-		setSelectedProvider
-	);
+	const {
+		toggleProviderEnabled,
+		createProviderInstance,
+		deleteProviderInstance,
+	} = useProviderSettings();
 
 	useEffect( () => {
 		// Fetch providers from REST API (PHP registry is source of truth)
@@ -72,29 +56,7 @@ export default function ProviderSettings( {
 					providersResponse.success &&
 					providersResponse.providers
 				) {
-					// Transform REST API response to match component expectations
-					const providerMetadata = providersResponse.providers.map(
-						( provider ) => ( {
-							id: provider.id,
-							metadata: {
-								name: provider.name,
-								description: provider.description,
-								supportedDeploymentTypes:
-									provider.deployment_types || [],
-								type: provider.type,
-								icon: '', // Icon not provided by PHP, can be added later if needed
-							},
-							// Transform settings_fields: map 'name' to 'id' for ProviderForm compatibility
-							settingsFields: (
-								provider.settings_fields || []
-							).map( ( field ) => ( {
-								...field,
-								id: field.name, // ProviderForm expects 'id' field
-							} ) ),
-						} )
-					);
-
-					setProviders( providerMetadata );
+					setProviders( providersResponse.providers );
 				}
 
 				// Configs are now managed by parent component
@@ -122,87 +84,57 @@ export default function ProviderSettings( {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [] );
 
-	// Filter providers based on search and type filter
-	const filteredProviders = providers.filter( ( provider ) => {
-		const matchesSearch =
-			! searchQuery ||
-			provider.metadata.name
-				.toLowerCase()
-				.includes( searchQuery.toLowerCase() ) ||
-			provider.metadata.description
-				?.toLowerCase()
-				.includes( searchQuery.toLowerCase() );
-
-		const matchesType =
-			filterType === 'all' || provider.metadata.type === filterType;
-
-		return matchesSearch && matchesType;
+	// Group instances by provider type
+	const instancesByProviderType = {};
+	Object.entries( configs ).forEach( ( [ instanceId, config ] ) => {
+		const providerType = config.provider_type || instanceId.split( ':' )[ 0 ];
+		if ( ! instancesByProviderType[ providerType ] ) {
+			instancesByProviderType[ providerType ] = [];
+		}
+		instancesByProviderType[ providerType ].push( {
+			instanceId,
+			config,
+		} );
 	} );
 
-	// Get unique provider types for filter
-	const providerTypes = [
-		...new Set( providers.map( ( p ) => p.metadata.type ) ),
-	];
+	const handleCreateInstance = useCallback(
+		async ( providerType ) => {
+			setIsAddModalOpen( true );
+		},
+		[]
+	);
 
-	// Count enabled and configured providers
-	const enabledCount = providers.filter(
-		( p ) => configs[ p.id ]?.enabled !== false
-	).length;
-	// Calculate configured count using JS logic based on required fields
-	const configuredCount = providers.filter( ( p ) => {
-		const providerConfig = configs[ p.id ] || {};
-		return isProviderConfigured( p.settingsFields || [], providerConfig );
-	} ).length;
-
-	const handleToggleProvider = useCallback(
-		async ( providerId, enabled ) => {
+	const handleCreateInstanceConfirm = useCallback(
+		async ( providerType, instanceName ) => {
 			try {
-				// If enabling, check dependencies first
-				if ( enabled ) {
-					const provider = providers.find(
-						( p ) => p.id === providerId
-					);
-					if ( provider ) {
-						// Check dependencies before toggling
-						const allDependenciesSatisfied =
-							areAllDependenciesSatisfied(
-								provider,
-								providers,
-								configs
-							);
+				await createProviderInstance( providerType, instanceName );
 
-						if ( ! allDependenciesSatisfied ) {
-							const unsatisfied = getUnsatisfiedDependencies(
-								provider,
-								providers,
-								configs
-							);
-							const dependencyNames = unsatisfied
-								.map( ( depId ) => {
-									const depProvider = providers.find(
-										( p ) => p.id === depId
-									);
-									return depProvider?.metadata?.name || depId;
-								} )
-								.join( ', ' );
+				// Reload configs
+				const configsResponse = await apiFetch( {
+					path: '/aether/site-exporter/settings?key=providers',
+				} );
 
-							// eslint-disable-next-line no-alert
-							alert(
-								// eslint-disable-next-line @wordpress/i18n-no-variables
-								__(
-									'Cannot enable provider: Missing required dependencies: ' +
-										dependencyNames,
-									'aether-site-exporter'
-								)
-							);
-							return;
-						}
-					}
+				if ( configsResponse.success && configsResponse.value ) {
+					onConfigsUpdate( configsResponse.value );
 				}
+			} catch ( error ) {
+				console.error( 'Failed to create instance:', error );
+				throw error;
+			}
+		},
+		[ createProviderInstance, onConfigsUpdate ]
+	);
 
-				// Use the hook to toggle provider enabled state
+	const handleConfigureInstance = useCallback( async ( instanceId ) => {
+		setSelectedInstanceId( instanceId );
+		setIsConfigModalOpen( true );
+	}, [] );
+
+	const handleToggleInstance = useCallback(
+		async ( instanceId, enabled ) => {
+			try {
 				const updatedProviders = await toggleProviderEnabled(
-					providerId,
+					instanceId,
 					enabled
 				);
 
@@ -211,51 +143,33 @@ export default function ProviderSettings( {
 					onConfigsUpdate( updatedProviders );
 				}
 			} catch ( error ) {
-				console.error( 'Failed to toggle provider:', error );
+				console.error( 'Failed to toggle instance:', error );
 			}
 		},
-		[ providers, configs, toggleProviderEnabled, onConfigsUpdate ]
+		[ toggleProviderEnabled, onConfigsUpdate ]
 	);
 
-	const handleConfigureProvider = useCallback( async ( provider ) => {
-		// Reload provider metadata to get updated settings fields based on current deployment types
-		try {
-			const providerResponse = await apiFetch( {
-				path: `/aether/site-exporter/providers/${ provider.id }`,
-			} );
+	const handleDeleteInstance = useCallback(
+		async ( instanceId ) => {
+			try {
+				const updatedProviders = await deleteProviderInstance(
+					instanceId
+				);
 
-			if ( providerResponse.success && providerResponse.provider ) {
-				// Update the provider with latest metadata (including filtered settings fields)
-				const updatedProvider = {
-					...provider,
-					settingsFields: (
-						providerResponse.provider.settings_fields || []
-					).map( ( field ) => ( {
-						...field,
-						id: field.name, // ProviderForm expects 'id' field
-					} ) ),
-				};
-				setSelectedProvider( updatedProvider );
-				setIsModalOpen( true );
-			} else {
-				// Fallback to original provider if fetch fails
-				setSelectedProvider( provider );
-				setIsModalOpen( true );
+				// Update parent configs state
+				if ( onConfigsUpdate ) {
+					onConfigsUpdate( updatedProviders );
+				}
+			} catch ( error ) {
+				console.error( 'Failed to delete instance:', error );
 			}
-		} catch ( error ) {
-			console.error( 'Failed to reload provider metadata:', error );
-			// Fallback to original provider if fetch fails
-			setSelectedProvider( provider );
-			setIsModalOpen( true );
-		}
-	}, [] );
+		},
+		[ deleteProviderInstance, onConfigsUpdate ]
+	);
 
 	const handleModalClose = useCallback( () => {
-		setIsModalOpen( false );
-		// Clear selected provider to unmount the modal immediately
-		setSelectedProvider( null );
-		// No need to reload configs since the modal doesn't modify them
-		// The configs are already current from sidebar changes
+		setIsConfigModalOpen( false );
+		setSelectedInstanceId( null );
 	}, [] );
 
 	if ( loading ) {
@@ -279,11 +193,28 @@ export default function ProviderSettings( {
 		);
 	}
 
+	// Get selected instance and provider for config modal
+	const selectedInstance = selectedInstanceId
+		? {
+				instanceId: selectedInstanceId,
+				config: configs[ selectedInstanceId ] || {},
+		  }
+		: null;
+	const selectedProvider =
+		selectedInstance && selectedInstance.config.provider_type
+			? providers.find(
+					( p ) => p.id === selectedInstance.config.provider_type
+			  )
+			: null;
+
 	const pageHeaderStyle = {
 		marginBottom: spacing.lg,
 		fontSize: '1.5rem',
 		fontWeight: fontWeight.bold,
 		color: colors.text,
+		display: 'flex',
+		justifyContent: 'space-between',
+		alignItems: 'center',
 	};
 
 	const pageDescriptionStyle = {
@@ -292,131 +223,102 @@ export default function ProviderSettings( {
 		fontSize: '0.875rem',
 	};
 
-	const controlsStyle = {
-		display: 'flex',
-		gap: spacing.md,
-		marginBottom: spacing.lg,
-		flexWrap: 'wrap',
-		alignItems: 'center',
-	};
-
-	const statsStyle = {
-		display: 'flex',
-		gap: spacing.md,
-		marginBottom: spacing.md,
-		fontSize: '0.875rem',
-		color: colors.textSecondary,
-	};
-
-	const gridStyle = createGridStyle( '280px', spacing.lg );
+	// Count total instances
+	const totalInstances = Object.keys( configs ).length;
+	const enabledInstances = Object.values( configs ).filter(
+		( c ) => c.enabled !== false
+	).length;
 
 	return (
 		<div>
-			<h2 style={ pageHeaderStyle }>
-				{ __( 'Provider Settings', 'aether-site-exporter' ) }
-			</h2>
+			<div style={ pageHeaderStyle }>
+				<div>
+					<h2 style={ { margin: 0 } }>
+						{ __( 'Provider Instances', 'aether-site-exporter' ) }
+					</h2>
+				</div>
+				<Button
+					variant="primary"
+					onClick={ () => setIsAddModalOpen( true ) }
+				>
+					{ __( 'Add Provider Instance', 'aether-site-exporter' ) }
+				</Button>
+			</div>
 			<p style={ pageDescriptionStyle }>
 				{ __(
-					'Configure deployment providers. Each provider can handle different deployment types (static sites, blueprint bundles, edge functions).',
+					'Create and manage multiple instances of each provider type. Each instance can have its own configuration and deployment settings.',
 					'aether-site-exporter'
 				) }
 			</p>
 
-			{ /* Stats */ }
-			<div style={ statsStyle }>
+			<div
+				style={ {
+					fontSize: '0.875rem',
+					color: colors.textSecondary,
+					marginBottom: spacing.lg,
+				} }
+			>
 				<span>
-					{ __( 'Total:', 'aether-site-exporter' ) }{ ' ' }
-					<strong>{ providers.length }</strong>
+					{ __( 'Total Instances:', 'aether-site-exporter' ) }{ ' ' }
+					<strong>{ totalInstances }</strong>
 				</span>
+				{ ' • ' }
 				<span>
 					{ __( 'Enabled:', 'aether-site-exporter' ) }{ ' ' }
-					<strong>{ enabledCount }</strong>
-				</span>
-				<span>
-					{ __( 'Configured:', 'aether-site-exporter' ) }{ ' ' }
-					<strong>{ configuredCount }</strong>
+					<strong>{ enabledInstances }</strong>
 				</span>
 			</div>
 
-			{ /* Search and Filter Controls */ }
-			<div style={ controlsStyle }>
-				<SearchControl
-					value={ searchQuery }
-					onChange={ setSearchQuery }
-					placeholder={ __(
-						'Search providers…',
-						'aether-site-exporter'
-					) }
-					style={ { maxWidth: '300px' } }
-				/>
-				{ providerTypes.length > 0 && (
-					<select
-						value={ filterType }
-						onChange={ ( e ) => setFilterType( e.target.value ) }
-						style={ {
-							padding: `${ spacing.sm } ${ spacing.md }`,
-							border: `1px solid ${ colors.borderLight }`,
-							borderRadius: '4px',
-						} }
-					>
-						<option value="all">
-							{ __( 'All Types', 'aether-site-exporter' ) }
-						</option>
-						{ providerTypes.map( ( type ) => (
-							<option key={ type } value={ type }>
-								{ type }
-							</option>
-						) ) }
-					</select>
-				) }
-			</div>
+			{ /* Provider Sections */ }
+			{ providers.map( ( provider ) => {
+				const instances = instancesByProviderType[ provider.id ] || [];
 
-			{ /* Provider Grid */ }
-			{ filteredProviders.length > 0 ? (
-				<div style={ gridStyle }>
-					{ filteredProviders.map( ( provider ) => {
-						const providerConfig = configs[ provider.id ] || {};
-						const enabled = providerConfig.enabled !== false; // Default to enabled
-
-						return (
-							<ProviderCard
-								key={ provider.id }
-								provider={ provider }
-								config={ providerConfig }
-								enabled={ enabled }
-								onToggle={ ( newEnabled ) =>
-									handleToggleProvider(
-										provider.id,
-										newEnabled
-									)
-								}
-								onConfigure={ () =>
-									handleConfigureProvider( provider )
-								}
-								allProviders={ providers }
-								allProviderConfigs={ configs }
-							/>
-						);
-					} ) }
-				</div>
-			) : (
-				<p style={ { color: colors.textSecondary } }>
-					{ __(
-						'No providers match your search criteria.',
-						'aether-site-exporter'
-					) }
-				</p>
-			) }
+				return (
+					<ProviderSection
+						key={ provider.id }
+						provider={ provider }
+						instances={ instances }
+						onCreateInstance={ handleCreateInstance }
+						onConfigureInstance={ handleConfigureInstance }
+						onToggleInstance={ handleToggleInstance }
+						onDeleteInstance={ handleDeleteInstance }
+					/>
+				);
+			} ) }
 
 			{ /* Configuration Modal */ }
-			{ selectedProvider && (
+			{ selectedProvider && selectedInstance && (
 				<ProviderConfigModal
-					isOpen={ isModalOpen }
+					isOpen={ isConfigModalOpen }
 					onClose={ handleModalClose }
-					provider={ selectedProvider }
-					initialConfig={ configs[ selectedProvider.id ] || {} }
+					provider={ {
+						id: selectedProvider.id,
+						metadata: {
+							name: selectedProvider.name,
+							description: selectedProvider.description,
+							supportedDeploymentTypes:
+								selectedProvider.deployment_types || [],
+							type: selectedProvider.type,
+						},
+						settingsFields: (
+							selectedProvider.settings_fields || []
+						).map( ( field ) => ( {
+							...field,
+							id: field.name,
+						} ) ),
+					} }
+					initialConfig={ selectedInstance.config }
+					instanceId={ selectedInstanceId }
 				/>
 			) }
+
+			{ /* Add Instance Modal */ }
+			<AddProviderInstanceModal
+				isOpen={ isAddModalOpen }
+				onClose={ () => setIsAddModalOpen( false ) }
+				providers={ providers }
+				onCreate={ handleCreateInstanceConfirm }
+			/>
 		</div>
 	);
 }
