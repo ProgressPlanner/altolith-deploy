@@ -271,46 +271,35 @@ export function useStaticSiteGenerator( onProgress ) {
 						allUniqueAssets.add( assetUrl );
 					}
 
-					// Process HTML and cache it
 					/**
-					 * Filter HTML before processing.
+					 * Filter raw HTML before caching.
 					 *
-					 * Allows providers to modify HTML before URL rewriting and processing.
+					 * Allows providers to modify HTML before caching.
+					 * NOTE: URL rewriting happens later during upload, per-provider.
 					 *
 					 * @param {string} html              Raw HTML content.
 					 * @param {string} url               Page URL.
 					 * @param {string} siteUrl           Site URL.
-					 * @param {string} staticSiteUrl     Static site deployment URL.
-					 * @param {string} staticSiteProviderId Provider ID.
 					 *
 					 * @example
 					 * import { addFilter } from '@wordpress/hooks';
 					 *
-					 * addFilter('aether.static.html.process', 'my-provider', (html, url, siteUrl, staticSiteUrl, providerId) => {
+					 * addFilter('aether.static.html.raw', 'my-provider', (html, url, siteUrl) => {
 					 *   // Add custom meta tag
 					 *   return html.replace('</head>', '<meta name="custom" content="value" /></head>');
 					 * });
 					 */
-					let processedHtml = applyFilters(
-						'aether.static.html.process',
+					const filteredRawHtml = applyFilters(
+						'aether.static.html.raw',
 						html,
 						url,
-						siteUrl,
-						staticSiteUrl,
-						staticSiteProviderId
+						siteUrl
 					);
 
-					// Process HTML (URL rewriting, admin bar removal, etc.)
-					processedHtml = processHtml(
-						processedHtml,
-						url,
-						siteUrl,
-						staticSiteUrl
-					);
-
-					// Cache processed HTML and asset URLs in IndexedDB
+					// Cache RAW HTML (before URL rewriting) and asset URLs in IndexedDB
+					// URL rewriting will happen per-provider during upload phase
 					// No size limit - IndexedDB can handle thousands of URLs
-					await cache.set( url, processedHtml, assetUrls );
+					await cache.set( url, filteredRawHtml, assetUrls );
 				} catch ( error ) {
 					// Log failure silently (network errors are expected for some URLs)
 					// Use debugWarn instead of letting error propagate to avoid console noise
@@ -724,7 +713,7 @@ export function useStaticSiteGenerator( onProgress ) {
 					);
 					continue;
 				}
-				const { processedHtml, assetUrls } = cached;
+				const { processedHtml: rawHtml, assetUrls } = cached;
 
 				try {
 					// Update UI to show current progress (files X of Y).
@@ -738,6 +727,43 @@ export function useStaticSiteGenerator( onProgress ) {
 							'uploadFilesProgress'
 						);
 					}
+
+					/**
+					 * Filter HTML before provider-specific processing.
+					 *
+					 * Allows providers to modify HTML before URL rewriting.
+					 *
+					 * @param {string} html                  Raw HTML content.
+					 * @param {string} url                   Page URL.
+					 * @param {string} siteUrl               Site URL.
+					 * @param {string} staticSiteUrl         Provider-specific deployment URL.
+					 * @param {string} staticSiteProviderId Provider ID.
+					 *
+					 * @example
+					 * import { addFilter } from '@wordpress/hooks';
+					 *
+					 * addFilter('aether.static.html.process', 'my-provider', (html, url, siteUrl, staticSiteUrl, providerId) => {
+					 *   // Add custom meta tag
+					 *   return html.replace('</head>', '<meta name="custom" content="value" /></head>');
+					 * });
+					 */
+					let processedHtml = applyFilters(
+						'aether.static.html.process',
+						rawHtml,
+						url,
+						siteUrl,
+						staticSiteUrl,
+						staticSiteProviderId
+					);
+
+					// Process HTML with provider-specific deployment URL
+					// This includes URL rewriting, admin bar removal, etc.
+					processedHtml = processHtml(
+						processedHtml,
+						url,
+						siteUrl,
+						staticSiteUrl
+					);
 
 					// Upload HTML file to storage with progress tracking.
 					const htmlPath = getStaticFilePath( url );
