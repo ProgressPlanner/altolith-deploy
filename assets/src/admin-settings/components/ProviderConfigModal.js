@@ -23,6 +23,7 @@ import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
  * @param {Function} props.onClose       Close modal handler.
  * @param {Object}   props.provider      Provider metadata.
  * @param {Object}   props.initialConfig Initial configuration values.
+ * @param {string}   props.instanceId    Instance ID for saving config.
  * @return {JSX.Element} Rendered modal component.
  */
 export default function ProviderConfigModal( {
@@ -30,6 +31,7 @@ export default function ProviderConfigModal( {
 	onClose,
 	provider,
 	initialConfig = {},
+	instanceId,
 } ) {
 	const [ config, setConfig ] = useState( initialConfig );
 	const [ hasChanges, setHasChanges ] = useState( false );
@@ -95,14 +97,15 @@ export default function ProviderConfigModal( {
 
 	// Trigger hooks when modal is open and config/provider changes
 	useEffect( () => {
-		if ( ! isOpen || ! provider ) {
+		if ( ! isOpen || ! provider || ! instanceId ) {
 			return;
 		}
 
 		const { id } = provider;
 
 		const hookContext = {
-			providerId: id,
+			providerId: id, // Provider type (for backwards compatibility)
+			instanceId, // Instance ID (for instance-specific operations)
 			provider,
 			config,
 			onConfigChange: handleFormChange,
@@ -117,17 +120,14 @@ export default function ProviderConfigModal( {
 		if ( afterFormRef.current ) {
 			doAction( 'aether.provider.modal.after_form', hookContext );
 		}
-	}, [ isOpen, provider, config, handleFormChange ] );
+	}, [ isOpen, provider, config, handleFormChange, instanceId ] );
 
 	const handleFormSubmit = async ( values ) => {
-		if ( ! provider ) {
+		if ( ! provider || ! instanceId ) {
 			return;
 		}
 
-		const { id } = provider;
-
-		// ProviderForm handles the save, but we need to preserve the enabled state
-		// Get current provider config to preserve enabled state
+		// Use instanceId for saving (not provider.id which is the provider type)
 		setSaveError( null );
 
 		try {
@@ -140,7 +140,7 @@ export default function ProviderConfigModal( {
 			}
 
 			const providerConfigs = configResponse.value || {};
-			const currentConfig = providerConfigs[ id ] || {};
+			const currentConfig = providerConfigs[ instanceId ] || {};
 			const enabled = currentConfig.enabled !== false; // Default to enabled
 
 			// Include deployment_types from config state (managed in modal checkboxes)
@@ -154,7 +154,7 @@ export default function ProviderConfigModal( {
 			// Save with enabled state preserved
 			const updatedProviders = {
 				...providerConfigs,
-				[ id ]: updatedConfig,
+				[ instanceId ]: updatedConfig,
 			};
 
 			const saveResponse = await apiFetch( {
@@ -322,6 +322,7 @@ export default function ProviderConfigModal( {
 				ref={ beforeFormRef }
 				className="aether-provider-modal__before-form"
 				data-provider-id={ id }
+				data-instance-id={ instanceId }
 			/>
 
 			<ProviderForm
@@ -342,6 +343,7 @@ export default function ProviderConfigModal( {
 				ref={ afterFormRef }
 				className="aether-provider-modal__after-form"
 				data-provider-id={ id }
+				data-instance-id={ instanceId }
 			/>
 		</Modal>
 	);
