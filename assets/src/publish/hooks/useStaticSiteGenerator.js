@@ -80,9 +80,10 @@ export function useStaticSiteGenerator( onProgress ) {
 						'static_site'
 					);
 
-				// Use discovered provider ID if available, otherwise fall back to parameter
+				// Use instance ID parameter if provided (multi-instance support)
+				// Otherwise use discovered provider type (legacy single-instance)
 				const providerIdToUse =
-					discoveredStaticSiteProviderId || staticSiteProviderId;
+					staticSiteProviderId || discoveredStaticSiteProviderId;
 
 				if ( providerIdToUse ) {
 					const configResponse = await apiFetch( {
