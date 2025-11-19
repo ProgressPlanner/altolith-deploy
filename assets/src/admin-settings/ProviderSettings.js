@@ -189,16 +189,16 @@ export default function ProviderSettings( {
 
 	if ( loading ) {
 		return (
-			<div style={ { textAlign: 'center', padding: spacing.xl } }>
-				<Spinner />
+			<div className="aether-provider-settings aether-provider-settings--loading" style={ { textAlign: 'center', padding: spacing.xl } }>
+				<Spinner className="aether-provider-settings__spinner" />
 			</div>
 		);
 	}
 
 	if ( providers.length === 0 ) {
 		return (
-			<div>
-				<p style={ { color: colors.textSecondary } }>
+			<div className="aether-provider-settings aether-provider-settings--empty">
+				<p className="aether-provider-settings__empty-message" style={ { color: colors.textSecondary } }>
 					{ __(
 						'No providers available. Install a provider plugin to enable deployment options.',
 						'aether-site-exporter'
@@ -245,55 +245,52 @@ export default function ProviderSettings( {
 	).length;
 
 	return (
-		<div>
-			<div style={ pageHeaderStyle }>
-				<div>
-					<h2 style={ { margin: 0 } }>
+		<div className="aether-provider-settings">
+			<div className="aether-provider-settings__header" style={ pageHeaderStyle }>
+				<div className="aether-provider-settings__header-content">
+					<h2 className="aether-provider-settings__title" style={ { margin: 0 } }>
 						{ __( 'Provider Instances', 'aether-site-exporter' ) }
 					</h2>
 				</div>
 				<Button
+					className="aether-provider-settings__add-button"
 					variant="primary"
 					onClick={ () => setIsAddModalOpen( true ) }
 				>
 					{ __( 'Add Provider Instance', 'aether-site-exporter' ) }
 				</Button>
 			</div>
-			<p style={ pageDescriptionStyle }>
+			<p className="aether-provider-settings__description" style={ pageDescriptionStyle }>
 				{ __(
 					'Create and manage multiple instances of each provider type. Each instance can have its own configuration and deployment settings.',
 					'aether-site-exporter'
 				) }
 			</p>
 
-			<div
-				style={ {
-					fontSize: '0.875rem',
-					color: colors.textSecondary,
-					marginBottom: spacing.lg,
-				} }
-			>
-				<span>
+			<div className="aether-provider-settings__stats" style={ {
+				fontSize: '0.875rem',
+				color: colors.textSecondary,
+				marginBottom: spacing.lg,
+			} }>
+				<span className="aether-provider-settings__stat">
 					{ __( 'Total Instances:', 'aether-site-exporter' ) }{ ' ' }
-					<strong>{ totalInstances }</strong>
+					<strong className="aether-provider-settings__stat-value">{ totalInstances }</strong>
 				</span>
-				{ ' • ' }
-				<span>
+				<span className="aether-provider-settings__stat-separator">{ ' • ' }</span>
+				<span className="aether-provider-settings__stat">
 					{ __( 'Enabled:', 'aether-site-exporter' ) }{ ' ' }
-					<strong>{ enabledInstances }</strong>
+					<strong className="aether-provider-settings__stat-value">{ enabledInstances }</strong>
 				</span>
 			</div>
 
 			{ /* Flat Grid of All Provider Instances */ }
 			{ allInstances.length > 0 ? (
-				<div
-					style={ {
-						display: 'grid',
-						gridTemplateColumns:
-							'repeat(auto-fill, minmax(300px, 1fr))',
-						gap: spacing.md,
-					} }
-				>
+				<div className="aether-provider-settings__grid" style={ {
+					display: 'grid',
+					gridTemplateColumns:
+						'repeat(auto-fill, minmax(300px, 1fr))',
+					gap: spacing.md,
+				} }>
 					{ allInstances.map( ( instance ) => (
 						<ProviderInstanceCard
 							key={ instance.instanceId }
@@ -319,16 +316,14 @@ export default function ProviderSettings( {
 					) ) }
 				</div>
 			) : (
-				<div
-					style={ {
-						padding: spacing.xl,
-						textAlign: 'center',
-						color: colors.textSecondary,
-						fontSize: '0.875rem',
-						border: `1px dashed ${ colors.borderLight }`,
-						borderRadius: '8px',
-					} }
-				>
+				<div className="aether-provider-settings__empty-state" style={ {
+					padding: spacing.xl,
+					textAlign: 'center',
+					color: colors.textSecondary,
+					fontSize: '0.875rem',
+					border: `1px dashed ${ colors.borderLight }`,
+					borderRadius: '8px',
+				} }>
 					{ __(
 						'No provider instances configured. Click "Add Provider Instance" to create one.',
 						'aether-site-exporter'

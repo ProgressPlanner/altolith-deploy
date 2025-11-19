@@ -264,13 +264,14 @@ export default function ProviderConfigModal( {
 			className="aether-provider-config-modal"
 		>
 			{ description && (
-				<div style={ headerStyle }>
-					<p style={ descriptionStyle }>{ description }</p>
+				<div className="aether-provider-config-modal__header" style={ headerStyle }>
+					<p className="aether-provider-config-modal__description" style={ descriptionStyle }>{ description }</p>
 				</div>
 			) }
 
 			{ saveError && (
 				<Notice
+					className="aether-provider-config-modal__notice aether-provider-config-modal__notice--error"
 					status="error"
 					isDismissible
 					onRemove={ () => setSaveError( null ) }
@@ -281,17 +282,15 @@ export default function ProviderConfigModal( {
 
 			{ /* Deployment Types Section */ }
 			{ supportedDeploymentTypes.length > 0 && (
-				<div style={ deploymentTypesSectionStyle }>
-					<div style={ sectionTitleStyle }>
+				<div className="aether-provider-config-modal__deployment-types" style={ deploymentTypesSectionStyle }>
+					<div className="aether-provider-config-modal__deployment-types-title" style={ sectionTitleStyle }>
 						{ __( 'Deployment Types', 'aether-site-exporter' ) }
 					</div>
-					<p
-						style={ {
-							fontSize: '0.875rem',
-							color: colors.textSecondary,
-							marginBottom: spacing.md,
-						} }
-					>
+					<p className="aether-provider-config-modal__deployment-types-description" style={ {
+						fontSize: '0.875rem',
+						color: colors.textSecondary,
+						marginBottom: spacing.md,
+					} }>
 						{ __(
 							'Select which deployment types this provider instance should handle.',
 							'aether-site-exporter'
@@ -300,6 +299,7 @@ export default function ProviderConfigModal( {
 					{ supportedDeploymentTypes.map( ( deploymentType ) => (
 						<CheckboxControl
 							key={ deploymentType }
+							className="aether-provider-config-modal__deployment-type-checkbox"
 							label={ deploymentTypeLabels[ deploymentType ] }
 							checked={
 								config.deployment_types?.includes(

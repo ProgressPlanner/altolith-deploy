@@ -71,7 +71,7 @@ export default function SecretField( {
 
 	return (
 		<div className="aether-secret-field" style={ containerStyle }>
-			<div style={ inputWrapperStyle }>
+			<div className="aether-secret-field__wrapper" style={ inputWrapperStyle }>
 				<TextControl
 					className="aether-secret-field__input"
 					label={ label }
@@ -109,6 +109,7 @@ export default function SecretField( {
 				>
 					{ isVisible ? (
 						<svg
+							className="aether-secret-field__icon aether-secret-field__icon--visible"
 							xmlns="http://www.w3.org/2000/svg"
 							viewBox="0 0 32 32"
 							width="18"
@@ -120,6 +121,7 @@ export default function SecretField( {
 						</svg>
 					) : (
 						<svg
+							className="aether-secret-field__icon aether-secret-field__icon--hidden"
 							xmlns="http://www.w3.org/2000/svg"
 							viewBox="0 0 32 32"
 							width="18"

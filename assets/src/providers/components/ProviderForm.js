@@ -393,6 +393,7 @@ function ProviderForm( {
 						{ /* Render advanced fields in ToolsPanel */ }
 						{ advancedFields.length > 0 && (
 							<ToolsPanel
+								className="aether-provider-form__tools-panel"
 								label={ __(
 									'Advanced settings',
 									'aether-site-exporter'
@@ -404,6 +405,7 @@ function ProviderForm( {
 									return (
 										<ToolsPanelItem
 											key={ field.id }
+											className="aether-provider-form__tools-panel-item"
 											hasValue={ () =>
 												hasFieldValue( field )
 											}

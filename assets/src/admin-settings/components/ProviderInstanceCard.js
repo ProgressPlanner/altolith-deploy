@@ -167,15 +167,16 @@ export default function ProviderInstanceCard( {
 	};
 
 	return (
-		<div style={ cardStyle }>
+		<div className="aether-provider-instance-card" style={ cardStyle }>
 			{ /* Provider Type Tag */ }
-			<div style={ providerTypeTagStyle }>{ provider.name }</div>
+			<div className="aether-provider-instance-card__type-tag" style={ providerTypeTagStyle }>{ provider.name }</div>
 
-			<div style={ headerStyle }>
+			<div className="aether-provider-instance-card__header" style={ headerStyle }>
 				{ isEditing ? (
 					<>
 						<input
 							ref={ inputRef }
+							className="aether-provider-instance-card__name-input"
 							type="text"
 							value={ editedName }
 							onChange={ ( e ) =>
@@ -195,6 +196,7 @@ export default function ProviderInstanceCard( {
 				) : (
 					<>
 						<div
+							className="aether-provider-instance-card__name"
 							style={ nameStyle }
 							onClick={ () => setIsEditing( true ) }
 							onKeyDown={ ( e ) => {
@@ -211,7 +213,7 @@ export default function ProviderInstanceCard( {
 						>
 							{ instance.config.instance_name }
 						</div>
-						<span style={ statusBadgeStyle }>
+						<span className={`aether-provider-instance-card__status aether-provider-instance-card__status--${instance.config.enabled ? 'enabled' : 'disabled'}`} style={ statusBadgeStyle }>
 							{ instance.config.enabled
 								? __( 'Enabled', 'aether-site-exporter' )
 								: __( 'Disabled', 'aether-site-exporter' ) }
@@ -220,8 +222,9 @@ export default function ProviderInstanceCard( {
 				) }
 			</div>
 
-			<div>
+			<div className="aether-provider-instance-card__toggle">
 				<ToggleControl
+					className="aether-provider-instance-card__toggle-control"
 					label={ __(
 						'Enable this instance',
 						'aether-site-exporter'
@@ -231,8 +234,9 @@ export default function ProviderInstanceCard( {
 				/>
 			</div>
 
-			<div style={ actionsStyle }>
+			<div className="aether-provider-instance-card__actions" style={ actionsStyle }>
 				<Button
+					className="aether-provider-instance-card__configure-button"
 					variant="secondary"
 					onClick={ onConfigure }
 					style={ { flex: 1 } }
@@ -240,6 +244,7 @@ export default function ProviderInstanceCard( {
 					{ __( 'Configure', 'aether-site-exporter' ) }
 				</Button>
 				<Button
+					className="aether-provider-instance-card__delete-button"
 					variant="secondary"
 					isDestructive
 					onClick={ handleDelete }

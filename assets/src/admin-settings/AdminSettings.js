@@ -109,11 +109,15 @@ export default function AdminSettings() {
 				) }
 			</h1>
 
-			<div style={ layoutStyle }>
+			<div className="aether-admin-settings__layout" style={ layoutStyle }>
 				{ /* Main Content */ }
-				<div style={ mainContentStyle }>
-					<div style={ sectionsStyle }>
-						<Notice status="info" isDismissible={ false }>
+				<div className="aether-admin-settings__main" style={ mainContentStyle }>
+					<div className="aether-admin-settings__sections" style={ sectionsStyle }>
+						<Notice
+							className="aether-admin-settings__notice aether-admin-settings__notice--info"
+							status="info"
+							isDismissible={ false }
+						>
 							{ __(
 								'Aether Site Exporter allows you to export your WordPress site as a complete package.',
 								'aether-site-exporter'
@@ -128,9 +132,10 @@ export default function AdminSettings() {
 				</div>
 
 				{ /* Sidebar */ }
-				<div style={ sidebarStyle }>
-					<div style={ sidebarContentStyle }>
+				<div className="aether-admin-settings__sidebar" style={ sidebarStyle }>
+					<div className="aether-admin-settings__sidebar-content" style={ sidebarContentStyle }>
 						<Button
+							className="aether-admin-settings__export-button"
 							variant="primary"
 							onClick={ () => setIsExportModalOpen( true ) }
 							style={ buttonStyle }

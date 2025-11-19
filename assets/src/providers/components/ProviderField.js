@@ -121,24 +121,24 @@ export default function ProviderField( {
 				style={ fieldWrapperStyle }
 			>
 				{ label && (
-					<div className="components-base-control__label">
-						<strong>{ label }</strong>
+					<div className="aether-provider-field__label components-base-control__label">
+						<strong className="aether-provider-field__label-text">{ label }</strong>
 						{ required && (
-							<span className="components-base-control__label__required">
+							<span className="aether-provider-field__label-required components-base-control__label__required">
 								*
 							</span>
 						) }
 					</div>
 				) }
 				{ help && (
-					<p className="components-base-control__help">{ help }</p>
+					<p className="aether-provider-field__help components-base-control__help">{ help }</p>
 				) }
 				{ error && (
-					<p className="components-base-control__help components-base-control__help--error">
+					<p className="aether-provider-field__error aether-provider-field__error--message components-base-control__help components-base-control__help--error">
 						{ error }
 					</p>
 				) }
-				<div className="aether-checkbox-group">
+				<div className="aether-provider-field__checkbox-group aether-checkbox-group">
 					{ options.map( ( option ) => {
 						const optionValue = option.value;
 						const optionLabel = option.label || option.value;
@@ -147,6 +147,7 @@ export default function ProviderField( {
 						return (
 							<CheckboxControl
 								key={ optionValue }
+								className="aether-provider-field__checkbox-option"
 								label={ optionLabel }
 								checked={ isSelected }
 								onChange={ ( checked ) => {
