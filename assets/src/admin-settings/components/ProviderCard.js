@@ -16,6 +16,7 @@ import {
 	areAllDependenciesSatisfied,
 	getUnsatisfiedDependencies,
 } from '../utils/dependencyValidation';
+import { isProviderConfigured } from '../utils/providerConfiguration';
 
 /**
  * Provider Card Component.
@@ -63,8 +64,11 @@ function ProviderCard( {
 	// Provider can only be enabled if all dependencies are satisfied
 	const canEnable = allDependenciesSatisfied;
 
-	// Check if provider is configured (has any non-default config values)
-	const isConfigured = config && Object.keys( config ).length > 0;
+	// Calculate configured status reactively based on required fields
+	const isConfigured = isProviderConfigured(
+		provider.settingsFields || [],
+		config
+	);
 
 	// Get deployment types from config or use supported types as default
 	const deploymentTypes =
@@ -301,13 +305,15 @@ function ProviderCard( {
 }
 
 // Memoize component to prevent unnecessary re-renders when parent updates
-// Only re-render if provider.id, config, enabled, or dependencies change
+// Only re-render if provider.id, config, enabled, settingsFields, or dependencies change
 export default memo( ProviderCard, ( prevProps, nextProps ) => {
 	return (
 		prevProps.provider.id === nextProps.provider.id &&
 		JSON.stringify( prevProps.config ) ===
 			JSON.stringify( nextProps.config ) &&
 		prevProps.enabled === nextProps.enabled &&
+		JSON.stringify( prevProps.provider.settingsFields ) ===
+			JSON.stringify( nextProps.provider.settingsFields ) &&
 		prevProps.allProviders.length === nextProps.allProviders.length
 	);
 } );
