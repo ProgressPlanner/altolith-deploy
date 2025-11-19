@@ -40,10 +40,10 @@ class ProvidersController
 			]
 		);
 
-		// Get specific provider.
+		// Get specific provider (supports both provider types and instance IDs with colons).
 		\register_rest_route(
 			$this->getNamespace(),
-			'/providers/(?P<provider_id>[a-z0-9_-]+)',
+			'/providers/(?P<provider_id>[a-z0-9_:-]+)',
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'getProvider' ],
@@ -115,32 +115,67 @@ class ProvidersController
 	}
 
 	/**
-	 * Get specific provider.
+	 * Get specific provider or provider instance.
+	 *
+	 * Supports both provider types (e.g., 'local-filesystem') and instance IDs (e.g., 'local-filesystem:uuid').
 	 *
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response|WP_Error Response or error.
 	 */
 	public function getProvider(WP_REST_Request $request)
 	{
-		$providerId = \sanitize_key($request->get_param('provider_id'));
-		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->get($providerId);
+		$providerId = $request->get_param('provider_id');
+		// Note: Cannot use sanitize_key() as it removes colons, which are needed for instance IDs
+		$providerId = \sanitize_text_field($providerId);
 
-		if (! $provider) {
-			return new WP_Error(
-				'provider_not_found',
-				\sprintf(\__('Provider not found: %s', 'aether-site-exporter'), $providerId),
-				[ 'status' => 404 ]
+		$registry = ProviderRegistry::getInstance();
+
+		// Check if this is an instance ID (contains colon) or a provider type
+		if (\strpos($providerId, ':') !== false) {
+			// Instance ID - get the provider for this instance
+			$provider = $registry->getProviderForInstance($providerId);
+
+			if (! $provider) {
+				return new WP_Error(
+					'provider_not_found',
+					\sprintf(\__('Provider instance not found: %s', 'aether-site-exporter'), $providerId),
+					[ 'status' => 404 ]
+				);
+			}
+
+			// Get instance-specific configuration
+			$settings = \get_option('aether_site_exporter_settings', []);
+			$instanceConfig = $settings['providers'][$providerId] ?? [];
+
+			// Return provider metadata with instance config
+			return new WP_REST_Response(
+				[
+					'success' => true,
+					'provider' => $this->getProviderMetadata($provider),
+					'config' => $instanceConfig,
+				],
+				200
+			);
+		} else {
+			// Provider type - get the base provider
+			$provider = $registry->get($providerId);
+
+			if (! $provider) {
+				return new WP_Error(
+					'provider_not_found',
+					\sprintf(\__('Provider not found: %s', 'aether-site-exporter'), $providerId),
+					[ 'status' => 404 ]
+				);
+			}
+
+			return new WP_REST_Response(
+				[
+					'success' => true,
+					'provider' => $this->getProviderMetadata($provider),
+				],
+				200
 			);
 		}
-
-		return new WP_REST_Response(
-			[
-				'success' => true,
-				'provider' => $this->getProviderMetadata($provider),
-			],
-			200
-		);
 	}
 
 	/**

@@ -11,14 +11,7 @@ import { __ } from '@wordpress/i18n';
 import { Notice, Button } from '@wordpress/components';
 import PublishProgressModal from '../publish/components/PublishProgressModal';
 import ProviderSettings from './ProviderSettings';
-import {
-	colors,
-	spacing,
-	fontWeight,
-	createFlexStyle,
-	fontSize,
-	borderRadius,
-} from '../utils/styles';
+import { colors, spacing, fontWeight, createFlexStyle } from '../utils/styles';
 import apiFetch from '../utils/api';
 
 export default function AdminSettings() {
@@ -93,16 +86,6 @@ export default function AdminSettings() {
 		...createFlexStyle( 'column', spacing.lg ),
 	};
 
-	const exportButtonStyle = {
-		fontSize: fontSize.lg,
-		fontWeight: fontWeight.semibold,
-		padding: `${ spacing.md } ${ spacing.xl }`,
-		borderRadius: borderRadius.md,
-		backgroundColor: colors.success,
-		borderColor: colors.success,
-		color: colors.white,
-	};
-
 	return (
 		<div className="aether-admin-settings" style={ containerStyle }>
 			<div
@@ -122,7 +105,6 @@ export default function AdminSettings() {
 					className="aether-admin-settings__export-button"
 					variant="primary"
 					onClick={ () => setIsExportModalOpen( true ) }
-					style={ exportButtonStyle }
 				>
 					{ __( 'Export Site', 'aether-site-exporter' ) }
 				</Button>
