@@ -353,14 +353,14 @@ class SettingsController
 				// For all fields (including arrays), replace with incoming value
 				// The frontend sends complete form values, so incoming value is the source of truth
 				// This ensures checkbox-group fields (like deployment_types) are replaced, not merged
-				
+
 				// Special handling for deployment_types to ensure it's always an array
 				if ($key === 'deployment_types') {
 					if (!\is_array($value)) {
 						$value = [];
 					}
 				}
-				
+
 				$mergedConfig[$key] = $value;
 			}
 

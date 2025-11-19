@@ -31,13 +31,6 @@ class ProviderRegistry
 	private array $providers = [];
 
 	/**
-	 * Whether providers have been discovered.
-	 *
-	 * @var bool
-	 */
-	private bool $discovered = false;
-
-	/**
 	 * Get singleton instance.
 	 *
 	 * @return ProviderRegistry Registry instance
@@ -71,8 +64,8 @@ class ProviderRegistry
 		/**
 		 * Filter to register providers.
 		 *
-		 * @param array<BaseProvider> $providers Array of provider instances
-		 * @return array<BaseProvider> Modified array of providers
+		 * @param array<mixed> $providers Array of provider instances (may contain non-BaseProvider items)
+		 * @return array<mixed> Modified array of providers
 		 */
 		$providers = \apply_filters('aether_providers', []);
 
@@ -85,8 +78,6 @@ class ProviderRegistry
 				}
 			}
 		}
-
-		$this->discovered = true;
 	}
 
 	/**
@@ -115,9 +106,9 @@ class ProviderRegistry
 	/**
 	 * Get all registered providers.
 	 *
-	 * Re-discovers providers if not yet discovered to ensure all providers
-	 * registered via the filter are included, even if they were registered
-	 * after the registry was first instantiated.
+	 * Re-discovers providers to ensure all providers registered via the filter
+	 * are included, even if they were registered after the registry was first
+	 * instantiated.
 	 *
 	 * @return array<string, BaseProvider> Array of provider instances keyed by ID
 	 */
@@ -214,4 +205,3 @@ class ProviderRegistry
 		return \count($this->providers);
 	}
 }
-

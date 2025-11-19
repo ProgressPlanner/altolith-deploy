@@ -1315,7 +1315,7 @@ class PublishStepsController
 		$registry = ProviderRegistry::getInstance();
 		$provider = $registry->getForDeploymentType('blueprint_bundle');
 		$exportPath = 'blueprint-bundle/bundle.zip';
-		
+
 		if ($provider) {
 			$settings = $provider->getSettings();
 			foreach ($settings as $field) {

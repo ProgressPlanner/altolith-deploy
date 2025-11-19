@@ -47,7 +47,7 @@ abstract class BaseProvider
 	abstract public function getDeploymentTypes(): array;
 
 	/**
-	 * Get provider settings fields definition.
+	 * Get provider-specific settings fields definition.
 	 *
 	 * Each field should be an array with:
 	 * - 'type': Field type (text, checkbox, select, etc.)
@@ -59,7 +59,85 @@ abstract class BaseProvider
 	 *
 	 * @return array<array<string, mixed>> Array of field definitions
 	 */
-	abstract public function getSettings(): array;
+	abstract public function getProviderSettings(): array;
+
+	/**
+	 * Get provider settings fields definition.
+	 *
+	 * This method automatically prepends the deployment_types field to provider-specific settings.
+	 * The deployment_types field is generated based on getDeploymentTypes().
+	 *
+	 * @return array<array<string, mixed>> Array of field definitions
+	 */
+	public function getSettings(): array
+	{
+		// Get supported deployment types for this provider
+		$supportedTypes = $this->getDeploymentTypes();
+
+		// Map deployment types to option labels
+		$deploymentTypeLabels = [
+			'static_site' => \__('Static Site', 'aether-site-exporter'),
+			'blueprint_bundle' => \__('Blueprint Bundle', 'aether-site-exporter'),
+			'edge_functions' => \__('Edge Functions', 'aether-site-exporter'),
+		];
+
+		// Build options array only for supported deployment types
+		$deploymentTypeOptions = [];
+		foreach ($supportedTypes as $type) {
+			if (isset($deploymentTypeLabels[$type])) {
+				$deploymentTypeOptions[] = [
+					'value' => $type,
+					'label' => $deploymentTypeLabels[$type],
+				];
+			}
+		}
+
+		$providerId = $this->getId();
+
+		// Generate deployment_types field
+		$deploymentTypesField = [
+			'type' => 'checkbox-group',
+			'label' => \__('Deployment Types', 'aether-site-exporter'),
+			'name' => 'deployment_types',
+			'description' => \__('Select which types of exports this provider should handle.', 'aether-site-exporter'),
+			'options' => $deploymentTypeOptions,
+			'defaultValue' => $supportedTypes, // Default to all supported types
+			'sanitize_callback' => function ($value) use ($supportedTypes) {
+				if (!\is_array($value)) {
+					return $supportedTypes; // Default to all supported types
+				}
+				// Only allow values that are in supported types
+				return \array_values(\array_intersect($value, $supportedTypes));
+			},
+			'get' => function () use ($supportedTypes, $providerId) {
+				$settings = \get_option('aether_site_exporter_settings', []);
+				$deploymentTypes = $settings['providers'][$providerId]['deployment_types'] ?? null;
+				// Default to all supported types if not set
+				if (!\is_array($deploymentTypes) || empty($deploymentTypes)) {
+					return $supportedTypes;
+				}
+				// Ensure only supported types are returned
+				return \array_values(\array_intersect($deploymentTypes, $supportedTypes));
+			},
+			'set' => function ($value) use ($providerId) {
+				$settings = \get_option('aether_site_exporter_settings', []);
+				if (!isset($settings['providers']) || !\is_array($settings['providers'])) {
+					$settings['providers'] = [];
+				}
+				if (!isset($settings['providers'][$providerId]) || !\is_array($settings['providers'][$providerId])) {
+					$settings['providers'][$providerId] = [];
+				}
+				$settings['providers'][$providerId]['deployment_types'] = $value;
+				\update_option('aether_site_exporter_settings', $settings);
+			},
+		];
+
+		// Get provider-specific settings
+		$providerSettings = $this->getProviderSettings();
+
+		// Prepend deployment_types field to provider settings
+		return \array_merge([$deploymentTypesField], $providerSettings);
+	}
 
 	/**
 	 * Register provider-specific REST API routes.
@@ -107,4 +185,3 @@ abstract class BaseProvider
 		return false;
 	}
 }
-

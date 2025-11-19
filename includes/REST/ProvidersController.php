@@ -162,8 +162,36 @@ class ProvidersController
 	private function getProviderMetadata($provider): array
 	{
 		$settings = $provider->getSettings();
+
+		// Get provider-specific deployment types from config
+		$providerId = $provider->getId();
+		$providerSettings = \get_option('aether_site_exporter_settings', []);
+		$providerConfig = $providerSettings['providers'][$providerId] ?? [];
+		$providerDeploymentTypes = $providerConfig['deployment_types'] ?? null;
+
+		// Get global deployment types
+		$globalDeploymentTypes = $providerSettings['global_deployment_types'] ?? null;
+
+		// Merge: use provider-specific if set, otherwise use global defaults, otherwise use provider's supported types
+		$deploymentTypes = $providerDeploymentTypes;
+		if (!\is_array($deploymentTypes) || empty($deploymentTypes)) {
+			if (\is_array($globalDeploymentTypes) && !empty($globalDeploymentTypes)) {
+				$deploymentTypes = $globalDeploymentTypes;
+			} else {
+				$deploymentTypes = $provider->getDeploymentTypes();
+			}
+		}
+
+		// Filter settings fields based on deployment types
 		$settingsFields = [];
 		foreach ($settings as $field) {
+			// If field has a deploymentType, only include it if that deployment type is enabled
+			if (isset($field['deploymentType'])) {
+				if (!\in_array($field['deploymentType'], $deploymentTypes, true)) {
+					continue; // Skip this field if its deployment type is not enabled
+				}
+			}
+
 			// Include all field properties needed by the frontend
 			$fieldData = [
 				'type' => $field['type'] ?? 'text',
@@ -199,10 +227,9 @@ class ProvidersController
 			'name' => $provider->getName(),
 			'description' => $provider->getDescription(),
 			'type' => $provider->getType(),
-			'deployment_types' => $provider->getDeploymentTypes(),
+			'deployment_types' => $deploymentTypes,
 			'settings_fields' => $settingsFields,
 			'configured' => $provider->isConfigured(),
 		];
 	}
 }
-
