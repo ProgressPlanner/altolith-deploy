@@ -109,7 +109,13 @@ export default function ProviderInstanceCard( {
 		}
 	};
 
-	const headerStyle = {
+	const headerContentStyle = {
+		display: 'flex',
+		flexDirection: 'column',
+		gap: spacing.sm,
+	};
+
+	const headerRowStyle = {
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'space-between',
@@ -170,76 +176,95 @@ export default function ProviderInstanceCard( {
 	return (
 		<Card className="aether-provider-instance-card">
 			<CardHeader className="aether-provider-instance-card__header">
-				{ /* Provider Type Tag */ }
 				<div
-					className="aether-provider-instance-card__type-tag"
-					style={ providerTypeTagStyle }
+					className="aether-provider-instance-card__header-content"
+					style={ headerContentStyle }
 				>
-					{ provider.name }
-				</div>
+					{ /* Provider Type Tag */ }
+					<div
+						className="aether-provider-instance-card__type-tag"
+						style={ providerTypeTagStyle }
+					>
+						{ provider.name }
+					</div>
 
-				<div style={ headerStyle }>
-					{ isEditing ? (
-						<>
-							<input
-								ref={ inputRef }
-								className="aether-provider-instance-card__name-input"
-								type="text"
-								value={ editedName }
-								onChange={ ( e ) =>
-									setEditedName( e.target.value )
-								}
-								onBlur={ handleNameSave }
-								onKeyDown={ ( e ) => {
-									if ( e.key === 'Enter' ) {
-										handleNameSave();
-									} else if ( e.key === 'Escape' ) {
-										handleNameCancel();
+					<div
+						className="aether-provider-instance-card__header-row"
+						style={ headerRowStyle }
+					>
+						{ isEditing ? (
+							<>
+								<input
+									ref={ inputRef }
+									className="aether-provider-instance-card__name-input"
+									type="text"
+									value={ editedName }
+									onChange={ ( e ) =>
+										setEditedName( e.target.value )
 									}
-								} }
-								style={ nameInputStyle }
-							/>
-						</>
-					) : (
-						<>
-							<div
-								className="aether-provider-instance-card__name"
-								style={ nameStyle }
-								onClick={ () => setIsEditing( true ) }
-								onKeyDown={ ( e ) => {
-									if ( e.key === 'Enter' || e.key === ' ' ) {
-										setIsEditing( true );
-									}
-								} }
-								onMouseEnter={ ( e ) => {
-									e.currentTarget.style.backgroundColor =
-										colors.backgroundLighter;
-								} }
-								onMouseLeave={ ( e ) => {
-									e.currentTarget.style.backgroundColor =
-										'transparent';
-								} }
-								role="button"
-								tabIndex={ 0 }
-								title={ __(
-									'Click to edit name',
-									'aether-site-exporter'
-								) }
-							>
-								{ instance.config.instance_name }
-							</div>
-							<span
-								className={ `aether-provider-instance-card__status aether-provider-instance-card__status--${
-									instance.config.enabled ? 'enabled' : 'disabled'
-								}` }
-								style={ statusBadgeStyle }
-							>
-								{ instance.config.enabled
-									? __( 'Enabled', 'aether-site-exporter' )
-									: __( 'Disabled', 'aether-site-exporter' ) }
-							</span>
-						</>
-					) }
+									onBlur={ handleNameSave }
+									onKeyDown={ ( e ) => {
+										if ( e.key === 'Enter' ) {
+											handleNameSave();
+										} else if ( e.key === 'Escape' ) {
+											handleNameCancel();
+										}
+									} }
+									style={ nameInputStyle }
+								/>
+							</>
+						) : (
+							<>
+								<div
+									className="aether-provider-instance-card__name"
+									style={ nameStyle }
+									onClick={ () => setIsEditing( true ) }
+									onKeyDown={ ( e ) => {
+										if (
+											e.key === 'Enter' ||
+											e.key === ' '
+										) {
+											setIsEditing( true );
+										}
+									} }
+									onMouseEnter={ ( e ) => {
+										e.currentTarget.style.backgroundColor =
+											colors.backgroundLighter;
+									} }
+									onMouseLeave={ ( e ) => {
+										e.currentTarget.style.backgroundColor =
+											'transparent';
+									} }
+									role="button"
+									tabIndex={ 0 }
+									title={ __(
+										'Click to edit name',
+										'aether-site-exporter'
+									) }
+								>
+									{ instance.config.instance_name }
+								</div>
+								<span
+									className={ `aether-provider-instance-card__status aether-provider-instance-card__status--${
+										instance.config.enabled
+											? 'enabled'
+											: 'disabled'
+									}` }
+									style={ statusBadgeStyle }
+								>
+									{ instance.config.enabled
+										? __(
+												'Enabled',
+												'aether-site-exporter'
+										  )
+										: __(
+												'Disabled',
+												'aether-site-exporter'
+										  ) }
+								</span>
+							</>
+						) }
+					</div>
 				</div>
 			</CardHeader>
 

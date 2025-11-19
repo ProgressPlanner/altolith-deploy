@@ -152,12 +152,7 @@ export default function ProviderSettings( {
 				throw error;
 			}
 		},
-		[
-			createProviderInstance,
-			onConfigsUpdate,
-			localConfigs,
-			providers,
-		]
+		[ createProviderInstance, onConfigsUpdate, localConfigs, providers ]
 	);
 
 	const handleConfigureInstance = useCallback( async ( instanceId ) => {
@@ -186,9 +181,6 @@ export default function ProviderSettings( {
 
 	const handleDeleteInstance = useCallback(
 		async ( instanceId ) => {
-			// Store the deleted instance for rollback
-			const deletedInstance = localConfigs[ instanceId ];
-
 			// Optimistically remove from local state
 			const { [ instanceId ]: removed, ...remainingConfigs } =
 				localConfigs;
