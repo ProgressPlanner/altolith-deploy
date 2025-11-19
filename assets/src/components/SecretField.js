@@ -9,7 +9,6 @@
 import { useState } from '@wordpress/element';
 import { TextControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { spacing } from '../utils/styles';
 
 export default function SecretField( {
 	value = '',

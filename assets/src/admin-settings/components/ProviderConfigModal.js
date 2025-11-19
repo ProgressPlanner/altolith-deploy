@@ -39,26 +39,9 @@ export default function ProviderConfigModal( {
 	const beforeFormRef = useRef( null );
 	const afterFormRef = useRef( null );
 
-	if ( ! provider ) {
-		return null;
-	}
-
-	const { id, metadata, settingsFields } = provider;
-	const { name, description } = metadata;
-
 	// Get current deployment types from initialConfig for visibility logic
 	// eslint-disable-next-line camelcase
 	const currentDeploymentTypes = initialConfig.deployment_types || [];
-
-	const headerStyle = {
-		marginBottom: spacing.md,
-	};
-
-	const descriptionStyle = {
-		fontSize: '0.875rem',
-		color: colors.textSecondary,
-		margin: 0,
-	};
 
 	const handleFormChange = useCallback(
 		( newValues ) => {
@@ -79,6 +62,9 @@ export default function ProviderConfigModal( {
 
 	// Reset config when modal opens/closes or provider changes
 	useEffect( () => {
+		if ( ! provider ) {
+			return;
+		}
 		if ( isOpen ) {
 			// Keep deployment_types in config for visibility logic, but don't show it in form
 			setConfig( initialConfig );
@@ -97,6 +83,8 @@ export default function ProviderConfigModal( {
 			return;
 		}
 
+		const { id } = provider;
+
 		const hookContext = {
 			providerId: id,
 			provider,
@@ -113,9 +101,15 @@ export default function ProviderConfigModal( {
 		if ( afterFormRef.current ) {
 			doAction( 'aether.provider.modal.after_form', hookContext );
 		}
-	}, [ isOpen, id, provider, config, handleFormChange ] );
+	}, [ isOpen, provider, config, handleFormChange ] );
 
 	const handleFormSubmit = async ( values ) => {
+		if ( ! provider ) {
+			return;
+		}
+
+		const { id } = provider;
+
 		// ProviderForm handles the save, but we need to preserve the enabled state
 		// Get current provider config to preserve enabled state
 		setSaveError( null );
@@ -197,6 +191,23 @@ export default function ProviderConfigModal( {
 		setHasChanges( false );
 		setSaveError( null );
 		onClose();
+	};
+
+	if ( ! provider ) {
+		return null;
+	}
+
+	const { id, metadata, settingsFields } = provider;
+	const { name, description } = metadata;
+
+	const headerStyle = {
+		marginBottom: spacing.md,
+	};
+
+	const descriptionStyle = {
+		fontSize: '0.875rem',
+		color: colors.textSecondary,
+		margin: 0,
 	};
 
 	return (

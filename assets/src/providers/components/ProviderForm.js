@@ -17,7 +17,9 @@ import {
 import {
 	Button,
 	Notice,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanel as ToolsPanel,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
@@ -26,13 +28,7 @@ import apiFetch from '../../utils/api';
 import { validateConfig } from '../../utils/validation';
 import ProviderField from './ProviderField';
 import { useSuccessTimeout } from '../../hooks/useSuccessTimeout';
-import {
-	colors,
-	spacing,
-	fontWeight,
-	borderRadius,
-	createFlexStyle,
-} from '../../utils/styles';
+import { colors, spacing, createFlexStyle } from '../../utils/styles';
 
 /**
  * Provider Form Component.

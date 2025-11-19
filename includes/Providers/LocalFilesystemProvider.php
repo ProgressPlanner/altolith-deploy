@@ -185,5 +185,4 @@ class LocalFilesystemProvider extends BaseProvider
 			],
 		];
 	}
-
 }
