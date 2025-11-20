@@ -7,10 +7,11 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from '@wordpress/element';
-import { Modal, Notice, CheckboxControl } from '@wordpress/components';
+import { Modal, CheckboxControl } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
 import ProviderForm from '../../providers/components/ProviderForm';
+import StatusNotice from '../../components/StatusNotice';
 import apiFetch from '../../utils/api';
 import { colors, spacing, fontWeight } from '../../utils/styles';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
@@ -289,14 +290,13 @@ export default function ProviderConfigModal( {
 			) }
 
 			{ saveError && (
-				<Notice
-					className="aether-provider-config-modal__notice aether-provider-config-modal__notice--error"
+				<StatusNotice
 					status="error"
+					message={ saveError }
 					isDismissible
 					onRemove={ () => setSaveError( null ) }
-				>
-					{ saveError }
-				</Notice>
+					className="aether-provider-config-modal__notice"
+				/>
 			) }
 
 			{ /* Deployment Types Section */ }

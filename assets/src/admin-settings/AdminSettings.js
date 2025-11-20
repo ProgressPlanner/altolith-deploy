@@ -8,9 +8,10 @@
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Notice, Button } from '@wordpress/components';
+import { Button } from '@wordpress/components';
 import PublishProgressModal from '../publish/components/PublishProgressModal';
 import ProviderSettings from './ProviderSettings';
+import StatusNotice from '../components/StatusNotice';
 import { colors, spacing, fontWeight, createFlexStyle } from '../utils/styles';
 import apiFetch from '../utils/api';
 
@@ -114,28 +115,26 @@ export default function AdminSettings() {
 				className="aether-admin-settings__sections"
 				style={ sectionsStyle }
 			>
-				<Notice
-					className="aether-admin-settings__notice aether-admin-settings__notice--info"
+				<StatusNotice
 					status="info"
-					isDismissible={ false }
-				>
-					{ __(
+					message={ __(
 						'Aether Site Exporter allows you to export your WordPress site as a complete package.',
 						'aether-site-exporter'
 					) }
-				</Notice>
+					isDismissible={ false }
+					className="aether-admin-settings__notice"
+				/>
 
 				{ /* Dynamic notices */ }
 				{ notices.map( ( notice ) => (
-					<Notice
+					<StatusNotice
 						key={ notice.id }
-						className={ `aether-admin-settings__notice aether-admin-settings__notice--${ notice.status }` }
 						status={ notice.status }
+						message={ notice.message }
 						isDismissible={ notice.isDismissible }
 						onRemove={ () => removeNotice( notice.id ) }
-					>
-						{ notice.message }
-					</Notice>
+						className="aether-admin-settings__notice"
+					/>
 				) ) }
 
 				<ProviderSettings
