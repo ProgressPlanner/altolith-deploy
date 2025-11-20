@@ -10,6 +10,7 @@
 import { applyFilters } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
 import { calculateOverallProgress } from '../utils/progressManager';
+import { formatFileSize } from '../../utils/helpers';
 
 /**
  * Upload site archive step handler (stateless).
@@ -30,6 +31,7 @@ export async function uploadSiteArchiveHandler( context ) {
 		setStatusMessage,
 		setStepProgress,
 		setOverallProgressValue,
+		blueprintBundle, // Blueprint bundle data with bundleSize, bundlePath, bundleUrl
 	} = context;
 
 	// Use blueprintBundleProviders if available (these are instance IDs)
@@ -52,8 +54,11 @@ export async function uploadSiteArchiveHandler( context ) {
 		return { skipped: true, reason: 'no_providers' };
 	}
 
+	const bundleSize = blueprintBundle?.bundleSize || 0;
+	const bundleSizeFormatted = formatFileSize( bundleSize );
+
 	setStatusMessage(
-		`Uploading blueprint bundle to ${ providers.length } provider(s)…`,
+		`Uploading blueprint bundle (${ bundleSizeFormatted }) to ${ providers.length } provider(s)…`,
 		'progress',
 		'uploadSiteArchive'
 	);
@@ -173,9 +178,15 @@ export async function uploadSiteArchiveHandler( context ) {
 	// Report results
 	if ( successCount > 0 ) {
 		setStatusMessage(
-			`Uploaded blueprint bundle to ${ successCount }/${ providers.length } provider(s)`,
+			`Uploaded blueprint bundle (${ bundleSizeFormatted }) to ${ successCount }/${ providers.length } provider(s)`,
 			failureCount > 0 ? 'warning' : 'success',
-			'uploadSiteArchive'
+			'uploadSiteArchive',
+			null,
+			{
+				bundleSize,
+				isBlueprint: true,
+				providerCount: successCount,
+			}
 		);
 	}
 

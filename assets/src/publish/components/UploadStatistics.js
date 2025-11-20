@@ -29,19 +29,33 @@ import { formatFileSize } from '../../utils/helpers';
 export default function UploadStatistics( { messageHistory } ) {
 	// Calculate upload statistics from message history
 	const uploadStats = useMemo( () => {
-		// Count unique providers from summary messages
+		// Count unique providers from summary messages (static site)
 		const providerSummaryMessages = messageHistory.filter( ( msg ) =>
 			msg.key?.startsWith( 'upload-provider-' )
 		);
-		const providerCount = Math.max(
-			1,
-			providerSummaryMessages.length || 1
-		);
 
-		// Count total files uploaded across all providers
+		// Check for blueprint bundle uploads
+		const blueprintMessages = messageHistory.filter(
+			( msg ) =>
+				msg.key === 'uploadSiteArchive' &&
+				msg.type === 'success' &&
+				msg.metadata?.isBlueprint
+		);
+		const hasBlueprintUpload = blueprintMessages.length > 0;
+		const blueprintProviderCount =
+			blueprintMessages[ 0 ]?.metadata?.providerCount || 0;
+
+		// Determine provider count
+		let providerCount = Math.max( 1, providerSummaryMessages.length || 1 );
+		// If only blueprint upload (no static site), use blueprint provider count
+		if ( hasBlueprintUpload && providerSummaryMessages.length === 0 ) {
+			providerCount = blueprintProviderCount;
+		}
+
+		// Count static site files uploaded across all providers
 		// Parse provider summary messages like "Completed Production: 100 files uploaded"
 		// to get actual total (e.g., 100 files × 3 providers = 300 total uploads)
-		let fileCount = 0;
+		let staticFileCount = 0;
 		if ( providerSummaryMessages.length > 0 ) {
 			// Multi-provider: sum file counts from each provider summary
 			providerSummaryMessages.forEach( ( msg ) => {
@@ -49,7 +63,7 @@ export default function UploadStatistics( { messageHistory } ) {
 					/(\d+)\s+files?\s+uploaded/i
 				);
 				if ( match ) {
-					fileCount += parseInt( match[ 1 ], 10 );
+					staticFileCount += parseInt( match[ 1 ], 10 );
 				}
 			} );
 		} else {
@@ -60,21 +74,36 @@ export default function UploadStatistics( { messageHistory } ) {
 					msg.metadata?.fileSize &&
 					msg.key?.startsWith( 'upload-' )
 			);
-			fileCount = uploadedFileMessages.length;
+			staticFileCount = uploadedFileMessages.length;
 		}
 
+		// Count blueprint bundle uploads (1 file per provider)
+		const blueprintFileCount = hasBlueprintUpload
+			? blueprintProviderCount
+			: 0;
+
+		// Total files = static files + blueprint bundles
+		const fileCount = staticFileCount + blueprintFileCount;
+
 		// Calculate total size from metadata
-		// Note: Size is correct even in multi-provider case because
-		// same file updates same message key with same metadata
+		// Static site files size
 		const uploadedFileMessages = messageHistory.filter(
 			( msg ) =>
 				msg.type === 'success' &&
 				msg.metadata?.fileSize &&
 				msg.key?.startsWith( 'upload-' )
 		);
-		const totalSize = uploadedFileMessages.reduce( ( sum, msg ) => {
+		const staticFilesSize = uploadedFileMessages.reduce( ( sum, msg ) => {
 			return sum + ( msg.metadata?.fileSize || 0 );
 		}, 0 );
+
+		// Blueprint bundle size (only count once, not per provider)
+		const blueprintSize = hasBlueprintUpload
+			? blueprintMessages[ 0 ]?.metadata?.bundleSize || 0
+			: 0;
+
+		// Total size = static files + blueprint
+		const totalSize = staticFilesSize + blueprintSize;
 
 		return {
 			providerCount,
@@ -83,7 +112,7 @@ export default function UploadStatistics( { messageHistory } ) {
 		};
 	}, [ messageHistory ] );
 
-	// Don't render if no files uploaded yet
+	// Don't render if no uploads at all
 	if ( uploadStats.fileCount === 0 ) {
 		return null;
 	}
