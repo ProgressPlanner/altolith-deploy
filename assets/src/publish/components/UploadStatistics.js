@@ -30,8 +30,11 @@ export default function UploadStatistics( { messageHistory } ) {
 	// Calculate upload statistics from message history
 	const uploadStats = useMemo( () => {
 		// Count unique providers from summary messages (static site)
-		const providerSummaryMessages = messageHistory.filter( ( msg ) =>
-			msg.key?.startsWith( 'upload-provider-' )
+		// Only count summary messages, not context messages
+		const providerSummaryMessages = messageHistory.filter(
+			( msg ) =>
+				msg.key?.startsWith( 'upload-provider-' ) &&
+				msg.key?.endsWith( '-summary' )
 		);
 
 		// Check for blueprint bundle uploads
