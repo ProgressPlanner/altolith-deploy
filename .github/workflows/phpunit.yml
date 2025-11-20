@@ -41,6 +41,9 @@ jobs:
       - name: Install dependencies
         run: composer install --prefer-dist --no-progress --ignore-platform-reqs
 
+      - name: Install Subversion
+        run: sudo apt-get update && sudo apt-get install -y subversion
+
       - name: Setup WordPress test environment
         env:
           WP_VERSION: latest
