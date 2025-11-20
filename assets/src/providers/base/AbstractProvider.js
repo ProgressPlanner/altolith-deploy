@@ -818,12 +818,11 @@ export class AbstractProvider {
 	 * Determines how files should be uploaded to this provider.
 	 * Providers should override this method to specify their upload strategy.
 	 *
-	 * @return {string} Upload strategy: 'git', 'storage', 'direct', or 'api'
+	 * @return {string} Upload strategy: 'storage', 'direct', or 'api'
 	 *
 	 * Strategies:
-	 * - 'git': Uses Git-based upload
 	 * - 'storage': Uses object storage upload (R2, S3, Spaces)
-	 * - 'direct': Direct HTTP upload to provider API
+	 * - 'direct': Direct file operation (local filesystem)
 	 * - 'api': Uses provider-specific API for uploads
 	 */
 	getUploadStrategy() {

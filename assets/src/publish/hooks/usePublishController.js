@@ -191,12 +191,10 @@ export function usePublishController( publishState ) {
 					);
 				}
 
-				// Determine upload strategy from provider type or use hook
-				// Git providers have type 'git-hosting', local has type 'local-storage'
-				let uploadStrategy = 'storage'; // Default
-				if ( providerMetadata.type === 'git-hosting' ) {
-					uploadStrategy = 'git';
-				} else if ( providerMetadata.type === 'local-storage' ) {
+				// Determine upload strategy from provider type
+				// Local filesystem has type 'local-storage' and uses direct file operations
+				let uploadStrategy = 'storage'; // Default for cloud storage providers
+				if ( providerMetadata.type === 'local-storage' ) {
 					uploadStrategy = 'direct';
 				}
 

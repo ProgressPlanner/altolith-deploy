@@ -1,8 +1,8 @@
 /**
  * Upload Site Archive Step
  *
- * Uploads wp-content.zip file directly to storage.
- * Handles both Git and storage provider uploads.
+ * Uploads blueprint-bundle.zip file to configured provider(s).
+ * Supports multiple provider instances with different deployment configurations.
  *
  * @package
  */
