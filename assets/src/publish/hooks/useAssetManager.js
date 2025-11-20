@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
+import { storage } from '../../utils/storage';
 
 const STORAGE_KEY = 'aetherAssets';
 
@@ -15,23 +16,13 @@ export function useAssetManager() {
 
 	// Load assets from localStorage on mount
 	useEffect( () => {
-		try {
-			const data = localStorage.getItem( STORAGE_KEY );
-			if ( data ) {
-				setAssets( JSON.parse( data ) );
-			}
-		} catch ( error ) {
-			// Failed to load assets from localStorage
-		}
+		const data = storage.get( STORAGE_KEY, {} );
+		setAssets( data );
 	}, [] );
 
 	// Save assets to localStorage whenever they change
 	useEffect( () => {
-		try {
-			localStorage.setItem( STORAGE_KEY, JSON.stringify( assets ) );
-		} catch ( error ) {
-			// Failed to save assets to localStorage
-		}
+		storage.set( STORAGE_KEY, assets );
 	}, [ assets ] );
 
 	const markAsChanged = useCallback( ( type, slug ) => {

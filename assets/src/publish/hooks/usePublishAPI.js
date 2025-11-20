@@ -10,6 +10,7 @@ import { useCallback } from '@wordpress/element';
 import apiFetch from '../../utils/api';
 import { ENDPOINTS } from '../../constants';
 import useAssetDiscovery from '../../utils/useAssetDiscovery';
+import { storage } from '../../utils/storage';
 
 export function usePublishAPI() {
 	const assetDiscovery = useAssetDiscovery();
@@ -36,17 +37,12 @@ export function usePublishAPI() {
 
 	const markAssetChanged = useCallback( ( type, slug ) => {
 		// Store changed assets in localStorage (no server needed)
-		const changedAssets = JSON.parse(
-			localStorage.getItem( 'aether_changed_assets' ) || '[]'
-		);
+		const changedAssets = storage.get( 'aether_changed_assets', [] );
 		const key = `${ type }:${ slug }`;
 
 		if ( ! changedAssets.includes( key ) ) {
 			changedAssets.push( key );
-			localStorage.setItem(
-				'aether_changed_assets',
-				JSON.stringify( changedAssets )
-			);
+			storage.set( 'aether_changed_assets', changedAssets );
 		}
 
 		return Promise.resolve( {
