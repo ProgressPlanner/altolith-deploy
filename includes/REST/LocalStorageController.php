@@ -73,6 +73,52 @@ class LocalStorageController
 				'permission_callback' => [ $this, 'permissionCheck' ],
 			]
 		);
+
+		// Copy blueprint bundle file to destination path.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/local-storage/copy-blueprint-bundle',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'copyBlueprintBundle' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+				'args'                => [
+					'source_path'      => [
+						'required' => true,
+						'type'     => 'string',
+					],
+					'destination_path' => [
+						'required' => true,
+						'type'     => 'string',
+					],
+				],
+			]
+		);
+
+		// Trigger blueprint bundle upload action (fires action for provider hooks).
+		\register_rest_route(
+			$this->getNamespace(),
+			'/local-storage/trigger-blueprint-bundle-upload',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'triggerBlueprintBundleUpload' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+				'args'                => [
+					'instance_id'      => [
+						'required' => true,
+						'type'     => 'string',
+					],
+					'source_path'      => [
+						'required' => true,
+						'type'     => 'string',
+					],
+					'destination_path' => [
+						'required' => true,
+						'type'     => 'string',
+					],
+				],
+			]
+		);
 	}
 
 	/**
@@ -563,6 +609,288 @@ class LocalStorageController
 			[
 				'success' => true,
 				'content' => \base64_encode($content),
+			],
+			200
+		);
+	}
+
+	/**
+	 * Copy blueprint bundle file to destination path.
+	 *
+	 * Used by local-filesystem provider instances to copy the generated blueprint bundle
+	 * to each instance's configured export_path.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error Response or error.
+	 */
+	public function copyBlueprintBundle(WP_REST_Request $request)
+	{
+		// CSRF protection: Verify nonce for state-changing operation
+		$nonceCheck = $this->verifyNonce($request);
+		if (\is_wp_error($nonceCheck)) {
+			return $nonceCheck;
+		}
+
+		$sourcePath = $request->get_param('source_path');
+		$destinationPath = $request->get_param('destination_path');
+
+		if (empty($sourcePath)) {
+			return new WP_Error(
+				'missing_source_path',
+				\__('Source path is required.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		if (empty($destinationPath)) {
+			return new WP_Error(
+				'missing_destination_path',
+				\__('Destination path is required.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Security: Validate paths to prevent path traversal attacks
+		// Note: Source paths can be absolute (from blueprint bundle generation) or relative
+		// PathValidator will ensure absolute paths are within ABSPATH
+		if (
+			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $sourcePath) ||
+			\strpos($sourcePath, "\0") !== false
+		) {
+			return new WP_Error(
+				'invalid_source_path',
+				\__('Invalid source path: path traversal not allowed.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Destination paths must always be relative (from instance config)
+		if (
+			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $destinationPath) ||
+			\preg_match('#^[/\\\\]#', $destinationPath) ||
+			\strpos($destinationPath, "\0") !== false
+		) {
+			return new WP_Error(
+				'invalid_destination_path',
+				\__('Invalid destination path: must be relative and path traversal not allowed.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Build full paths - handle both absolute and relative paths
+		// Check if source path is already absolute (starts with / or C:\)
+		$isAbsolutePath = \preg_match('#^[/\\\\]#', $sourcePath) || \preg_match('#^[A-Za-z]:[/\\\\]#', $sourcePath);
+
+		if ($isAbsolutePath) {
+			// Path is absolute, use as-is (will be validated by PathValidator)
+			$sourceFullPath = $sourcePath;
+		} else {
+			// Path is relative, prepend ABSPATH
+			$sourceFullPath = \rtrim(ABSPATH, '/') . '/' . \ltrim($sourcePath, '/');
+		}
+
+		// Destination path is always relative to ABSPATH
+		$destinationFullPath = \rtrim(ABSPATH, '/') . '/' . \ltrim($destinationPath, '/');
+		$destinationDir = \dirname($destinationFullPath);
+
+		// Security: Validate paths using universal PathValidator
+		$sourceValidation = PathValidator::validatePath($sourceFullPath, ABSPATH, false);
+		if (!$sourceValidation['valid']) {
+			return new WP_Error(
+				'invalid_source_path',
+				\sprintf(\__('Invalid source path: %s', 'aether-site-exporter'), $sourceValidation['error']),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$destinationValidation = PathValidator::validatePath($destinationFullPath, ABSPATH, false);
+		if (!$destinationValidation['valid']) {
+			return new WP_Error(
+				'invalid_destination_path',
+				\sprintf(\__('Invalid destination path: %s', 'aether-site-exporter'), $destinationValidation['error']),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Verify source file exists
+		if (!\file_exists($sourceFullPath) || !\is_file($sourceFullPath)) {
+			return new WP_Error(
+				'source_file_not_found',
+				\sprintf(\__('Source file not found: %s', 'aether-site-exporter'), $sourcePath),
+				[ 'status' => 404 ]
+			);
+		}
+
+		// Create destination directory if it doesn't exist
+		if (!\is_dir($destinationDir)) {
+			// Check if a FILE exists where we need a DIRECTORY (legacy bug cleanup)
+			if (\file_exists($destinationDir) && \is_file($destinationDir)) {
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Removing legacy blocking file to create directory: %s',
+						$destinationDir
+					));
+				}
+				@\unlink($destinationDir);
+			}
+
+			if (!\wp_mkdir_p($destinationDir)) {
+				return new WP_Error(
+					'directory_creation_failed',
+					\sprintf(\__('Failed to create destination directory: %s', 'aether-site-exporter'), $destinationDir),
+					[ 'status' => 500 ]
+				);
+			}
+		}
+
+		// Verify destination directory exists before attempting file copy
+		if (!\is_dir($destinationDir)) {
+			return new WP_Error(
+				'directory_missing',
+				\sprintf(\__('Destination directory does not exist: %s', 'aether-site-exporter'), $destinationDir),
+				[ 'status' => 500 ]
+			);
+		}
+
+		// Copy file from source to destination
+		if (!\copy($sourceFullPath, $destinationFullPath)) {
+			return new WP_Error(
+				'copy_failed',
+				\sprintf(
+					/* translators: %1$s: source path, %2$s: destination path */
+					\__('Failed to copy file from %1$s to %2$s', 'aether-site-exporter'),
+					$sourcePath,
+					$destinationPath
+				),
+				[ 'status' => 500 ]
+			);
+		}
+
+		// Track file for persistence monitoring
+		FileManager::trackFile(
+			$destinationFullPath,
+			'copy',
+			[
+				'source_path'      => $sourcePath,
+				'destination_path' => $destinationPath,
+				'size'             => \filesize($destinationFullPath),
+			]
+		);
+
+		return new WP_REST_Response(
+			[
+				'success' => true,
+				'message' => \__('Blueprint bundle copied successfully.', 'aether-site-exporter'),
+				'source_path'      => $sourcePath,
+				'destination_path' => $destinationPath,
+				'warning'          => FileManager::getEphemeralStorageWarning('copy'),
+			],
+			200
+		);
+	}
+
+	/**
+	 * Trigger blueprint bundle upload action.
+	 *
+	 * Fires the 'aether_blueprint_bundle_upload' action which allows provider instances
+	 * to handle their own upload implementation.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error Response or error.
+	 */
+	public function triggerBlueprintBundleUpload(WP_REST_Request $request)
+	{
+		// CSRF protection: Verify nonce for state-changing operation
+		$nonceCheck = $this->verifyNonce($request);
+		if (\is_wp_error($nonceCheck)) {
+			return $nonceCheck;
+		}
+
+		$instanceId = $request->get_param('instance_id');
+		$sourcePath = $request->get_param('source_path');
+		$destinationPath = $request->get_param('destination_path');
+		$context = $request->get_param('context') ?? [];
+
+		if (empty($instanceId)) {
+			return new WP_Error(
+				'missing_instance_id',
+				\__('Instance ID is required.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		if (empty($sourcePath)) {
+			return new WP_Error(
+				'missing_source_path',
+				\__('Source path is required.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		if (empty($destinationPath)) {
+			return new WP_Error(
+				'missing_destination_path',
+				\__('Destination path is required.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		/**
+		 * Action fired when blueprint bundle needs to be uploaded to a provider instance.
+		 *
+		 * This allows provider instances to handle their own upload implementation.
+		 * For example, local-filesystem provider instances will copy the file to their
+		 * configured export_path, while cloud providers might upload to their storage.
+		 *
+		 * @param string $instanceId      Provider instance ID (e.g., 'local-filesystem:abc-123').
+		 * @param string $sourcePath      Source path of the generated blueprint bundle (relative to ABSPATH).
+		 * @param string $destinationPath Destination path (instance's export_path, relative to ABSPATH).
+		 * @param array  $context         Additional context data.
+		 */
+		\do_action('aether_blueprint_bundle_upload', $instanceId, $sourcePath, $destinationPath, $context);
+
+		// Verify the upload succeeded by checking if destination file exists (for local-filesystem)
+		// This is a synchronous check since action hooks run synchronously
+		// Destination paths are always relative (from instance config)
+		$destinationFullPath = \rtrim(ABSPATH, '/') . '/' . \ltrim($destinationPath, '/');
+
+		// Only verify for local-filesystem instances (they should have created the file)
+		if (\strpos($instanceId, 'local-filesystem:') === 0 && !\file_exists($destinationFullPath)) {
+			// Check if source file exists (might be the issue)
+			// Source paths can be absolute or relative
+			$sourceFullPath = $sourcePath;
+			if (!\preg_match('#^[/\\\\]#', $sourcePath) && !\preg_match('#^[A-Za-z]:[/\\\\]#', $sourcePath)) {
+				$sourceFullPath = \rtrim(ABSPATH, '/') . '/' . \ltrim($sourcePath, '/');
+			}
+
+			if (!\file_exists($sourceFullPath)) {
+				return new WP_Error(
+					'source_file_not_found',
+					\sprintf(\__('Source file not found: %s', 'aether-site-exporter'), $sourcePath),
+					[ 'status' => 404 ]
+				);
+			}
+
+			// Source exists but destination doesn't - upload likely failed
+			return new WP_Error(
+				'upload_failed',
+				\sprintf(
+					/* translators: %1$s: instance ID, %2$s: destination path */
+					\__('Blueprint bundle upload failed for instance %1$s. Destination file not created at %2$s', 'aether-site-exporter'),
+					$instanceId,
+					$destinationPath
+				),
+				[ 'status' => 500 ]
+			);
+		}
+
+		return new WP_REST_Response(
+			[
+				'success' => true,
+				'message' => \__('Blueprint bundle upload completed successfully.', 'aether-site-exporter'),
+				'instance_id'      => $instanceId,
+				'source_path'      => $sourcePath,
+				'destination_path' => $destinationPath,
 			],
 			200
 		);

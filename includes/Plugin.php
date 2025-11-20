@@ -656,6 +656,198 @@ class Plugin
 
 		// Initialize registry (will discover providers via filter).
 		ProviderRegistry::getInstance();
+
+		// Register local-filesystem provider hooks for blueprint bundle uploads.
+		$this->initLocalFilesystemProviderHooks();
+	}
+
+	/**
+	 * Initialize hooks for local-filesystem provider.
+	 *
+	 * Registers action hook to handle blueprint bundle uploads for local-filesystem instances.
+	 *
+	 * @return void
+	 */
+	private function initLocalFilesystemProviderHooks(): void
+	{
+		/**
+		 * Hook into blueprint bundle upload action.
+		 *
+		 * This action is fired when a blueprint bundle needs to be uploaded to a provider instance.
+		 * Local-filesystem instances will copy the file to their configured export_path.
+		 *
+		 * @param string $instanceId      Provider instance ID (e.g., 'local-filesystem:abc-123').
+		 * @param string $sourcePath      Source path of the generated blueprint bundle.
+		 * @param string $destinationPath Destination path (instance's export_path).
+		 * @param array  $context         Additional context data.
+		 */
+		\add_action('aether_blueprint_bundle_upload', function ($instanceId, $sourcePath, $destinationPath, $context = []) {
+			// Only handle local-filesystem provider instances.
+			if (!\is_string($instanceId) || \strpos($instanceId, 'local-filesystem:') !== 0) {
+				return;
+			}
+
+			// Validate instance exists and is enabled.
+			$settings = \get_option('aether_site_exporter_settings', []);
+			$instanceConfig = $settings['providers'][$instanceId] ?? null;
+
+			if (!$instanceConfig) {
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Local-filesystem instance not found: %s',
+						$instanceId
+					));
+				}
+				return;
+			}
+
+			// Check if instance is enabled.
+			if (isset($instanceConfig['enabled']) && $instanceConfig['enabled'] === false) {
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Local-filesystem instance is disabled: %s',
+						$instanceId
+					));
+				}
+				return;
+			}
+
+			// Use destination path from context or instance config.
+			$exportPath = $destinationPath;
+			if (empty($exportPath) && isset($instanceConfig['export_path'])) {
+				$exportPath = $instanceConfig['export_path'];
+			}
+
+			if (empty($exportPath)) {
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: No export_path configured for instance: %s',
+						$instanceId
+					));
+				}
+				return;
+			}
+
+			// Copy the file directly (internal call to avoid HTTP overhead).
+			$copyResult = $this->copyBlueprintBundleFile($sourcePath, $exportPath);
+			
+			if (!$copyResult) {
+				// Log error if copy failed (the REST endpoint will verify and return error)
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Failed to copy blueprint bundle for instance %s from %s to %s',
+						$instanceId,
+						$sourcePath,
+						$exportPath
+					));
+				}
+			}
+		}, 10, 4);
+	}
+
+	/**
+	 * Copy blueprint bundle file to destination path.
+	 *
+	 * Internal method to copy files without REST overhead.
+	 *
+	 * @param string $sourcePath      Source path relative to ABSPATH.
+	 * @param string $destinationPath Destination path relative to ABSPATH.
+	 * @return bool True on success, false on failure.
+	 */
+	private function copyBlueprintBundleFile(string $sourcePath, string $destinationPath): bool
+	{
+		// Security: Validate paths.
+		// Note: Source paths can be absolute (from blueprint bundle generation) or relative
+		// PathValidator will ensure absolute paths are within ABSPATH
+		// Destination paths must always be relative (from instance config)
+		if (
+			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $sourcePath) ||
+			\strpos($sourcePath, "\0") !== false ||
+			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $destinationPath) ||
+			\preg_match('#^[/\\\\]#', $destinationPath) ||
+			\strpos($destinationPath, "\0") !== false
+		) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log('Aether: Invalid path for blueprint bundle copy');
+			}
+			return false;
+		}
+
+		// Build full paths - handle both absolute and relative paths.
+		// Check if source path is already absolute.
+		$isAbsolutePath = \preg_match('#^[/\\\\]#', $sourcePath) || \preg_match('#^[A-Za-z]:[/\\\\]#', $sourcePath);
+
+		if ($isAbsolutePath) {
+			// Path is absolute, use as-is (will be validated by PathValidator).
+			$sourceFullPath = $sourcePath;
+		} else {
+			// Path is relative, prepend ABSPATH.
+			$sourceFullPath = \rtrim(ABSPATH, '/') . '/' . \ltrim($sourcePath, '/');
+		}
+
+		// Destination path is always relative to ABSPATH.
+		$destinationFullPath = \rtrim(ABSPATH, '/') . '/' . \ltrim($destinationPath, '/');
+		$destinationDir = \dirname($destinationFullPath);
+
+		// Validate paths using PathValidator.
+		$sourceValidation = \Aether\SiteExporter\Utilities\PathValidator::validatePath($sourceFullPath, ABSPATH, false);
+		if (!$sourceValidation['valid']) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf('Aether: Invalid source path: %s', $sourceValidation['error']));
+			}
+			return false;
+		}
+
+		$destinationValidation = \Aether\SiteExporter\Utilities\PathValidator::validatePath($destinationFullPath, ABSPATH, false);
+		if (!$destinationValidation['valid']) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf('Aether: Invalid destination path: %s', $destinationValidation['error']));
+			}
+			return false;
+		}
+
+		// Verify source file exists.
+		if (!\file_exists($sourceFullPath) || !\is_file($sourceFullPath)) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf('Aether: Source file not found: %s', $sourcePath));
+			}
+			return false;
+		}
+
+		// Create destination directory if needed.
+		if (!\is_dir($destinationDir)) {
+			if (!\wp_mkdir_p($destinationDir)) {
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf('Aether: Failed to create destination directory: %s', $destinationDir));
+				}
+				return false;
+			}
+		}
+
+		// Copy file.
+		if (!\copy($sourceFullPath, $destinationFullPath)) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Failed to copy blueprint bundle from %s to %s',
+					$sourcePath,
+					$destinationPath
+				));
+			}
+			return false;
+		}
+
+		// Track file for persistence monitoring.
+		\Aether\SiteExporter\Utilities\FileManager::trackFile(
+			$destinationFullPath,
+			'copy',
+			[
+				'source_path'      => $sourcePath,
+				'destination_path' => $destinationPath,
+				'size'             => \filesize($destinationFullPath),
+			]
+		);
+
+		return true;
 	}
 
 	/**
