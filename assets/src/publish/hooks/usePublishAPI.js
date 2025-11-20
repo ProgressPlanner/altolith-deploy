@@ -44,17 +44,9 @@ export function usePublishAPI() {
 		[ service ]
 	);
 
-	const getGitConfig = useCallback(
-		async () => {
-			return await service.getGitConfig();
-		},
-		[ service ]
-	);
-
 	return {
 		discoverAssets,
 		getAssetStatus,
 		markAssetChanged,
-		getGitConfig,
 	};
 }

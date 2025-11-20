@@ -124,34 +124,4 @@ describe( 'PublishAPIService', () => {
 			);
 		} );
 	} );
-
-	describe( 'getGitConfig()', () => {
-		test( 'should fetch git configuration', async () => {
-			const mockConfig = {
-				success: true,
-				config: {
-					repository: 'test/repo',
-					branch: 'main',
-				},
-			};
-
-			mockApiFetch.mockResolvedValue( mockConfig );
-
-			const result = await service.getGitConfig();
-
-			expect( mockApiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/site-exporter/git/config',
-			} );
-			expect( result ).toEqual( mockConfig );
-		} );
-
-		test( 'should handle git config errors', async () => {
-			const error = new Error( 'Git config not found' );
-			mockApiFetch.mockRejectedValue( error );
-
-			await expect( service.getGitConfig() ).rejects.toThrow(
-				'Git config not found'
-			);
-		} );
-	} );
 } );

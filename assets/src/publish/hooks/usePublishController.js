@@ -213,40 +213,8 @@ export function usePublishController( publishState ) {
 				);
 				uploadStrategy = filteredStrategy;
 
-				let gitConfig = null;
-				if ( uploadStrategy === 'git' ) {
-					// For Git-based providers, fetch Git configuration
-					gitConfig = await api.getGitConfig().catch( () => null );
-				}
-
-				// DECISION POINT: Git vs Storage provider upload.
-				// Priority: Git upload takes precedence if configured.
-				// Fallback: Storage provider upload via API.
-				if (
-					uploadStrategy === 'git' &&
-					gitConfig &&
-					gitConfig.success &&
-					gitConfig.config
-				) {
-					// METHOD 1: Git-based upload
-					// Create simple manifest with wp-content.zip for Git upload.
-					// eslint-disable-next-line no-unused-vars
-					const _manifest = [
-						{
-							storageKey: 'wp-content.zip',
-							contentType: 'application/zip',
-						},
-					];
-					// 					await gitUpload.uploadFiles( manifest, gitConfig );
-					// Update progress to 100% for uploadSiteArchive when Git upload completes.
-					updateFromStep( 'uploadSiteArchive' );
-					setOverallProgressValue(
-						calculateOverallProgress( {
-							step: 'uploadSiteArchive',
-							progress: 100,
-						} )
-					);
-				} else if ( uploadStrategy === 'direct' ) {
+				// DECISION POINT: Storage provider upload strategy
+				if ( uploadStrategy === 'direct' ) {
 					// METHOD 2: Direct provider upload (LocalFilesystem)
 					// For 'direct' strategy, we use the provider's uploadFile method
 					// This allows the provider to handle the file operation (copy, verify, etc.)

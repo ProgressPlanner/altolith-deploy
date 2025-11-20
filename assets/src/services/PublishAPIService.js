@@ -71,18 +71,4 @@ export class PublishAPIService {
 			message: `Marked ${ type } ${ slug } as changed`,
 		};
 	}
-
-	/**
-	 * Get Git configuration
-	 *
-	 * Fetches Git configuration from server.
-	 *
-	 * @return {Promise<Object>} Git configuration response
-	 */
-	async getGitConfig() {
-		const response = await this.apiFetch( {
-			path: '/aether/site-exporter/git/config',
-		} );
-		return response;
-	}
 }
