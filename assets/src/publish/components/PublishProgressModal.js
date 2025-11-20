@@ -21,6 +21,7 @@ import {
 	createFlexStyle,
 	utilityStyles,
 } from '../../utils/styles';
+import { formatFileSize } from '../../utils/helpers';
 import ActivityLogMessage from './ActivityLogMessage';
 
 export default function PublishProgressModal( {
@@ -49,12 +50,17 @@ export default function PublishProgressModal( {
 	const shouldShowModal = isOpen || finalStatus;
 
 	// Wrapper for onClose that resets state before closing
+	// Only allow closing when job is finished (has finalStatus or error)
 	const handleClose = useCallback( () => {
+		// Prevent closing while job is in progress
+		if ( isPublishing && ! finalStatus && ! error ) {
+			return;
+		}
 		reset();
 		if ( onClose ) {
 			onClose();
 		}
-	}, [ reset, onClose ] );
+	}, [ reset, onClose, isPublishing, finalStatus, error ] );
 
 	// Reset state when modal closes (only when shouldShowModal becomes false)
 	useEffect( () => {
@@ -77,21 +83,11 @@ export default function PublishProgressModal( {
 	// Handle completion
 	useEffect( () => {
 		if ( finalStatus && onComplete ) {
-			// Call onComplete callback to close modal and refresh data
+			// Call onComplete callback to refresh data
+			// Note: Modal no longer auto-closes, user must manually close
 			onComplete( finalStatus );
 		}
 	}, [ finalStatus, onComplete ] );
-
-	// Auto-close modal after successful completion (with delay to show success message)
-	useEffect( () => {
-		if ( finalStatus && ! error ) {
-			const timer = setTimeout( () => {
-				handleClose();
-			}, 2000 ); // Close after 2 seconds to show success message
-
-			return () => clearTimeout( timer );
-		}
-	}, [ finalStatus, error, handleClose ] );
 
 	// Auto-scroll activity log to top when new messages arrive
 	useEffect( () => {
@@ -150,6 +146,39 @@ export default function PublishProgressModal( {
 			// Since messages are prepended, original index order is preserved
 			return 0;
 		} );
+	}, [ messageHistory ] );
+
+	// Calculate upload statistics from message history
+	const uploadStats = useMemo( () => {
+		// Count unique providers from summary messages
+		const providerSummaryMessages = messageHistory.filter( ( msg ) =>
+			msg.key?.startsWith( 'upload-provider-' )
+		);
+		const providerCount = Math.max(
+			1,
+			providerSummaryMessages.length || 1
+		);
+
+		// Count files from success messages (files that were uploaded)
+		// Look for messages with type 'success' that contain file size metadata
+		const uploadedFileMessages = messageHistory.filter(
+			( msg ) =>
+				msg.type === 'success' &&
+				msg.metadata?.fileSize &&
+				msg.key?.startsWith( 'upload-' )
+		);
+		const fileCount = uploadedFileMessages.length;
+
+		// Calculate total size from metadata
+		const totalSize = uploadedFileMessages.reduce( ( sum, msg ) => {
+			return sum + ( msg.metadata?.fileSize || 0 );
+		}, 0 );
+
+		return {
+			providerCount,
+			fileCount,
+			totalSize: formatFileSize( totalSize ),
+		};
 	}, [ messageHistory ] );
 
 	if ( ! shouldShowModal ) {
@@ -224,10 +253,42 @@ export default function PublishProgressModal( {
 		flexShrink: 0,
 	};
 
+	const detailsSectionStyle = {
+		marginTop: spacing.lg,
+		padding: spacing.md,
+		backgroundColor: colors.backgroundLight,
+		borderRadius: borderRadius.sm,
+		border: `1px solid ${ colors.borderLighter }`,
+		...createFlexStyle( 'row', spacing.xl ),
+		justifyContent: 'space-around',
+		flexWrap: 'wrap',
+	};
+
+	const detailItemStyle = {
+		...createFlexStyle( 'column', spacing.xs ),
+		alignItems: 'center',
+		minWidth: '120px',
+	};
+
+	const detailLabelStyle = {
+		fontSize: fontSize.xs,
+		color: colors.textMuted,
+		fontWeight: fontWeight.medium,
+		textTransform: 'uppercase',
+		letterSpacing: '0.5px',
+	};
+
+	const detailValueStyle = {
+		fontSize: fontSize.lg,
+		color: colors.text,
+		fontWeight: fontWeight.semibold,
+	};
+
 	const activityLogStyle = {
 		marginTop: spacing.xl,
 		overflowY: 'auto',
 		fontSize: fontSize.xs,
+		height: '300px',
 	};
 
 	const activityListStyle = {
@@ -257,8 +318,10 @@ export default function PublishProgressModal( {
 			className="aether-publish-progress-modal"
 			title={ getModalTitle() }
 			onRequestClose={ handleClose }
-			isFullScreen
-			style={ { width: '100vw', height: '100vh' } }
+			isFullScreen={ false }
+			shouldCloseOnClickOutside={ false }
+			shouldCloseOnEsc={ false }
+			__experimentalHideHeader={ false }
 		>
 			<div
 				className="aether-publish-progress-modal__content"
@@ -344,6 +407,74 @@ export default function PublishProgressModal( {
 								{ displayProgress }%
 							</span>
 						</div>
+
+						{ uploadStats.fileCount > 0 && (
+							<div
+								className="aether-publish-progress-modal__details"
+								style={ detailsSectionStyle }
+							>
+								<div
+									className="aether-publish-progress-modal__detail-item"
+									style={ detailItemStyle }
+								>
+									<span
+										className="aether-publish-progress-modal__detail-label"
+										style={ detailLabelStyle }
+									>
+										{ __(
+											'Providers',
+											'aether-site-exporter'
+										) }
+									</span>
+									<span
+										className="aether-publish-progress-modal__detail-value"
+										style={ detailValueStyle }
+									>
+										{ uploadStats.providerCount }
+									</span>
+								</div>
+								<div
+									className="aether-publish-progress-modal__detail-item"
+									style={ detailItemStyle }
+								>
+									<span
+										className="aether-publish-progress-modal__detail-label"
+										style={ detailLabelStyle }
+									>
+										{ __(
+											'Files Uploaded',
+											'aether-site-exporter'
+										) }
+									</span>
+									<span
+										className="aether-publish-progress-modal__detail-value"
+										style={ detailValueStyle }
+									>
+										{ uploadStats.fileCount }
+									</span>
+								</div>
+								<div
+									className="aether-publish-progress-modal__detail-item"
+									style={ detailItemStyle }
+								>
+									<span
+										className="aether-publish-progress-modal__detail-label"
+										style={ detailLabelStyle }
+									>
+										{ __(
+											'Total Size',
+											'aether-site-exporter'
+										) }
+									</span>
+									<span
+										className="aether-publish-progress-modal__detail-value"
+										style={ detailValueStyle }
+									>
+										{ uploadStats.totalSize }
+									</span>
+								</div>
+							</div>
+						) }
 					</div>
 				) }
 
