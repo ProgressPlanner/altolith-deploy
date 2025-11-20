@@ -574,17 +574,17 @@ describe( 'extractAssetsFromHtml', () => {
 			);
 		} );
 
-		test( 'skips Aether plugin assets', async () => {
+		test( 'includes plugin assets', async () => {
 			const html =
-				'<img src="/wp-content/plugins/aether/assets/image.webp" alt="Test">';
+				'<img src="/wp-content/plugins/my-plugin/assets/image.webp" alt="Test">';
 			const assets = await extractAssetsFromHtml(
 				html,
 				pageUrl,
 				siteUrl
 			);
 
-			expect( assets ).not.toContain(
-				'http://localhost:10003/wp-content/plugins/aether/assets/image.webp'
+			expect( assets ).toContain(
+				'http://localhost:10003/wp-content/plugins/my-plugin/assets/image.webp'
 			);
 		} );
 	} );

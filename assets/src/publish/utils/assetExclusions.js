@@ -58,7 +58,6 @@ export const EXCLUDED_URL_PATTERNS = [
 	'/wp-json/', // WordPress REST API endpoints
 	'/xmlrpc.php', // WordPress XML-RPC endpoint
 	'imagedelivery.net', // External CDN (imagedelivery.net)
-	'wp-content/plugins/aether/', // Aether plugin assets (admin-only)
 ];
 
 /**
