@@ -11,7 +11,6 @@ import { usePublishAPI } from './usePublishAPI';
 import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
 import { useBlueprintGenerator } from './useBlueprintGenerator';
-import { useConfig } from '../../hooks/useConfig';
 import { PUBLISH_STEPS } from '../utils/steps';
 import apiFetch from '../../utils/api';
 import { calculateOverallProgress } from '../utils/progressManager';
@@ -45,9 +44,6 @@ export function usePublishController( publishState ) {
 
 	const api = usePublishAPI();
 	const assetManager = useAssetManager();
-
-	// Get config at hook level (hooks can't be called inside callbacks)
-	const config = useConfig();
 
 	// Create blueprint generator hook.
 	const { generateBlueprint: generateBlueprintJson } =
@@ -493,7 +489,6 @@ export function usePublishController( publishState ) {
 		setStorageProviderId,
 		updateFromStep,
 		updateStaticSiteProgressContext,
-		config,
 		storageProviderId,
 		processStaticSiteUrls,
 		generateBlueprintJson,
