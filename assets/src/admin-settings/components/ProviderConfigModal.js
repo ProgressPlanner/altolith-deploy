@@ -15,6 +15,39 @@ import apiFetch from '../../utils/api';
 import { colors, spacing, fontWeight } from '../../utils/styles';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 
+// Styles - extracted to module level for performance
+const headerStyle = {
+	marginBottom: spacing.md,
+};
+
+const descriptionStyle = {
+	fontSize: '0.875rem',
+	color: colors.textSecondary,
+	margin: 0,
+};
+
+const sectionTitleStyle = {
+	fontSize: '1rem',
+	fontWeight: fontWeight.semibold,
+	color: colors.text,
+	marginTop: spacing.lg,
+	marginBottom: spacing.md,
+};
+
+const deploymentTypesSectionStyle = {
+	padding: spacing.md,
+	backgroundColor: colors.surfaceAlt,
+	borderRadius: '6px',
+	border: `1px solid ${ colors.borderLight }`,
+	marginBottom: spacing.lg,
+};
+
+const deploymentTypesDescriptionStyle = {
+	fontSize: '0.875rem',
+	color: colors.textSecondary,
+	marginBottom: spacing.md,
+};
+
 /**
  * Provider Configuration Modal Component.
  *
@@ -215,32 +248,6 @@ export default function ProviderConfigModal( {
 	const { id, metadata, settingsFields } = provider;
 	const { name, description } = metadata;
 
-	const headerStyle = {
-		marginBottom: spacing.md,
-	};
-
-	const descriptionStyle = {
-		fontSize: '0.875rem',
-		color: colors.textSecondary,
-		margin: 0,
-	};
-
-	const sectionTitleStyle = {
-		fontSize: '1rem',
-		fontWeight: fontWeight.semibold,
-		color: colors.text,
-		marginTop: spacing.lg,
-		marginBottom: spacing.md,
-	};
-
-	const deploymentTypesSectionStyle = {
-		padding: spacing.md,
-		backgroundColor: colors.surfaceAlt,
-		borderRadius: '6px',
-		border: `1px solid ${ colors.borderLight }`,
-		marginBottom: spacing.lg,
-	};
-
 	// Get supported deployment types from provider metadata
 	const supportedDeploymentTypes = metadata.supportedDeploymentTypes || [];
 
@@ -306,11 +313,7 @@ export default function ProviderConfigModal( {
 					</div>
 					<p
 						className="aether-provider-config-modal__deployment-types-description"
-						style={ {
-							fontSize: '0.875rem',
-							color: colors.textSecondary,
-							marginBottom: spacing.md,
-						} }
+						style={ deploymentTypesDescriptionStyle }
 					>
 						{ __(
 							'Select which deployment types this provider instance should handle.',

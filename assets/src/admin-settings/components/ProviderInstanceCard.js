@@ -30,6 +30,71 @@ import {
 	DEPLOYMENT_TYPE_LABELS,
 } from '../../constants/deploymentTypes';
 
+// Styles - extracted to module level for performance
+const headerContentStyle = {
+	display: 'flex',
+	flexDirection: 'column',
+	gap: spacing.sm,
+};
+
+const headerRowStyle = {
+	display: 'flex',
+	alignItems: 'center',
+};
+
+const nameStyle = {
+	fontSize: fontSize.base,
+	fontWeight: fontWeight.semibold,
+	color: colors.text,
+	cursor: 'pointer',
+	flex: 1,
+	padding: `${ spacing.xs } ${ spacing.sm }`,
+	borderRadius: borderRadius.sm,
+	transition: 'background-color 0.2s ease',
+};
+
+const nameInputStyle = {
+	fontSize: fontSize.base,
+	fontWeight: fontWeight.semibold,
+	padding: `${ spacing.xs } ${ spacing.sm }`,
+	border: `2px solid ${ colors.primary }`,
+	borderRadius: borderRadius.sm,
+	flex: 1,
+	outline: 'none',
+	transition: 'border-color 0.2s ease',
+};
+
+const actionsStyle = {
+	display: 'flex',
+	gap: spacing.sm,
+};
+
+const providerTypeTagStyle = {
+	fontSize: fontSize.xs,
+	fontWeight: fontWeight.medium,
+	padding: '4px 8px',
+	borderRadius: borderRadius.sm,
+	backgroundColor: '#000',
+	color: '#fff',
+	display: 'inline-block',
+	marginBottom: spacing.sm,
+};
+
+const deploymentTypesContainerStyle = {
+	display: 'flex',
+	flexWrap: 'wrap',
+	gap: spacing.xs,
+	marginTop: spacing.xs,
+};
+
+const toggleContainerStyle = {
+	marginTop: '1rem',
+};
+
+const configureButtonStyle = {
+	flex: 1,
+};
+
 /**
  * Provider Instance Card Component.
  *
@@ -111,62 +176,6 @@ export default function ProviderInstanceCard( {
 		if ( confirmed ) {
 			onDelete();
 		}
-	};
-
-	const headerContentStyle = {
-		display: 'flex',
-		flexDirection: 'column',
-		gap: spacing.sm,
-	};
-
-	const headerRowStyle = {
-		display: 'flex',
-		alignItems: 'center',
-	};
-
-	const nameStyle = {
-		fontSize: fontSize.base,
-		fontWeight: fontWeight.semibold,
-		color: colors.text,
-		cursor: 'pointer',
-		flex: 1,
-		padding: `${ spacing.xs } ${ spacing.sm }`,
-		borderRadius: borderRadius.sm,
-		transition: 'background-color 0.2s ease',
-	};
-
-	const nameInputStyle = {
-		fontSize: fontSize.base,
-		fontWeight: fontWeight.semibold,
-		padding: `${ spacing.xs } ${ spacing.sm }`,
-		border: `2px solid ${ colors.primary }`,
-		borderRadius: borderRadius.sm,
-		flex: 1,
-		outline: 'none',
-		transition: 'border-color 0.2s ease',
-	};
-
-	const actionsStyle = {
-		display: 'flex',
-		gap: spacing.sm,
-	};
-
-	const providerTypeTagStyle = {
-		fontSize: fontSize.xs,
-		fontWeight: fontWeight.medium,
-		padding: '4px 8px',
-		borderRadius: borderRadius.sm,
-		backgroundColor: '#000',
-		color: '#fff',
-		display: 'inline-block',
-		marginBottom: spacing.sm,
-	};
-
-	const deploymentTypesContainerStyle = {
-		display: 'flex',
-		flexWrap: 'wrap',
-		gap: spacing.xs,
-		marginTop: spacing.xs,
 	};
 
 	// Get enabled deployment types from instance config
@@ -314,7 +323,7 @@ export default function ProviderInstanceCard( {
 				</div>
 				<div
 					className="aether-provider-instance-card__toggle"
-					style={ { marginTop: '1rem' } }
+					style={ toggleContainerStyle }
 				>
 					<ToggleControl
 						className="aether-provider-instance-card__toggle-control"
@@ -337,7 +346,7 @@ export default function ProviderInstanceCard( {
 						className="aether-provider-instance-card__configure-button"
 						variant="secondary"
 						onClick={ onConfigure }
-						style={ { flex: 1 } }
+						style={ configureButtonStyle }
 					>
 						{ __( 'Configure', 'aether-site-exporter' ) }
 					</Button>

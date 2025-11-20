@@ -17,6 +17,57 @@ import apiFetch from '../utils/api';
 import { colors, spacing, fontWeight } from '../utils/styles';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 
+// Styles - extracted to module level for performance
+const loadingContainerStyle = {
+	textAlign: 'center',
+	padding: spacing.xl,
+};
+
+const emptyMessageStyle = {
+	color: colors.textSecondary,
+};
+
+const pageHeaderStyle = {
+	marginBottom: spacing.lg,
+	fontSize: '1.5rem',
+	fontWeight: fontWeight.bold,
+	color: colors.text,
+	display: 'flex',
+	justifyContent: 'space-between',
+	alignItems: 'center',
+};
+
+const pageHeaderTitleStyle = {
+	margin: 0,
+};
+
+const pageDescriptionStyle = {
+	marginBottom: spacing.lg,
+	color: colors.textSecondary,
+	fontSize: '0.875rem',
+};
+
+const statsContainerStyle = {
+	fontSize: '0.875rem',
+	color: colors.textSecondary,
+	marginBottom: spacing.lg,
+};
+
+const gridContainerStyle = {
+	display: 'grid',
+	gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+	gap: spacing.md,
+};
+
+const emptyStateStyle = {
+	padding: spacing.xl,
+	textAlign: 'center',
+	color: colors.textSecondary,
+	fontSize: '0.875rem',
+	border: `1px dashed ${ colors.borderLight }`,
+	borderRadius: '8px',
+};
+
 /**
  * Provider Settings Component.
  *
@@ -262,7 +313,7 @@ export default function ProviderSettings( {
 		return (
 			<div
 				className="aether-provider-settings aether-provider-settings--loading"
-				style={ { textAlign: 'center', padding: spacing.xl } }
+				style={ loadingContainerStyle }
 			>
 				<Spinner className="aether-provider-settings__spinner" />
 			</div>
@@ -274,7 +325,7 @@ export default function ProviderSettings( {
 			<div className="aether-provider-settings aether-provider-settings--empty">
 				<p
 					className="aether-provider-settings__empty-message"
-					style={ { color: colors.textSecondary } }
+					style={ emptyMessageStyle }
 				>
 					{ __(
 						'No providers available. Install a provider plugin to enable deployment options.',
@@ -299,22 +350,6 @@ export default function ProviderSettings( {
 			  )
 			: null;
 
-	const pageHeaderStyle = {
-		marginBottom: spacing.lg,
-		fontSize: '1.5rem',
-		fontWeight: fontWeight.bold,
-		color: colors.text,
-		display: 'flex',
-		justifyContent: 'space-between',
-		alignItems: 'center',
-	};
-
-	const pageDescriptionStyle = {
-		marginBottom: spacing.lg,
-		color: colors.textSecondary,
-		fontSize: '0.875rem',
-	};
-
 	// Count total instances
 	const totalInstances = Object.keys( configs ).length;
 	const enabledInstances = Object.values( configs ).filter(
@@ -330,7 +365,7 @@ export default function ProviderSettings( {
 				<div className="aether-provider-settings__header-content">
 					<h2
 						className="aether-provider-settings__title"
-						style={ { margin: 0 } }
+						style={ pageHeaderTitleStyle }
 					>
 						{ __( 'Provider Instances', 'aether-site-exporter' ) }
 					</h2>
@@ -355,11 +390,7 @@ export default function ProviderSettings( {
 
 			<div
 				className="aether-provider-settings__stats"
-				style={ {
-					fontSize: '0.875rem',
-					color: colors.textSecondary,
-					marginBottom: spacing.lg,
-				} }
+				style={ statsContainerStyle }
 			>
 				<span className="aether-provider-settings__stat">
 					{ __( 'Total Instances:', 'aether-site-exporter' ) }{ ' ' }
@@ -382,12 +413,7 @@ export default function ProviderSettings( {
 			{ allInstances.length > 0 ? (
 				<div
 					className="aether-provider-settings__grid"
-					style={ {
-						display: 'grid',
-						gridTemplateColumns:
-							'repeat(auto-fill, minmax(300px, 1fr))',
-						gap: spacing.md,
-					} }
+					style={ gridContainerStyle }
 				>
 					{ allInstances.map( ( instance ) => (
 						<ProviderInstanceCard
@@ -416,14 +442,7 @@ export default function ProviderSettings( {
 			) : (
 				<div
 					className="aether-provider-settings__empty-state"
-					style={ {
-						padding: spacing.xl,
-						textAlign: 'center',
-						color: colors.textSecondary,
-						fontSize: '0.875rem',
-						border: `1px dashed ${ colors.borderLight }`,
-						borderRadius: '8px',
-					} }
+					style={ emptyStateStyle }
 				>
 					{ __(
 						'No provider instances configured. Click "Add Provider Instance" to create one.',

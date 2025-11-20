@@ -15,68 +15,69 @@ import {
 	utilityStyles,
 } from '../../utils/styles';
 
+// Styles - extracted to module level for performance
+const sectionStyle = {
+	...commonStyles.section,
+};
+
+const sectionHeaderStyle = {
+	...commonStyles.sectionHeader,
+};
+
+const headerTitleStyle = {
+	margin: 0,
+	fontSize: '1.3em',
+	lineHeight: 1.4,
+	color: colors.text,
+};
+
+const headerDescriptionStyle = {
+	margin: '0.5rem 0 0',
+	color: colors.textMuted,
+	fontSize: fontSize.base,
+};
+
+const contentStyle = {
+	// maxWidth: '60rem',
+	paddingLeft: spacing.lg,
+	paddingRight: spacing.lg,
+	paddingTop: spacing.lg,
+	paddingBottom: spacing.lg,
+};
+
+const benefitItemStyle = {
+	marginBottom: '2rem',
+	padding: '1.5rem',
+	background: colors.white,
+	border: `1px solid ${ colors.borderLighter }`,
+	borderRadius: borderRadius.sm,
+};
+
+const benefitTitleStyle = {
+	margin: '0 0 1rem',
+	fontSize: fontSize.xl,
+	fontWeight: fontWeight.semibold,
+	color: colors.text,
+};
+
+const benefitParagraphStyle = {
+	margin: '0 0 1rem',
+	color: colors.textSecondary,
+	lineHeight: 1.6,
+};
+
+const benefitListStyle = {
+	margin: '0.5rem 0 0',
+	paddingLeft: '1.5rem',
+	color: colors.textSecondary,
+	lineHeight: 1.8,
+};
+
+const benefitListItemStyle = {
+	marginBottom: '0.5rem',
+};
+
 export default function HowItWorks() {
-	const sectionStyle = {
-		...commonStyles.section,
-	};
-
-	const sectionHeaderStyle = {
-		...commonStyles.sectionHeader,
-	};
-
-	const headerTitleStyle = {
-		margin: 0,
-		fontSize: '1.3em',
-		lineHeight: 1.4,
-		color: colors.text,
-	};
-
-	const headerDescriptionStyle = {
-		margin: '0.5rem 0 0',
-		color: colors.textMuted,
-		fontSize: fontSize.base,
-	};
-
-	const contentStyle = {
-		// maxWidth: '60rem',
-		paddingLeft: spacing.lg,
-		paddingRight: spacing.lg,
-		paddingTop: spacing.lg,
-		paddingBottom: spacing.lg,
-	};
-
-	const benefitItemStyle = {
-		marginBottom: '2rem',
-		padding: '1.5rem',
-		background: colors.white,
-		border: `1px solid ${ colors.borderLighter }`,
-		borderRadius: borderRadius.sm,
-	};
-
-	const benefitTitleStyle = {
-		margin: '0 0 1rem',
-		fontSize: fontSize.xl,
-		fontWeight: fontWeight.semibold,
-		color: colors.text,
-	};
-
-	const benefitParagraphStyle = {
-		margin: '0 0 1rem',
-		color: colors.textSecondary,
-		lineHeight: 1.6,
-	};
-
-	const benefitListStyle = {
-		margin: '0.5rem 0 0',
-		paddingLeft: '1.5rem',
-		color: colors.textSecondary,
-		lineHeight: 1.8,
-	};
-
-	const benefitListItemStyle = {
-		marginBottom: '0.5rem',
-	};
-
 	return (
 		<div className="aether-how-it-works" style={ sectionStyle }>
 			<div

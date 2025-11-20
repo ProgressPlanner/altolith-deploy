@@ -24,6 +24,94 @@ import {
 import ActivityLogMessage from './ActivityLogMessage';
 import UploadStatistics from './UploadStatistics';
 
+// Styles - extracted to module level for performance
+const modalContentStyle = {
+	padding: spacing[ '2xl' ],
+	display: 'flex',
+	flexDirection: 'column',
+	gap: spacing[ '2xl' ],
+};
+
+const noticeErrorStyle = {
+	...noticeStyles.error,
+	padding: spacing.md,
+	marginBottom: spacing.md,
+};
+
+const noticeSuccessStyle = {
+	...noticeStyles.success,
+	padding: spacing.md,
+	marginBottom: spacing.md,
+};
+
+const noticeParagraphStyle = {
+	margin: '0 0 0.5rem',
+};
+
+const progressContainerStyle = {
+	...createFlexStyle( 'column', spacing.xl ),
+};
+
+const progressBarContainerStyle = {
+	...createFlexStyle( 'row', spacing.lg ),
+	alignItems: 'center',
+	width: '100%',
+};
+
+const progressBarStyle = {
+	width: '100%',
+	height: '20px',
+	backgroundColor: colors.borderLighter,
+	borderRadius: borderRadius.sm,
+	overflow: 'hidden',
+	position: 'relative',
+};
+
+const progressBarFillStyle = {
+	height: '100%',
+	backgroundColor: colors.primary,
+	transition: 'width 0.3s ease',
+	borderRadius: borderRadius.sm,
+};
+
+const progressPercentageStyle = {
+	fontSize: fontSize.sm,
+	fontWeight: fontWeight.semibold,
+	color: colors.text,
+	minWidth: '3rem',
+	textAlign: 'right',
+	flexShrink: 0,
+};
+
+const activityLogStyle = {
+	marginTop: spacing.xl,
+	overflowY: 'auto',
+	fontSize: fontSize.xs,
+	height: '300px',
+};
+
+const activityListStyle = {
+	listStyle: 'none',
+	margin: 0,
+	padding: 0,
+	...createFlexStyle( 'column', 0 ),
+};
+
+const loadingStyle = {
+	display: 'flex',
+	flexDirection: 'column',
+	alignItems: 'center',
+	gap: spacing.xl,
+	padding: spacing[ '2xl' ],
+	textAlign: 'center',
+};
+
+const loadingParagraphStyle = {
+	margin: 0,
+	fontSize: '1.125rem',
+	color: colors.textMuted,
+};
+
 export default function PublishProgressModal( {
 	isOpen,
 	onClose,
@@ -162,93 +250,6 @@ export default function PublishProgressModal( {
 			return __( 'Site Published Successfully!', 'aether-site-exporter' );
 		}
 		return __( 'Publishing Site', 'aether-site-exporter' );
-	};
-
-	const modalContentStyle = {
-		padding: spacing[ '2xl' ],
-		display: 'flex',
-		flexDirection: 'column',
-		gap: spacing[ '2xl' ],
-	};
-
-	const noticeErrorStyle = {
-		...noticeStyles.error,
-		padding: spacing.md,
-		marginBottom: spacing.md,
-	};
-
-	const noticeSuccessStyle = {
-		...noticeStyles.success,
-		padding: spacing.md,
-		marginBottom: spacing.md,
-	};
-
-	const noticeParagraphStyle = {
-		margin: '0 0 0.5rem',
-	};
-
-	const progressContainerStyle = {
-		...createFlexStyle( 'column', spacing.xl ),
-	};
-
-	const progressBarContainerStyle = {
-		...createFlexStyle( 'row', spacing.lg ),
-		alignItems: 'center',
-		width: '100%',
-	};
-
-	const progressBarStyle = {
-		width: '100%',
-		height: '20px',
-		backgroundColor: colors.borderLighter,
-		borderRadius: borderRadius.sm,
-		overflow: 'hidden',
-		position: 'relative',
-	};
-
-	const progressBarFillStyle = {
-		height: '100%',
-		backgroundColor: colors.primary,
-		transition: 'width 0.3s ease',
-		borderRadius: borderRadius.sm,
-	};
-
-	const progressPercentageStyle = {
-		fontSize: fontSize.sm,
-		fontWeight: fontWeight.semibold,
-		color: colors.text,
-		minWidth: '3rem',
-		textAlign: 'right',
-		flexShrink: 0,
-	};
-
-	const activityLogStyle = {
-		marginTop: spacing.xl,
-		overflowY: 'auto',
-		fontSize: fontSize.xs,
-		height: '300px',
-	};
-
-	const activityListStyle = {
-		listStyle: 'none',
-		margin: 0,
-		padding: 0,
-		...createFlexStyle( 'column', 0 ),
-	};
-
-	const loadingStyle = {
-		display: 'flex',
-		flexDirection: 'column',
-		alignItems: 'center',
-		gap: spacing.xl,
-		padding: spacing[ '2xl' ],
-		textAlign: 'center',
-	};
-
-	const loadingParagraphStyle = {
-		margin: 0,
-		fontSize: '1.125rem',
-		color: colors.textMuted,
 	};
 
 	return (

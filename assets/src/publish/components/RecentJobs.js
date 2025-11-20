@@ -20,137 +20,138 @@ import {
 } from '../../utils/styles';
 import { formatJobTime, getStatusDisplay } from '../utils/jobFormatters';
 
+// Styles - extracted to module level for performance
+const sectionStyle = {
+	...commonStyles.section,
+};
+
+const sectionHeaderStyle = {
+	...commonStyles.sectionHeader,
+};
+
+const headerTitleStyle = {
+	margin: 0,
+	fontSize: '1.3em',
+	lineHeight: 1.4,
+	color: colors.text,
+};
+
+const headerDescriptionStyle = {
+	margin: '0.5rem 0 0',
+	color: colors.textMuted,
+	fontSize: fontSize.base,
+};
+
+const noticeInfoStyle = {
+	...noticeStyles.info,
+	padding: spacing.md,
+	marginLeft: spacing.lg,
+	marginRight: spacing.lg,
+	marginTop: spacing.lg,
+	marginBottom: spacing.lg,
+};
+
+const noticeParagraphStyle = {
+	margin: 0,
+	display: 'flex',
+	alignItems: 'center',
+	gap: spacing.sm,
+};
+
+const jobsListStyle = {
+	...createFlexStyle( 'column', spacing.lg ),
+	paddingLeft: spacing.lg,
+	paddingRight: spacing.lg,
+	paddingTop: spacing.lg,
+	paddingBottom: spacing.lg,
+};
+
+const jobCardStyle = {
+	padding: '1.5rem',
+	background: colors.white,
+	border: `1px solid ${ colors.borderLighter }`,
+	borderRadius: borderRadius.sm,
+};
+
+const jobHeaderStyle = {
+	...createFlexStyle( 'row', spacing.md ),
+	justifyContent: 'space-between',
+	alignItems: 'center',
+	marginBottom: spacing.lg,
+	paddingBottom: spacing.lg,
+	borderBottom: `1px solid ${ colors.backgroundLighter }`,
+};
+
+const jobIdStyle = {
+	...createFlexStyle( 'row', spacing.sm ),
+	alignItems: 'center',
+};
+
+const codeStyle = {
+	padding: '0.25rem 0.5rem',
+	background: colors.backgroundLighter,
+	borderRadius: borderRadius.sm,
+	fontSize: fontSize.base,
+	fontFamily: 'monospace',
+};
+
+const badgeStyle = ( type ) => ( {
+	...statusBadgeStyles.base,
+	...( statusBadgeStyles[ type ] || statusBadgeStyles.info ),
+} );
+
+const jobDetailsStyle = {
+	...createFlexStyle( 'column', '0.75rem' ),
+};
+
+const jobTimeStyle = {
+	...createFlexStyle( 'row', spacing.sm ),
+	alignItems: 'center',
+	color: colors.textSecondary,
+	fontSize: fontSize.base,
+};
+
+const jobProgressStyle = {
+	...createFlexStyle( 'column', spacing.sm ),
+};
+
+const jobProgressBarStyle = {
+	height: '1.25rem',
+	background: colors.backgroundLighter,
+	borderRadius: borderRadius.sm,
+	overflow: 'hidden',
+};
+
+const jobProgressFillStyle = {
+	height: '100%',
+	background: `linear-gradient(90deg, ${ colors.primary }, ${ colors.primaryHover })`,
+	display: 'flex',
+	alignItems: 'center',
+	justifyContent: 'flex-end',
+	paddingRight: spacing.sm,
+	color: colors.white,
+	fontSize: fontSize.base,
+	fontWeight: fontWeight.semibold,
+	transition: 'width 0.3s ease',
+};
+
+const jobStepStyle = {
+	fontSize: fontSize.base,
+	color: colors.textSecondary,
+};
+
+const jobErrorStyle = {
+	...createFlexStyle( 'row', spacing.sm ),
+	alignItems: 'flex-start',
+	padding: '0.75rem',
+	background: colors.backgroundError,
+	borderLeft: '3px solid ' + colors.error,
+	borderRadius: borderRadius.sm,
+	color: colors.textSecondary,
+	fontSize: fontSize.base,
+};
+
 export default function RecentJobs( { jobs = [], loading = false } ) {
-	const sectionStyle = {
-		...commonStyles.section,
-	};
-
-	const sectionHeaderStyle = {
-		...commonStyles.sectionHeader,
-	};
-
-	const headerTitleStyle = {
-		margin: 0,
-		fontSize: '1.3em',
-		lineHeight: 1.4,
-		color: colors.text,
-	};
-
-	const headerDescriptionStyle = {
-		margin: '0.5rem 0 0',
-		color: colors.textMuted,
-		fontSize: fontSize.base,
-	};
-
-	const noticeInfoStyle = {
-		...noticeStyles.info,
-		padding: spacing.md,
-		marginLeft: spacing.lg,
-		marginRight: spacing.lg,
-		marginTop: spacing.lg,
-		marginBottom: spacing.lg,
-	};
-
-	const noticeParagraphStyle = {
-		margin: 0,
-		display: 'flex',
-		alignItems: 'center',
-		gap: spacing.sm,
-	};
-
-	const jobsListStyle = {
-		...createFlexStyle( 'column', spacing.lg ),
-		paddingLeft: spacing.lg,
-		paddingRight: spacing.lg,
-		paddingTop: spacing.lg,
-		paddingBottom: spacing.lg,
-	};
-
-	const jobCardStyle = {
-		padding: '1.5rem',
-		background: colors.white,
-		border: `1px solid ${ colors.borderLighter }`,
-		borderRadius: borderRadius.sm,
-	};
-
-	const jobHeaderStyle = {
-		...createFlexStyle( 'row', spacing.md ),
-		justifyContent: 'space-between',
-		alignItems: 'center',
-		marginBottom: spacing.lg,
-		paddingBottom: spacing.lg,
-		borderBottom: `1px solid ${ colors.backgroundLighter }`,
-	};
-
-	const jobIdStyle = {
-		...createFlexStyle( 'row', spacing.sm ),
-		alignItems: 'center',
-	};
-
-	const codeStyle = {
-		padding: '0.25rem 0.5rem',
-		background: colors.backgroundLighter,
-		borderRadius: borderRadius.sm,
-		fontSize: fontSize.base,
-		fontFamily: 'monospace',
-	};
-
-	const badgeStyle = ( type ) => ( {
-		...statusBadgeStyles.base,
-		...( statusBadgeStyles[ type ] || statusBadgeStyles.info ),
-	} );
-
-	const jobDetailsStyle = {
-		...createFlexStyle( 'column', '0.75rem' ),
-	};
-
-	const jobTimeStyle = {
-		...createFlexStyle( 'row', spacing.sm ),
-		alignItems: 'center',
-		color: colors.textSecondary,
-		fontSize: fontSize.base,
-	};
-
-	const jobProgressStyle = {
-		...createFlexStyle( 'column', spacing.sm ),
-	};
-
-	const jobProgressBarStyle = {
-		height: '1.25rem',
-		background: colors.backgroundLighter,
-		borderRadius: borderRadius.sm,
-		overflow: 'hidden',
-	};
-
-	const jobProgressFillStyle = {
-		height: '100%',
-		background: `linear-gradient(90deg, ${ colors.primary }, ${ colors.primaryHover })`,
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'flex-end',
-		paddingRight: spacing.sm,
-		color: colors.white,
-		fontSize: fontSize.base,
-		fontWeight: fontWeight.semibold,
-		transition: 'width 0.3s ease',
-	};
-
-	const jobStepStyle = {
-		fontSize: fontSize.base,
-		color: colors.textSecondary,
-	};
-
-	const jobErrorStyle = {
-		...createFlexStyle( 'row', spacing.sm ),
-		alignItems: 'flex-start',
-		padding: '0.75rem',
-		background: colors.backgroundError,
-		borderLeft: '3px solid ' + colors.error,
-		borderRadius: borderRadius.sm,
-		color: colors.textSecondary,
-		fontSize: fontSize.base,
-	};
-
 	return (
 		<div className="aether-recent-jobs" style={ sectionStyle }>
 			<div
