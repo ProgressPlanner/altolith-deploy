@@ -5,36 +5,13 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import {
-	colors,
-	spacing,
-	borderRadius,
-	fontSize,
-	fontWeight,
-	commonStyles,
-	utilityStyles,
-} from '../../utils/styles';
+import { colors, spacing, commonStyles } from '../../utils/styles';
+import SectionHeader from '../../components/SectionHeader';
+import InfoCard, { InfoParagraph } from '../../components/InfoCard';
 
 // Styles - extracted to module level for performance
 const sectionStyle = {
 	...commonStyles.section,
-};
-
-const sectionHeaderStyle = {
-	...commonStyles.sectionHeader,
-};
-
-const headerTitleStyle = {
-	margin: 0,
-	fontSize: '1.3em',
-	lineHeight: 1.4,
-	color: colors.text,
-};
-
-const headerDescriptionStyle = {
-	margin: '0.5rem 0 0',
-	color: colors.textMuted,
-	fontSize: fontSize.base,
 };
 
 const contentStyle = {
@@ -43,27 +20,6 @@ const contentStyle = {
 	paddingRight: spacing.lg,
 	paddingTop: spacing.lg,
 	paddingBottom: spacing.lg,
-};
-
-const benefitItemStyle = {
-	marginBottom: '2rem',
-	padding: '1.5rem',
-	background: colors.white,
-	border: `1px solid ${ colors.borderLighter }`,
-	borderRadius: borderRadius.sm,
-};
-
-const benefitTitleStyle = {
-	margin: '0 0 1rem',
-	fontSize: fontSize.xl,
-	fontWeight: fontWeight.semibold,
-	color: colors.text,
-};
-
-const benefitParagraphStyle = {
-	margin: '0 0 1rem',
-	color: colors.textSecondary,
-	lineHeight: 1.6,
 };
 
 const benefitListStyle = {
@@ -80,65 +36,38 @@ const benefitListItemStyle = {
 export default function HowItWorks() {
 	return (
 		<div className="aether-how-it-works" style={ sectionStyle }>
-			<div
+			<SectionHeader
+				title={ __( 'How Publishing Works', 'aether-site-exporter' ) }
+				description={ __(
+					'Understanding the Aether publish process.',
+					'aether-site-exporter'
+				) }
 				className="aether-how-it-works__header"
-				style={ sectionHeaderStyle }
-			>
-				<h2
-					className="aether-how-it-works__title"
-					style={ headerTitleStyle }
-				>
-					{ __( 'How Publishing Works', 'aether-site-exporter' ) }
-				</h2>
-				<p
-					className="aether-how-it-works__description"
-					style={ headerDescriptionStyle }
-				>
-					{ __(
-						'Understanding the Aether publish process.',
-						'aether-site-exporter'
-					) }
-				</p>
-			</div>
+			/>
 
 			<div
 				className="aether-how-it-works__content"
 				style={ contentStyle }
 			>
-				<div
+				<InfoCard
+					title={ __(
+						'What Happens When You Publish?',
+						'aether-site-exporter'
+					) }
 					className="aether-how-it-works__item"
-					style={ benefitItemStyle }
 				>
-					<h4
-						className="aether-how-it-works__item-title"
-						style={ benefitTitleStyle }
-					>
-						{ __(
-							'What Happens When You Publish?',
-							'aether-site-exporter'
-						) }
-					</h4>
-					<p
-						className="aether-how-it-works__item-text"
-						style={ benefitParagraphStyle }
-					>
+					<InfoParagraph isLast>
 						{ __(
 							'When you click "Publish Site Now", Aether performs a series of automated steps to sync your WordPress site to your configured providers. The process is designed to be fast, reliable, and error-resistant.',
 							'aether-site-exporter'
 						) }
-					</p>
-				</div>
+					</InfoParagraph>
+				</InfoCard>
 
-				<div
+				<InfoCard
+					title={ __( 'Publish Steps', 'aether-site-exporter' ) }
 					className="aether-how-it-works__item"
-					style={ benefitItemStyle }
 				>
-					<h4
-						className="aether-how-it-works__item-title"
-						style={ benefitTitleStyle }
-					>
-						{ __( 'Publish Steps', 'aether-site-exporter' ) }
-					</h4>
 					<ol
 						className="aether-how-it-works__steps-list"
 						style={ benefitListStyle }
@@ -222,84 +151,54 @@ export default function HowItWorks() {
 							) }
 						</li>
 					</ol>
-				</div>
+				</InfoCard>
 
-				<div
+				<InfoCard
+					title={ __( 'Blueprint Storage', 'aether-site-exporter' ) }
 					className="aether-how-it-works__item"
-					style={ benefitItemStyle }
 				>
-					<h4
-						className="aether-how-it-works__item-title"
-						style={ benefitTitleStyle }
-					>
-						{ __( 'Blueprint Storage', 'aether-site-exporter' ) }
-					</h4>
-					<p
-						className="aether-how-it-works__item-text"
-						style={ benefitParagraphStyle }
-					>
+					<InfoParagraph isLast>
 						{ __(
 							'Your WordPress site is packaged as a Playground blueprint - a complete, portable version that can run in WordPress Playground. This blueprint is stored in your configured storage provider and can be accessed via the /wp-admin URL of your published site.',
 							'aether-site-exporter'
 						) }
-					</p>
-				</div>
+					</InfoParagraph>
+				</InfoCard>
 
-				<div
+				<InfoCard
+					title={ __(
+						'Static Site Deployment',
+						'aether-site-exporter'
+					) }
 					className="aether-how-it-works__item"
-					style={ benefitItemStyle }
 				>
-					<h4
-						className="aether-how-it-works__item-title"
-						style={ benefitTitleStyle }
-					>
-						{ __(
-							'Static Site Deployment',
-							'aether-site-exporter'
-						) }
-					</h4>
-					<p
-						className="aether-how-it-works__item-text"
-						style={ benefitParagraphStyle }
-					>
+					<InfoParagraph isLast>
 						{ __(
 							'When static site generation is enabled, Aether crawls your site, generates HTML for all pages, collects assets, and deploys everything to your configured hosting provider. Visitors see the fast, secure static version while you maintain full WordPress editing capabilities.',
 							'aether-site-exporter'
 						) }
-					</p>
-				</div>
+					</InfoParagraph>
+				</InfoCard>
 
-				<div
+				<InfoCard
+					title={ __( 'Publish Progress', 'aether-site-exporter' ) }
 					className="aether-how-it-works__item"
-					style={ benefitItemStyle }
 				>
-					<h4
-						className="aether-how-it-works__item-title"
-						style={ benefitTitleStyle }
-					>
-						{ __( 'Publish Progress', 'aether-site-exporter' ) }
-					</h4>
-					<p
-						className="aether-how-it-works__item-text"
-						style={ benefitParagraphStyle }
-					>
+					<InfoParagraph isLast>
 						{ __(
 							'The publish process shows real-time progress with a task list. Each step is executed independently with automatic retry logic for network errors. You can monitor the progress or close the modal and continue working - the publish will complete in the background.',
 							'aether-site-exporter'
 						) }
-					</p>
-				</div>
+					</InfoParagraph>
+				</InfoCard>
 
-				<div
+				<InfoCard
+					title={ __(
+						'What Gets Published?',
+						'aether-site-exporter'
+					) }
 					className="aether-how-it-works__item"
-					style={ benefitItemStyle }
 				>
-					<h4
-						className="aether-how-it-works__item-title"
-						style={ benefitTitleStyle }
-					>
-						{ __( 'What Gets Published?', 'aether-site-exporter' ) }
-					</h4>
 					<ul
 						className="aether-how-it-works__published-list"
 						style={ benefitListStyle }
@@ -350,37 +249,20 @@ export default function HowItWorks() {
 							{ __( 'Database content', 'aether-site-exporter' ) }
 						</li>
 					</ul>
-				</div>
+				</InfoCard>
 
-				<div
+				<InfoCard
+					title={ __( 'Troubleshooting', 'aether-site-exporter' ) }
 					className="aether-how-it-works__item aether-how-it-works__item--last"
-					style={ {
-						...benefitItemStyle,
-						...utilityStyles.noMarginBottom,
-					} }
+					isLast
 				>
-					<h4
-						className="aether-how-it-works__item-title"
-						style={ benefitTitleStyle }
-					>
-						{ __( 'Troubleshooting', 'aether-site-exporter' ) }
-					</h4>
-					<p
-						className="aether-how-it-works__item-text"
-						style={ benefitParagraphStyle }
-					>
+					<InfoParagraph>
 						{ __(
 							'If a publish fails, check the error message in the recent jobs list above. Common issues include missing provider configuration, network errors, or insufficient storage. You can retry the publish after fixing the issue.',
 							'aether-site-exporter'
 						) }
-					</p>
-					<p
-						className="aether-how-it-works__item-text aether-how-it-works__item-text--last"
-						style={ {
-							...benefitParagraphStyle,
-							...utilityStyles.noMarginBottom,
-						} }
-					>
+					</InfoParagraph>
+					<InfoParagraph isLast>
 						{ __(
 							'For detailed debugging information, visit the',
 							'aether-site-exporter'
@@ -392,8 +274,8 @@ export default function HowItWorks() {
 							{ __( 'Logs', 'aether-site-exporter' ) }
 						</a>{ ' ' }
 						{ __( 'page.', 'aether-site-exporter' ) }
-					</p>
-				</div>
+					</InfoParagraph>
+				</InfoCard>
 			</div>
 		</div>
 	);

@@ -19,27 +19,11 @@ import {
 } from '../../utils/styles';
 import { formatJobTime, getStatusDisplay } from '../utils/jobFormatters';
 import StatusBadge from '../../components/StatusBadge';
+import SectionHeader from '../../components/SectionHeader';
 
 // Styles - extracted to module level for performance
 const sectionStyle = {
 	...commonStyles.section,
-};
-
-const sectionHeaderStyle = {
-	...commonStyles.sectionHeader,
-};
-
-const headerTitleStyle = {
-	margin: 0,
-	fontSize: '1.3em',
-	lineHeight: 1.4,
-	color: colors.text,
-};
-
-const headerDescriptionStyle = {
-	margin: '0.5rem 0 0',
-	color: colors.textMuted,
-	fontSize: fontSize.base,
 };
 
 const noticeInfoStyle = {
@@ -149,26 +133,14 @@ const jobErrorStyle = {
 export default function RecentJobs( { jobs = [], loading = false } ) {
 	return (
 		<div className="aether-recent-jobs" style={ sectionStyle }>
-			<div
+			<SectionHeader
+				title={ __( 'Recent Publish Jobs', 'aether-site-exporter' ) }
+				description={ __(
+					'History of your recent publish operations.',
+					'aether'
+				) }
 				className="aether-recent-jobs__header"
-				style={ sectionHeaderStyle }
-			>
-				<h2
-					className="aether-recent-jobs__title"
-					style={ headerTitleStyle }
-				>
-					{ __( 'Recent Publish Jobs', 'aether-site-exporter' ) }
-				</h2>
-				<p
-					className="aether-recent-jobs__description"
-					style={ headerDescriptionStyle }
-				>
-					{ __(
-						'History of your recent publish operations.',
-						'aether'
-					) }
-				</p>
-			</div>
+			/>
 
 			{ loading && (
 				<div
