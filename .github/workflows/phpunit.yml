@@ -54,10 +54,16 @@ jobs:
           bash bin/install-wp-tests.sh wordpress_test_${{ matrix.php }} root root 127.0.0.1:3306 $WP_VERSION
 
       - name: Run PHPUnit tests
+        env:
+          WP_TESTS_DIR: /tmp/wordpress-tests-lib
         run: composer test
 
       - name: Run Unit tests only
+        env:
+          WP_TESTS_DIR: /tmp/wordpress-tests-lib
         run: composer test:unit
 
       - name: Run Integration tests only
+        env:
+          WP_TESTS_DIR: /tmp/wordpress-tests-lib
         run: composer test:integration
