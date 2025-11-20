@@ -142,7 +142,6 @@ export function buildWorkflowContext( config, dependencies ) {
 		setStatusMessage,
 		setStepProgress,
 		handleSiteArchiveUpload,
-		handleStaticSiteFilesUpload,
 	} = dependencies;
 
 	return {
@@ -168,7 +167,6 @@ export function buildWorkflowContext( config, dependencies ) {
 
 		// Upload handlers
 		handleSiteArchiveUpload,
-		handleStaticSiteFilesUpload,
 
 		// Discovered assets (populated during workflow)
 		discoveredAssets: null,

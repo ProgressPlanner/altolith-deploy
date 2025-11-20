@@ -426,7 +426,6 @@ describe( 'publishConfiguration', () => {
 				setStatusMessage: mockSetStatus,
 				setStepProgress: mockSetProgress,
 				handleSiteArchiveUpload: mockHandleArchive,
-				handleStaticSiteFilesUpload: mockHandleFiles,
 			};
 
 			const result = buildWorkflowContext( config, dependencies );
@@ -454,7 +453,6 @@ describe( 'publishConfiguration', () => {
 
 				// Upload handlers
 				handleSiteArchiveUpload: mockHandleArchive,
-				handleStaticSiteFilesUpload: mockHandleFiles,
 
 				// Discovered assets
 				discoveredAssets: null,
@@ -479,7 +477,6 @@ describe( 'publishConfiguration', () => {
 				setStatusMessage: null,
 				setStepProgress: null,
 				handleSiteArchiveUpload: null,
-				handleStaticSiteFilesUpload: null,
 			};
 
 			const result = buildWorkflowContext( config, dependencies );

@@ -438,7 +438,6 @@ export function usePublishController( publishState ) {
 					setStatusMessage,
 					setStepProgress,
 					handleSiteArchiveUpload,
-					handleStaticSiteFilesUpload,
 				}
 			);
 
