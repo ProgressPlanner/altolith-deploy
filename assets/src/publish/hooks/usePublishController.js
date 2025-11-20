@@ -6,7 +6,7 @@
  * @package
  */
 
-import { useCallback, useState } from '@wordpress/element';
+import { useCallback, useState, useRef } from '@wordpress/element';
 import { usePublishAPI } from './usePublishAPI';
 import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
@@ -48,24 +48,61 @@ export function usePublishController( publishState ) {
 	const { generateBlueprint: generateBlueprintJson } =
 		useBlueprintGenerator();
 
+	// Provider context for progress tracking across multiple providers
+	// This allows the progress callback to adjust progress based on the current provider index
+	const staticSiteProgressContext = useRef( {
+		providerIndex: 0,
+		totalProviders: 1,
+	} );
+
+	// Function to update static site progress context
+	// This allows the step handler to set the current provider index before processing
+	const updateStaticSiteProgressContext = useCallback(
+		( providerIndex, totalProviders ) => {
+			staticSiteProgressContext.current = {
+				providerIndex,
+				totalProviders,
+			};
+		},
+		[]
+	);
+
 	// Create static site generator with progress callback
 	const processStaticSiteUrls = useStaticSiteGenerator(
 		( uploadedFiles, totalFiles ) => {
 			if ( totalFiles > 0 && uploadedFiles >= 0 ) {
-				// Calculate progress percentage based on file count
-				const progress = Math.min(
+				// Get current provider context
+				const { providerIndex, totalProviders } =
+					staticSiteProgressContext.current;
+
+				// Current provider's progress (0-100)
+				const currentProviderProgress = Math.min(
 					100,
 					Math.max(
 						0,
 						Math.round( ( uploadedFiles / totalFiles ) * 100 )
 					)
 				);
+
+				// Calculate step progress accounting for multiple providers
+				// Progress formula: (providerIndex * 100 + currentProviderProgress) / totalProviders
+				let stepProgress = currentProviderProgress;
+				if ( totalProviders > 1 ) {
+					stepProgress = Math.min(
+						100,
+						Math.round(
+							( providerIndex * 100 + currentProviderProgress ) /
+								totalProviders
+						)
+					);
+				}
+
 				const overallProgress = calculateOverallProgress( {
 					step: 'uploadStaticSiteFiles',
-					progress,
+					progress: stepProgress,
 				} );
 				setOverallProgressValue( overallProgress );
-				setStepProgress( 'uploadStaticSiteFiles', progress );
+				setStepProgress( 'uploadStaticSiteFiles', stepProgress );
 			}
 		}
 	);
@@ -100,18 +137,50 @@ export function usePublishController( publishState ) {
 					const providerResponse = await apiFetch( {
 						path: `/aether/site-exporter/providers/${ fetchedStorageProviderId }`,
 					} );
-					if ( providerResponse.success ) {
-						if ( providerResponse.provider ) {
-							providerMetadata = providerResponse.provider;
-						}
-						if ( providerResponse.config ) {
-							instanceConfig = providerResponse.config;
-						}
+
+					if ( ! providerResponse ) {
+						throw new Error(
+							`REST API returned null response for provider ${ fetchedStorageProviderId }`
+						);
 					}
+
+					if ( ! providerResponse.success ) {
+						const errorMessage =
+							providerResponse.message ||
+							providerResponse.error ||
+							'Unknown error';
+						throw new Error(
+							`REST API error for provider ${ fetchedStorageProviderId }: ${ errorMessage }`
+						);
+					}
+
+					if ( providerResponse.provider ) {
+						providerMetadata = providerResponse.provider;
+					} else {
+						throw new Error(
+							`Provider metadata not found in REST API response for ${ fetchedStorageProviderId }`
+						);
+					}
+
+					if ( providerResponse.config ) {
+						instanceConfig = providerResponse.config;
+					}
+
+					debug(
+						`[Aether] Fetched provider metadata for ${ fetchedStorageProviderId }:`,
+						{
+							providerType: providerMetadata?.type,
+							hasConfig: !! instanceConfig,
+							instanceEnabled: instanceConfig?.enabled,
+						}
+					);
 				} catch ( error ) {
 					debugError(
 						`[Aether] Failed to fetch provider metadata for instance ${ fetchedStorageProviderId }:`,
 						error
+					);
+					throw new Error(
+						`Failed to fetch provider metadata for instance ${ fetchedStorageProviderId }: ${ error.message }`
 					);
 				}
 
@@ -197,6 +266,11 @@ export function usePublishController( publishState ) {
 					// Get upload handler for this provider via filter
 					// Pass instance ID (fetchedStorageProviderId) to the filter
 					// The handler will receive the instance ID and can extract provider type if needed
+
+					debug(
+						`[Aether] Looking for upload handler for instance ${ fetchedStorageProviderId }, strategy: ${ uploadStrategy }`
+					);
+
 					const uploadHandler = applyFilters(
 						'aether.provider.upload',
 						null,
@@ -208,6 +282,7 @@ export function usePublishController( publishState ) {
 								...context,
 								instanceId: fetchedStorageProviderId,
 								instanceConfig, // Include instance config in context
+								exportPath: context.exportPath, // Include exportPath from uploadSiteArchiveStep
 							},
 						}
 					);
@@ -217,13 +292,25 @@ export function usePublishController( publishState ) {
 						typeof uploadHandler !== 'function'
 					) {
 						// Extract provider type from instance ID for better error message
-						const providerType = fetchedStorageProviderId.includes( ':' )
+						const providerType = fetchedStorageProviderId.includes(
+							':'
+						)
 							? fetchedStorageProviderId.split( ':' )[ 0 ]
 							: fetchedStorageProviderId;
+
+						debugError(
+							`[Aether] No upload handler found for provider type: ${ providerType } (instance: ${ fetchedStorageProviderId })`
+						);
+
 						throw new Error(
-							`No upload handler registered for provider type: ${ providerType } (instance: ${ fetchedStorageProviderId })`
+							`No upload handler registered for provider type: ${ providerType } (instance: ${ fetchedStorageProviderId }). ` +
+								`Make sure the provider has registered an upload handler via the 'aether.provider.upload' filter.`
 						);
 					}
+
+					debug(
+						`[Aether] Upload handler found for ${ fetchedStorageProviderId }, calling handler...`
+					);
 
 					// Call the upload handler
 					// Pass context which includes exportPath from uploadSiteArchiveStep
@@ -234,27 +321,37 @@ export function usePublishController( publishState ) {
 							...context,
 							instanceId: fetchedStorageProviderId,
 							instanceConfig, // Include instance config
+							exportPath: context.exportPath, // Include exportPath from uploadSiteArchiveStep
 						}
 					);
 
-					if ( ! uploadResult || ! uploadResult.success ) {
+					if ( ! uploadResult ) {
 						throw new Error(
-							uploadResult?.error ||
-								'Failed to upload blueprint bundle'
+							`Upload handler returned null/undefined for instance ${ fetchedStorageProviderId }`
 						);
 					}
 
-					debug( 'Blueprint bundle upload complete:', uploadResult );
+					if ( ! uploadResult.success ) {
+						const errorMessage =
+							uploadResult?.error ||
+							uploadResult?.message ||
+							'Unknown upload error';
+						debugError(
+							`[Aether] Upload handler returned error for instance ${ fetchedStorageProviderId }:`,
+							errorMessage
+						);
+						throw new Error(
+							`Failed to upload blueprint bundle to instance ${ fetchedStorageProviderId }: ${ errorMessage }`
+						);
+					}
 
-					// Update progress to 100%
-					updateFromStep( 'uploadSiteArchive' );
-					setOverallProgressValue(
-						calculateOverallProgress( {
-							step: 'uploadSiteArchive',
-							progress: 100,
-						} )
+					debug(
+						`[Aether] Blueprint bundle upload complete for instance ${ fetchedStorageProviderId }:`,
+						uploadResult
 					);
-					setStepProgress( 'uploadSiteArchive', 100 );
+
+					// Progress updates are handled at the step handler level (uploadSiteArchiveStep.js)
+					// to properly track progress across multiple provider instances.
 				} else {
 					// ERROR: No upload method configured (no provider configured).
 					throw new Error( 'No supported upload method available' );
@@ -268,9 +365,9 @@ export function usePublishController( publishState ) {
 		[
 			api,
 			updateFromStep,
+			setOverallProgressValue, // Still used for git upload strategy
 			// 			gitUpload,
-			setOverallProgressValue,
-			setStepProgress,
+			// setStepProgress removed from deps as progress is handled at step handler level
 		]
 	);
 
@@ -393,9 +490,13 @@ export function usePublishController( publishState ) {
 				generateBlueprintJson,
 				handleSiteArchiveUpload,
 
+				// Provider progress context updater
+				updateStaticSiteProgressContext,
+
 				// UI callbacks
 				setStatusMessage,
 				setStepProgress,
+				setOverallProgressValue,
 				removeMessage,
 			};
 
@@ -446,6 +547,7 @@ export function usePublishController( publishState ) {
 		initializeSteps,
 		setStorageProviderId,
 		updateFromStep,
+		updateStaticSiteProgressContext,
 		config,
 		storageProviderId,
 		processStaticSiteUrls,

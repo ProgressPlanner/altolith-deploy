@@ -9,6 +9,7 @@
 
 import { applyFilters } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
+import { calculateOverallProgress } from '../utils/progressManager';
 
 /**
  * Upload site archive step handler (stateless).
@@ -27,6 +28,8 @@ export async function uploadSiteArchiveHandler( context ) {
 		blueprintBundleProviders = [], // NEW: Array of provider IDs
 		providerId, // LEGACY: Keep for backwards compat
 		setStatusMessage,
+		setStepProgress,
+		setOverallProgressValue,
 	} = context;
 
 	// Use blueprintBundleProviders if available (these are instance IDs)
@@ -134,6 +137,22 @@ export async function uploadSiteArchiveHandler( context ) {
 					exportPath,
 				},
 			} );
+
+			// Update progress incrementally as each instance completes
+			// Calculate progress as: (successCount / providers.length) * 100
+			if ( setStepProgress && setOverallProgressValue ) {
+				const stepProgress = Math.min(
+					100,
+					Math.round( ( successCount / providers.length ) * 100 )
+				);
+				setStepProgress( 'uploadSiteArchive', stepProgress );
+				setOverallProgressValue(
+					calculateOverallProgress( {
+						step: 'uploadSiteArchive',
+						progress: stepProgress,
+					} )
+				);
+			}
 		} catch ( error ) {
 			failureCount++;
 			const errorMessage =

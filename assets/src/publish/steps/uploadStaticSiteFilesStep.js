@@ -9,6 +9,7 @@
 
 import { applyFilters } from '@wordpress/hooks';
 import apiFetch from '../../utils/api';
+import { calculateOverallProgress } from '../utils/progressManager';
 
 /**
  * Upload static site files step handler.
@@ -34,6 +35,9 @@ export async function uploadStaticSiteFilesHandler( context ) {
 		staticSiteProviders = [], // NEW: Array of provider IDs
 		providerId, // LEGACY: Keep for backwards compat
 		setStatusMessage,
+		setStepProgress,
+		setOverallProgressValue,
+		updateStaticSiteProgressContext,
 		removeMessage,
 	} = context;
 
@@ -109,7 +113,15 @@ export async function uploadStaticSiteFilesHandler( context ) {
 	// This ensures each provider gets a complete set of files without interference.
 	const uploadResults = [];
 
-	for ( const providerIdItem of providers ) {
+	// Track progress across all providers
+	// We need to wrap processStaticSiteUrls to provide a provider-aware progress callback
+	// The original progress callback in usePublishController.js doesn't know about multiple providers
+	for (
+		let providerIndex = 0;
+		providerIndex < providers.length;
+		providerIndex++
+	) {
+		const providerIdItem = providers[ providerIndex ];
 		try {
 			// Fetch provider-specific deployment URL
 			// Each provider may have a different public URL (e.g., custom domain, worker endpoint)
@@ -141,6 +153,16 @@ export async function uploadStaticSiteFilesHandler( context ) {
 				// This maintains backwards compatibility
 			}
 
+			// Update progress context before processing this provider
+			// This allows the progress callback in usePublishController.js to adjust
+			// progress based on the current provider index and total providers
+			if ( updateStaticSiteProgressContext ) {
+				updateStaticSiteProgressContext(
+					providerIndex,
+					providers.length
+				);
+			}
+
 			const result = await processStaticSiteUrls(
 				filteredUrls,
 				providerDeploymentUrl, // Provider-specific deployment URL
@@ -150,6 +172,36 @@ export async function uploadStaticSiteFilesHandler( context ) {
 				blueprintDataForStatic,
 				removeMessage
 			);
+
+			// After processing, ensure progress reflects completed provider
+			// The progress callback should have already updated it, but we ensure it's correct
+			if (
+				setStepProgress &&
+				setOverallProgressValue &&
+				updateStaticSiteProgressContext &&
+				providers.length > 1
+			) {
+				// Provider completed, so update context to reflect completion
+				// This ensures progress shows 100% for this provider's share
+				updateStaticSiteProgressContext(
+					providerIndex + 1,
+					providers.length
+				);
+				// Trigger final progress update (provider at 100% of its share)
+				const stepProgress = Math.min(
+					100,
+					Math.round(
+						( ( providerIndex + 1 ) / providers.length ) * 100
+					)
+				);
+				setStepProgress( 'uploadStaticSiteFiles', stepProgress );
+				setOverallProgressValue(
+					calculateOverallProgress( {
+						step: 'uploadStaticSiteFiles',
+						progress: stepProgress,
+					} )
+				);
+			}
 
 			uploadResults.push( {
 				status: 'fulfilled',
