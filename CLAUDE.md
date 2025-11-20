@@ -1,0 +1,545 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Behavioral Guidelines
+
+### Collaborative Problem-Solving
+
+**ALWAYS ask for confirmation before implementing fixes.**
+
+- Even if you think you found the solution, **ASK FIRST**
+- We are partners working together, not working alone
+- Present your findings and proposed solution, then wait for confirmation
+- Have a dialogue - discuss the issue and explore solutions together
+- Never assume you have the complete picture without user input
+
+### Root Cause Analysis - No Quick Fixes
+
+**Find and fix the ROOT CAUSE, not symptoms.**
+
+- NEVER rush to conclusions when investigating issues
+- NEVER make assumptions about what's causing a problem
+- ALWAYS do thorough investigation before proposing solutions
+- Easy fixes are usually wrong - dig deeper
+- Read all relevant code paths before making changes
+- Verify assumptions with actual code inspection
+
+### Test-Driven Development (TDD)
+
+**Always write tests BEFORE implementing new features.**
+
+- Write failing tests first, then implement code to make them pass
+- Run tests after implementation to verify
+- Both JavaScript (Jest) and PHP should follow TDD
+
+### Clean Codebase Philosophy
+
+**We do not care about backwards-compatibility.**
+
+- No backwards-compatibility hacks (no unused parameter renames like `_var`, no `// removed` comments, no re-exports of deleted code)
+- Delete unused code completely instead of commenting it out
+- Refactor fearlessly - if something is better done differently, change it
+- Prioritize code clarity over preserving old patterns
+
+### Code Quality Standards
+
+- Run linters and fix issues before considering work complete
+- PHPStan must pass at current level
+- All tests must pass before committing
+
+## Core Architectural Principles
+
+### JavaScript-First, Reactive Architecture (CRITICAL)
+
+**This is a JS-first plugin - JavaScript is preferred over PHP whenever possible.**
+
+- If something CAN be done in JavaScript, it SHOULD be done in JavaScript
+- PHP should primarily serve as a thin REST API layer
+- **Target environment:** WordPress Playground (browser-based WASM environment)
+- Everything should be reactive - use React state, contexts, and hooks
+- Browser-based processing prevents PHP timeout issues in Playground
+- Examples: Static site generation runs in browser, asset processing in JS, HTML parsing with parse5
+
+**When to Use PHP vs JavaScript:**
+
+- **JavaScript**: UI logic, data processing, file operations (via REST), HTML parsing, static site generation, asset tracking, URL discovery
+- **PHP**: REST API endpoints, database queries, WordPress hooks/filters, server-side file I/O, authentication/security
+- **Rule of thumb**: If it can run in the browser without significant performance penalty, use JavaScript
+
+### Provider Architecture Principles
+
+**Provider Isolation (CRITICAL)**
+
+- Providers MUST be completely isolated to their own files
+- NO provider-specific logic in core architecture or abstractions
+- Core code should only interact with `BaseProvider` interface
+- Providers register via `aether_providers` filter for 3rd-party extensibility
+- Each provider is self-contained: all logic, configuration, validation within provider class
+- 3rd-party plugins can hook in and add their own providers
+- Example: `LocalFilesystemProvider` contains ALL local filesystem logic - nothing in core
+
+**Provider Instances Architecture**
+
+- Multiple instances of the same provider type are supported
+- Instance ID format: `{provider_type}:{uuid}` (e.g., `local-filesystem:a3f2c1b0-...`)
+- Each instance has its own configuration stored in settings
+- `ProviderRegistry` manages both provider types AND instances
+- Users can configure multiple instances (e.g., multiple S3 buckets, multiple local paths)
+- Instance configs stored in `aether_site_exporter_settings['providers']` array
+
+**Provider Extension Pattern for 3rd-Party Plugins**
+
+- 3rd-party providers extend `BaseProvider` in PHP
+- JavaScript providers implement `IProvider` interface and are dynamically loaded
+- Register via `add_filter('aether_providers', ...)` hook
+
+### Aether Ecosystem Integration
+
+**This plugin is part of the Aether ecosystem (all plugins with `aether` prefix).**
+
+- Designed to work together with other Aether plugins
+- Consider cross-plugin compatibility when making architectural changes
+- Shared conventions across Aether plugins should be maintained
+- Other Aether plugins may extend or integrate with this plugin's provider system
+
+## Development Commands
+
+### Build Commands
+
+```bash
+# Production build (minified)
+npm run build
+
+# Development build (unminified for debugging)
+npm run build:dev
+
+# Watch mode (auto-rebuild on changes)
+npm start
+```
+
+### Testing
+
+```bash
+# Run JavaScript tests
+npm run test:js
+
+# Run JavaScript tests in watch mode
+npm run test:js:watch
+
+# Run JavaScript tests with coverage
+npm run test:js:coverage
+
+# Run PHPStan (static analysis)
+composer phpstan
+
+# Run single JavaScript test file
+npm run test:js -- path/to/test/file.test.js
+```
+
+### Code Quality
+
+```bash
+# Lint JavaScript
+npm run lint:js
+
+# Fix JavaScript linting issues
+npm run lint:js:fix
+
+# Check PHP code style
+composer check-cs
+
+# Fix PHP code style
+composer fix-cs
+
+# Run PHPStan
+composer phpstan
+
+# Run all checks (CS + PHPStan)
+composer check
+```
+
+## High-Level Architecture
+
+### Overview
+
+Aether Site Exporter is a WordPress plugin that exports WordPress sites as static HTML or WordPress Playground blueprint bundles. The plugin uses a **universal compatibility** design - it works identically in both traditional hosting environments and WordPress Playground's browser-based WASM environment.
+
+### Universal Compatibility Design
+
+**Target: WordPress Playground (browser-based WASM environment)**
+
+Key principles:
+
+- **No environment detection** - code works identically everywhere
+- **Never use `sys_get_temp_dir()`** - ALWAYS use `TempDirectoryManager::getTempFilePath()` which uses `wp-content/uploads/aether-temp`
+- **Never use `realpath()` directly** - ALWAYS use `PathValidator` which has WASM-compatible fallbacks
+- **Never make external HTTP calls from PHP** - use filter-based architecture for WordPress.org API checks
+- **Browser-based static site generation** - prevents PHP timeouts
+
+### PHP Architecture (Thin REST API Layer)
+
+**Namespace:** `Aether\SiteExporter`
+
+**Entry Point:** `aether-site-exporter.php` → `Plugin::getInstance()`
+
+**Core Components:**
+
+1. **`Plugin.php`** - Main orchestrator (singleton pattern)
+   - Initializes all subsystems
+   - Registers REST API routes via controller classes
+   - Handles CORS for WordPress Playground compatibility
+   - Manages provider registry
+
+2. **Provider System** (Extensible architecture)
+   - `ProviderRegistry` - Singleton registry managing all provider types and instances
+   - `BaseProvider` - Abstract base class for storage providers
+   - `LocalFilesystemProvider` - Stores exports locally
+   - Providers register via `aether_providers` filter
+   - Instance IDs format: `{provider_type}:{uuid}`
+
+3. **REST API Controllers** (`includes/REST/`)
+   - Each controller is a dedicated class (separation of concerns)
+   - Publish controllers handle multi-step export workflow
+   - All endpoints prefixed with `/aether/v1/`
+   - CORS headers automatically added for Playground compatibility
+   - **No provider-specific logic in controllers**
+
+4. **Services** (`includes/Services/`)
+   - `ExportService` - Complete site export (database + wp-content)
+   - `BlueprintBundleGenerator` - WordPress Playground blueprint creation
+   - **Provider-agnostic** - work with any provider via interface
+
+5. **Utilities** (`includes/Utilities/`)
+   - `TempDirectoryManager` - Universal temp file handling (critical for Playground)
+   - `PathValidator` - Universal path validation (WASM-compatible)
+   - `FileManager` - File operations with persistence tracking
+   - `CredentialEncryption` - Secure credential storage
+
+**What PHP Handles:**
+- Authentication and security
+- Database queries
+- WordPress hooks/filters integration
+- Server-side file I/O (when absolutely necessary)
+- REST API endpoints (thin layer)
+
+### JavaScript/React Architecture (Primary Logic Layer)
+
+**Build System:** Webpack via `@wordpress/scripts`
+
+**Entry Points:**
+- `admin-settings` → Settings page UI (`assets/src/admin-settings/`)
+- `admin-common` → Global variables/shared code (`assets/src/admin-common/`)
+- `export` → Main publish page (`assets/src/publish/`)
+
+**Key Patterns:**
+
+1. **Context-based Reactive State Management**
+   - `PublishContext` - Publish workflow state
+   - `ConfigContext` - Plugin configuration
+   - Custom hooks consume contexts
+   - State flows reactively through component tree
+
+2. **Multi-Step Workflow System** (`assets/src/publish/`)
+   - Steps defined in `constants/steps.js`
+   - Each step is an async function returning standard response format
+   - `usePublishController.js` orchestrates step execution
+   - Progress tracking via `progressManager.js`
+   - State persisted in IndexedDB (Playground-compatible)
+
+3. **Browser-Based Asset Management**
+   - Static site generation runs entirely in browser
+   - HTML parsing with `parse5` library (pure JavaScript)
+   - URL rewriting for static sites
+   - Asset tracking and deduplication
+   - 500-URL cache limit prevents browser memory exhaustion
+
+4. **Provider Integration**
+   - Providers dynamically loaded via `window.aether.providerScriptsBaseUrl`
+   - `IProvider` interface defines provider contract
+   - Config fields built via `ConfigFieldBuilder`
+   - Each provider is isolated in its own file
+
+**What JavaScript Handles:**
+- All UI logic and rendering
+- Data processing and transformation
+- HTML parsing and manipulation
+- Static site generation workflow
+- Asset tracking and management
+- URL discovery and processing
+- State management (React + IndexedDB)
+
+### REST API Endpoints
+
+**Export Management:**
+- `GET /aether/v1/exports` - List all exports
+- `POST /aether/v1/exports` - Create new export
+- `GET /aether/v1/exports/{id}` - Get export details
+- `DELETE /aether/v1/exports/{id}` - Delete export
+
+**Publish Workflow:**
+- `POST /aether/v1/publish/jobs` - Create publish job
+- `GET /aether/v1/publish/jobs/{id}` - Get job status
+- `POST /aether/v1/publish/jobs/{id}/steps/{step}` - Execute step
+
+**Configuration:**
+- `GET /aether/v1/settings` - Get plugin settings
+- `PUT /aether/v1/settings` - Update settings
+- `GET /aether/v1/config` - Get provider config
+- `POST /aether/v1/providers/{id}/config` - Save provider config
+
+**Provider Management:**
+- `GET /aether/v1/providers` - List available providers
+- `POST /aether/v1/provider-config/{instanceId}` - Save provider instance config
+- `GET /aether/v1/provider-config/{instanceId}` - Get provider instance config
+
+### State Management
+
+**PHP:**
+- Settings stored in `aether_site_exporter_settings` option
+- Job state in transients (expire after 10 minutes)
+- Provider instance configs stored in settings array under `providers` key
+
+**JavaScript:**
+- Configuration cached in IndexedDB (key: `aether_site_exporter_config`)
+- Provider manifests cached in IndexedDB
+- Job progress tracked in React state + IndexedDB
+- Reactive updates via React contexts and hooks
+
+## Important Implementation Details
+
+### WordPress Playground Compatibility
+
+**Critical Files:**
+- `PLAYGROUND_COMPATIBILITY.md` - Comprehensive compatibility analysis
+- `TempDirectoryManager.php` - Universal temp directory solution
+- `PathValidator.php` - Universal path validation
+- `FileManager.php` - Persistent file operations
+
+**Configuration Filters:**
+
+```php
+// Configure post discovery limit (prevents timeouts on large sites)
+add_filter('option_aether_site_exporter_settings', function($settings) {
+    $settings['max_posts_for_discovery'] = 5000; // Default: 10000
+    return $settings;
+});
+
+// Custom WordPress.org API checking (for Playground compatibility)
+add_filter('aether_site_exporter_wporg_check_response', function($response, $slug, $type) {
+    // Implement custom checking logic (e.g., browser-based fetch)
+    return [
+        'success' => true,
+        'exists' => true/false,
+        'slug' => $slug,
+        'type' => $type,
+        'method' => 'custom',
+    ];
+}, 10, 3);
+```
+
+### Security Considerations
+
+**Path Traversal Prevention:**
+- All user-provided paths validated via `PathValidator`
+- Reject `..` sequences, absolute paths, null bytes
+- Validation occurs BEFORE filesystem operations
+
+**Credential Encryption:**
+- Provider credentials encrypted with `wp_salt('auth')`
+- Hash-based integrity verification
+- Stored in WordPress options (database)
+
+**CORS Security:**
+- Whitelisted origins only (Playground domains + same-origin)
+- Local development requires `AETHER_ALLOW_LOCAL_CORS` constant
+- Custom origins via `aether_site_exporter_cors_allowed_origins` filter
+
+### Testing Practices
+
+**JavaScript Tests:**
+- Jest + React Testing Library
+- Mock WordPress dependencies (`@wordpress/api-fetch`, etc.)
+- Test files colocated with source in `__tests__` directories
+- Follow TDD - write tests before implementation
+
+**PHP Tests:**
+- PHPStan for static analysis (level 9)
+- PHP_CodeSniffer (WordPress Coding Standards)
+- PHP-CS-Fixer for auto-fixing
+- Follow TDD - write tests before implementation
+
+## Common Development Patterns
+
+### Adding a New Provider (TDD Approach)
+
+**1. Write Tests First**
+```javascript
+// assets/src/providers/my-provider/__tests__/index.test.js
+describe('MyProvider', () => {
+    it('should implement IProvider interface', () => {
+        // Test all required methods exist
+    });
+});
+```
+
+**2. Create Provider Class (PHP)**
+```php
+// includes/Providers/MyProvider.php
+class MyProvider extends BaseProvider {
+    // Implement ALL provider logic here - nothing in core
+}
+```
+
+**3. Create Provider Implementation (JavaScript)**
+```javascript
+// assets/src/providers/my-provider/index.js
+// Implement IProvider interface
+// ALL provider-specific logic here - nothing in core
+```
+
+**4. Register Provider**
+```php
+// In Plugin.php or dedicated plugin
+add_filter('aether_providers', function($providers) {
+    $providers[] = new MyProvider();
+    return $providers;
+});
+```
+
+**Key Rules:**
+- ALL provider logic stays in provider files
+- NO provider-specific code in core architecture
+- Each provider is completely self-contained
+- Test first, then implement
+
+### Adding a New Publish Step (TDD Approach)
+
+**1. Write Tests First**
+```javascript
+// assets/src/publish/steps/__tests__/myStep.test.js
+describe('myStep', () => {
+    it('should return standard response format', async () => {
+        // Test implementation
+    });
+});
+```
+
+**2. Define Step Constant**
+```javascript
+// assets/src/constants/steps.js
+export const STEP_MY_STEP = 'my_step';
+```
+
+**3. Create Step Function (Prefer JavaScript)**
+```javascript
+// assets/src/publish/steps/myStep.js
+export async function myStep(jobId, config) {
+    // Implementation in JavaScript (preferred)
+    // Returns standard response format
+}
+```
+
+**4. Add to Workflow**
+```javascript
+// assets/src/publish/utils/steps.js
+// Add step to appropriate workflow
+```
+
+**5. Create REST Endpoint (If Needed)**
+```php
+// includes/REST/Publish/PublishStepsController.php
+// Add endpoint ONLY if server-side processing required
+// Keep it thin - delegate to JavaScript when possible
+```
+
+### Adding New Settings (TDD Approach)
+
+**1. Write Tests First**
+```javascript
+// Test settings UI and validation
+```
+
+**2. Add Setting to UI**
+```javascript
+// assets/src/admin-settings/
+// Add field to settings form
+```
+
+**3. Register in REST Controller**
+```php
+// includes/REST/SettingsController.php
+// Add validation and sanitization
+```
+
+**4. Add to Defaults**
+```php
+// Core/SettingsRepository.php
+// Add default value
+```
+
+## WP-CLI Commands
+
+```bash
+# Convert provider configurations (migration utility)
+wp aether convert-provider-configs
+```
+
+## File Organization
+
+```
+aether-site-exporter/
+├── includes/              # PHP backend (thin REST API layer)
+│   ├── Admin/            # WordPress admin integration
+│   ├── CLI/              # WP-CLI commands
+│   ├── Core/             # Core utilities (settings, etc.)
+│   ├── Providers/        # Storage provider system (isolated)
+│   ├── REST/             # REST API controllers (provider-agnostic)
+│   │   └── Publish/      # Publish workflow controllers
+│   ├── Services/         # Business logic services (provider-agnostic)
+│   ├── Sync/             # Sync/export logic
+│   │   └── Blueprint/    # Blueprint generation
+│   └── Utilities/        # Helper utilities (Playground-compatible)
+│
+├── assets/
+│   ├── src/              # JavaScript source (primary logic layer)
+│   │   ├── admin-common/ # Shared admin code
+│   │   ├── admin-settings/ # Settings page
+│   │   ├── publish/      # Main publish feature
+│   │   │   ├── components/ # React components
+│   │   │   ├── hooks/    # Custom React hooks
+│   │   │   ├── steps/    # Workflow step functions
+│   │   │   ├── utils/    # Utilities (DOM, assets, etc.)
+│   │   │   └── workflows/ # Workflow orchestration
+│   │   ├── providers/    # Provider implementations (isolated)
+│   │   ├── contexts/     # React contexts
+│   │   ├── hooks/        # Shared hooks
+│   │   ├── utils/        # Shared utilities
+│   │   └── components/   # Shared components
+│   └── build/            # Compiled assets (generated)
+│
+└── tests/                # Test files
+```
+
+## Dependencies
+
+**PHP:**
+- WordPress 6.4+
+- PHP 7.4+ (8.1+ recommended)
+
+**JavaScript:**
+- React 18
+- WordPress Components
+- parse5 (HTML parsing - critical for browser-based generation)
+- p-retry (retry logic)
+- idb (IndexedDB wrapper - Playground-compatible storage)
+- uuid (UUID generation)
+
+## Build Configuration
+
+**Webpack:**
+- Disables code splitting (all code in single bundles)
+- Dynamic imports set to `eager` mode
+- No chunk files created
+- Source maps removed from node_modules code
+- Minification controlled via `MINIFY` env var (default: false for easier debugging)
