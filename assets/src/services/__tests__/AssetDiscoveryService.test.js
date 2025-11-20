@@ -26,13 +26,15 @@ describe( 'AssetDiscoveryService - Pure Functions', () => {
 		} );
 
 		test( 'should return slug as-is if no slash', () => {
-			expect( normalizePluginSlug( 'hello-dolly' ) ).toBe( 'hello-dolly' );
+			expect( normalizePluginSlug( 'hello-dolly' ) ).toBe(
+				'hello-dolly'
+			);
 		} );
 
 		test( 'should handle multiple slashes', () => {
-			expect(
-				normalizePluginSlug( 'some-plugin/subdir/file.php' )
-			).toBe( 'some-plugin' );
+			expect( normalizePluginSlug( 'some-plugin/subdir/file.php' ) ).toBe(
+				'some-plugin'
+			);
 		} );
 	} );
 
@@ -140,10 +142,7 @@ describe( 'AssetDiscoveryService - Pure Functions', () => {
 
 	describe( 'filterBuiltInPlugins', () => {
 		test( 'should filter out aether plugin', () => {
-			const plugins = [
-				{ slug: 'aether' },
-				{ slug: 'custom-plugin' },
-			];
+			const plugins = [ { slug: 'aether' }, { slug: 'custom-plugin' } ];
 
 			const result = filterBuiltInPlugins( plugins );
 
@@ -434,7 +433,11 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 				'plugin',
 				{}
 			);
-			expect( mockCheckWpOrg ).toHaveBeenCalledWith( 'theme1', 'theme', {} );
+			expect( mockCheckWpOrg ).toHaveBeenCalledWith(
+				'theme1',
+				'theme',
+				{}
+			);
 
 			expect( result ).toEqual( [
 				{
