@@ -16,14 +16,21 @@ require_once dirname( __DIR__ ) . '/vendor/yoast/phpunit-polyfills/phpunitpolyfi
 // Define test environment root.
 $_test_root = dirname( __DIR__ );
 
-// Look for wp-tests-config.php in the plugin root.
-if ( file_exists( $_test_root . '/wp-tests-config.php' ) ) {
-	define( 'WP_TESTS_CONFIG_FILE_PATH', $_test_root . '/wp-tests-config.php' );
+// Path to the WordPress tests directory.
+// Use environment variable if set (CI), otherwise use wp-phpunit package (local).
+if ( ! defined( 'WP_TESTS_DIR' ) ) {
+	$_tests_dir = getenv( 'WP_TESTS_DIR' );
+	if ( ! $_tests_dir ) {
+		$_tests_dir = dirname( __DIR__ ) . '/vendor/wp-phpunit/wp-phpunit';
+	}
+	define( 'WP_TESTS_DIR', $_tests_dir );
 }
 
-// Path to the WordPress tests directory - use wp-phpunit package.
-if ( ! defined( 'WP_TESTS_DIR' ) ) {
-	define( 'WP_TESTS_DIR', dirname( __DIR__ ) . '/vendor/wp-phpunit/wp-phpunit' );
+// Look for wp-tests-config.php in the WordPress tests directory or plugin root.
+if ( file_exists( WP_TESTS_DIR . '/wp-tests-config.php' ) ) {
+	define( 'WP_TESTS_CONFIG_FILE_PATH', WP_TESTS_DIR . '/wp-tests-config.php' );
+} elseif ( file_exists( $_test_root . '/wp-tests-config.php' ) ) {
+	define( 'WP_TESTS_CONFIG_FILE_PATH', $_test_root . '/wp-tests-config.php' );
 }
 
 // Load WordPress test functions.
