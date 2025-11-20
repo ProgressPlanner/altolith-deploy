@@ -533,6 +533,127 @@ export async function myStep(jobId, config) {
 // Add default value
 ```
 
+## Code Testability Guidelines
+
+### General Principles
+
+**Make code testable by design, not as an afterthought.**
+
+1. **Prefer pure functions** - Functions that:
+   - Take inputs as parameters (no hidden dependencies)
+   - Return outputs (no side effects)
+   - Always produce same output for same input
+   - Example: `sanitizeKeyForStatus(key)`, `isExcludedUrl(url)`
+
+2. **Use dependency injection** - Pass dependencies as parameters:
+   ```javascript
+   // Bad: Hard-coded dependency
+   function processData() {
+       const data = localStorage.getItem('key');
+       return JSON.parse(data);
+   }
+
+   // Good: Dependency injected
+   function processData(storage) {
+       const data = storage.get('key');
+       return data;
+   }
+   ```
+
+3. **Abstract browser APIs** - Create thin wrappers:
+   - `storage.js` - Wraps localStorage
+   - `apiFetch` - Already abstracted via utils/api.js
+   - Makes mocking easy in tests
+
+4. **Separate pure logic from side effects**:
+   ```javascript
+   // Bad: Mixed concerns
+   function processAndSave(html) {
+       const processed = html.replace(...);
+       localStorage.setItem('result', processed);
+       return processed;
+   }
+
+   // Good: Separated
+   function processHtml(html) {  // Pure, testable
+       return html.replace(...);
+   }
+
+   function saveResult(processed, storage) {  // Side effect isolated
+       storage.set('result', processed);
+   }
+   ```
+
+### What to Test
+
+**Always write tests for:**
+- Pure utility functions (htmlProcessor, assetExclusions, etc.)
+- Business logic functions
+- Data transformations
+- Configuration validation
+- Edge cases and error conditions
+
+**Don't worry about testing:**
+- React hooks with complex dependencies (usePublishController)
+- High-level orchestration functions (uploadFilesWithProgress)
+- Simple pass-through wrappers
+
+### Testing Utilities Already Available
+
+**Storage abstraction** (`assets/src/utils/storage.js`):
+```javascript
+import { storage } from '../../utils/storage';
+
+// In production code
+storage.set('key', value);
+const data = storage.get('key', defaultValue);
+
+// In tests
+jest.mock('../../utils/storage', () => ({
+    storage: {
+        get: jest.fn(),
+        set: jest.fn(),
+        // ... other methods
+    }
+}));
+```
+
+### Test File Organization
+
+- Co-locate tests with source code
+- Tests go in `__tests__/` subdirectory
+- Test file naming: `filename.test.js` for `filename.js`
+- Example: `assets/src/utils/__tests__/storage.test.js`
+
+### Example: Making Code Testable
+
+**Before (Hard to test):**
+```javascript
+function processAndUpload() {
+    const html = fetch('/page').then(r => r.text());
+    const processed = processHtml(html);
+    localStorage.setItem('result', processed);
+    return uploadToServer(processed);
+}
+```
+
+**After (Easy to test):**
+```javascript
+// Pure function - easy to test
+export function processHtml(html, siteUrl) {
+    // ... processing logic
+    return processed;
+}
+
+// Composition with injected dependencies
+async function processAndUpload(fetcher, storage, uploader) {
+    const html = await fetcher('/page');
+    const processed = processHtml(html);
+    storage.set('result', processed);
+    return uploader(processed);
+}
+```
+
 ## WP-CLI Commands
 
 ```bash
