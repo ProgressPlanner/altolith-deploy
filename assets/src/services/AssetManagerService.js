@@ -23,16 +23,11 @@ export function normalizeAssetData( assetData ) {
 		return { existsOnR2: false };
 	}
 
-	// Extract snake_case property using bracket notation to avoid camelcase linting error
-	const snakeCaseValue = assetData.exists_on_r2;
-	const { existsOnR2, ...rest } = assetData;
-
-	// Remove snake_case property from rest
-	delete rest.exists_on_r2;
+	const { exists_on_r2, existsOnR2, ...rest } = assetData;
 
 	return {
 		...rest,
-		existsOnR2: existsOnR2 || snakeCaseValue || false,
+		existsOnR2: existsOnR2 || exists_on_r2 || false,
 	};
 }
 

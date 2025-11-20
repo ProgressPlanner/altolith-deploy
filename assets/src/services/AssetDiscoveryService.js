@@ -44,8 +44,8 @@ export function getActiveTheme( themes ) {
 /**
  * Filter assets by WordPress.org status.
  *
- * @param {Array<Object>} assets    Array of assets with from_wporg property.
- * @param {boolean}       fromWpOrg True to get WordPress.org assets, false for custom.
+ * @param {Array<Object>} assets     Array of assets with from_wporg property.
+ * @param {boolean}       fromWpOrg  True to get WordPress.org assets, false for custom.
  * @return {Array<Object>} Filtered assets.
  */
 export function filterByWpOrgStatus( assets, fromWpOrg ) {
@@ -129,10 +129,10 @@ export function getSiteName() {
  */
 export class AssetDiscoveryService {
 	/**
-	 * @param {Function} apiFetch      WordPress apiFetch function.
-	 * @param {Function} checkWpOrg    Function to check if asset is from WordPress.org.
-	 * @param {Object}   wporgCache    WordPress.org cache instance.
-	 * @param {Function} getSiteNameFn Function to get site name (optional, defaults to getSiteName).
+	 * @param {Function} apiFetch       WordPress apiFetch function.
+	 * @param {Function} checkWpOrg     Function to check if asset is from WordPress.org.
+	 * @param {Object}   wporgCache     WordPress.org cache instance.
+	 * @param {Function} getSiteNameFn  Function to get site name (optional, defaults to getSiteName).
 	 */
 	constructor( apiFetch, checkWpOrg, wporgCache, getSiteNameFn = null ) {
 		this.apiFetch = apiFetch;
@@ -252,9 +252,7 @@ export class AssetDiscoveryService {
 
 		const wporgPlugins = wporgAssets
 			.filter( ( asset ) => asset.assetType === 'plugin' )
-			.filter(
-				( plugin ) => filterBuiltInPlugins( [ plugin ] ).length > 0
-			)
+			.filter( ( plugin ) => filterBuiltInPlugins( [ plugin ] ).length > 0 )
 			.map( toBlueprintSlugFormat );
 
 		const wporgThemes = wporgAssets
