@@ -6,7 +6,7 @@
  * @package
  */
 
-import { getStaticSiteUrlsHandler } from '../getStaticSiteUrlsStep';
+import { handler as getStaticSiteUrlsHandler } from '../../jobs/publishStaticSite/phases/discover/steps/getStaticSiteUrls';
 
 // Mock apiFetch
 jest.mock( '../../../utils/api', () => ( {

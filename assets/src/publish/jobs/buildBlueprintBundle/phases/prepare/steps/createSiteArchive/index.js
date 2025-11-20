@@ -11,8 +11,9 @@
  * @package
  */
 
-import apiFetch from '../../utils/api';
-import { getArchiveProgressCache } from '../../utils/archiveProgressCache';
+import { addFilter } from '@wordpress/hooks';
+import apiFetch from '../../../../../../../utils/api';
+import { getArchiveProgressCache } from '../../../../../../../utils/archiveProgressCache';
 
 /**
  * Create site archive step handler (modular approach).
@@ -23,7 +24,7 @@ import { getArchiveProgressCache } from '../../utils/archiveProgressCache';
  * @param {Function} context.setStepProgress  Step progress updater.
  * @return {Promise<Object>} Step result.
  */
-export async function createSiteArchiveHandler( context ) {
+export async function handler( context ) {
 	const { discoveredAssets, setStatusMessage, setStepProgress } = context;
 	const progressCache = getArchiveProgressCache();
 
@@ -366,3 +367,21 @@ export async function createSiteArchiveHandler( context ) {
 
 	return finalizeResponse.data || {};
 }
+
+/**
+ * Register createSiteArchive step for prepare phase
+ */
+addFilter(
+	'aether.publish.buildBlueprintBundle.prepare.steps.register',
+	'aether/build-blueprint-bundle-create-site-archive-step',
+	( steps ) => {
+		steps.push( {
+			id: 'createSiteArchive',
+			label: 'Create Site Archive',
+			description: 'Create wp-content.zip with database and custom assets',
+			dependencies: [],
+			handler,
+		} );
+		return steps;
+	}
+);

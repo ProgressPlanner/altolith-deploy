@@ -7,9 +7,9 @@
  * @package
  */
 
-import { applyFilters } from '@wordpress/hooks';
-import apiFetch from '../../utils/api';
-import { calculateOverallProgress } from '../utils/progressManager';
+import { addFilter, applyFilters } from '@wordpress/hooks';
+import apiFetch from '../../../../../../../utils/api';
+import { calculateOverallProgress } from '../../../../../../utils/progressManager';
 
 /**
  * Upload static site files step handler.
@@ -24,7 +24,7 @@ import { calculateOverallProgress } from '../utils/progressManager';
  * @param {Function} context.removeMessage         Message remover.
  * @return {Promise<Object>} Step result with uploaded files.
  */
-export async function uploadStaticSiteFilesHandler( context ) {
+export async function handler( context ) {
 	const {
 		processStaticSiteUrls,
 		urls, // From getStaticSiteUrlsHandler (workflow) or currentStatus (tests)
@@ -325,3 +325,21 @@ export async function uploadStaticSiteFilesHandler( context ) {
 
 	return filteredResult;
 }
+
+/**
+ * Register uploadStaticFiles step for staticSite phase
+ */
+addFilter(
+	'aether.publish.uploadAssets.staticSite.steps.register',
+	'aether/upload-assets-upload-static-files-step',
+	( steps ) => {
+		steps.push( {
+			id: 'uploadStaticFiles',
+			label: 'Upload Static Files',
+			description: 'Generate and upload static HTML files to providers',
+			dependencies: [],
+			handler,
+		} );
+		return steps;
+	}
+);

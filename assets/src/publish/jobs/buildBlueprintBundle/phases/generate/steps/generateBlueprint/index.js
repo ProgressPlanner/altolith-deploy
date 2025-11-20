@@ -7,7 +7,8 @@
  * @package
  */
 
-import apiFetch from '../../utils/api';
+import { addFilter } from '@wordpress/hooks';
+import apiFetch from '../../../../../../../utils/api';
 
 /**
  * Generate blueprint step handler.
@@ -20,7 +21,7 @@ import apiFetch from '../../utils/api';
  * @param {string}   context.zipSize               Size of wp-content.zip from createSiteArchive step.
  * @return {Promise<Object>} Step result with blueprint bundle data.
  */
-export async function generateBlueprintHandler( context ) {
+export async function handler( context ) {
 	const {
 		generateBlueprintJson,
 		setStatusMessage,
@@ -86,3 +87,21 @@ export async function generateBlueprintHandler( context ) {
 		blueprintBundle: response.data,
 	};
 }
+
+/**
+ * Register generateBlueprint step for generate phase
+ */
+addFilter(
+	'aether.publish.buildBlueprintBundle.generate.steps.register',
+	'aether/build-blueprint-bundle-generate-blueprint-step',
+	( steps ) => {
+		steps.push( {
+			id: 'generateBlueprint',
+			label: 'Generate Blueprint',
+			description: 'Create blueprint-bundle.zip with blueprint.json',
+			dependencies: [],
+			handler,
+		} );
+		return steps;
+	}
+);

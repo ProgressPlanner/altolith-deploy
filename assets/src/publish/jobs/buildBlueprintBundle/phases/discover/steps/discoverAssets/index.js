@@ -7,6 +7,8 @@
  * @package
  */
 
+import { addFilter } from '@wordpress/hooks';
+
 /**
  * Discover assets step handler.
  *
@@ -15,7 +17,7 @@
  * @param {Function} context.setStatusMessage Status message updater.
  * @return {Promise<Object>} Step result with discovered assets.
  */
-export async function discoverAssetsHandler( context ) {
+export async function handler( context ) {
 	const { api, setStatusMessage } = context;
 
 	setStatusMessage(
@@ -73,3 +75,21 @@ export async function discoverAssetsHandler( context ) {
 		discoveredAssets: assets,
 	};
 }
+
+/**
+ * Register discoverAssets step for discover phase
+ */
+addFilter(
+	'aether.publish.buildBlueprintBundle.discover.steps.register',
+	'aether/build-blueprint-bundle-discover-assets-step',
+	( steps ) => {
+		steps.push( {
+			id: 'discoverAssets',
+			label: 'Discover Assets',
+			description: 'Find custom plugins and themes',
+			dependencies: [],
+			handler,
+		} );
+		return steps;
+	}
+);

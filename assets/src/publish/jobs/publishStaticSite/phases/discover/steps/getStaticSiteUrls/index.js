@@ -7,7 +7,8 @@
  * @package
  */
 
-import apiFetch from '../../utils/api';
+import { addFilter } from '@wordpress/hooks';
+import apiFetch from '../../../../../../../utils/api';
 
 /**
  * Get static site URLs step handler.
@@ -16,7 +17,7 @@ import apiFetch from '../../utils/api';
  * @param {Function} context.setStatusMessage Status message updater.
  * @return {Promise<Object>} Step result with discovered URLs.
  */
-export async function getStaticSiteUrlsHandler( context ) {
+export async function handler( context ) {
 	const { setStatusMessage } = context;
 
 	setStatusMessage(
@@ -49,3 +50,21 @@ export async function getStaticSiteUrlsHandler( context ) {
 		urlsCount: urls.length,
 	};
 }
+
+/**
+ * Register getStaticSiteUrls step for discover phase
+ */
+addFilter(
+	'aether.publish.publishStaticSite.discover.steps.register',
+	'aether/publish-static-site-get-static-site-urls-step',
+	( steps ) => {
+		steps.push( {
+			id: 'getStaticSiteUrls',
+			label: 'Get Static Site URLs',
+			description: 'Discover all URLs to convert to static HTML',
+			dependencies: [],
+			handler,
+		} );
+		return steps;
+	}
+);

@@ -17,8 +17,7 @@ import { calculateOverallProgress } from '../utils/progressManager';
 import { debug, debugError } from '../../utils/debug';
 import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
-import { PUBLISH_WORKFLOW, STEP_HANDLERS } from '../workflows/publishWorkflow';
-import { executeWorkflow } from '../workflows/workflowExecutor';
+import { executeJobs } from '../workflows/jobExecutor';
 import {
 	preparePublishConfiguration,
 	determineProvidersByDeploymentType,
@@ -441,22 +440,38 @@ export function usePublishController( publishState ) {
 
 			// Set up workflow lifecycle callbacks for UI updates
 			const workflowOptions = {
-				onStepStart: ( stepId ) => {
-					debug( `[Workflow] Step starting: ${ stepId }` );
+				onJobStart: ( jobId ) => {
+					debug( `[Workflow] Job starting: ${ jobId }` );
+				},
+				onJobComplete: ( jobId, state ) => {
+					debug( `[Workflow] Job completed: ${ jobId }`, state );
+				},
+				onPhaseStart: ( jobId, phaseId ) => {
+					debug( `[Workflow] Phase starting: ${ jobId }.${ phaseId }` );
+				},
+				onPhaseComplete: ( jobId, phaseId, state ) => {
+					debug( `[Workflow] Phase completed: ${ jobId }.${ phaseId }`, state );
+				},
+				onStepStart: ( jobId, phaseId, stepId ) => {
+					debug( `[Workflow] Step starting: ${ jobId }.${ phaseId }.${ stepId }` );
+					// Update UI with step ID for backwards compatibility
+					// The old system used just stepId, so we'll use that for UI updates
 					updateFromStep( stepId );
 				},
-				onStepComplete: ( stepId, result ) => {
-					debug( `[Workflow] Step completed: ${ stepId }`, result );
+				onStepComplete: ( jobId, phaseId, stepId, result ) => {
+					debug( `[Workflow] Step completed: ${ jobId }.${ phaseId }.${ stepId }`, result );
 				},
 				onProgress: ( current ) => {
 					setOverallProgressValue( current );
 				},
 			};
 
-			// Execute the workflow
-			await executeWorkflow(
-				PUBLISH_WORKFLOW,
-				STEP_HANDLERS,
+			// Execute jobs using new job system
+			// For now, execute all three jobs in sequence
+			// Later, jobs can be selected based on deployment type
+			const jobsToExecute = [ 'buildBlueprintBundle', 'publishStaticSite', 'uploadAssets' ];
+			await executeJobs(
+				jobsToExecute,
 				workflowContext,
 				workflowOptions
 			);

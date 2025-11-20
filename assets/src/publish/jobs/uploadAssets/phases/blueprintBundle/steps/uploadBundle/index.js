@@ -1,5 +1,5 @@
 /**
- * Upload Site Archive Step
+ * Upload Bundle Step
  *
  * Uploads blueprint-bundle.zip file to configured provider(s).
  * Supports multiple provider instances with different deployment configurations.
@@ -7,13 +7,13 @@
  * @package
  */
 
-import { applyFilters } from '@wordpress/hooks';
+import { addFilter, applyFilters } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
-import { calculateOverallProgress } from '../utils/progressManager';
-import { formatFileSize } from '../../utils/helpers';
+import { calculateOverallProgress } from '../../../../../../utils/progressManager';
+import { formatFileSize } from '../../../../../../../utils/helpers';
 
 /**
- * Upload site archive step handler (stateless).
+ * Upload bundle step handler (stateless).
  *
  * @param {Object}   context                          Execution context.
  * @param {Function} context.handleSiteArchiveUpload  Archive upload function.
@@ -23,7 +23,7 @@ import { formatFileSize } from '../../utils/helpers';
  * @param {Object}   context.blueprintBundle          Blueprint bundle data from generateBlueprint step.
  * @return {Promise<Object>} Step result.
  */
-export async function uploadSiteArchiveHandler( context ) {
+export async function handler( context ) {
 	const {
 		handleSiteArchiveUpload,
 		blueprintBundleProviders = [], // NEW: Array of provider IDs
@@ -204,3 +204,21 @@ export async function uploadSiteArchiveHandler( context ) {
 		failureCount,
 	};
 }
+
+/**
+ * Register uploadBundle step for blueprintBundle phase
+ */
+addFilter(
+	'aether.publish.uploadAssets.blueprintBundle.steps.register',
+	'aether/upload-assets-upload-bundle-step',
+	( steps ) => {
+		steps.push( {
+			id: 'uploadBundle',
+			label: 'Upload Blueprint Bundle',
+			description: 'Upload blueprint-bundle.zip to providers',
+			dependencies: [],
+			handler,
+		} );
+		return steps;
+	}
+);

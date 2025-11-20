@@ -6,7 +6,7 @@
  * @package
  */
 
-import { generateBlueprintHandler } from '../generateBlueprintStep';
+import { handler as generateBlueprintHandler } from '../../jobs/buildBlueprintBundle/phases/generate/steps/generateBlueprint';
 import apiFetch from '../../../utils/api';
 
 // Mock apiFetch

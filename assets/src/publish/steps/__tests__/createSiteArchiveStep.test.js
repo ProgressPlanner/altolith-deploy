@@ -7,7 +7,7 @@
  * @package
  */
 
-import { createSiteArchiveHandler } from '../createSiteArchiveStep';
+import { handler as createSiteArchiveHandler } from '../../jobs/buildBlueprintBundle/phases/prepare/steps/createSiteArchive';
 import apiFetch from '../../../utils/api';
 import { getArchiveProgressCache } from '../../../utils/archiveProgressCache';
 

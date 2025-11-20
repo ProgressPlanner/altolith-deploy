@@ -1,17 +1,57 @@
 /**
  * Progress Manager
  *
- * Dynamically calculates progress based on PUBLISH_WORKFLOW configuration.
- * Automatically adapts to workflow changes without hardcoded values.
+ * Calculates progress based on step progress values.
+ * With the job-based workflow system, progress is calculated differently.
  *
  * @package
  */
 
 import { MAX_PROGRESS } from '../../utils/constants';
-import {
-	getCumulativeProgress,
-	getStepWeight,
-} from '../workflows/publishWorkflow';
+
+// Hardcoded step weights for backwards compatibility
+// TODO: Remove this once job-based progress calculation is fully implemented
+// Order matters! Steps are executed in this order.
+const STEP_WEIGHTS = {
+	discoverAssets: 5,        // Phase 1: 0-5%
+	getStaticSiteUrls: 8,     // Phase 2: 5-13%
+	createSiteArchive: 20,    // Phase 3: 13-33%
+	generateBlueprint: 1,     // Phase 4: 33-34%
+	uploadSiteArchive: 16,    // Phase 5: 34-50% (parallel with uploadStaticSiteFiles)
+	uploadStaticSiteFiles: 50, // Phase 5: 34-84% (parallel with uploadSiteArchive)
+};
+
+/**
+ * Get cumulative progress before a step.
+ *
+ * @param {string} step Step identifier.
+ * @return {number} Cumulative progress (0-100).
+ */
+function getCumulativeProgress( step ) {
+	const stepOrder = Object.keys( STEP_WEIGHTS );
+	const stepIndex = stepOrder.indexOf( step );
+
+	if ( stepIndex === -1 ) {
+		return 0;
+	}
+
+	let cumulative = 0;
+	for ( let i = 0; i < stepIndex; i++ ) {
+		cumulative += STEP_WEIGHTS[ stepOrder[ i ] ];
+	}
+
+	return cumulative;
+}
+
+/**
+ * Get weight allocated to a step.
+ *
+ * @param {string} step Step identifier.
+ * @return {number} Step weight (0-100).
+ */
+function getStepWeight( step ) {
+	return STEP_WEIGHTS[ step ] || 0;
+}
 
 /**
  * Calculate overall progress percentage based on current step and step progress.
