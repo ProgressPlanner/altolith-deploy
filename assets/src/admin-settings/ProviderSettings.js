@@ -9,20 +9,16 @@
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Spinner, Button } from '@wordpress/components';
+import { Button } from '@wordpress/components';
 import ProviderInstanceCard from './components/ProviderInstanceCard';
 import ProviderConfigModal from './components/ProviderConfigModal';
 import AddProviderInstanceModal from './components/AddProviderInstanceModal';
+import LoadingSpinner from '../components/LoadingSpinner';
 import apiFetch from '../utils/api';
 import { colors, spacing, fontWeight } from '../utils/styles';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 
 // Styles - extracted to module level for performance
-const loadingContainerStyle = {
-	textAlign: 'center',
-	padding: spacing.xl,
-};
-
 const emptyMessageStyle = {
 	color: colors.textSecondary,
 };
@@ -311,11 +307,8 @@ export default function ProviderSettings( {
 
 	if ( loading ) {
 		return (
-			<div
-				className="aether-provider-settings aether-provider-settings--loading"
-				style={ loadingContainerStyle }
-			>
-				<Spinner className="aether-provider-settings__spinner" />
+			<div className="aether-provider-settings aether-provider-settings--loading">
+				<LoadingSpinner />
 			</div>
 		);
 	}

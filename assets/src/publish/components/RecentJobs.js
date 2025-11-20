@@ -13,12 +13,12 @@ import {
 	fontSize,
 	fontWeight,
 	commonStyles,
-	statusBadgeStyles,
 	noticeStyles,
 	createFlexStyle,
 	utilityStyles,
 } from '../../utils/styles';
 import { formatJobTime, getStatusDisplay } from '../utils/jobFormatters';
+import StatusBadge from '../../components/StatusBadge';
 
 // Styles - extracted to module level for performance
 const sectionStyle = {
@@ -94,11 +94,6 @@ const codeStyle = {
 	fontSize: fontSize.base,
 	fontFamily: 'monospace',
 };
-
-const badgeStyle = ( type ) => ( {
-	...statusBadgeStyles.base,
-	...( statusBadgeStyles[ type ] || statusBadgeStyles.info ),
-} );
 
 const jobDetailsStyle = {
 	...createFlexStyle( 'column', '0.75rem' ),
@@ -250,14 +245,11 @@ export default function RecentJobs( { jobs = [], loading = false } ) {
 										</code>
 									</div>
 									<div className="aether-recent-jobs__job-status">
-										<span
-											className={ `aether-recent-jobs__badge aether-recent-jobs__badge--${ statusDisplay.class }` }
-											style={ badgeStyle(
-												statusDisplay.class
-											) }
-										>
-											{ statusDisplay.label }
-										</span>
+										<StatusBadge
+											type={ statusDisplay.class }
+											label={ statusDisplay.label }
+											className="aether-recent-jobs__badge"
+										/>
 									</div>
 								</div>
 
