@@ -11,10 +11,6 @@ jobs:
     name: PHPStan Static Analysis
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        php: ['7.4', '8.3']
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,7 +18,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: '8.3'
           coverage: none
 
       - name: Install dependencies
