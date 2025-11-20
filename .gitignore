@@ -9,3 +9,4 @@ coverage/
 # PHPUnit
 .phpunit.cache/
 coverage/
+/wp-tests-config.php

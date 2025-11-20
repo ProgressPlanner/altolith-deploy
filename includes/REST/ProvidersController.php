@@ -192,10 +192,10 @@ class ProvidersController
 	{
 		$deploymentType = \sanitize_key($request->get_param('deployment_type'));
 		$registry = ProviderRegistry::getInstance();
-		
+
 		// Get enabled instances for this deployment type
 		$instance = $registry->getEnabledInstanceForDeploymentType($deploymentType);
-		
+
 		if ($instance) {
 			// Get provider metadata for the instance's provider type
 			$provider = $registry->getProviderForInstance($instance['instanceId']);

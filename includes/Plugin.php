@@ -712,7 +712,7 @@ class Plugin
 
 			// Copy the file directly (internal call to avoid HTTP overhead).
 			$copyResult = $this->copyBlueprintBundleFile($sourcePath, $exportPath);
-			
+
 			if (!$copyResult) {
 				// Log error if copy failed (the REST endpoint will verify and return error)
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
