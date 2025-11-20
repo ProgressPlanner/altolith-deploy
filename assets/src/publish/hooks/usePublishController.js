@@ -331,13 +331,7 @@ export function usePublishController( publishState ) {
 				throw error;
 			}
 		},
-		[
-			api,
-			updateFromStep,
-			setOverallProgressValue, // Still used for git upload strategy
-			// 			gitUpload,
-			// setStepProgress removed from deps as progress is handled at step handler level
-		]
+		[]
 	);
 
 	const startPublish = useCallback( async () => {
