@@ -126,12 +126,21 @@ export async function uploadStaticSiteFilesHandler( context ) {
 			// Fetch provider-specific deployment URL
 			// Each provider may have a different public URL (e.g., custom domain, worker endpoint)
 			let providerDeploymentUrl = staticSiteUrl || null;
+			let providerName = providerIdItem; // Fallback to ID
+			let providerConfig = {};
+
 			try {
 				const providerResponse = await apiFetch( {
 					path: `/aether/site-exporter/providers/${ providerIdItem }`,
 				} );
 				if ( providerResponse.success && providerResponse.config ) {
-					const providerConfig = providerResponse.config || {};
+					providerConfig = providerResponse.config || {};
+					// Get provider instance name or type for display
+					providerName =
+						providerConfig.instance_name ||
+						providerConfig.provider_type ||
+						providerIdItem;
+
 					// Get deployment URL from provider config (same logic as AbstractProvider.getDeploymentUrl)
 					if ( providerConfig.pages_url ) {
 						providerDeploymentUrl = providerConfig.pages_url;
@@ -153,6 +162,17 @@ export async function uploadStaticSiteFilesHandler( context ) {
 				// This maintains backwards compatibility
 			}
 
+			// Show provider context banner
+			if ( setStatusMessage && providers.length > 1 ) {
+				setStatusMessage(
+					`Uploading to ${ providerName } (Provider ${
+						providerIndex + 1
+					} of ${ providers.length })`,
+					'info',
+					'upload-provider-context'
+				);
+			}
+
 			// Update progress context before processing this provider
 			// This allows the progress callback in usePublishController.js to adjust
 			// progress based on the current provider index and total providers
@@ -172,6 +192,16 @@ export async function uploadStaticSiteFilesHandler( context ) {
 				blueprintDataForStatic,
 				removeMessage
 			);
+
+			// Show provider completion summary
+			if ( setStatusMessage && providers.length > 1 ) {
+				const filesUploaded = result.filesUploaded || 0;
+				setStatusMessage(
+					`Completed ${ providerName }: ${ filesUploaded } files uploaded`,
+					'success',
+					`upload-provider-${ providerIndex }-summary`
+				);
+			}
 
 			// After processing, ensure progress reflects completed provider
 			// The progress callback should have already updated it, but we ensure it's correct

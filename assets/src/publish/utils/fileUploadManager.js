@@ -16,6 +16,8 @@ import { createConcurrencyLimiter } from '../../utils/concurrencyLimiter';
 import { calculateFileHash } from '../../utils/fileHash';
 import { shouldSkipUpload } from '../../utils/manifestManager';
 import { debugWarn } from '../../utils/debug';
+import { formatFileSize } from '../../utils/helpers';
+import { delay } from '../../utils/delay';
 
 /**
  * Sanitize a storage key for use in status message keys.
@@ -188,11 +190,16 @@ export async function uploadFilesWithProgress( {
 					filesSkipped++;
 					totalProcessed++;
 
+					const fileSize = blob.size;
+					const sizeStr = formatFileSize( fileSize );
+
 					if ( setStatusMessage ) {
 						setStatusMessage(
-							`Skipped unchanged file ${ displayName }`,
+							`Skipped unchanged file ${ displayName } (${ sizeStr })`,
 							'success',
-							uploadKey
+							uploadKey,
+							undefined,
+							{ fileSize }
 						);
 					}
 
@@ -242,18 +249,20 @@ export async function uploadFilesWithProgress( {
 				}
 
 				const fileSize = blob.size;
+				const sizeStr = formatFileSize( fileSize );
 
 				// Create status message with unique key for progress tracking
 				if ( setStatusMessage ) {
 					setStatusMessage(
-						`Uploading ${ displayName }`,
+						`Uploading ${ displayName } (${ sizeStr })`,
 						'progress',
 						uploadKey,
 						{
 							percent: 0,
 							loaded: 0,
 							total: fileSize,
-						}
+						},
+						{ fileSize }
 					);
 				}
 
@@ -267,14 +276,15 @@ export async function uploadFilesWithProgress( {
 						// Update progress in status message
 						if ( setStatusMessage ) {
 							setStatusMessage(
-								`Uploading ${ displayName }`,
+								`Uploading ${ displayName } (${ sizeStr })`,
 								'progress',
 								uploadKey,
 								{
 									percent,
 									loaded,
 									total,
-								}
+								},
+								{ fileSize }
 							);
 						}
 					},
@@ -311,24 +321,77 @@ export async function uploadFilesWithProgress( {
 					metadata
 				);
 
-				// Upload file with progress tracking
-				const uploadResult = await storageService.upload(
-					key,
-					blob,
-					uploadOptions
-				);
+				// Upload file with retry logic (max 3 attempts with exponential backoff)
+				const maxRetries = 3;
+				let uploadResult = null;
+				let lastError = null;
 
-				if ( uploadResult.success ) {
+				for ( let attempt = 1; attempt <= maxRetries; attempt++ ) {
+					try {
+						uploadResult = await storageService.upload(
+							key,
+							blob,
+							uploadOptions
+						);
+
+						if ( uploadResult.success ) {
+							// Upload succeeded, break out of retry loop
+							break;
+						}
+
+						// Upload returned failure, prepare for retry
+						lastError = uploadResult.error || 'Upload failed';
+
+						// If this isn't the last attempt, retry with backoff
+						if ( attempt < maxRetries ) {
+							const delayMs = Math.pow( 2, attempt - 1 ) * 1000; // 1s, 2s, 4s
+							if ( setStatusMessage ) {
+								setStatusMessage(
+									`Retrying ${ displayName } (${ sizeStr }) - attempt ${
+										attempt + 1
+									}/${ maxRetries }`,
+									'info',
+									uploadKey,
+									undefined,
+									{ fileSize }
+								);
+							}
+							await delay( delayMs );
+						}
+					} catch ( error ) {
+						lastError = error.message || error;
+
+						// If this isn't the last attempt, retry with backoff
+						if ( attempt < maxRetries ) {
+							const delayMs = Math.pow( 2, attempt - 1 ) * 1000; // 1s, 2s, 4s
+							if ( setStatusMessage ) {
+								setStatusMessage(
+									`Retrying ${ displayName } (${ sizeStr }) - attempt ${
+										attempt + 1
+									}/${ maxRetries }`,
+									'info',
+									uploadKey,
+									undefined,
+									{ fileSize }
+								);
+							}
+							await delay( delayMs );
+						}
+					}
+				}
+
+				if ( uploadResult && uploadResult.success ) {
 					filesUploaded++;
 					totalProcessed++;
 
 					// Update message to success (remove progress)
 					if ( setStatusMessage ) {
 						setStatusMessage(
-							`Uploaded ${ displayName }`,
+							`Uploaded ${ displayName } (${ sizeStr })`,
 							'success',
 							uploadKey,
-							null // Remove progress
+							null, // Remove progress
+							{ fileSize }
 						);
 					}
 
@@ -371,12 +434,16 @@ export async function uploadFilesWithProgress( {
 
 					results.push( uploadResultData );
 				} else {
-					// Upload failed
+					// Upload failed after all retries
 					filesFailed++;
+
+					const errorMessage =
+						lastError ||
+						'Upload failed after ${ maxRetries } attempts';
 
 					if ( setStatusMessage ) {
 						setStatusMessage(
-							`Failed to upload ${ displayName }`,
+							`Failed to upload ${ displayName } after ${ maxRetries } attempts`,
 							'error',
 							uploadKey,
 							null
@@ -388,7 +455,7 @@ export async function uploadFilesWithProgress( {
 						success: false,
 						skipped: false,
 						url: null,
-						error: uploadResult.error || 'Upload failed',
+						error: errorMessage,
 					} );
 				}
 			} catch ( error ) {

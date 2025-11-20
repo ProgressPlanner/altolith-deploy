@@ -337,7 +337,7 @@ export default function ProviderSettings( {
 				</div>
 				<Button
 					className="aether-provider-settings__add-button"
-					variant="primary"
+					variant="tertiary"
 					onClick={ () => setIsAddModalOpen( true ) }
 				>
 					{ __( 'Add Provider Instance', 'aether-site-exporter' ) }

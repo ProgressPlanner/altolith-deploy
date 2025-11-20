@@ -207,12 +207,20 @@ export function PublishProvider( { children } ) {
 	/**
 	 * Add message to activity log history
 	 *
-	 * @param {string}      message Message text (can include HTML)
-	 * @param {string}      type    Message type: 'info' | 'success' | 'error' | 'progress'
-	 * @param {string|null} key     Optional key to identify message for later updates
+	 * @param {string}      message  Message text (can include HTML)
+	 * @param {string}      type     Message type: 'info' | 'success' | 'error' | 'progress'
+	 * @param {string|null} key      Optional key to identify message for later updates
+	 * @param {*}           progress Optional progress value
+	 * @param {Object}      metadata Optional metadata (e.g., provider info, file size)
 	 */
 	const addMessage = useCallback(
-		( message, type = 'info', key = null, progress = undefined ) => {
+		(
+			message,
+			type = 'info',
+			key = null,
+			progress = undefined,
+			metadata = undefined
+		) => {
 			setMessageHistory( ( prev ) => [
 				{
 					id: Date.now() + Math.random(),
@@ -220,6 +228,7 @@ export function PublishProvider( { children } ) {
 					type,
 					key,
 					...( progress !== undefined && { progress } ), // Only include progress if provided
+					...( metadata !== undefined && { metadata } ),
 					timestamp: Date.now(),
 				},
 				...prev, // Prepend to show newest first
@@ -238,9 +247,16 @@ export function PublishProvider( { children } ) {
 	 * @param {string|null} newMessage New message text (optional, keeps existing if null)
 	 * @param {string|null} newType    New message type (optional, keeps existing if null)
 	 * @param {Object|null} progress   Progress data { percent, loaded, total } (optional)
+	 * @param {Object}      metadata   Optional metadata to merge (e.g., provider info)
 	 */
 	const updateMessage = useCallback(
-		( key, newMessage = null, newType = null, progress = undefined ) => {
+		(
+			key,
+			newMessage = null,
+			newType = null,
+			progress = undefined,
+			metadata = undefined
+		) => {
 			setMessageHistory( ( prev ) =>
 				prev.map( ( item ) => {
 					if ( item.key !== key ) {
@@ -258,6 +274,13 @@ export function PublishProvider( { children } ) {
 						delete updated.progress;
 					} else if ( progress !== undefined ) {
 						updated.progress = progress;
+					}
+					// Merge metadata - allow updating specific fields
+					if ( metadata !== undefined ) {
+						updated.metadata = {
+							...( item.metadata || {} ),
+							...metadata,
+						};
 					}
 					return updated;
 				} )
@@ -322,12 +345,20 @@ export function PublishProvider( { children } ) {
 	 * Also adds the message to activity log history.
 	 * If a key is provided and a message with that key exists, updates it instead of adding new.
 	 *
-	 * @param {string}      message Status message to display
-	 * @param {string}      type    Message type: 'info' | 'success' | 'error' | 'progress'
-	 * @param {string|null} key     Optional key to identify message for later updates
+	 * @param {string}      message  Status message to display
+	 * @param {string}      type     Message type: 'info' | 'success' | 'error' | 'progress'
+	 * @param {string|null} key      Optional key to identify message for later updates
+	 * @param {*}           progress Optional progress value
+	 * @param {Object}      metadata Optional metadata (e.g., provider info, file size)
 	 */
 	const setStatusMessage = useCallback(
-		( message, type, key = null, progress = undefined ) => {
+		(
+			message,
+			type,
+			key = null,
+			progress = undefined,
+			metadata = undefined
+		) => {
 			setCurrentStatusMessage( message );
 			if ( message ) {
 				if ( key ) {
@@ -353,6 +384,13 @@ export function PublishProvider( { children } ) {
 								} else if ( progress !== undefined ) {
 									updated.progress = progress;
 								}
+								// Merge metadata - allow updating specific fields
+								if ( metadata !== undefined ) {
+									updated.metadata = {
+										...( item.metadata || {} ),
+										...metadata,
+									};
+								}
 								return updated;
 							} );
 						}
@@ -364,6 +402,7 @@ export function PublishProvider( { children } ) {
 								type,
 								key,
 								...( progress !== undefined && { progress } ),
+								...( metadata !== undefined && { metadata } ),
 								timestamp: Date.now(),
 							},
 							...prev,
@@ -371,7 +410,7 @@ export function PublishProvider( { children } ) {
 					} );
 				} else {
 					// No key, just add message
-					addMessage( message, type, null, progress );
+					addMessage( message, type, null, progress, metadata );
 				}
 			}
 		},
