@@ -159,17 +159,40 @@ export default function PublishProgressModal( {
 			providerSummaryMessages.length || 1
 		);
 
-		// Count files from success messages (files that were uploaded)
-		// Look for messages with type 'success' that contain file size metadata
+		// Count total files uploaded across all providers
+		// Parse provider summary messages like "Completed Production: 100 files uploaded"
+		// to get actual total (e.g., 100 files × 3 providers = 300 total uploads)
+		let fileCount = 0;
+		if ( providerSummaryMessages.length > 0 ) {
+			// Multi-provider: sum file counts from each provider summary
+			providerSummaryMessages.forEach( ( msg ) => {
+				const match = msg.message?.match(
+					/(\d+)\s+files?\s+uploaded/i
+				);
+				if ( match ) {
+					fileCount += parseInt( match[ 1 ], 10 );
+				}
+			} );
+		} else {
+			// Single provider or no summaries yet: count unique file messages
+			const uploadedFileMessages = messageHistory.filter(
+				( msg ) =>
+					msg.type === 'success' &&
+					msg.metadata?.fileSize &&
+					msg.key?.startsWith( 'upload-' )
+			);
+			fileCount = uploadedFileMessages.length;
+		}
+
+		// Calculate total size from metadata
+		// Note: Size is correct even in multi-provider case because
+		// same file updates same message key with same metadata
 		const uploadedFileMessages = messageHistory.filter(
 			( msg ) =>
 				msg.type === 'success' &&
 				msg.metadata?.fileSize &&
 				msg.key?.startsWith( 'upload-' )
 		);
-		const fileCount = uploadedFileMessages.length;
-
-		// Calculate total size from metadata
 		const totalSize = uploadedFileMessages.reduce( ( sum, msg ) => {
 			return sum + ( msg.metadata?.fileSize || 0 );
 		}, 0 );
