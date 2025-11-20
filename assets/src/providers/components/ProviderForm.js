@@ -16,7 +16,6 @@ import {
 } from '@wordpress/element';
 import {
 	Button,
-	Notice,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
 	__experimentalToolsPanel as ToolsPanel,
 	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
@@ -24,11 +23,25 @@ import {
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
+import StatusNotice from '../../components/StatusNotice';
 import apiFetch from '../../utils/api';
 import { validateConfig } from '../../utils/validation';
 import ProviderField from './ProviderField';
 import { useSuccessTimeout } from '../../hooks/useSuccessTimeout';
 import { colors, spacing, createFlexStyle } from '../../utils/styles';
+
+// Styles - extracted to module level for performance
+const formStyle = {
+	...createFlexStyle( 'column', spacing.md ),
+};
+
+const actionsStyle = {
+	...createFlexStyle( 'row', spacing.sm ),
+	justifyContent: 'flex-end',
+	marginTop: spacing.md,
+	paddingTop: spacing.md,
+	borderTop: `1px solid ${ colors.borderLight }`,
+};
 
 /**
  * Provider Form Component.
@@ -234,18 +247,6 @@ function ProviderForm( {
 		}
 	};
 
-	const formStyle = {
-		...createFlexStyle( 'column', spacing.md ),
-	};
-
-	const actionsStyle = {
-		...createFlexStyle( 'row', spacing.sm ),
-		justifyContent: 'flex-end',
-		marginTop: spacing.md,
-		paddingTop: spacing.md,
-		borderTop: `1px solid ${ colors.borderLight }`,
-	};
-
 	return (
 		<form
 			className="aether-provider-form"
@@ -253,28 +254,26 @@ function ProviderForm( {
 			style={ formStyle }
 		>
 			{ error && (
-				<Notice
-					className="aether-provider-form__notice aether-provider-form__notice--error"
+				<StatusNotice
 					status="error"
+					message={ error }
 					isDismissible
 					onRemove={ () => setError( null ) }
-				>
-					{ error }
-				</Notice>
+					className="aether-provider-form__notice"
+				/>
 			) }
 
 			{ success && (
-				<Notice
-					className="aether-provider-form__notice aether-provider-form__notice--success"
+				<StatusNotice
 					status="success"
-					isDismissible
-					onRemove={ () => setSuccess( false ) }
-				>
-					{ __(
+					message={ __(
 						'Settings saved successfully!',
 						'aether-site-exporter'
 					) }
-				</Notice>
+					isDismissible
+					onRemove={ () => setSuccess( false ) }
+					className="aether-provider-form__notice"
+				/>
 			) }
 
 			{ /* Hook: before_fields */ }
