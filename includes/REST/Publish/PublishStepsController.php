@@ -1194,7 +1194,7 @@ class PublishStepsController
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error Response object.
 	 */
-	public function generateBlueprintBundle(WP_REST_Request $request): \WP_REST_Response|WP_Error
+	public function generateBlueprintBundle(WP_REST_Request $request)
 	{
 		$params = $request->get_json_params();
 		$blueprintData = $params['blueprintData'] ?? [];

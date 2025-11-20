@@ -312,7 +312,10 @@ export default function ProviderInstanceCard( {
 						</div>
 					) }
 				</div>
-				<div className="aether-provider-instance-card__toggle" style={ { margin: '0.25rem 0' } }>
+				<div
+					className="aether-provider-instance-card__toggle"
+					style={ { marginTop: '1rem' } }
+				>
 					<ToggleControl
 						className="aether-provider-instance-card__toggle-control"
 						label={ __(
