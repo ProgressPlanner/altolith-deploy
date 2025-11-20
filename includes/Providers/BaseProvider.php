@@ -54,8 +54,10 @@ abstract class BaseProvider
 	 * - 'label': Human-readable label
 	 * - 'name': Field name (used in form submission, e.g., 'export_path' or 'foo[bar]')
 	 * - 'sanitize_callback': Callable to sanitize the value before saving
-	 * - 'get': Callable to retrieve the current value
-	 * - 'set': Callable to save the value
+	 *
+	 * Note: Field values are read directly from instance configs stored in
+	 * `aether_site_exporter_settings['providers'][instanceId]`. The `get`/`set`
+	 * closures are no longer used in the instance-based architecture.
 	 *
 	 * @return array<array<string, mixed>> Array of field definitions
 	 */

@@ -103,21 +103,6 @@ class LocalFilesystemProvider extends BaseProvider
 					}
 					return \sanitize_text_field($value);
 				},
-				'get' => function () {
-					$settings = \get_option('aether_site_exporter_settings', []);
-					return $settings['providers'][self::PROVIDER_ID]['export_path'] ?? 'blueprint-bundle/bundle.zip';
-				},
-				'set' => function ($value) {
-					$settings = \get_option('aether_site_exporter_settings', []);
-					if (! isset($settings['providers']) || ! \is_array($settings['providers'])) {
-						$settings['providers'] = [];
-					}
-					if (! isset($settings['providers'][self::PROVIDER_ID]) || ! \is_array($settings['providers'][self::PROVIDER_ID])) {
-						$settings['providers'][self::PROVIDER_ID] = [];
-					}
-					$settings['providers'][self::PROVIDER_ID]['export_path'] = $value;
-					\update_option('aether_site_exporter_settings', $settings);
-				},
 			],
 			[
 				'type' => 'text',
@@ -130,21 +115,6 @@ class LocalFilesystemProvider extends BaseProvider
 						return '';
 					}
 					return \esc_url_raw($value);
-				},
-				'get' => function () {
-					$settings = \get_option('aether_site_exporter_settings', []);
-					return $settings['providers'][self::PROVIDER_ID]['public_url'] ?? '';
-				},
-				'set' => function ($value) {
-					$settings = \get_option('aether_site_exporter_settings', []);
-					if (! isset($settings['providers']) || ! \is_array($settings['providers'])) {
-						$settings['providers'] = [];
-					}
-					if (! isset($settings['providers'][self::PROVIDER_ID]) || ! \is_array($settings['providers'][self::PROVIDER_ID])) {
-						$settings['providers'][self::PROVIDER_ID] = [];
-					}
-					$settings['providers'][self::PROVIDER_ID]['public_url'] = $value;
-					\update_option('aether_site_exporter_settings', $settings);
 				},
 			],
 			[
@@ -166,21 +136,6 @@ class LocalFilesystemProvider extends BaseProvider
 						return 'static/';
 					}
 					return \sanitize_text_field($value);
-				},
-				'get' => function () {
-					$settings = \get_option('aether_site_exporter_settings', []);
-					return $settings['providers'][self::PROVIDER_ID]['static_files_path'] ?? 'static/';
-				},
-				'set' => function ($value) {
-					$settings = \get_option('aether_site_exporter_settings', []);
-					if (! isset($settings['providers']) || ! \is_array($settings['providers'])) {
-						$settings['providers'] = [];
-					}
-					if (! isset($settings['providers'][self::PROVIDER_ID]) || ! \is_array($settings['providers'][self::PROVIDER_ID])) {
-						$settings['providers'][self::PROVIDER_ID] = [];
-					}
-					$settings['providers'][self::PROVIDER_ID]['static_files_path'] = $value;
-					\update_option('aether_site_exporter_settings', $settings);
 				},
 			],
 		];

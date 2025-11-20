@@ -74,19 +74,13 @@ class ExportService
 			);
 		}
 
-		// Get export path from provider registry.
+		// Get export path from enabled instance config.
 		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->getForDeploymentType('blueprint_bundle');
+		$instance = $registry->getEnabledInstanceForDeploymentType('blueprint_bundle');
 		$exportPath = 'blueprint-bundle/bundle.zip';
 
-		if ($provider) {
-			$settings = $provider->getSettings();
-			foreach ($settings as $field) {
-				if (($field['name'] ?? '') === 'export_path' && isset($field['get']) && \is_callable($field['get'])) {
-					$exportPath = \call_user_func($field['get']);
-					break;
-				}
-			}
+		if ($instance && isset($instance['config']['export_path'])) {
+			$exportPath = $instance['config']['export_path'];
 		}
 
 		// Security: Validate export_path is a string and doesn't contain null bytes
@@ -1459,19 +1453,13 @@ class ExportService
 	 */
 	public function finalizeArchive(string $zipPath)
 	{
-		// Get export path from provider registry.
+		// Get export path from enabled instance config.
 		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->getForDeploymentType('blueprint_bundle');
+		$instance = $registry->getEnabledInstanceForDeploymentType('blueprint_bundle');
 		$exportPath = 'blueprint-bundle/bundle.zip';
 
-		if ($provider) {
-			$settings = $provider->getSettings();
-			foreach ($settings as $field) {
-				if (($field['name'] ?? '') === 'export_path' && isset($field['get']) && \is_callable($field['get'])) {
-					$exportPath = \call_user_func($field['get']);
-					break;
-				}
-			}
+		if ($instance && isset($instance['config']['export_path'])) {
+			$exportPath = $instance['config']['export_path'];
 		}
 
 		// Security: Validate export_path.

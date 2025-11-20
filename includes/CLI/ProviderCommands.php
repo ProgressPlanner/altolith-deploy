@@ -31,12 +31,13 @@ class ProviderCommands
 	 *
 	 * @when after_wp_load
 	 *
-	 * @param array $args       Positional arguments.
-	 * @param array $assoc_args Named arguments.
+	 * @param array<int, string> $args       Positional arguments.
+	 * @param array<string, mixed> $assoc_args Named arguments.
+	 * @return void
 	 */
-	public function convertProviderConfigs($args, $assoc_args)
+	public function convertProviderConfigs(array $args, array $assoc_args): void // phpcs:ignore Squiz.NamingConventions.ValidVariableName.NotCamelCaps -- WP-CLI convention
 	{
-		$dryRun = isset($assoc_args['dry-run']);
+		$dryRun = isset($assoc_args['dry-run']); // phpcs:ignore Squiz.NamingConventions.ValidVariableName.NotCamelCaps -- WP-CLI convention
 
 		WP_CLI::log('Converting provider configurations to instance-based format...');
 		WP_CLI::log('');
@@ -100,7 +101,10 @@ class ProviderCommands
 			WP_CLI::log(WP_CLI::colorize('%yDry run - no changes made.%n'));
 			WP_CLI::log('');
 			WP_CLI::log('New configuration would be:');
-			WP_CLI::log(\wp_json_encode($converted, JSON_PRETTY_PRINT));
+			$json = \wp_json_encode($converted, JSON_PRETTY_PRINT);
+			if ($json !== false) {
+				WP_CLI::log($json);
+			}
 		} else {
 			// Save converted configs.
 			$settings['providers'] = $converted;

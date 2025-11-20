@@ -442,71 +442,37 @@ class PublishStepsController
 	 * Get static site URL for HTML generation.
 	 *
 	 * Calculates the deployment URL dynamically based on:
-	 * - custom_domain (if configured - this is the public-facing URL)
+	 * - public_url (local filesystem - where the static site will be accessed)
+	 * - custom_domain (R2/S3 - this is the public-facing URL)
 	 * - base_url from provider configuration as fallback
 	 *
 	 * @return string Static site URL (e.g., "https://example.com/").
 	 */
 	private function getStaticSiteUrl(): string
 	{
-		// Get provider from registry for static_site deployment type.
+		// Get enabled instance for static_site deployment type.
 		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->getForDeploymentType('static_site');
+		$instance = $registry->getEnabledInstanceForDeploymentType('static_site');
 
-		// If no provider is configured, use relative URLs.
-		if (! $provider) {
+		// If no enabled instance is configured, use relative URLs.
+		if (! $instance) {
 			return '';
 		}
 
-		// Try to get base URL from provider configuration using get callbacks.
-		$baseUrl = '';
-		$settings = $provider->getSettings();
+		$config = $instance['config'];
 
 		// Priority order:
 		// 1. public_url (local filesystem - where the static site will be accessed)
 		// 2. custom_domain (R2/S3 - this is the public-facing URL)
 		// 3. base_url from provider configuration
-		foreach ($settings as $field) {
-			$fieldName = $field['name'] ?? '';
-			if (empty($fieldName)) {
-				continue;
-			}
+		$baseUrl = '';
 
-			if ($fieldName === 'public_url' && isset($field['get']) && \is_callable($field['get'])) {
-				$value = \call_user_func($field['get']);
-				if (! empty($value)) {
-					$baseUrl = $value;
-					break;
-				}
-			}
-		}
-
-		// Try custom_domain if public_url not found.
-		if (empty($baseUrl)) {
-			foreach ($settings as $field) {
-				$fieldName = $field['name'] ?? '';
-				if ($fieldName === 'custom_domain' && isset($field['get']) && \is_callable($field['get'])) {
-					$value = \call_user_func($field['get']);
-					if (! empty($value)) {
-						$baseUrl = $value;
-						break;
-					}
-				}
-			}
-		}
-
-		// Try base_url as fallback.
-		if (empty($baseUrl)) {
-			foreach ($settings as $field) {
-				$fieldName = $field['name'] ?? '';
-				if ($fieldName === 'base_url' && isset($field['get']) && \is_callable($field['get'])) {
-					$value = \call_user_func($field['get']);
-					if (! empty($value)) {
-						$baseUrl = $value;
-						break;
-					}
-				}
-			}
+		if (! empty($config['public_url'])) {
+			$baseUrl = $config['public_url'];
+		} elseif (! empty($config['custom_domain'])) {
+			$baseUrl = $config['custom_domain'];
+		} elseif (! empty($config['base_url'])) {
+			$baseUrl = $config['base_url'];
 		}
 
 		// If no base URL found, return empty string (will use relative URLs).
@@ -1311,19 +1277,13 @@ class PublishStepsController
 		 */
 		$blueprintData = \apply_filters('aether_blueprint_data', $blueprintData, $archiveResult);
 
-		// Get bundle filename from provider registry.
+		// Get bundle filename from enabled instance config.
 		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->getForDeploymentType('blueprint_bundle');
+		$instance = $registry->getEnabledInstanceForDeploymentType('blueprint_bundle');
 		$exportPath = 'blueprint-bundle/bundle.zip';
 
-		if ($provider) {
-			$settings = $provider->getSettings();
-			foreach ($settings as $field) {
-				if (($field['name'] ?? '') === 'export_path' && isset($field['get']) && \is_callable($field['get'])) {
-					$exportPath = \call_user_func($field['get']);
-					break;
-				}
-			}
+		if ($instance && isset($instance['config']['export_path'])) {
+			$exportPath = $instance['config']['export_path'];
 		}
 		$bundleFilename = \basename($exportPath);
 
