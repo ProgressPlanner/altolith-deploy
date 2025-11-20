@@ -20,6 +20,12 @@ import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 import { PUBLISH_WORKFLOW, STEP_HANDLERS } from '../workflows/publishWorkflow';
 import { executeWorkflow } from '../workflows/workflowExecutor';
+import {
+	preparePublishConfiguration,
+	determineProvidersByDeploymentType,
+	buildWorkflowContext,
+	determineSiteUrl,
+} from '../utils/publishConfiguration';
 
 export function usePublishController( publishState ) {
 	const {
@@ -387,11 +393,15 @@ export function usePublishController( publishState ) {
 				path: '/aether/site-exporter/settings',
 			} );
 
-			if ( settingsResponse.success ) {
-				const settings = settingsResponse.settings || {};
-				const providerTypes = settings.provider_types || {};
-				const currentStorageProviderId = providerTypes.storage || '';
-				setStorageProviderId( currentStorageProviderId );
+			// Use pure function to extract configuration
+			const publishConfig = preparePublishConfiguration(
+				settingsResponse,
+				storageProviderId
+			);
+
+			// Update storage provider ID state
+			if ( settingsResponse.success && publishConfig.storageProviderId ) {
+				setStorageProviderId( publishConfig.storageProviderId );
 			}
 
 			// Fetch asset status
@@ -414,58 +424,28 @@ export function usePublishController( publishState ) {
 			// Activate the first step immediately to update UI
 			updateFromStep( 'discoverAssets' );
 
-			// Fetch static site provider settings
-			const fetchedStaticSiteProviderId =
-				settingsResponse.settings?.provider_types?.static_site || '';
+			// Get current site URL for static site generation (use pure function)
+			const siteUrl = determineSiteUrl( config, window.location.origin );
 
-			// Get current site URL for static site generation
-			const siteUrl = config.playgroundUrl || window.location.origin;
+			// Get providerId for backwards compatibility (from pure function result)
+			const providerId = publishConfig.providerId;
 
-			// Get providerId for backwards compatibility
-			const providerId = fetchedStaticSiteProviderId || storageProviderId;
-
-			// Get enabled provider instances for each deployment type from settings
-			const getEnabledInstancesForDeploymentType = ( deploymentType ) => {
-				try {
-					// Get all provider configs from settings
-					const providerConfigs =
-						settingsResponse.settings?.providers || {};
-
-					// Filter enabled instances that support this deployment type
-					return Object.entries( providerConfigs )
-						.filter( ( [ , instanceConfig ] ) => {
-							// Check if enabled (default to true if not specified)
-							const isEnabled = instanceConfig.enabled !== false;
-
-							// Check if supports this deployment type
-							const deploymentTypes =
-								instanceConfig.deployment_types || [];
-							const supportsType =
-								deploymentTypes.includes( deploymentType );
-
-							return isEnabled && supportsType;
-						} )
-						.map( ( [ id ] ) => id );
-				} catch ( error ) {
-					debugError(
-						`Failed to get instances for deployment type ${ deploymentType }:`,
-						error
-					);
-					return [];
-				}
-			};
-
-			// Get arrays of instance IDs for each deployment type
-			const staticSiteProviders = getEnabledInstancesForDeploymentType(
-				DEPLOYMENT_TYPES.STATIC_SITE
+			// Get arrays of instance IDs for each deployment type (use pure function)
+			const providersByType = determineProvidersByDeploymentType(
+				publishConfig.providerConfigs,
+				[
+					DEPLOYMENT_TYPES.STATIC_SITE,
+					DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE,
+					DEPLOYMENT_TYPES.EDGE_FUNCTIONS,
+				]
 			);
+
+			const staticSiteProviders =
+				providersByType[ DEPLOYMENT_TYPES.STATIC_SITE ];
 			const blueprintBundleProviders =
-				getEnabledInstancesForDeploymentType(
-					DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE
-				);
-			const edgeFunctionProviders = getEnabledInstancesForDeploymentType(
-				DEPLOYMENT_TYPES.EDGE_FUNCTIONS
-			);
+				providersByType[ DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE ];
+			const edgeFunctionProviders =
+				providersByType[ DEPLOYMENT_TYPES.EDGE_FUNCTIONS ];
 
 			debug( '[Workflow] Providers by deployment type:', {
 				staticSite: staticSiteProviders,
@@ -473,32 +453,31 @@ export function usePublishController( publishState ) {
 				edgeFunctions: edgeFunctionProviders,
 			} );
 
-			// Build context object with all dependencies for step handlers
-			const workflowContext = {
-				// API and state
-				api,
-				siteUrl,
-				providerId, // Legacy: single provider ID for backwards compat
+			// Build context object with all dependencies for step handlers (use pure function)
+			const workflowContext = buildWorkflowContext(
+				{
+					siteUrl,
+					providerId,
+					staticSiteProviders,
+					blueprintBundleProviders,
+					edgeFunctionProviders,
+				},
+				{
+					api,
+					processStaticSiteUrls,
+					generateBlueprintJson,
+					updateStaticSiteProgressContext,
+					assetManager,
+					setStatusMessage,
+					setStepProgress,
+					handleSiteArchiveUpload,
+					handleStaticSiteFilesUpload,
+				}
+			);
 
-				// Provider arrays by deployment type (from PHP registry via REST API)
-				staticSiteProviders,
-				blueprintBundleProviders,
-				edgeFunctionProviders,
-
-				// Hooks and utilities
-				processStaticSiteUrls,
-				generateBlueprintJson,
-				handleSiteArchiveUpload,
-
-				// Provider progress context updater
-				updateStaticSiteProgressContext,
-
-				// UI callbacks
-				setStatusMessage,
-				setStepProgress,
-				setOverallProgressValue,
-				removeMessage,
-			};
+			// Add additional UI callbacks not in pure function (to avoid coupling)
+			workflowContext.setOverallProgressValue = setOverallProgressValue;
+			workflowContext.removeMessage = removeMessage;
 
 			// Execute full workflow - individual steps check provider deployment_types
 
