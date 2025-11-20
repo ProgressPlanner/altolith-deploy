@@ -221,14 +221,6 @@ export default function ProviderInstanceCard( {
 					className="aether-provider-instance-card__header-content"
 					style={ headerContentStyle }
 				>
-					{ /* Provider Type Tag */ }
-					<div
-						className="aether-provider-instance-card__type-tag"
-						style={ providerTypeTagStyle }
-					>
-						{ provider.name }
-					</div>
-
 					<div
 						className="aether-provider-instance-card__header-row"
 						style={ headerRowStyle }
@@ -283,6 +275,18 @@ export default function ProviderInstanceCard( {
 							</div>
 						) }
 					</div>
+				</div>
+			</CardHeader>
+
+			<CardBody className="aether-provider-instance-card__body">
+				<div className="aether-provider-instance-card__body-content-tags">
+					{ /* Provider Type Tag */ }
+					<div
+						className="aether-provider-instance-card__type-tag"
+						style={ providerTypeTagStyle }
+					>
+						{ provider.name }
+					</div>
 
 					{ /* Deployment Types Tags */ }
 					{ enabledDeploymentTypes.length > 0 && (
@@ -308,10 +312,7 @@ export default function ProviderInstanceCard( {
 						</div>
 					) }
 				</div>
-			</CardHeader>
-
-			<CardBody className="aether-provider-instance-card__body">
-				<div className="aether-provider-instance-card__toggle">
+				<div className="aether-provider-instance-card__toggle" style={ { margin: '0.25rem 0' } }>
 					<ToggleControl
 						className="aether-provider-instance-card__toggle-control"
 						label={ __(
