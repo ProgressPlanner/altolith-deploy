@@ -24,7 +24,7 @@ describe( 'usePublishReadiness', () => {
 			value: {
 				provider_types: {
 					storage: 'local-filesystem',
-					static_site: 'github-pages',
+					static_site: 'local-filesystem',
 				},
 				staticSite: {
 					enabled: true,

@@ -18,8 +18,8 @@ describe( 'settingsHelpers', () => {
 						bucket_name: 'my-bucket',
 						access_key_id: 'key123',
 					},
-					gitlab: {
-						project_id: '123',
+					'local-filesystem:other-instance': {
+						bucket_name: 'other-bucket',
 					},
 				},
 			};
@@ -41,7 +41,7 @@ describe( 'settingsHelpers', () => {
 				},
 			};
 
-			const result = getProviderSettings( settings, 'gitlab' );
+			const result = getProviderSettings( settings, 'non-existent-provider' );
 
 			expect( result ).toEqual( {} );
 		} );
@@ -74,8 +74,8 @@ describe( 'settingsHelpers', () => {
 					'local-filesystem': {
 						bucket_name: 'old-bucket',
 					},
-					gitlab: {
-						project_id: '123',
+					'local-filesystem:other-instance': {
+						bucket_name: 'other-bucket',
 					},
 				},
 			};
@@ -94,7 +94,7 @@ describe( 'settingsHelpers', () => {
 			expect( result.providers[ 'local-filesystem' ] ).toEqual(
 				providerSettings
 			);
-			expect( result.providers.gitlab ).toEqual( { project_id: '123' } );
+			expect( result.providers[ 'local-filesystem:other-instance' ] ).toEqual( { bucket_name: 'other-bucket' } );
 			expect( result._saveKey ).toBe( 'providers' );
 			expect( result._saveValue ).toEqual( result.providers );
 		} );
@@ -123,7 +123,7 @@ describe( 'settingsHelpers', () => {
 			const allSettings = {
 				otherSetting: 'value',
 				providers: {
-					gitlab: { project_id: '123' },
+					'local-filesystem:other-instance': { bucket_name: 'other-bucket' },
 				},
 			};
 
@@ -138,7 +138,7 @@ describe( 'settingsHelpers', () => {
 			);
 
 			expect( result.otherSetting ).toBe( 'value' );
-			expect( result.providers.gitlab ).toEqual( { project_id: '123' } );
+			expect( result.providers[ 'local-filesystem:other-instance' ] ).toEqual( { bucket_name: 'other-bucket' } );
 		} );
 
 		test( 'sets _saveKey and _saveValue correctly', () => {
