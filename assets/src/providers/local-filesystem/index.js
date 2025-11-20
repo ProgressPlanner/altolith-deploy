@@ -22,7 +22,7 @@ const provider = new LocalFilesystemProvider();
 addFilter(
 	'aether.provider.upload',
 	'aether/local-filesystem',
-	( handler, providerId, config ) => {
+	( handler, providerId ) => {
 		// Only handle requests for local-filesystem providers (including instances)
 		if ( ! providerId || ! providerId.startsWith( 'local-filesystem' ) ) {
 			return handler; // Return existing handler or null

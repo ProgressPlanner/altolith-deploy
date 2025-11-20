@@ -209,12 +209,14 @@ describe( 'uploadStaticSiteFilesHandler', () => {
 			// Mock different upload results
 			mockProcessStaticSiteUrls.mockImplementation(
 				async ( urls, deploymentUrl, providerId ) => {
-					const fileCount =
-						providerId === 'provider-1'
-							? 100
-							: providerId === 'provider-2'
-							? 50
-							: 75;
+					let fileCount;
+					if ( providerId === 'provider-1' ) {
+						fileCount = 100;
+					} else if ( providerId === 'provider-2' ) {
+						fileCount = 50;
+					} else {
+						fileCount = 75;
+					}
 					return {
 						success: true,
 						filesUploaded: fileCount,

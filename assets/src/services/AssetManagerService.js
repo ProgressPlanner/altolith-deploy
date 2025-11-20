@@ -23,10 +23,12 @@ export function normalizeAssetData( assetData ) {
 		return { existsOnR2: false };
 	}
 
+	// eslint-disable-next-line camelcase
 	const { exists_on_r2, existsOnR2, ...rest } = assetData;
 
 	return {
 		...rest,
+		// eslint-disable-next-line camelcase
 		existsOnR2: existsOnR2 || exists_on_r2 || false,
 	};
 }

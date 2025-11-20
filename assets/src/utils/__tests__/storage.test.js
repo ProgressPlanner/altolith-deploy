@@ -46,11 +46,12 @@ describe( 'Storage Abstraction Layer', () => {
 
 		test( 'should handle localStorage errors gracefully', () => {
 			// Mock localStorage.getItem to throw
-			jest.spyOn( Storage.prototype, 'getItem' ).mockImplementation(
-				() => {
-					throw new Error( 'Storage error' );
-				}
-			);
+			jest.spyOn(
+				Object.getPrototypeOf( localStorage ),
+				'getItem'
+			).mockImplementation( () => {
+				throw new Error( 'Storage error' );
+			} );
 
 			const result = storage.get( 'test-key' );
 
@@ -115,13 +116,14 @@ describe( 'Storage Abstraction Layer', () => {
 
 		test( 'should return false on quota exceeded error', () => {
 			// Mock localStorage.setItem to throw quota error
-			jest.spyOn( Storage.prototype, 'setItem' ).mockImplementation(
-				() => {
-					const error = new Error( 'QuotaExceededError' );
-					error.name = 'QuotaExceededError';
-					throw error;
-				}
-			);
+			jest.spyOn(
+				Object.getPrototypeOf( localStorage ),
+				'setItem'
+			).mockImplementation( () => {
+				const error = new Error( 'QuotaExceededError' );
+				error.name = 'QuotaExceededError';
+				throw error;
+			} );
 
 			const result = storage.set( 'test-key', { large: 'data' } );
 
@@ -129,11 +131,12 @@ describe( 'Storage Abstraction Layer', () => {
 		} );
 
 		test( 'should return false on other localStorage errors', () => {
-			jest.spyOn( Storage.prototype, 'setItem' ).mockImplementation(
-				() => {
-					throw new Error( 'Storage error' );
-				}
-			);
+			jest.spyOn(
+				Object.getPrototypeOf( localStorage ),
+				'setItem'
+			).mockImplementation( () => {
+				throw new Error( 'Storage error' );
+			} );
 
 			const result = storage.set( 'test-key', { data: 'value' } );
 
@@ -172,11 +175,12 @@ describe( 'Storage Abstraction Layer', () => {
 		} );
 
 		test( 'should return false on localStorage error', () => {
-			jest.spyOn( Storage.prototype, 'removeItem' ).mockImplementation(
-				() => {
-					throw new Error( 'Storage error' );
-				}
-			);
+			jest.spyOn(
+				Object.getPrototypeOf( localStorage ),
+				'removeItem'
+			).mockImplementation( () => {
+				throw new Error( 'Storage error' );
+			} );
 
 			const result = storage.remove( 'test-key' );
 
@@ -204,7 +208,10 @@ describe( 'Storage Abstraction Layer', () => {
 		} );
 
 		test( 'should return false on localStorage error', () => {
-			jest.spyOn( Storage.prototype, 'clear' ).mockImplementation( () => {
+			jest.spyOn(
+				Object.getPrototypeOf( localStorage ),
+				'clear'
+			).mockImplementation( () => {
 				throw new Error( 'Storage error' );
 			} );
 
@@ -230,11 +237,12 @@ describe( 'Storage Abstraction Layer', () => {
 		} );
 
 		test( 'should return false on localStorage error', () => {
-			jest.spyOn( Storage.prototype, 'getItem' ).mockImplementation(
-				() => {
-					throw new Error( 'Storage error' );
-				}
-			);
+			jest.spyOn(
+				Object.getPrototypeOf( localStorage ),
+				'getItem'
+			).mockImplementation( () => {
+				throw new Error( 'Storage error' );
+			} );
 
 			const result = storage.has( 'test-key' );
 
@@ -263,7 +271,10 @@ describe( 'Storage Abstraction Layer', () => {
 		} );
 
 		test( 'should return empty array on localStorage error', () => {
-			jest.spyOn( Storage.prototype, 'key' ).mockImplementation( () => {
+			jest.spyOn(
+				Object.getPrototypeOf( localStorage ),
+				'key'
+			).mockImplementation( () => {
 				throw new Error( 'Storage error' );
 			} );
 
