@@ -55,7 +55,6 @@ class ConfigController
 
 		$config = [
 			'success'            => true,
-			'playgroundUrl'      => Plugin::getPlaygroundUrl(),
 			'publicUrl'          => \home_url(),
 			'adminUrl'           => \admin_url(),
 			'wporgCheckMethod'   => $wporgCheckMethod,

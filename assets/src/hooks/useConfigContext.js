@@ -25,16 +25,6 @@ import { ConfigContext } from '../contexts/ConfigContext';
  * @property {Function} invalidateCache - Invalidate cache
  *
  * @example
- * function MyComponent() {
- *     const { config, loading, error, refetch } = useConfigContext();
- *
- *     if (loading) return <Spinner />;
- *     if (error) return <Error message={error} onRetry={refetch} />;
- *
- *     return <div>Playground URL: {config.playgroundUrl}</div>;
- * }
- *
- * @example
  * // Optimistic update
  * function SettingsForm() {
  *     const { config, updateConfig } = useConfigContext();

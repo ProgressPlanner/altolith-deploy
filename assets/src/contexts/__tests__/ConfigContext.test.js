@@ -34,7 +34,6 @@ describe( 'ConfigContext', () => {
 		it( 'should initialize with loading state', () => {
 			apiFetch.mockResolvedValue( {
 				success: true,
-				playgroundUrl: 'https://example.com',
 				publicUrl: '',
 				adminUrl: '',
 			} );
@@ -51,7 +50,6 @@ describe( 'ConfigContext', () => {
 		it( 'should fetch config on mount', async () => {
 			apiFetch.mockResolvedValue( {
 				success: true,
-				playgroundUrl: 'https://playground.example.com',
 				publicUrl: 'https://public.example.com',
 				adminUrl: 'https://admin.example.com',
 			} );
@@ -65,7 +63,6 @@ describe( 'ConfigContext', () => {
 			} );
 
 			expect( result.current.config ).toEqual( {
-				playgroundUrl: 'https://playground.example.com',
 				publicUrl: 'https://public.example.com',
 				adminUrl: 'https://admin.example.com',
 			} );
@@ -96,7 +93,6 @@ describe( 'ConfigContext', () => {
 		it( 'should cache config for 5 minutes', async () => {
 			const mockConfig = {
 				success: true,
-				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
 			};
@@ -124,7 +120,6 @@ describe( 'ConfigContext', () => {
 		it( 'should bypass cache when refetch is called', async () => {
 			const mockConfig = {
 				success: true,
-				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
 			};
@@ -152,7 +147,6 @@ describe( 'ConfigContext', () => {
 		it( 'should invalidate cache after 5 minutes', async () => {
 			const mockConfig = {
 				success: true,
-				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
 			};
@@ -187,7 +181,6 @@ describe( 'ConfigContext', () => {
 		it( 'should deduplicate concurrent fetch requests', async () => {
 			const mockConfig = {
 				success: true,
-				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
 			};
@@ -224,7 +217,6 @@ describe( 'ConfigContext', () => {
 		it( 'should update config optimistically', async () => {
 			const initialConfig = {
 				success: true,
-				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
 			};
@@ -247,42 +239,12 @@ describe( 'ConfigContext', () => {
 			// Config should be updated immediately with merge
 			expect( result.current.config.foo ).toBe( 'bar' );
 		} );
-
-		it( 'should merge partial updates', async () => {
-			const initialConfig = {
-				success: true,
-				playgroundUrl: 'https://example.com',
-				publicUrl: '',
-				adminUrl: '',
-			};
-			apiFetch.mockResolvedValue( initialConfig );
-
-			const { result } = renderHook( () => useConfigContext(), {
-				wrapper,
-			} );
-
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
-
-			const partialUpdate = { playgroundUrl: 'https://new-url.com' };
-
-			act( () => {
-				result.current.updateConfig( partialUpdate );
-			} );
-
-			// Should merge with existing config
-			expect( result.current.config.playgroundUrl ).toBe(
-				'https://new-url.com'
-			);
-		} );
 	} );
 
 	describe( 'Cache Invalidation', () => {
 		it( 'should invalidate cache manually', async () => {
 			const mockConfig = {
 				success: true,
-				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
 			};
@@ -362,7 +324,6 @@ describe( 'ConfigContext', () => {
 			// Second call succeeds
 			const mockConfig = {
 				success: true,
-				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
 			};
@@ -382,7 +343,6 @@ describe( 'ConfigContext', () => {
 		it( 'should provide refetch method that forces fetch', async () => {
 			const initialConfig = {
 				success: true,
-				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
 			};
@@ -398,7 +358,6 @@ describe( 'ConfigContext', () => {
 
 			const updatedConfig = {
 				success: true,
-				playgroundUrl: '',
 				publicUrl: '',
 				adminUrl: '',
 			};

@@ -24,7 +24,6 @@ import {
 	preparePublishConfiguration,
 	determineProvidersByDeploymentType,
 	buildWorkflowContext,
-	determineSiteUrl,
 } from '../utils/publishConfiguration';
 
 export function usePublishController( publishState ) {
@@ -425,7 +424,7 @@ export function usePublishController( publishState ) {
 			updateFromStep( 'discoverAssets' );
 
 			// Get current site URL for static site generation (use pure function)
-			const siteUrl = determineSiteUrl( config, window.location.origin );
+			const siteUrl = window.location.origin;
 
 			// Get providerId for backwards compatibility (from pure function result)
 			const providerId = publishConfig.providerId;

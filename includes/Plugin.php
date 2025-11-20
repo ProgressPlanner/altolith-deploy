@@ -22,13 +22,6 @@ use function Aether\SiteExporter\getStorageConfig;
 class Plugin
 {
 	/**
-	 * WordPress Playground base URL.
-	 *
-	 * @var string
-	 */
-	private const PLAYGROUND_URL = 'https://static-wp.s12y.org/index.html';
-
-	/**
 	 * Plugin instance.
 	 *
 	 * @var Plugin|null
@@ -600,17 +593,6 @@ class Plugin
 				]
 			);
 		}
-	}
-
-
-	/**
-	 * Get WordPress Playground base URL.
-	 *
-	 * @return string Playground URL.
-	 */
-	public static function getPlaygroundUrl(): string
-	{
-		return self::PLAYGROUND_URL;
 	}
 
 	/**

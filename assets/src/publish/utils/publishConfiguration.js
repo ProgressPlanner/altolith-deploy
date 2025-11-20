@@ -174,17 +174,3 @@ export function buildWorkflowContext( config, dependencies ) {
 		discoveredAssets: null,
 	};
 }
-
-/**
- * Determine site URL for publish workflow
- *
- * Pure function that determines the site URL to use,
- * preferring playground URL over window location.
- *
- * @param {Object} config - Configuration object with playgroundUrl
- * @param {string} fallbackOrigin - Fallback origin (typically window.location.origin)
- * @return {string} Site URL to use
- */
-export function determineSiteUrl( config, fallbackOrigin ) {
-	return config?.playgroundUrl || fallbackOrigin;
-}

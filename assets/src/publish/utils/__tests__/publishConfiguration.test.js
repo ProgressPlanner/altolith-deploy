@@ -12,7 +12,6 @@ import {
 	getEnabledInstancesForDeploymentType,
 	determineProvidersByDeploymentType,
 	buildWorkflowContext,
-	determineSiteUrl,
 } from '../publishConfiguration';
 import { DEPLOYMENT_TYPES } from '../../../constants/deploymentTypes';
 
@@ -489,54 +488,6 @@ describe( 'publishConfiguration', () => {
 			expect( result ).toHaveProperty( 'providerId' );
 			expect( result ).toHaveProperty( 'discoveredAssets' );
 			expect( result.discoveredAssets ).toBeNull();
-		} );
-	} );
-
-	describe( 'determineSiteUrl()', () => {
-		test( 'should prefer playground URL over fallback', () => {
-			const config = {
-				playgroundUrl: 'https://playground.wordpress.net',
-			};
-
-			const result = determineSiteUrl( config, 'https://example.com' );
-
-			expect( result ).toBe( 'https://playground.wordpress.net' );
-		} );
-
-		test( 'should use fallback when playground URL is not set', () => {
-			const config = {};
-
-			const result = determineSiteUrl( config, 'https://example.com' );
-
-			expect( result ).toBe( 'https://example.com' );
-		} );
-
-		test( 'should handle null/undefined config', () => {
-			const result1 = determineSiteUrl( null, 'https://example.com' );
-			const result2 = determineSiteUrl( undefined, 'https://example.com' );
-
-			expect( result1 ).toBe( 'https://example.com' );
-			expect( result2 ).toBe( 'https://example.com' );
-		} );
-
-		test( 'should handle empty playground URL', () => {
-			const config = {
-				playgroundUrl: '',
-			};
-
-			const result = determineSiteUrl( config, 'https://example.com' );
-
-			expect( result ).toBe( 'https://example.com' );
-		} );
-
-		test( 'should handle null playground URL', () => {
-			const config = {
-				playgroundUrl: null,
-			};
-
-			const result = determineSiteUrl( config, 'https://example.com' );
-
-			expect( result ).toBe( 'https://example.com' );
 		} );
 	} );
 } );

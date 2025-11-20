@@ -104,7 +104,6 @@ export function ConfigProvider( { children } ) {
 
 				if ( response.success ) {
 					const newConfig = {
-						playgroundUrl: response.playgroundUrl || '',
 						publicUrl: response.publicUrl || '',
 						adminUrl: response.adminUrl || '',
 						...response.config, // Include any additional config fields

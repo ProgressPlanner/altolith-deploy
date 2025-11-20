@@ -20,7 +20,6 @@ import { useConfigContext } from './useConfigContext';
  *
  * @return {Object} Configuration object with loading state and config values
  * @property {boolean} loading       - Loading state
- * @property {string}  playgroundUrl - Playground URL
  * @property {string}  publicUrl     - Public URL
  * @property {string}  adminUrl      - Admin URL
  */
@@ -30,7 +29,6 @@ export function useConfig() {
 	// Return in the same format as before for backward compatibility
 	return {
 		loading,
-		playgroundUrl: config.playgroundUrl || '',
 		publicUrl: config.publicUrl || '',
 		adminUrl: config.adminUrl || '',
 		...config, // Include any additional config fields
