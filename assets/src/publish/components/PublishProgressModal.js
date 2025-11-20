@@ -21,8 +21,8 @@ import {
 	createFlexStyle,
 	utilityStyles,
 } from '../../utils/styles';
-import { formatFileSize } from '../../utils/helpers';
 import ActivityLogMessage from './ActivityLogMessage';
+import UploadStatistics from './UploadStatistics';
 
 export default function PublishProgressModal( {
 	isOpen,
@@ -148,62 +148,6 @@ export default function PublishProgressModal( {
 		} );
 	}, [ messageHistory ] );
 
-	// Calculate upload statistics from message history
-	const uploadStats = useMemo( () => {
-		// Count unique providers from summary messages
-		const providerSummaryMessages = messageHistory.filter( ( msg ) =>
-			msg.key?.startsWith( 'upload-provider-' )
-		);
-		const providerCount = Math.max(
-			1,
-			providerSummaryMessages.length || 1
-		);
-
-		// Count total files uploaded across all providers
-		// Parse provider summary messages like "Completed Production: 100 files uploaded"
-		// to get actual total (e.g., 100 files × 3 providers = 300 total uploads)
-		let fileCount = 0;
-		if ( providerSummaryMessages.length > 0 ) {
-			// Multi-provider: sum file counts from each provider summary
-			providerSummaryMessages.forEach( ( msg ) => {
-				const match = msg.message?.match(
-					/(\d+)\s+files?\s+uploaded/i
-				);
-				if ( match ) {
-					fileCount += parseInt( match[ 1 ], 10 );
-				}
-			} );
-		} else {
-			// Single provider or no summaries yet: count unique file messages
-			const uploadedFileMessages = messageHistory.filter(
-				( msg ) =>
-					msg.type === 'success' &&
-					msg.metadata?.fileSize &&
-					msg.key?.startsWith( 'upload-' )
-			);
-			fileCount = uploadedFileMessages.length;
-		}
-
-		// Calculate total size from metadata
-		// Note: Size is correct even in multi-provider case because
-		// same file updates same message key with same metadata
-		const uploadedFileMessages = messageHistory.filter(
-			( msg ) =>
-				msg.type === 'success' &&
-				msg.metadata?.fileSize &&
-				msg.key?.startsWith( 'upload-' )
-		);
-		const totalSize = uploadedFileMessages.reduce( ( sum, msg ) => {
-			return sum + ( msg.metadata?.fileSize || 0 );
-		}, 0 );
-
-		return {
-			providerCount,
-			fileCount,
-			totalSize: formatFileSize( totalSize ),
-		};
-	}, [ messageHistory ] );
-
 	if ( ! shouldShowModal ) {
 		return null;
 	}
@@ -274,37 +218,6 @@ export default function PublishProgressModal( {
 		minWidth: '3rem',
 		textAlign: 'right',
 		flexShrink: 0,
-	};
-
-	const detailsSectionStyle = {
-		marginTop: spacing.lg,
-		padding: spacing.md,
-		backgroundColor: colors.backgroundLight,
-		borderRadius: borderRadius.sm,
-		border: `1px solid ${ colors.borderLighter }`,
-		...createFlexStyle( 'row', spacing.xl ),
-		justifyContent: 'space-around',
-		flexWrap: 'wrap',
-	};
-
-	const detailItemStyle = {
-		...createFlexStyle( 'column', spacing.xs ),
-		alignItems: 'center',
-		minWidth: '120px',
-	};
-
-	const detailLabelStyle = {
-		fontSize: fontSize.xs,
-		color: colors.textMuted,
-		fontWeight: fontWeight.medium,
-		textTransform: 'uppercase',
-		letterSpacing: '0.5px',
-	};
-
-	const detailValueStyle = {
-		fontSize: fontSize.lg,
-		color: colors.text,
-		fontWeight: fontWeight.semibold,
 	};
 
 	const activityLogStyle = {
@@ -430,76 +343,10 @@ export default function PublishProgressModal( {
 								{ displayProgress }%
 							</span>
 						</div>
-
-						{ uploadStats.fileCount > 0 && (
-							<div
-								className="aether-publish-progress-modal__details"
-								style={ detailsSectionStyle }
-							>
-								<div
-									className="aether-publish-progress-modal__detail-item"
-									style={ detailItemStyle }
-								>
-									<span
-										className="aether-publish-progress-modal__detail-label"
-										style={ detailLabelStyle }
-									>
-										{ __(
-											'Providers',
-											'aether-site-exporter'
-										) }
-									</span>
-									<span
-										className="aether-publish-progress-modal__detail-value"
-										style={ detailValueStyle }
-									>
-										{ uploadStats.providerCount }
-									</span>
-								</div>
-								<div
-									className="aether-publish-progress-modal__detail-item"
-									style={ detailItemStyle }
-								>
-									<span
-										className="aether-publish-progress-modal__detail-label"
-										style={ detailLabelStyle }
-									>
-										{ __(
-											'Files Uploaded',
-											'aether-site-exporter'
-										) }
-									</span>
-									<span
-										className="aether-publish-progress-modal__detail-value"
-										style={ detailValueStyle }
-									>
-										{ uploadStats.fileCount }
-									</span>
-								</div>
-								<div
-									className="aether-publish-progress-modal__detail-item"
-									style={ detailItemStyle }
-								>
-									<span
-										className="aether-publish-progress-modal__detail-label"
-										style={ detailLabelStyle }
-									>
-										{ __(
-											'Total Size',
-											'aether-site-exporter'
-										) }
-									</span>
-									<span
-										className="aether-publish-progress-modal__detail-value"
-										style={ detailValueStyle }
-									>
-										{ uploadStats.totalSize }
-									</span>
-								</div>
-							</div>
-						) }
 					</div>
 				) }
+
+				<UploadStatistics messageHistory={ messageHistory } />
 
 				{ messageHistory.length > 0 && (
 					<div
