@@ -158,7 +158,7 @@ export async function uploadStaticSiteFilesHandler( context ) {
 					success: true,
 					filesUploaded: result.filesUploaded || 0,
 					uploadedFiles: result.uploadedFiles || [],
-				}
+				},
 			} );
 		} catch ( error ) {
 			uploadResults.push( {
@@ -167,7 +167,7 @@ export async function uploadStaticSiteFilesHandler( context ) {
 					providerId: providerIdItem,
 					success: false,
 					error: error.message,
-				}
+				},
 			} );
 		}
 	}
