@@ -5,3 +5,7 @@ node_modules
 .claude/settings.local.json
 node_modules/
 coverage/
+
+# PHPUnit
+.phpunit.cache/
+coverage/

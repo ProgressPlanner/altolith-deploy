@@ -185,11 +185,22 @@ npm run test:js:watch
 # Run JavaScript tests with coverage
 npm run test:js:coverage
 
-# Run PHPStan (static analysis)
-composer phpstan
-
 # Run single JavaScript test file
 npm run test:js -- path/to/test/file.test.js
+
+# Run PHP tests (PHPUnit)
+composer test
+
+# Run specific PHP test suite
+composer test:unit        # Unit tests only
+composer test:integration # Integration tests only
+
+# Run single PHP test file or method
+composer test -- --filter TestClassName
+composer test -- --filter testMethodName
+
+# Run PHPStan (static analysis)
+composer phpstan
 ```
 
 ### Code Quality
@@ -419,10 +430,31 @@ add_filter('aether_site_exporter_wporg_check_response', function($response, $slu
 - Follow TDD - write tests before implementation
 
 **PHP Tests:**
-- PHPStan for static analysis (level 9)
-- PHP_CodeSniffer (WordPress Coding Standards)
-- PHP-CS-Fixer for auto-fixing
-- Follow TDD - write tests before implementation
+- **Framework**: PHPUnit 9.6 with wp-phpunit integration
+- **Test Organization**:
+  - `tests/Unit/` - Unit tests for isolated components
+  - `tests/Integration/` - Integration tests for REST API and workflows
+  - `tests/Helpers/TestCase.php` - Base test case with helper methods
+- **Coverage**: 141 tests, 336 assertions (security, business logic, integration)
+- **Key Test Suites**:
+  - **Security Tests**: PathValidator (path traversal, injection), CredentialEncryption
+  - **Business Logic**: JobStateManager, ProviderRegistry, FileManager, TempDirectoryManager
+  - **Integration Tests**: ProviderConfigController (REST API with encryption)
+- **Testing Philosophy**:
+  - Tests catch bugs in implementation, not written just for coverage
+  - Test edge cases, error conditions, and security boundaries
+  - Test actual behavior, not implementation details
+  - Mock providers for isolation, real WordPress functions for integration
+- **Running Tests**:
+  - `composer test` - Run all tests
+  - `composer test:unit` - Unit tests only
+  - `composer test:integration` - Integration tests only
+  - `composer test -- --filter TestName` - Run specific test
+- **Static Analysis**:
+  - PHPStan (level 9) for type safety
+  - PHP_CodeSniffer (WordPress Coding Standards)
+  - PHP-CS-Fixer for auto-fixing
+- **TDD Workflow**: Write tests before implementation
 
 ## Common Development Patterns
 

@@ -11,11 +11,21 @@
         "phpstan/phpstan": "*",
         "phpstan/extension-installer": "*",
         "szepeviktor/phpstan-wordpress": "*",
-        "friendsofphp/php-cs-fixer": "^3.89"
+        "friendsofphp/php-cs-fixer": "^3.89",
+        "yoast/phpunit-polyfills": "^2.0",
+        "wp-phpunit/wp-phpunit": "^6.6",
+        "phpunit/phpunit": "^9.6",
+        "mockery/mockery": "^1.6",
+        "brain/monkey": "^2.6"
     },
     "autoload": {
         "psr-4": {
             "Aether\\SiteExporter\\": "includes/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Aether\\SiteExporter\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -30,7 +40,10 @@
         "check": [
             "@check-cs",
             "@phpstan"
-        ]
+        ],
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite=unit",
+        "test:integration": "phpunit --testsuite=integration"
     },
     "config": {
         "allow-plugins": {
