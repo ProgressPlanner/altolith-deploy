@@ -1,115 +1,64 @@
 /**
  * Asset Manager Hook
  *
- * Manages asset state in localStorage
+ * Manages asset state in localStorage.
+ * Uses AssetManagerService for all business logic.
  *
  * @package
  */
 
-import { useState, useEffect, useCallback } from '@wordpress/element';
+import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
 import { storage } from '../../utils/storage';
-
-const STORAGE_KEY = 'aetherAssets';
+import {
+	AssetManagerService,
+	filterChangedAssets,
+	clearAllUploadFlags,
+} from '../../services/AssetManagerService';
 
 export function useAssetManager() {
 	const [ assets, setAssets ] = useState( {} );
 
+	// Create service instance (memoized to prevent recreation)
+	const service = useMemo( () => new AssetManagerService( storage ), [] );
+
 	// Load assets from localStorage on mount
 	useEffect( () => {
-		const data = storage.get( STORAGE_KEY, {} );
+		const data = service.load();
 		setAssets( data );
-	}, [] );
+	}, [ service ] );
 
 	// Save assets to localStorage whenever they change
 	useEffect( () => {
-		storage.set( STORAGE_KEY, assets );
-	}, [ assets ] );
+		service.save( assets );
+	}, [ service, assets ] );
 
-	const markAsChanged = useCallback( ( type, slug ) => {
-		setAssets( ( prev ) => {
-			const updated = { ...prev };
-			const existingAsset = updated[ slug ];
-			updated[ slug ] = existingAsset
-				? { ...existingAsset, needsUpload: true }
-				: { type, slug, needsUpload: true };
-			return updated;
-		} );
-	}, [] );
+	const markAsChanged = useCallback(
+		( type, slug ) => {
+			setAssets( ( prev ) => service.markAsChanged( prev, type, slug ) );
+		},
+		[ service ]
+	);
 
-	const updateFromServer = useCallback( ( assetData ) => {
-		const {
-			slug,
-			type,
-			name,
-			existsOnR2 = assetData.exists_on_r2 || false,
-		} = assetData;
-		setAssets( ( prev ) => {
-			const updated = { ...prev };
-			const existingAsset = updated[ slug ];
-			updated[ slug ] = existingAsset
-				? {
-						...existingAsset,
-						existsOnR2,
-						name,
-						needsUpload: ! existsOnR2,
-				  }
-				: {
-						type,
-						slug,
-						name,
-						existsOnR2,
-						needsUpload: ! existsOnR2,
-				  };
-			return updated;
-		} );
-	}, [] );
+	const updateFromServer = useCallback(
+		( assetData ) => {
+			setAssets( ( prev ) => service.updateFromServer( prev, assetData ) );
+		},
+		[ service ]
+	);
 
-	const syncWithServer = useCallback( ( serverAssets ) => {
-		if ( ! Array.isArray( serverAssets ) ) {
-			return;
-		}
-
-		setAssets( ( prev ) => {
-			const updated = { ...prev };
-			serverAssets.forEach( ( assetData ) => {
-				const { slug } = assetData;
-				const existingAsset = updated[ slug ];
-				const existsOnR2 =
-					assetData.existsOnR2 || assetData.exists_on_r2 || false;
-				updated[ slug ] = existingAsset
-					? {
-							...existingAsset,
-							existsOnR2,
-							name: assetData.name,
-							needsUpload:
-								existingAsset.needsUpload || ! existsOnR2,
-					  }
-					: {
-							type: assetData.type,
-							slug,
-							name: assetData.name,
-							existsOnR2,
-							needsUpload: ! existsOnR2,
-					  };
-			} );
-			return updated;
-		} );
-	}, [] );
+	const syncWithServer = useCallback(
+		( serverAssets ) => {
+			setAssets( ( prev ) => service.syncWithServer( prev, serverAssets ) );
+		},
+		[ service ]
+	);
 
 	const getChangedAssets = useCallback( () => {
-		return Object.values( assets )
-			.filter( ( asset ) => asset.needsUpload )
-			.map( ( asset ) => `${ asset.type }:${ asset.slug }` );
+		return filterChangedAssets( assets );
 	}, [ assets ] );
 
 	const clearUploadFlags = useCallback( () => {
-		setAssets( ( prev ) => {
-			const updated = { ...prev };
-			Object.keys( updated ).forEach( ( slug ) => {
-				updated[ slug ] = { ...updated[ slug ], needsUpload: false };
-			} );
-			return updated;
-		} );
+		setAssets( ( prev ) => clearAllUploadFlags( prev ) );
 	}, [] );
 
 	return {
