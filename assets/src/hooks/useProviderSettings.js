@@ -4,11 +4,15 @@
  * Centralized hook for fetching and updating provider settings.
  * Eliminates duplicate code across components that manage provider configurations.
  *
+ * Uses ProviderSettingsAPI service for all business logic.
+ * Hook provides React state management (loading/error) around service calls.
+ *
  * @package
  */
 
-import { useState, useCallback } from '@wordpress/element';
+import { useState, useCallback, useMemo } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
+import { ProviderSettingsAPI } from '../services/ProviderSettingsAPI';
 
 /**
  * Custom hook for managing provider settings
@@ -18,6 +22,9 @@ import apiFetch from '@wordpress/api-fetch';
 export function useProviderSettings() {
 	const [ loading, setLoading ] = useState( false );
 	const [ error, setError ] = useState( null );
+
+	// Create service instance with apiFetch (memoized to prevent recreation)
+	const api = useMemo( () => new ProviderSettingsAPI( apiFetch ), [] );
 
 	/**
 	 * Fetch all provider settings
@@ -29,22 +36,15 @@ export function useProviderSettings() {
 		setError( null );
 
 		try {
-			const response = await apiFetch( {
-				path: '/aether/site-exporter/settings?key=providers',
-			} );
-
-			if ( ! response.success ) {
-				throw new Error( 'Failed to load provider settings' );
-			}
-
+			const providers = await api.fetchAll();
 			setLoading( false );
-			return response.value || {};
+			return providers;
 		} catch ( err ) {
 			setError( err.message );
 			setLoading( false );
 			throw err;
 		}
-	}, [] );
+	}, [ api ] );
 
 	/**
 	 * Update a single provider's configuration
@@ -58,58 +58,15 @@ export function useProviderSettings() {
 	 */
 	const updateProviderConfig = useCallback(
 		async ( providerId, updatedConfig, options = {} ) => {
-			const { preserveEnabled = false, preserveDeploymentTypes = false } =
-				options;
-
 			setLoading( true );
 			setError( null );
 
 			try {
-				// Fetch current settings
-				const currentProviders = await fetchProviderSettings();
-				const currentConfig = currentProviders[ providerId ] || {};
-
-				// Merge configurations with preservation options
-				// Start with existing config to preserve all fields, then overlay updates
-				const mergedConfig = {
-					...currentConfig,
-					...updatedConfig,
-				};
-
-				// Preserve enabled state if requested
-				if ( preserveEnabled && 'enabled' in currentConfig ) {
-					mergedConfig.enabled = currentConfig.enabled;
-				}
-
-				// Preserve deployment_types if requested and exists
-				if (
-					preserveDeploymentTypes &&
-					'deployment_types' in currentConfig
-				) {
-					mergedConfig.deployment_types =
-						currentConfig.deployment_types;
-				}
-
-				// Build updated providers object
-				const updatedProviders = {
-					...currentProviders,
-					[ providerId ]: mergedConfig,
-				};
-
-				// Save to API
-				const saveResponse = await apiFetch( {
-					path: '/aether/site-exporter/settings',
-					method: 'POST',
-					data: {
-						key: 'providers',
-						value: updatedProviders,
-					},
-				} );
-
-				if ( ! saveResponse.success ) {
-					throw new Error( 'Failed to save provider settings' );
-				}
-
+				const updatedProviders = await api.update(
+					providerId,
+					updatedConfig,
+					options
+				);
 				setLoading( false );
 				return updatedProviders;
 			} catch ( err ) {
@@ -118,7 +75,7 @@ export function useProviderSettings() {
 				throw err;
 			}
 		},
-		[ fetchProviderSettings ]
+		[ api ]
 	);
 
 	/**
@@ -133,38 +90,7 @@ export function useProviderSettings() {
 			setError( null );
 
 			try {
-				// Fetch current settings
-				const currentProviders = await fetchProviderSettings();
-
-				// Merge all updates
-				const updatedProviders = {
-					...currentProviders,
-					...Object.entries( updates ).reduce(
-						( acc, [ providerId, config ] ) => {
-							acc[ providerId ] = {
-								...( currentProviders[ providerId ] || {} ),
-								...config,
-							};
-							return acc;
-						},
-						{}
-					),
-				};
-
-				// Save to API
-				const saveResponse = await apiFetch( {
-					path: '/aether/site-exporter/settings',
-					method: 'POST',
-					data: {
-						key: 'providers',
-						value: updatedProviders,
-					},
-				} );
-
-				if ( ! saveResponse.success ) {
-					throw new Error( 'Failed to save provider settings' );
-				}
-
+				const updatedProviders = await api.updateMultiple( updates );
 				setLoading( false );
 				return updatedProviders;
 			} catch ( err ) {
@@ -173,7 +99,7 @@ export function useProviderSettings() {
 				throw err;
 			}
 		},
-		[ fetchProviderSettings ]
+		[ api ]
 	);
 
 	/**
@@ -185,9 +111,23 @@ export function useProviderSettings() {
 	 */
 	const toggleProviderEnabled = useCallback(
 		async ( providerId, enabled ) => {
-			return updateProviderConfig( providerId, { enabled } );
+			setLoading( true );
+			setError( null );
+
+			try {
+				const updatedProviders = await api.toggleEnabled(
+					providerId,
+					enabled
+				);
+				setLoading( false );
+				return updatedProviders;
+			} catch ( err ) {
+				setError( err.message );
+				setLoading( false );
+				throw err;
+			}
 		},
-		[ updateProviderConfig ]
+		[ api ]
 	);
 
 	/**
@@ -204,19 +144,11 @@ export function useProviderSettings() {
 			setError( null );
 
 			try {
-				const response = await apiFetch( {
-					path: `/aether/site-exporter/providers/${ providerType }/instances`,
-					method: 'POST',
-					data: {
-						instance_id: instanceId,
-						instance_name: instanceName,
-					},
-				} );
-
-				if ( ! response.success ) {
-					throw new Error( 'Failed to create provider instance' );
-				}
-
+				const response = await api.createInstance(
+					instanceId,
+					providerType,
+					instanceName
+				);
 				setLoading( false );
 				return response;
 			} catch ( err ) {
@@ -225,7 +157,7 @@ export function useProviderSettings() {
 				throw err;
 			}
 		},
-		[]
+		[ api ]
 	);
 
 	/**
@@ -237,11 +169,23 @@ export function useProviderSettings() {
 	 */
 	const renameProviderInstance = useCallback(
 		async ( instanceId, instanceName ) => {
-			return updateProviderConfig( instanceId, {
-				instance_name: instanceName,
-			} );
+			setLoading( true );
+			setError( null );
+
+			try {
+				const updatedProviders = await api.renameInstance(
+					instanceId,
+					instanceName
+				);
+				setLoading( false );
+				return updatedProviders;
+			} catch ( err ) {
+				setError( err.message );
+				setLoading( false );
+				throw err;
+			}
 		},
-		[ updateProviderConfig ]
+		[ api ]
 	);
 
 	/**
@@ -256,15 +200,7 @@ export function useProviderSettings() {
 			setError( null );
 
 			try {
-				// Delete via REST API
-				await apiFetch( {
-					path: `/aether/site-exporter/providers/${ instanceId }/config`,
-					method: 'DELETE',
-				} );
-
-				// Fetch updated settings
-				const updatedProviders = await fetchProviderSettings();
-
+				const updatedProviders = await api.deleteInstance( instanceId );
 				setLoading( false );
 				return updatedProviders;
 			} catch ( err ) {
@@ -273,7 +209,7 @@ export function useProviderSettings() {
 				throw err;
 			}
 		},
-		[ fetchProviderSettings ]
+		[ api ]
 	);
 
 	return {
