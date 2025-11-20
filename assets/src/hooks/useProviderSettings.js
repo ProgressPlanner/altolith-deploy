@@ -70,7 +70,9 @@ export function useProviderSettings() {
 				const currentConfig = currentProviders[ providerId ] || {};
 
 				// Merge configurations with preservation options
+				// Start with existing config to preserve all fields, then overlay updates
 				const mergedConfig = {
+					...currentConfig,
 					...updatedConfig,
 				};
 
