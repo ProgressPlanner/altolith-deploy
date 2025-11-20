@@ -53,6 +53,17 @@ export async function createSiteArchiveHandler( context ) {
 		);
 	}
 
+	// Validate required data fields
+	if (
+		! initResponse.data ||
+		! initResponse.data.zipPath ||
+		! initResponse.data.progressId
+	) {
+		throw new Error(
+			'Invalid response from server: missing required data (zipPath or progressId)'
+		);
+	}
+
 	const { zipPath, progressId } = initResponse.data;
 	const progress = initResponse.progress || {};
 
