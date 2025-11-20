@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
-import PublishProgressModal from '../publish/components/PublishProgressModal';
+import PublishProgressModal from '../components/PublishProgressModal';
 import ProviderSettings from './ProviderSettings';
 import StatusNotice from '../components/StatusNotice';
 import { colors, spacing, fontWeight, createFlexStyle } from '../utils/styles';

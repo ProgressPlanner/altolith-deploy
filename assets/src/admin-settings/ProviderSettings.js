@@ -10,9 +10,9 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
-import ProviderInstanceCard from './components/ProviderInstanceCard';
-import ProviderConfigModal from './components/ProviderConfigModal';
-import AddProviderInstanceModal from './components/AddProviderInstanceModal';
+import ProviderInstanceCard from '../components/ProviderInstanceCard';
+import ProviderConfigModal from '../components/ProviderConfigModal';
+import AddProviderInstanceModal from '../components/AddProviderInstanceModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SectionHeader from '../components/SectionHeader';
 import apiFetch from '../utils/api';

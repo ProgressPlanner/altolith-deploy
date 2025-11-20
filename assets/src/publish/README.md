@@ -76,7 +76,7 @@ Main publish modal component that shows workflow progress.
 
 **Usage:**
 ```javascript
-import PublishProgressModal from '../publish/components/PublishProgressModal';
+import PublishProgressModal from '../components/PublishProgressModal';
 
 <PublishProgressModal
     isOpen={isOpen}

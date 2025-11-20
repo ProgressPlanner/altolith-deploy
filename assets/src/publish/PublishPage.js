@@ -6,11 +6,11 @@
 
 import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import PublishButton from './components/PublishButton';
-import ConfigurationSummary from './components/ConfigurationSummary';
-import RecentJobs from './components/RecentJobs';
-import HowItWorks from './components/HowItWorks';
-import PublishProgressModal from './components/PublishProgressModal';
+import PublishButton from '../components/PublishButton';
+import ConfigurationSummary from '../components/ConfigurationSummary';
+import RecentJobs from '../components/RecentJobs';
+import HowItWorks from '../components/HowItWorks';
+import PublishProgressModal from '../components/PublishProgressModal';
 import PlaygroundNotice from '../components/PlaygroundNotice';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { usePublishReadiness } from './hooks/usePublishReadiness';
