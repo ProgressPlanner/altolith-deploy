@@ -9,15 +9,18 @@
 
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import {
-	Modal,
-	Button,
-	TextControl,
-	SelectControl,
-} from '@wordpress/components';
+import { Modal, TextControl, SelectControl } from '@wordpress/components';
 // eslint-disable-next-line import/no-unresolved
 import { v4 as uuidv4 } from 'uuid';
+import ModalActions from '../../components/ModalActions';
 import { spacing } from '../../utils/styles';
+
+// Styles - extracted to module level for performance
+const formStyle = {
+	display: 'flex',
+	flexDirection: 'column',
+	gap: spacing.lg,
+};
 
 /**
  * Add Provider Instance Modal Component.
@@ -86,19 +89,6 @@ export default function AddProviderInstanceModal( {
 		( p ) => p.id === selectedProviderType
 	);
 
-	const formStyle = {
-		display: 'flex',
-		flexDirection: 'column',
-		gap: spacing.lg,
-	};
-
-	const actionsStyle = {
-		display: 'flex',
-		justifyContent: 'flex-end',
-		gap: spacing.sm,
-		paddingTop: spacing.lg,
-	};
-
 	return (
 		<Modal
 			className="aether-add-provider-instance-modal"
@@ -159,31 +149,22 @@ export default function AddProviderInstanceModal( {
 					/>
 				) }
 
-				<div
+				<ModalActions
+					onCancel={ handleClose }
+					onSubmit={ handleCreate }
+					cancelLabel={ __( 'Cancel', 'aether-site-exporter' ) }
+					submitLabel={ __(
+						'Create Instance',
+						'aether-site-exporter'
+					) }
+					isSubmitting={ isCreating }
+					isSubmitDisabled={
+						! selectedProviderType ||
+						! instanceName.trim() ||
+						isCreating
+					}
 					className="aether-add-provider-instance-modal__actions"
-					style={ actionsStyle }
-				>
-					<Button
-						className="aether-add-provider-instance-modal__cancel-button"
-						variant="tertiary"
-						onClick={ handleClose }
-					>
-						{ __( 'Cancel', 'aether-site-exporter' ) }
-					</Button>
-					<Button
-						className="aether-add-provider-instance-modal__create-button"
-						variant="primary"
-						onClick={ handleCreate }
-						disabled={
-							! selectedProviderType ||
-							! instanceName.trim() ||
-							isCreating
-						}
-						isBusy={ isCreating }
-					>
-						{ __( 'Create Instance', 'aether-site-exporter' ) }
-					</Button>
-				</div>
+				/>
 			</div>
 		</Modal>
 	);
