@@ -75,6 +75,7 @@ export function usePublishController( publishState ) {
 	const handleSiteArchiveUpload = useCallback(
 		async ( providerId, context ) => {
 			try {
+				// providerId is an instance ID (e.g., 'local-filesystem:abc-123')
 				// Use provider ID passed from executeSteps (avoids redundant settings fetch).
 				// Get default provider if none configured
 				let fetchedStorageProviderId = providerId;
@@ -85,28 +86,38 @@ export function usePublishController( publishState ) {
 					fetchedStorageProviderId = await getDefaultProvider();
 				}
 
+				if ( ! fetchedStorageProviderId ) {
+					throw new Error(
+						'No provider instance ID provided for blueprint bundle upload'
+					);
+				}
+
 				// Fetch provider metadata from REST API to check upload strategy
+				// The endpoint handles both instance IDs and provider type IDs
 				let providerMetadata = null;
+				let instanceConfig = null;
 				try {
 					const providerResponse = await apiFetch( {
 						path: `/aether/site-exporter/providers/${ fetchedStorageProviderId }`,
 					} );
-					if (
-						providerResponse.success &&
-						providerResponse.provider
-					) {
-						providerMetadata = providerResponse.provider;
+					if ( providerResponse.success ) {
+						if ( providerResponse.provider ) {
+							providerMetadata = providerResponse.provider;
+						}
+						if ( providerResponse.config ) {
+							instanceConfig = providerResponse.config;
+						}
 					}
 				} catch ( error ) {
 					debugError(
-						`[Aether] Failed to fetch provider metadata for ${ fetchedStorageProviderId }:`,
+						`[Aether] Failed to fetch provider metadata for instance ${ fetchedStorageProviderId }:`,
 						error
 					);
 				}
 
 				if ( ! providerMetadata ) {
 					throw new Error(
-						`Provider not found: ${ fetchedStorageProviderId }`
+						`Provider instance not found: ${ fetchedStorageProviderId }`
 					);
 				}
 
@@ -184,14 +195,20 @@ export function usePublishController( publishState ) {
 
 					// Use hook-based upload instead of provider method
 					// Get upload handler for this provider via filter
+					// Pass instance ID (fetchedStorageProviderId) to the filter
+					// The handler will receive the instance ID and can extract provider type if needed
 					const uploadHandler = applyFilters(
 						'aether.provider.upload',
 						null,
-						fetchedStorageProviderId,
+						fetchedStorageProviderId, // Instance ID (e.g., 'local-filesystem:abc-123')
 						{
 							filePath: blueprintBundlePath,
 							fileName: 'blueprint-bundle.zip',
-							context,
+							context: {
+								...context,
+								instanceId: fetchedStorageProviderId,
+								instanceConfig, // Include instance config in context
+							},
 						}
 					);
 
@@ -199,16 +216,25 @@ export function usePublishController( publishState ) {
 						! uploadHandler ||
 						typeof uploadHandler !== 'function'
 					) {
+						// Extract provider type from instance ID for better error message
+						const providerType = fetchedStorageProviderId.includes( ':' )
+							? fetchedStorageProviderId.split( ':' )[ 0 ]
+							: fetchedStorageProviderId;
 						throw new Error(
-							`No upload handler registered for provider: ${ fetchedStorageProviderId }`
+							`No upload handler registered for provider type: ${ providerType } (instance: ${ fetchedStorageProviderId })`
 						);
 					}
 
 					// Call the upload handler
+					// Pass context which includes exportPath from uploadSiteArchiveStep
 					const uploadResult = await uploadHandler(
 						blueprintBundlePath,
 						'blueprint-bundle.zip',
-						context
+						{
+							...context,
+							instanceId: fetchedStorageProviderId,
+							instanceConfig, // Include instance config
+						}
 					);
 
 					if ( ! uploadResult || ! uploadResult.success ) {

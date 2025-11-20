@@ -8,6 +8,7 @@
  */
 
 import { applyFilters } from '@wordpress/hooks';
+import apiFetch from '@wordpress/api-fetch';
 
 /**
  * Upload site archive step handler (stateless).
@@ -28,11 +29,14 @@ export async function uploadSiteArchiveHandler( context ) {
 		setStatusMessage,
 	} = context;
 
-	// Use blueprintBundleProviders if available, fallback to single providerId
+	// Use blueprintBundleProviders if available (these are instance IDs)
+	// Fallback to single providerId for backward compatibility (may be instance ID or provider type ID)
 	let providers = [];
 	if ( blueprintBundleProviders.length > 0 ) {
+		// blueprintBundleProviders contains instance IDs (e.g., 'local-filesystem:abc-123')
 		providers = blueprintBundleProviders;
 	} else if ( providerId ) {
+		// Legacy fallback - providerId may be instance ID or provider type ID
 		providers = [ providerId ];
 	}
 
@@ -51,9 +55,41 @@ export async function uploadSiteArchiveHandler( context ) {
 		'uploadSiteArchive'
 	);
 
-	// Upload to ALL providers in parallel
-	const uploadPromises = providers.map( async ( providerIdItem ) => {
+	// Upload to providers sequentially to avoid race conditions
+	const uploadResults = [];
+	let successCount = 0;
+	let failureCount = 0;
+
+	for ( const providerIdItem of providers ) {
 		try {
+			// Fetch provider-specific configuration
+			// providerIdItem is an instance ID (e.g., 'local-filesystem:abc-123')
+			let exportPath = 'blueprint-bundle/bundle.zip'; // Default path
+			try {
+				const providerResponse = await apiFetch( {
+					path: `/aether/site-exporter/providers/${ providerIdItem }`,
+				} );
+				if ( providerResponse.success && providerResponse.config ) {
+					const providerConfig = providerResponse.config || {};
+					// Get provider-specific export_path from instance config
+					if ( providerConfig.export_path ) {
+						exportPath = providerConfig.export_path;
+					}
+				} else if ( ! providerResponse.success ) {
+					console.warn(
+						`[Aether] Failed to fetch config for instance ${ providerIdItem }:`,
+						providerResponse
+					);
+				}
+			} catch ( error ) {
+				// If we can't fetch provider config, use default export path
+				// This maintains backwards compatibility
+				console.warn(
+					`[Aether] Error fetching config for instance ${ providerIdItem }, using default export path:`,
+					error
+				);
+			}
+
 			/**
 			 * Filter the deployment configuration before archive upload.
 			 *
@@ -80,6 +116,7 @@ export async function uploadSiteArchiveHandler( context ) {
 				{
 					...context,
 					providerId: providerIdItem,
+					exportPath, // Add export path to config
 				},
 				providerIdItem
 			);
@@ -88,49 +125,52 @@ export async function uploadSiteArchiveHandler( context ) {
 			// Pass entire context so upload handler has access to blueprintBundle data
 			await handleSiteArchiveUpload( providerIdItem, deploymentConfig );
 
-			return {
-				providerId: providerIdItem,
-				success: true,
-			};
+			successCount++;
+			uploadResults.push( {
+				status: 'fulfilled',
+				value: {
+					providerId: providerIdItem,
+					success: true,
+					exportPath,
+				},
+			} );
 		} catch ( error ) {
-			return {
+			failureCount++;
+			const errorMessage =
+				error?.message || error?.toString() || 'Unknown error';
+			console.error(
+				`[Aether] Failed to upload blueprint bundle to instance ${ providerIdItem }:`,
+				error
+			);
+			uploadResults.push( {
+				status: 'rejected',
+				reason: error,
 				providerId: providerIdItem,
-				success: false,
-				error: error.message,
-			};
+				error: errorMessage,
+			} );
 		}
-	} );
+	}
 
-	const results = await Promise.allSettled( uploadPromises );
-
-	// Aggregate results
-	const successfulUploads = results.filter(
-		( r ) => r.status === 'fulfilled' && r.value.success
-	);
-	const failedUploads = results.filter(
-		( r ) =>
-			r.status === 'rejected' ||
-			( r.status === 'fulfilled' && ! r.value.success )
-	);
-
-	if ( successfulUploads.length > 0 ) {
+	// Report results
+	if ( successCount > 0 ) {
 		setStatusMessage(
-			`Uploaded blueprint bundle to ${ successfulUploads.length }/${ providers.length } provider(s)`,
-			failedUploads.length > 0 ? 'warning' : 'success',
+			`Uploaded blueprint bundle to ${ successCount }/${ providers.length } provider(s)`,
+			failureCount > 0 ? 'warning' : 'success',
 			'uploadSiteArchive'
 		);
 	}
 
-	if ( failedUploads.length === providers.length ) {
+	// Fail only if ALL providers failed
+	if ( successCount === 0 ) {
 		throw new Error( 'Failed to upload blueprint bundle to any provider' );
 	}
 
 	return {
 		providers,
-		results: results.map( ( r ) =>
+		results: uploadResults.map( ( r ) =>
 			r.status === 'fulfilled' ? r.value : r.reason
 		),
-		successCount: successfulUploads.length,
-		failureCount: failedUploads.length,
+		successCount,
+		failureCount,
 	};
 }
