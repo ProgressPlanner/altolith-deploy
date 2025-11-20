@@ -41,14 +41,18 @@ export function useAssetManager() {
 
 	const updateFromServer = useCallback(
 		( assetData ) => {
-			setAssets( ( prev ) => service.updateFromServer( prev, assetData ) );
+			setAssets( ( prev ) =>
+				service.updateFromServer( prev, assetData )
+			);
 		},
 		[ service ]
 	);
 
 	const syncWithServer = useCallback(
 		( serverAssets ) => {
-			setAssets( ( prev ) => service.syncWithServer( prev, serverAssets ) );
+			setAssets( ( prev ) =>
+				service.syncWithServer( prev, serverAssets )
+			);
 		},
 		[ service ]
 	);

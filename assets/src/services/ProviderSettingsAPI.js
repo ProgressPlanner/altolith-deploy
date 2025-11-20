@@ -12,10 +12,10 @@
  *
  * Pure function for merging provider configs.
  *
- * @param {Object} currentConfig Current provider configuration
- * @param {Object} updatedConfig Updated configuration
- * @param {Object} options Merge options
- * @param {boolean} options.preserveEnabled Preserve existing enabled state
+ * @param {Object}  currentConfig                   Current provider configuration
+ * @param {Object}  updatedConfig                   Updated configuration
+ * @param {Object}  options                         Merge options
+ * @param {boolean} options.preserveEnabled         Preserve existing enabled state
  * @param {boolean} options.preserveDeploymentTypes Preserve existing deployment_types
  * @return {Object} Merged configuration
  */
@@ -56,7 +56,7 @@ export function mergeProviderConfig(
  * Pure function for merging multiple provider config updates.
  *
  * @param {Object} currentProviders Current provider configurations
- * @param {Object} updates Object mapping provider IDs to their updated configs
+ * @param {Object} updates          Object mapping provider IDs to their updated configs
  * @return {Object} Updated provider configurations
  */
 export function mergeMultipleProviders( currentProviders, updates ) {
@@ -137,9 +137,9 @@ export class ProviderSettingsAPI {
 	/**
 	 * Update a single provider's configuration
 	 *
-	 * @param {string} providerId Provider ID
+	 * @param {string} providerId    Provider ID
 	 * @param {Object} updatedConfig Updated configuration
-	 * @param {Object} options Merge options
+	 * @param {Object} options       Merge options
 	 * @return {Promise<Object>} Updated provider configurations
 	 */
 	async update( providerId, updatedConfig, options = {} ) {
@@ -187,8 +187,8 @@ export class ProviderSettingsAPI {
 	/**
 	 * Toggle provider enabled state
 	 *
-	 * @param {string} providerId Provider ID
-	 * @param {boolean} enabled New enabled state
+	 * @param {string}  providerId Provider ID
+	 * @param {boolean} enabled    New enabled state
 	 * @return {Promise<Object>} Updated provider configurations
 	 */
 	async toggleEnabled( providerId, enabled ) {
@@ -198,7 +198,7 @@ export class ProviderSettingsAPI {
 	/**
 	 * Create a new provider instance
 	 *
-	 * @param {string} instanceId Client-generated instance ID (provider_type:uuid)
+	 * @param {string} instanceId   Client-generated instance ID (provider_type:uuid)
 	 * @param {string} providerType Provider type (e.g., 'local-filesystem')
 	 * @param {string} instanceName User-friendly instance name
 	 * @return {Promise<Object>} Created instance info
@@ -223,7 +223,7 @@ export class ProviderSettingsAPI {
 	/**
 	 * Rename a provider instance
 	 *
-	 * @param {string} instanceId Instance ID
+	 * @param {string} instanceId   Instance ID
 	 * @param {string} instanceName New instance name
 	 * @return {Promise<Object>} Updated provider configurations
 	 */

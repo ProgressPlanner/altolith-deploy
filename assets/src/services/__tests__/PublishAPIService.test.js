@@ -44,7 +44,9 @@ describe( 'PublishAPIService', () => {
 
 			const result = await service.discoverAssets();
 
-			expect( mockAssetDiscovery.discoverCustomAssets ).toHaveBeenCalled();
+			expect(
+				mockAssetDiscovery.discoverCustomAssets
+			).toHaveBeenCalled();
 			expect( result ).toEqual( {
 				success: true,
 				assets: mockAssets,

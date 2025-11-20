@@ -431,7 +431,9 @@ describe( 'ProviderSettingsAPI', () => {
 					'New Name'
 				);
 
-				expect( result[ 'provider-1' ].instance_name ).toBe( 'New Name' );
+				expect( result[ 'provider-1' ].instance_name ).toBe(
+					'New Name'
+				);
 			} );
 		} );
 

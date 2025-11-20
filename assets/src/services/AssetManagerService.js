@@ -48,13 +48,18 @@ export function calculateNeedsUpload( existsOnR2 ) {
  *
  * Pure function for creating asset with consistent structure.
  *
- * @param {string} type Asset type (theme, plugin)
- * @param {string} slug Asset slug
- * @param {string} name Asset name (optional)
+ * @param {string}  type       Asset type (theme, plugin)
+ * @param {string}  slug       Asset slug
+ * @param {string}  name       Asset name (optional)
  * @param {boolean} existsOnR2 Whether asset exists on R2 (optional)
  * @return {Object} New asset object
  */
-export function createAsset( type, slug, name = undefined, existsOnR2 = false ) {
+export function createAsset(
+	type,
+	slug,
+	name = undefined,
+	existsOnR2 = false
+) {
 	const asset = {
 		type,
 		slug,
@@ -77,9 +82,9 @@ export function createAsset( type, slug, name = undefined, existsOnR2 = false ) 
  *
  * Pure function for merging existing asset with updated data.
  *
- * @param {Object} existing Existing asset object
- * @param {Object} updated Updated asset data
- * @param {Object} options Merge options
+ * @param {Object}  existing                    Existing asset object
+ * @param {Object}  updated                     Updated asset data
+ * @param {Object}  options                     Merge options
  * @param {boolean} options.preserveNeedsUpload Preserve existing needsUpload flag
  * @return {Object} Merged asset
  */
@@ -200,8 +205,8 @@ export class AssetManagerService {
 	 * Mark asset as changed (needs upload)
 	 *
 	 * @param {Object} currentAssets Current assets state
-	 * @param {string} type Asset type
-	 * @param {string} slug Asset slug
+	 * @param {string} type          Asset type
+	 * @param {string} slug          Asset slug
 	 * @return {Object} Updated assets state
 	 */
 	markAsChanged( currentAssets, type, slug ) {
@@ -219,7 +224,7 @@ export class AssetManagerService {
 	 * Update asset from server data
 	 *
 	 * @param {Object} currentAssets Current assets state
-	 * @param {Object} assetData Server asset data
+	 * @param {Object} assetData     Server asset data
 	 * @return {Object} Updated assets state
 	 */
 	updateFromServer( currentAssets, assetData ) {
@@ -238,7 +243,7 @@ export class AssetManagerService {
 	 * Sync multiple assets from server
 	 *
 	 * @param {Object} currentAssets Current assets state
-	 * @param {Array} serverAssets Array of server asset data
+	 * @param {Array}  serverAssets  Array of server asset data
 	 * @return {Object} Updated assets state
 	 */
 	syncWithServer( currentAssets, serverAssets ) {

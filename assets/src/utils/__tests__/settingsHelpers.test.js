@@ -41,7 +41,10 @@ describe( 'settingsHelpers', () => {
 				},
 			};
 
-			const result = getProviderSettings( settings, 'non-existent-provider' );
+			const result = getProviderSettings(
+				settings,
+				'non-existent-provider'
+			);
 
 			expect( result ).toEqual( {} );
 		} );
@@ -94,7 +97,9 @@ describe( 'settingsHelpers', () => {
 			expect( result.providers[ 'local-filesystem' ] ).toEqual(
 				providerSettings
 			);
-			expect( result.providers[ 'local-filesystem:other-instance' ] ).toEqual( { bucket_name: 'other-bucket' } );
+			expect(
+				result.providers[ 'local-filesystem:other-instance' ]
+			).toEqual( { bucket_name: 'other-bucket' } );
 			expect( result._saveKey ).toBe( 'providers' );
 			expect( result._saveValue ).toEqual( result.providers );
 		} );
@@ -123,7 +128,9 @@ describe( 'settingsHelpers', () => {
 			const allSettings = {
 				otherSetting: 'value',
 				providers: {
-					'local-filesystem:other-instance': { bucket_name: 'other-bucket' },
+					'local-filesystem:other-instance': {
+						bucket_name: 'other-bucket',
+					},
 				},
 			};
 
@@ -138,7 +145,9 @@ describe( 'settingsHelpers', () => {
 			);
 
 			expect( result.otherSetting ).toBe( 'value' );
-			expect( result.providers[ 'local-filesystem:other-instance' ] ).toEqual( { bucket_name: 'other-bucket' } );
+			expect(
+				result.providers[ 'local-filesystem:other-instance' ]
+			).toEqual( { bucket_name: 'other-bucket' } );
 		} );
 
 		test( 'sets _saveKey and _saveValue correctly', () => {

@@ -19,9 +19,9 @@ import { useConfigContext } from './useConfigContext';
  * Multiple components using this hook will share the same config state.
  *
  * @return {Object} Configuration object with loading state and config values
- * @property {boolean} loading       - Loading state
- * @property {string}  publicUrl     - Public URL
- * @property {string}  adminUrl      - Admin URL
+ * @property {boolean} loading   - Loading state
+ * @property {string}  publicUrl - Public URL
+ * @property {string}  adminUrl  - Admin URL
  */
 export function useConfig() {
 	const { config, loading } = useConfigContext();

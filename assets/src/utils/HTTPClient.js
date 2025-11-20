@@ -16,7 +16,7 @@ export class HTTPClient {
 	/**
 	 * Perform GET request
 	 *
-	 * @param {string} url - URL to fetch
+	 * @param {string} url     - URL to fetch
 	 * @param {Object} options - Fetch options
 	 * @return {Promise<Response>} Fetch response
 	 */
@@ -30,8 +30,8 @@ export class HTTPClient {
 	/**
 	 * Perform POST request
 	 *
-	 * @param {string} url - URL to post to
-	 * @param {Object} data - Data to send
+	 * @param {string} url     - URL to post to
+	 * @param {Object} data    - Data to send
 	 * @param {Object} options - Fetch options
 	 * @return {Promise<Response>} Fetch response
 	 */
@@ -51,8 +51,8 @@ export class HTTPClient {
 	/**
 	 * Perform PUT request
 	 *
-	 * @param {string} url - URL to put to
-	 * @param {Object} data - Data to send
+	 * @param {string} url     - URL to put to
+	 * @param {Object} data    - Data to send
 	 * @param {Object} options - Fetch options
 	 * @return {Promise<Response>} Fetch response
 	 */
@@ -72,7 +72,7 @@ export class HTTPClient {
 	/**
 	 * Perform DELETE request
 	 *
-	 * @param {string} url - URL to delete
+	 * @param {string} url     - URL to delete
 	 * @param {Object} options - Fetch options
 	 * @return {Promise<Response>} Fetch response
 	 */
@@ -86,7 +86,7 @@ export class HTTPClient {
 	/**
 	 * Generic fetch method for custom requests
 	 *
-	 * @param {string} url - URL to fetch
+	 * @param {string} url     - URL to fetch
 	 * @param {Object} options - Full fetch options
 	 * @return {Promise<Response>} Fetch response
 	 */
@@ -105,7 +105,7 @@ export class MockHTTPClient {
 	 * Create mock client
 	 *
 	 * @param {Object} responses - Map of URL patterns to responses
-	 * @param {Object} config - Configuration options
+	 * @param {Object} config    - Configuration options
 	 */
 	constructor( responses = {}, config = {} ) {
 		// Use Map to support RegExp keys
@@ -124,7 +124,7 @@ export class MockHTTPClient {
 	/**
 	 * Set response for a URL pattern
 	 *
-	 * @param {string|RegExp} pattern - URL pattern to match
+	 * @param {string|RegExp}   pattern  - URL pattern to match
 	 * @param {Object|Function} response - Response object or factory function
 	 */
 	setResponse( pattern, response ) {
@@ -134,7 +134,7 @@ export class MockHTTPClient {
 	/**
 	 * Get response for URL
 	 *
-	 * @param {string} url - URL to match
+	 * @param {string} url     - URL to match
 	 * @param {Object} options - Request options
 	 * @return {Object} Response configuration
 	 */
@@ -203,7 +203,7 @@ export class MockHTTPClient {
 	/**
 	 * Perform GET request
 	 *
-	 * @param {string} url - URL to fetch
+	 * @param {string} url     - URL to fetch
 	 * @param {Object} options - Fetch options
 	 * @return {Promise<Object>} Mock response
 	 */
@@ -218,8 +218,8 @@ export class MockHTTPClient {
 	/**
 	 * Perform POST request
 	 *
-	 * @param {string} url - URL to post to
-	 * @param {Object} data - Data to send
+	 * @param {string} url     - URL to post to
+	 * @param {Object} data    - Data to send
 	 * @param {Object} options - Fetch options
 	 * @return {Promise<Object>} Mock response
 	 */
@@ -238,8 +238,8 @@ export class MockHTTPClient {
 	/**
 	 * Perform PUT request
 	 *
-	 * @param {string} url - URL to put to
-	 * @param {Object} data - Data to send
+	 * @param {string} url     - URL to put to
+	 * @param {Object} data    - Data to send
 	 * @param {Object} options - Fetch options
 	 * @return {Promise<Object>} Mock response
 	 */
@@ -258,7 +258,7 @@ export class MockHTTPClient {
 	/**
 	 * Perform DELETE request
 	 *
-	 * @param {string} url - URL to delete
+	 * @param {string} url     - URL to delete
 	 * @param {Object} options - Fetch options
 	 * @return {Promise<Object>} Mock response
 	 */
@@ -273,7 +273,7 @@ export class MockHTTPClient {
 	/**
 	 * Generic fetch method
 	 *
-	 * @param {string} url - URL to fetch
+	 * @param {string} url     - URL to fetch
 	 * @param {Object} options - Full fetch options
 	 * @return {Promise<Object>} Mock response
 	 */
@@ -307,7 +307,8 @@ export class MockHTTPClient {
 	 * @return {Array<Object>} Matching requests
 	 */
 	getRequestsMatching( pattern ) {
-		const regex = pattern instanceof RegExp ? pattern : new RegExp( pattern );
+		const regex =
+			pattern instanceof RegExp ? pattern : new RegExp( pattern );
 		return this.requests.filter( ( req ) => regex.test( req.url ) );
 	}
 }

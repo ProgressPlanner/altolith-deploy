@@ -183,12 +183,15 @@ describe( 'MockHTTPClient', () => {
 		} );
 
 		test( 'should support response factory functions', async () => {
-			mockClient.setResponse( 'https://example.com/api', ( url, options ) => {
-				return {
-					status: 200,
-					body: JSON.stringify( { url, method: options.method } ),
-				};
-			} );
+			mockClient.setResponse(
+				'https://example.com/api',
+				( url, options ) => {
+					return {
+						status: 200,
+						body: JSON.stringify( { url, method: options.method } ),
+					};
+				}
+			);
 
 			const response = await mockClient.get( 'https://example.com/api' );
 			const json = await response.json();
@@ -236,9 +239,7 @@ describe( 'MockHTTPClient', () => {
 				body: JSON.stringify( { key: 'value' } ),
 			} );
 
-			const response = await mockClient.get(
-				'https://example.com/json'
-			);
+			const response = await mockClient.get( 'https://example.com/json' );
 			const json = await response.json();
 
 			expect( json ).toEqual( { key: 'value' } );
@@ -250,9 +251,7 @@ describe( 'MockHTTPClient', () => {
 				body: { key: 'value' },
 			} );
 
-			const response = await mockClient.get(
-				'https://example.com/json'
-			);
+			const response = await mockClient.get( 'https://example.com/json' );
 			const json = await response.json();
 
 			expect( json ).toEqual( { key: 'value' } );
@@ -359,10 +358,9 @@ describe( 'MockHTTPClient', () => {
 				body: 'POST response',
 			} );
 
-			const response = await mockClient.post(
-				'https://example.com/api',
-				{ data: 'test' }
-			);
+			const response = await mockClient.post( 'https://example.com/api', {
+				data: 'test',
+			} );
 			const text = await response.text();
 
 			expect( text ).toBe( 'POST response' );
@@ -422,12 +420,12 @@ describe( 'MockHTTPClient', () => {
 
 			mockClient = new MockHTTPClient( responses );
 
-			expect( mockClient.responses.has( 'https://example.com/api' ) ).toBe(
-				true
-			);
-			expect( mockClient.responses.get( 'https://example.com/api' ) ).toEqual(
-				{ status: 200, body: 'test' }
-			);
+			expect(
+				mockClient.responses.has( 'https://example.com/api' )
+			).toBe( true );
+			expect(
+				mockClient.responses.get( 'https://example.com/api' )
+			).toEqual( { status: 200, body: 'test' } );
 		} );
 
 		test( 'should initialize with config', () => {

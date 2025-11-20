@@ -12,8 +12,8 @@
  *
  * Pure function that sums up all file counts.
  *
- * @param {number} urlCount - Number of URLs/pages
- * @param {number} assetCount - Number of unique assets
+ * @param {number} urlCount      - Number of URLs/pages
+ * @param {number} assetCount    - Number of unique assets
  * @param {number} manifestCount - Number of manifest files (usually 1)
  * @return {number} Total file count
  */
@@ -32,7 +32,7 @@ export function calculateTotalFiles( urlCount, assetCount, manifestCount = 1 ) {
  * Pure function that calculates progress as a percentage.
  *
  * @param {number} uploadedCount - Number of files uploaded so far
- * @param {number} totalCount - Total number of files to upload
+ * @param {number} totalCount    - Total number of files to upload
  * @return {number} Progress percentage (0-100)
  */
 export function calculateUploadProgress( uploadedCount, totalCount ) {
@@ -45,7 +45,10 @@ export function calculateUploadProgress( uploadedCount, totalCount ) {
 	const safeTotal = Math.max( 1, Number( totalCount ) || 1 ); // Avoid division by zero
 
 	// Calculate percentage, clamped to 0-100
-	const percentage = Math.min( 100, Math.max( 0, ( safeUploaded / safeTotal ) * 100 ) );
+	const percentage = Math.min(
+		100,
+		Math.max( 0, ( safeUploaded / safeTotal ) * 100 )
+	);
 
 	return Math.round( percentage );
 }
@@ -56,8 +59,8 @@ export function calculateUploadProgress( uploadedCount, totalCount ) {
  * Useful when uploading to multiple providers or in multiple phases.
  * Each stage gets an equal share of the total progress.
  *
- * @param {number} currentStage - Current stage index (0-based)
- * @param {number} totalStages - Total number of stages
+ * @param {number} currentStage  - Current stage index (0-based)
+ * @param {number} totalStages   - Total number of stages
  * @param {number} stageProgress - Progress within current stage (0-100)
  * @return {number} Overall progress percentage (0-100)
  */
@@ -76,7 +79,7 @@ export function calculateMultiStageProgress(
 
 	// Each stage is worth (100 / totalStages)%
 	const completedStagesProgress = ( safeCurrent / safeTotal ) * 100;
-	const currentStageProgress = ( safeStageProgress / safeTotal );
+	const currentStageProgress = safeStageProgress / safeTotal;
 
 	const totalProgress = completedStagesProgress + currentStageProgress;
 
@@ -88,11 +91,11 @@ export function calculateMultiStageProgress(
  *
  * Pure function that aggregates upload stats.
  *
- * @param {Object} stats - Statistics object
- * @param {number} stats.urlsSucceeded - Successfully uploaded URLs
- * @param {number} stats.urlsFailed - Failed URL uploads
+ * @param {Object} stats                 - Statistics object
+ * @param {number} stats.urlsSucceeded   - Successfully uploaded URLs
+ * @param {number} stats.urlsFailed      - Failed URL uploads
  * @param {number} stats.assetsSucceeded - Successfully uploaded assets
- * @param {number} stats.assetsFailed - Failed asset uploads
+ * @param {number} stats.assetsFailed    - Failed asset uploads
  * @return {Object} Aggregated statistics
  */
 export function calculateUploadStats( stats ) {
@@ -120,7 +123,9 @@ export function calculateUploadStats( stats ) {
 		totalFailed,
 		successRate: Math.round( successRate ),
 		urlSuccessRate:
-			totalUrls > 0 ? Math.round( ( urlsSucceeded / totalUrls ) * 100 ) : 100,
+			totalUrls > 0
+				? Math.round( ( urlsSucceeded / totalUrls ) * 100 )
+				: 100,
 		assetSuccessRate:
 			totalAssets > 0
 				? Math.round( ( assetsSucceeded / totalAssets ) * 100 )
@@ -134,15 +139,11 @@ export function calculateUploadStats( stats ) {
  * Pure function that determines success based on thresholds.
  *
  * @param {number} successCount - Number of successful uploads
- * @param {number} totalCount - Total upload attempts
- * @param {number} threshold - Minimum success percentage (default 80)
+ * @param {number} totalCount   - Total upload attempts
+ * @param {number} threshold    - Minimum success percentage (default 80)
  * @return {boolean} True if upload meets success threshold
  */
-export function isUploadSuccessful(
-	successCount,
-	totalCount,
-	threshold = 80
-) {
+export function isUploadSuccessful( successCount, totalCount, threshold = 80 ) {
 	if ( totalCount === 0 ) {
 		return true; // No files to upload = success
 	}
@@ -150,7 +151,10 @@ export function isUploadSuccessful(
 	const safeSuccess = Math.max( 0, Number( successCount ) || 0 );
 	const safeTotal = Math.max( 1, Number( totalCount ) || 1 );
 	// Use explicit check for undefined/null to allow 0 as valid threshold
-	const rawThreshold = threshold !== undefined && threshold !== null ? Number( threshold ) : 80;
+	const rawThreshold =
+		threshold !== undefined && threshold !== null
+			? Number( threshold )
+			: 80;
 	const safeThreshold = Math.min( 100, Math.max( 0, rawThreshold ) );
 
 	const successRate = ( safeSuccess / safeTotal ) * 100;
@@ -164,7 +168,7 @@ export function isUploadSuccessful(
  * Pure function for calculating upload speed.
  *
  * @param {number} bytesUploaded - Total bytes uploaded
- * @param {number} elapsedMs - Elapsed time in milliseconds
+ * @param {number} elapsedMs     - Elapsed time in milliseconds
  * @return {number} Bytes per second (0 if time is 0)
  */
 export function calculateUploadSpeed( bytesUploaded, elapsedMs ) {

@@ -96,7 +96,9 @@ describe( 'AssetManagerService', () => {
 		} );
 
 		test( 'should handle null/undefined input', () => {
-			expect( normalizeAssetData( null ) ).toEqual( { existsOnR2: false } );
+			expect( normalizeAssetData( null ) ).toEqual( {
+				existsOnR2: false,
+			} );
 			expect( normalizeAssetData( undefined ) ).toEqual( {
 				existsOnR2: false,
 			} );

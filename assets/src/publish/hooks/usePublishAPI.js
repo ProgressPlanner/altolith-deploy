@@ -22,20 +22,14 @@ export function usePublishAPI() {
 		[ assetDiscovery ]
 	);
 
-	const discoverAssets = useCallback(
-		async () => {
-			return await service.discoverAssets();
-		},
-		[ service ]
-	);
+	const discoverAssets = useCallback( async () => {
+		return await service.discoverAssets();
+	}, [ service ] );
 
 	// getAssetStatus is an alias for discoverAssets (eliminates duplication)
-	const getAssetStatus = useCallback(
-		async () => {
-			return await service.discoverAssets();
-		},
-		[ service ]
-	);
+	const getAssetStatus = useCallback( async () => {
+		return await service.discoverAssets();
+	}, [ service ] );
 
 	const markAssetChanged = useCallback(
 		( type, slug ) => {

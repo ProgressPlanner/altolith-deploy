@@ -32,10 +32,7 @@ describe( 'createSiteArchiveHandler', () => {
 
 		// Default context
 		mockContext = {
-			discoveredAssets: [
-				{ slug: 'plugin-1' },
-				{ slug: 'plugin-2' },
-			],
+			discoveredAssets: [ { slug: 'plugin-1' }, { slug: 'plugin-2' } ],
 			setStatusMessage: jest.fn(),
 			setStepProgress: jest.fn(),
 		};
@@ -52,7 +49,9 @@ describe( 'createSiteArchiveHandler', () => {
 		beforeEach( () => {
 			// Mock successful API responses for all phases
 			apiFetch.mockImplementation( async ( { path } ) => {
-				if ( path === '/aether/site-exporter/publish/createArchive/init' ) {
+				if (
+					path === '/aether/site-exporter/publish/createArchive/init'
+				) {
 					return {
 						success: true,
 						data: {
@@ -63,63 +62,92 @@ describe( 'createSiteArchiveHandler', () => {
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/database' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/database'
+				) {
 					return {
 						success: true,
 						progress: { overall: 20 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/uploads/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/uploads/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 2 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/uploads/batch' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/uploads/batch'
+				) {
 					return {
 						success: true,
 						progress: { overall: 40 },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/plugins/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/plugins/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { plugins: [ 'plugin-1', 'plugin-2' ] },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/plugins/add' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/plugins/add'
+				) {
 					return {
 						success: true,
 						progress: { overall: 60 },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/themes/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/themes/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { themes: [ 'theme-1' ] },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/themes/add' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/themes/add'
+				) {
 					return {
 						success: true,
 						progress: { overall: 80 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/mu-plugins/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/mu-plugins/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 0 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/finalize' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/finalize'
+				) {
 					return {
 						success: true,
 						data: { archivePath: '/tmp/archive.zip' },
@@ -138,7 +166,9 @@ describe( 'createSiteArchiveHandler', () => {
 				'createSiteArchive',
 				100
 			);
-			expect( mockProgressCache.clear ).toHaveBeenCalledWith( 'progress-123' );
+			expect( mockProgressCache.clear ).toHaveBeenCalledWith(
+				'progress-123'
+			);
 		} );
 
 		test( 'should initialize archive with custom assets', async () => {
@@ -267,7 +297,9 @@ describe( 'createSiteArchiveHandler', () => {
 	describe( 'Empty content scenarios', () => {
 		beforeEach( () => {
 			apiFetch.mockImplementation( async ( { path } ) => {
-				if ( path === '/aether/site-exporter/publish/createArchive/init' ) {
+				if (
+					path === '/aether/site-exporter/publish/createArchive/init'
+				) {
 					return {
 						success: true,
 						data: {
@@ -278,42 +310,62 @@ describe( 'createSiteArchiveHandler', () => {
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/database' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/database'
+				) {
 					return {
 						success: true,
 						progress: { overall: 50 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/uploads/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/uploads/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 0 },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/plugins/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/plugins/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { plugins: [] },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/themes/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/themes/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { themes: [] },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/mu-plugins/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/mu-plugins/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 0 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/finalize' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/finalize'
+				) {
 					return {
 						success: true,
 						data: { archivePath: '/tmp/archive.zip' },
@@ -411,7 +463,9 @@ describe( 'createSiteArchiveHandler', () => {
 
 		test( 'should clear progress cache on database phase failure', async () => {
 			apiFetch.mockImplementation( async ( { path } ) => {
-				if ( path === '/aether/site-exporter/publish/createArchive/init' ) {
+				if (
+					path === '/aether/site-exporter/publish/createArchive/init'
+				) {
 					return {
 						success: true,
 						data: {
@@ -422,7 +476,10 @@ describe( 'createSiteArchiveHandler', () => {
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/database' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/database'
+				) {
 					return {
 						success: false,
 						message: 'Database phase failed',
@@ -436,12 +493,16 @@ describe( 'createSiteArchiveHandler', () => {
 				createSiteArchiveHandler( mockContext )
 			).rejects.toThrow( 'Database phase failed' );
 
-			expect( mockProgressCache.clear ).toHaveBeenCalledWith( 'progress-123' );
+			expect( mockProgressCache.clear ).toHaveBeenCalledWith(
+				'progress-123'
+			);
 		} );
 
 		test( 'should clear progress cache on uploads batch failure', async () => {
 			apiFetch.mockImplementation( async ( { path } ) => {
-				if ( path === '/aether/site-exporter/publish/createArchive/init' ) {
+				if (
+					path === '/aether/site-exporter/publish/createArchive/init'
+				) {
 					return {
 						success: true,
 						data: {
@@ -452,14 +513,20 @@ describe( 'createSiteArchiveHandler', () => {
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/database' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/database'
+				) {
 					return {
 						success: true,
 						progress: { overall: 20 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/uploads/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/uploads/batches'
+				) {
 					return {
 						success: false,
 						message: 'Uploads batches failed',
@@ -473,12 +540,16 @@ describe( 'createSiteArchiveHandler', () => {
 				createSiteArchiveHandler( mockContext )
 			).rejects.toThrow( 'Uploads batches failed' );
 
-			expect( mockProgressCache.clear ).toHaveBeenCalledWith( 'progress-123' );
+			expect( mockProgressCache.clear ).toHaveBeenCalledWith(
+				'progress-123'
+			);
 		} );
 
 		test( 'should clear progress cache on plugin add failure', async () => {
 			apiFetch.mockImplementation( async ( { path } ) => {
-				if ( path === '/aether/site-exporter/publish/createArchive/init' ) {
+				if (
+					path === '/aether/site-exporter/publish/createArchive/init'
+				) {
 					return {
 						success: true,
 						data: {
@@ -489,28 +560,41 @@ describe( 'createSiteArchiveHandler', () => {
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/database' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/database'
+				) {
 					return {
 						success: true,
 						progress: { overall: 20 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/uploads/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/uploads/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 0 },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/plugins/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/plugins/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { plugins: [ 'plugin-1' ] },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/plugins/add' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/plugins/add'
+				) {
 					return {
 						success: false,
 						message: 'Failed to add plugin: plugin-1',
@@ -524,12 +608,16 @@ describe( 'createSiteArchiveHandler', () => {
 				createSiteArchiveHandler( mockContext )
 			).rejects.toThrow( 'Failed to add plugin: plugin-1' );
 
-			expect( mockProgressCache.clear ).toHaveBeenCalledWith( 'progress-123' );
+			expect( mockProgressCache.clear ).toHaveBeenCalledWith(
+				'progress-123'
+			);
 		} );
 
 		test( 'should clear progress cache on finalize failure', async () => {
 			apiFetch.mockImplementation( async ( { path } ) => {
-				if ( path === '/aether/site-exporter/publish/createArchive/init' ) {
+				if (
+					path === '/aether/site-exporter/publish/createArchive/init'
+				) {
 					return {
 						success: true,
 						data: {
@@ -540,42 +628,62 @@ describe( 'createSiteArchiveHandler', () => {
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/database' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/database'
+				) {
 					return {
 						success: true,
 						progress: { overall: 50 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/uploads/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/uploads/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 0 },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/plugins/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/plugins/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { plugins: [] },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/themes/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/themes/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { themes: [] },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/mu-plugins/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/mu-plugins/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 0 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/finalize' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/finalize'
+				) {
 					return {
 						success: false,
 						message: 'Finalize failed',
@@ -589,7 +697,9 @@ describe( 'createSiteArchiveHandler', () => {
 				createSiteArchiveHandler( mockContext )
 			).rejects.toThrow( 'Finalize failed' );
 
-			expect( mockProgressCache.clear ).toHaveBeenCalledWith( 'progress-123' );
+			expect( mockProgressCache.clear ).toHaveBeenCalledWith(
+				'progress-123'
+			);
 		} );
 	} );
 
@@ -597,7 +707,9 @@ describe( 'createSiteArchiveHandler', () => {
 		beforeEach( () => {
 			// Mock full workflow with different progress values
 			apiFetch.mockImplementation( async ( { path } ) => {
-				if ( path === '/aether/site-exporter/publish/createArchive/init' ) {
+				if (
+					path === '/aether/site-exporter/publish/createArchive/init'
+				) {
 					return {
 						success: true,
 						data: {
@@ -608,56 +720,82 @@ describe( 'createSiteArchiveHandler', () => {
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/database' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/database'
+				) {
 					return {
 						success: true,
 						progress: { overall: 10 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/uploads/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/uploads/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 1 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/uploads/batch' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/uploads/batch'
+				) {
 					return {
 						success: true,
 						progress: { overall: 30 },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/plugins/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/plugins/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { plugins: [ 'plugin-1' ] },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/plugins/add' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/plugins/add'
+				) {
 					return {
 						success: true,
 						progress: { overall: 60 },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/themes/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/themes/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { themes: [] },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/mu-plugins/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/mu-plugins/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 0 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/finalize' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/finalize'
+				) {
 					return {
 						success: true,
 						data: { archivePath: '/tmp/archive.zip' },
@@ -709,7 +847,9 @@ describe( 'createSiteArchiveHandler', () => {
 
 		test( 'should handle progress update with missing overall value', async () => {
 			apiFetch.mockImplementation( async ( { path } ) => {
-				if ( path === '/aether/site-exporter/publish/createArchive/init' ) {
+				if (
+					path === '/aether/site-exporter/publish/createArchive/init'
+				) {
 					return {
 						success: true,
 						data: {
@@ -720,42 +860,62 @@ describe( 'createSiteArchiveHandler', () => {
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/database' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/database'
+				) {
 					return {
 						success: true,
 						progress: {}, // No overall value
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/uploads/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/uploads/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 0 },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/plugins/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/plugins/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { plugins: [] },
 					};
 				}
 
-				if ( path.includes( '/aether/site-exporter/publish/createArchive/phase/themes/list' ) ) {
+				if (
+					path.includes(
+						'/aether/site-exporter/publish/createArchive/phase/themes/list'
+					)
+				) {
 					return {
 						success: true,
 						data: { themes: [] },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/phase/mu-plugins/batches' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/phase/mu-plugins/batches'
+				) {
 					return {
 						success: true,
 						data: { batches: 0 },
 					};
 				}
 
-				if ( path === '/aether/site-exporter/publish/createArchive/finalize' ) {
+				if (
+					path ===
+					'/aether/site-exporter/publish/createArchive/finalize'
+				) {
 					return {
 						success: true,
 						data: {},

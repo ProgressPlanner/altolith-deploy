@@ -50,9 +50,7 @@ describe( 'providerMetadata', () => {
 			test( 'should use cache on subsequent calls', async () => {
 				apiFetch.mockResolvedValue( {
 					success: true,
-					providers: [
-						{ id: 'provider-1', name: 'Provider 1' },
-					],
+					providers: [ { id: 'provider-1', name: 'Provider 1' } ],
 				} );
 
 				await getProviderMetadata();
@@ -65,9 +63,7 @@ describe( 'providerMetadata', () => {
 			test( 'should return same reference from cache', async () => {
 				apiFetch.mockResolvedValue( {
 					success: true,
-					providers: [
-						{ id: 'provider-1' },
-					],
+					providers: [ { id: 'provider-1' } ],
 				} );
 
 				const result1 = await getProviderMetadata();
@@ -215,7 +211,8 @@ describe( 'providerMetadata', () => {
 					providers: mockProviders,
 				} );
 
-				const result = await getProvidersByDeploymentType( 'static_site' );
+				const result =
+					await getProvidersByDeploymentType( 'static_site' );
 
 				expect( result ).toEqual( mockProviders );
 			} );
@@ -225,7 +222,8 @@ describe( 'providerMetadata', () => {
 					success: false,
 				} );
 
-				const result = await getProvidersByDeploymentType( 'static_site' );
+				const result =
+					await getProvidersByDeploymentType( 'static_site' );
 
 				expect( result ).toEqual( [] );
 			} );
@@ -235,7 +233,8 @@ describe( 'providerMetadata', () => {
 					success: true,
 				} );
 
-				const result = await getProvidersByDeploymentType( 'static_site' );
+				const result =
+					await getProvidersByDeploymentType( 'static_site' );
 
 				expect( result ).toEqual( [] );
 			} );
@@ -243,7 +242,8 @@ describe( 'providerMetadata', () => {
 			test( 'should return empty array on API error', async () => {
 				apiFetch.mockRejectedValue( new Error( 'Network error' ) );
 
-				const result = await getProvidersByDeploymentType( 'static_site' );
+				const result =
+					await getProvidersByDeploymentType( 'static_site' );
 
 				expect( result ).toEqual( [] );
 				expect( console.error ).toHaveBeenCalledWith(

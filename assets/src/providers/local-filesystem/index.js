@@ -34,8 +34,9 @@ addFilter(
 			// providerId from filter is an instance ID (e.g., 'local-filesystem:abc-123')
 			// Use instanceId from context if available, otherwise fall back to providerId from closure
 			const instanceId = context?.instanceId || providerId;
-			const exportPath = context?.exportPath || 'blueprint-bundle/bundle.zip';
-			
+			const exportPath =
+				context?.exportPath || 'blueprint-bundle/bundle.zip';
+
 			// Trigger PHP action hook for provider instances to handle upload
 			// This allows each provider instance to copy the file to its configured path
 			try {
@@ -53,19 +54,26 @@ addFilter(
 				if ( ! response.success ) {
 					return {
 						success: false,
-						error: response.message || 'Failed to trigger blueprint bundle upload',
+						error:
+							response.message ||
+							'Failed to trigger blueprint bundle upload',
 					};
 				}
 
 				return {
 					success: true,
-					message: response.message || 'Blueprint bundle uploaded successfully',
+					message:
+						response.message ||
+						'Blueprint bundle uploaded successfully',
 					path: exportPath,
 				};
 			} catch ( error ) {
 				return {
 					success: false,
-					error: error?.message || error?.toString() || 'Unknown error during upload',
+					error:
+						error?.message ||
+						error?.toString() ||
+						'Unknown error during upload',
 				};
 			}
 		};

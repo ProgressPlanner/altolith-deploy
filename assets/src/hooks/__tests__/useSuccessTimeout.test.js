@@ -178,9 +178,7 @@ describe( 'useSuccessTimeout', () => {
 	describe( 'Cleanup on unmount', () => {
 		test( 'should clear timeout when component unmounts', () => {
 			const callback = jest.fn();
-			const { result, unmount } = renderHook( () =>
-				useSuccessTimeout()
-			);
+			const { result, unmount } = renderHook( () => useSuccessTimeout() );
 
 			act( () => {
 				result.current.showSuccess( callback );
@@ -205,9 +203,7 @@ describe( 'useSuccessTimeout', () => {
 
 		test( 'should handle unmount after clearSuccess was called', () => {
 			const callback = jest.fn();
-			const { result, unmount } = renderHook( () =>
-				useSuccessTimeout()
-			);
+			const { result, unmount } = renderHook( () => useSuccessTimeout() );
 
 			act( () => {
 				result.current.showSuccess( callback );

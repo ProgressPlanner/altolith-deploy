@@ -20,7 +20,10 @@ describe( 'Storage Abstraction Layer', () => {
 
 	describe( 'get()', () => {
 		test( 'should return parsed value when key exists', () => {
-			localStorage.setItem( 'test-key', JSON.stringify( { foo: 'bar' } ) );
+			localStorage.setItem(
+				'test-key',
+				JSON.stringify( { foo: 'bar' } )
+			);
 
 			const result = storage.get( 'test-key' );
 
@@ -43,9 +46,11 @@ describe( 'Storage Abstraction Layer', () => {
 
 		test( 'should handle localStorage errors gracefully', () => {
 			// Mock localStorage.getItem to throw
-			jest.spyOn( Storage.prototype, 'getItem' ).mockImplementation( () => {
-				throw new Error( 'Storage error' );
-			} );
+			jest.spyOn( Storage.prototype, 'getItem' ).mockImplementation(
+				() => {
+					throw new Error( 'Storage error' );
+				}
+			);
 
 			const result = storage.get( 'test-key' );
 
@@ -149,7 +154,10 @@ describe( 'Storage Abstraction Layer', () => {
 
 	describe( 'remove()', () => {
 		test( 'should remove existing key', () => {
-			localStorage.setItem( 'test-key', JSON.stringify( { foo: 'bar' } ) );
+			localStorage.setItem(
+				'test-key',
+				JSON.stringify( { foo: 'bar' } )
+			);
 
 			const result = storage.remove( 'test-key' );
 
@@ -222,9 +230,11 @@ describe( 'Storage Abstraction Layer', () => {
 		} );
 
 		test( 'should return false on localStorage error', () => {
-			jest.spyOn( Storage.prototype, 'getItem' ).mockImplementation( () => {
-				throw new Error( 'Storage error' );
-			} );
+			jest.spyOn( Storage.prototype, 'getItem' ).mockImplementation(
+				() => {
+					throw new Error( 'Storage error' );
+				}
+			);
 
 			const result = storage.has( 'test-key' );
 

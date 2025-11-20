@@ -21,7 +21,6 @@ import {
 import { formatJobTime, getStatusDisplay } from '../utils/jobFormatters';
 
 export default function RecentJobs( { jobs = [], loading = false } ) {
-
 	const sectionStyle = {
 		...commonStyles.section,
 	};

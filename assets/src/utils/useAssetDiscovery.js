@@ -7,26 +7,17 @@
  * @package
  */
 
-import { useState, useCallback } from '@wordpress/element';
-import { debugWarn } from './debug';
+import { useState, useCallback, useMemo } from '@wordpress/element';
 import apiFetch from './api';
 import { getWpOrgCache } from './wporgCache';
+import { debugWarn } from './debug';
+import {
+	AssetDiscoveryService,
+	normalizePluginSlug,
+} from '../services/AssetDiscoveryService';
 
-/**
- * Normalize plugin slug to directory name only.
- * WordPress stores plugins as 'akismet/akismet.php' but WordPress.org expects just 'akismet'.
- *
- * @param {string} slug - Plugin slug (may include file path)
- * @return {string} Normalized slug (directory name only)
- */
-export function normalizePluginSlug( slug ) {
-	// If slug contains a slash, extract just the directory name (first part)
-	// Example: 'akismet/akismet.php' -> 'akismet'
-	if ( slug.includes( '/' ) ) {
-		return slug.split( '/' )[ 0 ];
-	}
-	return slug;
-}
+// Re-export normalizePluginSlug for backwards compatibility
+export { normalizePluginSlug };
 
 /**
  * Check if a plugin or theme exists on WordPress.org
@@ -177,44 +168,27 @@ async function checkWithMethod( slug, type, method, config = {} ) {
 }
 
 /**
- * Get all installed plugins and themes with metadata from REST API
- *
- * @return {Promise<Object>} Object with plugins and themes arrays
- */
-async function getInstalledAssets() {
-	try {
-		const response = await apiFetch( {
-			path: '/aether/site-exporter/assets',
-			method: 'GET',
-		} );
-
-		if ( ! response.success ) {
-			throw new Error( response.error || 'Failed to fetch assets' );
-		}
-
-		return {
-			plugins: response.plugins || [],
-			themes: response.themes || [],
-		};
-	} catch ( error ) {
-		debugWarn( 'Failed to fetch installed assets:', error );
-		return {
-			plugins: [],
-			themes: [],
-		};
-	}
-}
-
-/**
  * Asset Discovery Hook
  *
  * Provides methods to discover and categorize installed plugins/themes.
+ * Uses AssetDiscoveryService for business logic.
  *
  * @return {Object} Hook methods and state
  */
 export default function useAssetDiscovery() {
 	const [ loading, setLoading ] = useState( false );
 	const [ error, setError ] = useState( null );
+
+	// Create service instance with dependencies
+	const service = useMemo(
+		() =>
+			new AssetDiscoveryService(
+				apiFetch,
+				isFromWordPressOrg,
+				getWpOrgCache()
+			),
+		[]
+	);
 
 	/**
 	 * Discover all custom assets (not from WordPress.org)
@@ -226,64 +200,7 @@ export default function useAssetDiscovery() {
 		setError( null );
 
 		try {
-			// Fetch config to get wporgCheckMethod
-			const configResponse = await apiFetch( {
-				path: '/aether/site-exporter/config',
-				method: 'GET',
-			} );
-
-			const config = configResponse || {};
-
-			const { plugins, themes } = await getInstalledAssets();
-
-			// Only include active plugins and themes (like getBlueprintAssets does)
-			// This ensures the message shows only what will actually be included in the bundle
-			const activePlugins = plugins.filter(
-				( plugin ) => plugin.is_active
-			);
-
-			// Get active theme (themes array should only have one active theme)
-			const activeTheme = themes.find( ( theme ) => theme.is_active );
-			const activeThemes = activeTheme ? [ activeTheme ] : [];
-
-			// Check each asset against WordPress.org
-			// Method is configurable via filters (default: PHP server-side)
-			const items = [
-				...activePlugins.map( ( p ) => ( {
-					...p,
-					assetType: 'plugin',
-				} ) ),
-				...activeThemes.map( ( t ) => ( {
-					...t,
-					assetType: 'theme',
-				} ) ),
-			];
-
-			// Check all assets in parallel
-			const allAssets = await Promise.all(
-				items.map( async ( item ) => {
-					const fromWpOrg = await isFromWordPressOrg(
-						item.slug,
-						item.assetType,
-						config
-					);
-					return {
-						...item,
-						from_wporg: fromWpOrg,
-					};
-				} )
-			);
-
-			// Filter to only custom assets (not from WordPress.org)
-			const customAssets = allAssets
-				.filter( ( asset ) => ! asset.from_wporg )
-				.map( ( asset ) => ( {
-					type: asset.assetType,
-					slug: asset.slug,
-					name: asset.name,
-					version: asset.version,
-				} ) );
-
+			const customAssets = await service.discoverCustomAssets();
 			setLoading( false );
 			return customAssets;
 		} catch ( err ) {
@@ -291,7 +208,7 @@ export default function useAssetDiscovery() {
 			setLoading( false );
 			throw err;
 		}
-	}, [] );
+	}, [ service ] );
 
 	/**
 	 * Get WordPress.org assets for blueprint generation
@@ -306,86 +223,15 @@ export default function useAssetDiscovery() {
 		setError( null );
 
 		try {
-			// Fetch config to get wporgCheckMethod
-			const configResponse = await apiFetch( {
-				path: '/aether/site-exporter/config',
-				method: 'GET',
-			} );
-
-			const config = configResponse || {};
-
-			const { plugins, themes } = await getInstalledAssets();
-
-			// Only check active plugins
-			const activePlugins = plugins.filter(
-				( plugin ) => plugin.is_active
-			);
-
-			// Get active theme and parent themes
-			const activeTheme = themes.find( ( theme ) => theme.is_active );
-			const activeThemes = activeTheme ? [ activeTheme ] : [];
-
-			// Check each asset against WordPress.org
-			// Method is configurable via filters (default: PHP server-side)
-			const items = [
-				...activePlugins.map( ( p ) => ( {
-					...p,
-					assetType: 'plugin',
-				} ) ),
-				...activeThemes.map( ( t ) => ( {
-					...t,
-					assetType: 'theme',
-				} ) ),
-			];
-
-			// Check all assets in parallel
-			const allAssets = await Promise.all(
-				items.map( async ( item ) => {
-					const fromWpOrg = await isFromWordPressOrg(
-						item.slug,
-						item.assetType,
-						config
-					);
-					return {
-						...item,
-						from_wporg: fromWpOrg,
-					};
-				} )
-			);
-
-			// Filter to only WordPress.org assets
-			const wporgPlugins = allAssets
-				.filter(
-					( asset ) =>
-						asset.assetType === 'plugin' && asset.from_wporg
-				)
-				.filter(
-					( plugin ) =>
-						// Skip plugins that are built into Playground or already included
-						! [ 'aether', 'sqlite-database-integration' ].includes(
-							normalizePluginSlug( plugin.slug )
-						)
-				)
-				.map( ( plugin ) => normalizePluginSlug( plugin.slug ) );
-
-			const wporgThemes = allAssets
-				.filter(
-					( asset ) => asset.assetType === 'theme' && asset.from_wporg
-				)
-				.map( ( theme ) => normalizePluginSlug( theme.slug ) );
-
+			const blueprintAssets = await service.getBlueprintAssets();
 			setLoading( false );
-			return {
-				plugins: wporgPlugins,
-				themes: wporgThemes,
-				siteName: window.wp?.siteName || document.title,
-			};
+			return blueprintAssets;
 		} catch ( err ) {
 			setError( err.message );
 			setLoading( false );
 			throw err;
 		}
-	}, [] );
+	}, [ service ] );
 
 	return {
 		discoverCustomAssets,

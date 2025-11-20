@@ -95,7 +95,9 @@ describe( 'helpers', () => {
 			const fallback = { default: true };
 
 			expect( parseJSONSafely( null, fallback ) ).toEqual( fallback );
-			expect( parseJSONSafely( undefined, fallback ) ).toEqual( fallback );
+			expect( parseJSONSafely( undefined, fallback ) ).toEqual(
+				fallback
+			);
 			expect( parseJSONSafely( 123, fallback ) ).toEqual( fallback );
 		} );
 
@@ -167,7 +169,9 @@ describe( 'helpers', () => {
 			expect( parseJSONArray( '{"foo":"bar"}', fallback ) ).toEqual(
 				fallback
 			);
-			expect( parseJSONArray( '"string"', fallback ) ).toEqual( fallback );
+			expect( parseJSONArray( '"string"', fallback ) ).toEqual(
+				fallback
+			);
 			expect( parseJSONArray( '123', fallback ) ).toEqual( fallback );
 		} );
 
@@ -201,8 +205,12 @@ describe( 'helpers', () => {
 		test( 'should reject non-object JSON', () => {
 			const fallback = { default: true };
 
-			expect( parseJSONObject( '[1,2,3]', fallback ) ).toEqual( fallback );
-			expect( parseJSONObject( '"string"', fallback ) ).toEqual( fallback );
+			expect( parseJSONObject( '[1,2,3]', fallback ) ).toEqual(
+				fallback
+			);
+			expect( parseJSONObject( '"string"', fallback ) ).toEqual(
+				fallback
+			);
 			expect( parseJSONObject( '123', fallback ) ).toEqual( fallback );
 		} );
 

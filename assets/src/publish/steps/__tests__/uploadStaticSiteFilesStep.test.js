@@ -335,7 +335,9 @@ describe( 'uploadStaticSiteFilesHandler', () => {
 			await uploadStaticSiteFilesHandler( mockContext );
 
 			expect( mockContext.setStatusMessage ).toHaveBeenCalledWith(
-				expect.stringContaining( 'Uploaded static site to 2/3 provider(s)' ),
+				expect.stringContaining(
+					'Uploaded static site to 2/3 provider(s)'
+				),
 				'warning',
 				'uploadStaticSiteFiles'
 			);
@@ -495,7 +497,9 @@ describe( 'uploadStaticSiteFilesHandler', () => {
 
 			await expect(
 				uploadStaticSiteFilesHandler( contextWithoutUrls )
-			).rejects.toThrow( 'URLs not found. Please run getStaticSiteUrls first.' );
+			).rejects.toThrow(
+				'URLs not found. Please run getStaticSiteUrls first.'
+			);
 		} );
 
 		test( 'should throw error when URLs is not an array', async () => {
@@ -506,7 +510,9 @@ describe( 'uploadStaticSiteFilesHandler', () => {
 
 			await expect(
 				uploadStaticSiteFilesHandler( contextWithInvalidUrls )
-			).rejects.toThrow( 'URLs not found. Please run getStaticSiteUrls first.' );
+			).rejects.toThrow(
+				'URLs not found. Please run getStaticSiteUrls first.'
+			);
 		} );
 
 		test( 'should return skipped status when no providers configured', async () => {
@@ -592,8 +598,7 @@ describe( 'uploadStaticSiteFilesHandler', () => {
 				async ( urls, deploymentUrl, providerId ) => {
 					return {
 						success: true,
-						filesUploaded:
-							providerId === 'provider-1' ? 100 : 50,
+						filesUploaded: providerId === 'provider-1' ? 100 : 50,
 						uploadedFiles: [],
 					};
 				}

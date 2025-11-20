@@ -18,9 +18,9 @@ export class PublishAPIService {
 	/**
 	 * Create service instance
 	 *
-	 * @param {Function} apiFetch WordPress apiFetch function (injectable for testing)
-	 * @param {Object} assetDiscovery Asset discovery service
-	 * @param {Object} storage Storage implementation (injectable for testing)
+	 * @param {Function} apiFetch       WordPress apiFetch function (injectable for testing)
+	 * @param {Object}   assetDiscovery Asset discovery service
+	 * @param {Object}   storage        Storage implementation (injectable for testing)
 	 */
 	constructor( apiFetch, assetDiscovery, storage ) {
 		this.apiFetch = apiFetch;

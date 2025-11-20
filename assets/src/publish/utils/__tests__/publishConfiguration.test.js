@@ -192,7 +192,10 @@ describe( 'publishConfiguration', () => {
 		} );
 
 		test( 'should handle empty provider configs', () => {
-			const result = getEnabledInstancesForDeploymentType( {}, 'static-site' );
+			const result = getEnabledInstancesForDeploymentType(
+				{},
+				'static-site'
+			);
 
 			expect( result ).toEqual( [] );
 		} );

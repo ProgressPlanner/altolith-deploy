@@ -15,7 +15,7 @@ import { debugError } from '../../utils/debug';
  * Extracts provider IDs and settings from API response.
  * Pure function - no side effects, easily testable.
  *
- * @param {Object} settingsResponse - Response from settings API
+ * @param {Object} settingsResponse          - Response from settings API
  * @param {string} fallbackStorageProviderId - Fallback provider ID if not in settings
  * @return {Object} Configuration object with provider IDs
  */
@@ -45,7 +45,7 @@ export function preparePublishConfiguration(
  * that support the specified deployment type.
  *
  * @param {Object} providerConfigs - All provider configurations
- * @param {string} deploymentType - Deployment type to filter by
+ * @param {string} deploymentType  - Deployment type to filter by
  * @return {Array<string>} Array of enabled instance IDs
  */
 export function getEnabledInstancesForDeploymentType(
@@ -59,10 +59,7 @@ export function getEnabledInstancesForDeploymentType(
 
 		return Object.entries( providerConfigs )
 			.filter( ( [ , instanceConfig ] ) => {
-				if (
-					! instanceConfig ||
-					typeof instanceConfig !== 'object'
-				) {
+				if ( ! instanceConfig || typeof instanceConfig !== 'object' ) {
 					return false;
 				}
 
@@ -93,7 +90,7 @@ export function getEnabledInstancesForDeploymentType(
  * Pure function that takes provider configs and returns
  * arrays of instance IDs for each deployment type.
  *
- * @param {Object} providerConfigs - All provider configurations
+ * @param {Object}        providerConfigs - All provider configurations
  * @param {Array<string>} deploymentTypes - Array of deployment type constants
  * @return {Object} Object with arrays of instance IDs keyed by deployment type
  */
@@ -120,7 +117,7 @@ export function determineProvidersByDeploymentType(
  * Pure function that assembles the context object
  * needed for workflow execution.
  *
- * @param {Object} config - Configuration object
+ * @param {Object} config       - Configuration object
  * @param {Object} dependencies - External dependencies
  * @return {Object} Workflow context
  */

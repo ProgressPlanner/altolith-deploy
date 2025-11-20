@@ -14,7 +14,9 @@ jest.mock( '../urlRewriter', () => ( {
 	createUrlRewriter: jest.fn( () => ( {
 		rewriteHtml: jest.fn( ( html ) => html ), // Pass through by default
 	} ) ),
-	stripPlaygroundScope: jest.fn( ( path ) => path.replace( /^scope:[^/]+\//, '' ) ),
+	stripPlaygroundScope: jest.fn( ( path ) =>
+		path.replace( /^scope:[^/]+\//, '' )
+	),
 } ) );
 
 describe( 'htmlProcessor', () => {
@@ -30,7 +32,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).not.toContain( 'admin-bar-css' );
 				expect( result ).not.toContain( 'admin-bar.css' );
@@ -46,7 +52,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).not.toContain( 'dashicons-css' );
 				expect( result ).not.toContain( 'dashicons.css' );
@@ -62,7 +72,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).not.toContain( 'id="wpadminbar"' );
 				expect( result ).not.toContain( 'Admin bar content' );
@@ -81,7 +95,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).not.toContain( 'admin-bar-inline-css' );
 				expect( result ).not.toContain( '#wpadminbar' );
@@ -97,7 +115,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).not.toContain( 'admin-bar-js' );
 				expect( result ).not.toContain( 'admin-bar.js' );
@@ -112,7 +134,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).not.toContain( 'logged-in' );
 				expect( result ).toContain( 'class="' );
@@ -129,11 +155,17 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				// Check that "admin-bar" class was removed (as standalone class, not part of "no-admin-bar")
 				// The class should NOT appear immediately after whitespace or quote
-				expect( result ).not.toMatch( /class="[^"]*(\s|")admin-bar(\s|")/ );
+				expect( result ).not.toMatch(
+					/class="[^"]*(\s|")admin-bar(\s|")/
+				);
 				expect( result ).toContain( 'home' );
 				expect( result ).toContain( 'page' );
 			} );
@@ -147,7 +179,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).toContain( 'no-admin-bar' );
 			} );
@@ -161,7 +197,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				const matches = result.match( /no-admin-bar/g );
 				expect( matches ).toHaveLength( 1 );
@@ -177,7 +217,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).not.toContain( 'wp-admin-bar-user' );
 				expect( result ).toContain( 'wp-site-blocks' );
@@ -195,7 +239,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).not.toContain( 'comments/feed' );
 			} );
@@ -210,7 +258,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).not.toContain( 'api.w.org' );
 			} );
@@ -225,7 +277,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				expect( result ).not.toContain( 'EditURI' );
 				expect( result ).not.toContain( 'rsd+xml' );
@@ -241,7 +297,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				// Main feed should be preserved (only comments/feed is removed)
 				expect( result ).toContain( 'feed/' );
@@ -282,7 +342,11 @@ describe( 'htmlProcessor', () => {
 
 				const html = '<html><body>Content</body></html>';
 
-				processHtml( html, 'http://example.com/page', 'http://example.com' );
+				processHtml(
+					html,
+					'http://example.com/page',
+					'http://example.com'
+				);
 
 				expect( createUrlRewriter ).toHaveBeenCalledWith(
 					'http://example.com',
@@ -312,7 +376,11 @@ describe( 'htmlProcessor', () => {
 					</html>
 				`;
 
-				const result = processHtml( html, 'http://example.com', 'http://example.com' );
+				const result = processHtml(
+					html,
+					'http://example.com',
+					'http://example.com'
+				);
 
 				// Admin bar removed
 				expect( result ).not.toContain( 'admin-bar-css' );
@@ -326,7 +394,9 @@ describe( 'htmlProcessor', () => {
 				// Body classes updated
 				expect( result ).not.toContain( 'logged-in' );
 				// Verify "admin-bar" class removed (match as standalone class with space/quote boundaries)
-				expect( result ).not.toMatch( /class="[^"]*(\s|^)admin-bar(\s|")/);
+				expect( result ).not.toMatch(
+					/class="[^"]*(\s|^)admin-bar(\s|")/
+				);
 				expect( result ).toContain( 'no-admin-bar' );
 
 				// Content preserved
@@ -382,9 +452,7 @@ describe( 'htmlProcessor', () => {
 				);
 
 				expect(
-					getStaticFilePath(
-						'http://example.com/scope:12345/about'
-					)
+					getStaticFilePath( 'http://example.com/scope:12345/about' )
 				).toBe( 'about/index.html' );
 			} );
 
@@ -402,9 +470,9 @@ describe( 'htmlProcessor', () => {
 
 		describe( 'Edge Cases', () => {
 			test( 'should handle URLs with multiple slashes', () => {
-				expect( getStaticFilePath( 'http://example.com///about///' ) ).toBe(
-					'about/index.html'
-				);
+				expect(
+					getStaticFilePath( 'http://example.com///about///' )
+				).toBe( 'about/index.html' );
 			} );
 
 			test( 'should handle URLs with query parameters (ignore them)', () => {

@@ -59,7 +59,9 @@ describe( 'assetExclusions', () => {
 					isExcludedUrl( 'http://example.com/wp-json/wp/v2/posts' )
 				).toBe( true );
 				expect(
-					isExcludedUrl( 'https://example.com/wp-json/custom/endpoint' )
+					isExcludedUrl(
+						'https://example.com/wp-json/custom/endpoint'
+					)
 				).toBe( true );
 			} );
 
@@ -156,13 +158,17 @@ describe( 'assetExclusions', () => {
 
 			test( 'should handle URLs with fragments', () => {
 				expect(
-					isExcludedUrl( 'http://example.com/wp-json/endpoint#section' )
+					isExcludedUrl(
+						'http://example.com/wp-json/endpoint#section'
+					)
 				).toBe( true );
 			} );
 
 			test( 'should handle malformed URLs gracefully', () => {
 				// Should not throw
-				expect( () => isExcludedUrl( 'not-a-valid-url' ) ).not.toThrow();
+				expect( () =>
+					isExcludedUrl( 'not-a-valid-url' )
+				).not.toThrow();
 			} );
 
 			test( 'should handle relative URLs', () => {
@@ -286,7 +292,8 @@ describe( 'assetExclusions', () => {
 
 		test( 'should handle complete asset processing workflow', () => {
 			// Typical workflow: check if URL is excluded, then check extension
-			const assetUrl = 'http://example.com/wp-content/themes/my-theme/style.css';
+			const assetUrl =
+				'http://example.com/wp-content/themes/my-theme/style.css';
 
 			const excluded = isExcludedUrl( assetUrl );
 			expect( excluded ).toBe( false );

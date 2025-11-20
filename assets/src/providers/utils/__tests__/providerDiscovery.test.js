@@ -28,7 +28,9 @@ describe( 'providerDiscovery', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
 		// Reset to default: no filters applied
-		applyFilters.mockImplementation( ( hook, defaultValue ) => defaultValue );
+		applyFilters.mockImplementation(
+			( hook, defaultValue ) => defaultValue
+		);
 		// Suppress console.error in tests
 		jest.spyOn( console, 'error' ).mockImplementation( () => {} );
 	} );
@@ -73,7 +75,10 @@ describe( 'providerDiscovery', () => {
 				apiFetch.mockResolvedValue( {
 					success: true,
 					providers: [
-						{ id: 'provider-1', deployment_types: [ 'blueprint_bundle' ] },
+						{
+							id: 'provider-1',
+							deployment_types: [ 'blueprint_bundle' ],
+						},
 					],
 				} );
 
@@ -89,11 +94,20 @@ describe( 'providerDiscovery', () => {
 				apiFetch.mockResolvedValue( {
 					success: true,
 					providers: [
-						{ id: 'provider-1', deployment_types: [ 'blueprint_bundle' ] },
-						{ id: 'provider-2', deployment_types: [ 'static_site' ] },
+						{
+							id: 'provider-1',
+							deployment_types: [ 'blueprint_bundle' ],
+						},
+						{
+							id: 'provider-2',
+							deployment_types: [ 'static_site' ],
+						},
 						{
 							id: 'provider-3',
-							deployment_types: [ 'static_site', 'blueprint_bundle' ],
+							deployment_types: [
+								'static_site',
+								'blueprint_bundle',
+							],
 						},
 					],
 				} );
@@ -108,8 +122,14 @@ describe( 'providerDiscovery', () => {
 				apiFetch.mockResolvedValue( {
 					success: true,
 					providers: [
-						{ id: 'provider-1', deployment_types: [ 'blueprint_bundle' ] },
-						{ id: 'provider-2', deployment_types: [ 'blueprint_bundle' ] },
+						{
+							id: 'provider-1',
+							deployment_types: [ 'blueprint_bundle' ],
+						},
+						{
+							id: 'provider-2',
+							deployment_types: [ 'blueprint_bundle' ],
+						},
 					],
 				} );
 
@@ -124,7 +144,10 @@ describe( 'providerDiscovery', () => {
 					success: true,
 					providers: [
 						{ id: 'provider-1' },
-						{ id: 'provider-2', deployment_types: [ 'static_site' ] },
+						{
+							id: 'provider-2',
+							deployment_types: [ 'static_site' ],
+						},
 					],
 				} );
 
@@ -188,7 +211,8 @@ describe( 'providerDiscovery', () => {
 			test( 'should use filtered value when provided', async () => {
 				applyFilters.mockReturnValue( 'custom-provider' );
 
-				const result = await getProviderForDeploymentType( 'static_site' );
+				const result =
+					await getProviderForDeploymentType( 'static_site' );
 
 				expect( applyFilters ).toHaveBeenCalledWith(
 					'aether.provider.getForDeploymentType',
@@ -220,9 +244,7 @@ describe( 'providerDiscovery', () => {
 				applyFilters.mockReturnValue( null );
 				apiFetch.mockResolvedValue( {
 					success: true,
-					providers: [
-						{ id: 'provider-1' },
-					],
+					providers: [ { id: 'provider-1' } ],
 				} );
 
 				await getProviderForDeploymentType( 'static_site' );
@@ -243,7 +265,8 @@ describe( 'providerDiscovery', () => {
 					],
 				} );
 
-				const result = await getProviderForDeploymentType( 'static_site' );
+				const result =
+					await getProviderForDeploymentType( 'static_site' );
 
 				expect( result ).toBe( 'provider-1' );
 			} );
@@ -252,9 +275,7 @@ describe( 'providerDiscovery', () => {
 				applyFilters.mockReturnValue( null );
 				apiFetch.mockResolvedValue( {
 					success: true,
-					providers: [
-						{ id: 'blueprint-provider' },
-					],
+					providers: [ { id: 'blueprint-provider' } ],
 				} );
 
 				await getProviderForDeploymentType( 'blueprint_bundle' );
@@ -271,7 +292,8 @@ describe( 'providerDiscovery', () => {
 					providers: [],
 				} );
 
-				const result = await getProviderForDeploymentType( 'static_site' );
+				const result =
+					await getProviderForDeploymentType( 'static_site' );
 
 				expect( result ).toBeNull();
 			} );
@@ -282,7 +304,8 @@ describe( 'providerDiscovery', () => {
 					success: false,
 				} );
 
-				const result = await getProviderForDeploymentType( 'static_site' );
+				const result =
+					await getProviderForDeploymentType( 'static_site' );
 
 				expect( result ).toBeNull();
 			} );
@@ -293,7 +316,8 @@ describe( 'providerDiscovery', () => {
 					success: true,
 				} );
 
-				const result = await getProviderForDeploymentType( 'static_site' );
+				const result =
+					await getProviderForDeploymentType( 'static_site' );
 
 				expect( result ).toBeNull();
 			} );
@@ -302,7 +326,8 @@ describe( 'providerDiscovery', () => {
 				applyFilters.mockReturnValue( null );
 				apiFetch.mockRejectedValue( new Error( 'Network error' ) );
 
-				const result = await getProviderForDeploymentType( 'static_site' );
+				const result =
+					await getProviderForDeploymentType( 'static_site' );
 
 				expect( result ).toBeNull();
 				expect( console.error ).toHaveBeenCalledWith(

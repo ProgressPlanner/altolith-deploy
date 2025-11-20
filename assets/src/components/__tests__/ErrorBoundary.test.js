@@ -91,10 +91,10 @@ describe( 'ErrorBoundary', () => {
 				</ErrorBoundary>
 			);
 
-			expect( screen.getByText( 'Something went wrong' ) ).toBeInTheDocument();
 			expect(
-				screen.queryByText( 'No error' )
-			).not.toBeInTheDocument();
+				screen.getByText( 'Something went wrong' )
+			).toBeInTheDocument();
+			expect( screen.queryByText( 'No error' ) ).not.toBeInTheDocument();
 		} );
 
 		test( 'should display default error message', () => {
@@ -209,7 +209,9 @@ describe( 'ErrorBoundary', () => {
 
 			render( <Wrapper /> );
 
-			expect( screen.getByText( 'Something went wrong' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Something went wrong' )
+			).toBeInTheDocument();
 
 			// Fix the underlying issue
 			window.testSetShouldThrow( false );
@@ -276,9 +278,7 @@ describe( 'ErrorBoundary', () => {
 	describe( 'Custom fallback UI', () => {
 		test( 'should render custom fallback when provided', () => {
 			const customFallback = ( { error } ) => (
-				<div>
-					Custom error UI: { error.message }
-				</div>
+				<div>Custom error UI: { error.message }</div>
 			);
 
 			render(
@@ -361,7 +361,9 @@ describe( 'ErrorBoundary', () => {
 				</ErrorBoundary>
 			);
 
-			expect( screen.getByText( 'Something went wrong' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Something went wrong' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should handle error without stack trace', () => {
@@ -370,11 +372,16 @@ describe( 'ErrorBoundary', () => {
 
 			render(
 				<ErrorBoundary>
-					<ThrowError shouldThrow={ true } error={ errorWithoutStack } />
+					<ThrowError
+						shouldThrow={ true }
+						error={ errorWithoutStack }
+					/>
 				</ErrorBoundary>
 			);
 
-			expect( screen.getByText( 'Something went wrong' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Something went wrong' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should handle non-Error objects thrown', () => {
@@ -388,7 +395,9 @@ describe( 'ErrorBoundary', () => {
 				</ErrorBoundary>
 			);
 
-			expect( screen.getByText( 'Something went wrong' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Something went wrong' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should handle deeply nested error', () => {
@@ -408,7 +417,9 @@ describe( 'ErrorBoundary', () => {
 				</ErrorBoundary>
 			);
 
-			expect( screen.getByText( 'Something went wrong' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Something went wrong' )
+			).toBeInTheDocument();
 		} );
 	} );
 
@@ -428,7 +439,9 @@ describe( 'ErrorBoundary', () => {
 				</ErrorBoundary>
 			);
 
-			expect( screen.getByText( 'Something went wrong' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Something went wrong' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should work with both onError and onReset callbacks', async () => {
