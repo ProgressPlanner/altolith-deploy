@@ -40,6 +40,8 @@ export default function PublishProgressModal( {
 		reset,
 		overallProgress,
 		messageHistory,
+		staticSiteProviders,
+		blueprintBundleProviders,
 	} = publishState;
 
 	// Ref for activity log auto-scroll
@@ -346,7 +348,11 @@ export default function PublishProgressModal( {
 					</div>
 				) }
 
-				<UploadStatistics messageHistory={ messageHistory } />
+				<UploadStatistics
+					messageHistory={ messageHistory }
+					staticSiteProviders={ staticSiteProviders }
+					blueprintBundleProviders={ blueprintBundleProviders }
+				/>
 
 				{ messageHistory.length > 0 && (
 					<div

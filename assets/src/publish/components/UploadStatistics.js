@@ -22,42 +22,37 @@ import { formatFileSize } from '../../utils/helpers';
 /**
  * Upload Statistics Component
  *
- * @param {Object} props                Component props
- * @param {Array}  props.messageHistory Array of status messages
+ * @param {Object} props                          Component props
+ * @param {Array}  props.messageHistory           Array of status messages
+ * @param {Array}  props.staticSiteProviders      Array of provider IDs for static site deployment
+ * @param {Array}  props.blueprintBundleProviders Array of provider IDs for blueprint bundle deployment
  * @return {JSX.Element|null} Upload statistics section or null if no stats available
  */
-export default function UploadStatistics( { messageHistory } ) {
+export default function UploadStatistics( {
+	messageHistory,
+	staticSiteProviders = [],
+	blueprintBundleProviders = [],
+} ) {
 	// Calculate upload statistics from message history
 	const uploadStats = useMemo( () => {
-		// Count unique providers from summary messages (static site)
-		// Only count summary messages, not context messages
+		// Get provider count from actual provider arrays (more accurate than parsing messages)
+		// Use the largest count between static and blueprint providers
+		const providerCount = Math.max(
+			staticSiteProviders.length,
+			blueprintBundleProviders.length,
+			1
+		);
+
+		// Count static site files uploaded across all providers
+		// Parse provider summary messages like "Completed Production: 100 files uploaded"
+		// to get actual total (e.g., 100 files × 3 providers = 300 total uploads)
 		const providerSummaryMessages = messageHistory.filter(
 			( msg ) =>
 				msg.key?.startsWith( 'upload-provider-' ) &&
 				msg.key?.endsWith( '-summary' )
 		);
 
-		// Check for blueprint bundle uploads
-		const blueprintMessages = messageHistory.filter(
-			( msg ) =>
-				msg.key === 'uploadSiteArchive' &&
-				msg.type === 'success' &&
-				msg.metadata?.isBlueprint
-		);
-		const hasBlueprintUpload = blueprintMessages.length > 0;
-		const blueprintProviderCount =
-			blueprintMessages[ 0 ]?.metadata?.providerCount || 0;
-
-		// Determine provider count
-		let providerCount = Math.max( 1, providerSummaryMessages.length || 1 );
-		// If only blueprint upload (no static site), use blueprint provider count
-		if ( hasBlueprintUpload && providerSummaryMessages.length === 0 ) {
-			providerCount = blueprintProviderCount;
-		}
-
-		// Count static site files uploaded across all providers
-		// Parse provider summary messages like "Completed Production: 100 files uploaded"
-		// to get actual total (e.g., 100 files × 3 providers = 300 total uploads)
+		// Count static site files
 		let staticFileCount = 0;
 		if ( providerSummaryMessages.length > 0 ) {
 			// Multi-provider: sum file counts from each provider summary
@@ -81,9 +76,7 @@ export default function UploadStatistics( { messageHistory } ) {
 		}
 
 		// Count blueprint bundle uploads (1 file per provider)
-		const blueprintFileCount = hasBlueprintUpload
-			? blueprintProviderCount
-			: 0;
+		const blueprintFileCount = blueprintBundleProviders.length;
 
 		// Total files = static files + blueprint bundles
 		const fileCount = staticFileCount + blueprintFileCount;
@@ -101,9 +94,13 @@ export default function UploadStatistics( { messageHistory } ) {
 		}, 0 );
 
 		// Blueprint bundle size (only count once, not per provider)
-		const blueprintSize = hasBlueprintUpload
-			? blueprintMessages[ 0 ]?.metadata?.bundleSize || 0
-			: 0;
+		const blueprintMessages = messageHistory.filter(
+			( msg ) =>
+				msg.key === 'uploadSiteArchive' &&
+				msg.type === 'success' &&
+				msg.metadata?.isBlueprint
+		);
+		const blueprintSize = blueprintMessages[ 0 ]?.metadata?.bundleSize || 0;
 
 		// Total size = static files + blueprint
 		const totalSize = staticFilesSize + blueprintSize;
@@ -113,7 +110,7 @@ export default function UploadStatistics( { messageHistory } ) {
 			fileCount,
 			totalSize: formatFileSize( totalSize ),
 		};
-	}, [ messageHistory ] );
+	}, [ messageHistory, staticSiteProviders, blueprintBundleProviders ] );
 
 	// Don't render if no uploads at all
 	if ( uploadStats.fileCount === 0 ) {

@@ -36,6 +36,7 @@ export function usePublishController( publishState ) {
 		setOverallProgressValue,
 		setStepProgress,
 		removeMessage,
+		setProviders,
 	} = publishState;
 
 	// State for storage provider ID (set before starting publish)
@@ -408,6 +409,9 @@ export function usePublishController( publishState ) {
 				edgeFunctions: edgeFunctionProviders,
 			} );
 
+			// Store provider arrays in global state for UI access
+			setProviders( staticSiteProviders, blueprintBundleProviders );
+
 			// Build context object with all dependencies for step handlers (use pure function)
 			const workflowContext = buildWorkflowContext(
 				{
@@ -489,6 +493,7 @@ export function usePublishController( publishState ) {
 		setStepProgress,
 		removeMessage,
 		setOverallProgressValue,
+		setProviders,
 		markAllComplete,
 	] );
 

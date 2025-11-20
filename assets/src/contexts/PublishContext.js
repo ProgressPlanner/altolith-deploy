@@ -28,6 +28,8 @@ export const PublishContext = createContext( {
 	error: null,
 	currentStatusMessage: null,
 	overallProgress: 0,
+	staticSiteProviders: [],
+	blueprintBundleProviders: [],
 	initializeSteps: () => {},
 	setStepStatus: () => {},
 	setStepProgress: () => {},
@@ -40,6 +42,7 @@ export const PublishContext = createContext( {
 	setOverallProgressValue: () => {},
 	updateMessage: () => {},
 	removeMessage: () => {},
+	setProviders: () => {},
 	reset: () => {},
 } );
 
@@ -69,6 +72,10 @@ export function PublishProvider( { children } ) {
 	const [ currentStatusMessage, setCurrentStatusMessage ] = useState( null );
 	const [ overallProgress, setOverallProgress ] = useState( 0 );
 	const [ messageHistory, setMessageHistory ] = useState( [] );
+	const [ staticSiteProviders, setStaticSiteProviders ] = useState( [] );
+	const [ blueprintBundleProviders, setBlueprintBundleProviders ] = useState(
+		[]
+	);
 
 	// Track maximum progress to prevent progress from going backwards
 	const maxProgressRef = useRef( 0 );
@@ -438,6 +445,20 @@ export function PublishProvider( { children } ) {
 	}, [] );
 
 	/**
+	 * Set provider arrays
+	 *
+	 * @param {Array} staticProviders    Array of provider IDs for static site deployment
+	 * @param {Array} blueprintProviders Array of provider IDs for blueprint bundle deployment
+	 */
+	const setProviders = useCallback(
+		( staticProviders = [], blueprintProviders = [] ) => {
+			setStaticSiteProviders( staticProviders );
+			setBlueprintBundleProviders( blueprintProviders );
+		},
+		[]
+	);
+
+	/**
 	 * Reset all publish state to initial values
 	 *
 	 * Called when starting a new publish or closing the publish modal.
@@ -455,6 +476,8 @@ export function PublishProvider( { children } ) {
 		setCurrentStatusMessage( null );
 		setOverallProgress( 0 );
 		setMessageHistory( [] );
+		setStaticSiteProviders( [] );
+		setBlueprintBundleProviders( [] );
 		maxProgressRef.current = 0;
 	}, [] );
 
@@ -469,6 +492,8 @@ export function PublishProvider( { children } ) {
 			currentStatusMessage,
 			overallProgress,
 			messageHistory,
+			staticSiteProviders,
+			blueprintBundleProviders,
 			initializeSteps,
 			setStepStatus,
 			setStepProgress,
@@ -482,6 +507,7 @@ export function PublishProvider( { children } ) {
 			addMessage,
 			updateMessage,
 			removeMessage,
+			setProviders,
 			reset,
 		} ),
 		[
@@ -493,6 +519,8 @@ export function PublishProvider( { children } ) {
 			currentStatusMessage,
 			overallProgress,
 			messageHistory,
+			staticSiteProviders,
+			blueprintBundleProviders,
 			initializeSteps,
 			setStepStatus,
 			setStepProgress,
@@ -504,6 +532,7 @@ export function PublishProvider( { children } ) {
 			addMessage,
 			updateMessage,
 			removeMessage,
+			setProviders,
 			reset,
 		]
 	);
