@@ -18,6 +18,7 @@ import {
 	createFlexStyle,
 } from '../../utils/styles';
 import { formatFileSize } from '../../utils/helpers';
+import UploadStatistic from './UploadStatistic';
 
 /**
  * Upload Statistics Component
@@ -129,20 +130,6 @@ export default function UploadStatistics( {
 		flexWrap: 'wrap',
 	};
 
-	const detailItemStyle = {
-		...createFlexStyle( 'column', spacing.xs ),
-		alignItems: 'center',
-		minWidth: '120px',
-	};
-
-	const detailLabelStyle = {
-		fontSize: fontSize.xs,
-		color: colors.textMuted,
-		fontWeight: fontWeight.medium,
-		textTransform: 'uppercase',
-		letterSpacing: '0.5px',
-	};
-
 	const detailValueStyle = {
 		fontSize: fontSize.lg,
 		color: colors.text,
@@ -154,57 +141,27 @@ export default function UploadStatistics( {
 			className="aether-publish-progress-modal__details"
 			style={ detailsSectionStyle }
 		>
-			<div
-				className="aether-publish-progress-modal__detail-item"
-				style={ detailItemStyle }
+			<UploadStatistic
+				label={ __( 'Providers', 'aether-site-exporter' ) }
 			>
-				<span
-					className="aether-publish-progress-modal__detail-label"
-					style={ detailLabelStyle }
-				>
-					{ __( 'Providers', 'aether-site-exporter' ) }
-				</span>
-				<span
-					className="aether-publish-progress-modal__detail-value"
-					style={ detailValueStyle }
-				>
+				<span style={ detailValueStyle }>
 					{ uploadStats.providerCount }
 				</span>
-			</div>
-			<div
-				className="aether-publish-progress-modal__detail-item"
-				style={ detailItemStyle }
+			</UploadStatistic>
+			<UploadStatistic
+				label={ __( 'Files Uploaded', 'aether-site-exporter' ) }
 			>
-				<span
-					className="aether-publish-progress-modal__detail-label"
-					style={ detailLabelStyle }
-				>
-					{ __( 'Files Uploaded', 'aether-site-exporter' ) }
-				</span>
-				<span
-					className="aether-publish-progress-modal__detail-value"
-					style={ detailValueStyle }
-				>
+				<span style={ detailValueStyle }>
 					{ uploadStats.fileCount }
 				</span>
-			</div>
-			<div
-				className="aether-publish-progress-modal__detail-item"
-				style={ detailItemStyle }
+			</UploadStatistic>
+			<UploadStatistic
+				label={ __( 'Total Size', 'aether-site-exporter' ) }
 			>
-				<span
-					className="aether-publish-progress-modal__detail-label"
-					style={ detailLabelStyle }
-				>
-					{ __( 'Total Size', 'aether-site-exporter' ) }
-				</span>
-				<span
-					className="aether-publish-progress-modal__detail-value"
-					style={ detailValueStyle }
-				>
+				<span style={ detailValueStyle }>
 					{ uploadStats.totalSize }
 				</span>
-			</div>
+			</UploadStatistic>
 		</div>
 	);
 }
