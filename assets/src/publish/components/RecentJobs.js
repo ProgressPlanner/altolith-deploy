@@ -18,66 +18,9 @@ import {
 	createFlexStyle,
 	utilityStyles,
 } from '../../utils/styles';
+import { formatJobTime, getStatusDisplay } from '../utils/jobFormatters';
 
 export default function RecentJobs( { jobs = [], loading = false } ) {
-	const formatJobTime = ( timestamp ) => {
-		if ( ! timestamp ) {
-			return __( 'Unknown', 'aether-site-exporter' );
-		}
-
-		const now = Math.floor( Date.now() / 1000 ); // Current time in seconds
-		const diff = now - timestamp;
-		const minutes = Math.floor( diff / 60 );
-		const hours = Math.floor( diff / 3600 );
-		const days = Math.floor( diff / 86400 );
-
-		if ( days > 0 ) {
-			return `${ days } ${
-				days === 1
-					? __( 'day', 'aether-site-exporter' )
-					: __( 'days', 'aether-site-exporter' )
-			} ${ __( 'ago', 'aether-site-exporter' ) }`;
-		}
-		if ( hours > 0 ) {
-			return `${ hours } ${
-				hours === 1
-					? __( 'hour', 'aether-site-exporter' )
-					: __( 'hours', 'aether-site-exporter' )
-			} ${ __( 'ago', 'aether-site-exporter' ) }`;
-		}
-		if ( minutes > 0 ) {
-			return `${ minutes } ${
-				minutes === 1
-					? __( 'minute', 'aether-site-exporter' )
-					: __( 'minutes', 'aether-site-exporter' )
-			} ${ __( 'ago', 'aether-site-exporter' ) }`;
-		}
-		return __( 'Just now', 'aether-site-exporter' );
-	};
-
-	const getStatusDisplay = ( status ) => {
-		const displays = {
-			complete: {
-				label: __( 'Completed', 'aether-site-exporter' ),
-				class: 'success',
-			},
-			failed: {
-				label: __( 'Failed', 'aether-site-exporter' ),
-				class: 'error',
-			},
-			running: {
-				label: __( 'Running', 'aether-site-exporter' ),
-				class: 'info',
-			},
-		};
-
-		return (
-			displays[ status ] || {
-				label: status.charAt( 0 ).toUpperCase() + status.slice( 1 ),
-				class: 'warning',
-			}
-		);
-	};
 
 	const sectionStyle = {
 		...commonStyles.section,
