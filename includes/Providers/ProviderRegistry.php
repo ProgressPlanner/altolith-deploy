@@ -294,4 +294,38 @@ class ProviderRegistry
 
 		return "{$providerType}:{$uuid}";
 	}
+
+	/**
+	 * Get enabled instance for a deployment type.
+	 *
+	 * Finds the first enabled provider instance that supports the given deployment type.
+	 *
+	 * @param string $deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
+	 * @return array{instanceId: string, config: array<string, mixed>}|null Instance data or null if not found
+	 */
+	public function getEnabledInstanceForDeploymentType(string $deploymentType): ?array
+	{
+		$settings = \get_option('aether_site_exporter_settings', []);
+		$providers = $settings['providers'] ?? [];
+
+		foreach ($providers as $instanceId => $config) {
+			// Check if instance is enabled (default to enabled if not set)
+			if (isset($config['enabled']) && $config['enabled'] === false) {
+				continue;
+			}
+
+			// Check if instance supports this deployment type
+			$instanceDeploymentTypes = $config['deployment_types'] ?? [];
+			if (! \is_array($instanceDeploymentTypes) || ! \in_array($deploymentType, $instanceDeploymentTypes, true)) {
+				continue;
+			}
+
+			return [
+				'instanceId' => $instanceId,
+				'config' => $config,
+			];
+		}
+
+		return null;
+	}
 }

@@ -181,6 +181,10 @@ class ProvidersController
 	/**
 	 * Get providers by deployment type.
 	 *
+	 * Returns enabled provider instances that support the deployment type.
+	 * This endpoint is used for backward compatibility but should be replaced
+	 * with instance-based endpoints in new code.
+	 *
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response Response with provider metadata.
 	 */
@@ -188,11 +192,25 @@ class ProvidersController
 	{
 		$deploymentType = \sanitize_key($request->get_param('deployment_type'));
 		$registry = ProviderRegistry::getInstance();
-		$providers = $registry->getByDeploymentType($deploymentType);
-
-		$metadata = [];
-		foreach ($providers as $provider) {
-			$metadata[] = $this->getProviderMetadata($provider);
+		
+		// Get enabled instances for this deployment type
+		$instance = $registry->getEnabledInstanceForDeploymentType($deploymentType);
+		
+		if ($instance) {
+			// Get provider metadata for the instance's provider type
+			$provider = $registry->getProviderForInstance($instance['instanceId']);
+			if ($provider) {
+				$metadata = [$this->getProviderMetadata($provider)];
+			} else {
+				$metadata = [];
+			}
+		} else {
+			// Fallback to provider types for backward compatibility
+			$providers = $registry->getByDeploymentType($deploymentType);
+			$metadata = [];
+			foreach ($providers as $provider) {
+				$metadata[] = $this->getProviderMetadata($provider);
+			}
 		}
 
 		return new WP_REST_Response(
