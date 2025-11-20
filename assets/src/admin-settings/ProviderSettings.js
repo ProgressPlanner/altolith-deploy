@@ -14,33 +14,14 @@ import ProviderInstanceCard from './components/ProviderInstanceCard';
 import ProviderConfigModal from './components/ProviderConfigModal';
 import AddProviderInstanceModal from './components/AddProviderInstanceModal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import SectionHeader from '../components/SectionHeader';
 import apiFetch from '../utils/api';
-import { colors, spacing, fontWeight } from '../utils/styles';
+import { colors, spacing } from '../utils/styles';
 import { useProviderSettings } from '../hooks/useProviderSettings';
 
 // Styles - extracted to module level for performance
 const emptyMessageStyle = {
 	color: colors.textSecondary,
-};
-
-const pageHeaderStyle = {
-	marginBottom: spacing.lg,
-	fontSize: '1.5rem',
-	fontWeight: fontWeight.bold,
-	color: colors.text,
-	display: 'flex',
-	justifyContent: 'space-between',
-	alignItems: 'center',
-};
-
-const pageHeaderTitleStyle = {
-	margin: 0,
-};
-
-const pageDescriptionStyle = {
-	marginBottom: spacing.lg,
-	color: colors.textSecondary,
-	fontSize: '0.875rem',
 };
 
 const statsContainerStyle = {
@@ -351,35 +332,26 @@ export default function ProviderSettings( {
 
 	return (
 		<div className="aether-provider-settings">
-			<div
-				className="aether-provider-settings__header"
-				style={ pageHeaderStyle }
-			>
-				<div className="aether-provider-settings__header-content">
-					<h2
-						className="aether-provider-settings__title"
-						style={ pageHeaderTitleStyle }
-					>
-						{ __( 'Provider Instances', 'aether-site-exporter' ) }
-					</h2>
-				</div>
-				<Button
-					className="aether-provider-settings__add-button"
-					variant="tertiary"
-					onClick={ () => setIsAddModalOpen( true ) }
-				>
-					{ __( 'Add Provider Instance', 'aether-site-exporter' ) }
-				</Button>
-			</div>
-			<p
-				className="aether-provider-settings__description"
-				style={ pageDescriptionStyle }
-			>
-				{ __(
+			<SectionHeader
+				title={ __( 'Provider Instances', 'aether-site-exporter' ) }
+				description={ __(
 					'Create and manage multiple instances of each provider type. Each instance can have its own configuration and deployment settings.',
 					'aether-site-exporter'
 				) }
-			</p>
+				className="aether-provider-settings__header"
+				actions={
+					<Button
+						className="aether-provider-settings__add-button"
+						variant="tertiary"
+						onClick={ () => setIsAddModalOpen( true ) }
+					>
+						{ __(
+							'Add Provider Instance',
+							'aether-site-exporter'
+						) }
+					</Button>
+				}
+			/>
 
 			<div
 				className="aether-provider-settings__stats"
