@@ -156,8 +156,8 @@ export default function ProviderInstanceCard( {
 		fontWeight: fontWeight.medium,
 		padding: '4px 8px',
 		borderRadius: borderRadius.sm,
-		backgroundColor: colors.backgroundLighter,
-		color: colors.textSecondary,
+		backgroundColor: '#000',
+		color: '#fff',
 		display: 'inline-block',
 		marginBottom: spacing.sm,
 	};
