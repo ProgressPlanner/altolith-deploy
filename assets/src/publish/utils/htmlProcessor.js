@@ -23,14 +23,11 @@ export function processHtml( html, url, siteUrl, staticSiteUrl = null ) {
 	// This removes #wpadminbar div, related CSS/JS, and body classes.
 	html = removeAdminBar( html );
 
-	// STEP 2: Remove aether plugin assets (admin-only functionality not needed in static site).
-	html = removeAetherAssets( html );
-
-	// STEP 3: Remove dynamic WordPress links (RSS comments feed, REST API, XML-RPC).
+	// STEP 2: Remove dynamic WordPress links (RSS comments feed, REST API, XML-RPC).
 	// These features don't exist in static exports.
 	html = removeDynamicWpLinks( html );
 
-	// STEP 4: Replace all internal URLs (absolute → relative or custom domain).
+	// STEP 3: Replace all internal URLs (absolute → relative or custom domain).
 	// This is the main URL rewriting step that makes the static site work.
 	const urlRewriter = createUrlRewriter( siteUrl, staticSiteUrl );
 	html = urlRewriter.rewriteHtml( html, url );
@@ -179,68 +176,6 @@ function removeAdminBar( html ) {
 			'$1$2'
 		);
 	}
-
-	return html;
-}
-
-/**
- * Remove aether plugin assets from HTML.
- *
- * The aether plugin is admin-only and should not be included in static site.
- *
- * @param {string} html HTML content.
- * @return {string} HTML with aether assets removed.
- */
-function removeAetherAssets( html ) {
-	// Helper function to remove elements by attribute.
-	const removeElementsByAttr = (
-		htmlContent,
-		element,
-		attribute,
-		valuePattern,
-		exactMatch = false
-	) => {
-		const escapedPattern = valuePattern.replace(
-			/[.*+?^${}()|[\]\\]/g,
-			'\\$&'
-		);
-
-		// Build pattern based on match type.
-		let attrPattern;
-		if ( exactMatch ) {
-			attrPattern = `${ attribute }=["']${ escapedPattern }["']`;
-		} else {
-			attrPattern = `${ attribute }=["'][^"']*${ escapedPattern }[^"']*["']`;
-		}
-
-		// Self-closing tags (link).
-		if ( element === 'link' ) {
-			const pattern = new RegExp(
-				`<${ element }[^>]*${ attrPattern }[^>]*>`,
-				'gi'
-			);
-			return htmlContent.replace( pattern, '' );
-		}
-
-		// Tags with content (script, style, div).
-		const pattern = new RegExp(
-			`<${ element }[^>]*${ attrPattern }[^>]*>.*?<\/${ element }>`,
-			'gis'
-		);
-		return htmlContent.replace( pattern, '' );
-	};
-
-	const pluginSlug = 'aether';
-
-	// Remove by ID pattern.
-	html = removeElementsByAttr( html, 'link', 'id', pluginSlug, false );
-	html = removeElementsByAttr( html, 'script', 'id', pluginSlug, false );
-	html = removeElementsByAttr( html, 'style', 'id', pluginSlug, false );
-
-	// Remove by path.
-	const pathPattern = 'wp-content/plugins/' + pluginSlug + '/';
-	html = removeElementsByAttr( html, 'link', 'href', pathPattern, false );
-	html = removeElementsByAttr( html, 'script', 'src', pathPattern, false );
 
 	return html;
 }
