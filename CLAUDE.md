@@ -33,6 +33,61 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Run tests after implementation to verify
 - Both JavaScript (Jest) and PHP should follow TDD
 
+### Testing Philosophy - Tests Catch Bugs, Not Pass Blindly
+
+**When tests fail, ALWAYS investigate the implementation first, NOT the tests.**
+
+**Critical Testing Principles:**
+
+1. **Tests exist to catch bugs in the implementation**
+   - A failing test is doing its job - it found a problem
+   - NEVER change tests to make them pass without understanding WHY they're failing
+   - The implementation is guilty until proven innocent
+
+2. **Investigate implementation before changing tests**
+   - When a test fails, read the implementation code it's testing
+   - Understand what changed in the implementation
+   - Check if the implementation has a bug or if the behavior intentionally changed
+   - Only update tests if the implementation's NEW behavior is correct
+
+3. **Tests must be thorough, not just happy paths**
+   - Happy path tests are necessary but insufficient
+   - Test edge cases: empty inputs, null values, errors, boundary conditions
+   - Test failure scenarios: network errors, validation failures, missing data
+   - Test security: injection attacks, path traversal, unauthorized access
+   - Comprehensive tests strengthen the codebase and catch regressions
+
+4. **Bad testing practices to avoid**
+   - ❌ Making tests pass by weakening assertions
+   - ❌ Removing tests that fail without understanding why
+   - ❌ Only testing the happy path
+   - ❌ Changing tests to match bugs in implementation
+   - ❌ Writing tests that always pass regardless of implementation
+
+5. **Good testing practices**
+   - ✅ Read the implementation when tests fail
+   - ✅ Verify the implementation is correct before changing tests
+   - ✅ Test error handling and edge cases
+   - ✅ Use descriptive test names that explain what's being tested
+   - ✅ Write tests that would fail if the implementation had bugs
+
+**Example workflow when tests fail:**
+
+```javascript
+// ❌ WRONG: Change test to match (potentially buggy) implementation
+test('processes data', () => {
+  const result = processData(null);
+  expect(result).toBeUndefined(); // Changed from expect().toThrow() to make it pass
+});
+
+// ✅ RIGHT: Investigate implementation, find it should handle null
+test('processes data', () => {
+  const result = processData(null);
+  expect(() => processData(null)).toThrow('Data cannot be null'); // Test catches the bug
+});
+// Then fix the implementation to handle null properly
+```
+
 ### Clean Codebase Philosophy
 
 **We do not care about backwards-compatibility.**

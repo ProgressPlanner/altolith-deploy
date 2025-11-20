@@ -39,13 +39,13 @@ describe( 'ManifestCache', () => {
 
 	describe( 'Cache Key Generation', () => {
 		test( 'generates correct cache key for provider', () => {
-			const key = cache.getCacheKey( 'cloudflare-r2' );
-			expect( key ).toBe( 'manifest:cloudflare-r2' );
+			const key = cache.getCacheKey( 'local-filesystem' );
+			expect( key ).toBe( 'manifest:local-filesystem' );
 		} );
 
 		test( 'generates different keys for different providers', () => {
-			const key1 = cache.getCacheKey( 'cloudflare-r2' );
-			const key2 = cache.getCacheKey( 'github-pages' );
+			const key1 = cache.getCacheKey( 'local-filesystem' );
+			const key2 = cache.getCacheKey( 'test-provider-2' );
 			expect( key1 ).not.toBe( key2 );
 		} );
 	} );
@@ -54,11 +54,11 @@ describe( 'ManifestCache', () => {
 		test( 'returns null for cache miss', async () => {
 			mockIndexedDBStore.get.mockResolvedValue( null );
 
-			const result = await cache.get( 'cloudflare-r2' );
+			const result = await cache.get( 'local-filesystem' );
 
 			expect( result ).toBeNull();
 			expect( mockIndexedDBStore.get ).toHaveBeenCalledWith(
-				'manifest:cloudflare-r2'
+				'manifest:local-filesystem'
 			);
 		} );
 
@@ -73,7 +73,7 @@ describe( 'ManifestCache', () => {
 			};
 			mockIndexedDBStore.get.mockResolvedValue( cachedData );
 
-			const result = await cache.get( 'cloudflare-r2' );
+			const result = await cache.get( 'local-filesystem' );
 
 			expect( result ).toEqual( manifest );
 		} );
@@ -88,11 +88,11 @@ describe( 'ManifestCache', () => {
 			};
 			mockIndexedDBStore.get.mockResolvedValue( cachedData );
 
-			const result = await cache.get( 'cloudflare-r2' );
+			const result = await cache.get( 'local-filesystem' );
 
 			expect( result ).toBeNull();
 			expect( mockIndexedDBStore.delete ).toHaveBeenCalledWith(
-				'manifest:cloudflare-r2'
+				'manifest:local-filesystem'
 			);
 		} );
 
@@ -102,41 +102,41 @@ describe( 'ManifestCache', () => {
 				'style.css': { size: 512, hash: 'def456' },
 			};
 
-			await cache.set( 'cloudflare-r2', manifest );
+			await cache.set( 'local-filesystem', manifest );
 
 			expect( mockIndexedDBStore.set ).toHaveBeenCalledWith(
-				'manifest:cloudflare-r2',
+				'manifest:local-filesystem',
 				{ manifest },
-				{ providerId: 'cloudflare-r2' }
+				{ providerId: 'local-filesystem', schemaVersion: 2 }
 			);
 		} );
 
 		test( 'handles empty manifest', async () => {
 			const manifest = {};
 
-			await cache.set( 'cloudflare-r2', manifest );
+			await cache.set( 'local-filesystem', manifest );
 
 			expect( mockIndexedDBStore.set ).toHaveBeenCalledWith(
-				'manifest:cloudflare-r2',
+				'manifest:local-filesystem',
 				{ manifest: {} },
-				{ providerId: 'cloudflare-r2' }
+				{ providerId: 'local-filesystem', schemaVersion: 2 }
 			);
 		} );
 	} );
 
 	describe( 'Invalidate', () => {
 		test( 'deletes cached manifest for provider', async () => {
-			await cache.invalidate( 'cloudflare-r2' );
+			await cache.invalidate( 'local-filesystem' );
 
 			expect( mockIndexedDBStore.delete ).toHaveBeenCalledWith(
-				'manifest:cloudflare-r2'
+				'manifest:local-filesystem'
 			);
 		} );
 
 		test( 'returns true on successful invalidation', async () => {
 			mockIndexedDBStore.delete.mockResolvedValue( true );
 
-			const result = await cache.invalidate( 'cloudflare-r2' );
+			const result = await cache.invalidate( 'local-filesystem' );
 
 			expect( result ).toBe( true );
 		} );
@@ -146,7 +146,7 @@ describe( 'ManifestCache', () => {
 				new Error( 'Database error' )
 			);
 
-			const result = await cache.invalidate( 'cloudflare-r2' );
+			const result = await cache.invalidate( 'local-filesystem' );
 
 			expect( result ).toBe( false );
 		} );
@@ -221,7 +221,7 @@ describe( 'ManifestCache', () => {
 				new Error( 'Database error' )
 			);
 
-			const result = await cache.get( 'cloudflare-r2' );
+			const result = await cache.get( 'local-filesystem' );
 
 			expect( result ).toBeNull();
 		} );
@@ -232,7 +232,7 @@ describe( 'ManifestCache', () => {
 			);
 
 			const manifest = { 'index.html': { size: 1024, hash: 'abc123' } };
-			const result = await cache.set( 'cloudflare-r2', manifest );
+			const result = await cache.set( 'local-filesystem', manifest );
 
 			expect( result ).toBe( false );
 		} );
