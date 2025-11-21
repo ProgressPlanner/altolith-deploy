@@ -157,7 +157,11 @@ export async function executePreScan( {
 	if ( setStatusMessage ) {
 		setStatusMessage(
 			sprintf(
-				__( 'Pre-scan complete: %d HTML files, %d assets', 'aether-site-exporter' ),
+				/* translators: %1$d: Number of HTML files, %2$d: Number of assets */
+				__(
+					'Pre-scan complete: %1$d HTML files, %2$d assets',
+					'aether-site-exporter'
+				),
 				cacheStats.sessionCached,
 				allUniqueAssets.size
 			),

@@ -86,7 +86,10 @@ async function handler( context ) {
 	if ( ! bundleResponse.success ) {
 		throw new Error(
 			bundleResponse.message ||
-				__( 'Failed to create blueprint bundle', 'aether-site-exporter' )
+				__(
+					'Failed to create blueprint bundle',
+					'aether-site-exporter'
+				)
 		);
 	}
 
@@ -95,6 +98,7 @@ async function handler( context ) {
 
 	setStatusMessage(
 		sprintf(
+			/* translators: %s: File size */
 			__( 'Generated blueprint bundle (%s)', 'aether-site-exporter' ),
 			sizeFormatted
 		),

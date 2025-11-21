@@ -169,7 +169,10 @@ export default function ProviderConfigModal( {
 
 			if ( ! configResponse.success ) {
 				throw new Error(
-					__( 'Failed to load current settings', 'aether-site-exporter' )
+					__(
+						'Failed to load current settings',
+						'aether-site-exporter'
+					)
 				);
 			}
 

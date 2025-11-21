@@ -197,7 +197,11 @@ export async function uploadFilesWithProgress( {
 					if ( setStatusMessage ) {
 						setStatusMessage(
 							sprintf(
-								__( 'Skipped unchanged file %s (%s)', 'aether-site-exporter' ),
+								/* translators: %1$s: File name, %2$s: File size */
+								__(
+									'Skipped unchanged file %1$s (%2$s)',
+									'aether-site-exporter'
+								),
 								displayName,
 								sizeStr
 							),
@@ -260,7 +264,11 @@ export async function uploadFilesWithProgress( {
 				if ( setStatusMessage ) {
 					setStatusMessage(
 						sprintf(
-							__( 'Uploading %s (%s)', 'aether-site-exporter' ),
+							/* translators: %1$s: File name, %2$s: File size */
+							__(
+								'Uploading %1$s (%2$s)',
+								'aether-site-exporter'
+							),
 							displayName,
 							sizeStr
 						),
@@ -286,7 +294,11 @@ export async function uploadFilesWithProgress( {
 						if ( setStatusMessage ) {
 							setStatusMessage(
 								sprintf(
-									__( 'Uploading %s (%s)', 'aether-site-exporter' ),
+									/* translators: %1$s: File name, %2$s: File size */
+									__(
+										'Uploading %1$s (%2$s)',
+										'aether-site-exporter'
+									),
 									displayName,
 									sizeStr
 								),
@@ -361,7 +373,11 @@ export async function uploadFilesWithProgress( {
 							if ( setStatusMessage ) {
 								setStatusMessage(
 									sprintf(
-										__( 'Retrying %s (%s) - attempt %d/%d', 'aether-site-exporter' ),
+										/* translators: %1$s: File name, %2$s: File size, %3$d: Attempt number, %4$d: Max retries */
+										__(
+											'Retrying %1$s (%2$s) - attempt %3$d/%4$d',
+											'aether-site-exporter'
+										),
 										displayName,
 										sizeStr,
 										attempt + 1,
@@ -384,7 +400,11 @@ export async function uploadFilesWithProgress( {
 							if ( setStatusMessage ) {
 								setStatusMessage(
 									sprintf(
-										__( 'Retrying %s (%s) - attempt %d/%d', 'aether-site-exporter' ),
+										/* translators: %1$s: File name, %2$s: File size, %3$d: Attempt number, %4$d: Max retries */
+										__(
+											'Retrying %1$s (%2$s) - attempt %3$d/%4$d',
+											'aether-site-exporter'
+										),
 										displayName,
 										sizeStr,
 										attempt + 1,
@@ -409,7 +429,11 @@ export async function uploadFilesWithProgress( {
 					if ( setStatusMessage ) {
 						setStatusMessage(
 							sprintf(
-								__( 'Uploaded %s (%s)', 'aether-site-exporter' ),
+								/* translators: %1$s: File name, %2$s: File size */
+								__(
+									'Uploaded %1$s (%2$s)',
+									'aether-site-exporter'
+								),
 								displayName,
 								sizeStr
 							),
@@ -469,7 +493,11 @@ export async function uploadFilesWithProgress( {
 					if ( setStatusMessage ) {
 						setStatusMessage(
 							sprintf(
-								__( 'Failed to upload %s after %d attempts', 'aether-site-exporter' ),
+								/* translators: %1$s: File name, %2$d: Number of attempts */
+								__(
+									'Failed to upload %1$s after %2$d attempts',
+									'aether-site-exporter'
+								),
 								displayName,
 								maxRetries
 							),
@@ -495,6 +523,7 @@ export async function uploadFilesWithProgress( {
 				if ( setStatusMessage ) {
 					setStatusMessage(
 						sprintf(
+							/* translators: %s: File name */
 							__( 'Failed to upload %s', 'aether-site-exporter' ),
 							displayName
 						),
@@ -605,7 +634,11 @@ export async function uploadSingleFileWithProgress( {
 				const fileSizeMB = ( blob.size / ( 1024 * 1024 ) ).toFixed( 2 );
 				setStatusMessage(
 					sprintf(
-						__( '%s unchanged (%s MB) - skipping upload', 'aether-site-exporter' ),
+						/* translators: %1$s: File name, %2$s: File size in MB */
+						__(
+							'%1$s unchanged (%2$s MB) - skipping upload',
+							'aether-site-exporter'
+						),
 						displayName,
 						fileSizeMB
 					),
@@ -638,7 +671,11 @@ export async function uploadSingleFileWithProgress( {
 		// Create status message with progress tracking
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				sprintf( __( 'Uploading %s', 'aether-site-exporter' ), displayName ),
+				sprintf(
+					/* translators: %s: File name */
+					__( 'Uploading %s', 'aether-site-exporter' ),
+					displayName
+				),
 				'progress',
 				statusKey,
 				{
@@ -658,7 +695,11 @@ export async function uploadSingleFileWithProgress( {
 				// Update progress in status message
 				if ( setStatusMessage ) {
 					setStatusMessage(
-						sprintf( __( 'Uploading %s', 'aether-site-exporter' ), displayName ),
+						sprintf(
+							/* translators: %s: File name */
+							__( 'Uploading %s', 'aether-site-exporter' ),
+							displayName
+						),
 						'progress',
 						statusKey,
 						{
@@ -680,7 +721,11 @@ export async function uploadSingleFileWithProgress( {
 			// Update message to success (remove progress)
 			if ( setStatusMessage ) {
 				setStatusMessage(
-					sprintf( __( 'Uploaded %s', 'aether-site-exporter' ), displayName ),
+					sprintf(
+						/* translators: %s: File name */
+						__( 'Uploaded %s', 'aether-site-exporter' ),
+						displayName
+					),
 					'success',
 					statusKey,
 					null // Remove progress
@@ -699,7 +744,11 @@ export async function uploadSingleFileWithProgress( {
 		// Upload failed
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				sprintf( __( 'Failed to upload %s', 'aether-site-exporter' ), displayName ),
+				sprintf(
+					/* translators: %s: File name */
+					__( 'Failed to upload %s', 'aether-site-exporter' ),
+					displayName
+				),
 				'error',
 				statusKey,
 				null
@@ -710,7 +759,9 @@ export async function uploadSingleFileWithProgress( {
 			success: false,
 			url: null,
 			skipped: false,
-			error: uploadResult.error || __( 'Upload failed', 'aether-site-exporter' ),
+			error:
+				uploadResult.error ||
+				__( 'Upload failed', 'aether-site-exporter' ),
 			hash: fileHash,
 		};
 	} catch ( error ) {
@@ -718,7 +769,11 @@ export async function uploadSingleFileWithProgress( {
 
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				sprintf( __( 'Failed to upload %s', 'aether-site-exporter' ), displayName ),
+				sprintf(
+					/* translators: %s: File name */
+					__( 'Failed to upload %s', 'aether-site-exporter' ),
+					displayName
+				),
 				'error',
 				statusKey,
 				null

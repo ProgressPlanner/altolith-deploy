@@ -301,7 +301,10 @@ export class AbstractProvider {
 			throw new Error(
 				sprintf(
 					/* translators: %s: JSON string of validation errors */
-					__( 'Configuration validation failed: %s', 'aether-site-exporter' ),
+					__(
+						'Configuration validation failed: %s',
+						'aether-site-exporter'
+					),
 					JSON.stringify( errors )
 				)
 			);

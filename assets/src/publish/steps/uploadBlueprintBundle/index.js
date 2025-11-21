@@ -6,7 +6,7 @@
  * @package
  */
 
-import { __, sprintf } from '@wordpress/i18n';
+import { __, sprintf, _n } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
 import { formatFileSize } from '../../../utils/helpers';
@@ -38,7 +38,10 @@ async function handler( context ) {
 
 	if ( providers.length === 0 ) {
 		setStatusMessage(
-			__( 'No providers enabled for blueprint bundle', 'aether-site-exporter' ),
+			__(
+				'No providers enabled for blueprint bundle',
+				'aether-site-exporter'
+			),
 			'warning',
 			'uploadBlueprintBundle'
 		);
@@ -50,9 +53,10 @@ async function handler( context ) {
 
 	setStatusMessage(
 		sprintf(
+			/* translators: %1$s: File size, %2$d: Number of providers */
 			_n(
-				'Uploading blueprint bundle (%s) to %d provider…',
-				'Uploading blueprint bundle (%s) to %d providers…',
+				'Uploading blueprint bundle (%1$s) to %2$d provider…',
+				'Uploading blueprint bundle (%1$s) to %2$d providers…',
 				providers.length,
 				'aether-site-exporter'
 			),
@@ -128,7 +132,9 @@ async function handler( context ) {
 				status: 'rejected',
 				reason: error,
 				providerId: providerIdItem,
-				error: error?.message || __( 'Unknown error', 'aether-site-exporter' ),
+				error:
+					error?.message ||
+					__( 'Unknown error', 'aether-site-exporter' ),
 			} );
 		}
 	}
@@ -137,9 +143,10 @@ async function handler( context ) {
 	if ( successCount > 0 ) {
 		setStatusMessage(
 			sprintf(
+				/* translators: %1$s: File size, %2$d: Success count, %3$d: Total providers */
 				_n(
-					'Uploaded blueprint bundle (%s) to %d/%d provider',
-					'Uploaded blueprint bundle (%s) to %d/%d providers',
+					'Uploaded blueprint bundle (%1$s) to %2$d/%3$d provider',
+					'Uploaded blueprint bundle (%1$s) to %2$d/%3$d providers',
 					providers.length,
 					'aether-site-exporter'
 				),
@@ -154,7 +161,10 @@ async function handler( context ) {
 
 	if ( successCount === 0 ) {
 		throw new Error(
-			__( 'Failed to upload blueprint bundle to any provider', 'aether-site-exporter' )
+			__(
+				'Failed to upload blueprint bundle to any provider',
+				'aether-site-exporter'
+			)
 		);
 	}
 
@@ -174,7 +184,10 @@ async function handler( context ) {
 export const uploadBlueprintBundleStep = {
 	id: 'uploadBlueprintBundle',
 	label: __( 'Upload Blueprint Bundle', 'aether-site-exporter' ),
-	description: __( 'Upload blueprint-bundle.zip to providers', 'aether-site-exporter' ),
+	description: __(
+		'Upload blueprint-bundle.zip to providers',
+		'aether-site-exporter'
+	),
 	supportsProgress: true,
 	dependencies: [ 'generateBlueprint' ],
 	provides: [],

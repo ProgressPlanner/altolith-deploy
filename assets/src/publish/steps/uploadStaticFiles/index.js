@@ -39,7 +39,10 @@ async function handler( context ) {
 
 	if ( ! urls || ! Array.isArray( urls ) ) {
 		throw new Error(
-			__( 'URLs not found. Please run getStaticSiteUrls first.', 'aether-site-exporter' )
+			__(
+				'URLs not found. Please run getStaticSiteUrls first.',
+				'aether-site-exporter'
+			)
 		);
 	}
 
@@ -47,7 +50,10 @@ async function handler( context ) {
 
 	if ( providers.length === 0 ) {
 		setStatusMessage(
-			__( 'No providers enabled for static site deployment', 'aether-site-exporter' ),
+			__(
+				'No providers enabled for static site deployment',
+				'aether-site-exporter'
+			),
 			'warning',
 			'uploadStaticFiles'
 		);
@@ -56,9 +62,10 @@ async function handler( context ) {
 
 	setStatusMessage(
 		sprintf(
+			/* translators: %1$d: Number of files, %2$d: Number of providers */
 			_n(
-				'Processing %d file for %d provider…',
-				'Processing %d files for %d providers…',
+				'Processing %1$d file for %2$d provider…',
+				'Processing %1$d files for %2$d providers…',
 				urls.length,
 				'aether-site-exporter'
 			),
@@ -182,9 +189,10 @@ async function handler( context ) {
 	if ( successfulProviders.length > 0 ) {
 		setStatusMessage(
 			sprintf(
+				/* translators: %1$d: Success count, %2$d: Total providers, %3$d: Total files uploaded */
 				_n(
-					'Uploaded static site to %d/%d provider (%d file)',
-					'Uploaded static site to %d/%d providers (%d files)',
+					'Uploaded static site to %1$d/%2$d provider (%3$d file)',
+					'Uploaded static site to %1$d/%2$d providers (%3$d files)',
 					totalFilesUploaded,
 					'aether-site-exporter'
 				),
@@ -199,7 +207,10 @@ async function handler( context ) {
 
 	if ( failedProviders.length === providers.length ) {
 		throw new Error(
-			__( 'Failed to upload static site to any provider', 'aether-site-exporter' )
+			__(
+				'Failed to upload static site to any provider',
+				'aether-site-exporter'
+			)
 		);
 	}
 
@@ -223,7 +234,10 @@ async function handler( context ) {
 export const uploadStaticFilesStep = {
 	id: 'uploadStaticFiles',
 	label: __( 'Upload Static Files', 'aether-site-exporter' ),
-	description: __( 'Generate and upload static HTML files', 'aether-site-exporter' ),
+	description: __(
+		'Generate and upload static HTML files',
+		'aether-site-exporter'
+	),
 	supportsProgress: true,
 	dependencies: [ 'getStaticSiteUrls' ],
 	provides: [],

@@ -412,7 +412,10 @@ export function usePublishController( publishState ) {
 
 			// Initialize steps with 'discoverBlueprintBundleAssets' as the active step
 			// This sets up steps array, active step, and lastStepIndex correctly
-			initializeSteps( getRegisteredSteps(), 'discoverBlueprintBundleAssets' );
+			initializeSteps(
+				getRegisteredSteps(),
+				'discoverBlueprintBundleAssets'
+			);
 			// Set isPublishing to true to start the workflow
 			setIsPublishing( true );
 			debug( 'Steps initialized, starting publish workflow' );

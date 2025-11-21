@@ -35,16 +35,28 @@ describe( 'steps', () => {
 			const steps = getRegisteredSteps();
 
 			const progressSteps = steps.filter( ( s ) => s.supportsProgress );
-			const noProgressSteps = steps.filter( ( s ) => ! s.supportsProgress );
+			const noProgressSteps = steps.filter(
+				( s ) => ! s.supportsProgress
+			);
 
 			// Upload and create steps support progress
-			expect( progressSteps.map( ( s ) => s.id ) ).toContain( 'uploadStaticFiles' );
-			expect( progressSteps.map( ( s ) => s.id ) ).toContain( 'uploadBlueprintBundle' );
-			expect( progressSteps.map( ( s ) => s.id ) ).toContain( 'createBlueprintBundle' );
+			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
+				'uploadStaticFiles'
+			);
+			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
+				'uploadBlueprintBundle'
+			);
+			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
+				'createBlueprintBundle'
+			);
 
 			// Discovery steps don't support progress
-			expect( noProgressSteps.map( ( s ) => s.id ) ).toContain( 'discoverBlueprintBundleAssets' );
-			expect( noProgressSteps.map( ( s ) => s.id ) ).toContain( 'getStaticSiteUrls' );
+			expect( noProgressSteps.map( ( s ) => s.id ) ).toContain(
+				'discoverBlueprintBundleAssets'
+			);
+			expect( noProgressSteps.map( ( s ) => s.id ) ).toContain(
+				'getStaticSiteUrls'
+			);
 		} );
 	} );
 } );

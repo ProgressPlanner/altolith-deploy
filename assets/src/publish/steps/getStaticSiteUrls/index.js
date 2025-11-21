@@ -42,7 +42,11 @@ async function handler( context ) {
 
 	setStatusMessage(
 		sprintf(
-			__( 'Discovered %d URLs for static site generation', 'aether-site-exporter' ),
+			/* translators: %d: Number of URLs */
+			__(
+				'Discovered %d URLs for static site generation',
+				'aether-site-exporter'
+			),
 			urlsCount
 		),
 		'success',

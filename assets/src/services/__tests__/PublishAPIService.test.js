@@ -70,9 +70,9 @@ describe( 'PublishAPIService', () => {
 			const error = new Error( 'Discovery failed' );
 			mockAssetDiscovery.discoverCustomAssets.mockRejectedValue( error );
 
-			await expect( service.discoverBlueprintBundleAssets() ).rejects.toThrow(
-				'Discovery failed'
-			);
+			await expect(
+				service.discoverBlueprintBundleAssets()
+			).rejects.toThrow( 'Discovery failed' );
 		} );
 	} );
 

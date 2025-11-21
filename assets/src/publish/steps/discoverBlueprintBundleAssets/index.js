@@ -53,13 +53,18 @@ async function handler( context ) {
 			const pluginText =
 				plugins.length === 1
 					? sprintf(
-							__( '1 active custom plugin (%s)', 'aether-site-exporter' ),
+							/* translators: %s: Plugin slug */
+							__(
+								'1 active custom plugin (%s)',
+								'aether-site-exporter'
+							),
 							plugins[ 0 ].slug
 					  )
 					: sprintf(
+							/* translators: %1$d: Number of plugins, %2$s: Comma-separated plugin slugs */
 							_n(
-								'%d active custom plugin (%s)',
-								'%d active custom plugins (%s)',
+								'%1$d active custom plugin (%2$s)',
+								'%1$d active custom plugins (%2$s)',
 								plugins.length,
 								'aether-site-exporter'
 							),
@@ -72,13 +77,18 @@ async function handler( context ) {
 			const themeText =
 				themes.length === 1
 					? sprintf(
-							__( '1 active custom theme (%s)', 'aether-site-exporter' ),
+							/* translators: %s: Theme slug */
+							__(
+								'1 active custom theme (%s)',
+								'aether-site-exporter'
+							),
 							themes[ 0 ].slug
 					  )
 					: sprintf(
+							/* translators: %1$d: Number of themes, %2$s: Comma-separated theme slugs */
 							_n(
-								'%d active custom theme (%s)',
-								'%d active custom themes (%s)',
+								'%1$d active custom theme (%2$s)',
+								'%1$d active custom themes (%2$s)',
 								themes.length,
 								'aether-site-exporter'
 							),
@@ -88,7 +98,11 @@ async function handler( context ) {
 			parts.push( themeText );
 		}
 		message = sprintf(
-			__( 'Discovered %s. These will be included in the blueprint bundle.', 'aether-site-exporter' ),
+			/* translators: %s: Discovered assets description */
+			__(
+				'Discovered %s. These will be included in the blueprint bundle.',
+				'aether-site-exporter'
+			),
 			parts.join( __( ' and ', 'aether-site-exporter' ) )
 		);
 	}
