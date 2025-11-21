@@ -12,6 +12,7 @@ import { colors, fontSize, commonStyles } from '@aether/utils/styles';
 // Styles - extracted to module level for performance
 const sectionHeaderStyle = {
 	...commonStyles.sectionHeader,
+	backgroundColor: colors.white,
 };
 
 const headerTitleStyle = {
@@ -19,6 +20,7 @@ const headerTitleStyle = {
 	fontSize: '1.3em',
 	lineHeight: 1.4,
 	color: colors.text,
+	backgroundColor: colors.white,
 };
 
 const headerDescriptionStyle = {

@@ -10,14 +10,13 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
-import ProviderInstanceTable from '../components/ProviderInstanceTable';
-import ProviderConfigModal from '../components/ProviderConfigModal';
-import AddProviderInstanceModal from '../components/AddProviderInstanceModal';
-import LoadingSpinner from '../components/LoadingSpinner';
-import SectionHeader from '../components/SectionHeader';
-import apiFetch from '../utils/api';
-import { colors, spacing } from '../utils/styles';
-import { useProviderSettings } from '../hooks/useProviderSettings';
+import ProviderInstancePanel from '@aether/components/ProviderInstancePanel';
+import AddProviderInstanceModal from '@aether/components/AddProviderInstanceModal';
+import LoadingSpinner from '@aether/components/LoadingSpinner';
+import SectionHeader from '@aether/components/SectionHeader';
+import apiFetch from '@aether/utils/api';
+import { colors, spacing } from '@aether/utils/styles';
+import { useProviderSettings } from '@aether/hooks/useProviderSettings';
 
 // Styles - extracted to module level for performance
 const emptyMessageStyle = {
@@ -30,8 +29,10 @@ const statsContainerStyle = {
 	marginBottom: spacing.lg,
 };
 
-const tableWrapperStyle = {
-	overflowX: 'auto',
+const panelsContainerStyle = {
+	display: 'flex',
+	flexDirection: 'column',
+	backgroundColor: colors.white,
 };
 
 const emptyStateStyle = {
@@ -59,8 +60,6 @@ export default function ProviderSettings( {
 } ) {
 	const [ providers, setProviders ] = useState( [] );
 	const [ loading, setLoading ] = useState( true );
-	const [ selectedInstanceId, setSelectedInstanceId ] = useState( null );
-	const [ isConfigModalOpen, setIsConfigModalOpen ] = useState( false );
 	const [ isAddModalOpen, setIsAddModalOpen ] = useState( false );
 
 	// Local state for optimistic updates
@@ -183,10 +182,6 @@ export default function ProviderSettings( {
 		[ createProviderInstance, onConfigsUpdate, localConfigs, providers ]
 	);
 
-	const handleConfigureInstance = useCallback( async ( instanceId ) => {
-		setSelectedInstanceId( instanceId );
-		setIsConfigModalOpen( true );
-	}, [] );
 
 	const handleToggleInstance = useCallback(
 		async ( instanceId, enabled ) => {
@@ -262,7 +257,7 @@ export default function ProviderSettings( {
 		[ renameProviderInstance, onConfigsUpdate ]
 	);
 
-	const handleModalSave = useCallback(
+	const handleConfigSave = useCallback(
 		( instanceId, updatedConfig ) => {
 			// Update local state immediately for reactivity
 			const updatedConfigs = {
@@ -278,11 +273,6 @@ export default function ProviderSettings( {
 		},
 		[ localConfigs, onConfigsUpdate ]
 	);
-
-	const handleModalClose = useCallback( () => {
-		setIsConfigModalOpen( false );
-		setSelectedInstanceId( null );
-	}, [] );
 
 	if ( loading ) {
 		return (
@@ -308,19 +298,6 @@ export default function ProviderSettings( {
 		);
 	}
 
-	// Get selected instance and provider for config modal
-	const selectedInstance = selectedInstanceId
-		? {
-				instanceId: selectedInstanceId,
-				config: configs[ selectedInstanceId ] || {},
-		  }
-		: null;
-	const selectedProvider =
-		selectedInstance && selectedInstance.config.provider_type
-			? providers.find(
-					( p ) => p.id === selectedInstance.config.provider_type
-			  )
-			: null;
 
 	// Count total instances
 	const totalInstances = Object.keys( configs ).length;
@@ -351,40 +328,59 @@ export default function ProviderSettings( {
 				}
 			/>
 
-			<div
-				className="aether-provider-settings__stats"
-				style={ statsContainerStyle }
-			>
-				<span className="aether-provider-settings__stat">
-					{ __( 'Total Instances:', 'aether-site-exporter' ) }{ ' ' }
-					<strong className="aether-provider-settings__stat-value">
-						{ totalInstances }
-					</strong>
-				</span>
-				<span className="aether-provider-settings__stat-separator">
-					{ ' • ' }
-				</span>
-				<span className="aether-provider-settings__stat">
-					{ __( 'Enabled:', 'aether-site-exporter' ) }{ ' ' }
-					<strong className="aether-provider-settings__stat-value">
-						{ enabledInstances }
-					</strong>
-				</span>
-			</div>
-
-			{ /* Table of All Provider Instances */ }
+			{ /* Panels of All Provider Instances */ }
 			{ allInstances.length > 0 ? (
 				<div
-					className="aether-provider-settings__table-wrapper"
-					style={ tableWrapperStyle }
+					className="aether-provider-settings__panels-container"
+					style={ panelsContainerStyle }
 				>
-					<ProviderInstanceTable
-						instances={ allInstances }
-						onConfigure={ handleConfigureInstance }
-						onToggle={ handleToggleInstance }
-						onDelete={ handleDeleteInstance }
-						onRename={ handleRenameInstance }
-					/>
+					{ allInstances.map( ( instance ) => {
+						const providerType =
+							instance.config.provider_type ||
+							instance.instanceId.split( ':' )[ 0 ];
+						const fullProvider = providers.find(
+							( p ) => p.id === providerType
+						);
+
+						return (
+							<ProviderInstancePanel
+								key={ instance.instanceId }
+								provider={ {
+									id: fullProvider?.id || providerType,
+									metadata: {
+										name: fullProvider?.name || providerType,
+										description:
+											fullProvider?.description || '',
+										supportedDeploymentTypes:
+											fullProvider?.deployment_types ||
+											[],
+										type: fullProvider?.type || '',
+									},
+									settingsFields: (
+										fullProvider?.settings_fields || []
+									).map( ( field ) => ( {
+										...field,
+										id: field.name,
+									} ) ),
+								} }
+								instance={ {
+									instanceId: instance.instanceId,
+									config: instance.config,
+								} }
+								onToggle={ ( enabled ) =>
+									handleToggleInstance(
+										instance.instanceId,
+										enabled
+									)
+								}
+								onDelete={ () =>
+									handleDeleteInstance( instance.instanceId )
+								}
+								onRename={ handleRenameInstance }
+								onSave={ handleConfigSave }
+							/>
+						);
+					} ) }
 				</div>
 			) : (
 				<div
@@ -396,33 +392,6 @@ export default function ProviderSettings( {
 						'aether-site-exporter'
 					) }
 				</div>
-			) }
-
-			{ /* Configuration Modal */ }
-			{ selectedProvider && selectedInstance && (
-				<ProviderConfigModal
-					isOpen={ isConfigModalOpen }
-					onClose={ handleModalClose }
-					onSave={ handleModalSave }
-					provider={ {
-						id: selectedProvider.id,
-						metadata: {
-							name: selectedProvider.name,
-							description: selectedProvider.description,
-							supportedDeploymentTypes:
-								selectedProvider.deployment_types || [],
-							type: selectedProvider.type,
-						},
-						settingsFields: (
-							selectedProvider.settings_fields || []
-						).map( ( field ) => ( {
-							...field,
-							id: field.name,
-						} ) ),
-					} }
-					initialConfig={ selectedInstance.config }
-					instanceId={ selectedInstanceId }
-				/>
 			) }
 
 			{ /* Add Instance Modal */ }
