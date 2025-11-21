@@ -268,4 +268,37 @@ addAction(
 	}
 );
 
-export default registry;
+// Make registry globally available so all bundles share the same instance
+// This is necessary because webpack creates separate module instances for each bundle
+let exportedRegistry = registry;
+
+if ( typeof window !== 'undefined' ) {
+	window.aether = window.aether || {};
+	// Only create global registry if it doesn't exist (first bundle to load)
+	if ( ! window.aether.ProviderRegistry ) {
+		window.aether.ProviderRegistry = registry;
+		// eslint-disable-next-line no-console
+		console.log( 'ProviderRegistry: Created global registry instance' );
+	} else {
+		// If registry already exists, use the global one and sync providers
+		const globalRegistry = window.aether.ProviderRegistry;
+		// Copy any providers from this instance to the global one
+		const localProviders = Array.from( providers.values() );
+		localProviders.forEach( ( provider ) => {
+			const providerId = provider.getId();
+			if ( ! globalRegistry.get( providerId ) ) {
+				globalRegistry.register( providerId, provider );
+			}
+		} );
+		// Use the global registry instead
+		exportedRegistry = globalRegistry;
+		// eslint-disable-next-line no-console
+		console.log(
+			'ProviderRegistry: Using global registry instance,',
+			globalRegistry.getAll().length,
+			'providers registered'
+		);
+	}
+}
+
+export default exportedRegistry;
