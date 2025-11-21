@@ -7,6 +7,7 @@
  * @package
  */
 
+import { __, sprintf } from '@wordpress/i18n';
 import { applyFilters, doAction } from '@wordpress/hooks';
 import { buildDeploymentTypesField } from '../utils/configFieldBuilder';
 import {
@@ -298,7 +299,11 @@ export class AbstractProvider {
 		const errors = await this.validateConfig( config );
 		if ( Object.keys( errors ).length > 0 ) {
 			throw new Error(
-				'Configuration validation failed: ' + JSON.stringify( errors )
+				sprintf(
+					/* translators: %s: JSON string of validation errors */
+					__( 'Configuration validation failed: %s', 'aether-site-exporter' ),
+					JSON.stringify( errors )
+				)
 			);
 		}
 

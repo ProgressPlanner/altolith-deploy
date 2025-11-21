@@ -6,6 +6,7 @@
  * @package
  */
 
+import { __, sprintf } from '@wordpress/i18n';
 import { doAction, applyFilters } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from './assetExtractor';
 import { debug, debugWarn } from '../../utils/debug';
@@ -46,7 +47,7 @@ export async function executePreScan( {
 
 	if ( setStatusMessage ) {
 		setStatusMessage(
-			'Scanning files to upload…',
+			__( 'Scanning files to upload…', 'aether-site-exporter' ),
 			'progress',
 			'scanFiles'
 		);
@@ -155,7 +156,11 @@ export async function executePreScan( {
 
 	if ( setStatusMessage ) {
 		setStatusMessage(
-			`Pre-scan complete: ${ cacheStats.sessionCached } HTML files, ${ allUniqueAssets.size } assets`,
+			sprintf(
+				__( 'Pre-scan complete: %d HTML files, %d assets', 'aether-site-exporter' ),
+				cacheStats.sessionCached,
+				allUniqueAssets.size
+			),
 			'success',
 			'scanFiles'
 		);

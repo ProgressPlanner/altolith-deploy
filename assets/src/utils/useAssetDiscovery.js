@@ -7,6 +7,7 @@
  * @package
  */
 
+import { __ } from '@wordpress/i18n';
 import { useState, useCallback, useMemo } from '@wordpress/element';
 import apiFetch from './api';
 import { getWpOrgCache } from './wporgCache';
@@ -149,7 +150,9 @@ async function checkWithMethod( slug, type, method, config = {} ) {
 		} else {
 			// PHP or CORS proxy: standardized response with 'success' and 'exists' fields
 			if ( ! data.success ) {
-				throw new Error( data.error || 'Unknown error' );
+				throw new Error(
+					data.error || __( 'Unknown error', 'aether-site-exporter' )
+				);
 			}
 			exists = data.exists;
 		}

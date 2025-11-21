@@ -7,6 +7,7 @@
  * @package
  */
 
+import { __, sprintf, _n } from '@wordpress/i18n';
 import { doAction, applyFilters } from '@wordpress/hooks';
 import { calculateOverallProgress } from '../../utils/progressManager';
 
@@ -38,7 +39,7 @@ async function handler( context ) {
 
 	if ( ! urls || ! Array.isArray( urls ) ) {
 		throw new Error(
-			'URLs not found. Please run getStaticSiteUrls first.'
+			__( 'URLs not found. Please run getStaticSiteUrls first.', 'aether-site-exporter' )
 		);
 	}
 
@@ -46,7 +47,7 @@ async function handler( context ) {
 
 	if ( providers.length === 0 ) {
 		setStatusMessage(
-			'No providers enabled for static site deployment',
+			__( 'No providers enabled for static site deployment', 'aether-site-exporter' ),
 			'warning',
 			'uploadStaticFiles'
 		);
@@ -54,7 +55,16 @@ async function handler( context ) {
 	}
 
 	setStatusMessage(
-		`Processing ${ urls.length } files for ${ providers.length } provider(s)…`,
+		sprintf(
+			_n(
+				'Processing %d file for %d provider…',
+				'Processing %d files for %d providers…',
+				urls.length,
+				'aether-site-exporter'
+			),
+			urls.length,
+			providers.length
+		),
 		'progress',
 		'uploadStaticFiles'
 	);
@@ -171,14 +181,26 @@ async function handler( context ) {
 
 	if ( successfulProviders.length > 0 ) {
 		setStatusMessage(
-			`Uploaded static site to ${ successfulProviders.length }/${ providers.length } provider(s) (${ totalFilesUploaded } files)`,
+			sprintf(
+				_n(
+					'Uploaded static site to %d/%d provider (%d file)',
+					'Uploaded static site to %d/%d providers (%d files)',
+					totalFilesUploaded,
+					'aether-site-exporter'
+				),
+				successfulProviders.length,
+				providers.length,
+				totalFilesUploaded
+			),
 			failedProviders.length > 0 ? 'warning' : 'success',
 			'uploadStaticFiles'
 		);
 	}
 
 	if ( failedProviders.length === providers.length ) {
-		throw new Error( 'Failed to upload static site to any provider' );
+		throw new Error(
+			__( 'Failed to upload static site to any provider', 'aether-site-exporter' )
+		);
 	}
 
 	return applyFilters(
@@ -200,8 +222,8 @@ async function handler( context ) {
  */
 export const uploadStaticFilesStep = {
 	id: 'uploadStaticFiles',
-	label: 'Upload Static Files',
-	description: 'Generate and upload static HTML files',
+	label: __( 'Upload Static Files', 'aether-site-exporter' ),
+	description: __( 'Generate and upload static HTML files', 'aether-site-exporter' ),
 	dependencies: [ 'getStaticSiteUrls' ],
 	provides: [],
 	handler,

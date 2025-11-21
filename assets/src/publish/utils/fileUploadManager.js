@@ -11,6 +11,7 @@
  * @package
  */
 
+import { __, sprintf } from '@wordpress/i18n';
 import { doAction, applyFilters } from '@wordpress/hooks';
 import { createConcurrencyLimiter } from '../../utils/concurrencyLimiter';
 import { calculateFileHash } from '../../utils/fileHash';
@@ -195,7 +196,11 @@ export async function uploadFilesWithProgress( {
 
 					if ( setStatusMessage ) {
 						setStatusMessage(
-							`Skipped unchanged file ${ displayName } (${ sizeStr })`,
+							sprintf(
+								__( 'Skipped unchanged file %s (%s)', 'aether-site-exporter' ),
+								displayName,
+								sizeStr
+							),
 							'success',
 							uploadKey,
 							undefined,
@@ -254,7 +259,11 @@ export async function uploadFilesWithProgress( {
 				// Create status message with unique key for progress tracking
 				if ( setStatusMessage ) {
 					setStatusMessage(
-						`Uploading ${ displayName } (${ sizeStr })`,
+						sprintf(
+							__( 'Uploading %s (%s)', 'aether-site-exporter' ),
+							displayName,
+							sizeStr
+						),
 						'progress',
 						uploadKey,
 						{
@@ -276,7 +285,11 @@ export async function uploadFilesWithProgress( {
 						// Update progress in status message
 						if ( setStatusMessage ) {
 							setStatusMessage(
-								`Uploading ${ displayName } (${ sizeStr })`,
+								sprintf(
+									__( 'Uploading %s (%s)', 'aether-site-exporter' ),
+									displayName,
+									sizeStr
+								),
 								'progress',
 								uploadKey,
 								{
@@ -347,9 +360,13 @@ export async function uploadFilesWithProgress( {
 							const delayMs = Math.pow( 2, attempt - 1 ) * 1000; // 1s, 2s, 4s
 							if ( setStatusMessage ) {
 								setStatusMessage(
-									`Retrying ${ displayName } (${ sizeStr }) - attempt ${
-										attempt + 1
-									}/${ maxRetries }`,
+									sprintf(
+										__( 'Retrying %s (%s) - attempt %d/%d', 'aether-site-exporter' ),
+										displayName,
+										sizeStr,
+										attempt + 1,
+										maxRetries
+									),
 									'info',
 									uploadKey,
 									undefined,
@@ -366,9 +383,13 @@ export async function uploadFilesWithProgress( {
 							const delayMs = Math.pow( 2, attempt - 1 ) * 1000; // 1s, 2s, 4s
 							if ( setStatusMessage ) {
 								setStatusMessage(
-									`Retrying ${ displayName } (${ sizeStr }) - attempt ${
-										attempt + 1
-									}/${ maxRetries }`,
+									sprintf(
+										__( 'Retrying %s (%s) - attempt %d/%d', 'aether-site-exporter' ),
+										displayName,
+										sizeStr,
+										attempt + 1,
+										maxRetries
+									),
 									'info',
 									uploadKey,
 									undefined,
@@ -387,7 +408,11 @@ export async function uploadFilesWithProgress( {
 					// Update message to success (remove progress)
 					if ( setStatusMessage ) {
 						setStatusMessage(
-							`Uploaded ${ displayName } (${ sizeStr })`,
+							sprintf(
+								__( 'Uploaded %s (%s)', 'aether-site-exporter' ),
+								displayName,
+								sizeStr
+							),
 							'success',
 							uploadKey,
 							null, // Remove progress
@@ -443,7 +468,11 @@ export async function uploadFilesWithProgress( {
 
 					if ( setStatusMessage ) {
 						setStatusMessage(
-							`Failed to upload ${ displayName } after ${ maxRetries } attempts`,
+							sprintf(
+								__( 'Failed to upload %s after %d attempts', 'aether-site-exporter' ),
+								displayName,
+								maxRetries
+							),
 							'error',
 							uploadKey,
 							null
@@ -465,7 +494,10 @@ export async function uploadFilesWithProgress( {
 
 				if ( setStatusMessage ) {
 					setStatusMessage(
-						`Failed to upload ${ displayName }`,
+						sprintf(
+							__( 'Failed to upload %s', 'aether-site-exporter' ),
+							displayName
+						),
 						'error',
 						uploadKey,
 						null
@@ -572,7 +604,11 @@ export async function uploadSingleFileWithProgress( {
 			if ( setStatusMessage ) {
 				const fileSizeMB = ( blob.size / ( 1024 * 1024 ) ).toFixed( 2 );
 				setStatusMessage(
-					`${ displayName } unchanged (${ fileSizeMB } MB) - skipping upload`,
+					sprintf(
+						__( '%s unchanged (%s MB) - skipping upload', 'aether-site-exporter' ),
+						displayName,
+						fileSizeMB
+					),
 					'success',
 					statusKey
 				);
@@ -602,7 +638,7 @@ export async function uploadSingleFileWithProgress( {
 		// Create status message with progress tracking
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				`Uploading ${ displayName }`,
+				sprintf( __( 'Uploading %s', 'aether-site-exporter' ), displayName ),
 				'progress',
 				statusKey,
 				{
@@ -622,7 +658,7 @@ export async function uploadSingleFileWithProgress( {
 				// Update progress in status message
 				if ( setStatusMessage ) {
 					setStatusMessage(
-						`Uploading ${ displayName }`,
+						sprintf( __( 'Uploading %s', 'aether-site-exporter' ), displayName ),
 						'progress',
 						statusKey,
 						{
@@ -644,7 +680,7 @@ export async function uploadSingleFileWithProgress( {
 			// Update message to success (remove progress)
 			if ( setStatusMessage ) {
 				setStatusMessage(
-					`Uploaded ${ displayName }`,
+					sprintf( __( 'Uploaded %s', 'aether-site-exporter' ), displayName ),
 					'success',
 					statusKey,
 					null // Remove progress
@@ -663,7 +699,7 @@ export async function uploadSingleFileWithProgress( {
 		// Upload failed
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				`Failed to upload ${ displayName }`,
+				sprintf( __( 'Failed to upload %s', 'aether-site-exporter' ), displayName ),
 				'error',
 				statusKey,
 				null
@@ -674,7 +710,7 @@ export async function uploadSingleFileWithProgress( {
 			success: false,
 			url: null,
 			skipped: false,
-			error: uploadResult.error || 'Upload failed',
+			error: uploadResult.error || __( 'Upload failed', 'aether-site-exporter' ),
 			hash: fileHash,
 		};
 	} catch ( error ) {
@@ -682,7 +718,7 @@ export async function uploadSingleFileWithProgress( {
 
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				`Failed to upload ${ displayName }`,
+				sprintf( __( 'Failed to upload %s', 'aether-site-exporter' ), displayName ),
 				'error',
 				statusKey,
 				null

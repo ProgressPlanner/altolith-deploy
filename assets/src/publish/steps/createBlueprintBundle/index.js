@@ -7,6 +7,7 @@
  * @package
  */
 
+import { __, sprintf } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import { formatFileSize } from '../../../utils/helpers';
 
@@ -29,7 +30,7 @@ async function handler( context ) {
 	} = context;
 
 	setStatusMessage(
-		'Creating blueprint bundle…',
+		__( 'Creating blueprint bundle…', 'aether-site-exporter' ),
 		'progress',
 		'createBlueprintBundle'
 	);
@@ -49,7 +50,8 @@ async function handler( context ) {
 
 	if ( ! archiveResponse.success ) {
 		throw new Error(
-			archiveResponse.message || 'Failed to create blueprint bundle'
+			archiveResponse.message ||
+				__( 'Failed to create blueprint bundle', 'aether-site-exporter' )
 		);
 	}
 
@@ -62,7 +64,10 @@ async function handler( context ) {
 	}
 
 	setStatusMessage(
-		`Created blueprint bundle (${ sizeFormatted })`,
+		sprintf(
+			__( 'Created blueprint bundle (%s)', 'aether-site-exporter' ),
+			sizeFormatted
+		),
 		'success',
 		'createBlueprintBundle'
 	);
@@ -80,8 +85,11 @@ async function handler( context ) {
  */
 export const createBlueprintBundleStep = {
 	id: 'createBlueprintBundle',
-	label: 'Create Bundle',
-	description: 'Package custom plugins, themes, and uploads',
+	label: __( 'Create Bundle', 'aether-site-exporter' ),
+	description: __(
+		'Package custom plugins, themes, and uploads',
+		'aether-site-exporter'
+	),
 	dependencies: [ 'discoverBlueprintBundleAssets' ],
 	provides: [ 'zipPath', 'zipUrl', 'zipSize' ],
 	handler,

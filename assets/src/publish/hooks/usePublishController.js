@@ -7,6 +7,7 @@
  */
 
 import { useCallback, useState, useRef } from '@wordpress/element';
+import { __, sprintf } from '@wordpress/i18n';
 import { usePublishAPI } from './usePublishAPI';
 import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
@@ -127,7 +128,10 @@ export function usePublishController( publishState ) {
 
 				if ( ! fetchedStorageProviderId ) {
 					throw new Error(
-						'No provider instance ID provided for blueprint bundle upload'
+						__(
+							'No provider instance ID provided for blueprint bundle upload',
+							'aether-site-exporter'
+						)
 					);
 				}
 
@@ -142,7 +146,14 @@ export function usePublishController( publishState ) {
 
 					if ( ! providerResponse ) {
 						throw new Error(
-							`REST API returned null response for provider ${ fetchedStorageProviderId }`
+							sprintf(
+								/* translators: %s: Provider ID */
+								__(
+									'REST API returned null response for provider %s',
+									'aether-site-exporter'
+								),
+								fetchedStorageProviderId
+							)
 						);
 					}
 
@@ -150,9 +161,17 @@ export function usePublishController( publishState ) {
 						const errorMessage =
 							providerResponse.message ||
 							providerResponse.error ||
-							'Unknown error';
+							__( 'Unknown error', 'aether-site-exporter' );
 						throw new Error(
-							`REST API error for provider ${ fetchedStorageProviderId }: ${ errorMessage }`
+							sprintf(
+								/* translators: 1: Provider ID, 2: Error message */
+								__(
+									'REST API error for provider %1$s: %2$s',
+									'aether-site-exporter'
+								),
+								fetchedStorageProviderId,
+								errorMessage
+							)
 						);
 					}
 
@@ -160,7 +179,14 @@ export function usePublishController( publishState ) {
 						providerMetadata = providerResponse.provider;
 					} else {
 						throw new Error(
-							`Provider metadata not found in REST API response for ${ fetchedStorageProviderId }`
+							sprintf(
+								/* translators: %s: Provider ID */
+								__(
+									'Provider metadata not found in REST API response for %s',
+									'aether-site-exporter'
+								),
+								fetchedStorageProviderId
+							)
 						);
 					}
 
@@ -182,13 +208,28 @@ export function usePublishController( publishState ) {
 						error
 					);
 					throw new Error(
-						`Failed to fetch provider metadata for instance ${ fetchedStorageProviderId }: ${ error.message }`
+						sprintf(
+							/* translators: 1: Provider instance ID, 2: Error message */
+							__(
+								'Failed to fetch provider metadata for instance %1$s: %2$s',
+								'aether-site-exporter'
+							),
+							fetchedStorageProviderId,
+							error.message
+						)
 					);
 				}
 
 				if ( ! providerMetadata ) {
 					throw new Error(
-						`Provider instance not found: ${ fetchedStorageProviderId }`
+						sprintf(
+							/* translators: %s: Provider instance ID */
+							__(
+								'Provider instance not found: %s',
+								'aether-site-exporter'
+							),
+							fetchedStorageProviderId
+						)
 					);
 				}
 
@@ -221,7 +262,10 @@ export function usePublishController( publishState ) {
 
 					if ( ! blueprintBundlePath ) {
 						throw new Error(
-							'Blueprint bundle not found. generateBlueprint must run before uploadSiteArchive.'
+							__(
+								'Blueprint bundle not found. generateBlueprint must run before uploadSiteArchive.',
+								'aether-site-exporter'
+							)
 						);
 					}
 
@@ -271,8 +315,15 @@ export function usePublishController( publishState ) {
 						);
 
 						throw new Error(
-							`No upload handler registered for provider type: ${ providerType } (instance: ${ fetchedStorageProviderId }). ` +
-								`Make sure the provider has registered an upload handler via the 'aether.provider.upload' filter.`
+							sprintf(
+								/* translators: 1: Provider type, 2: Provider instance ID */
+								__(
+									"No upload handler registered for provider type: %1$s (instance: %2$s). Make sure the provider has registered an upload handler via the 'aether.provider.upload' filter.",
+									'aether-site-exporter'
+								),
+								providerType,
+								fetchedStorageProviderId
+							)
 						);
 					}
 
@@ -295,7 +346,14 @@ export function usePublishController( publishState ) {
 
 					if ( ! uploadResult ) {
 						throw new Error(
-							`Upload handler returned null/undefined for instance ${ fetchedStorageProviderId }`
+							sprintf(
+								/* translators: %s: Provider instance ID */
+								__(
+									'Upload handler returned null/undefined for instance %s',
+									'aether-site-exporter'
+								),
+								fetchedStorageProviderId
+							)
 						);
 					}
 
@@ -303,13 +361,24 @@ export function usePublishController( publishState ) {
 						const errorMessage =
 							uploadResult?.error ||
 							uploadResult?.message ||
-							'Unknown upload error';
+							__(
+								'Unknown upload error',
+								'aether-site-exporter'
+							);
 						debugError(
 							`[Aether] Upload handler returned error for instance ${ fetchedStorageProviderId }:`,
 							errorMessage
 						);
 						throw new Error(
-							`Failed to upload blueprint bundle to instance ${ fetchedStorageProviderId }: ${ errorMessage }`
+							sprintf(
+								/* translators: 1: Provider instance ID, 2: Error message */
+								__(
+									'Failed to upload blueprint bundle to instance %1$s: %2$s',
+									'aether-site-exporter'
+								),
+								fetchedStorageProviderId,
+								errorMessage
+							)
 						);
 					}
 
@@ -322,7 +391,12 @@ export function usePublishController( publishState ) {
 					// to properly track progress across multiple provider instances.
 				} else {
 					// ERROR: No upload method configured (no provider configured).
-					throw new Error( 'No supported upload method available' );
+					throw new Error(
+						__(
+							'No supported upload method available',
+							'aether-site-exporter'
+						)
+					);
 				}
 
 				// Upload complete - control returns to workflow executor.

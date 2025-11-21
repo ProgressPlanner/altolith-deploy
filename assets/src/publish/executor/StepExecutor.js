@@ -7,6 +7,7 @@
  * @package
  */
 
+import { __, sprintf } from '@wordpress/i18n';
 import { doAction, applyFilters } from '@wordpress/hooks';
 import { buildParallelPlan, validateDependencies } from './DependencyResolver';
 
@@ -171,7 +172,14 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 			error,
 			executionContext
 		);
-		throw new Error( `Step "${ stepId }" failed: ${ error.message }` );
+		throw new Error(
+			sprintf(
+				/* translators: 1: Step ID, 2: Error message */
+				__( 'Step "%1$s" failed: %2$s', 'aether-site-exporter' ),
+				stepId,
+				error.message
+			)
+		);
 	}
 }
 

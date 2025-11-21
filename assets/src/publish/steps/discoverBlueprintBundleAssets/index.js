@@ -7,6 +7,8 @@
  * @package
  */
 
+import { __, sprintf, _n } from '@wordpress/i18n';
+
 /**
  * Discover blueprint bundle assets step handler.
  *
@@ -19,7 +21,7 @@ async function handler( context ) {
 	const { api, setStatusMessage } = context;
 
 	setStatusMessage(
-		'Discovering plugins and themes…',
+		__( 'Discovering plugins and themes…', 'aether-site-exporter' ),
 		'progress',
 		'discoverBlueprintBundleAssets'
 	);
@@ -29,7 +31,8 @@ async function handler( context ) {
 
 	if ( ! discoveryResponse.success ) {
 		throw new Error(
-			discoveryResponse.message || 'Failed to discover assets'
+			discoveryResponse.message ||
+				__( 'Failed to discover assets', 'aether-site-exporter' )
 		);
 	}
 
@@ -40,30 +43,54 @@ async function handler( context ) {
 	// Build success message
 	let message;
 	if ( assets.length === 0 ) {
-		message = 'Discovered 0 active custom plugins/themes';
+		message = __(
+			'Discovered 0 active custom plugins/themes',
+			'aether-site-exporter'
+		);
 	} else {
 		const parts = [];
 		if ( plugins.length > 0 ) {
 			const pluginText =
 				plugins.length === 1
-					? `1 active custom plugin (${ plugins[ 0 ].slug })`
-					: `${ plugins.length } active custom plugins (${ plugins
-							.map( ( p ) => p.slug )
-							.join( ', ' ) })`;
+					? sprintf(
+							__( '1 active custom plugin (%s)', 'aether-site-exporter' ),
+							plugins[ 0 ].slug
+					  )
+					: sprintf(
+							_n(
+								'%d active custom plugin (%s)',
+								'%d active custom plugins (%s)',
+								plugins.length,
+								'aether-site-exporter'
+							),
+							plugins.length,
+							plugins.map( ( p ) => p.slug ).join( ', ' )
+					  );
 			parts.push( pluginText );
 		}
 		if ( themes.length > 0 ) {
 			const themeText =
 				themes.length === 1
-					? `1 active custom theme (${ themes[ 0 ].slug })`
-					: `${ themes.length } active custom themes (${ themes
-							.map( ( t ) => t.slug )
-							.join( ', ' ) })`;
+					? sprintf(
+							__( '1 active custom theme (%s)', 'aether-site-exporter' ),
+							themes[ 0 ].slug
+					  )
+					: sprintf(
+							_n(
+								'%d active custom theme (%s)',
+								'%d active custom themes (%s)',
+								themes.length,
+								'aether-site-exporter'
+							),
+							themes.length,
+							themes.map( ( t ) => t.slug ).join( ', ' )
+					  );
 			parts.push( themeText );
 		}
-		message = `Discovered ${ parts.join(
-			' and '
-		) }. These will be included in the blueprint bundle.`;
+		message = sprintf(
+			__( 'Discovered %s. These will be included in the blueprint bundle.', 'aether-site-exporter' ),
+			parts.join( __( ' and ', 'aether-site-exporter' ) )
+		);
 	}
 
 	setStatusMessage( message, 'success', 'discoverBlueprintBundleAssets' );
@@ -79,8 +106,11 @@ async function handler( context ) {
  */
 export const discoverBlueprintBundleAssetsStep = {
 	id: 'discoverBlueprintBundleAssets',
-	label: 'Discover Assets',
-	description: 'Find custom plugins and themes for blueprint bundle',
+	label: __( 'Discover Assets', 'aether-site-exporter' ),
+	description: __(
+		'Find custom plugins and themes for blueprint bundle',
+		'aether-site-exporter'
+	),
 	dependencies: [],
 	provides: [ 'discoveredAssets' ],
 	handler,

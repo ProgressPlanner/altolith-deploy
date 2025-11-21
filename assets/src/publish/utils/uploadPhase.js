@@ -6,6 +6,7 @@
  * @package
  */
 
+import { __, sprintf } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import { processHtml, getStaticFilePath } from './htmlProcessor';
 import { getAssetLocalPath } from './assetExtractor';
@@ -38,7 +39,7 @@ export async function prepareManifest(
 	try {
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				'Fetching file manifest…',
+				__( 'Fetching file manifest…', 'aether-site-exporter' ),
 				'progress',
 				'fetchManifest'
 			);
@@ -58,7 +59,14 @@ export async function prepareManifest(
 		const manifestEntryCount = Object.keys( manifest ).length;
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				`Fetched file manifest (${ manifestEntryCount } entries)`,
+				sprintf(
+					/* translators: %d: Number of manifest entries */
+					__(
+						'Fetched file manifest (%d entries)',
+						'aether-site-exporter'
+					),
+					manifestEntryCount
+				),
 				'success',
 				'fetchManifest'
 			);
@@ -398,13 +406,21 @@ export async function uploadHtmlFile( {
 
 	if ( ! htmlUploadResult.success ) {
 		throw new Error(
-			`Failed to upload HTML file: ${ htmlUploadResult.error }`
+			sprintf(
+				/* translators: %s: Error message */
+				__( 'Failed to upload HTML file: %s', 'aether-site-exporter' ),
+				htmlUploadResult.error
+			)
 		);
 	}
 
 	if ( setStatusMessage ) {
 		setStatusMessage(
-			`Uploaded ${ htmlPath }`,
+			sprintf(
+				/* translators: %s: File path */
+				__( 'Uploaded %s', 'aether-site-exporter' ),
+				htmlPath
+			),
 			'success',
 			`upload-${ htmlPath }`
 		);
@@ -440,7 +456,7 @@ export async function finalizeManifest(
 	try {
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				'Updating file manifest…',
+				__( 'Updating file manifest…', 'aether-site-exporter' ),
 				'progress',
 				'updateManifest'
 			);
@@ -470,7 +486,7 @@ export async function finalizeManifest(
 
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				'Updated file manifest',
+				__( 'Updated file manifest', 'aether-site-exporter' ),
 				'success',
 				'updateManifest'
 			);

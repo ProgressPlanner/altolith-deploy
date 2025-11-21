@@ -6,6 +6,7 @@
  * @package
  */
 
+import { __, sprintf } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import { formatFileSize } from '../../../utils/helpers';
 
@@ -32,14 +33,17 @@ async function handler( context ) {
 	} = context;
 
 	setStatusMessage(
-		'Generating blueprint bundle…',
+		__( 'Generating blueprint bundle…', 'aether-site-exporter' ),
 		'progress',
 		'generateBlueprint'
 	);
 
 	if ( ! zipPath ) {
 		throw new Error(
-			'Site archive not found. Please run createBlueprintBundle first.'
+			__(
+				'Site archive not found. Please run createBlueprintBundle first.',
+				'aether-site-exporter'
+			)
 		);
 	}
 
@@ -59,7 +63,8 @@ async function handler( context ) {
 
 		if ( ! blueprintResponse.success ) {
 			throw new Error(
-				blueprintResponse.message || 'Failed to generate blueprint'
+				blueprintResponse.message ||
+					__( 'Failed to generate blueprint', 'aether-site-exporter' )
 			);
 		}
 		blueprintData = blueprintResponse.blueprint;
@@ -80,7 +85,8 @@ async function handler( context ) {
 
 	if ( ! bundleResponse.success ) {
 		throw new Error(
-			bundleResponse.message || 'Failed to create blueprint bundle'
+			bundleResponse.message ||
+				__( 'Failed to create blueprint bundle', 'aether-site-exporter' )
 		);
 	}
 
@@ -88,7 +94,10 @@ async function handler( context ) {
 	const sizeFormatted = formatFileSize( bundleSize || 0 );
 
 	setStatusMessage(
-		`Generated blueprint bundle (${ sizeFormatted })`,
+		sprintf(
+			__( 'Generated blueprint bundle (%s)', 'aether-site-exporter' ),
+			sizeFormatted
+		),
 		'success',
 		'generateBlueprint'
 	);
@@ -109,8 +118,8 @@ async function handler( context ) {
  */
 export const generateBlueprintStep = {
 	id: 'generateBlueprint',
-	label: 'Generate Blueprint',
-	description: 'Create blueprint-bundle.zip',
+	label: __( 'Generate Blueprint', 'aether-site-exporter' ),
+	description: __( 'Create blueprint-bundle.zip', 'aether-site-exporter' ),
 	dependencies: [ 'createBlueprintBundle' ],
 	provides: [ 'blueprintData', 'blueprintBundle' ],
 	handler,

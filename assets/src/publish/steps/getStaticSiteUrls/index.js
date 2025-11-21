@@ -6,6 +6,8 @@
  * @package
  */
 
+import { __, sprintf } from '@wordpress/i18n';
+
 /**
  * Get static site URLs step handler.
  *
@@ -19,7 +21,7 @@ async function handler( context ) {
 	const { api, siteUrl, setStatusMessage } = context;
 
 	setStatusMessage(
-		'Discovering URLs for static site…',
+		__( 'Discovering URLs for static site…', 'aether-site-exporter' ),
 		'progress',
 		'getStaticSiteUrls'
 	);
@@ -28,7 +30,10 @@ async function handler( context ) {
 	const urlResponse = await api.discoverUrls();
 
 	if ( ! urlResponse.success ) {
-		throw new Error( urlResponse.message || 'Failed to discover URLs' );
+		throw new Error(
+			urlResponse.message ||
+				__( 'Failed to discover URLs', 'aether-site-exporter' )
+		);
 	}
 
 	const urls = urlResponse.urls || [];
@@ -36,7 +41,10 @@ async function handler( context ) {
 	const urlsCount = urls.length;
 
 	setStatusMessage(
-		`Discovered ${ urlsCount } URLs for static site generation`,
+		sprintf(
+			__( 'Discovered %d URLs for static site generation', 'aether-site-exporter' ),
+			urlsCount
+		),
 		'success',
 		'getStaticSiteUrls'
 	);
@@ -54,8 +62,11 @@ async function handler( context ) {
  */
 export const getStaticSiteUrlsStep = {
 	id: 'getStaticSiteUrls',
-	label: 'Discover URLs',
-	description: 'Find all URLs for static site generation',
+	label: __( 'Discover URLs', 'aether-site-exporter' ),
+	description: __(
+		'Find all URLs for static site generation',
+		'aether-site-exporter'
+	),
 	dependencies: [],
 	provides: [ 'urls', 'staticSiteUrl', 'urlsCount' ],
 	handler,

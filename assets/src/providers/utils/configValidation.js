@@ -6,6 +6,8 @@
  * @package
  */
 
+import { __, sprintf } from '@wordpress/i18n';
+
 /**
  * Validate a configuration value against a field definition.
  *
@@ -17,7 +19,11 @@
 export async function validateFieldValue( value, field, config ) {
 	// Check required fields
 	if ( field.required && ! value ) {
-		return `${ field.label } is required.`;
+		return sprintf(
+			/* translators: %s: Field label */
+			__( '%s is required.', 'aether-site-exporter' ),
+			field.label
+		);
 	}
 
 	// Skip validation if field is empty and not required
@@ -33,8 +39,13 @@ export async function validateFieldValue( value, field, config ) {
 		if ( validation.pattern ) {
 			const regex = new RegExp( validation.pattern );
 			if ( ! regex.test( value ) ) {
-				return (
-					validation.message || `${ field.label } format is invalid.`
+				if ( validation.message ) {
+					return validation.message;
+				}
+				return sprintf(
+					/* translators: %s: Field label */
+					__( '%s format is invalid.', 'aether-site-exporter' ),
+					field.label
 				);
 			}
 		}
@@ -44,7 +55,15 @@ export async function validateFieldValue( value, field, config ) {
 			validation.minLength !== undefined &&
 			value.length < validation.minLength
 		) {
-			return `${ field.label } must be at least ${ validation.minLength } characters.`;
+			return sprintf(
+				/* translators: 1: Field label, 2: Minimum length */
+				__(
+					'%1$s must be at least %2$d characters.',
+					'aether-site-exporter'
+				),
+				field.label,
+				validation.minLength
+			);
 		}
 
 		// Max length validation
@@ -52,7 +71,15 @@ export async function validateFieldValue( value, field, config ) {
 			validation.maxLength !== undefined &&
 			value.length > validation.maxLength
 		) {
-			return `${ field.label } must be no more than ${ validation.maxLength } characters.`;
+			return sprintf(
+				/* translators: 1: Field label, 2: Maximum length */
+				__(
+					'%1$s must be no more than %2$d characters.',
+					'aether-site-exporter'
+				),
+				field.label,
+				validation.maxLength
+			);
 		}
 
 		// Custom validator callback

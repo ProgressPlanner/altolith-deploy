@@ -168,7 +168,9 @@ export default function ProviderConfigModal( {
 			} );
 
 			if ( ! configResponse.success ) {
-				throw new Error( 'Failed to load current settings' );
+				throw new Error(
+					__( 'Failed to load current settings', 'aether-site-exporter' )
+				);
 			}
 
 			const providerConfigs = configResponse.value || {};
