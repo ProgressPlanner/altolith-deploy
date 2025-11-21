@@ -18,7 +18,7 @@ import { calculateFileHash } from '../../utils/fileHash';
 import { shouldSkipUpload } from '../../utils/manifestManager';
 import { debugWarn } from '../../utils/debug';
 import { formatFileSize } from '../../utils/helpers';
-import { delay } from '../../utils/delay';
+import { errorHandler } from './errorHandler';
 
 /**
  * Sanitize a storage key for use in status message keys.
@@ -346,79 +346,62 @@ export async function uploadFilesWithProgress( {
 					metadata
 				);
 
-				// Upload file with retry logic (max 3 attempts with exponential backoff)
-				const maxRetries = 3;
+				// Upload file with retry logic using ErrorHandler
 				let uploadResult = null;
-				let lastError = null;
 
-				for ( let attempt = 1; attempt <= maxRetries; attempt++ ) {
-					try {
-						uploadResult = await storageService.upload(
-							key,
-							blob,
-							uploadOptions
-						);
+				try {
+					uploadResult = await errorHandler.executeWithRetry(
+						async () => {
+							const result = await storageService.upload(
+								key,
+								blob,
+								uploadOptions
+							);
 
-						if ( uploadResult.success ) {
-							// Upload succeeded, break out of retry loop
-							break;
-						}
-
-						// Upload returned failure, prepare for retry
-						lastError = uploadResult.error || 'Upload failed';
-
-						// If this isn't the last attempt, retry with backoff
-						if ( attempt < maxRetries ) {
-							const delayMs = Math.pow( 2, attempt - 1 ) * 1000; // 1s, 2s, 4s
-							if ( setStatusMessage ) {
-								setStatusMessage(
-									sprintf(
-										/* translators: %1$s: File name, %2$s: File size, %3$d: Attempt number, %4$d: Max retries */
-										__(
-											'Retrying %1$s (%2$s) - attempt %3$d/%4$d',
-											'aether-site-exporter'
-										),
-										displayName,
-										sizeStr,
-										attempt + 1,
-										maxRetries
-									),
-									'info',
-									uploadKey,
-									undefined,
-									{ fileSize }
+							// If upload returned failure, throw error for retry logic
+							if ( ! result.success ) {
+								const error = new Error(
+									result.error || 'Upload failed'
 								);
+								error.code = result.code;
+								error.status = result.status;
+								throw error;
 							}
-							await delay( delayMs );
-						}
-					} catch ( error ) {
-						lastError = error.message || error;
 
-						// If this isn't the last attempt, retry with backoff
-						if ( attempt < maxRetries ) {
-							const delayMs = Math.pow( 2, attempt - 1 ) * 1000; // 1s, 2s, 4s
-							if ( setStatusMessage ) {
-								setStatusMessage(
-									sprintf(
-										/* translators: %1$s: File name, %2$s: File size, %3$d: Attempt number, %4$d: Max retries */
-										__(
-											'Retrying %1$s (%2$s) - attempt %3$d/%4$d',
-											'aether-site-exporter'
+							return result;
+						},
+						{
+							onRetry: ( error, attempt, delay ) => {
+								if ( setStatusMessage ) {
+									setStatusMessage(
+										sprintf(
+											/* translators: %1$s: File name, %2$s: File size, %3$d: Attempt number, %4$d: Max retries */
+											__(
+												'Retrying %1$s (%2$s) - attempt %3$d/%4$d',
+												'aether-site-exporter'
+											),
+											displayName,
+											sizeStr,
+											attempt,
+											3
 										),
-										displayName,
-										sizeStr,
-										attempt + 1,
-										maxRetries
-									),
-									'info',
-									uploadKey,
-									undefined,
-									{ fileSize }
-								);
-							}
-							await delay( delayMs );
+										'info',
+										uploadKey,
+										undefined,
+										{ fileSize }
+									);
+								}
+							},
 						}
-					}
+					);
+				} catch ( error ) {
+					// Upload failed after all retries
+					uploadResult = {
+						success: false,
+						error: errorHandler.formatMessage( error, {
+							operation: `upload ${ displayName }`,
+						} ),
+					};
 				}
 
 				if ( uploadResult && uploadResult.success ) {

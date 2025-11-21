@@ -10,6 +10,12 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { doAction, applyFilters } from '@wordpress/hooks';
 import { buildParallelPlan, validateDependencies } from './DependencyResolver';
+import {
+	errorHandler,
+	formatErrorMessage,
+	determineSeverity,
+	ERROR_SEVERITY,
+} from '../utils/errorHandler';
 
 /**
  * Execute a workflow with the given steps.
@@ -145,8 +151,24 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 			...executionContext.state,
 		};
 
-		// Execute handler
-		const result = await step.handler( stepContext );
+		// Execute handler with retry logic
+		const result = await errorHandler.executeWithRetry(
+			async () => {
+				return await step.handler( stepContext );
+			},
+			{
+				onRetry: ( error, attempt, delay ) => {
+					// Fire retry action
+					doAction(
+						`aether.publish.step.${ stepId }.retry`,
+						error,
+						attempt,
+						delay,
+						executionContext
+					);
+				},
+			}
+		);
 
 		// Apply result filter
 		const filteredResult = applyFilters(
@@ -166,20 +188,38 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 		return filteredResult;
 	} catch ( error ) {
-		onError( stepId, error );
+		// Categorize and format error
+		const category = errorHandler.categorize( error );
+		const severity = determineSeverity( category, { stepId } );
+		const formattedMessage = formatErrorMessage( error, {
+			stepId,
+			operation: step.label || stepId,
+		} );
+
+		// Create enhanced error object
+		const enhancedError = {
+			...error,
+			category,
+			severity,
+			stepId,
+			formattedMessage,
+			originalMessage: error.message,
+		};
+
+		onError( stepId, enhancedError );
 		doAction(
 			`aether.publish.step.${ stepId }.error`,
-			error,
+			enhancedError,
 			executionContext
 		);
-		throw new Error(
-			sprintf(
-				/* translators: 1: Step ID, 2: Error message */
-				__( 'Step "%1$s" failed: %2$s', 'aether-site-exporter' ),
-				stepId,
-				error.message
-			)
-		);
+
+		// For critical errors, stop workflow immediately
+		if ( severity === ERROR_SEVERITY.CRITICAL ) {
+			throw new Error( formattedMessage );
+		}
+
+		// For other errors, wrap with step context
+		throw new Error( formattedMessage );
 	}
 }
 
