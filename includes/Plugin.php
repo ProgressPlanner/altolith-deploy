@@ -411,7 +411,7 @@ class Plugin
 
 		// Allow local development origins (requires explicit opt-in for security)
 		// Define AETHER_ALLOW_LOCAL_CORS in wp-config.php to enable
-		if (\defined('WP_DEBUG') && WP_DEBUG && \defined('AETHER_ALLOW_LOCAL_CORS') && AETHER_ALLOW_LOCAL_CORS) {
+		if (\defined('WP_DEBUG') && WP_DEBUG && \defined('AETHER_ALLOW_LOCAL_CORS') && constant('AETHER_ALLOW_LOCAL_CORS')) {
 			// Security: Only allow common development ports to reduce attack surface
 			$commonDevPorts = ['3000', '3001', '8000', '8080', '8888'];
 
@@ -590,13 +590,13 @@ class Plugin
 	}
 
 	/**
-	 * Get all custom assets (plugins and themes).
+	 * Get the asset discovery service.
 	 *
-	 * @return array<int, array<string, string>> Custom assets array.
+	 * @return AssetDiscoveryService
 	 */
-	public function getAllCustomAssets(): array
+	public function getAssetDiscovery(): AssetDiscoveryService
 	{
-		return $this->assetDiscovery->getAllCustomAssets();
+		return $this->assetDiscovery;
 	}
 
 	/**

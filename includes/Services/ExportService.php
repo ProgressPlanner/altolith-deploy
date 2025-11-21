@@ -308,7 +308,7 @@ class ExportService
 			}
 		} else {
 			// Fallback: Use PHP-based detection (includes ALL active plugins).
-			$customAssets = $this->plugin->getAllCustomAssets();
+			$customAssets = $this->plugin->getAssetDiscovery()->getAllCustomAssets();
 			foreach ($customAssets as $asset) {
 				if ('plugin' === $asset['type']) {
 					// Skip 'aether' plugin - it's added separately in blueprint from aether.zip URL.
@@ -596,7 +596,7 @@ class ExportService
 		}
 
 		// Count files in custom plugins.
-		$customAssets = $this->plugin->getAllCustomAssets();
+		$customAssets = $this->plugin->getAssetDiscovery()->getAllCustomAssets();
 		foreach ($customAssets as $asset) {
 			if ('plugin' === $asset['type']) {
 				$pluginDir = WP_PLUGIN_DIR . '/' . $asset['slug'];
@@ -1103,7 +1103,7 @@ class ExportService
 				}
 			}
 		} else {
-			$customAssets = $this->plugin->getAllCustomAssets();
+			$customAssets = $this->plugin->getAssetDiscovery()->getAllCustomAssets();
 			foreach ($customAssets as $asset) {
 				if ('plugin' === $asset['type'] && 'aether' !== $asset['slug']) {
 					$plugins[] = $asset['slug'];
@@ -1234,7 +1234,7 @@ class ExportService
 				}
 			}
 		} else {
-			$customAssets = $this->plugin->getAllCustomAssets();
+			$customAssets = $this->plugin->getAssetDiscovery()->getAllCustomAssets();
 			foreach ($customAssets as $asset) {
 				if ('theme' === $asset['type']) {
 					$themes[] = $asset['slug'];

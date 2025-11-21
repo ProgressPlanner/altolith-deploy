@@ -163,7 +163,7 @@ class ExportController
 		}
 
 		// Get custom assets (plugins/themes).
-		$customAssets = $this->plugin->getAllCustomAssets();
+		$customAssets = $this->plugin->getAssetDiscovery()->getAllCustomAssets();
 
 		// Add each custom plugin.
 		foreach ($customAssets as $asset) {
