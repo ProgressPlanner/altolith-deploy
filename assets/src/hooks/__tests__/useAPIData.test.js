@@ -110,7 +110,9 @@ describe( 'useAPIData', () => {
 
 	describe( 'refresh functionality', () => {
 		test( 'should refetch when refresh is called', async () => {
-			apiFetch.mockResolvedValueOnce( { count: 1 } ).mockResolvedValueOnce( { count: 2 } );
+			apiFetch
+				.mockResolvedValueOnce( { count: 1 } )
+				.mockResolvedValueOnce( { count: 2 } );
 
 			const { result } = renderHook( () =>
 				useAPIData( {

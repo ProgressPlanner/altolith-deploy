@@ -164,7 +164,7 @@ class CorsHandler
 
 		// Allow local development origins (requires explicit opt-in for security)
 		// Define AETHER_ALLOW_LOCAL_CORS in wp-config.php to enable
-		if (\defined('WP_DEBUG') && WP_DEBUG && \defined('AETHER_ALLOW_LOCAL_CORS') && constant('AETHER_ALLOW_LOCAL_CORS')) {
+		if (\defined('WP_DEBUG') && WP_DEBUG && \defined('AETHER_ALLOW_LOCAL_CORS') && \constant('AETHER_ALLOW_LOCAL_CORS')) {
 			$allowedOrigins = \array_merge($allowedOrigins, $this->getLocalDevelopmentOrigins($origin));
 		}
 

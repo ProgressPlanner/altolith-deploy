@@ -49,7 +49,9 @@ describe( 'useConfig', () => {
 
 		const { result } = renderHook( () => useConfig() );
 
-		expect( result.current.adminUrl ).toBe( 'https://example.com/wp-admin' );
+		expect( result.current.adminUrl ).toBe(
+			'https://example.com/wp-admin'
+		);
 	} );
 
 	test( 'should return empty strings when config values missing', () => {
