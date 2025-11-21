@@ -8,7 +8,7 @@
  */
 
 import { applyFilters } from '@wordpress/hooks';
-import { formatFileSize } from '../../utils/helpers';
+import { formatFileSize } from '../../../utils/helpers';
 
 /**
  * Create site archive step handler.

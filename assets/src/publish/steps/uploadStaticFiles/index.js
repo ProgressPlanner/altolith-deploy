@@ -7,8 +7,8 @@
  */
 
 import { applyFilters } from '@wordpress/hooks';
-import apiFetch from '../../utils/api';
-import { calculateOverallProgress } from '../utils/progressManager';
+import apiFetch from '../../../utils/api';
+import { calculateOverallProgress } from '../../utils/progressManager';
 
 /**
  * Upload static files step handler.

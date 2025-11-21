@@ -7,7 +7,7 @@
  */
 
 import { applyFilters } from '@wordpress/hooks';
-import { formatFileSize } from '../../utils/helpers';
+import { formatFileSize } from '../../../utils/helpers';
 
 /**
  * Generate blueprint step handler.
