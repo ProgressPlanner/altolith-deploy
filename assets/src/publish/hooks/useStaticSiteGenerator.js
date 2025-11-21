@@ -48,7 +48,8 @@ export function useStaticSiteGenerator( onProgress ) {
 			siteUrl,
 			setStatusMessage,
 			blueprintData,
-			removeMessage = null
+			removeMessage = null,
+			cache = null
 		) => {
 			// Create asset tracker to prevent duplicate uploads
 			const assetTracker = createAssetTracker();
@@ -85,13 +86,14 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			const totalUrls = urls.length;
 
-			// PHASE 1: Pre-scan all URLs
+			// PHASE 1: Pre-scan all URLs (use shared cache if provided)
 			const preScanResult = await executePreScan( {
 				urls,
 				siteUrl,
 				providerId: staticSiteProviderId,
 				providerConfig,
 				setStatusMessage,
+				cache,
 			} );
 
 			const { cache, totalFilesToUpload } = preScanResult;
@@ -130,7 +132,7 @@ export function useStaticSiteGenerator( onProgress ) {
 					);
 					continue;
 				}
-				const { processedHtml: rawHtml, assetUrls } = cached;
+				const { rawHtml, assetUrls } = cached;
 
 				try {
 					// Update progress message
@@ -239,13 +241,8 @@ export function useStaticSiteGenerator( onProgress ) {
 				}
 			}
 
-			// Clean up cache
-			const cacheCleanedCount = await cache.clearSession();
-			if ( cacheCleanedCount > 0 ) {
-				debug(
-					`[Aether] Cleared ${ cacheCleanedCount } cache entries from this session`
-				);
-			}
+			// Note: Cache cleanup is handled at the workflow level (uploadStaticFiles step)
+			// to ensure it happens once for all providers, not per provider
 
 			// Finalize manifest
 			await finalizeManifest(
