@@ -7,7 +7,7 @@
  */
 
 import { escapeRegex } from './urlUtils';
-import { debug } from '../../utils/debug';
+import { debug } from '@aether/utils/debug';
 
 /**
  * Protect inline script content by replacing with placeholders.

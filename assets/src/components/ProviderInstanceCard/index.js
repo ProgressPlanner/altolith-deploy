@@ -24,11 +24,11 @@ import {
 	fontSize,
 	borderRadius,
 	statusBadgeStyles,
-} from '../../utils/styles';
+} from '@aether/utils/styles';
 import {
 	DEPLOYMENT_TYPES,
 	DEPLOYMENT_TYPE_LABELS,
-} from '../../constants/deploymentTypes';
+} from '@aether/constants/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const headerContentStyle = {

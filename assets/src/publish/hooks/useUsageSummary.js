@@ -10,7 +10,7 @@
 
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { useAPIData } from '../../hooks/useAPIData';
+import { useAPIData } from '@aether/hooks/useAPIData';
 
 const PROVIDER_LABELS = {
 	'local-filesystem': __( 'Local Filesystem', 'aether-site-exporter' ),

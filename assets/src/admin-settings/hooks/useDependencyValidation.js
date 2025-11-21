@@ -9,7 +9,7 @@
 
 import { useEffect, useRef } from '@wordpress/element';
 import { areAllDependenciesSatisfied } from '../utils/dependencyValidation';
-import { useProviderSettings } from '../../hooks/useProviderSettings';
+import { useProviderSettings } from '@aether/hooks/useProviderSettings';
 
 /**
  * Hook to validate and auto-disable providers with unsatisfied dependencies

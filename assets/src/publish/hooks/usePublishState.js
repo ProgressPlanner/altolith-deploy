@@ -7,7 +7,7 @@
  * @package
  */
 
-import { usePublishContext } from '../../hooks/usePublishContext';
+import { usePublishContext } from '@aether/hooks/usePublishContext';
 
 /**
  * Get publish workflow state

@@ -16,8 +16,8 @@ import {
 	fontSize,
 	fontWeight,
 	noticeStyles,
-} from '../../utils/styles';
-import { debugError } from '../../utils/debug';
+} from '@aether/utils/styles';
+import { debugError } from '@aether/utils/debug';
 
 /**
  * Error Boundary component

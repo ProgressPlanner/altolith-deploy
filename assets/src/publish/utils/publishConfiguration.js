@@ -7,7 +7,7 @@
  * @package
  */
 
-import { debugError } from '../../utils/debug';
+import { debugError } from '@aether/utils/debug';
 
 /**
  * Prepare publish configuration from settings response

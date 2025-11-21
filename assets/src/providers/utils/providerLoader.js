@@ -14,8 +14,8 @@
  * @package
  */
 
-import apiFetch from '../../utils/api';
-import { debugError, debugWarn } from '../../utils/debug';
+import apiFetch from '@aether/utils/api';
+import { debugError, debugWarn } from '@aether/utils/debug';
 import { applyFilters } from '@wordpress/hooks';
 
 /**

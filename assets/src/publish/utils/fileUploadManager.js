@@ -13,11 +13,11 @@
 
 import { __, sprintf } from '@wordpress/i18n';
 import { doAction, applyFilters } from '@wordpress/hooks';
-import { createConcurrencyLimiter } from '../../utils/concurrencyLimiter';
-import { calculateFileHash } from '../../utils/fileHash';
-import { shouldSkipUpload } from '../../utils/manifestManager';
-import { debugWarn } from '../../utils/debug';
-import { formatFileSize } from '../../utils/helpers';
+import { createConcurrencyLimiter } from '@aether/utils/concurrencyLimiter';
+import { calculateFileHash } from '@aether/utils/fileHash';
+import { shouldSkipUpload } from '@aether/utils/manifestManager';
+import { debugWarn } from '@aether/utils/debug';
+import { formatFileSize } from '@aether/utils/helpers';
 import { errorHandler } from './errorHandler';
 
 /**

@@ -8,10 +8,10 @@
  */
 
 import { useCallback, useMemo } from '@wordpress/element';
-import apiFetch from '../../utils/api';
-import useAssetDiscovery from '../../utils/useAssetDiscovery';
-import { storage } from '../../utils/storage';
-import { PublishAPIService } from '../../services/PublishAPIService';
+import apiFetch from '@aether/utils/api';
+import useAssetDiscovery from '@aether/utils/useAssetDiscovery';
+import { storage } from '@aether/utils/storage';
+import { PublishAPIService } from '@aether/services/PublishAPIService';
 
 export function usePublishAPI() {
 	const assetDiscovery = useAssetDiscovery();

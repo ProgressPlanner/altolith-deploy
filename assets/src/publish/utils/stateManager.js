@@ -8,8 +8,8 @@
  * @package
  */
 
-import { debug, debugWarn } from '../../utils/debug';
-import IndexedDBStore, { isIndexedDBAvailable } from '../../utils/indexedDB';
+import { debug, debugWarn } from '@aether/utils/debug';
+import IndexedDBStore, { isIndexedDBAvailable } from '@aether/utils/indexedDB';
 
 const DB_CONFIG = {
 	dbName: 'aether-publish-state',

@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useRef, useCallback } from '@wordpress/element';
-import apiFetch from '../../utils/api';
+import apiFetch from '@aether/utils/api';
 
 /**
  * Hook to reload provider metadata when deployment types change

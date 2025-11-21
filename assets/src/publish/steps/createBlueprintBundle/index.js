@@ -9,7 +9,7 @@
 
 import { __, sprintf } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
-import { formatFileSize } from '../../../utils/helpers';
+import { formatFileSize } from '@aether/utils/helpers';
 
 /**
  * Create blueprint bundle step handler.

@@ -24,11 +24,11 @@ import {
 import { __ } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
 import StatusNotice from '../StatusNotice';
-import apiFetch from '../../utils/api';
-import { validateConfig } from '../../utils/validation';
+import apiFetch from '@aether/utils/api';
+import { validateConfig } from '@aether/utils/validation';
 import ProviderField from '../ProviderField';
-import { useSuccessTimeout } from '../../hooks/useSuccessTimeout';
-import { colors, spacing, createFlexStyle } from '../../utils/styles';
+import { useSuccessTimeout } from '@aether/hooks/useSuccessTimeout';
+import { colors, spacing, createFlexStyle } from '@aether/utils/styles';
 
 // Styles - extracted to module level for performance
 const formStyle = {

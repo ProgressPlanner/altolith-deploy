@@ -16,11 +16,11 @@ import {
 	noticeStyles,
 	createFlexStyle,
 	utilityStyles,
-} from '../../utils/styles';
+} from '@aether/utils/styles';
 import {
 	formatJobTime,
 	getStatusDisplay,
-} from '../../publish/utils/jobFormatters';
+} from '@aether/publish/utils/jobFormatters';
 import StatusBadge from '../StatusBadge';
 import SectionHeader from '../SectionHeader';
 

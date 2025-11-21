@@ -11,16 +11,16 @@ import { usePublishAPI } from './usePublishAPI';
 import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
 import { useBlueprintGenerator } from './useBlueprintGenerator';
-import apiFetch from '../../utils/api';
-import { debug, debugError } from '../../utils/debug';
-import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
-import { executeSteps } from '../executor';
-import { getActiveSteps, getRegisteredSteps } from '../steps';
+import apiFetch from '@aether/utils/api';
+import { debug, debugError } from '@aether/utils/debug';
+import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
+import { executeSteps } from '@aether/publish/executor';
+import { getActiveSteps, getRegisteredSteps } from '@aether/publish/steps';
 import {
 	preparePublishConfiguration,
 	determineProvidersByDeploymentType,
 	buildWorkflowContext,
-} from '../utils/publishConfiguration';
+} from '@aether/publish/utils/publishConfiguration';
 
 export function usePublishController( publishState ) {
 	const {

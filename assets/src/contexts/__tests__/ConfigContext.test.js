@@ -5,11 +5,11 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { createElement } from '@wordpress/element';
 import { ConfigProvider } from '../ConfigContext';
-import { useConfigContext } from '../../hooks/useConfigContext';
-import apiFetch from '../../utils/api';
+import { useConfigContext } from '@aether/hooks/useConfigContext';
+import apiFetch from '@aether/utils/api';
 
 // Mock the API module
-jest.mock( '../../utils/api' );
+jest.mock( '@aether/utils/api' );
 
 /**
  * Wrapper component for testing context

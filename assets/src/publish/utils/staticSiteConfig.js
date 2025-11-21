@@ -7,8 +7,8 @@
  */
 
 import { applyFilters } from '@wordpress/hooks';
-import { debug } from '../../utils/debug';
-import apiFetch from '../../utils/api';
+import { debug } from '@aether/utils/debug';
+import apiFetch from '@aether/utils/api';
 
 /**
  * Build storage configuration object.

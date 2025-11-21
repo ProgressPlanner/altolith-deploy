@@ -9,7 +9,7 @@
 
 import { __ } from '@wordpress/i18n';
 import { AbstractProvider } from '../base/AbstractProvider';
-import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
+import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 
 /**
  * LocalFilesystemProvider class

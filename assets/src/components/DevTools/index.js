@@ -8,9 +8,9 @@
  */
 
 import { useState, useEffect } from '@wordpress/element';
-import { useConfigContext } from '../../hooks/useConfigContext';
-import { useProviderContext } from '../../hooks/useProviderContext';
-import { spacing, colors } from '../../utils/styles';
+import { useConfigContext } from '@aether/hooks/useConfigContext';
+import { useProviderContext } from '@aether/hooks/useProviderContext';
+import { spacing, colors } from '@aether/utils/styles';
 
 /**
  * Check if we're in development mode

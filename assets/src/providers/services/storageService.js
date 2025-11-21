@@ -15,12 +15,12 @@ import {
 	batchDelete as batchDeleteFromAdapter,
 	getObjectUrl,
 	downloadFile as downloadFileFromAdapter,
-} from '../../utils/filesystemAdapter';
+} from '@aether/utils/filesystemAdapter';
 import {
 	createFileContext,
 	FILE_TYPES,
 	uploadFile as uploadFileUnified,
-} from '../../publish/utils/unifiedFileUpload';
+} from '@aether/publish/utils/unifiedFileUpload';
 
 /**
  * Storage Service class.

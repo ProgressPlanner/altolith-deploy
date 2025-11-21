@@ -8,7 +8,7 @@
 
 import { __, sprintf, _n } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
-import { formatFileSize } from '../../../utils/helpers';
+import { formatFileSize } from '@aether/utils/helpers';
 import {
 	createFileContext,
 	FILE_TYPES,

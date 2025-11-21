@@ -10,7 +10,7 @@
 
 import { useMemo } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { useAPIData } from '../../hooks/useAPIData';
+import { useAPIData } from '@aether/hooks/useAPIData';
 
 /**
  * Check publish readiness based on settings and provider status

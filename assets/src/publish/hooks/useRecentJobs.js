@@ -7,7 +7,7 @@
  * @package
  */
 
-import { useAPIData } from '../../hooks/useAPIData';
+import { useAPIData } from '@aether/hooks/useAPIData';
 
 /**
  * Hook to fetch recent publish jobs

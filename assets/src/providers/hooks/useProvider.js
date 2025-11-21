@@ -7,7 +7,7 @@
  * @package
  */
 
-import { useProviderContext } from '../../hooks/useProviderContext';
+import { useProviderContext } from '@aether/hooks/useProviderContext';
 
 /**
  * Get a provider instance by ID.

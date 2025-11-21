@@ -16,8 +16,8 @@ import {
 	fontSize,
 	fontWeight,
 	createFlexStyle,
-} from '../../utils/styles';
-import { formatFileSize } from '../../utils/helpers';
+} from '@aether/utils/styles';
+import { formatFileSize } from '@aether/utils/helpers';
 import UploadStatistic from '../UploadStatistic';
 
 /**

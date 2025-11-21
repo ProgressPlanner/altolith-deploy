@@ -6,7 +6,7 @@
  * @package
  */
 
-import { debug, debugError } from '../../utils/debug';
+import { debug, debugError } from '@aether/utils/debug';
 import { applyFilters } from '@wordpress/hooks';
 
 // Import URL utilities

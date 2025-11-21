@@ -21,7 +21,7 @@ import {
 	saveExecutionContext,
 	restoreExecutionContext,
 } from '../utils/stateManager';
-import { debug, debugWarn } from '../../utils/debug';
+import { debug, debugWarn } from '@aether/utils/debug';
 
 /**
  * Execute a workflow with the given steps.

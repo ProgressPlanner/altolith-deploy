@@ -22,7 +22,7 @@ import { __ } from '@wordpress/i18n';
 import {
 	DEPLOYMENT_TYPE_LABELS,
 	DEPLOYMENT_TYPE_DESCRIPTIONS,
-} from '../../constants/deploymentTypes';
+} from '@aether/constants/deploymentTypes';
 
 /**
  * ConfigFieldBuilder class

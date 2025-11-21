@@ -12,9 +12,9 @@
  * @package
  */
 
-import apiFetch from '../../utils/api';
+import apiFetch from '@aether/utils/api';
 import { applyFilters, doAction } from '@wordpress/hooks';
-import IndexedDBStore from '../../utils/indexedDB';
+import IndexedDBStore from '@aether/utils/indexedDB';
 
 /**
  * Cache duration in milliseconds (5 minutes).

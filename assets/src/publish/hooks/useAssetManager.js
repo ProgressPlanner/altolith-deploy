@@ -8,12 +8,12 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
-import { storage } from '../../utils/storage';
+import { storage } from '@aether/utils/storage';
 import {
 	AssetManagerService,
 	filterChangedAssets,
 	clearAllUploadFlags,
-} from '../../services/AssetManagerService';
+} from '@aether/services/AssetManagerService';
 
 export function useAssetManager() {
 	const [ assets, setAssets ] = useState( {} );

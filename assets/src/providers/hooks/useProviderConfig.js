@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { useProvider } from './useProvider';
-import { debugError } from '../../utils/debug';
+import { debugError } from '@aether/utils/debug';
 
 /**
  * Manage provider configuration.

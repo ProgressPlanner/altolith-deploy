@@ -9,8 +9,8 @@
 import { useEffect, useMemo, useCallback, useRef } from '@wordpress/element';
 import { Modal, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { usePublishState } from '../../publish/hooks/usePublishState';
-import { usePublishController } from '../../publish/hooks/usePublishController';
+import { usePublishState } from '@aether/publish/hooks/usePublishState';
+import { usePublishController } from '@aether/publish/hooks/usePublishController';
 import {
 	colors,
 	spacing,
@@ -20,7 +20,7 @@ import {
 	noticeStyles,
 	createFlexStyle,
 	utilityStyles,
-} from '../../utils/styles';
+} from '@aether/utils/styles';
 import ActivityLogMessage from '../ActivityLogMessage';
 import UploadStatistics from '../UploadStatistics';
 

@@ -7,8 +7,8 @@
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { extractAssetsFromHtml } from '../../utils/assetExtractor';
-import { debug, debugWarn } from '../../../utils/debug';
+import { extractAssetsFromHtml } from '@aether/publish/utils/assetExtractor';
+import { debug, debugWarn } from '@aether/utils/debug';
 
 /**
  * Pre-scan static site step handler.

@@ -11,15 +11,15 @@ import { applyFilters } from '@wordpress/hooks';
 import { processHtml, getStaticFilePath } from './htmlProcessor';
 import { getAssetLocalPath } from './assetExtractor';
 import { uploadFilesWithProgress } from './fileUploadManager';
-import { debug, debugWarn } from '../../utils/debug';
-import { calculateFileHash } from '../../utils/fileHash';
+import { debug, debugWarn } from '@aether/utils/debug';
+import { calculateFileHash } from '@aether/utils/fileHash';
 import {
 	fetchManifest,
 	updateManifestEntry,
 	shouldSkipUpload,
 	uploadManifest,
 	cleanupManifest,
-} from '../../utils/manifestManager';
+} from '@aether/utils/manifestManager';
 
 /**
  * Fetch and prepare manifest for upload phase.

@@ -8,7 +8,7 @@
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { debugError, debugWarn } from '../../utils/debug';
+import { debugError, debugWarn } from '@aether/utils/debug';
 
 /**
  * Error categories for error handling strategies.

@@ -6,7 +6,7 @@
 
 import { Button } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useConfig } from '../../hooks/useConfig';
+import { useConfig } from '@aether/hooks/useConfig';
 import {
 	colors,
 	spacing,
@@ -14,7 +14,7 @@ import {
 	commonStyles,
 	noticeStyles,
 	utilityStyles,
-} from '../../utils/styles';
+} from '@aether/utils/styles';
 
 export default function PublishButton( {
 	readiness,
