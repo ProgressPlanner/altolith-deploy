@@ -443,10 +443,10 @@ class FileManager
 	public static function getEphemeralStorageWarning($context = 'files')
 	{
 		$warnings = [
-			'export'  => 'Export files are stored temporarily and should be downloaded immediately. Files may not persist across browser sessions in some environments.',
-			'upload'  => 'Uploaded files may not persist across sessions in some environments. Download your files after generation.',
-			'temp'    => 'Temporary files are automatically cleaned up after 1 hour.',
-			'files'   => 'Files may not persist across browser sessions in some environments. Download important files immediately.',
+			'export'  => \__('Export files are stored temporarily and should be downloaded immediately. Files may not persist across browser sessions in some environments.', 'aether-site-exporter'),
+			'upload'  => \__('Uploaded files may not persist across sessions in some environments. Download your files after generation.', 'aether-site-exporter'),
+			'temp'    => \__('Temporary files are automatically cleaned up after 1 hour.', 'aether-site-exporter'),
+			'files'   => \__('Files may not persist across browser sessions in some environments. Download important files immediately.', 'aether-site-exporter'),
 		];
 
 		return $warnings[ $context ] ?? $warnings['files'];

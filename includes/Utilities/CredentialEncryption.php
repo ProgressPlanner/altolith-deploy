@@ -266,7 +266,7 @@ class CredentialEncryption
 		if (empty($settings['providers']) || ! \is_array($settings['providers'])) {
 			return [
 				'success'           => true,
-				'message'           => 'No provider credentials to rotate.',
+				'message'           => \__('No provider credentials to rotate.', 'aether-site-exporter'),
 				'providers_rotated' => 0,
 			];
 		}
@@ -290,7 +290,8 @@ class CredentialEncryption
 						return [
 							'success'           => false,
 							'message'           => \sprintf(
-								'Failed to decrypt credentials for provider: %s. Aborting key rotation.',
+								/* translators: %s: Provider ID */
+								\__('Failed to decrypt credentials for provider: %s. Aborting key rotation.', 'aether-site-exporter'),
 								$providerId
 							),
 							'providers_rotated' => 0,
@@ -328,7 +329,8 @@ class CredentialEncryption
 						return [
 							'success'           => false,
 							'message'           => \sprintf(
-								'CRITICAL: Failed to re-encrypt credentials for provider: %s. Old key deleted. Manual recovery required.',
+								/* translators: %s: Provider ID */
+								\__('CRITICAL: Failed to re-encrypt credentials for provider: %s. Old key deleted. Manual recovery required.', 'aether-site-exporter'),
 								$providerId
 							),
 							'providers_rotated' => 0,
@@ -350,7 +352,7 @@ class CredentialEncryption
 		if (! $updated) {
 			return [
 				'success'           => false,
-				'message'           => 'Failed to save re-encrypted credentials to database.',
+				'message'           => \__('Failed to save re-encrypted credentials to database.', 'aether-site-exporter'),
 				'providers_rotated' => 0,
 			];
 		}
@@ -358,7 +360,8 @@ class CredentialEncryption
 		return [
 			'success'           => true,
 			'message'           => \sprintf(
-				'Successfully rotated encryption key and re-encrypted credentials for %d provider(s).',
+				/* translators: %d: Number of providers */
+				\__('Successfully rotated encryption key and re-encrypted credentials for %d provider(s).', 'aether-site-exporter'),
 				\count($reencryptedProviders)
 			),
 			'providers_rotated' => \count($reencryptedProviders),

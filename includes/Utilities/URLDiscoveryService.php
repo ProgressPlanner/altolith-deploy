@@ -6,10 +6,10 @@
  * Discovers all URLs on the WordPress site that need to be converted to static HTML.
  * Uses a crawling approach to find internal links and WordPress-specific URL patterns.
  *
- * @package Aether\Utilities\StaticSite
+ * @package Aether\Utilities
  */
 
-namespace Aether\SiteExporter\Utilities\StaticSite;
+namespace Aether\SiteExporter\Utilities;
 
 use Aether\SiteExporter\Utilities\HTTPClient;
 

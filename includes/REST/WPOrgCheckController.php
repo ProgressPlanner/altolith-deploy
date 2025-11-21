@@ -160,7 +160,7 @@ class WPOrgCheckController
 				'cached'     => false,
 				'checked_at' => \gmdate('Y-m-d\TH:i:s\Z'),
 				'error'      => $responseData->get_error_message(),
-				'message'    => 'WordPress.org API check failed. Client should fallback to CORS proxy.',
+				'message'    => \__('WordPress.org API check failed. Client should fallback to CORS proxy.', 'aether-site-exporter'),
 			];
 		}
 
@@ -220,7 +220,7 @@ class WPOrgCheckController
 			'method'      => 'wp-api',
 			'cached'      => false,
 			'checked_at'  => \gmdate('Y-m-d\TH:i:s\Z'),
-			'message'     => 'Unexpected response from WordPress.org API',
+			'message'     => \__('Unexpected response from WordPress.org API', 'aether-site-exporter'),
 			'statusCode'  => $responseCode,
 		];
 	}
