@@ -9,10 +9,10 @@
 
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
-import StaticSiteCache from '../../../utils/staticSiteCache';
-import { executePreScan } from '../../utils/preScanPhase';
-import { fetchProviderConfig } from '../../utils/staticSiteConfig';
-import { debug, debugWarn } from '../../../utils/debug';
+import StaticSiteCache from '@aether/utils/staticSiteCache';
+import { executePreScan } from '@aether/publish/utils/preScanPhase';
+import { fetchProviderConfig } from '@aether/publish/utils/staticSiteConfig';
+import { debug, debugWarn } from '@aether/utils/debug';
 
 /**
  * Upload static files step handler.

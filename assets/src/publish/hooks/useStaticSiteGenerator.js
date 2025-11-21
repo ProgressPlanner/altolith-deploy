@@ -10,12 +10,12 @@
 
 import { useCallback } from '@wordpress/element';
 import { doAction, applyFilters } from '@wordpress/hooks';
-import { createAssetTracker } from '../utils/assetTracker';
-import { debug, debugWarn } from '../../utils/debug';
+import { createAssetTracker } from '@aether/publish/utils/assetTracker';
+import { debug, debugWarn } from '@aether/utils/debug';
 import {
 	updateManifestEntry,
 	uploadManifest,
-} from '../../utils/manifestManager';
+} from '@aether/utils/manifestManager';
 
 // Extracted modules
 import {
@@ -24,14 +24,14 @@ import {
 	createFailureTracker,
 	fetchProviderConfig,
 	createStorageService,
-} from '../utils/staticSiteConfig';
-import { executePreScan } from '../utils/preScanPhase';
+} from '@aether/publish/utils/staticSiteConfig';
+import { executePreScan } from '@aether/publish/utils/preScanPhase';
 import {
 	prepareManifest,
 	processAssets,
 	uploadHtmlFile,
 	finalizeManifest,
-} from '../utils/uploadPhase';
+} from '@aether/publish/utils/uploadPhase';
 
 /**
  * Process URLs and upload static site files.
