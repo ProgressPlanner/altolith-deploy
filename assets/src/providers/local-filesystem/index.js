@@ -31,7 +31,15 @@ const processedFiles = new Map();
  * @return {Promise<void>}
  */
 async function handleUnifiedFileUpload( fileContext ) {
-	const { fileType, providerId, filePath, fileContent, contentType, storageKey, metadata = {} } = fileContext;
+	const {
+		fileType,
+		providerId,
+		filePath,
+		fileContent,
+		contentType,
+		storageKey,
+		metadata = {},
+	} = fileContext;
 
 	// Only handle requests for local-filesystem providers
 	if ( ! providerId || ! providerId.startsWith( 'local-filesystem' ) ) {
@@ -112,7 +120,8 @@ async function handleUnifiedFileUpload( fileContext ) {
 
 			if ( ! response.success ) {
 				throw new Error(
-					response.message || 'Failed to trigger blueprint bundle upload'
+					response.message ||
+						'Failed to trigger blueprint bundle upload'
 				);
 			}
 
@@ -134,7 +143,11 @@ async function handleUnifiedFileUpload( fileContext ) {
 			} else if ( fileContent instanceof Blob ) {
 				fileBlob = fileContent;
 			}
-		} else if ( filePath && ( filePath.startsWith( 'http://' ) || filePath.startsWith( 'https://' ) ) ) {
+		} else if (
+			filePath &&
+			( filePath.startsWith( 'http://' ) ||
+				filePath.startsWith( 'https://' ) )
+		) {
 			// Fetch from URL if content not provided
 			try {
 				const response = await fetch( filePath, {
@@ -168,7 +181,8 @@ async function handleUnifiedFileUpload( fileContext ) {
 		}
 
 		// Process HTML content - rewrite URLs for static site
-		const isHtml = fileType === FILE_TYPES.STATIC_HTML ||
+		const isHtml =
+			fileType === FILE_TYPES.STATIC_HTML ||
 			( contentType && contentType.includes( 'text/html' ) );
 
 		if ( isHtml && metadata.siteUrl && providerPublicUrl ) {
@@ -193,12 +207,18 @@ async function handleUnifiedFileUpload( fileContext ) {
 		let finalStorageKey = storageKey;
 		if ( ! finalStorageKey ) {
 			// Derive from filePath
-			if ( filePath.startsWith( 'http://' ) || filePath.startsWith( 'https://' ) ) {
+			if (
+				filePath.startsWith( 'http://' ) ||
+				filePath.startsWith( 'https://' )
+			) {
 				try {
 					const urlObj = new URL( filePath );
 					finalStorageKey = urlObj.pathname;
 					if ( urlObj.search ) {
-						finalStorageKey = finalStorageKey.replace( urlObj.search, '' );
+						finalStorageKey = finalStorageKey.replace(
+							urlObj.search,
+							''
+						);
 					}
 				} catch ( urlError ) {
 					debugWarn( `Failed to parse URL ${ filePath }:`, urlError );
@@ -217,7 +237,8 @@ async function handleUnifiedFileUpload( fileContext ) {
 		if ( finalStorageKey === '' ) {
 			finalStorageKey = 'index.html';
 		} else if ( finalStorageKey.endsWith( '/' ) ) {
-			finalStorageKey = finalStorageKey.replace( /\/+$/, '' ) + '/index.html';
+			finalStorageKey =
+				finalStorageKey.replace( /\/+$/, '' ) + '/index.html';
 		} else if ( ! hasFileExtension && isHtml ) {
 			finalStorageKey = finalStorageKey + '/index.html';
 		}

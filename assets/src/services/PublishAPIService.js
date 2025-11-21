@@ -115,9 +115,9 @@ export class PublishAPIService {
 	 *
 	 * Creates wp-content.zip containing custom plugins, themes, and uploads.
 	 *
-	 * @param {Object}   options              Archive creation options.
-	 * @param {Array}    options.assets       Array of asset objects to include.
-	 * @param {boolean}  options.includeUploads Whether to include uploads directory.
+	 * @param {Object}  options                Archive creation options.
+	 * @param {Array}   options.assets         Array of asset objects to include.
+	 * @param {boolean} options.includeUploads Whether to include uploads directory.
 	 * @return {Promise<Object>} Response with zipPath, zipUrl, and zipSize
 	 */
 	async createArchive( { assets = [], includeUploads = true } = {} ) {
@@ -163,9 +163,9 @@ export class PublishAPIService {
 	 * This is typically handled client-side via generateBlueprintJson function.
 	 * This method is a fallback if the function is not available.
 	 *
-	 * @param {Object}   options              Blueprint generation options.
-	 * @param {Array}    options.assets       Discovered assets.
-	 * @param {string}   options.wpContentZipUrl URL to wp-content.zip.
+	 * @param {Object} options                 Blueprint generation options.
+	 * @param {Array}  options.assets          Discovered assets.
+	 * @param {string} options.wpContentZipUrl URL to wp-content.zip.
 	 * @return {Promise<Object>} Response with blueprint data
 	 */
 	async generateBlueprint( { assets = [], wpContentZipUrl = null } = {} ) {
@@ -173,7 +173,8 @@ export class PublishAPIService {
 		// via the generateBlueprintJson function from useBlueprintGenerator hook
 		return {
 			success: false,
-			message: 'Blueprint generation must be done client-side. Please ensure generateBlueprintJson function is available.',
+			message:
+				'Blueprint generation must be done client-side. Please ensure generateBlueprintJson function is available.',
 		};
 	}
 
@@ -182,9 +183,9 @@ export class PublishAPIService {
 	 *
 	 * Creates blueprint-bundle.zip containing blueprint.json and wp-content.zip.
 	 *
-	 * @param {Object}   options                Bundle creation options.
-	 * @param {Object}   options.blueprint     Blueprint JSON data.
-	 * @param {string}   options.wpContentZipPath Path to wp-content.zip.
+	 * @param {Object} options                  Bundle creation options.
+	 * @param {Object} options.blueprint        Blueprint JSON data.
+	 * @param {string} options.wpContentZipPath Path to wp-content.zip.
 	 * @return {Promise<Object>} Response with bundlePath, bundleUrl, and bundleSize
 	 */
 	async createBlueprintBundle( { blueprint, wpContentZipPath } = {} ) {
@@ -227,7 +228,8 @@ export class PublishAPIService {
 
 			return {
 				success: false,
-				message: response.message || 'Failed to create blueprint bundle',
+				message:
+					response.message || 'Failed to create blueprint bundle',
 			};
 		} catch ( error ) {
 			return {

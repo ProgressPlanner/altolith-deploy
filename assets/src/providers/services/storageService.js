@@ -17,6 +17,11 @@ import {
 	getObjectUrl,
 	downloadFile as downloadFileFromAdapter,
 } from '../../utils/filesystemAdapter';
+import {
+	createFileContext,
+	FILE_TYPES,
+	uploadFile as uploadFileUnified,
+} from '../../publish/utils/unifiedFileUpload';
 
 /**
  * Storage Service class.
@@ -70,6 +75,8 @@ export class StorageService {
 	/**
 	 * Upload a file to storage.
 	 *
+	 * Uses unified upload action system for provider integration.
+	 *
 	 * @param {string}    key      Object key/path in storage.
 	 * @param {File|Blob} file     File to upload.
 	 * @param {Object}    metadata Optional metadata (contentType, cacheControl, onProgress).
@@ -83,32 +90,49 @@ export class StorageService {
 			};
 		}
 
-		const options = {
-			contentType: metadata.contentType || file.type,
-			cacheControl: metadata.cacheControl || '',
-			onProgress: metadata.onProgress || null,
-			jobId: this.jobId,
-		};
-
+		const contentType = metadata.contentType || file.type;
 		const prefixedKey = this._prefixKey( key );
-		const result = await uploadFile(
-			this.staticPath,
-			prefixedKey,
-			file,
-			options
-		);
 
-		if ( ! result.success ) {
-			return result;
+		// Determine file type based on content type
+		let fileType = FILE_TYPES.STATIC_ASSET;
+		if ( contentType === 'text/html' ) {
+			fileType = FILE_TYPES.STATIC_HTML;
 		}
 
-		// Build public URL.
-		const url = this.getUrl( key );
+		// Create unified file context
+		const fileContext = createFileContext( {
+			fileType,
+			filePath: null, // Not applicable for storage service uploads
+			fileContent: file,
+			contentType,
+			storageKey: prefixedKey,
+			providerId: this.providerId,
+			metadata: {
+				staticPath: this.staticPath,
+				originalKey: key,
+				jobId: this.jobId,
+				cacheControl: metadata.cacheControl || '',
+				onProgress: metadata.onProgress || null,
+			},
+		} );
 
-		return {
-			success: true,
-			url,
-		};
+		// Upload via unified action system
+		try {
+			await uploadFileUnified( fileContext );
+
+			// Build public URL
+			const url = this.getUrl( key );
+
+			return {
+				success: true,
+				url,
+			};
+		} catch ( error ) {
+			return {
+				success: false,
+				error: error.message || 'Upload failed',
+			};
+		}
 	}
 
 	/**

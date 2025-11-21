@@ -11,7 +11,11 @@ import { applyFilters } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
 import { formatFileSize } from '../../../utils/helpers';
 import { calculateOverallProgress } from '../../utils/progressManager';
-import { createFileContext, FILE_TYPES, uploadFile } from '../../utils/unifiedFileUpload';
+import {
+	createFileContext,
+	FILE_TYPES,
+	uploadFile,
+} from '../../utils/unifiedFileUpload';
 
 /**
  * Upload blueprint bundle step handler.
@@ -19,7 +23,7 @@ import { createFileContext, FILE_TYPES, uploadFile } from '../../utils/unifiedFi
  * @param {Object}   context                          Execution context.
  * @param {Array}    context.blueprintBundleProviders Providers for blueprint bundle.
  * @param {Object}   context.blueprintBundle          Bundle data from generateBlueprint.
- * @param {string}   context.siteUrl                   WordPress site URL.
+ * @param {string}   context.siteUrl                  WordPress site URL.
  * @param {Function} context.setStatusMessage         Status message updater.
  * @param {Function} context.setStepProgress          Step progress updater.
  * @param {Function} context.setOverallProgressValue  Overall progress updater.

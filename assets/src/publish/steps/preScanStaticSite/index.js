@@ -100,10 +100,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %1$d: Number of pages, %2$d: Number of assets */
-			__(
-				'Found %1$d pages and %2$d assets',
-				'aether-site-exporter'
-			),
+			__( 'Found %1$d pages and %2$d assets', 'aether-site-exporter' ),
 			htmlUrls.length,
 			allAssets.size
 		),

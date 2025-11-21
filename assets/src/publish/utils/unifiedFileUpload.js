@@ -23,14 +23,14 @@ export const FILE_TYPES = {
 /**
  * Create file context for unified upload action.
  *
- * @param {Object}   options                    Options object.
- * @param {string}   options.fileType          File type (FILE_TYPES.*).
- * @param {string}   options.filePath         File path (for blueprint bundles) or URL (for static files).
+ * @param {Object}           options             Options object.
+ * @param {string}           options.fileType    File type (FILE_TYPES.*).
+ * @param {string}           options.filePath    File path (for blueprint bundles) or URL (for static files).
  * @param {Blob|string|null} options.fileContent File content (Blob, string, or null to fetch).
- * @param {string}   options.contentType       Content type (MIME type).
- * @param {string}   options.storageKey       Storage key/path for the file.
- * @param {string}   options.providerId       Provider instance ID.
- * @param {Object}   options.metadata         Additional metadata (siteUrl, staticSiteUrl, blueprintData, etc.).
+ * @param {string}           options.contentType Content type (MIME type).
+ * @param {string}           options.storageKey  Storage key/path for the file.
+ * @param {string}           options.providerId  Provider instance ID.
+ * @param {Object}           options.metadata    Additional metadata (siteUrl, staticSiteUrl, blueprintData, etc.).
  * @return {Object} File context object.
  */
 export function createFileContext( {
@@ -59,7 +59,7 @@ export function createFileContext( {
  * WordPress hooks don't have built-in async action support. We use a promise
  * tracking system where handlers register their promises on the context object.
  *
- * @param {string} actionName Action name.
+ * @param {string} actionName  Action name.
  * @param {Object} fileContext File context object (first arg).
  * @return {Promise<void>}
  */
@@ -147,4 +147,3 @@ export async function uploadFiles( fileContexts, providerIds ) {
 
 	return results;
 }
-
