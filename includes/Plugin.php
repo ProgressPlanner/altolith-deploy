@@ -277,6 +277,62 @@ class Plugin
 		);
 	}
 
+	/**
+	 * Enqueue provider script separately.
+	 *
+	 * Providers are compiled as separate bundles and loaded dynamically.
+	 * This method enqueues the local-filesystem provider script with the
+	 * data-provider-id attribute for providerLoader detection.
+	 *
+	 * @param string $providerId Provider ID (e.g., 'local-filesystem').
+	 * @return void
+	 */
+	public function enqueueProviderScript(string $providerId): void
+	{
+		$handle = 'aether-provider-' . $providerId;
+
+		// Only enqueue if not already enqueued
+		if (\wp_script_is($handle, 'enqueued')) {
+			return;
+		}
+
+		$pluginUrl = AETHER_SITE_EXPORTER_PLUGIN_URL;
+
+		// Load dependencies from asset file if it exists
+		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/provider-' . $providerId . '.asset.php';
+		$asset = \file_exists($assetFile) ? require $assetFile : [
+			'dependencies' => [],
+			'version' => \time(),
+		];
+
+		\wp_enqueue_script(
+			$handle,
+			$pluginUrl . 'assets/build/provider-' . $providerId . '.js',
+			$asset['dependencies'],
+			$asset['version'],
+			true
+		);
+
+		// Add data-provider-id attribute for providerLoader detection
+		// Use script_loader_tag filter to add the attribute
+		\add_filter(
+			'script_loader_tag',
+			function ($tag, $scriptHandle) use ($handle, $providerId) {
+				if ($scriptHandle === $handle) {
+					// Add data-provider-id attribute to script tag
+					$tag = \str_replace(
+						'<script ',
+						\sprintf('<script data-provider-id="%s" ', \esc_attr($providerId)),
+						$tag
+					);
+				}
+				return $tag;
+			},
+			10,
+			2
+		);
+	}
+
 
 
 	/**
