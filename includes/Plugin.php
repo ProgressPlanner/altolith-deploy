@@ -570,6 +570,37 @@ class Plugin
 			}
 		}
 
+		// Check if destination path exists as a directory (copy() fails if destination is a directory).
+		if (\file_exists($destinationFullPath) && \is_dir($destinationFullPath)) {
+			// Try to remove empty directory, otherwise fail.
+			if ($this->isDirectoryEmpty($destinationFullPath)) {
+				if (!\rmdir($destinationFullPath)) {
+					if (\defined('WP_DEBUG') && WP_DEBUG) {
+						\error_log(\sprintf(
+							'Aether: Failed to remove empty directory at destination path: %s',
+							$destinationFullPath
+						));
+					}
+					return false;
+				}
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Removed empty directory at destination path: %s',
+						$destinationFullPath
+					));
+				}
+			} else {
+				// Directory is not empty, cannot proceed.
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Destination path exists as non-empty directory: %s',
+						$destinationFullPath
+					));
+				}
+				return false;
+			}
+		}
+
 		// Copy file.
 		if (!\copy($sourceFullPath, $destinationFullPath)) {
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
@@ -625,5 +656,34 @@ class Plugin
 		$registry = ProviderRegistry::getInstance();
 		$provider = $registry->getForDeploymentType($deploymentType);
 		return $provider ? $provider->getId() : ($providerId ?? '');
+	}
+
+	/**
+	 * Check if a directory is empty.
+	 *
+	 * @param string $dir Directory path to check.
+	 * @return bool True if directory is empty or doesn't exist, false otherwise.
+	 */
+	private function isDirectoryEmpty(string $dir): bool
+	{
+		if (!\is_dir($dir)) {
+			return true;
+		}
+
+		$handle = @\opendir($dir);
+		if ($handle === false) {
+			return false;
+		}
+
+		// Read directory entries, skipping . and ..
+		while (($entry = \readdir($handle)) !== false) {
+			if ($entry !== '.' && $entry !== '..') {
+				\closedir($handle);
+				return false;
+			}
+		}
+
+		\closedir($handle);
+		return true;
 	}
 }
