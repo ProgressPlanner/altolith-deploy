@@ -77,6 +77,9 @@ class Plugin
 	 */
 	private function init(): void
 	{
+		// Initialize cookie manager first (needed for actions below).
+		$this->cookieManager = new CookieManager();
+
 		// Enable iframe cookie authentication by setting SameSite=None on WordPress auth cookies.
 		// Required for WordPress Playground which runs in an iframe.
 		\add_action('set_auth_cookie', [ $this->cookieManager, 'setSameSiteCookies' ], 10, 6);
@@ -98,9 +101,6 @@ class Plugin
 
 		// Initialize CORS handler.
 		$this->corsHandler = new CorsHandler();
-
-		// Initialize cookie manager.
-		$this->cookieManager = new CookieManager();
 
 		// Initialize provider registry and register providers.
 		$this->initProviders();
