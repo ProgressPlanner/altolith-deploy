@@ -487,6 +487,37 @@ class FileManager
 			}
 		}
 
+		// Check if destination path exists as a directory (copy() fails if destination is a directory).
+		if (\file_exists($destination) && \is_dir($destination)) {
+			// Try to remove empty directory, otherwise fail.
+			if (self::isDirectoryEmpty($destination)) {
+				if (!\rmdir($destination)) {
+					\error_log(
+						\sprintf(
+							'Aether File Manager: Failed to remove empty directory at destination path: %s',
+							$destination
+						)
+					);
+					return false;
+				}
+				\error_log(
+					\sprintf(
+						'Aether File Manager: Removed empty directory at destination path: %s',
+						$destination
+					)
+				);
+			} else {
+				// Directory is not empty, cannot proceed.
+				\error_log(
+					\sprintf(
+						'Aether File Manager: Destination path exists as non-empty directory: %s',
+						$destination
+					)
+				);
+				return false;
+			}
+		}
+
 		$result = @\copy($source, $destination);
 
 		if (! $result) {
@@ -511,6 +542,35 @@ class FileManager
 			return false;
 		}
 
+		return true;
+	}
+
+	/**
+	 * Check if a directory is empty.
+	 *
+	 * @param string $dir Directory path to check.
+	 * @return bool True if directory is empty or doesn't exist, false otherwise.
+	 */
+	private static function isDirectoryEmpty(string $dir): bool
+	{
+		if (!\is_dir($dir)) {
+			return true;
+		}
+
+		$handle = @\opendir($dir);
+		if ($handle === false) {
+			return false;
+		}
+
+		// Read directory entries, skipping . and ..
+		while (($entry = \readdir($handle)) !== false) {
+			if ($entry !== '.' && $entry !== '..') {
+				\closedir($handle);
+				return false;
+			}
+		}
+
+		\closedir($handle);
 		return true;
 	}
 }
