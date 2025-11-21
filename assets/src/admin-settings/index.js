@@ -47,17 +47,36 @@ const init = () => {
 	const container = document.getElementById( 'aether-admin-settings' );
 
 	if ( ! container ) {
+		// eslint-disable-next-line no-console
+		console.error(
+			'Aether: Container element #aether-admin-settings not found'
+		);
 		return;
 	}
 
-	render(
-		<ErrorBoundary>
-			<PublishProvider>
-				<AdminSettings />
-			</PublishProvider>
-		</ErrorBoundary>,
-		container
-	);
+	// eslint-disable-next-line no-console
+	console.log( 'Aether: Initializing admin settings page...' );
+
+	try {
+		render(
+			<ErrorBoundary>
+				<PublishProvider>
+					<AdminSettings />
+				</PublishProvider>
+			</ErrorBoundary>,
+			container
+		);
+		// eslint-disable-next-line no-console
+		console.log( 'Aether: Admin settings page rendered successfully' );
+	} catch ( error ) {
+		// eslint-disable-next-line no-console
+		console.error( 'Aether: Error rendering admin settings page:', error );
+	}
 };
 
-init();
+// Wait for DOM to be ready
+if ( document.readyState === 'loading' ) {
+	document.addEventListener( 'DOMContentLoaded', init );
+} else {
+	init();
+}

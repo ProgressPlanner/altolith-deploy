@@ -80,16 +80,21 @@ export function ProviderProvider( { children } ) {
 					const maxAttempts = 20; // 20 attempts * 100ms = 2 seconds
 					const interval = setInterval( () => {
 						attempts++;
-						const providers = ProviderRegistry.getAll();
-						if ( providers.length > 0 || attempts >= maxAttempts ) {
+						const foundProviders = ProviderRegistry.getAll();
+						if (
+							foundProviders.length > 0 ||
+							attempts >= maxAttempts
+						) {
 							clearInterval( interval );
-							if ( providers.length > 0 ) {
+							if ( foundProviders.length > 0 ) {
 								// Providers found, process them
-								processProviders( providers );
+								processProviders( foundProviders );
 							} else {
 								// Still no providers after waiting
 								setLoading( false );
-								setError( 'No providers found. Please ensure provider plugins are active.' );
+								setError(
+									'No providers found. Please ensure provider plugins are active.'
+								);
 							}
 						}
 					}, 100 );
