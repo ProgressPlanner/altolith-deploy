@@ -10,6 +10,7 @@
 import { applyFilters } from '@wordpress/hooks';
 import { discoverBlueprintBundleAssetsStep } from './discoverBlueprintBundleAssets';
 import { getStaticSiteUrlsStep } from './getStaticSiteUrls';
+import { preScanStaticSiteStep } from './preScanStaticSite';
 import { createBlueprintBundleStep } from './createBlueprintBundle';
 import { generateBlueprintStep } from './generateBlueprint';
 import { uploadBlueprintBundleStep } from './uploadBlueprintBundle';
@@ -26,6 +27,7 @@ export function getRegisteredSteps() {
 	const steps = [
 		discoverBlueprintBundleAssetsStep,
 		getStaticSiteUrlsStep,
+		preScanStaticSiteStep,
 		createBlueprintBundleStep,
 		generateBlueprintStep,
 		uploadBlueprintBundleStep,
@@ -70,8 +72,11 @@ export function getActiveSteps( context ) {
 			return blueprintBundleProviders.length > 0;
 		}
 
-		// Skip static site upload if no static site providers
-		if ( step.id === 'uploadStaticFiles' ) {
+		// Skip static site steps if no static site providers
+		if (
+			step.id === 'preScanStaticSite' ||
+			step.id === 'uploadStaticFiles'
+		) {
 			return staticSiteProviders.length > 0;
 		}
 

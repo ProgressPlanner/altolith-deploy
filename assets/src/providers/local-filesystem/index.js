@@ -12,6 +12,7 @@ import apiFetch from '@wordpress/api-fetch';
 import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 import { uploadFile } from '../../utils/filesystemAdapter';
 import { debug, debugWarn } from '../../utils/debug';
+import { processHtml } from '../../publish/utils/htmlProcessor';
 
 // Create provider instance for hook registration
 const provider = new LocalFilesystemProvider();
@@ -51,8 +52,9 @@ async function processFileForProvider( fileContext, providerId ) {
 	uploadResults[ providerId ].filesProcessed++;
 
 	try {
-		// Fetch provider config to get static_files_path
+		// Fetch provider config to get static_files_path and public_url
 		let staticPath = 'static/';
+		let providerPublicUrl = fileContext.staticSiteUrl || null;
 		try {
 			const providerResponse = await apiFetch( {
 				path: `/aether/site-exporter/providers/${ providerId }`,
@@ -62,6 +64,10 @@ async function processFileForProvider( fileContext, providerId ) {
 					providerResponse.config.static_files_path || 'static/';
 				// Ensure path doesn't have trailing slash
 				staticPath = staticPath.replace( /\/$/, '' );
+				// Use provider-specific public_url for URL rewriting
+				if ( providerResponse.config.public_url ) {
+					providerPublicUrl = providerResponse.config.public_url;
+				}
 			}
 		} catch ( configError ) {
 			debugWarn(
@@ -112,6 +118,30 @@ async function processFileForProvider( fileContext, providerId ) {
 			return;
 		}
 
+		// Process HTML content - rewrite URLs for static site
+		const contentType = fileContext.contentType || fileBlob.type || '';
+		const isHtml =
+			contentType.includes( 'text/html' ) ||
+			( ! contentType && ! /\.[a-z0-9]+$/i.test( fileContext.url ) );
+
+		if ( isHtml && fileContext.siteUrl && providerPublicUrl ) {
+			try {
+				const htmlText = await fileBlob.text();
+				const processedHtml = processHtml(
+					htmlText,
+					fileContext.url,
+					fileContext.siteUrl,
+					providerPublicUrl
+				);
+				fileBlob = new Blob( [ processedHtml ], { type: 'text/html' } );
+			} catch ( htmlError ) {
+				debugWarn(
+					`Failed to process HTML for ${ fileContext.url }:`,
+					htmlError
+				);
+			}
+		}
+
 		// Determine storage key from path or URL
 		let storageKey = fileContext.path || fileContext.url;
 		if (
@@ -136,8 +166,17 @@ async function processFileForProvider( fileContext, providerId ) {
 		storageKey = storageKey.replace( /^\/+/, '' );
 
 		// Handle directory paths (add index.html)
-		if ( storageKey === '' || storageKey.endsWith( '/' ) ) {
+		// For HTML content without file extension, use directory-style paths
+		const hasFileExtension = /\.[a-zA-Z0-9]+$/.test( storageKey );
+		if ( storageKey === '' ) {
+			// Homepage
+			storageKey = 'index.html';
+		} else if ( storageKey.endsWith( '/' ) ) {
+			// Path with trailing slash
 			storageKey = storageKey.replace( /\/+$/, '' ) + '/index.html';
+		} else if ( ! hasFileExtension ) {
+			// HTML page without extension (e.g., sample-page -> sample-page/index.html)
+			storageKey = storageKey + '/index.html';
 		}
 
 		// Upload file via filesystemAdapter

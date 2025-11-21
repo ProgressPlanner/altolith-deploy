@@ -8,7 +8,7 @@
  */
 
 import { __, sprintf, _n } from '@wordpress/i18n';
-import { doAction, applyFilters } from '@wordpress/hooks';
+import { doActionAsync, applyFilters } from '@wordpress/hooks';
 import { calculateOverallProgress } from '../../utils/progressManager';
 
 /**
@@ -147,7 +147,7 @@ async function handler( context ) {
 		 * @param {Array}    fileContext.providers        Provider IDs.
 		 * @param {Function} fileContext.setStatusMessage Status updater.
 		 */
-		doAction( 'aether.staticSite.file.process', fileContext );
+		await doActionAsync( 'aether.staticSite.file.process', fileContext );
 
 		// Also fire provider-specific actions for more granular control
 		for ( const providerId of providers ) {
@@ -157,7 +157,7 @@ async function handler( context ) {
 			 * @param {Object} fileContext File context object.
 			 * @param {string} providerId  Provider ID.
 			 */
-			doAction(
+			await doActionAsync(
 				`aether.staticSite.file.process.${ providerId }`,
 				fileContext,
 				providerId
@@ -239,7 +239,7 @@ export const uploadStaticFilesStep = {
 		'aether-site-exporter'
 	),
 	supportsProgress: true,
-	dependencies: [ 'getStaticSiteUrls' ],
+	dependencies: [ 'preScanStaticSite' ],
 	provides: [],
 	handler,
 };
