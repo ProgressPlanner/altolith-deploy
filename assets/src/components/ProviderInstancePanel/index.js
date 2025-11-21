@@ -8,7 +8,13 @@
  * @package
  */
 
-import { useState, useRef, useEffect, useCallback } from '@wordpress/element';
+import {
+	useState,
+	useRef,
+	useEffect,
+	useCallback,
+	useMemo,
+} from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import {
 	Button,
@@ -171,13 +177,13 @@ const getDeploymentTypeTagStyle = ( deploymentType ) => {
 /**
  * Provider Instance Panel Component
  *
- * @param {Object}   props             Component props.
- * @param {Object}   props.provider    Provider metadata with settingsFields.
- * @param {Object}   props.instance    Instance config.
- * @param {Function} props.onToggle    Callback to toggle enabled state.
- * @param {Function} props.onDelete    Callback to delete instance.
- * @param {Function} props.onRename    Callback to rename instance.
- * @param {Function} props.onSave      Callback to save config changes.
+ * @param {Object}   props          Component props.
+ * @param {Object}   props.provider Provider metadata with settingsFields.
+ * @param {Object}   props.instance Instance config.
+ * @param {Function} props.onToggle Callback to toggle enabled state.
+ * @param {Function} props.onDelete Callback to delete instance.
+ * @param {Function} props.onRename Callback to rename instance.
+ * @param {Function} props.onSave   Callback to save config changes.
  * @return {JSX.Element} Rendered component.
  */
 export default function ProviderInstancePanel( {
@@ -199,8 +205,16 @@ export default function ProviderInstancePanel( {
 	const afterFormRef = useRef( null );
 
 	// Update config when instance config changes
+	// Use a ref to track if we're in the middle of a local update
+	const isLocalUpdateRef = useRef( false );
+
 	useEffect( () => {
-		setConfig( instance.config );
+		// Only sync from parent if we're not in the middle of a local update
+		if ( ! isLocalUpdateRef.current ) {
+			setConfig( instance.config );
+		}
+		// Reset the flag after sync
+		isLocalUpdateRef.current = false;
 	}, [ instance.config ] );
 
 	// Focus input when editing starts
@@ -211,7 +225,7 @@ export default function ProviderInstancePanel( {
 		}
 	}, [ isEditing ] );
 
-	const handleNameSave = async () => {
+	const handleNameSave = useCallback( async () => {
 		if ( editedName.trim() === '' ) {
 			setEditedName( instance.config.instance_name || '' );
 			setIsEditing( false );
@@ -235,12 +249,17 @@ export default function ProviderInstancePanel( {
 			}
 		}
 		setIsEditing( false );
-	};
+	}, [
+		editedName,
+		instance.config.instance_name,
+		instance.instanceId,
+		onRename,
+	] );
 
-	const handleNameCancel = () => {
+	const handleNameCancel = useCallback( () => {
 		setEditedName( instance.config.instance_name || '' );
 		setIsEditing( false );
-	};
+	}, [ instance.config.instance_name ] );
 
 	const handleDelete = () => {
 		// eslint-disable-next-line no-alert
@@ -260,8 +279,12 @@ export default function ProviderInstancePanel( {
 		}
 	};
 
-	// Get enabled deployment types from instance config
-	const enabledDeploymentTypes = instance?.config?.deployment_types || [];
+	// Get enabled deployment types from local config state (for reactivity)
+	// Memoize to prevent unnecessary headerContent recreation
+	const enabledDeploymentTypes = useMemo(
+		() => config?.deployment_types || [],
+		[ config?.deployment_types ]
+	);
 
 	// Get provider metadata
 	const providerMetadata = provider?.metadata || {};
@@ -410,116 +433,151 @@ export default function ProviderInstancePanel( {
 		}
 	}, [ provider, config, handleFormChange, instance.instanceId ] );
 
-	// Custom header content
-	const headerContent = (
-		<div
-			className="aether-provider-instance-panel__header-content"
-			style={ panelHeaderStyle }
-		>
-			{ /* Instance Name */ }
-			{ isEditing ? (
-				<input
-					ref={ inputRef }
-					className="aether-provider-instance-panel__name-input"
-					type="text"
-					value={ editedName }
-					onChange={ ( e ) => setEditedName( e.target.value ) }
-					onBlur={ handleNameSave }
-					onKeyDown={ ( e ) => {
-						if ( e.key === 'Enter' ) {
-							handleNameSave();
-						} else if ( e.key === 'Escape' ) {
-							handleNameCancel();
-						}
-					} }
-					style={ nameInputStyle }
-					onClick={ ( e ) => e.stopPropagation() }
-				/>
-			) : (
+	// Custom header content - memoized to prevent title disappearing on re-renders
+	const headerContent = useMemo(
+		() => (
+			<div
+				className="aether-provider-instance-panel__header-content"
+				style={ panelHeaderStyle }
+			>
+				{ /* Instance Name */ }
+				{ isEditing ? (
+					<input
+						ref={ inputRef }
+						className="aether-provider-instance-panel__name-input"
+						type="text"
+						value={ editedName }
+						onChange={ ( e ) => setEditedName( e.target.value ) }
+						onBlur={ handleNameSave }
+						onKeyDown={ ( e ) => {
+							if ( e.key === 'Enter' ) {
+								handleNameSave();
+							} else if ( e.key === 'Escape' ) {
+								handleNameCancel();
+							}
+						} }
+						style={ nameInputStyle }
+						onClick={ ( e ) => e.stopPropagation() }
+					/>
+				) : (
+					<div
+						className="aether-provider-instance-panel__name"
+						style={ nameStyle }
+						onClick={ ( e ) => {
+							e.stopPropagation();
+							setIsEditing( true );
+						} }
+						onKeyDown={ ( e ) => {
+							if ( e.key === 'Enter' || e.key === ' ' ) {
+								e.stopPropagation();
+								setIsEditing( true );
+							}
+						} }
+						onMouseEnter={ ( e ) => {
+							e.currentTarget.style.backgroundColor =
+								colors.backgroundLighter;
+						} }
+						onMouseLeave={ ( e ) => {
+							e.currentTarget.style.backgroundColor =
+								'transparent';
+						} }
+						role="button"
+						tabIndex={ 0 }
+						title={ __(
+							'Click to edit name',
+							'aether-site-exporter'
+						) }
+					>
+						{ config.instance_name ||
+							instance.config.instance_name }
+					</div>
+				) }
+
+				{ /* Provider Type Tag */ }
+				<span
+					className="aether-provider-instance-panel__type-tag"
+					style={ providerTypeTagStyle }
+				>
+					{ providerMetadata.name || provider?.id || '' }
+				</span>
+
+				{ /* Deployment Types Tags */ }
+				{ enabledDeploymentTypes.length > 0 ? (
+					<div
+						className="aether-provider-instance-panel__deployment-types"
+						style={ deploymentTypesContainerStyle }
+					>
+						{ enabledDeploymentTypes.map( ( deploymentType ) => (
+							<span
+								key={ deploymentType }
+								className={ `aether-provider-instance-panel__deployment-type-tag aether-provider-instance-panel__deployment-type-tag--${ deploymentType }` }
+								style={ getDeploymentTypeTagStyle(
+									deploymentType
+								) }
+							>
+								{ DEPLOYMENT_TYPE_LABELS[ deploymentType ] ||
+									deploymentType }
+							</span>
+						) ) }
+					</div>
+				) : (
+					<span
+						style={ {
+							color: colors.textSecondary,
+							fontSize: fontSize.sm,
+							fontStyle: 'italic',
+							flex: '1 1 auto',
+						} }
+					>
+						{ __( 'None', 'aether-site-exporter' ) }
+					</span>
+				) }
+
+				{ /* Enabled Toggle */ }
 				<div
-					className="aether-provider-instance-panel__name"
-					style={ nameStyle }
-					onClick={ ( e ) => {
-						e.stopPropagation();
-						setIsEditing( true );
-					} }
+					className="aether-provider-instance-panel__toggle"
+					style={ toggleContainerStyle }
+					onClick={ ( e ) => e.stopPropagation() }
 					onKeyDown={ ( e ) => {
 						if ( e.key === 'Enter' || e.key === ' ' ) {
 							e.stopPropagation();
-							setIsEditing( true );
 						}
 					} }
-					onMouseEnter={ ( e ) => {
-						e.currentTarget.style.backgroundColor =
-							colors.backgroundLighter;
-					} }
-					onMouseLeave={ ( e ) => {
-						e.currentTarget.style.backgroundColor = 'transparent';
-					} }
-					role="button"
-					tabIndex={ 0 }
-					title={ __( 'Click to edit name', 'aether-site-exporter' ) }
+					role="presentation"
 				>
-					{ instance.config.instance_name }
+					<ToggleControl
+						className="aether-provider-instance-panel__toggle-control"
+						label={ __(
+							'Enable this instance',
+							'aether-site-exporter'
+						) }
+						checked={ config.enabled !== false }
+						onChange={ ( enabled ) => {
+							// Mark that we're doing a local update
+							isLocalUpdateRef.current = true;
+							// Update local state immediately for reactivity
+							setConfig( ( prev ) => ( { ...prev, enabled } ) );
+							// Then call the parent callback
+							onToggle( enabled );
+						} }
+						__nextHasNoMarginBottom={ true }
+					/>
 				</div>
-			) }
-
-			{ /* Provider Type Tag */ }
-			<span
-				className="aether-provider-instance-panel__type-tag"
-				style={ providerTypeTagStyle }
-			>
-				{ providerMetadata.name || provider?.id || '' }
-			</span>
-
-			{ /* Deployment Types Tags */ }
-			{ enabledDeploymentTypes.length > 0 ? (
-				<div
-					className="aether-provider-instance-panel__deployment-types"
-					style={ deploymentTypesContainerStyle }
-				>
-					{ enabledDeploymentTypes.map( ( deploymentType ) => (
-						<span
-							key={ deploymentType }
-							className={ `aether-provider-instance-panel__deployment-type-tag aether-provider-instance-panel__deployment-type-tag--${ deploymentType }` }
-							style={ getDeploymentTypeTagStyle( deploymentType ) }
-						>
-							{ DEPLOYMENT_TYPE_LABELS[ deploymentType ] ||
-								deploymentType }
-						</span>
-					) ) }
-				</div>
-			) : (
-				<span
-					style={ {
-						color: colors.textSecondary,
-						fontSize: fontSize.sm,
-						fontStyle: 'italic',
-						flex: '1 1 auto',
-					} }
-				>
-					{ __( 'None', 'aether-site-exporter' ) }
-				</span>
-			) }
-
-			{ /* Enabled Toggle */ }
-			<div
-				className="aether-provider-instance-panel__toggle"
-				style={ toggleContainerStyle }
-				onClick={ ( e ) => e.stopPropagation() }
-			>
-				<ToggleControl
-					className="aether-provider-instance-panel__toggle-control"
-					label={ __(
-						'Enable this instance',
-						'aether-site-exporter'
-					) }
-					checked={ instance.config.enabled !== false }
-					onChange={ onToggle }
-					__nextHasNoMarginBottom={ true }
-				/>
 			</div>
-		</div>
+		),
+		[
+			isEditing,
+			editedName,
+			config.instance_name,
+			instance.config.instance_name,
+			config.enabled,
+			enabledDeploymentTypes,
+			providerMetadata.name,
+			provider?.id,
+			handleNameSave,
+			handleNameCancel,
+			onToggle,
+		]
 	);
 
 	return (
@@ -635,4 +693,3 @@ export default function ProviderInstancePanel( {
 		</PanelBody>
 	);
 }
-

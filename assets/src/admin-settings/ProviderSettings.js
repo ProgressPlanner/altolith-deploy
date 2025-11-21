@@ -23,12 +23,6 @@ const emptyMessageStyle = {
 	color: colors.textSecondary,
 };
 
-const statsContainerStyle = {
-	fontSize: '0.875rem',
-	color: colors.textSecondary,
-	marginBottom: spacing.lg,
-};
-
 const panelsContainerStyle = {
 	display: 'flex',
 	flexDirection: 'column',
@@ -182,7 +176,6 @@ export default function ProviderSettings( {
 		[ createProviderInstance, onConfigsUpdate, localConfigs, providers ]
 	);
 
-
 	const handleToggleInstance = useCallback(
 		async ( instanceId, enabled ) => {
 			try {
@@ -298,13 +291,6 @@ export default function ProviderSettings( {
 		);
 	}
 
-
-	// Count total instances
-	const totalInstances = Object.keys( configs ).length;
-	const enabledInstances = Object.values( configs ).filter(
-		( c ) => c.enabled !== false
-	).length;
-
 	return (
 		<div className="aether-provider-settings">
 			<SectionHeader
@@ -348,7 +334,8 @@ export default function ProviderSettings( {
 								provider={ {
 									id: fullProvider?.id || providerType,
 									metadata: {
-										name: fullProvider?.name || providerType,
+										name:
+											fullProvider?.name || providerType,
 										description:
 											fullProvider?.description || '',
 										supportedDeploymentTypes:
