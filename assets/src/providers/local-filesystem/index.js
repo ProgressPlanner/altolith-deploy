@@ -12,7 +12,6 @@ import apiFetch from '@wordpress/api-fetch';
 import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 import { uploadFile as uploadFileToStorage } from '@aether/utils/filesystemAdapter';
 import { debug, debugWarn } from '@aether/utils/debug';
-import { processHtml } from '@aether/publish/utils/htmlProcessor';
 import { FILE_TYPES } from '@aether/publish/utils/unifiedFileUpload';
 
 // Create provider instance for hook registration
@@ -69,7 +68,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 	try {
 		let staticPath = 'static/';
 		let exportPath = 'blueprint-bundle/bundle.zip';
-		let providerPublicUrl = metadata.staticSiteUrl || null;
 
 		// Fetch provider config
 		try {
@@ -87,9 +85,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 					// For static files, use static_files_path
 					staticPath = config.static_files_path || 'static/';
 					staticPath = staticPath.replace( /\/$/, '' );
-					if ( config.public_url ) {
-						providerPublicUrl = config.public_url;
-					}
 				}
 			}
 		} catch ( configError ) {
@@ -198,28 +193,13 @@ async function handleUnifiedFileUpload( fileContext ) {
 			return;
 		}
 
-		// Process HTML content - rewrite URLs for static site
+		// HTML is already processed by the base layer (unifiedFileUpload.js)
+		// Provider receives pre-processed HTML in fileContent
+
+		// Check if file is HTML for path handling
 		const isHtml =
 			fileType === FILE_TYPES.STATIC_HTML ||
 			( contentType && contentType.includes( 'text/html' ) );
-
-		if ( isHtml && metadata.siteUrl && providerPublicUrl ) {
-			try {
-				const htmlText = await fileBlob.text();
-				const processedHtml = processHtml(
-					htmlText,
-					filePath,
-					metadata.siteUrl,
-					providerPublicUrl
-				);
-				fileBlob = new Blob( [ processedHtml ], { type: 'text/html' } );
-			} catch ( htmlError ) {
-				debugWarn(
-					`Failed to process HTML for ${ filePath }:`,
-					htmlError
-				);
-			}
-		}
 
 		// Determine storage key
 		let finalStorageKey = storageKey;

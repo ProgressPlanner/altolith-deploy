@@ -8,6 +8,9 @@
  */
 
 import { doAction, applyFilters } from '@wordpress/hooks';
+import { processHtml } from '@aether/publish/utils/htmlProcessor';
+import apiFetch from '@wordpress/api-fetch';
+import { debugWarn } from '@aether/utils/debug';
 
 /**
  * File types supported by the unified upload system.
@@ -54,6 +57,44 @@ export function createFileContext( {
 }
 
 /**
+ * Get provider's static site URL (public URL).
+ *
+ * Fetches provider config via API if metadata.staticSiteUrl is not available.
+ *
+ * @param {string} providerId Provider instance ID.
+ * @param {Object} metadata   File context metadata.
+ * @return {Promise<string|null>} Provider's static site URL or null if unavailable.
+ */
+async function getProviderStaticSiteUrl( providerId, metadata ) {
+	// Use metadata.staticSiteUrl if available
+	if ( metadata.staticSiteUrl ) {
+		return metadata.staticSiteUrl;
+	}
+
+	// Fetch provider config to get public_url
+	try {
+		const providerResponse = await apiFetch( {
+			path: `/aether/site-exporter/providers/${ providerId }/config`,
+		} );
+
+		if (
+			providerResponse.success &&
+			providerResponse.config &&
+			providerResponse.config.public_url
+		) {
+			return providerResponse.config.public_url;
+		}
+	} catch ( error ) {
+		debugWarn(
+			`Failed to fetch provider config for ${ providerId }:`,
+			error
+		);
+	}
+
+	return null;
+}
+
+/**
  * Execute action handlers asynchronously.
  *
  * WordPress hooks don't have built-in async action support. We use a promise
@@ -93,11 +134,93 @@ async function doActionAsync( actionName, fileContext ) {
  * @return {Promise<Object>} Upload result with success status and optional error.
  */
 export async function uploadFile( fileContext ) {
+	const {
+		fileType,
+		filePath,
+		fileContent,
+		contentType,
+		providerId,
+		metadata = {},
+	} = fileContext;
+
+	// Process HTML content per-provider-instance before upload
+	// Each provider has a different staticSiteUrl, so HTML needs to be processed separately
+	const isHtml =
+		fileType === FILE_TYPES.STATIC_HTML ||
+		( contentType && contentType.includes( 'text/html' ) );
+
+	let processedContent = fileContent;
+
+	if ( isHtml && metadata.siteUrl ) {
+		try {
+			// Get provider's staticSiteUrl
+			const staticSiteUrl = await getProviderStaticSiteUrl(
+				providerId,
+				metadata
+			);
+
+			if ( staticSiteUrl ) {
+				// Extract HTML content from fileContent (handle both Blob and string)
+				let htmlText;
+				if ( typeof fileContent === 'string' ) {
+					htmlText = fileContent;
+				} else if ( fileContent instanceof Blob ) {
+					htmlText = await fileContent.text();
+				} else {
+					debugWarn(
+						'Cannot process HTML: fileContent is not a string or Blob'
+					);
+				}
+
+				if ( htmlText ) {
+					// Apply HTML filter hook (for consistency with Path 1)
+					const filteredHtml = applyFilters(
+						'aether.static.html.process',
+						htmlText,
+						filePath,
+						metadata.siteUrl,
+						staticSiteUrl,
+						providerId
+					);
+
+					// Process HTML with URL rewriting
+					const processedHtml = processHtml(
+						filteredHtml,
+						filePath,
+						metadata.siteUrl,
+						staticSiteUrl
+					);
+
+					// Convert processed HTML back to Blob with correct content type
+					processedContent = new Blob( [ processedHtml ], {
+						type: 'text/html',
+					} );
+				}
+			} else {
+				debugWarn(
+					`Cannot process HTML for ${ providerId }: staticSiteUrl not available`
+				);
+			}
+		} catch ( error ) {
+			debugWarn(
+				`Failed to process HTML for ${ filePath || 'unknown' }:`,
+				error
+			);
+			// Continue with original content on error
+		}
+	}
+
+	// Create context with processed content
+	const contextWithProcessedContent = {
+		...fileContext,
+		fileContent: processedContent,
+	};
+
 	// Allow filtering of file context before upload
 	const filteredContext = applyFilters(
 		'aether.file.upload.context',
-		fileContext,
-		fileContext.providerId
+		contextWithProcessedContent,
+		providerId
 	);
 
 	// Fire unified upload action asynchronously
