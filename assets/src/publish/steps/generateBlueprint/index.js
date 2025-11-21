@@ -120,6 +120,7 @@ export const generateBlueprintStep = {
 	id: 'generateBlueprint',
 	label: __( 'Generate Blueprint', 'aether-site-exporter' ),
 	description: __( 'Create blueprint-bundle.zip', 'aether-site-exporter' ),
+	supportsProgress: false,
 	dependencies: [ 'createBlueprintBundle' ],
 	provides: [ 'blueprintData', 'blueprintBundle' ],
 	handler,

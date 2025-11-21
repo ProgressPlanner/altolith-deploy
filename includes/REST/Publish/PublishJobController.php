@@ -168,11 +168,11 @@ class PublishJobController
 		$jobId = 'aether_site_exporter_' . \wp_generate_password(16, false);
 
 		// Initialize job status.
-		// Workflow starts with: discoverAssets (first tracked step).
+		// Workflow starts with: discoverBlueprintBundleAssets (first tracked step).
 		$jobData = [
 			'status'         => 'pending',
 			'message'        => \__('Queued...', 'aether-site-exporter'),
-			'currentStep'   => 'discoverAssets',
+			'currentStep'   => 'discoverBlueprintBundleAssets',
 			'started'        => \time(),
 			'changedAssets' => $changedAssets,
 		];

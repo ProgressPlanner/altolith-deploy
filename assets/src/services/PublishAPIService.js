@@ -36,7 +36,7 @@ export class PublishAPIService {
 	 *
 	 * @return {Promise<Object>} Discovery response with assets array
 	 */
-	async discoverAssets() {
+	async discoverBlueprintBundleAssets() {
 		const customAssets = await this.assetDiscovery.discoverCustomAssets();
 		return {
 			success: true,

@@ -30,7 +30,7 @@ The workflow uses a three-level hierarchy (Jobs → Phases → Steps) with autom
 
 **Jobs:**
 1. **buildBlueprintBundle** - Create WordPress Playground blueprint bundle
-   - discover phase → discoverAssets step
+   - discover phase → discoverBlueprintBundleAssets step
    - prepare phase → createBlueprintBundle step
    - generate phase → generateBlueprint step
 
@@ -150,7 +150,7 @@ All step metadata is defined in `utils/steps.js`:
 ```javascript
 export const steps = [
     {
-        id: 'discoverAssets',
+        id: 'discoverBlueprintBundleAssets',
         label: __('Discovering assets', 'aether'),
         phase: 'preparation',
         supportsProgress: true,

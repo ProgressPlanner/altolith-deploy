@@ -16,7 +16,7 @@ Jobs → Phases → Steps
 
 - **Jobs**: High-level operations (e.g., "Build Blueprint Bundle", "Publish Static Site")
 - **Phases**: Logical groupings within jobs (e.g., "Discover", "Prepare", "Generate")
-- **Steps**: Individual executable units within phases (e.g., "discoverAssets", "createBlueprintBundle")
+- **Steps**: Individual executable units within phases (e.g., "discoverBlueprintBundleAssets", "createBlueprintBundle")
 
 ### Hook Namespaces
 
@@ -128,7 +128,7 @@ assets/src/publish/jobs/
 │       ├── discover/
 │       │   ├── index.js       # Phase registration
 │       │   └── steps/
-│       │       └── discoverAssets/
+│       │       └── discoverBlueprintBundleAssets/
 │       │           └── index.js  # Step handler + registration
 │       ├── prepare/
 │       │   ├── index.js
@@ -156,7 +156,7 @@ Creates a WordPress Playground blueprint bundle.
 
 **Phases**:
 - `discover` - Find custom plugins/themes to include
-  - Steps: `discoverAssets`
+  - Steps: `discoverBlueprintBundleAssets`
 - `prepare` - Create wp-content.zip archive
   - Steps: `createBlueprintBundle`
 - `generate` - Create blueprint-bundle.zip
@@ -315,12 +315,12 @@ addAction('aether.publish.buildBlueprintBundle.discover.before', 'my-plugin', (c
 });
 
 // Listen to step lifecycle
-addAction('aether.publish.buildBlueprintBundle.discover.discoverAssets.before', 'my-plugin', (context) => {
+addAction('aether.publish.buildBlueprintBundle.discover.discoverBlueprintBundleAssets.before', 'my-plugin', (context) => {
     console.log('Discover assets step starting');
 });
 
 // Filter step results
-addFilter('aether.publish.buildBlueprintBundle.discover.discoverAssets.result', 'my-plugin', (result, context) => {
+addFilter('aether.publish.buildBlueprintBundle.discover.discoverBlueprintBundleAssets.result', 'my-plugin', (result, context) => {
     // Modify result before it's merged into state
     return {
         ...result,
@@ -393,14 +393,14 @@ If circular dependencies are detected, an error is thrown with details about the
 ```javascript
 // publishWorkflow.js - Hardcoded workflow
 export const PUBLISH_WORKFLOW = [
-    [['discoverAssets', 10]],  // Phase 1
+    [['discoverBlueprintBundleAssets', 10]],  // Phase 1
     [['createBlueprintBundle', 40]],  // Phase 2
     [['generateBlueprint', 10]],  // Phase 3
     // ... more steps
 ];
 
 // steps.js - Step constants
-export const STEP_DISCOVER_ASSETS = 'discoverAssets';
+export const STEP_DISCOVER_ASSETS = 'discoverBlueprintBundleAssets';
 
 // usePublishController.js
 await executeWorkflow(PUBLISH_WORKFLOW, STEP_HANDLERS, context, options);

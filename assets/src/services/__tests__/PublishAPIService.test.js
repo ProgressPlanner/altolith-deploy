@@ -31,7 +31,7 @@ describe( 'PublishAPIService', () => {
 		);
 	} );
 
-	describe( 'discoverAssets()', () => {
+	describe( 'discoverBlueprintBundleAssets()', () => {
 		test( 'should discover assets and return success response', async () => {
 			const mockAssets = [
 				{ type: 'theme', slug: 'theme-1' },
@@ -42,7 +42,7 @@ describe( 'PublishAPIService', () => {
 				mockAssets
 			);
 
-			const result = await service.discoverAssets();
+			const result = await service.discoverBlueprintBundleAssets();
 
 			expect(
 				mockAssetDiscovery.discoverCustomAssets
@@ -57,7 +57,7 @@ describe( 'PublishAPIService', () => {
 		test( 'should handle empty asset discovery', async () => {
 			mockAssetDiscovery.discoverCustomAssets.mockResolvedValue( [] );
 
-			const result = await service.discoverAssets();
+			const result = await service.discoverBlueprintBundleAssets();
 
 			expect( result ).toEqual( {
 				success: true,
@@ -70,7 +70,7 @@ describe( 'PublishAPIService', () => {
 			const error = new Error( 'Discovery failed' );
 			mockAssetDiscovery.discoverCustomAssets.mockRejectedValue( error );
 
-			await expect( service.discoverAssets() ).rejects.toThrow(
+			await expect( service.discoverBlueprintBundleAssets() ).rejects.toThrow(
 				'Discovery failed'
 			);
 		} );

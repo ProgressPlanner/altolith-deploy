@@ -40,7 +40,7 @@ Centralizes all publish-related REST API calls.
 **Returns:**
 ```javascript
 const {
-    discoverAssets,      // Discover changed assets
+    discoverBlueprintBundleAssets,      // Discover changed assets
     getAssetStatus,      // Get asset status
     markAssetChanged,    // Mark asset as changed
     startPublish,        // Start publish job

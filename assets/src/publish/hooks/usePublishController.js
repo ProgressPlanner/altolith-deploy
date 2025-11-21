@@ -12,14 +12,13 @@ import { usePublishAPI } from './usePublishAPI';
 import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
 import { useBlueprintGenerator } from './useBlueprintGenerator';
-import { PUBLISH_STEPS } from '../utils/steps';
 import apiFetch from '../../utils/api';
 import { calculateOverallProgress } from '../utils/progressManager';
 import { debug, debugError } from '../../utils/debug';
 import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 import { executeSteps } from '../executor';
-import { getActiveSteps } from '../steps';
+import { getActiveSteps, getRegisteredSteps } from '../steps';
 import {
 	preparePublishConfiguration,
 	determineProvidersByDeploymentType,
@@ -411,9 +410,9 @@ export function usePublishController( publishState ) {
 		try {
 			debug( 'startPublish called' );
 
-			// Initialize steps with 'discoverAssets' as the active step
+			// Initialize steps with 'discoverBlueprintBundleAssets' as the active step
 			// This sets up steps array, active step, and lastStepIndex correctly
-			initializeSteps( PUBLISH_STEPS, 'discoverAssets' );
+			initializeSteps( getRegisteredSteps(), 'discoverBlueprintBundleAssets' );
 			// Set isPublishing to true to start the workflow
 			setIsPublishing( true );
 			debug( 'Steps initialized, starting publish workflow' );
@@ -450,7 +449,7 @@ export function usePublishController( publishState ) {
 			// No job tracking - React owns all state, PHP provides stateless endpoints
 
 			// Activate the first step immediately to update UI
-			updateFromStep( 'discoverAssets' );
+			updateFromStep( 'discoverBlueprintBundleAssets' );
 
 			// Get current site URL for static site generation (use pure function)
 			const siteUrl = window.location.origin;

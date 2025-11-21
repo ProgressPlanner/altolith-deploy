@@ -12,7 +12,7 @@ import { MAX_PROGRESS } from '../../utils/constants';
 // Hardcoded step weights for step-based progress tracking
 // Order matters! Steps are executed in this order.
 const STEP_WEIGHTS = {
-	discoverAssets: 5, // Phase 1: 0-5%
+	discoverBlueprintBundleAssets: 5, // Phase 1: 0-5%
 	getStaticSiteUrls: 8, // Phase 2: 5-13%
 	createBlueprintBundle: 20, // Phase 3: 13-33%
 	generateBlueprint: 1, // Phase 4: 33-34%

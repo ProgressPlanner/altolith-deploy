@@ -4,79 +4,47 @@
  * @package
  */
 
-import { PUBLISH_STEPS, getStep, supportsProgress } from '../steps';
+import { getRegisteredSteps } from '../../steps';
 
 describe( 'steps', () => {
-	describe( 'PUBLISH_STEPS', () => {
+	describe( 'getRegisteredSteps', () => {
 		test( 'defines all required steps', () => {
-			const stepIds = PUBLISH_STEPS.map( ( step ) => step.id );
+			const steps = getRegisteredSteps();
+			const stepIds = steps.map( ( step ) => step.id );
 
-			expect( stepIds ).toContain( 'discoverAssets' );
+			expect( stepIds ).toContain( 'discoverBlueprintBundleAssets' );
 			expect( stepIds ).toContain( 'getStaticSiteUrls' );
 			expect( stepIds ).toContain( 'generateBlueprint' );
 			expect( stepIds ).toContain( 'createBlueprintBundle' );
-			expect( stepIds ).toContain( 'uploadStaticSiteFiles' );
-			expect( stepIds ).toContain( 'uploadSiteArchive' );
-		} );
-
-		test( 'steps are in correct order', () => {
-			expect( PUBLISH_STEPS[ 0 ].id ).toBe( 'discoverAssets' );
-			expect( PUBLISH_STEPS[ PUBLISH_STEPS.length - 1 ].id ).toBe(
-				'uploadSiteArchive'
-			);
+			expect( stepIds ).toContain( 'uploadStaticFiles' );
+			expect( stepIds ).toContain( 'uploadBlueprintBundle' );
 		} );
 
 		test( 'each step has required properties', () => {
-			PUBLISH_STEPS.forEach( ( step ) => {
+			const steps = getRegisteredSteps();
+
+			steps.forEach( ( step ) => {
 				expect( step ).toHaveProperty( 'id' );
 				expect( step ).toHaveProperty( 'label' );
 				expect( step ).toHaveProperty( 'supportsProgress' );
-				expect( step ).toHaveProperty( 'phase' );
-				expect( step ).toHaveProperty( 'waitingMessage' );
-				expect( step ).toHaveProperty( 'completionMessage' );
+				expect( step ).toHaveProperty( 'handler' );
 			} );
 		} );
-	} );
 
-	describe( 'getStep', () => {
-		test( 'returns step definition for valid step ID', () => {
-			const step = getStep( 'discoverAssets' );
+		test( 'steps with progress support are marked correctly', () => {
+			const steps = getRegisteredSteps();
 
-			expect( step ).toBeDefined();
-			expect( step.id ).toBe( 'discoverAssets' );
-			expect( step.label ).toBeDefined();
-		} );
+			const progressSteps = steps.filter( ( s ) => s.supportsProgress );
+			const noProgressSteps = steps.filter( ( s ) => ! s.supportsProgress );
 
-		test( 'returns null for invalid step ID', () => {
-			const step = getStep( 'invalidStep' );
+			// Upload and create steps support progress
+			expect( progressSteps.map( ( s ) => s.id ) ).toContain( 'uploadStaticFiles' );
+			expect( progressSteps.map( ( s ) => s.id ) ).toContain( 'uploadBlueprintBundle' );
+			expect( progressSteps.map( ( s ) => s.id ) ).toContain( 'createBlueprintBundle' );
 
-			expect( step ).toBeNull();
-		} );
-
-		test( 'returns null for empty string', () => {
-			const step = getStep( '' );
-
-			expect( step ).toBeNull();
-		} );
-	} );
-
-	describe( 'supportsProgress', () => {
-		test( 'returns true for steps that support progress', () => {
-			const step = getStep( 'createBlueprintBundle' );
-
-			expect( step.supportsProgress ).toBe( true );
-			expect( supportsProgress( 'createBlueprintBundle' ) ).toBe( true );
-		} );
-
-		test( 'returns false for steps that do not support progress', () => {
-			const step = getStep( 'discoverAssets' );
-
-			expect( step.supportsProgress ).toBe( false );
-			expect( supportsProgress( 'discoverAssets' ) ).toBe( false );
-		} );
-
-		test( 'returns false for invalid step ID', () => {
-			expect( supportsProgress( 'invalidStep' ) ).toBe( false );
+			// Discovery steps don't support progress
+			expect( noProgressSteps.map( ( s ) => s.id ) ).toContain( 'discoverBlueprintBundleAssets' );
+			expect( noProgressSteps.map( ( s ) => s.id ) ).toContain( 'getStaticSiteUrls' );
 		} );
 	} );
 } );

@@ -22,13 +22,13 @@ export function usePublishAPI() {
 		[ assetDiscovery ]
 	);
 
-	const discoverAssets = useCallback( async () => {
-		return await service.discoverAssets();
+	const discoverBlueprintBundleAssets = useCallback( async () => {
+		return await service.discoverBlueprintBundleAssets();
 	}, [ service ] );
 
-	// getAssetStatus is an alias for discoverAssets (eliminates duplication)
+	// getAssetStatus is an alias for discoverBlueprintBundleAssets (eliminates duplication)
 	const getAssetStatus = useCallback( async () => {
-		return await service.discoverAssets();
+		return await service.discoverBlueprintBundleAssets();
 	}, [ service ] );
 
 	const markAssetChanged = useCallback(
@@ -39,7 +39,7 @@ export function usePublishAPI() {
 	);
 
 	return {
-		discoverAssets,
+		discoverBlueprintBundleAssets,
 		getAssetStatus,
 		markAssetChanged,
 	};

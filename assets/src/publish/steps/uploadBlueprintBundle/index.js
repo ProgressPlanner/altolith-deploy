@@ -175,6 +175,7 @@ export const uploadBlueprintBundleStep = {
 	id: 'uploadBlueprintBundle',
 	label: __( 'Upload Blueprint Bundle', 'aether-site-exporter' ),
 	description: __( 'Upload blueprint-bundle.zip to providers', 'aether-site-exporter' ),
+	supportsProgress: true,
 	dependencies: [ 'generateBlueprint' ],
 	provides: [],
 	handler,

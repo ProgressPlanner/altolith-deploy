@@ -27,7 +27,7 @@ async function handler( context ) {
 	);
 
 	// Call client-side asset discovery
-	const discoveryResponse = await api.discoverAssets();
+	const discoveryResponse = await api.discoverBlueprintBundleAssets();
 
 	if ( ! discoveryResponse.success ) {
 		throw new Error(
@@ -111,6 +111,7 @@ export const discoverBlueprintBundleAssetsStep = {
 		'Find custom plugins and themes for blueprint bundle',
 		'aether-site-exporter'
 	),
+	supportsProgress: false,
 	dependencies: [],
 	provides: [ 'discoveredAssets' ],
 	handler,

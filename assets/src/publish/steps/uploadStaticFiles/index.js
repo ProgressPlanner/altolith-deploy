@@ -224,6 +224,7 @@ export const uploadStaticFilesStep = {
 	id: 'uploadStaticFiles',
 	label: __( 'Upload Static Files', 'aether-site-exporter' ),
 	description: __( 'Generate and upload static HTML files', 'aether-site-exporter' ),
+	supportsProgress: true,
 	dependencies: [ 'getStaticSiteUrls' ],
 	provides: [],
 	handler,

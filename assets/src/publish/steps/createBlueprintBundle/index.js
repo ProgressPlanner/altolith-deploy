@@ -90,6 +90,7 @@ export const createBlueprintBundleStep = {
 		'Package custom plugins, themes, and uploads',
 		'aether-site-exporter'
 	),
+	supportsProgress: true,
 	dependencies: [ 'discoverBlueprintBundleAssets' ],
 	provides: [ 'zipPath', 'zipUrl', 'zipSize' ],
 	handler,

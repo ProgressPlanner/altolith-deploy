@@ -67,6 +67,7 @@ export const getStaticSiteUrlsStep = {
 		'Find all URLs for static site generation',
 		'aether-site-exporter'
 	),
+	supportsProgress: false,
 	dependencies: [],
 	provides: [ 'urls', 'staticSiteUrl', 'urlsCount' ],
 	handler,
