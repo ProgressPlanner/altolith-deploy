@@ -60,15 +60,54 @@ export function ProviderProvider( { children } ) {
 
 	/**
 	 * Load providers from JavaScript registry
+	 * Waits for providers to register if registry is empty
 	 */
 	const loadProviders = useCallback( () => {
 		setLoading( true );
 		setError( null );
 
-		try {
-			// Get all providers from JavaScript registry
-			const allProviders = ProviderRegistry.getAll();
+		// Wait for providers to register (they load asynchronously)
+		const checkProviders = () => {
+			try {
+				// Get all providers from JavaScript registry
+				const allProviders = ProviderRegistry.getAll();
 
+				// If no providers yet, wait a bit and try again
+				// This handles the case where provider scripts haven't loaded yet
+				if ( allProviders.length === 0 ) {
+					// Wait up to 2 seconds for providers to register
+					let attempts = 0;
+					const maxAttempts = 20; // 20 attempts * 100ms = 2 seconds
+					const interval = setInterval( () => {
+						attempts++;
+						const providers = ProviderRegistry.getAll();
+						if ( providers.length > 0 || attempts >= maxAttempts ) {
+							clearInterval( interval );
+							if ( providers.length > 0 ) {
+								// Providers found, process them
+								processProviders( providers );
+							} else {
+								// Still no providers after waiting
+								setLoading( false );
+								setError( 'No providers found. Please ensure provider plugins are active.' );
+							}
+						}
+					}, 100 );
+					return;
+				}
+
+				// Providers found immediately, process them
+				processProviders( allProviders );
+			} catch ( err ) {
+				const errorMessage = err.message || 'Failed to load providers';
+				setError( errorMessage );
+				setLoading( false );
+				debugError( 'Provider loading error:', err );
+			}
+		};
+
+		// Helper to process providers
+		const processProviders = ( allProviders ) => {
 			// Transform to match expected format
 			const providerMetadata = allProviders.map( ( provider ) => {
 				const supportedTypes =
@@ -86,12 +125,9 @@ export function ProviderProvider( { children } ) {
 			setProviderIds( providerMetadata.map( ( p ) => p.id ) );
 			setProviders( providerMetadata );
 			setLoading( false );
-		} catch ( err ) {
-			const errorMessage = err.message || 'Failed to load providers';
-			setError( errorMessage );
-			setLoading( false );
-			debugError( 'Provider loading error:', err );
-		}
+		};
+
+		checkProviders();
 	}, [] );
 
 	/**

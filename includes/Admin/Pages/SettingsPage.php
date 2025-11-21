@@ -53,36 +53,10 @@ class SettingsPage extends BaseAdminPage
 		$plugin = \Aether\SiteExporter\Plugin::getInstance();
 		$plugin->enqueueProviderScript('local-filesystem');
 
-		// Use admin_enqueue_scripts hook at priority 20 to add provider script dependencies
-		// This runs after providers plugin enqueues scripts at priority 5
-		\add_action('admin_enqueue_scripts', function () use ($asset) {
-			$providerScripts = [
-				'aether-sep-provider-cloudflare-r2',
-				'aether-sep-provider-cloudflare',
-				'aether-sep-provider-gitlab',
-				'aether-sep-provider-gitlab-pages',
-			];
-
-			$providerScriptDependencies = [];
-			foreach ($providerScripts as $scriptHandle) {
-				if (\wp_script_is($scriptHandle, 'registered')) {
-					$providerScriptDependencies[] = $scriptHandle;
-				}
-			}
-
-			// Add provider scripts as dependencies to admin-settings if they exist
-			if (!empty($providerScriptDependencies) && \wp_script_is('aether-admin-settings', 'registered')) {
-				global $wp_scripts;
-				if (isset($wp_scripts->registered['aether-admin-settings'])) {
-					$wp_scripts->registered['aether-admin-settings']->deps = \array_merge(
-						$wp_scripts->registered['aether-admin-settings']->deps,
-						$providerScriptDependencies
-					);
-				}
-			}
-		}, 20);
-
 		// Enqueue the main script
+		// Provider scripts from aether-site-exporter-providers are enqueued at priority 5,
+		// so they should load before this script (which runs at default priority 10).
+		// The JavaScript code will wait for providers to register before querying the registry.
 		\wp_enqueue_script(
 			'aether-admin-settings',
 			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin-settings.js',
