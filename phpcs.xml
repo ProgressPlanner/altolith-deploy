@@ -9,6 +9,7 @@
 	<exclude-pattern>*/vendor/*</exclude-pattern>
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
 	<exclude-pattern>*/tests/*</exclude-pattern>
+	<exclude-pattern>wp-tests-config.php</exclude-pattern>
 	<exclude-pattern>*.js</exclude-pattern>
 	<exclude-pattern>*.css</exclude-pattern>
 	<exclude-pattern>*/assets/build/*</exclude-pattern>
@@ -113,6 +114,22 @@
 	<!-- Proper scope keywords -->
 	<rule ref="Squiz.Scope.MethodScope"/>
 	<rule ref="Squiz.Scope.MemberVarScope"/>
+
+	<!-- Disallow multiple consecutive blank lines -->
+	<rule ref="Squiz.WhiteSpace.SuperfluousWhitespace">
+		<properties>
+			<property name="ignoreBlankLines" value="false"/>
+		</properties>
+	</rule>
+	<rule ref="Squiz.WhiteSpace.SuperfluousWhitespace.StartFile">
+		<severity>5</severity>
+	</rule>
+	<rule ref="Squiz.WhiteSpace.SuperfluousWhitespace.EndFile">
+		<severity>5</severity>
+	</rule>
+	<rule ref="Squiz.WhiteSpace.SuperfluousWhitespace.EmptyLines">
+		<severity>5</severity>
+	</rule>
 	
 	<!-- Detect duplicate class names -->
 	<rule ref="Generic.Classes.DuplicateClassName"/>

@@ -121,7 +121,6 @@ class URLDiscoveryService
 			}
 		}
 
-
 		return $this->discovered;
 	}
 
@@ -292,7 +291,6 @@ class URLDiscoveryService
 		if (! \in_array($url, $this->discovered, true)) {
 			$this->discovered[] = $url;
 		}
-
 
 		// Fetch the page.
 		// Reduced timeout for WordPress Playground compatibility (can be slow).

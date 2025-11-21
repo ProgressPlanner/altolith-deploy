@@ -15,7 +15,6 @@ use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use Aether\SiteExporter\Providers\ProviderRegistry;
 use Aether\SiteExporter\Providers\LocalFilesystemProvider;
 
-use function Aether\SiteExporter\getStorageConfig;
 /**
  * Main plugin orchestrator class.
  */
