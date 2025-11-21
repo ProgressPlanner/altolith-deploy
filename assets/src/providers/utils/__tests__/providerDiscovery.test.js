@@ -163,7 +163,8 @@ describe( 'providerDiscovery', () => {
 				};
 				mockGetForDeploymentType.mockReturnValue( mockProvider );
 
-				const result = getProviderForDeploymentType( 'blueprint_bundle' );
+				const result =
+					getProviderForDeploymentType( 'blueprint_bundle' );
 
 				expect( mockGetForDeploymentType ).toHaveBeenCalledWith(
 					'blueprint_bundle'

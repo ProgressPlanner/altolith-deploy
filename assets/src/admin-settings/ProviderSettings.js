@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
+import apiFetch from '@wordpress/api-fetch';
 import ProviderInstancePanel from '@aether/components/ProviderInstancePanel';
 import AddProviderInstanceModal from '@aether/components/AddProviderInstanceModal';
 import LoadingSpinner from '@aether/components/LoadingSpinner';
@@ -53,7 +54,6 @@ export default function ProviderSettings( {
 	onNotice,
 } ) {
 	const [ providers, setProviders ] = useState( [] );
-	const [ loading, setLoading ] = useState( true );
 	const [ isAddModalOpen, setIsAddModalOpen ] = useState( false );
 
 	// Local state for optimistic updates
@@ -85,8 +85,10 @@ export default function ProviderSettings( {
 					name: provider.getName(),
 					description: provider.getDescription?.() || '',
 					type: provider.getType?.() || 'generic',
-					deployment_types: provider.getSupportedDeploymentTypes?.() || [],
-					settings_fields: provider.getProviderSpecificConfigFields?.() || [],
+					deployment_types:
+						provider.getSupportedDeploymentTypes?.() || [],
+					settings_fields:
+						provider.getProviderSpecificConfigFields?.() || [],
 				} ) );
 
 				setProviders( providerMetadata );
@@ -98,29 +100,25 @@ export default function ProviderSettings( {
 		loadProviders();
 
 		// Configs are now managed by parent component
-				// If parent hasn't loaded them yet, trigger initial load
-				if ( onConfigsUpdate && Object.keys( configs ).length === 0 ) {
-					const configsResponse = await apiFetch( {
-						path: '/aether/site-exporter/settings?key=providers',
-					} );
-
+		// If parent hasn't loaded them yet, trigger initial load
+		if ( onConfigsUpdate && Object.keys( configs ).length === 0 ) {
+			apiFetch( {
+				path: '/aether/site-exporter/settings?key=providers',
+			} )
+				.then( ( configsResponse ) => {
 					if ( configsResponse.success && configsResponse.value ) {
 						onConfigsUpdate( configsResponse.value );
 					}
-				}
-			} catch ( error ) {
-				console.error(
-					'Failed to load providers or configurations:',
-					error
-				);
-			} finally {
-				setLoading( false );
-			}
-		};
-
-		loadProviders();
+				} )
+				.catch( ( error ) => {
+					console.error(
+						'Failed to load provider configurations:',
+						error
+					);
+				} );
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [] );
+	}, [ onConfigsUpdate, configs ] );
 
 	// Create flat list of all instances with provider metadata
 	const allInstances = Object.entries( configs ).map(
@@ -352,7 +350,7 @@ export default function ProviderSettings( {
 		[ localConfigs, onConfigsUpdate ]
 	);
 
-	if ( loading ) {
+	if ( providers.length === 0 ) {
 		return (
 			<div className="aether-provider-settings aether-provider-settings--loading">
 				<LoadingSpinner />

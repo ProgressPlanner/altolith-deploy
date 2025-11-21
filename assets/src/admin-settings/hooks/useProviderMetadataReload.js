@@ -67,7 +67,8 @@ export function useProviderMetadataReload(
 				// Get providers from JavaScript registry
 				const allProviders = ProviderRegistry.getAll();
 				const providerMetadata = allProviders.map( ( provider ) => {
-					const configFields = provider.getProviderSpecificConfigFields?.() || [];
+					const configFields =
+						provider.getProviderSpecificConfigFields?.() || [];
 					return {
 						id: provider.getId(),
 						metadata: {

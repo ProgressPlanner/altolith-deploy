@@ -135,8 +135,8 @@ class ProviderRegistry {
 	 * @return {Object|null} Provider instance or null if not found
 	 */
 	getForDeploymentType( deploymentType ) {
-		const providers = this.getByDeploymentType( deploymentType );
-		return providers.length > 0 ? providers[ 0 ] : null;
+		const matchingProviders = this.getByDeploymentType( deploymentType );
+		return matchingProviders.length > 0 ? matchingProviders[ 0 ] : null;
 	}
 
 	/**
@@ -213,7 +213,9 @@ class ProviderRegistry {
 		const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
 			/[xy]/g,
 			( c ) => {
+				// eslint-disable-next-line no-bitwise
 				const r = ( Math.random() * 16 ) | 0;
+				// eslint-disable-next-line no-bitwise
 				const v = c === 'x' ? r : ( r & 0x3 ) | 0x8;
 				return v.toString( 16 );
 			}
@@ -243,24 +245,27 @@ const registry = new ProviderRegistry();
  * When providers call doAction('aether.providers.register', provider),
  * this will automatically register them.
  */
-addAction( 'aether.providers.register', 'aether/provider-registry', ( provider ) => {
-	if ( ! provider || typeof provider !== 'object' ) {
-		return;
-	}
+addAction(
+	'aether.providers.register',
+	'aether/provider-registry',
+	( provider ) => {
+		if ( ! provider || typeof provider !== 'object' ) {
+			return;
+		}
 
-	// Get provider ID
-	let providerId;
-	if ( typeof provider.getId === 'function' ) {
-		providerId = provider.getId();
-	} else if ( provider.id ) {
-		providerId = provider.id;
-	} else {
-		return; // Invalid provider
-	}
+		// Get provider ID
+		let providerId;
+		if ( typeof provider.getId === 'function' ) {
+			providerId = provider.getId();
+		} else if ( provider.id ) {
+			providerId = provider.id;
+		} else {
+			return; // Invalid provider
+		}
 
-	// Register the provider
-	registry.register( providerId, provider );
-} );
+		// Register the provider
+		registry.register( providerId, provider );
+	}
+);
 
 export default registry;
-
