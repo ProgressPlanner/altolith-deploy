@@ -2,20 +2,27 @@
  * Local Filesystem Provider Registration
  *
  * This file registers hooks for the LocalFilesystem provider implementation.
- * Provider metadata and settings are registered via PHP.
+ * Provider metadata is registered in JavaScript, not PHP.
  *
  * @package
  */
 
-import { addFilter, addAction } from '@wordpress/hooks';
+import { addFilter, addAction, doAction } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
 import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 import { uploadFile as uploadFileToStorage } from '@aether/utils/filesystemAdapter';
 import { debug, debugWarn } from '@aether/utils/debug';
 import { FILE_TYPES } from '@aether/publish/utils/unifiedFileUpload';
+import ProviderRegistry from '../registry/ProviderRegistry';
 
 // Create provider instance for hook registration
 const provider = new LocalFilesystemProvider();
+
+// Register provider in JavaScript registry
+ProviderRegistry.register( provider.getId(), provider );
+
+// Also trigger the hook for any listeners
+doAction( 'aether.providers.register', provider );
 
 // Track upload results per provider instance
 const uploadResults = {};

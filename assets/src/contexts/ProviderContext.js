@@ -14,7 +14,7 @@ import {
 	useCallback,
 	useMemo,
 } from '@wordpress/element';
-import apiFetch from '../utils/api';
+import ProviderRegistry from '../providers/registry/ProviderRegistry';
 import { debugError } from '../utils/debug';
 
 /**
@@ -59,36 +59,32 @@ export function ProviderProvider( { children } ) {
 	const [ error, setError ] = useState( null );
 
 	/**
-	 * Load providers from REST API (PHP registry)
+	 * Load providers from JavaScript registry
 	 */
-	const loadProviders = useCallback( async () => {
+	const loadProviders = useCallback( () => {
 		setLoading( true );
 		setError( null );
 
 		try {
-			// Fetch providers from REST API
-			const response = await apiFetch( {
-				path: '/aether/site-exporter/providers',
+			// Get all providers from JavaScript registry
+			const allProviders = ProviderRegistry.getAll();
+
+			// Transform to match expected format
+			const providerMetadata = allProviders.map( ( provider ) => {
+				const supportedTypes =
+					provider.getSupportedDeploymentTypes?.() || [];
+				return {
+					id: provider.getId(),
+					name: provider.getName(),
+					description: provider.getDescription?.() || '',
+					type: provider.getType?.() || 'generic',
+					supportedDeploymentTypes: supportedTypes,
+					configured: false, // Will be determined from config
+				};
 			} );
 
-			if ( response.success && response.providers ) {
-				// Transform to match expected format
-				const providerMetadata = response.providers.map( ( p ) => ( {
-					id: p.id,
-					name: p.name,
-					description: p.description,
-					type: p.type,
-					supportedDeploymentTypes: p.deployment_types || [],
-					configured: p.configured || false,
-				} ) );
-
-				setProviderIds( providerMetadata.map( ( p ) => p.id ) );
-				setProviders( providerMetadata );
-			} else {
-				setProviderIds( [] );
-				setProviders( [] );
-			}
-
+			setProviderIds( providerMetadata.map( ( p ) => p.id ) );
+			setProviders( providerMetadata );
 			setLoading( false );
 		} catch ( err ) {
 			const errorMessage = err.message || 'Failed to load providers';
