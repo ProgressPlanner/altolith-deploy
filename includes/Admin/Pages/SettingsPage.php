@@ -53,9 +53,9 @@ class SettingsPage extends BaseAdminPage
 		$plugin = \Aether\SiteExporter\Plugin::getInstance();
 		$plugin->enqueueProviderScript('local-filesystem');
 
-		// Use wp_enqueue_scripts hook at priority 20 to add provider script dependencies
+		// Use admin_enqueue_scripts hook at priority 20 to add provider script dependencies
 		// This runs after providers plugin enqueues scripts at priority 5
-		\add_action('wp_enqueue_scripts', function () use ($asset) {
+		\add_action('admin_enqueue_scripts', function () use ($asset) {
 			$providerScripts = [
 				'aether-sep-provider-cloudflare-r2',
 				'aether-sep-provider-cloudflare',
