@@ -102,7 +102,7 @@ class ExportController
 	 * @param \WP_REST_Request<array<string, mixed>> $_request Request object (unused, required by REST API interface).
 	 * @return WP_REST_Response|WP_Error
 	 */
-	public function startExport(\WP_REST_Request $_request): \WP_REST_Response|\WP_Error
+	public function startExport(\WP_REST_Request $_request)
 	{
 		// CSRF protection: Verify nonce for state-changing operation
 		$nonceCheck = $this->verifyNonce($_request);
@@ -254,7 +254,7 @@ class ExportController
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response|WP_Error
 	 */
-	public function exportStatus(WP_REST_Request $request): \WP_REST_Response|\WP_Error
+	public function exportStatus(WP_REST_Request $request)
 	{
 		// CSRF protection: Verify nonce for state-changing operation
 		$nonceCheck = $this->verifyNonce($request);
@@ -379,7 +379,7 @@ class ExportController
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response|WP_Error
 	 */
-	public function downloadExport(WP_REST_Request $request): \WP_REST_Response|\WP_Error
+	public function downloadExport(WP_REST_Request $request)
 	{
 		$jobId = \sanitize_key($request->get_param('jobId'));
 
