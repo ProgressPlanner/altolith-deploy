@@ -297,7 +297,7 @@ function MyComponent() {
         getProvidersByCapability,      // Filter by deployment type
         loading,
         error,
-    } = useProviderRegistry();
+    } = useProviderContext();
 
     return (
         <ul>
