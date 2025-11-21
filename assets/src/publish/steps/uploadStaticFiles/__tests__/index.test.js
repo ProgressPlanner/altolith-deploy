@@ -26,6 +26,7 @@ describe( 'uploadStaticFiles failure detection logic', () => {
 	 * Helper to simulate the failure detection logic used in uploadStaticFiles.
 	 * A provider is considered failed only if it uploaded zero files.
 	 * This is key: success: false just means some URLs had errors, not total failure.
+	 * @param providerResults
 	 */
 	function getFailedProviders( providerResults ) {
 		return Object.entries( providerResults ).filter(

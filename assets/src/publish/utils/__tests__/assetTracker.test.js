@@ -121,9 +121,9 @@ describe( 'createAssetTracker', () => {
 		} );
 
 		test( 'returns false for non-failed URL', () => {
-			expect(
-				tracker.isFailed( 'https://example.com/image.jpg' )
-			).toBe( false );
+			expect( tracker.isFailed( 'https://example.com/image.jpg' ) ).toBe(
+				false
+			);
 		} );
 
 		test( 'normalizes URL before storing', () => {
