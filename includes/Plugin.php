@@ -281,6 +281,7 @@ class Plugin
 		$assetsController = new REST\AssetsController();
 		$wporgCheckController = new REST\WPOrgCheckController();
 		$localStorageController = new REST\LocalStorageController();
+		$urlDiscoveryController = new REST\URLDiscoveryController();
 
 		// Initialize publish controllers.
 		$publishJobController = new REST\Publish\PublishJobController($this);
@@ -295,6 +296,7 @@ class Plugin
 		$assetsController->registerRoutes();
 		$wporgCheckController->registerRoutes();
 		$localStorageController->registerRoutes();
+		$urlDiscoveryController->registerRoutes();
 
 		// Register publish routes.
 		$publishJobController->registerRoutes();

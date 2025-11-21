@@ -385,12 +385,6 @@ Key principles:
 **Configuration Filters:**
 
 ```php
-// Configure post discovery limit (prevents timeouts on large sites)
-add_filter('option_aether_site_exporter_settings', function($settings) {
-    $settings['max_posts_for_discovery'] = 5000; // Default: 10000
-    return $settings;
-});
-
 // Custom WordPress.org API checking (for Playground compatibility)
 add_filter('aether_site_exporter_wporg_check_response', function($response, $slug, $type) {
     // Implement custom checking logic (e.g., browser-based fetch)

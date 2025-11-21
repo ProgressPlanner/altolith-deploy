@@ -239,7 +239,9 @@ describe( 'stateManager', () => {
 			// set(key, value, metadata) - value is the second argument
 			// The value is wrapped in stateData with stateKey, workflowId, etc.
 			const savedValue = setCall[ 1 ];
-			expect( savedValue.state.stepResults.blueprintBundle ).toBeDefined();
+			expect(
+				savedValue.state.stepResults.blueprintBundle
+			).toBeDefined();
 			expect( savedValue.state.stepResults.urlsResult ).toBeDefined();
 		} );
 	} );

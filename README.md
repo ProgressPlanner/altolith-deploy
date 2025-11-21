@@ -101,18 +101,6 @@ The plugin uses a universal implementation approach - no environment detection, 
 
 ### Configuration
 
-#### Post Discovery Limit
-
-For large sites, configure the post discovery limit to prevent timeouts:
-
-```php
-// Add to wp-config.php or theme functions.php
-add_filter( 'option_aether_site_exporter_settings', function( $settings ) {
-    $settings['max_posts_for_discovery'] = 5000; // Adjust as needed (100-50000)
-    return $settings;
-} );
-```
-
 #### WordPress.org Asset Detection
 
 Implement custom WordPress.org API checking using the filter hook:

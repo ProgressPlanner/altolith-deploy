@@ -16,7 +16,6 @@ use Aether\SiteExporter\REST\RESTHelpersTrait;
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Services\ExportService;
 use Aether\SiteExporter\Services\BlueprintBundleGenerator;
-use Aether\SiteExporter\Utilities\URLDiscoveryService;
 use Aether\SiteExporter\Utilities\HTTPClient;
 use Aether\SiteExporter\Providers\ProviderRegistry;
 use WP_REST_Request;
@@ -65,17 +64,6 @@ class PublishStepsController
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'executeGenerateStaticSite' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
-			]
-		);
-
-		// Get static site URLs endpoint.
-		\register_rest_route(
-			$this->getNamespace(),
-			'/publish/steps/getStaticSiteUrls',
-			[
-				'methods'             => 'GET',
-				'callback'            => [ $this, 'getStaticSiteUrls' ],
 				'permission_callback' => [ $this, 'permissionCheck' ],
 			]
 		);
@@ -433,169 +421,6 @@ class PublishStepsController
 			return new WP_Error(
 				'step_execution_failed',
 				\sprintf(\__('Step execution failed: %s', 'aether-site-exporter'), $sanitizedMessage),
-				['status' => 500]
-			);
-		}
-	}
-
-	/**
-	 * Get static site URL for HTML generation.
-	 *
-	 * Calculates the deployment URL dynamically based on:
-	 * - public_url (local filesystem - where the static site will be accessed)
-	 * - custom_domain (R2/S3 - this is the public-facing URL)
-	 * - base_url from provider configuration as fallback
-	 *
-	 * @return string Static site URL (e.g., "https://example.com/").
-	 */
-	private function getStaticSiteUrl(): string
-	{
-		// Get enabled instance for static_site deployment type.
-		$registry = ProviderRegistry::getInstance();
-		$instance = $registry->getEnabledInstanceForDeploymentType('static_site');
-
-		// If no enabled instance is configured, use relative URLs.
-		if (! $instance) {
-			return '';
-		}
-
-		$config = $instance['config'];
-
-		// Priority order:
-		// 1. public_url (local filesystem - where the static site will be accessed)
-		// 2. custom_domain (R2/S3 - this is the public-facing URL)
-		// 3. base_url from provider configuration
-		$baseUrl = '';
-
-		if (! empty($config['public_url'])) {
-			$baseUrl = $config['public_url'];
-		} elseif (! empty($config['custom_domain'])) {
-			$baseUrl = $config['custom_domain'];
-		} elseif (! empty($config['base_url'])) {
-			$baseUrl = $config['base_url'];
-		}
-
-		// If no base URL found, return empty string (will use relative URLs).
-		if (empty($baseUrl)) {
-			return '';
-		}
-
-		// Security: Validate URL to prevent open redirect and malicious schemes
-		// Only allow http:// and https:// protocols
-		$parsedUrl = \wp_parse_url($baseUrl);
-		if (
-			empty($parsedUrl) ||
-			! isset($parsedUrl['scheme']) ||
-			! \in_array(\strtolower($parsedUrl['scheme']), ['http', 'https'], true)
-		) {
-			// Invalid URL or non-HTTP(S) scheme - fall back to relative URLs
-			return '';
-		}
-
-		// Sanitize the URL
-		$baseUrl = \esc_url_raw($baseUrl, ['http', 'https']);
-		if (empty($baseUrl)) {
-			return '';
-		}
-
-		// Ensure trailing slash
-		return \rtrim($baseUrl, '/') . '/';
-	}
-
-	/**
-	 * Get static site URLs for React-based generation.
-	 *
-	 * Returns all URLs that need to be converted to static HTML,
-	 * along with the static site deployment URL.
-	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return \WP_REST_Response|\WP_Error
-	 */
-	public function getStaticSiteUrls(WP_REST_Request $request)
-	{
-		// Rate limiting: URL discovery is expensive, limit to 5 requests per minute
-		$rateLimitCheck = $this->checkRateLimit('url_discovery', 5, 60);
-		if (\is_wp_error($rateLimitCheck)) {
-			return $rateLimitCheck;
-		}
-
-		try {
-			// Increase execution time limit for URL discovery (can be slow in Playground).
-			// WordPress Playground may have strict timeout limits, so we try to increase it.
-			// Check if set_time_limit is available (disabled in safe mode)
-			if (\function_exists('set_time_limit')) {
-				@\set_time_limit(120); // 2 minutes
-
-				// Verify the timeout was actually set (may fail in safe mode or with max_execution_time)
-				// ini_get('max_execution_time') returns the current limit (string|false)
-				$currentLimit = @\ini_get('max_execution_time');
-				/** @phpstan-ignore-next-line -- ini_get can return false, defensive check */
-				$currentLimitInt = \is_string($currentLimit) ? (int) $currentLimit : false;
-				/** @phpstan-ignore-next-line -- $currentLimitInt can be false, defensive check */
-				if (false !== $currentLimitInt && $currentLimitInt < 120 && $currentLimitInt !== 0) {
-					// Timeout increase failed (0 means unlimited, so that's OK)
-					\error_log(\sprintf(
-						'Aether: set_time_limit() call did not increase timeout (current: %d, requested: 120)',
-						$currentLimitInt
-					));
-				}
-			} else {
-				// Log that we couldn't increase timeout for debugging purposes
-				\error_log('Aether: set_time_limit() not available, using default timeout');
-			}
-
-			// Discover all URLs.
-			$urlDiscovery = new URLDiscoveryService();
-			$urls = $urlDiscovery->discoverAllUrls();
-
-			/**
-			 * Filter static site URLs before returning to client.
-			 *
-			 * Allows adding, removing, or modifying URLs for static site generation.
-			 *
-			 * @param array $urls Array of URL objects with 'url' and 'type' keys.
-			 *
-			 * @example
-			 * add_filter('aether_static_site_urls', function($urls) {
-			 *     // Add custom URL
-			 *     $urls[] = [
-			 *         'url' => '/custom-page/',
-			 *         'type' => 'page',
-			 *     ];
-			 *     return $urls;
-			 * });
-			 */
-			$urls = \apply_filters('aether_static_site_urls', $urls);
-
-			// Get static site URL for URL rewriting.
-			$staticSiteUrl = $this->getStaticSiteUrl();
-
-			/**
-			 * Filter static site base URL.
-			 *
-			 * Allows modification of the deployment URL used for URL rewriting.
-			 *
-			 * @param string $staticSiteUrl The static site base URL.
-			 *
-			 * @example
-			 * add_filter('aether_static_site_base_url', function($url) {
-			 *     return 'https://custom-domain.com/';
-			 * });
-			 */
-			$staticSiteUrl = \apply_filters('aether_static_site_base_url', $staticSiteUrl);
-
-			return \rest_ensure_response([
-				'success' => true,
-				'urls' => $urls,
-				'staticSiteUrl' => $staticSiteUrl,
-			]);
-		} catch (\Exception $e) {
-			// Sanitize exception message to prevent information disclosure
-			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
-
-			return new WP_Error(
-				'url_discovery_failed',
-				\sprintf(\__('Failed to discover URLs: %s', 'aether-site-exporter'), $sanitizedMessage),
 				['status' => 500]
 			);
 		}

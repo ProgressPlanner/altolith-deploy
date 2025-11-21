@@ -73,32 +73,92 @@ export class PublishAPIService {
 	}
 
 	/**
-	 * Discover URLs for static site generation
+	 * Fetch all pages of a paginated URL endpoint.
 	 *
-	 * Calls the REST API to discover all URLs that need to be fetched.
-	 *
-	 * @return {Promise<Object>} Response with urls array and staticSiteUrl
+	 * @param {string}   endpoint       API endpoint path.
+	 * @param {Function} onPageComplete Optional callback after each page.
+	 * @return {Promise<Array>} All URLs from all pages.
 	 */
-	async discoverUrls() {
-		try {
+	async fetchAllPaginatedUrls( endpoint, onPageComplete = null ) {
+		const allUrls = [];
+		let page = 1;
+		let hasMore = true;
+
+		while ( hasMore ) {
 			const response = await this.apiFetch( {
-				path: '/aether/site-exporter/publish/steps/getStaticSiteUrls',
+				path: `${ endpoint }?page=${ page }`,
 				method: 'GET',
 			} );
 
-			if ( response.success ) {
-				return {
-					success: true,
-					urls: response.urls || [],
-					staticSiteUrl: response.staticSiteUrl || null,
-				};
+			if ( ! response.success ) {
+				throw new Error(
+					response.message ||
+						`Failed to fetch URLs from ${ endpoint }`
+				);
 			}
 
+			allUrls.push( ...( response.urls || [] ) );
+			hasMore = response.hasMore;
+			page = response.nextPage || page + 1;
+
+			if ( onPageComplete ) {
+				onPageComplete( {
+					page: page - 1,
+					urlsCount: allUrls.length,
+					total: response.total,
+					hasMore,
+				} );
+			}
+		}
+
+		return allUrls;
+	}
+
+	/**
+	 * Discover URLs for static site generation
+	 *
+	 * Calls paginated REST API endpoints to discover all URLs that need to be fetched.
+	 * Fetches posts, terms, authors, and archives in parallel where possible.
+	 *
+	 * @param {Function} onProgress Optional callback for progress updates.
+	 * @return {Promise<Object>} Response with urls array and staticSiteUrl
+	 */
+	async discoverUrls( onProgress = null ) {
+		try {
+			const allUrls = [];
+			const types = [ 'posts', 'terms', 'authors', 'archives' ];
+
+			// Fetch each type sequentially to avoid overwhelming the server
+			for ( const type of types ) {
+				if ( onProgress ) {
+					onProgress( { type, status: 'fetching' } );
+				}
+
+				const urls = await this.fetchAllPaginatedUrls(
+					`/aether/site-exporter/urls/${ type }`,
+					onProgress
+						? ( progress ) => onProgress( { type, ...progress } )
+						: null
+				);
+
+				allUrls.push( ...urls );
+
+				if ( onProgress ) {
+					onProgress( {
+						type,
+						status: 'complete',
+						count: urls.length,
+					} );
+				}
+			}
+
+			// Deduplicate URLs
+			const uniqueUrls = [ ...new Set( allUrls ) ];
+
 			return {
-				success: false,
-				message: response.message || 'Failed to discover URLs',
-				urls: [],
-				staticSiteUrl: null,
+				success: true,
+				urls: uniqueUrls,
+				staticSiteUrl: null, // Will be determined by provider config
 			};
 		} catch ( error ) {
 			return {

@@ -857,12 +857,12 @@ All critical compatibility issues have been resolved using a **universal impleme
 - Returns `exists: null` when WordPress.org check unavailable
 - Frontend handles gracefully with fallback behavior
 
-#### 5. Configurable Post Limits
-**File:** `includes/Utilities/Static/URLDiscoveryService.php`
-- Added `max_posts_for_discovery` setting (default: 10,000)
-- Range: 100-50,000 with validation
-- Prevents timeout on large sites
-- User can configure via settings
+#### 5. Paginated URL Discovery
+**File:** `includes/REST/URLDiscoveryController.php`
+- URL discovery now uses paginated REST API endpoints
+- Each request fetches 500 items maximum
+- Prevents PHP timeouts on large sites
+- Types: posts, terms, authors, archives
 
 #### 6. IndexedDB Cache System
 **Files:** `assets/src/utils/indexedDB.js`, `assets/src/utils/staticSiteCache.js`

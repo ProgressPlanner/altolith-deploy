@@ -26,8 +26,20 @@ async function handler( context ) {
 		'getStaticSiteUrls'
 	);
 
-	// Discover URLs from API
-	const urlResponse = await api.discoverUrls();
+	// Discover URLs from API with progress updates
+	const urlResponse = await api.discoverUrls( ( progress ) => {
+		if ( progress.status === 'fetching' ) {
+			setStatusMessage(
+				sprintf(
+					/* translators: %s: Type being fetched (posts, terms, etc.) */
+					__( 'Fetching %s…', 'aether-site-exporter' ),
+					progress.type
+				),
+				'progress',
+				'getStaticSiteUrls'
+			);
+		}
+	} );
 
 	if ( ! urlResponse.success ) {
 		throw new Error(
