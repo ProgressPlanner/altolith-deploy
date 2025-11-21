@@ -12,7 +12,6 @@ namespace Aether\SiteExporter\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
-use Aether\SiteExporter\Plugin;
 
 /**
  * Configuration REST endpoints.
