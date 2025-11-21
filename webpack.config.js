@@ -65,6 +65,7 @@ module.exports = {
 		'admin-settings': './assets/src/admin-settings/index.js',
 		'admin-common': './assets/src/admin-common/index.js',
 		export: './assets/src/publish/index.js',
+		'provider-local-filesystem': './assets/src/providers/local-filesystem/index.js',
 	},
 	output: {
 		...defaultConfig.output,
