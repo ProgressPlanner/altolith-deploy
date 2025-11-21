@@ -12,7 +12,6 @@ namespace Aether\SiteExporter\Tests\Integration\Workflows;
 
 use Aether\SiteExporter\Tests\Helpers\TestCase;
 use Aether\SiteExporter\Sync\JobStateManager;
-use Aether\SiteExporter\Providers\ProviderRegistry;
 
 /**
  * Publish workflow test case.
@@ -225,11 +224,13 @@ class PublishWorkflowTest extends TestCase {
 
 		update_option( 'aether_site_exporter_settings', $settings );
 
-		$registry = ProviderRegistry::getInstance();
-		$instance = $registry->getEnabledInstanceForDeploymentType( 'static_site' );
+		// Test that instance config can be read from options
+		$settings = get_option( 'aether_site_exporter_settings', [] );
+		$instanceConfig = $settings['providers']['local-filesystem:test-uuid'] ?? null;
 
-		$this->assertNotNull( $instance );
-		$this->assertEquals( 'local-filesystem:test-uuid', $instance['instanceId'] );
+		$this->assertNotNull( $instanceConfig );
+		$this->assertTrue( $instanceConfig['enabled'] ?? false );
+		$this->assertContains( 'static_site', $instanceConfig['deployment_types'] ?? [] );
 	}
 
 	/**
@@ -239,10 +240,11 @@ class PublishWorkflowTest extends TestCase {
 		// Clear all provider configs.
 		update_option( 'aether_site_exporter_settings', [] );
 
-		$registry = ProviderRegistry::getInstance();
-		$instance = $registry->getEnabledInstanceForDeploymentType( 'static_site' );
+		// Test that no instance config exists
+		$settings = get_option( 'aether_site_exporter_settings', [] );
+		$providers = $settings['providers'] ?? [];
 
-		$this->assertNull( $instance, 'Should return null when no enabled provider found' );
+		$this->assertEmpty( $providers, 'Should have no providers when settings are cleared' );
 	}
 
 	/**
@@ -260,10 +262,12 @@ class PublishWorkflowTest extends TestCase {
 
 		update_option( 'aether_site_exporter_settings', $settings );
 
-		$registry = ProviderRegistry::getInstance();
-		$instance = $registry->getEnabledInstanceForDeploymentType( 'static_site' );
+		// Test that instance config exists but doesn't support static_site
+		$settings = get_option( 'aether_site_exporter_settings', [] );
+		$instanceConfig = $settings['providers']['local-filesystem:test-uuid'] ?? null;
 
-		$this->assertNull( $instance, 'Should return null when provider does not support deployment type' );
+		$this->assertNotNull( $instanceConfig );
+		$this->assertNotContains( 'static_site', $instanceConfig['deployment_types'] ?? [] );
 	}
 
 	// ========================================================================

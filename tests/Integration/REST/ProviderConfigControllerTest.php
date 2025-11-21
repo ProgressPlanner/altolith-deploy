@@ -12,7 +12,6 @@ namespace Aether\SiteExporter\Tests\Integration\REST;
 
 use Aether\SiteExporter\Tests\Helpers\TestCase;
 use Aether\SiteExporter\REST\ProviderConfigController;
-use Aether\SiteExporter\Providers\ProviderRegistry;
 use Aether\SiteExporter\Utilities\CredentialEncryption;
 use WP_REST_Request;
 
