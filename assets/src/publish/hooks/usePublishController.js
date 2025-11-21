@@ -12,7 +12,6 @@ import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
 import { useBlueprintGenerator } from './useBlueprintGenerator';
 import apiFetch from '../../utils/api';
-import { calculateOverallProgress } from '../utils/progressManager';
 import { debug, debugError } from '../../utils/debug';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 import { executeSteps } from '../executor';
@@ -97,11 +96,8 @@ export function usePublishController( publishState ) {
 					);
 				}
 
-				const overallProgress = calculateOverallProgress( {
-					step: 'uploadStaticSiteFiles',
-					progress: stepProgress,
-				} );
-				setOverallProgressValue( overallProgress );
+				// Use step progress directly as overall progress for upload steps
+				setOverallProgressValue( stepProgress );
 				setStepProgress( 'uploadStaticSiteFiles', stepProgress );
 			}
 		}

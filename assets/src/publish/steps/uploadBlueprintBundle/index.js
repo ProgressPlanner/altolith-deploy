@@ -9,7 +9,6 @@
 import { __, sprintf, _n } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
 import { formatFileSize } from '../../../utils/helpers';
-import { calculateOverallProgress } from '../../utils/progressManager';
 import {
 	createFileContext,
 	FILE_TYPES,
@@ -35,7 +34,6 @@ async function handler( context ) {
 		siteUrl,
 		setStatusMessage,
 		setStepProgress,
-		setOverallProgressValue,
 	} = context;
 
 	const providers = blueprintBundleProviders;
@@ -124,18 +122,12 @@ async function handler( context ) {
 			} );
 
 			// Update progress
-			if ( setStepProgress && setOverallProgressValue ) {
+			if ( setStepProgress ) {
 				const stepProgress = Math.min(
 					100,
 					Math.round( ( successCount / providers.length ) * 100 )
 				);
 				setStepProgress( 'uploadBlueprintBundle', stepProgress );
-				setOverallProgressValue(
-					calculateOverallProgress( {
-						step: 'uploadBlueprintBundle',
-						progress: stepProgress,
-					} )
-				);
 			}
 		} catch ( error ) {
 			failureCount++;
