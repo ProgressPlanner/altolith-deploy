@@ -12,6 +12,8 @@ namespace Aether\SiteExporter;
 use Aether\SiteExporter\Admin\PluginDependencyManager;
 use Aether\SiteExporter\Sync\AssetDiscoveryService;
 use Aether\SiteExporter\Utilities\TempDirectoryManager;
+use Aether\SiteExporter\Utilities\CorsHandler;
+use Aether\SiteExporter\Utilities\CookieManager;
 use Aether\SiteExporter\Providers\ProviderRegistry;
 use Aether\SiteExporter\Providers\LocalFilesystemProvider;
 
@@ -33,6 +35,20 @@ class Plugin
 	 * @var AssetDiscoveryService
 	 */
 	private AssetDiscoveryService $assetDiscovery;
+
+	/**
+	 * CORS Handler instance.
+	 *
+	 * @var CorsHandler
+	 */
+	private CorsHandler $corsHandler;
+
+	/**
+	 * Cookie Manager instance.
+	 *
+	 * @var CookieManager
+	 */
+	private CookieManager $cookieManager;
 
 	/**
 	 * Get plugin instance.
@@ -62,8 +78,8 @@ class Plugin
 	{
 		// Enable iframe cookie authentication by setting SameSite=None on WordPress auth cookies.
 		// Required for WordPress Playground which runs in an iframe.
-		\add_action('set_auth_cookie', [ $this, 'setSameSiteCookies' ], 10, 6);
-		\add_action('set_logged_in_cookie', [ $this, 'setSameSiteCookies' ], 10, 6);
+		\add_action('set_auth_cookie', [ $this->cookieManager, 'setSameSiteCookies' ], 10, 6);
+		\add_action('set_logged_in_cookie', [ $this->cookieManager, 'setSameSiteCookies' ], 10, 6);
 
 		// Force anonymous user context for static site generation requests.
 		// This ensures fetched content matches anonymous visitor view, even if cookies/sessions are present.
@@ -78,6 +94,12 @@ class Plugin
 
 		// Initialize asset discovery service.
 		$this->assetDiscovery = new AssetDiscoveryService();
+
+		// Initialize CORS handler.
+		$this->corsHandler = new CorsHandler();
+
+		// Initialize cookie manager.
+		$this->cookieManager = new CookieManager();
 
 		// Initialize provider registry and register providers.
 		$this->initProviders();
@@ -267,9 +289,9 @@ class Plugin
 	{
 		// Add CORS headers for all REST API requests (required for WordPress Playground).
 		// Use multiple hooks to ensure headers are sent for both preflight and actual requests.
-		\add_filter('rest_pre_dispatch', [ $this, 'handleCorsPreflight' ], 10, 3);
-		\add_filter('rest_pre_serve_request', [ $this, 'addCorsHeadersFilter' ], 0, 4);
-		\add_action('rest_send_cors_headers', [ $this, 'addCorsHeadersAction' ]);
+		\add_filter('rest_pre_dispatch', [ $this->corsHandler, 'handlePreflight' ], 10, 3);
+		\add_filter('rest_pre_serve_request', [ $this->corsHandler, 'addHeadersFilter' ], 0, 4);
+		\add_action('rest_send_cors_headers', [ $this->corsHandler, 'addHeadersAction' ]);
 
 		// Initialize REST controllers.
 		$settingsController = new REST\SettingsController();
@@ -302,172 +324,6 @@ class Plugin
 		$publishStepsController->registerRoutes();
 	}
 
-	/**
-	 * Handle CORS preflight requests (OPTIONS).
-	 *
-	 * WordPress REST API doesn't automatically handle OPTIONS requests for CORS.
-	 * This method intercepts OPTIONS requests and sends appropriate CORS headers.
-	 *
-	 * @param mixed           $result  Response to replace the requested value with.
-	 * @param \WP_REST_Server $server  Server instance.
-	 * @param \WP_REST_Request $request Request used to generate the response.
-	 * @return mixed Response or null to continue with normal processing.
-	 */
-	public function handleCorsPreflight($result, $server, $request)
-	{
-		// Only handle OPTIONS requests for Aether endpoints.
-		if ($request->get_method() !== 'OPTIONS') {
-			return $result;
-		}
-
-		$route = $request->get_route();
-		if (! \str_starts_with($route, '/aether/')) {
-			return $result;
-		}
-
-		// Send CORS headers for preflight request.
-		$this->sendCorsHeaders();
-
-		// Return empty response for OPTIONS request.
-		return new \WP_REST_Response(null, 204);
-	}
-
-	/**
-	 * Add CORS headers via filter (rest_pre_serve_request).
-	 *
-	 * @param bool              $served Whether the request has already been served.
-	 * @param \WP_REST_Response $result Response data.
-	 * @param mixed             $request Request object (may be WP_REST_Request or other types).
-	 * @param \WP_REST_Server   $server Server instance.
-	 * @return bool Unchanged served status.
-	 */
-	public function addCorsHeadersFilter($served, $result, $request, $server) // phpcs:ignore VariableAnalysis.CodeAnalysis
-	{
-		// Only add headers for Aether endpoints
-		if ($request instanceof \WP_REST_Request) {
-			$route = $request->get_route();
-			if (! \str_starts_with($route, '/aether/')) {
-				return $served;
-			}
-		}
-
-		$this->sendCorsHeaders();
-
-		return $served;
-	}
-
-	/**
-	 * Add CORS headers via action (rest_send_cors_headers).
-	 *
-	 * @return void
-	 */
-	public function addCorsHeadersAction(): void
-	{
-		// Get current request from global REST server
-		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- WordPress global variable
-		global $wp_rest_server; // phpcs:ignore Squiz.NamingConventions.ValidVariableName.NotCamelCaps
-		// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase -- WordPress global variable
-		if (! $wp_rest_server) { // phpcs:ignore Squiz.NamingConventions.ValidVariableName.NotCamelCaps
-			return;
-		}
-
-		// Check if this is an Aether endpoint by checking the request URI
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- CORS headers don't need nonce
-		$requestUri = \sanitize_text_field(\wp_unslash($_SERVER['REQUEST_URI'] ?? ''));
-		if (! \str_contains($requestUri, '/wp-json/aether/')) {
-			return;
-		}
-
-		$this->sendCorsHeaders();
-	}
-
-	/**
-	 * Send CORS headers.
-	 *
-	 * Internal method to actually send the headers with origin whitelisting.
-	 *
-	 * @return void
-	 */
-	private function sendCorsHeaders(): void
-	{
-		// Prevent duplicate headers.
-		if (\headers_sent()) {
-			return;
-		}
-
-		// Get the origin from the request
-		$origin = isset($_SERVER['HTTP_ORIGIN']) ? \esc_url_raw(\wp_unslash($_SERVER['HTTP_ORIGIN'])) : '';
-
-		// Define allowed origins (WordPress Playground and local development)
-		$allowedOrigins = [
-			'https://playground.wordpress.net',
-			'https://wasm.wordpress.net',
-		];
-
-		// Allow same-origin requests (current site)
-		$siteUrl = \get_site_url();
-		if ($siteUrl) {
-			$allowedOrigins[] = $siteUrl;
-		}
-
-		// Allow local development origins (requires explicit opt-in for security)
-		// Define AETHER_ALLOW_LOCAL_CORS in wp-config.php to enable
-		if (\defined('WP_DEBUG') && WP_DEBUG && \defined('AETHER_ALLOW_LOCAL_CORS') && constant('AETHER_ALLOW_LOCAL_CORS')) {
-			// Security: Only allow common development ports to reduce attack surface
-			$commonDevPorts = ['3000', '3001', '8000', '8080', '8888'];
-
-			// Allow localhost with common dev ports
-			if ($origin && \preg_match('/^https?:\/\/localhost:(\d+)$/', $origin, $matches)) {
-				if (\in_array($matches[1], $commonDevPorts, true)) {
-					$allowedOrigins[] = $origin;
-				}
-			}
-
-			// Allow 127.0.0.1 with common dev ports
-			if ($origin && \preg_match('/^https?:\/\/127\.0\.0\.1:(\d+)$/', $origin, $matches)) {
-				if (\in_array($matches[1], $commonDevPorts, true)) {
-					$allowedOrigins[] = $origin;
-				}
-			}
-		}
-
-		// Allow WordPress Playground dynamic subdomains (e.g., https://playground.wordpress.net/*)
-		// These are safe because they're official WordPress infrastructure
-		$isPlaygroundOrigin = $origin && (
-			\str_starts_with($origin, 'https://playground.wordpress.net') ||
-			\str_starts_with($origin, 'https://wasm.wordpress.net')
-		);
-		if ($isPlaygroundOrigin) {
-			$allowedOrigins[] = $origin;
-		}
-
-		// Apply filter to allow developers to add custom allowed origins
-		$allowedOrigins = \apply_filters('aether_site_exporter_cors_allowed_origins', $allowedOrigins);
-
-		// Check if the request origin is in the allowed list
-		if ($origin && \in_array($origin, $allowedOrigins, true)) {
-			\header('Access-Control-Allow-Origin: ' . $origin);
-			\header('Access-Control-Allow-Credentials: true');
-		} elseif (!$origin) {
-			// No origin header (same-origin request or non-browser client)
-			// Allow it but don't send CORS headers
-			return;
-		} else {
-			// Origin not allowed - don't send CORS headers
-			// The browser will block the request
-			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf(
-					'Aether: Blocked CORS request from disallowed origin: %s',
-					$origin
-				));
-			}
-			return;
-		}
-
-		\header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-		\header('Access-Control-Allow-Headers: Content-Type, Authorization, X-WP-Nonce');
-		\header('Access-Control-Max-Age: 86400'); // Cache preflight for 24 hours.
-	}
 
 	/**
 	 * Force anonymous user context for static site generation requests.
@@ -504,91 +360,6 @@ class Plugin
 		}
 	}
 
-	/**
-	 * Set SameSite=None on WordPress authentication cookies.
-	 *
-	 * Required for WordPress Playground which runs in an iframe.
-	 * Modern browsers block third-party cookies by default unless SameSite=None is set.
-	 *
-	 * @param string $authCookie    Authentication cookie value.
-	 * @param int    $expire        Cookie expiration time.
-	 * @param int    $expiration    Session expiration timestamp.
-	 * @param int    $userId        User ID.
-	 * @param string $scheme        Authentication scheme.
-	 * @param string $token         Session token.
-	 * @return void
-	 */
-	public function setSameSiteCookies($authCookie, $expire, $expiration, $userId, $scheme, $token): void // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-	{
-		// Determine which cookies to set based on the action hook.
-		$action = \current_action();
-
-		// Check if site is using HTTPS or if this is a secure auth scheme
-		// SameSite=None requires Secure flag, but Secure flag requires HTTPS
-		$isSecure = \is_ssl() || ('secure_auth' === $scheme);
-
-		// Use SameSite=None for HTTPS (allows cross-site/iframe usage)
-		// Fall back to SameSite=Lax for HTTP sites (still reasonably secure)
-		$sameSite = $isSecure ? 'None' : 'Lax';
-
-		if ('set_auth_cookie' === $action) {
-			// Set the auth cookie (can be AUTH_COOKIE or SECURE_AUTH_COOKIE based on scheme).
-			$authCookieName = $isSecure ? SECURE_AUTH_COOKIE : AUTH_COOKIE;
-
-			\setcookie(
-				$authCookieName,
-				$authCookie,
-				[
-					'expires'  => $expire,
-					'path'     => PLUGINS_COOKIE_PATH,
-					'domain'   => COOKIE_DOMAIN,
-					'secure'   => $isSecure,
-					'httponly' => true,
-					'samesite' => $sameSite,
-				]
-			);
-
-			\setcookie(
-				$authCookieName,
-				$authCookie,
-				[
-					'expires'  => $expire,
-					'path'     => ADMIN_COOKIE_PATH,
-					'domain'   => COOKIE_DOMAIN,
-					'secure'   => $isSecure,
-					'httponly' => true,
-					'samesite' => $sameSite,
-				]
-			);
-		} elseif ('set_logged_in_cookie' === $action) {
-			// Set the logged-in cookie.
-			\setcookie(
-				LOGGED_IN_COOKIE,
-				$authCookie,
-				[
-					'expires'  => $expire,
-					'path'     => COOKIEPATH,
-					'domain'   => COOKIE_DOMAIN,
-					'secure'   => $isSecure,
-					'httponly' => true,
-					'samesite' => $sameSite,
-				]
-			);
-
-			\setcookie(
-				LOGGED_IN_COOKIE,
-				$authCookie,
-				[
-					'expires'  => $expire,
-					'path'     => SITECOOKIEPATH,
-					'domain'   => COOKIE_DOMAIN,
-					'secure'   => $isSecure,
-					'httponly' => true,
-					'samesite' => $sameSite,
-				]
-			);
-		}
-	}
 
 	/**
 	 * Get the asset discovery service.
