@@ -1,7 +1,5 @@
 /**
- * Error Parser Test Suite
- *
- * Tests for error response parsing utility.
+ * Error Parser Tests
  *
  * @package
  */
@@ -11,148 +9,103 @@ import {
 	parseErrorResponseWithStatus,
 } from '../errorParser';
 
-describe( 'parseErrorResponse', () => {
-	it( 'should parse Cloudflare API error format', () => {
-		const response = JSON.stringify( {
-			errors: [ { message: 'Worker deployment failed' } ],
+describe( 'errorParser', () => {
+	describe( 'parseErrorResponse()', () => {
+		test( 'should return default message for empty response', () => {
+			expect( parseErrorResponse( '', 'Default error' ) ).toBe( 'Default error' );
+			expect( parseErrorResponse( null, 'Default error' ) ).toBe( 'Default error' );
+			expect( parseErrorResponse( undefined, 'Default error' ) ).toBe( 'Default error' );
 		} );
 
-		const result = parseErrorResponse( response, 'Default message' );
-
-		expect( result ).toBe( 'Worker deployment failed' );
-	} );
-
-	it( 'should parse generic error format', () => {
-		const response = JSON.stringify( {
-			error: 'Invalid credentials',
+		test( 'should parse API errors array format', () => {
+			const response = JSON.stringify( {
+				errors: [ { message: 'First error message' } ],
+			} );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'First error message' );
 		} );
 
-		const result = parseErrorResponse( response, 'Default message' );
-
-		expect( result ).toBe( 'Invalid credentials' );
-	} );
-
-	it( 'should parse message format', () => {
-		const response = JSON.stringify( {
-			message: 'Connection timeout',
+		test( 'should handle empty errors array', () => {
+			const response = JSON.stringify( { errors: [] } );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Default' );
 		} );
 
-		const result = parseErrorResponse( response, 'Default message' );
-
-		expect( result ).toBe( 'Connection timeout' );
-	} );
-
-	it( 'should handle plain text responses', () => {
-		const response = 'Internal server error';
-
-		const result = parseErrorResponse( response, 'Default message' );
-
-		expect( result ).toBe( 'Internal server error' );
-	} );
-
-	it( 'should return default message for empty response', () => {
-		const result = parseErrorResponse( '', 'Default message' );
-
-		expect( result ).toBe( 'Default message' );
-	} );
-
-	it( 'should return default message for null response', () => {
-		const result = parseErrorResponse( null, 'Default message' );
-
-		expect( result ).toBe( 'Default message' );
-	} );
-
-	it( 'should handle empty Cloudflare errors array', () => {
-		const response = JSON.stringify( {
-			errors: [],
+		test( 'should handle errors array without message property', () => {
+			const response = JSON.stringify( { errors: [ { code: 'ERR_001' } ] } );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Default' );
 		} );
 
-		const result = parseErrorResponse( response, 'Default message' );
-
-		expect( result ).toBe( 'Default message' );
-	} );
-
-	it( 'should handle Cloudflare errors without message', () => {
-		const response = JSON.stringify( {
-			errors: [ { code: 1234 } ],
+		test( 'should parse generic error string format', () => {
+			const response = JSON.stringify( { error: 'Something went wrong' } );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Something went wrong' );
 		} );
 
-		const result = parseErrorResponse( response, 'Default message' );
-
-		expect( result ).toBe( 'Default message' );
-	} );
-
-	it( 'should handle object error format', () => {
-		const response = JSON.stringify( {
-			error: { detail: 'Complex error object' },
+		test( 'should stringify error object', () => {
+			const response = JSON.stringify( { error: { code: 'ERR', details: 'info' } } );
+			const result = parseErrorResponse( response, 'Default' );
+			expect( result ).toContain( 'ERR' );
+			expect( result ).toContain( 'details' );
 		} );
 
-		const result = parseErrorResponse( response, 'Default message' );
-
-		expect( result ).toBe( '{"detail":"Complex error object"}' );
-	} );
-
-	it( 'should handle invalid JSON gracefully', () => {
-		const response = '{ invalid json }';
-
-		const result = parseErrorResponse( response, 'Default message' );
-
-		expect( result ).toBe( '{ invalid json }' );
-	} );
-} );
-
-describe( 'parseErrorResponseWithStatus', () => {
-	it( 'should include status code in error message', () => {
-		const response = JSON.stringify( {
-			error: 'Not found',
+		test( 'should parse message format', () => {
+			const response = JSON.stringify( { message: 'Error message here' } );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Error message here' );
 		} );
 
-		const result = parseErrorResponseWithStatus(
-			response,
-			404,
-			'Resource fetch'
-		);
-
-		expect( result ).toBe( 'Not found (HTTP 404)' );
-	} );
-
-	it( 'should not duplicate status code if already in message', () => {
-		const response = JSON.stringify( {
-			error: 'Not found (404)',
+		test( 'should return default for unrecognized JSON format', () => {
+			const response = JSON.stringify( { unknown: 'format' } );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Default' );
 		} );
 
-		const result = parseErrorResponseWithStatus(
-			response,
-			404,
-			'Resource fetch'
-		);
-
-		expect( result ).toBe( 'Not found (404)' );
-	} );
-
-	it( 'should use operation name when no specific error', () => {
-		const response = '';
-
-		const result = parseErrorResponseWithStatus(
-			response,
-			500,
-			'Worker deployment'
-		);
-
-		expect( result ).toBe( 'Worker deployment failed (HTTP 500)' );
-	} );
-
-	it( 'should handle missing status code', () => {
-		const response = JSON.stringify( {
-			error: 'Something went wrong',
+		test( 'should return plain text for invalid JSON', () => {
+			expect( parseErrorResponse( 'Plain text error', 'Default' ) ).toBe( 'Plain text error' );
 		} );
 
-		const result = parseErrorResponseWithStatus(
-			response,
-			null,
-			'Operation'
-		);
+		test( 'should prioritize errors array over other formats', () => {
+			const response = JSON.stringify( {
+				errors: [ { message: 'Array error' } ],
+				error: 'Generic error',
+				message: 'Message error',
+			} );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Array error' );
+		} );
 
-		expect( result ).toBe( 'Something went wrong' );
+		test( 'should prioritize error over message', () => {
+			const response = JSON.stringify( {
+				error: 'Generic error',
+				message: 'Message error',
+			} );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Generic error' );
+		} );
+	} );
+
+	describe( 'parseErrorResponseWithStatus()', () => {
+		test( 'should add HTTP status to error message', () => {
+			const response = JSON.stringify( { message: 'Not found' } );
+			const result = parseErrorResponseWithStatus( response, 404, 'Resource fetch' );
+			expect( result ).toBe( 'Not found (HTTP 404)' );
+		} );
+
+		test( 'should use operation name for default message', () => {
+			const result = parseErrorResponseWithStatus( '', null, 'Worker deployment' );
+			expect( result ).toBe( 'Worker deployment failed' );
+		} );
+
+		test( 'should not duplicate status code if already in message', () => {
+			const response = JSON.stringify( { message: 'Error 500: Server error' } );
+			const result = parseErrorResponseWithStatus( response, 500, 'API call' );
+			expect( result ).toBe( 'Error 500: Server error' );
+		} );
+
+		test( 'should handle null status code', () => {
+			const response = JSON.stringify( { error: 'Some error' } );
+			const result = parseErrorResponseWithStatus( response, null, 'Operation' );
+			expect( result ).toBe( 'Some error' );
+		} );
+
+		test( 'should handle zero status code', () => {
+			const response = JSON.stringify( { error: 'Network error' } );
+			const result = parseErrorResponseWithStatus( response, 0, 'Request' );
+			expect( result ).toBe( 'Network error' );
+		} );
 	} );
 } );
