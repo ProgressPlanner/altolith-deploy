@@ -118,4 +118,3 @@ class ProviderMetadataMapper
 		return $settingsFields;
 	}
 }
-

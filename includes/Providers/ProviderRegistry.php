@@ -33,7 +33,7 @@ class ProviderRegistry
 	/**
 	 * Whether providers have been discovered.
 	 *
-	 * @var bool
+	 * @var boolean
 	 */
 	private bool $discovered = false;
 

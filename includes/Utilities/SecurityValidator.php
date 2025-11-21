@@ -11,6 +11,8 @@
 
 namespace Aether\SiteExporter\Utilities;
 
+use Aether\SiteExporter\Utilities\PathValidator;
+
 \defined('ABSPATH') || exit;
 
 /**
@@ -184,4 +186,3 @@ class SecurityValidator
 		];
 	}
 }
-

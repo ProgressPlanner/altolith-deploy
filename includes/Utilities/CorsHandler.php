@@ -213,4 +213,3 @@ class CorsHandler
 		return $localOrigins;
 	}
 }
-
