@@ -14,6 +14,7 @@ use Aether\SiteExporter\Sync\AssetDiscoveryService;
 use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use Aether\SiteExporter\Utilities\CorsHandler;
 use Aether\SiteExporter\Utilities\CookieManager;
+use Aether\SiteExporter\Utilities\SecurityValidator;
 use Aether\SiteExporter\Providers\ProviderRegistry;
 use Aether\SiteExporter\Providers\LocalFilesystemProvider;
 
@@ -508,13 +509,10 @@ class Plugin
 		// Note: Source paths can be absolute (from blueprint bundle generation) or relative
 		// PathValidator will ensure absolute paths are within ABSPATH
 		// Destination paths must always be relative (from instance config)
-		if (
-			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $sourcePath) ||
-			\strpos($sourcePath, "\0") !== false ||
-			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $destinationPath) ||
-			\preg_match('#^[/\\\\]#', $destinationPath) ||
-			\strpos($destinationPath, "\0") !== false
-		) {
+		$sourceValidation = SecurityValidator::validatePathComprehensive($sourcePath, null, false);
+		$destinationValidation = SecurityValidator::validateExportPath($destinationPath);
+
+		if (! $sourceValidation['valid'] || ! $destinationValidation['valid']) {
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
 				\error_log('Aether: Invalid path for blueprint bundle copy');
 			}

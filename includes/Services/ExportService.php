@@ -13,6 +13,7 @@ namespace Aether\SiteExporter\Services;
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Sync\JobStateManager;
 use Aether\SiteExporter\Utilities\TempDirectoryManager;
+use Aether\SiteExporter\Utilities\SecurityValidator;
 use Aether\SiteExporter\Providers\ProviderRegistry;
 use Aether\SiteExporter\Services\ZipService;
 use Aether\SiteExporter\Services\FileBatchService;
@@ -111,7 +112,7 @@ class ExportService
 		}
 
 		// Security: Validate export_path is a string and doesn't contain null bytes
-		if (!\is_string($exportPath) || \strpos($exportPath, "\0") !== false) {
+		if (!\is_string($exportPath) || !SecurityValidator::isValidPath($exportPath)) {
 			$exportPath = 'blueprint-bundle/bundle.zip';
 		}
 
@@ -120,11 +121,8 @@ class ExportService
 
 		// Security: Reject paths with path traversal sequences, absolute paths, or null bytes.
 		// CRITICAL: Validate BEFORE any filesystem operations.
-		if (
-			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $exportDir) ||
-			\preg_match('#^[/\\\\]#', $exportDir) ||
-			\strpos($exportDir, "\0") !== false
-		) {
+		$exportDirValidation = SecurityValidator::validateExportPath($exportDir);
+		if (! $exportDirValidation['valid']) {
 			return new \WP_Error(
 				'invalid_export_path',
 				\__('Invalid export path: path traversal not allowed', 'aether-site-exporter'),
@@ -272,13 +270,8 @@ class ExportService
 				$slug = \sanitize_file_name($slug);
 
 				// Security: Validate slug doesn't contain path traversal, null bytes, or dangerous values
-				if (
-					empty($slug) ||
-					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
-					\strpos($slug, "\0") !== false ||
-					$slug === '.' ||
-					$slug === '..'
-				) {
+				$slugValidation = SecurityValidator::validateSlug($slug);
+				if (! $slugValidation['valid']) {
 					continue;
 				}
 
@@ -321,13 +314,8 @@ class ExportService
 				$slug = \sanitize_file_name($slug);
 
 				// Security: Validate slug doesn't contain path traversal, null bytes, or dangerous values
-				if (
-					empty($slug) ||
-					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
-					\strpos($slug, "\0") !== false ||
-					$slug === '.' ||
-					$slug === '..'
-				) {
+				$slugValidation = SecurityValidator::validateSlug($slug);
+				if (! $slugValidation['valid']) {
 					continue;
 				}
 
@@ -824,13 +812,8 @@ class ExportService
 	{
 		// Security: Sanitize and validate slug.
 		$pluginSlug = \sanitize_file_name($pluginSlug);
-		if (
-			empty($pluginSlug) ||
-			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $pluginSlug) ||
-			\strpos($pluginSlug, "\0") !== false ||
-			$pluginSlug === '.' ||
-			$pluginSlug === '..'
-		) {
+		$slugValidation = SecurityValidator::validateSlug($pluginSlug);
+		if (! $slugValidation['valid']) {
 			return new \WP_Error(
 				'invalid_plugin_slug',
 				\__('Invalid plugin slug', 'aether-site-exporter'),
@@ -955,13 +938,8 @@ class ExportService
 	{
 		// Security: Sanitize and validate slug.
 		$themeSlug = \sanitize_file_name($themeSlug);
-		if (
-			empty($themeSlug) ||
-			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $themeSlug) ||
-			\strpos($themeSlug, "\0") !== false ||
-			$themeSlug === '.' ||
-			$themeSlug === '..'
-		) {
+		$slugValidation = SecurityValidator::validateSlug($themeSlug);
+		if (! $slugValidation['valid']) {
 			return new \WP_Error(
 				'invalid_theme_slug',
 				\__('Invalid theme slug', 'aether-site-exporter'),
@@ -1161,16 +1139,13 @@ class ExportService
 		}
 
 		// Security: Validate export_path.
-		if (!\is_string($exportPath) || \strpos($exportPath, "\0") !== false) {
+		if (!\is_string($exportPath) || !SecurityValidator::isValidPath($exportPath)) {
 			$exportPath = 'blueprint-bundle/bundle.zip';
 		}
 
 		$exportDir = \dirname($exportPath);
-		if (
-			\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $exportDir) ||
-			\preg_match('#^[/\\\\]#', $exportDir) ||
-			\strpos($exportDir, "\0") !== false
-		) {
+		$exportDirValidation = SecurityValidator::validateExportPath($exportDir);
+		if (! $exportDirValidation['valid']) {
 			return new \WP_Error(
 				'invalid_export_path',
 				\__('Invalid export path: path traversal not allowed', 'aether-site-exporter'),
@@ -1285,5 +1260,4 @@ class ExportService
 
 		return $count;
 	}
-
 }
