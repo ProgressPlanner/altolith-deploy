@@ -4,7 +4,7 @@ Static site generation and deployment orchestration for the Aether plugin.
 
 ## Overview
 
-The publish workflow converts a WordPress site running in WordPress Playground into a static site and deploys it to a cloud provider. It uses a **hook-based job orchestration** model (`@wordpress/hooks`) with React and PHP coordination via REST API.
+The publish workflow converts a WordPress site running in WordPress Playground into a static site and deploys it to a cloud provider. It uses a **hook-based step orchestration** model (`@wordpress/hooks`) with React and PHP coordination via REST API.
 
 ## Architecture
 
@@ -24,24 +24,23 @@ The workflow is split between React (client-side) and PHP (server-side):
 - `prepare_upload_manifest` - List files for upload
 - Job status management and persistence
 
-### Job Orchestration
+### Step-Based Workflow
 
-The workflow uses a three-level hierarchy (Jobs → Phases → Steps) with automatic dependency resolution:
+Steps are defined in `steps/index.js` and registered via `@wordpress/hooks`. Each step:
+- Has a unique ID, label, and description
+- Declares dependencies on other steps
+- Declares what data it provides to subsequent steps
+- Optionally supports progress tracking
 
-**Jobs:**
-1. **buildBlueprintBundle** - Create WordPress Playground blueprint bundle
-   - discover phase → discoverBlueprintBundleAssets step
-   - prepare phase → createBlueprintBundle step
-   - generate phase → generateBlueprint step
+**Steps:**
+1. **discoverBlueprintBundleAssets** - Find plugins, themes, and uploads to include
+2. **createBlueprintBundle** - Package wp-content.zip archive
+3. **generateBlueprint** - Create blueprint-bundle.zip with blueprint.json
+4. **uploadBlueprintBundle** - Upload blueprint bundle to providers
+5. **getStaticSiteUrls** - Discover all URLs for static site generation
+6. **uploadStaticFiles** - Generate and upload static HTML/CSS/JS
 
-2. **publishStaticSite** - Generate static HTML site
-   - discover phase → getStaticSiteUrls step
-
-3. **uploadAssets** - Upload generated assets to providers
-   - blueprintBundle phase → uploadBundle step (depends on buildBlueprintBundle)
-   - staticSite phase → uploadStaticFiles step (depends on publishStaticSite)
-
-Jobs register via `@wordpress/hooks` and can be extended by third-party plugins. See `WORKFLOW_REFACTOR.md` for details.
+Steps register via `@wordpress/hooks` and can be extended by third-party plugins via the `aether.publish.steps` filter.
 
 ## Directory Structure
 
@@ -52,24 +51,22 @@ publish/
 │   ├── PublishPage.js           # Full-page publish interface
 │   └── ...
 ├── hooks/               # Custom hooks for publish logic
-│   ├── usePublishController.js  # Main orchestration using job system
+│   ├── usePublishController.js  # Main orchestration using step system
 │   ├── useStaticSiteGenerator.js  # Static site generation (React)
 │   ├── usePublishAPI.js         # REST API calls
 │   ├── useBlueprintGenerator.js # Blueprint generation
 │   └── ...
-├── jobs/                # Job-based workflow system
-│   ├── buildBlueprintBundle/  # Blueprint bundle job
-│   ├── publishStaticSite/     # Static site job
-│   ├── uploadAssets/          # Upload job
-│   └── index.js         # Job registry entry point
-├── registry/            # Workflow orchestration
-│   ├── JobRegistry.js   # Job registration system
-│   ├── DependencyResolver.js  # Dependency resolution
-│   └── HookManager.js   # Hook utilities
+├── steps/               # Step definitions
+│   ├── index.js         # Step registry and getRegisteredSteps()
+│   ├── discoverBlueprintBundleAssets/
+│   ├── createBlueprintBundle/
+│   ├── generateBlueprint/
+│   ├── uploadBlueprintBundle/
+│   ├── getStaticSiteUrls/
+│   └── uploadStaticFiles/
 ├── workflows/           # Workflow execution
 │   └── jobExecutor.js   # Job executor with hooks
 └── utils/               # Utility functions
-    ├── steps.js         # Step definitions and metadata
     ├── progressManager.js  # Progress calculation
     ├── assetExtractor.js  # Extract assets from HTML
     ├── urlRewriter.js     # Rewrite URLs in HTML
@@ -104,22 +101,22 @@ import PublishProgressModal from '../components/PublishProgressModal';
 
 ### usePublishController
 
-Main orchestration hook using the job-based workflow system.
+Main orchestration hook using the step-based workflow system.
 
 **Location:** `hooks/usePublishController.js`
 
 **Responsibilities:**
-- Job execution via `executeJobs()` from `workflows/jobExecutor.js`
+- Step execution via `executeJobs()` from `workflows/jobExecutor.js`
 - Status polling and updates
 - Error handling and recovery
 - Progress calculation via `progressManager.js`
-- Job lifecycle management
+- Step lifecycle management
 
 **Implementation:**
-- Uses `@wordpress/hooks` for job orchestration
-- Three-level hierarchy: Jobs → Phases → Steps
+- Uses `@wordpress/hooks` for step orchestration
+- Steps declare dependencies and provided data
 - Automatic dependency resolution
-- Extensible via third-party plugins
+- Extensible via `aether.publish.steps` filter
 
 ### useStaticSiteGenerator
 
@@ -143,35 +140,33 @@ React-based static site generation (this is the correct approach).
 
 ## Step Definitions
 
-### steps.js - Source of Truth
+### steps/index.js - Source of Truth
 
-All step metadata is defined in `utils/steps.js`:
+All step definitions are in `steps/*/index.js` files and exported via `steps/index.js`:
 
 ```javascript
-export const steps = [
-    {
-        id: 'discoverBlueprintBundleAssets',
-        label: __('Discovering assets', 'aether'),
-        phase: 'preparation',
-        supportsProgress: true,
-        completionMessage: __('Assets discovered successfully', 'aether'),
-        // ... more metadata
-    },
-    // ... more steps
-];
+import { getRegisteredSteps } from './steps';
 
-// Helper functions
-export function getStep(stepId);
-export function getNextStep(stepId);
-export function getLabel(stepId);
+const steps = getRegisteredSteps();
+// Returns array of step definitions with:
+// - id: unique identifier
+// - label: internationalized display name
+// - description: internationalized description
+// - supportsProgress: boolean for progress tracking
+// - dependencies: array of step IDs this depends on
+// - provides: array of data keys this step provides
+// - handler: async function that executes the step
 ```
 
-This file provides:
-- Internationalized labels
-- Phase grouping
-- Progress support flags
-- Completion messages
-- Navigation helpers
+Steps can be extended via the `aether.publish.steps` filter:
+
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.publish.steps', 'my-plugin/custom-step', (steps) => {
+    return [...steps, myCustomStep];
+});
+```
 
 ## API Integration
 
@@ -295,15 +290,6 @@ npm run test:js -- assets/src/publish
 npm run test:js -- --watch assets/src/publish
 ```
 
-### E2E Tests
-
-End-to-end tests run full publish workflow in WordPress Playground:
-
-```bash
-# Run publish E2E tests
-npm run test:e2e -- --grep "publish"
-```
-
 ## Performance Considerations
 
 ### Chunking
@@ -328,22 +314,7 @@ fetch(url, { signal: abortController.signal });
 abortController.abort();
 ```
 
-## Future Improvements (Planned)
-
-### Phase 4-5 Refactoring
-
-- **Split usePublishController** into smaller hooks
-- **Extract business logic** to service classes
-- **Improve state management** with Context API
-- **Add proper cancellation** support throughout
-- **Better error recovery** with partial retry
-
-See `REFACTORING_PLAN.md` for details.
-
 ## Related Documentation
 
 - [Main README](../README.md) - Source code overview
 - [Providers README](../providers/README.md) - Cloud provider integration
-- [Constants README](../constants/README.md) - API endpoints and timing
-- [Components README](../components/README.md) - Shared components
-- [Hooks README](../hooks/README.md) - Custom hooks
