@@ -16,6 +16,7 @@ import {
 	determineSeverity,
 	ERROR_SEVERITY,
 } from '../utils/errorHandler';
+import { createProgressTracker } from '../utils/progressTracker';
 
 /**
  * Execute a workflow with the given steps.
@@ -44,9 +45,28 @@ export async function executeSteps( steps, context, options = {} ) {
 	// Build execution plan with parallel groups
 	const executionPlan = buildParallelPlan( steps );
 
+	// Get all step IDs in execution order
+	const stepIds = steps.map( ( step ) => step.id );
+
+	// Create progress tracker with equal step weights
+	const workflowId = context.workflowId || `workflow-${ Date.now() }`;
+	const progressTracker = createProgressTracker( workflowId, stepIds );
+
+	// Try to load previous progress (for resume capability)
+	try {
+		const savedProgress = await progressTracker.load();
+		if ( savedProgress ) {
+			debug( '[StepExecutor] Loaded previous progress:', savedProgress );
+		}
+	} catch ( error ) {
+		debugWarn( '[StepExecutor] Failed to load previous progress:', error );
+	}
+
 	// Create execution context
 	const executionContext = {
 		...context,
+		workflowId,
+		progressTracker,
 		completedSteps: [],
 		skippedSteps: [],
 		state: {},
@@ -119,9 +139,13 @@ export async function executeSteps( steps, context, options = {} ) {
 			executionContext
 		);
 
+		// Clear progress tracker on successful completion
+		await progressTracker.clear();
+
 		return executionContext.state;
 	} catch ( error ) {
 		doAction( 'aether.publish.workflow.error', error, executionContext );
+		// Don't clear progress on error - allows for resume
 		throw error;
 	}
 }
@@ -143,6 +167,11 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 	doAction( `aether.publish.step.${ stepId }.before`, executionContext );
 
 	onStepStart( stepId, step );
+
+	// Initialize step progress to 0
+	if ( executionContext.progressTracker ) {
+		await executionContext.progressTracker.updateStepProgress( stepId, 0 );
+	}
 
 	try {
 		// Build context for this step (merge state into context)
@@ -178,6 +207,11 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 		);
 
 		onStepComplete( stepId, filteredResult );
+
+		// Mark step as completed in progress tracker
+		if ( executionContext.progressTracker ) {
+			await executionContext.progressTracker.completeStep( stepId );
+		}
 
 		// Fire after hook
 		doAction(
