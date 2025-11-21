@@ -113,25 +113,74 @@ describe( 'createAssetTracker', () => {
 		} );
 	} );
 
-	describe( 'clear', () => {
-		test( 'clears all tracked URLs', () => {
-			tracker.markUploaded( 'https://example.com/image1.jpg' );
-			tracker.markUploaded( 'https://example.com/image2.jpg' );
-			expect( tracker.getCount() ).toBe( 2 );
+	describe( 'markFailed', () => {
+		test( 'marks URL as failed', () => {
+			const url = 'https://example.com/broken.css';
+			tracker.markFailed( url );
+			expect( tracker.isFailed( url ) ).toBe( true );
+		} );
 
-			tracker.clear();
-			expect( tracker.getCount() ).toBe( 0 );
+		test( 'returns false for non-failed URL', () => {
 			expect(
-				tracker.isUploaded( 'https://example.com/image1.jpg' )
-			).toBe( false );
-			expect(
-				tracker.isUploaded( 'https://example.com/image2.jpg' )
+				tracker.isFailed( 'https://example.com/image.jpg' )
 			).toBe( false );
 		} );
 
-		test( 'handles clearing empty tracker', () => {
-			expect( () => tracker.clear() ).not.toThrow();
+		test( 'normalizes URL before storing', () => {
+			const url1 = 'https://example.com/broken.css';
+			const url2 = 'https://example.com/broken.css/';
+			const url3 = 'https://example.com/broken.css#fragment';
+
+			tracker.markFailed( url1 );
+			expect( tracker.isFailed( url2 ) ).toBe( true );
+			expect( tracker.isFailed( url3 ) ).toBe( true );
+		} );
+
+		test( 'tracks failed and uploaded separately', () => {
+			const failedUrl = 'https://example.com/broken.css';
+			const uploadedUrl = 'https://example.com/success.css';
+
+			tracker.markFailed( failedUrl );
+			tracker.markUploaded( uploadedUrl );
+
+			expect( tracker.isFailed( failedUrl ) ).toBe( true );
+			expect( tracker.isUploaded( failedUrl ) ).toBe( false );
+			expect( tracker.isFailed( uploadedUrl ) ).toBe( false );
+			expect( tracker.isUploaded( uploadedUrl ) ).toBe( true );
+		} );
+	} );
+
+	describe( 'getFailedCount', () => {
+		test( 'returns 0 for empty tracker', () => {
+			expect( tracker.getFailedCount() ).toBe( 0 );
+		} );
+
+		test( 'returns correct count after marking URLs as failed', () => {
+			tracker.markFailed( 'https://example.com/broken1.css' );
+			expect( tracker.getFailedCount() ).toBe( 1 );
+
+			tracker.markFailed( 'https://example.com/broken2.css' );
+			expect( tracker.getFailedCount() ).toBe( 2 );
+		} );
+
+		test( 'does not count duplicates', () => {
+			tracker.markFailed( 'https://example.com/broken.css' );
+			tracker.markFailed( 'https://example.com/broken.css' );
+			tracker.markFailed( 'https://example.com/broken.css/' );
+			expect( tracker.getFailedCount() ).toBe( 1 );
+		} );
+	} );
+
+	describe( 'clear', () => {
+		test( 'clears both uploaded and failed assets', () => {
+			tracker.markUploaded( 'https://example.com/success.css' );
+			tracker.markFailed( 'https://example.com/broken.css' );
+			expect( tracker.getCount() ).toBe( 1 );
+			expect( tracker.getFailedCount() ).toBe( 1 );
+
+			tracker.clear();
 			expect( tracker.getCount() ).toBe( 0 );
+			expect( tracker.getFailedCount() ).toBe( 0 );
 		} );
 	} );
 
