@@ -78,8 +78,15 @@ export function useDependencyValidation( providers, configs, onConfigsUpdate ) {
 					const updatedProviders =
 						await updateMultipleProviders( providersToDisable );
 
+					// Merge API response with current configs to preserve all instances
+					// This ensures no instances are lost if API response is incomplete
+					const mergedConfigs = {
+						...configs,
+						...updatedProviders,
+					};
+
 					if ( onConfigsUpdate ) {
-						onConfigsUpdate( updatedProviders );
+						onConfigsUpdate( mergedConfigs );
 					}
 				} catch ( error ) {
 					console.error(

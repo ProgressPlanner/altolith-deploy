@@ -178,25 +178,64 @@ export default function ProviderSettings( {
 
 	const handleToggleInstance = useCallback(
 		async ( instanceId, enabled ) => {
+			// Capture original state before optimistic update for rollback
+			const originalConfigs = localConfigs;
+
+			// Optimistic update: update local state immediately before API call
+			const optimisticConfigs = {
+				...localConfigs,
+				[ instanceId ]: {
+					...localConfigs[ instanceId ],
+					enabled,
+				},
+			};
+			setLocalConfigs( optimisticConfigs );
+
 			try {
 				const updatedProviders = await toggleProviderEnabled(
 					instanceId,
 					enabled
 				);
 
-				// Update parent configs state
+				// Merge API response with current local state to preserve all instances
+				// This ensures no instances are lost if API response is incomplete
+				const mergedConfigs = {
+					...optimisticConfigs,
+					...updatedProviders,
+				};
+
+				// Update local state with merged result
+				setLocalConfigs( mergedConfigs );
+
+				// Update parent configs state with merged result
 				if ( onConfigsUpdate ) {
-					onConfigsUpdate( updatedProviders );
+					onConfigsUpdate( mergedConfigs );
 				}
 			} catch ( error ) {
 				console.error( 'Failed to toggle instance:', error );
+
+				// Rollback optimistic update on error
+				setLocalConfigs( originalConfigs );
+
+				// Show error notification
+				if ( onNotice ) {
+					onNotice(
+						`Failed to toggle instance: ${
+							error.message || 'Unknown error'
+						}`,
+						'error'
+					);
+				}
 			}
 		},
-		[ toggleProviderEnabled, onConfigsUpdate ]
+		[ toggleProviderEnabled, onConfigsUpdate, localConfigs, onNotice ]
 	);
 
 	const handleDeleteInstance = useCallback(
 		async ( instanceId ) => {
+			// Capture original state before optimistic update for rollback
+			const originalConfigs = localConfigs;
+
 			// Optimistically remove from local state
 			const { [ instanceId ]: removed, ...remainingConfigs } =
 				localConfigs;
@@ -204,17 +243,28 @@ export default function ProviderSettings( {
 
 			try {
 				// Delete from backend
-				await deleteProviderInstance( instanceId );
+				const updatedProviders =
+					await deleteProviderInstance( instanceId );
 
-				// Update parent state (persists the optimistic update)
+				// Merge API response with remaining configs to preserve all instances
+				// This ensures no instances are lost if API response is incomplete
+				const mergedConfigs = {
+					...remainingConfigs,
+					...updatedProviders,
+				};
+
+				// Update local state with merged result
+				setLocalConfigs( mergedConfigs );
+
+				// Update parent state with merged result
 				if ( onConfigsUpdate ) {
-					onConfigsUpdate( remainingConfigs );
+					onConfigsUpdate( mergedConfigs );
 				}
 			} catch ( error ) {
 				console.error( 'Failed to delete instance:', error );
 
 				// Rollback optimistic update on error
-				setLocalConfigs( localConfigs );
+				setLocalConfigs( originalConfigs );
 
 				// Show error notification
 				if ( onNotice ) {
@@ -232,22 +282,50 @@ export default function ProviderSettings( {
 
 	const handleRenameInstance = useCallback(
 		async ( instanceId, newName ) => {
+			// Capture original state before optimistic update for rollback
+			const originalConfigs = localConfigs;
+
+			// Optimistic update: update local state immediately before API call
+			const optimisticConfigs = {
+				...localConfigs,
+				[ instanceId ]: {
+					...localConfigs[ instanceId ],
+					instance_name: newName,
+				},
+			};
+			setLocalConfigs( optimisticConfigs );
+
 			try {
 				const updatedProviders = await renameProviderInstance(
 					instanceId,
 					newName
 				);
 
-				// Update parent configs state
+				// Merge API response with current local state to preserve all instances
+				// This ensures no instances are lost if API response is incomplete
+				const mergedConfigs = {
+					...optimisticConfigs,
+					...updatedProviders,
+				};
+
+				// Update local state with merged result
+				setLocalConfigs( mergedConfigs );
+
+				// Update parent configs state with merged result
 				if ( onConfigsUpdate ) {
-					onConfigsUpdate( updatedProviders );
+					onConfigsUpdate( mergedConfigs );
 				}
 			} catch ( error ) {
 				console.error( 'Failed to rename instance:', error );
+
+				// Rollback optimistic update on error
+				setLocalConfigs( originalConfigs );
+
+				// Re-throw to show error in UI
 				throw error;
 			}
 		},
-		[ renameProviderInstance, onConfigsUpdate ]
+		[ renameProviderInstance, onConfigsUpdate, localConfigs ]
 	);
 
 	const handleConfigSave = useCallback(
