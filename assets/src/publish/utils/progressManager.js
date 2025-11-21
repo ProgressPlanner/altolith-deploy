@@ -14,7 +14,7 @@ import { MAX_PROGRESS } from '../../utils/constants';
 const STEP_WEIGHTS = {
 	discoverAssets: 5, // Phase 1: 0-5%
 	getStaticSiteUrls: 8, // Phase 2: 5-13%
-	createSiteArchive: 20, // Phase 3: 13-33%
+	createBlueprintBundle: 20, // Phase 3: 13-33%
 	generateBlueprint: 1, // Phase 4: 33-34%
 	uploadSiteArchive: 16, // Phase 5: 34-50% (parallel with uploadStaticSiteFiles)
 	uploadStaticSiteFiles: 50, // Phase 5: 34-84% (parallel with uploadSiteArchive)

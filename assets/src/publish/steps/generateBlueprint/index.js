@@ -15,7 +15,7 @@ import { formatFileSize } from '../../../utils/helpers';
  * @param {Object}   context                       Execution context.
  * @param {Object}   context.api                   PublishAPI instance.
  * @param {Function} context.generateBlueprintJson Blueprint JSON generator function.
- * @param {string}   context.zipPath               Path to wp-content.zip from createSiteArchive.
+ * @param {string}   context.zipPath               Path to wp-content.zip from createBlueprintBundle.
  * @param {string}   context.zipUrl                URL to wp-content.zip.
  * @param {Array}    context.discoveredAssets      Discovered assets.
  * @param {Function} context.setStatusMessage      Status message updater.
@@ -39,7 +39,7 @@ async function handler( context ) {
 
 	if ( ! zipPath ) {
 		throw new Error(
-			'Site archive not found. Please run createSiteArchive first.'
+			'Site archive not found. Please run createBlueprintBundle first.'
 		);
 	}
 
@@ -111,7 +111,7 @@ export const generateBlueprintStep = {
 	id: 'generateBlueprint',
 	label: 'Generate Blueprint',
 	description: 'Create blueprint-bundle.zip',
-	dependencies: [ 'createSiteArchive' ],
+	dependencies: [ 'createBlueprintBundle' ],
 	provides: [ 'blueprintData', 'blueprintBundle' ],
 	handler,
 };

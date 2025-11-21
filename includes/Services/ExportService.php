@@ -236,7 +236,7 @@ class ExportService
 					if ($stateManager) {
 						$status = $stateManager->getStatus($jobId);
 						if ($status) {
-							$status['createSiteArchive_progress'] = $progress;
+							$status['createBlueprintBundle_progress'] = $progress;
 							$stateManager->updateStatus($jobId, $status);
 						}
 					} else {
@@ -379,7 +379,7 @@ class ExportService
 		if ($progressCallback && $totalFiles > 0 && $jobId && $stateManager) {
 			$status = $stateManager->getStatus($jobId);
 			if ($status) {
-				$status['createSiteArchive_progress'] = 100;
+				$status['createBlueprintBundle_progress'] = 100;
 				$stateManager->updateStatus($jobId, $status);
 			}
 		}

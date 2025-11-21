@@ -16,7 +16,7 @@ Jobs → Phases → Steps
 
 - **Jobs**: High-level operations (e.g., "Build Blueprint Bundle", "Publish Static Site")
 - **Phases**: Logical groupings within jobs (e.g., "Discover", "Prepare", "Generate")
-- **Steps**: Individual executable units within phases (e.g., "discoverAssets", "createSiteArchive")
+- **Steps**: Individual executable units within phases (e.g., "discoverAssets", "createBlueprintBundle")
 
 ### Hook Namespaces
 
@@ -133,7 +133,7 @@ assets/src/publish/jobs/
 │       ├── prepare/
 │       │   ├── index.js
 │       │   └── steps/
-│       │       └── createSiteArchive/
+│       │       └── createBlueprintBundle/
 │       │           └── index.js
 │       └── generate/
 │           ├── index.js
@@ -158,7 +158,7 @@ Creates a WordPress Playground blueprint bundle.
 - `discover` - Find custom plugins/themes to include
   - Steps: `discoverAssets`
 - `prepare` - Create wp-content.zip archive
-  - Steps: `createSiteArchive`
+  - Steps: `createBlueprintBundle`
 - `generate` - Create blueprint-bundle.zip
   - Steps: `generateBlueprint`
 
@@ -394,7 +394,7 @@ If circular dependencies are detected, an error is thrown with details about the
 // publishWorkflow.js - Hardcoded workflow
 export const PUBLISH_WORKFLOW = [
     [['discoverAssets', 10]],  // Phase 1
-    [['createSiteArchive', 40]],  // Phase 2
+    [['createBlueprintBundle', 40]],  // Phase 2
     [['generateBlueprint', 10]],  // Phase 3
     // ... more steps
 ];

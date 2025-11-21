@@ -50,7 +50,7 @@ export const PUBLISH_STEPS = [
 		),
 	},
 	{
-		id: 'createSiteArchive',
+		id: 'createBlueprintBundle',
 		label: __( 'Create Site Archive', 'aether-site-exporter' ),
 		supportsProgress: true,
 		phase: 'generate',

@@ -4,7 +4,7 @@
  * Consolidated Publish Steps Controller
  *
  * Handles all publish workflow step endpoints in a single controller.
- * Consolidates: GenerateBlueprintController, CreateSiteArchiveController,
+ * Consolidates: GenerateBlueprintController, createBlueprintBundleController,
  * GenerateStaticSiteController, PrepareUploadManifestController.
  *
  * @package Aether\REST\Publish
@@ -50,10 +50,10 @@ class PublishStepsController
 		// Create site archive step.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/steps/createSiteArchive',
+			'/publish/steps/createBlueprintBundle',
 			[
 				'methods'             => 'POST',
-				'callback'            => [ $this, 'executeCreateSiteArchive' ],
+				'callback'            => [ $this, 'executecreateBlueprintBundle' ],
 				'permission_callback' => [ $this, 'permissionCheck' ],
 			]
 		);
@@ -247,14 +247,14 @@ class PublishStepsController
 	}
 
 	/**
-	 * Execute the createSiteArchive step.
+	 * Execute the createBlueprintBundle step.
 	 *
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function executeCreateSiteArchive(WP_REST_Request $request)
+	public function executecreateBlueprintBundle(WP_REST_Request $request)
 	{
-		return $this->executeStep($request, 'createSiteArchive', function ($status, $jobId) {
+		return $this->executeStep($request, 'createBlueprintBundle', function ($status, $jobId) {
 			// Get export service.
 			$exportService = new ExportService($this->plugin);
 
@@ -374,7 +374,7 @@ class PublishStepsController
 			 *
 			 * @example
 			 * add_filter('aether_publish_step_result', function($result, $stepName, $jobId) {
-			 *     if ($stepName === 'createSiteArchive') {
+			 *     if ($stepName === 'createBlueprintBundle') {
 			 *         $result['status']['custom_data'] = 'added by filter';
 			 *     }
 			 *     return $result;
@@ -394,7 +394,7 @@ class PublishStepsController
 			 *
 			 * @example
 			 * add_action('aether_publish_step_after', function($stepName, $jobId, $result) {
-			 *     if ($stepName === 'createSiteArchive') {
+			 *     if ($stepName === 'createBlueprintBundle') {
 			 *         error_log("Archive created: " . $result['status']['exportResult']['zipPath']);
 			 *     }
 			 * }, 10, 3);

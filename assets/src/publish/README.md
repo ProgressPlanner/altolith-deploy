@@ -31,7 +31,7 @@ The workflow uses a three-level hierarchy (Jobs → Phases → Steps) with autom
 **Jobs:**
 1. **buildBlueprintBundle** - Create WordPress Playground blueprint bundle
    - discover phase → discoverAssets step
-   - prepare phase → createSiteArchive step
+   - prepare phase → createBlueprintBundle step
    - generate phase → generateBlueprint step
 
 2. **publishStaticSite** - Generate static HTML site

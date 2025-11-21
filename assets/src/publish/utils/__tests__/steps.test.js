@@ -14,7 +14,7 @@ describe( 'steps', () => {
 			expect( stepIds ).toContain( 'discoverAssets' );
 			expect( stepIds ).toContain( 'getStaticSiteUrls' );
 			expect( stepIds ).toContain( 'generateBlueprint' );
-			expect( stepIds ).toContain( 'createSiteArchive' );
+			expect( stepIds ).toContain( 'createBlueprintBundle' );
 			expect( stepIds ).toContain( 'uploadStaticSiteFiles' );
 			expect( stepIds ).toContain( 'uploadSiteArchive' );
 		} );
@@ -62,10 +62,10 @@ describe( 'steps', () => {
 
 	describe( 'supportsProgress', () => {
 		test( 'returns true for steps that support progress', () => {
-			const step = getStep( 'createSiteArchive' );
+			const step = getStep( 'createBlueprintBundle' );
 
 			expect( step.supportsProgress ).toBe( true );
-			expect( supportsProgress( 'createSiteArchive' ) ).toBe( true );
+			expect( supportsProgress( 'createBlueprintBundle' ) ).toBe( true );
 		} );
 
 		test( 'returns false for steps that do not support progress', () => {
