@@ -12,7 +12,7 @@ namespace Aether\SiteExporter\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
-use Aether\SiteExporter\Sync\Blueprint\AssetDiscoveryService;
+use Aether\SiteExporter\Sync\AssetDiscoveryService;
 
 /**
  * Assets REST endpoints.

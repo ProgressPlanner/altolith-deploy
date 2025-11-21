@@ -16,7 +16,7 @@ use Aether\SiteExporter\REST\RESTHelpersTrait;
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Services\ExportService;
 use Aether\SiteExporter\Services\BlueprintBundleGenerator;
-use Aether\SiteExporter\Utilities\StaticSite\URLDiscoveryService;
+use Aether\SiteExporter\Utilities\URLDiscoveryService;
 use Aether\SiteExporter\Utilities\HTTPClient;
 use Aether\SiteExporter\Providers\ProviderRegistry;
 use WP_REST_Request;

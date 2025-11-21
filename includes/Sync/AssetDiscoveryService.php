@@ -14,10 +14,10 @@
  * - Internal WordPress requests work (HTTPClient for same-site requests)
  * - External API calls fail (wordpress.org, api.example.com) - use browser fetch()
  *
- * @package Aether\Sync\Blueprint
+ * @package Aether\Sync
  */
 
-namespace Aether\SiteExporter\Sync\Blueprint;
+namespace Aether\SiteExporter\Sync;
 
 /**
  * Service class for discovering installed WordPress assets.

@@ -10,7 +10,7 @@ namespace Aether\SiteExporter;
 
 \defined('ABSPATH') || exit;
 use Aether\SiteExporter\Admin\PluginDependencyManager;
-use Aether\SiteExporter\Sync\Blueprint\AssetDiscoveryService;
+use Aether\SiteExporter\Sync\AssetDiscoveryService;
 use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use Aether\SiteExporter\Providers\ProviderRegistry;
 use Aether\SiteExporter\Providers\LocalFilesystemProvider;
