@@ -4,8 +4,12 @@
  * Providers are now registered entirely in JavaScript via aether.providers.register hooks.
  * Provider metadata comes from JavaScript ProviderRegistry, not PHP.
  *
- * Providers are loaded dynamically as separate scripts (enqueued via PHP) to reduce initial bundle size.
- * When a provider script loads, it registers itself in the JavaScript ProviderRegistry.
+ * Import the local-filesystem provider here to ensure it's always available
+ * as the default provider. Other providers are loaded dynamically as separate scripts.
  *
  * @package
  */
+
+// Import local-filesystem provider to ensure it registers early
+// This provider is always available and doesn't need dynamic loading
+import '../providers/local-filesystem';
