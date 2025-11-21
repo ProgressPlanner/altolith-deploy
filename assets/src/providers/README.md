@@ -28,10 +28,17 @@ Providers register themselves via WordPress hooks:
 ```javascript
 // In provider index.js
 import { doAction } from '@wordpress/hooks';
+import ProviderRegistry from '../registry/ProviderRegistry';
 import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 
-// Register provider instance
-doAction('aether.providers.register', new LocalFilesystemProvider());
+// Create provider instance
+const provider = new LocalFilesystemProvider();
+
+// Register provider in JavaScript registry
+ProviderRegistry.register(provider.getId(), provider);
+
+// Also trigger the hook for any listeners
+doAction('aether.providers.register', provider);
 ```
 
 The `ProviderRegistry` singleton collects all registered providers and makes them available throughout the application.
@@ -59,11 +66,18 @@ Provider registers itself when its module loads:
 
 ```javascript
 // providers/local-filesystem/index.js
-import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 import { doAction } from '@wordpress/hooks';
+import ProviderRegistry from '../registry/ProviderRegistry';
+import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 
-// Register provider instance
-doAction('aether.providers.register', new LocalFilesystemProvider());
+// Create provider instance
+const provider = new LocalFilesystemProvider();
+
+// Register provider in JavaScript registry
+ProviderRegistry.register(provider.getId(), provider);
+
+// Also trigger the hook for any listeners
+doAction('aether.providers.register', provider);
 ```
 
 ### 2. Discovery
@@ -242,7 +256,18 @@ export class MyProvider extends AbstractProvider {
 
 ```javascript
 // providers/my-provider/index.js
+import ProviderRegistry from '../registry/ProviderRegistry';
+import { doAction } from '@wordpress/hooks';
 import { MyProvider } from './MyProvider';
+
+// Create provider instance
+const provider = new MyProvider();
+
+// Register in JavaScript registry
+ProviderRegistry.register(provider.getId(), provider);
+
+// Also trigger the hook for any listeners
+doAction('aether.providers.register', provider);
 import { doAction } from '@wordpress/hooks';
 
 doAction('aether.providers.register', new MyProvider());

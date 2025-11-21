@@ -511,8 +511,12 @@
  *    - deploy()
  *    - getStatus()
  *
- * 3. Register provider via WordPress hooks:
- *    doAction('aether.providers.register', new MyProvider())
+ * 3. Register provider in JavaScript registry:
+ *    import ProviderRegistry from '../registry/ProviderRegistry';
+ *    import { doAction } from '@wordpress/hooks';
+ *    const provider = new MyProvider();
+ *    ProviderRegistry.register(provider.getId(), provider);
+ *    doAction('aether.providers.register', provider);
  *
  * 4. Add provider to webpack build config (if needed)
  *
