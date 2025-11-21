@@ -33,10 +33,7 @@ initializeErrorHandlers();
 
 // Providers are registered via PHP using the 'aether_providers' filter.
 // JavaScript providers register implementation hooks (aether.provider.upload, aether.provider.test, etc.).
-
-// Import local-filesystem provider to ensure hooks are registered
-// This is the default/fallback provider and must be available for upload operations
-import '../providers/local-filesystem/index';
+// Providers are loaded dynamically as separate scripts (enqueued via PHP) to reduce initial bundle size.
 
 // Load providers dynamically to reduce initial bundle size
 // Don't wait for providers to load - render immediately
