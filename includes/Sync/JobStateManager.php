@@ -24,7 +24,7 @@ class JobStateManager
 	 *
 	 * @var int
 	 */
-	const TRANSIENT_EXPIRATION = 1800;
+	private const TRANSIENT_EXPIRATION = 1800;
 
 	/**
 	 * Get job status from transient.

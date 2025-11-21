@@ -24,7 +24,7 @@ class SettingsRepository
 	/**
 	 * Main settings option key.
 	 */
-	const SETTINGS_KEY = 'aether_site_exporter_settings';
+	private const SETTINGS_KEY = 'aether_site_exporter_settings';
 
 	/**
 	 * Get all settings.
