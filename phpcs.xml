@@ -105,6 +105,13 @@
 	<rule ref="Squiz.PHP.Eval"/>
 	<rule ref="Squiz.PHP.DisallowMultipleAssignments"/>
 	
+	<!-- ============================================== -->
+	<!-- UNUSED VARIABLE DETECTION                      -->
+	<!-- ============================================== -->
+	
+	<!-- Detect unused variables, function parameters, and code issues -->
+	<rule ref="VariableAnalysis.CodeAnalysis.VariableAnalysis"/>
+	
 	<!-- Proper use of boolean operators -->
 	<rule ref="Squiz.Operators.ValidLogicalOperators"/>
 	
@@ -192,6 +199,9 @@
 	
 	<!-- Show sniff codes in all reports -->
 	<arg value="ns"/>
+	
+	<!-- Include warnings in reports (default behavior, but explicit for clarity) -->
+	<arg value="w"/>
 	
 	<!-- Check up to 20 files simultaneously -->
 	<arg name="parallel" value="20"/>
