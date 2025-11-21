@@ -10,10 +10,10 @@
 import { addFilter, addAction } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
 import { LocalFilesystemProvider } from './LocalFilesystemProvider';
-import { uploadFile as uploadFileToStorage } from '../../utils/filesystemAdapter';
-import { debug, debugWarn } from '../../utils/debug';
-import { processHtml } from '../../publish/utils/htmlProcessor';
-import { FILE_TYPES } from '../../publish/utils/unifiedFileUpload';
+import { uploadFile as uploadFileToStorage } from '@aether/utils/filesystemAdapter';
+import { debug, debugWarn } from '@aether/utils/debug';
+import { processHtml } from '@aether/publish/utils/htmlProcessor';
+import { FILE_TYPES } from '@aether/publish/utils/unifiedFileUpload';
 
 // Create provider instance for hook registration
 const provider = new LocalFilesystemProvider();

@@ -9,11 +9,11 @@
 
 import { useCallback } from '@wordpress/element';
 import { applyFilters } from '@wordpress/hooks';
-import useAssetDiscovery from '../../utils/useAssetDiscovery';
+import useAssetDiscovery from '@aether/utils/useAssetDiscovery';
 import {
 	buildBlueprintSteps,
 	buildBlueprintJson,
-} from '../utils/blueprintStepBuilders';
+} from '@aether/publish/utils/blueprintStepBuilders';
 
 /**
  * Hook for generating WordPress Playground blueprint JSON.

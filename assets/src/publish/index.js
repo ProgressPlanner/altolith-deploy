@@ -20,13 +20,13 @@ if ( typeof __webpack_public_path__ !== 'undefined' ) {
 
 import { render } from '@wordpress/element';
 import PublishPage from './PublishPage';
-import { loadAllProviders } from '../providers/utils/providerLoader';
-import { ConfigProvider } from '../contexts/ConfigContext';
-import { ProviderProvider } from '../contexts/ProviderContext';
-import { PublishProvider } from '../contexts/PublishContext';
-import DevTools from '../components/DevTools';
-import { debugWarn } from '../utils/debug';
-import { initializeErrorHandlers } from '../utils/errorHandler';
+import { loadAllProviders } from '@aether/providers/utils/providerLoader';
+import { ConfigProvider } from '@aether/contexts/ConfigContext';
+import { ProviderProvider } from '@aether/contexts/ProviderContext';
+import { PublishProvider } from '@aether/contexts/PublishContext';
+import DevTools from '@aether/components/DevTools';
+import { debugWarn } from '@aether/utils/debug';
+import { initializeErrorHandlers } from '@aether/utils/errorHandler';
 
 // Initialize global error handlers
 initializeErrorHandlers();
