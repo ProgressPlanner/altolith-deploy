@@ -136,7 +136,7 @@ export default function ProviderConfigModal( {
 		const { id } = provider;
 
 		const hookContext = {
-			providerId: id, // Provider type (for backwards compatibility)
+			providerId: id, // Provider type
 			instanceId, // Instance ID (for instance-specific operations)
 			provider,
 			config,

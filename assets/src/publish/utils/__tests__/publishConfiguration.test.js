@@ -41,28 +41,11 @@ describe( 'publishConfiguration', () => {
 			expect( result ).toEqual( {
 				storageProviderId: 'local-filesystem:123',
 				staticSiteProviderId: 'cloudflare:456',
-				providerId: 'cloudflare:456', // Prefers static_site
 				providerConfigs: {
 					'local-filesystem:123': { enabled: true },
 					'cloudflare:456': { enabled: true },
 				},
 			} );
-		} );
-
-		test( 'should use fallback for providerId when static_site and storage are empty', () => {
-			const settingsResponse = {
-				settings: {
-					provider_types: {},
-					providers: {},
-				},
-			};
-
-			const result = preparePublishConfiguration(
-				settingsResponse,
-				'fallback-provider:789'
-			);
-
-			expect( result.providerId ).toBe( 'fallback-provider:789' );
 		} );
 
 		test( 'should handle missing settings object', () => {
@@ -73,7 +56,6 @@ describe( 'publishConfiguration', () => {
 			expect( result ).toEqual( {
 				storageProviderId: '',
 				staticSiteProviderId: '',
-				providerId: '',
 				providerConfigs: {},
 			} );
 		} );
@@ -84,23 +66,6 @@ describe( 'publishConfiguration', () => {
 
 			expect( result1.storageProviderId ).toBe( '' );
 			expect( result2.storageProviderId ).toBe( '' );
-		} );
-
-		test( 'should prefer storage over fallback when static_site is empty', () => {
-			const settingsResponse = {
-				settings: {
-					provider_types: {
-						storage: 'local-filesystem:123',
-					},
-				},
-			};
-
-			const result = preparePublishConfiguration(
-				settingsResponse,
-				'fallback:999'
-			);
-
-			expect( result.providerId ).toBe( 'local-filesystem:123' );
 		} );
 
 		test( 'should handle empty provider_types object', () => {
@@ -114,7 +79,6 @@ describe( 'publishConfiguration', () => {
 
 			expect( result.storageProviderId ).toBe( '' );
 			expect( result.staticSiteProviderId ).toBe( '' );
-			expect( result.providerId ).toBe( '' );
 		} );
 	} );
 
@@ -404,7 +368,6 @@ describe( 'publishConfiguration', () => {
 		test( 'should build complete workflow context', () => {
 			const config = {
 				siteUrl: 'https://example.com',
-				providerId: 'local-filesystem:123',
 				staticSiteProviders: [ 'cloudflare:1', 'cloudflare:2' ],
 				blueprintBundleProviders: [ 'local-filesystem:123' ],
 				edgeFunctionProviders: [],
@@ -418,7 +381,6 @@ describe( 'publishConfiguration', () => {
 			const mockSetStatus = jest.fn();
 			const mockSetProgress = jest.fn();
 			const mockHandleArchive = jest.fn();
-			const mockHandleFiles = jest.fn();
 
 			const dependencies = {
 				api: mockApi,
@@ -437,7 +399,6 @@ describe( 'publishConfiguration', () => {
 				// API and state
 				api: mockApi,
 				siteUrl: 'https://example.com',
-				providerId: 'local-filesystem:123',
 
 				// Provider arrays
 				staticSiteProviders: [ 'cloudflare:1', 'cloudflare:2' ],
@@ -465,7 +426,6 @@ describe( 'publishConfiguration', () => {
 		test( 'should handle minimal config and dependencies', () => {
 			const config = {
 				siteUrl: 'https://example.com',
-				providerId: '',
 				staticSiteProviders: [],
 				blueprintBundleProviders: [],
 				edgeFunctionProviders: [],
@@ -485,7 +445,6 @@ describe( 'publishConfiguration', () => {
 			const result = buildWorkflowContext( config, dependencies );
 
 			expect( result ).toHaveProperty( 'siteUrl' );
-			expect( result ).toHaveProperty( 'providerId' );
 			expect( result ).toHaveProperty( 'discoveredAssets' );
 			expect( result.discoveredAssets ).toBeNull();
 		} );

@@ -6,11 +6,11 @@
  * @package
  */
 
-import { handler as generateBlueprintHandler } from '../../jobs/buildBlueprintBundle/phases/generate/steps/generateBlueprint';
-import apiFetch from '../../../utils/api';
+import { handler as generateBlueprintHandler } from '../index.js';
+import apiFetch from '../../../../../../../../utils/api.js';
 
 // Mock apiFetch
-jest.mock( '../../../utils/api' );
+jest.mock( '../../../../../../../../utils/api.js' );
 
 describe( 'generateBlueprintStep', () => {
 	describe( 'generateBlueprintHandler', () => {

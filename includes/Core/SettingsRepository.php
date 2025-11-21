@@ -32,10 +32,9 @@ class SettingsRepository
 	 * Returns raw settings from WordPress options.
 	 * React handles transformation and validation.
 	 *
-	 * @param bool $_bypassCache Kept for compatibility, unused (no cache).
 	 * @return array<string, mixed> Settings array.
 	 */
-	public function getAll(bool $_bypassCache = false): array
+	public function getAll(): array
 	{
 
 		$settings = \get_option(self::SETTINGS_KEY, []);

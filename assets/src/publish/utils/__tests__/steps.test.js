@@ -7,12 +7,7 @@
 import {
 	PUBLISH_STEPS,
 	getStep,
-	getNextStep,
-	getCompletionMessage,
-	getWaitingMessage,
-	getLabel,
 	supportsProgress,
-	requiresBrowserUpload,
 } from '../steps';
 
 describe( 'steps', () => {
@@ -69,82 +64,6 @@ describe( 'steps', () => {
 		} );
 	} );
 
-	describe( 'getNextStep', () => {
-		test( 'returns next step ID for valid current step', () => {
-			const nextStep = getNextStep( 'discoverAssets' );
-
-			expect( nextStep ).toBe( 'getStaticSiteUrls' );
-		} );
-
-		test( 'returns null for last step', () => {
-			const nextStep = getNextStep( 'uploadSiteArchive' );
-
-			expect( nextStep ).toBeNull();
-		} );
-
-		test( 'returns null for invalid step ID', () => {
-			const nextStep = getNextStep( 'invalidStep' );
-
-			expect( nextStep ).toBeNull();
-		} );
-
-		test( 'returns correct next step for each step', () => {
-			for ( let i = 0; i < PUBLISH_STEPS.length - 1; i++ ) {
-				const currentStep = PUBLISH_STEPS[ i ];
-				const expectedNextStep = PUBLISH_STEPS[ i + 1 ];
-
-				expect( getNextStep( currentStep.id ) ).toBe(
-					expectedNextStep.id
-				);
-			}
-		} );
-	} );
-
-	describe( 'getCompletionMessage', () => {
-		test( 'returns completion message for valid step', () => {
-			const message = getCompletionMessage( 'discoverAssets' );
-
-			expect( message ).toBeDefined();
-			expect( typeof message ).toBe( 'string' );
-		} );
-
-		test( 'returns null for invalid step ID', () => {
-			const message = getCompletionMessage( 'invalidStep' );
-
-			expect( message ).toBeNull();
-		} );
-	} );
-
-	describe( 'getWaitingMessage', () => {
-		test( 'returns waiting message for valid step', () => {
-			const message = getWaitingMessage( 'discoverAssets' );
-
-			expect( message ).toBeDefined();
-			expect( typeof message ).toBe( 'string' );
-		} );
-
-		test( 'returns null for invalid step ID', () => {
-			const message = getWaitingMessage( 'invalidStep' );
-
-			expect( message ).toBeNull();
-		} );
-	} );
-
-	describe( 'getLabel', () => {
-		test( 'returns label for valid step', () => {
-			const label = getLabel( 'discoverAssets' );
-
-			expect( label ).toBeDefined();
-			expect( typeof label ).toBe( 'string' );
-		} );
-
-		test( 'returns null for invalid step ID', () => {
-			const label = getLabel( 'invalidStep' );
-
-			expect( label ).toBeNull();
-		} );
-	} );
-
 	describe( 'supportsProgress', () => {
 		test( 'returns true for steps that support progress', () => {
 			const step = getStep( 'createSiteArchive' );
@@ -162,17 +81,6 @@ describe( 'steps', () => {
 
 		test( 'returns false for invalid step ID', () => {
 			expect( supportsProgress( 'invalidStep' ) ).toBe( false );
-		} );
-	} );
-
-	describe( 'requiresBrowserUpload', () => {
-		test( 'returns false for steps without requiresBrowserUpload property', () => {
-			// Most steps don't have this property, so it should default to false
-			expect( requiresBrowserUpload( 'discoverAssets' ) ).toBe( false );
-		} );
-
-		test( 'returns false for invalid step ID', () => {
-			expect( requiresBrowserUpload( 'invalidStep' ) ).toBe( false );
 		} );
 	} );
 } );

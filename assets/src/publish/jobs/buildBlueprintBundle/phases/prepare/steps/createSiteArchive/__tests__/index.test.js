@@ -7,13 +7,13 @@
  * @package
  */
 
-import { handler as createSiteArchiveHandler } from '../../jobs/buildBlueprintBundle/phases/prepare/steps/createSiteArchive';
-import apiFetch from '../../../utils/api';
-import { getArchiveProgressCache } from '../../../utils/archiveProgressCache';
+import { handler as createSiteArchiveHandler } from '../index.js';
+import apiFetch from '../../../../../../../../utils/api.js';
+import { getArchiveProgressCache } from '../../../../../../../../utils/archiveProgressCache.js';
 
 // Mock dependencies
-jest.mock( '../../../utils/api' );
-jest.mock( '../../../utils/archiveProgressCache' );
+jest.mock( '../../../../../../../../utils/api.js' );
+jest.mock( '../../../../../../../../utils/archiveProgressCache.js' );
 
 describe( 'createSiteArchiveHandler', () => {
 	let mockContext;

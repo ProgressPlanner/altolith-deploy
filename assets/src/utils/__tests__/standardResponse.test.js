@@ -131,7 +131,7 @@ describe( 'normalizeResponse', () => {
 		expect( result ).toEqual( response );
 	} );
 
-	it( 'should normalize legacy success format', () => {
+	it( 'should normalize success format without data field', () => {
 		const response = {
 			success: true,
 			workerName: 'test-worker',
@@ -149,7 +149,7 @@ describe( 'normalizeResponse', () => {
 		} );
 	} );
 
-	it( 'should normalize legacy error format', () => {
+	it( 'should normalize error format', () => {
 		const response = {
 			success: false,
 			error: 'Something failed',

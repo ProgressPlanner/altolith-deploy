@@ -9,8 +9,7 @@
 
 import { MAX_PROGRESS } from '../../utils/constants';
 
-// Hardcoded step weights for backwards compatibility
-// TODO: Remove this once job-based progress calculation is fully implemented
+// Hardcoded step weights for step-based progress tracking
 // Order matters! Steps are executed in this order.
 const STEP_WEIGHTS = {
 	discoverAssets: 5,        // Phase 1: 0-5%
@@ -96,26 +95,4 @@ export function calculateOverallProgress( stepProgress ) {
 
 	// Ensure progress is between 0-100 and rounded
 	return Math.min( MAX_PROGRESS, Math.max( 0, Math.round( overall ) ) );
-}
-
-/**
- * Get progress weight configuration for a step.
- *
- * Returns an object with start and range for backwards compatibility.
- *
- * @param {string} step Step identifier.
- * @return {Object|null} Progress weight configuration { start, range } or null if step not found.
- */
-export function getProgressWeight( step ) {
-	const weight = getStepWeight( step );
-	const start = getCumulativeProgress( step );
-
-	if ( weight === 0 ) {
-		return null;
-	}
-
-	return {
-		start,
-		range: weight,
-	};
 }

@@ -29,11 +29,6 @@ export function preparePublishConfiguration(
 	return {
 		storageProviderId: providerTypes.storage || '',
 		staticSiteProviderId: providerTypes.static_site || '',
-		// For backwards compatibility, use static site provider or storage provider
-		providerId:
-			providerTypes.static_site ||
-			providerTypes.storage ||
-			fallbackStorageProviderId,
 		providerConfigs: settings.providers || {},
 	};
 }
@@ -124,7 +119,6 @@ export function determineProvidersByDeploymentType(
 export function buildWorkflowContext( config, dependencies ) {
 	const {
 		siteUrl,
-		providerId,
 		staticSiteProviders,
 		blueprintBundleProviders,
 		edgeFunctionProviders,
@@ -145,7 +139,6 @@ export function buildWorkflowContext( config, dependencies ) {
 		// API and state
 		api,
 		siteUrl,
-		providerId, // Legacy: single provider ID for backwards compat
 
 		// Provider arrays by deployment type (from PHP registry via REST API)
 		staticSiteProviders,

@@ -17,23 +17,22 @@ import { calculateOverallProgress } from '../../../../../../utils/progressManage
  * @param {Object}   context                       Execution context.
  * @param {Function} context.processStaticSiteUrls Static site generator function.
  * @param {Array}    context.staticSiteProviders   Array of provider IDs that support static site deployment.
- * @param {string}   context.providerId            (Legacy) Single provider ID for backwards compatibility.
- * @param {Object}   context.currentStatus         Current job status.
- * @param {string}   context.siteUrl               WordPress site URL.
- * @param {Function} context.setStatusMessage      Status message updater.
- * @param {Function} context.removeMessage         Message remover.
+ * @param {Array}    context.urls                   URLs to process.
+ * @param {string}   context.staticSiteUrl          Static site URL.
+ * @param {Object}   context.blueprintData          Blueprint data.
+ * @param {string}   context.siteUrl                WordPress site URL.
+ * @param {Function} context.setStatusMessage       Status message updater.
+ * @param {Function} context.removeMessage           Message remover.
  * @return {Promise<Object>} Step result with uploaded files.
  */
 export async function handler( context ) {
 	const {
 		processStaticSiteUrls,
-		urls, // From getStaticSiteUrlsHandler (workflow) or currentStatus (tests)
-		staticSiteUrl, // From getStaticSiteUrlsHandler (workflow) or currentStatus (tests)
-		blueprintData, // From generateBlueprintHandler (workflow) or currentStatus (tests)
-		currentStatus, // Legacy support for tests
+		urls,
+		staticSiteUrl,
+		blueprintData,
 		siteUrl,
-		staticSiteProviders = [], // NEW: Array of provider IDs
-		providerId, // LEGACY: Keep for backwards compat
+		staticSiteProviders = [],
 		setStatusMessage,
 		setStepProgress,
 		setOverallProgressValue,
@@ -41,26 +40,13 @@ export async function handler( context ) {
 		removeMessage,
 	} = context;
 
-	// Support both new format (urls directly in context) and old format (currentStatus.urls for tests)
-	const urlsArray = urls || currentStatus?.urls;
-	const blueprintDataForStatic =
-		blueprintData !== undefined
-			? blueprintData
-			: currentStatus?.blueprintData ?? null;
-
-	if ( ! urlsArray || ! Array.isArray( urlsArray ) ) {
+	if ( ! urls || ! Array.isArray( urls ) ) {
 		throw new Error(
 			'URLs not found. Please run getStaticSiteUrls first.'
 		);
 	}
 
-	// Use staticSiteProviders if available, fallback to single providerId
-	let providers = [];
-	if ( staticSiteProviders.length > 0 ) {
-		providers = staticSiteProviders;
-	} else if ( providerId ) {
-		providers = [ providerId ];
-	}
+	const providers = staticSiteProviders;
 
 	if ( providers.length === 0 ) {
 		setStatusMessage(
@@ -97,12 +83,12 @@ export async function handler( context ) {
 	 */
 	const filteredUrls = applyFilters(
 		'aether.upload.urls',
-		urlsArray,
-		providers, // Pass array instead of single ID
+		urls,
+		providers,
 		{
 			// Enhanced context for providers
 			siteUrl,
-			blueprintData: blueprintDataForStatic,
+			blueprintData,
 			staticSiteUrl,
 			providers,
 		}
@@ -159,7 +145,6 @@ export async function handler( context ) {
 				}
 			} catch ( error ) {
 				// If we can't fetch provider config, fall back to shared staticSiteUrl
-				// This maintains backwards compatibility
 			}
 
 			// Show provider context banner
@@ -183,13 +168,13 @@ export async function handler( context ) {
 				);
 			}
 
-			const result = await processStaticSiteUrls(
+				const result = await processStaticSiteUrls(
 				filteredUrls,
 				providerDeploymentUrl, // Provider-specific deployment URL
 				providerIdItem,
 				siteUrl,
 				setStatusMessage,
-				blueprintDataForStatic,
+				blueprintData,
 				removeMessage
 			);
 
@@ -310,15 +295,12 @@ export async function handler( context ) {
 			),
 			successCount: successfulUploads.length,
 			failureCount: failedUploads.length,
-			// Legacy fields for backwards compatibility
-			staticFiles: successfulUploads[ 0 ]?.value?.uploadedFiles || [],
-			filesUploaded: successfulUploads[ 0 ]?.value?.filesUploaded || 0,
 		},
 		providers,
 		{
 			// Enhanced context for providers
 			siteUrl,
-			blueprintData: blueprintDataForStatic,
+			blueprintData,
 			staticSiteUrl,
 		}
 	);

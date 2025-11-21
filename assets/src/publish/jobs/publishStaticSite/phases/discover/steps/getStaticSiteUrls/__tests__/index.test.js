@@ -6,15 +6,15 @@
  * @package
  */
 
-import { handler as getStaticSiteUrlsHandler } from '../../jobs/publishStaticSite/phases/discover/steps/getStaticSiteUrls';
+import { handler as getStaticSiteUrlsHandler } from '../index.js';
 
 // Mock apiFetch
-jest.mock( '../../../utils/api', () => ( {
+jest.mock( '../../../../../../../../utils/api.js', () => ( {
 	__esModule: true,
 	default: jest.fn(),
 } ) );
 
-import apiFetch from '../../../utils/api';
+import apiFetch from '../../../../../../../../utils/api.js';
 
 describe( 'getStaticSiteUrlsStep', () => {
 	beforeEach( () => {

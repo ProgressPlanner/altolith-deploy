@@ -4,7 +4,7 @@ Static site generation and deployment orchestration for the Aether plugin.
 
 ## Overview
 
-The publish workflow converts a WordPress site running in WordPress Playground into a static site and deploys it to a cloud provider. It uses a **step-based orchestration** model with React and PHP coordination via REST API.
+The publish workflow converts a WordPress site running in WordPress Playground into a static site and deploys it to a cloud provider. It uses a **hook-based job orchestration** model (`@wordpress/hooks`) with React and PHP coordination via REST API.
 
 ## Architecture
 
@@ -24,19 +24,24 @@ The workflow is split between React (client-side) and PHP (server-side):
 - `prepare_upload_manifest` - List files for upload
 - Job status management and persistence
 
-### Step Orchestration
+### Job Orchestration
 
-Steps execute sequentially with status tracking:
+The workflow uses a three-level hierarchy (Jobs → Phases → Steps) with automatic dependency resolution:
 
-1. **discoverAssets** - Find all changed assets
-2. **getStaticSiteUrls** - Generate list of URLs to export
-3. **generateBlueprint** - Create Playground blueprint
-4. **createSiteArchive** - Package WordPress files
-5. **generateStaticSite** (React) - Process HTML, extract assets, upload
-6. **uploadStaticSiteFiles** - Upload static HTML files
-7. **uploadSiteArchive** - Upload WordPress archive
+**Jobs:**
+1. **buildBlueprintBundle** - Create WordPress Playground blueprint bundle
+   - discover phase → discoverAssets step
+   - prepare phase → createSiteArchive step
+   - generate phase → generateBlueprint step
 
-Each step reports progress and can be cancelled.
+2. **publishStaticSite** - Generate static HTML site
+   - discover phase → getStaticSiteUrls step
+
+3. **uploadAssets** - Upload generated assets to providers
+   - blueprintBundle phase → uploadBundle step (depends on buildBlueprintBundle)
+   - staticSite phase → uploadStaticFiles step (depends on publishStaticSite)
+
+Jobs register via `@wordpress/hooks` and can be extended by third-party plugins. See `WORKFLOW_REFACTOR.md` for details.
 
 ## Directory Structure
 
@@ -47,13 +52,25 @@ publish/
 │   ├── PublishPage.js           # Full-page publish interface
 │   └── ...
 ├── hooks/               # Custom hooks for publish logic
-│   ├── usePublishController.js  # Main orchestration (873 LOC - needs refactoring)
+│   ├── usePublishController.js  # Main orchestration using job system
 │   ├── useStaticSiteGenerator.js  # Static site generation (React)
 │   ├── usePublishAPI.js         # REST API calls
 │   ├── useBlueprintGenerator.js # Blueprint generation
 │   └── ...
+├── jobs/                # Job-based workflow system
+│   ├── buildBlueprintBundle/  # Blueprint bundle job
+│   ├── publishStaticSite/     # Static site job
+│   ├── uploadAssets/          # Upload job
+│   └── index.js         # Job registry entry point
+├── registry/            # Workflow orchestration
+│   ├── JobRegistry.js   # Job registration system
+│   ├── DependencyResolver.js  # Dependency resolution
+│   └── HookManager.js   # Hook utilities
+├── workflows/           # Workflow execution
+│   └── jobExecutor.js   # Job executor with hooks
 └── utils/               # Utility functions
     ├── steps.js         # Step definitions and metadata
+    ├── progressManager.js  # Progress calculation
     ├── assetExtractor.js  # Extract assets from HTML
     ├── urlRewriter.js     # Rewrite URLs in HTML
     └── ...
@@ -87,22 +104,22 @@ import PublishProgressModal from '../components/PublishProgressModal';
 
 ### usePublishController
 
-Main orchestration hook (⚠️ **needs refactoring** - 873 LOC god hook).
+Main orchestration hook using the job-based workflow system.
 
 **Location:** `hooks/usePublishController.js`
 
 **Responsibilities:**
-- Step orchestration and sequencing
+- Job execution via `executeJobs()` from `workflows/jobExecutor.js`
 - Status polling and updates
 - Error handling and recovery
-- Progress calculation
+- Progress calculation via `progressManager.js`
 - Job lifecycle management
 
-**Current Issues:**
-- Too many responsibilities (7+)
-- Mixed concerns (UI state + business logic)
-- Hard to test
-- Planned refactoring in Phase 4-5
+**Implementation:**
+- Uses `@wordpress/hooks` for job orchestration
+- Three-level hierarchy: Jobs → Phases → Steps
+- Automatic dependency resolution
+- Extensible via third-party plugins
 
 ### useStaticSiteGenerator
 

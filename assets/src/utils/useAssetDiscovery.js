@@ -16,7 +16,7 @@ import {
 	normalizePluginSlug,
 } from '../services/AssetDiscoveryService';
 
-// Re-export normalizePluginSlug for backwards compatibility
+// Re-export normalizePluginSlug
 export { normalizePluginSlug };
 
 /**

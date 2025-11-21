@@ -382,9 +382,6 @@ export function usePublishController( publishState ) {
 			// Get current site URL for static site generation (use pure function)
 			const siteUrl = window.location.origin;
 
-			// Get providerId for backwards compatibility (from pure function result)
-			const providerId = publishConfig.providerId;
-
 			// Get arrays of instance IDs for each deployment type (use pure function)
 			const providersByType = determineProvidersByDeploymentType(
 				publishConfig.providerConfigs,
@@ -415,7 +412,6 @@ export function usePublishController( publishState ) {
 			const workflowContext = buildWorkflowContext(
 				{
 					siteUrl,
-					providerId,
 					staticSiteProviders,
 					blueprintBundleProviders,
 					edgeFunctionProviders,
@@ -454,8 +450,7 @@ export function usePublishController( publishState ) {
 				},
 				onStepStart: ( jobId, phaseId, stepId ) => {
 					debug( `[Workflow] Step starting: ${ jobId }.${ phaseId }.${ stepId }` );
-					// Update UI with step ID for backwards compatibility
-					// The old system used just stepId, so we'll use that for UI updates
+					// Update UI with step ID
 					updateFromStep( stepId );
 				},
 				onStepComplete: ( jobId, phaseId, stepId, result ) => {

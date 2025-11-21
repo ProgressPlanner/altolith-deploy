@@ -18,7 +18,6 @@ import { formatFileSize } from '../../../../../../../utils/helpers';
  * @param {Object}   context                          Execution context.
  * @param {Function} context.handleSiteArchiveUpload  Archive upload function.
  * @param {Array}    context.blueprintBundleProviders Array of provider IDs that support blueprint bundle deployment.
- * @param {string}   context.providerId               (Legacy) Single provider ID for backwards compatibility.
  * @param {Function} context.setStatusMessage         Status message updater.
  * @param {Object}   context.blueprintBundle          Blueprint bundle data from generateBlueprint step.
  * @return {Promise<Object>} Step result.
@@ -26,24 +25,15 @@ import { formatFileSize } from '../../../../../../../utils/helpers';
 export async function handler( context ) {
 	const {
 		handleSiteArchiveUpload,
-		blueprintBundleProviders = [], // NEW: Array of provider IDs
-		providerId, // LEGACY: Keep for backwards compat
+		blueprintBundleProviders = [],
 		setStatusMessage,
 		setStepProgress,
 		setOverallProgressValue,
 		blueprintBundle, // Blueprint bundle data with bundleSize, bundlePath, bundleUrl
 	} = context;
 
-	// Use blueprintBundleProviders if available (these are instance IDs)
-	// Fallback to single providerId for backward compatibility (may be instance ID or provider type ID)
-	let providers = [];
-	if ( blueprintBundleProviders.length > 0 ) {
-		// blueprintBundleProviders contains instance IDs (e.g., 'local-filesystem:abc-123')
-		providers = blueprintBundleProviders;
-	} else if ( providerId ) {
-		// Legacy fallback - providerId may be instance ID or provider type ID
-		providers = [ providerId ];
-	}
+	// blueprintBundleProviders contains instance IDs (e.g., 'local-filesystem:abc-123')
+	const providers = blueprintBundleProviders;
 
 	if ( providers.length === 0 ) {
 		setStatusMessage(
@@ -91,7 +81,6 @@ export async function handler( context ) {
 				}
 			} catch ( error ) {
 				// If we can't fetch provider config, use default export path
-				// This maintains backwards compatibility
 				console.warn(
 					`[Aether] Error fetching config for instance ${ providerIdItem }, using default export path:`,
 					error

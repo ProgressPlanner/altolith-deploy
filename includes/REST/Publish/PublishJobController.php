@@ -139,7 +139,7 @@ class PublishJobController
 		$discoveredAssets = isset($body['discoveredAssets']) ? $sanitizeArrayRecursive($body['discoveredAssets']) : null;
 
 		// Note: Array complexity validation above already checks both depth and element count
-		// This redundant check is kept for backwards compatibility and defense in depth
+		// This redundant check is kept for defense in depth
 		$maxAssetCount = 1000; // Maximum 1000 assets per request
 		if (\is_array($changedAssets) && \count($changedAssets, COUNT_RECURSIVE) > $maxAssetCount) {
 			return new \WP_Error(

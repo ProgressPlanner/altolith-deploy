@@ -101,57 +101,6 @@ export function getStep( stepId ) {
 }
 
 /**
- * Get the next step ID in the workflow.
- *
- * @param {string} currentStepId Current step identifier.
- * @return {string|null} Next step ID or null if this is the final step.
- */
-export function getNextStep( currentStepId ) {
-	const currentIndex = PUBLISH_STEPS.findIndex(
-		( step ) => step.id === currentStepId
-	);
-
-	if ( currentIndex === -1 || currentIndex === PUBLISH_STEPS.length - 1 ) {
-		return null;
-	}
-
-	return PUBLISH_STEPS[ currentIndex + 1 ].id;
-}
-
-/**
- * Get the completion message for a step.
- *
- * @param {string} stepId Step identifier.
- * @return {string|null} Completion message or null if not defined.
- */
-export function getCompletionMessage( stepId ) {
-	const step = getStep( stepId );
-	return step?.completionMessage || null;
-}
-
-/**
- * Get the waiting message for a step.
- *
- * @param {string} stepId Step identifier.
- * @return {string|null} Waiting message or null if not defined.
- */
-export function getWaitingMessage( stepId ) {
-	const step = getStep( stepId );
-	return step?.waitingMessage || null;
-}
-
-/**
- * Get the label for a step.
- *
- * @param {string} stepId Step identifier.
- * @return {string|null} Step label or null if not found.
- */
-export function getLabel( stepId ) {
-	const step = getStep( stepId );
-	return step?.label || null;
-}
-
-/**
  * Check if a step supports progress reporting.
  *
  * @param {string} stepId Step identifier.
@@ -160,15 +109,4 @@ export function getLabel( stepId ) {
 export function supportsProgress( stepId ) {
 	const step = getStep( stepId );
 	return step?.supportsProgress || false;
-}
-
-/**
- * Check if a step requires browser upload.
- *
- * @param {string} stepId Step identifier.
- * @return {boolean} True if step requires browser upload.
- */
-export function requiresBrowserUpload( stepId ) {
-	const step = getStep( stepId );
-	return step?.requiresBrowserUpload || false;
 }

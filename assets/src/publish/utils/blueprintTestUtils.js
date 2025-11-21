@@ -189,7 +189,7 @@ export function validateBlueprintSteps( steps, expectedStepConfig ) {
 				);
 			}
 		} else if ( ! step.wordPressFilesZip.url ) {
-			// Fallback for URL-based resources (legacy format)
+			// Fallback for URL-based resources
 			errors.push(
 				`Step ${ currentIndex }: importWordPressFiles missing wordPressFilesZip.url`
 			);

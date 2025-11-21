@@ -19,8 +19,5 @@ export * from './timing.js';
 // Provider Constants
 export * from './providers.js';
 
-// Step Constants
-export * from './steps.js';
-
 // Capability Constants
 export * from './capabilities.js';

@@ -81,7 +81,6 @@ export function useStaticSiteGenerator( onProgress ) {
 					);
 
 				// Use instance ID parameter if provided (multi-instance support)
-				// Otherwise use discovered provider type (legacy single-instance)
 				const providerIdToUse =
 					staticSiteProviderId || discoveredStaticSiteProviderId;
 

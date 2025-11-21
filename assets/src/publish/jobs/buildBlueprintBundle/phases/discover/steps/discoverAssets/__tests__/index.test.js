@@ -4,7 +4,7 @@
  * @package
  */
 
-import { handler as discoverAssetsHandler } from '../../jobs/buildBlueprintBundle/phases/discover/steps/discoverAssets';
+import { handler as discoverAssetsHandler } from '../index.js';
 
 describe( 'discoverAssetsStep', () => {
 	describe( 'discoverAssetsHandler', () => {

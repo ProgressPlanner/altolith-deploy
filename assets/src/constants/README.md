@@ -89,37 +89,16 @@ if (hasCapability(provider, 'storage')) {
   - `isStorageProvider(providerId)` - Check if provider is storage
   - `hasCapability(provider, capability)` - Check provider capabilities
 
-### steps.js
+### steps.js (Removed)
 
-Publish workflow step IDs, statuses, and progress calculation.
+**This file has been removed** after the workflow refactor to a job-based orchestration system.
 
-```javascript
-import { PUBLISH_STEPS, STEP_STATUS, calculateOverallProgress } from '../constants';
+For step-related functionality, see:
+- `publish/utils/steps.js` - Step definitions and metadata with i18n support
+- `publish/utils/progressManager.js` - Progress calculation
+- `publish/jobs/` - Job-based workflow system with hierarchical structure
 
-// Use step constants
-const currentStep = PUBLISH_STEPS.GENERATE_BLUEPRINT;
-
-// Check status
-if (step.status === STEP_STATUS.COMPLETE) {
-    // Step is done
-}
-
-// Calculate progress
-const progress = calculateOverallProgress(currentStep, stepProgress);
-```
-
-**Contents:**
-- `PUBLISH_STEPS` - Step ID constants
-- `STEP_STATUS` - Status values (pending, active, complete, error, skipped, waiting)
-- `PUBLISH_STATUS` - Overall workflow statuses
-- `STEP_WEIGHTS` - Relative weights for progress calculation
-- Helper functions:
-  - `calculateOverallProgress(stepId, stepProgress)` - Weighted progress
-  - `getStepIndex(stepId)` - Get step position in workflow
-  - `getNextStep(stepId)` - Get next step ID
-  - `getPreviousStep(stepId)` - Get previous step ID
-
-**Note:** This file complements `publish/utils/steps.js` which contains step definitions and metadata.
+The publish workflow now uses a hook-based job orchestration system (`@wordpress/hooks`) instead of hardcoded constants.
 
 ### capabilities.js
 
