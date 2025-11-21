@@ -96,7 +96,7 @@ export function useStaticSiteGenerator( onProgress ) {
 				cache,
 			} );
 
-			const { cache, totalFilesToUpload } = preScanResult;
+			const { cache: sharedCache, totalFilesToUpload } = preScanResult;
 
 			// Merge pre-scan failures
 			failures.urlsFailed += preScanResult.failures.urlsFailed;
@@ -113,7 +113,7 @@ export function useStaticSiteGenerator( onProgress ) {
 			let filesSkipped = 0;
 
 			// Get cached URLs
-			const cachedUrls = await cache.getAllUrls();
+			const cachedUrls = await sharedCache.getAllUrls();
 
 			// Fire upload start action
 			doAction(
@@ -125,7 +125,7 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			// Process each URL
 			for ( const url of cachedUrls ) {
-				const cached = await cache.get( url );
+				const cached = await sharedCache.get( url );
 				if ( ! cached ) {
 					debugWarn(
 						`[Aether] Cache miss for URL: ${ url } - skipping`
