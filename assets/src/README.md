@@ -84,6 +84,49 @@ The build uses dynamic imports for code splitting to reduce initial bundle size:
 - Large dependencies (like zip libraries) loaded when needed
 - Webpack automatically creates chunks for split code
 
+## Path Aliases
+
+The codebase uses path aliases for cleaner imports. Instead of deep relative paths like `../../../utils/debug`, use the `@aether/*` aliases:
+
+### Available Aliases
+
+- `@aether/utils` → `assets/src/utils`
+- `@aether/components` → `assets/src/components`
+- `@aether/hooks` → `assets/src/hooks`
+- `@aether/constants` → `assets/src/constants`
+- `@aether/contexts` → `assets/src/contexts`
+- `@aether/services` → `assets/src/services`
+- `@aether/providers` → `assets/src/providers`
+- `@aether/publish` → `assets/src/publish`
+- `@aether/admin` → `assets/src/admin-settings`
+
+### Usage Examples
+
+```javascript
+// ❌ Old style (still works, but not recommended)
+import { debug } from '../../utils/debug';
+import StaticSiteCache from '../../../utils/staticSiteCache';
+
+// ✅ New style (recommended)
+import { debug } from '@aether/utils/debug';
+import StaticSiteCache from '@aether/utils/staticSiteCache';
+import { executePreScan } from '@aether/publish/utils/preScanPhase';
+```
+
+### Benefits
+
+- **Cleaner imports**: No more counting `../` levels
+- **Easier refactoring**: Moving files doesn't break imports
+- **Better IDE support**: Autocomplete and go-to-definition work better
+- **Self-documenting**: Aliases make codebase structure clearer
+
+### Migration
+
+Both import styles work (backward compatible). Migrate gradually:
+- Use aliases in new code
+- Update files as you edit them
+- Old relative imports continue to work
+
 ## Development Guidelines
 
 ### Component Structure
