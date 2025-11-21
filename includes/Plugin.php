@@ -105,11 +105,6 @@ class Plugin
 		\add_action('admin_enqueue_scripts', [ $this, 'enqueueAdminCommon' ]);
 		\add_action('wp_enqueue_scripts', [ $this, 'enqueueAdminCommon' ]);
 
-		// Register WP-CLI commands.
-		if (\defined('WP_CLI') && WP_CLI) {
-			$this->registerCLICommands();
-		}
-
 		// Remove emoji scripts for cleaner static site generation.
 		$this->removeEmojiScripts();
 	}
@@ -861,15 +856,5 @@ class Plugin
 		$registry = ProviderRegistry::getInstance();
 		$provider = $registry->getForDeploymentType($deploymentType);
 		return $provider ? $provider->getId() : ($providerId ?? '');
-	}
-
-	/**
-	 * Register WP-CLI commands.
-	 *
-	 * @return void
-	 */
-	private function registerCLICommands(): void
-	{
-		\WP_CLI::add_command('aether convert-provider-configs', [ new CLI\ProviderCommands(), 'convertProviderConfigs' ]);
 	}
 }
