@@ -127,6 +127,9 @@ class Plugin
 		\add_action('admin_enqueue_scripts', [ $this, 'enqueueAdminCommon' ]);
 		\add_action('wp_enqueue_scripts', [ $this, 'enqueueAdminCommon' ]);
 
+		// Add filter to add data-provider-id attribute to provider script tags
+		\add_filter('script_loader_tag', [ $this, 'addProviderScriptAttribute' ], 10, 2);
+
 		// Remove emoji scripts for cleaner static site generation.
 		$this->removeEmojiScripts();
 	}
@@ -312,25 +315,34 @@ class Plugin
 			$asset['version'],
 			true
 		);
+	}
 
-		// Add data-provider-id attribute for providerLoader detection
-		// Use script_loader_tag filter to add the attribute
-		\add_filter(
-			'script_loader_tag',
-			function ($tag, $scriptHandle) use ($handle, $providerId) {
-				if ($scriptHandle === $handle) {
-					// Add data-provider-id attribute to script tag
-					$tag = \str_replace(
-						'<script ',
-						\sprintf('<script data-provider-id="%s" ', \esc_attr($providerId)),
-						$tag
-					);
-				}
-				return $tag;
-			},
-			10,
-			2
-		);
+	/**
+	 * Add data-provider-id attribute to provider script tags.
+	 *
+	 * Filter callback for script_loader_tag to add data-provider-id attribute
+	 * to provider script tags for providerLoader detection.
+	 *
+	 * @param string $tag        The script tag HTML.
+	 * @param string $scriptHandle The script handle.
+	 * @return string Modified script tag.
+	 */
+	public function addProviderScriptAttribute(string $tag, string $scriptHandle): string
+	{
+		// Check if this is a provider script (handle format: aether-provider-{providerId})
+		if (\strpos($scriptHandle, 'aether-provider-') === 0) {
+			// Extract provider ID from handle
+			$providerId = \str_replace('aether-provider-', '', $scriptHandle);
+
+			// Add data-provider-id attribute to script tag
+			$tag = \str_replace(
+				'<script ',
+				\sprintf('<script data-provider-id="%s" ', \esc_attr($providerId)),
+				$tag
+			);
+		}
+
+		return $tag;
 	}
 
 
