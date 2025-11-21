@@ -1,8 +1,8 @@
 /**
  * Provider Metadata Tests
  *
- * Tests for provider metadata caching and retrieval utilities.
- * Validates caching behavior and API integration.
+ * Tests for provider metadata retrieval utilities.
+ * Validates ProviderRegistry integration.
  *
  * @package
  */
@@ -13,15 +13,25 @@ import {
 	getProviderById,
 	clearMetadataCache,
 } from '../providerMetadata';
-import apiFetch from '@wordpress/api-fetch';
+import ProviderRegistry from '../../registry/ProviderRegistry';
 
-// Mock dependencies
-jest.mock( '@wordpress/api-fetch' );
+// Mock ProviderRegistry
+const mockGetAll = jest.fn();
+const mockGetByDeploymentType = jest.fn();
+const mockGet = jest.fn();
+
+jest.mock( '../../registry/ProviderRegistry', () => ( {
+	__esModule: true,
+	default: {
+		getAll: () => mockGetAll(),
+		getByDeploymentType: ( type ) => mockGetByDeploymentType( type ),
+		get: ( id ) => mockGet( id ),
+	},
+} ) );
 
 describe( 'providerMetadata', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
-		clearMetadataCache();
 		// Suppress console.error in tests
 		jest.spyOn( console, 'error' ).mockImplementation( () => {} );
 	} );
@@ -31,401 +41,137 @@ describe( 'providerMetadata', () => {
 	} );
 
 	describe( 'getProviderMetadata()', () => {
-		describe( 'Caching behavior', () => {
-			test( 'should fetch metadata on first call', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-					providers: [
-						{ id: 'provider-1', name: 'Provider 1' },
-						{ id: 'provider-2', name: 'Provider 2' },
+		test( 'should get all providers from registry', () => {
+			const mockProviders = [
+				{
+					getId: () => 'provider-1',
+					getName: () => 'Provider 1',
+					getDescription: () => 'Description 1',
+					getType: () => 'type-1',
+					getSupportedDeploymentTypes: () => [ 'static_site' ],
+				},
+				{
+					getId: () => 'provider-2',
+					getName: () => 'Provider 2',
+					getDescription: () => 'Description 2',
+					getType: () => 'type-2',
+					getSupportedDeploymentTypes: () => [
+						'static_site',
+						'blueprint_bundle',
 					],
-				} );
+				},
+			];
+			mockGetAll.mockReturnValue( mockProviders );
 
-				const result = await getProviderMetadata();
+			const result = getProviderMetadata();
 
-				expect( apiFetch ).toHaveBeenCalledTimes( 1 );
-				expect( result ).toHaveLength( 2 );
-			} );
-
-			test( 'should use cache on subsequent calls', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-					providers: [ { id: 'provider-1', name: 'Provider 1' } ],
-				} );
-
-				await getProviderMetadata();
-				const result = await getProviderMetadata();
-
-				expect( apiFetch ).toHaveBeenCalledTimes( 1 );
-				expect( result ).toHaveLength( 1 );
-			} );
-
-			test( 'should return same reference from cache', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-					providers: [ { id: 'provider-1' } ],
-				} );
-
-				const result1 = await getProviderMetadata();
-				const result2 = await getProviderMetadata();
-
-				expect( result1 ).toBe( result2 );
-			} );
-
-			test( 'should refetch after cache clear', async () => {
-				apiFetch
-					.mockResolvedValueOnce( {
-						success: true,
-						providers: [ { id: 'provider-1' } ],
-					} )
-					.mockResolvedValueOnce( {
-						success: true,
-						providers: [ { id: 'provider-2' } ],
-					} );
-
-				await getProviderMetadata();
-				clearMetadataCache();
-				const result = await getProviderMetadata();
-
-				expect( apiFetch ).toHaveBeenCalledTimes( 2 );
-				expect( result[ 0 ].id ).toBe( 'provider-2' );
+			expect( mockGetAll ).toHaveBeenCalled();
+			expect( result ).toHaveLength( 2 );
+			expect( result[ 0 ] ).toEqual( {
+				id: 'provider-1',
+				name: 'Provider 1',
+				description: 'Description 1',
+				type: 'type-1',
+				deployment_types: [ 'static_site' ],
 			} );
 		} );
 
-		describe( 'API response handling', () => {
-			test( 'should return providers array on success', async () => {
-				const mockProviders = [
-					{ id: 'provider-1', name: 'Provider 1' },
-					{ id: 'provider-2', name: 'Provider 2' },
-				];
+		test( 'should handle providers without optional methods', () => {
+			const mockProviders = [
+				{
+					getId: () => 'provider-1',
+					getName: () => 'Provider 1',
+				},
+			];
+			mockGetAll.mockReturnValue( mockProviders );
 
-				apiFetch.mockResolvedValue( {
-					success: true,
-					providers: mockProviders,
-				} );
+			const result = getProviderMetadata();
 
-				const result = await getProviderMetadata();
-
-				expect( result ).toEqual( mockProviders );
+			expect( result[ 0 ] ).toEqual( {
+				id: 'provider-1',
+				name: 'Provider 1',
+				description: '',
+				type: 'generic',
+				deployment_types: [],
 			} );
+		} );
 
-			test( 'should return empty array when success is false', async () => {
-				apiFetch.mockResolvedValue( {
-					success: false,
-				} );
+		test( 'should return empty array when no providers', () => {
+			mockGetAll.mockReturnValue( [] );
 
-				const result = await getProviderMetadata();
+			const result = getProviderMetadata();
 
-				expect( result ).toEqual( [] );
-			} );
-
-			test( 'should return empty array when providers is missing', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-				} );
-
-				const result = await getProviderMetadata();
-
-				expect( result ).toEqual( [] );
-			} );
-
-			test( 'should return empty array on API error', async () => {
-				apiFetch.mockRejectedValue( new Error( 'Network error' ) );
-
-				const result = await getProviderMetadata();
-
-				expect( result ).toEqual( [] );
-				expect( console.error ).toHaveBeenCalledWith(
-					'[Aether] Failed to fetch provider metadata:',
-					expect.any( Error )
-				);
-			} );
-
-			test( 'should not cache empty array on error', async () => {
-				apiFetch
-					.mockRejectedValueOnce( new Error( 'Network error' ) )
-					.mockResolvedValueOnce( {
-						success: true,
-						providers: [ { id: 'provider-1' } ],
-					} );
-
-				await getProviderMetadata();
-				const result = await getProviderMetadata();
-
-				expect( apiFetch ).toHaveBeenCalledTimes( 2 );
-				expect( result ).toHaveLength( 1 );
-			} );
+			expect( result ).toEqual( [] );
 		} );
 	} );
 
 	describe( 'getProvidersByDeploymentType()', () => {
-		describe( 'No caching (always fetches)', () => {
-			test( 'should fetch every time', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-					providers: [ { id: 'provider-1' } ],
-				} );
+		test( 'should get providers for deployment type', () => {
+			const mockProviders = [
+				{
+					getId: () => 'provider-1',
+					getName: () => 'Provider 1',
+					getDescription: () => 'Description 1',
+					getType: () => 'type-1',
+					getSupportedDeploymentTypes: () => [ 'static_site' ],
+				},
+			];
+			mockGetByDeploymentType.mockReturnValue( mockProviders );
 
-				await getProvidersByDeploymentType( 'static_site' );
-				await getProvidersByDeploymentType( 'static_site' );
+			const result = getProvidersByDeploymentType( 'static_site' );
 
-				expect( apiFetch ).toHaveBeenCalledTimes( 2 );
-			} );
-
-			test( 'should use correct API path', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-					providers: [],
-				} );
-
-				await getProvidersByDeploymentType( 'static_site' );
-
-				expect( apiFetch ).toHaveBeenCalledWith( {
-					path: '/aether/site-exporter/providers/by-deployment-type/static_site',
-				} );
-			} );
-
-			test( 'should handle different deployment types', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-					providers: [],
-				} );
-
-				await getProvidersByDeploymentType( 'blueprint_bundle' );
-
-				expect( apiFetch ).toHaveBeenCalledWith( {
-					path: '/aether/site-exporter/providers/by-deployment-type/blueprint_bundle',
-				} );
-			} );
+			expect( mockGetByDeploymentType ).toHaveBeenCalledWith(
+				'static_site'
+			);
+			expect( result ).toHaveLength( 1 );
+			expect( result[ 0 ].id ).toBe( 'provider-1' );
 		} );
 
-		describe( 'API response handling', () => {
-			test( 'should return providers array on success', async () => {
-				const mockProviders = [
-					{ id: 'provider-1' },
-					{ id: 'provider-2' },
-				];
+		test( 'should return empty array when no providers for type', () => {
+			mockGetByDeploymentType.mockReturnValue( [] );
 
-				apiFetch.mockResolvedValue( {
-					success: true,
-					providers: mockProviders,
-				} );
+			const result = getProvidersByDeploymentType( 'blueprint_bundle' );
 
-				const result =
-					await getProvidersByDeploymentType( 'static_site' );
-
-				expect( result ).toEqual( mockProviders );
-			} );
-
-			test( 'should return empty array when success is false', async () => {
-				apiFetch.mockResolvedValue( {
-					success: false,
-				} );
-
-				const result =
-					await getProvidersByDeploymentType( 'static_site' );
-
-				expect( result ).toEqual( [] );
-			} );
-
-			test( 'should return empty array when providers is missing', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-				} );
-
-				const result =
-					await getProvidersByDeploymentType( 'static_site' );
-
-				expect( result ).toEqual( [] );
-			} );
-
-			test( 'should return empty array on API error', async () => {
-				apiFetch.mockRejectedValue( new Error( 'Network error' ) );
-
-				const result =
-					await getProvidersByDeploymentType( 'static_site' );
-
-				expect( result ).toEqual( [] );
-				expect( console.error ).toHaveBeenCalledWith(
-					'[Aether] Failed to fetch providers for deployment type static_site:',
-					expect.any( Error )
-				);
-			} );
+			expect( result ).toEqual( [] );
 		} );
 	} );
 
 	describe( 'getProviderById()', () => {
-		describe( 'No caching (always fetches)', () => {
-			test( 'should fetch every time', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-					provider: { id: 'provider-1' },
-				} );
+		test( 'should get provider by ID', () => {
+			const mockProvider = {
+				getId: () => 'provider-1',
+				getName: () => 'Provider 1',
+				getDescription: () => 'Description 1',
+				getType: () => 'type-1',
+				getSupportedDeploymentTypes: () => [ 'static_site' ],
+			};
+			mockGet.mockReturnValue( mockProvider );
 
-				await getProviderById( 'provider-1' );
-				await getProviderById( 'provider-1' );
+			const result = getProviderById( 'provider-1' );
 
-				expect( apiFetch ).toHaveBeenCalledTimes( 2 );
-			} );
-
-			test( 'should use correct API path', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-					provider: {},
-				} );
-
-				await getProviderById( 'local-filesystem' );
-
-				expect( apiFetch ).toHaveBeenCalledWith( {
-					path: '/aether/site-exporter/providers/local-filesystem',
-				} );
-			} );
-
-			test( 'should handle different provider IDs', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-					provider: {},
-				} );
-
-				await getProviderById( 'cloudflare-r2' );
-
-				expect( apiFetch ).toHaveBeenCalledWith( {
-					path: '/aether/site-exporter/providers/cloudflare-r2',
-				} );
+			expect( mockGet ).toHaveBeenCalledWith( 'provider-1' );
+			expect( result ).toEqual( {
+				id: 'provider-1',
+				name: 'Provider 1',
+				description: 'Description 1',
+				type: 'type-1',
+				deployment_types: [ 'static_site' ],
 			} );
 		} );
 
-		describe( 'API response handling', () => {
-			test( 'should return provider object on success', async () => {
-				const mockProvider = {
-					id: 'provider-1',
-					name: 'Provider 1',
-				};
+		test( 'should return null when provider not found', () => {
+			mockGet.mockReturnValue( null );
 
-				apiFetch.mockResolvedValue( {
-					success: true,
-					provider: mockProvider,
-				} );
+			const result = getProviderById( 'non-existent' );
 
-				const result = await getProviderById( 'provider-1' );
-
-				expect( result ).toEqual( mockProvider );
-			} );
-
-			test( 'should return null when success is false', async () => {
-				apiFetch.mockResolvedValue( {
-					success: false,
-				} );
-
-				const result = await getProviderById( 'provider-1' );
-
-				expect( result ).toBeNull();
-			} );
-
-			test( 'should return null when provider is missing', async () => {
-				apiFetch.mockResolvedValue( {
-					success: true,
-				} );
-
-				const result = await getProviderById( 'provider-1' );
-
-				expect( result ).toBeNull();
-			} );
-
-			test( 'should return null on API error', async () => {
-				apiFetch.mockRejectedValue( new Error( 'Network error' ) );
-
-				const result = await getProviderById( 'provider-1' );
-
-				expect( result ).toBeNull();
-				expect( console.error ).toHaveBeenCalledWith(
-					'[Aether] Failed to fetch provider provider-1:',
-					expect.any( Error )
-				);
-			} );
+			expect( result ).toBeNull();
 		} );
 	} );
 
 	describe( 'clearMetadataCache()', () => {
-		test( 'should clear the cache', async () => {
-			apiFetch.mockResolvedValue( {
-				success: true,
-				providers: [ { id: 'provider-1' } ],
-			} );
-
-			await getProviderMetadata();
-			clearMetadataCache();
-
-			// Next call should fetch again
-			await getProviderMetadata();
-
-			expect( apiFetch ).toHaveBeenCalledTimes( 2 );
-		} );
-
-		test( 'should be safe to call when cache is empty', () => {
+		test( 'should be a no-op function', () => {
+			// clearMetadataCache is now a no-op since we use registry directly
 			expect( () => clearMetadataCache() ).not.toThrow();
-		} );
-
-		test( 'should be safe to call multiple times', async () => {
-			apiFetch.mockResolvedValue( {
-				success: true,
-				providers: [],
-			} );
-
-			clearMetadataCache();
-			clearMetadataCache();
-			clearMetadataCache();
-
-			expect( () => clearMetadataCache() ).not.toThrow();
-		} );
-	} );
-
-	describe( 'Integration scenarios', () => {
-		test( 'getProviderMetadata cache should not affect other functions', async () => {
-			apiFetch.mockResolvedValue( {
-				success: true,
-				providers: [ { id: 'provider-1' } ],
-				provider: { id: 'provider-1' },
-			} );
-
-			await getProviderMetadata();
-			await getProviderById( 'provider-1' );
-			await getProvidersByDeploymentType( 'static_site' );
-
-			// getProviderMetadata should use cache (1 call)
-			// Other functions should not (2 calls each)
-			expect( apiFetch ).toHaveBeenCalledTimes( 3 );
-		} );
-
-		test( 'should handle sequential calls with caching', async () => {
-			apiFetch.mockResolvedValue( {
-				success: true,
-				providers: [ { id: 'provider-1' } ],
-			} );
-
-			// First call fetches
-			await getProviderMetadata();
-			// Subsequent calls use cache
-			await getProviderMetadata();
-			await getProviderMetadata();
-
-			// Should only fetch once
-			expect( apiFetch ).toHaveBeenCalledTimes( 1 );
-		} );
-
-		test( 'should handle mixed success and failure calls', async () => {
-			apiFetch
-				.mockRejectedValueOnce( new Error( 'Error' ) )
-				.mockResolvedValueOnce( {
-					success: true,
-					providers: [ { id: 'provider-1' } ],
-				} );
-
-			const result1 = await getProviderMetadata();
-			const result2 = await getProviderMetadata();
-
-			expect( result1 ).toEqual( [] );
-			expect( result2 ).toEqual( [ { id: 'provider-1' } ] );
 		} );
 	} );
 } );
