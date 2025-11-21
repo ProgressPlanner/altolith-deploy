@@ -1,8 +1,7 @@
 /**
  * Standard Response Format Utility
  *
- * Provides standardized response object format for all API operations.
- * Eliminates inconsistent response structures across the codebase.
+ * Provides standardized response object format for API operations.
  *
  * Standard format:
  * {
@@ -59,115 +58,4 @@ export function createErrorResponse( error, errors = null ) {
 	}
 
 	return response;
-}
-
-/**
- * Normalize a response to standard format.
- *
- * Takes various response formats and converts to standard format.
- *
- * @param {Object} response Response to normalize.
- * @return {Object} Normalized response in standard format.
- */
-export function normalizeResponse( response ) {
-	// Already in standard format
-	if (
-		response &&
-		typeof response.success === 'boolean' &&
-		( response.data !== undefined || response.error !== undefined )
-	) {
-		return response;
-	}
-
-	// Format with error field
-	if ( response && response.error ) {
-		return createErrorResponse( response.error, response.errors );
-	}
-
-	// Format with success=true but no data field
-	if ( response && response.success === true ) {
-		// Extract data from non-standard fields
-		const { success, error, errors, ...data } = response;
-		return createSuccessResponse( data );
-	}
-
-	// Format with success=false
-	if ( response && response.success === false ) {
-		return createErrorResponse(
-			response.message || response.error || 'Operation failed',
-			response.errors
-		);
-	}
-
-	// Fallback for unknown format
-	return response;
-}
-
-/**
- * Check if response indicates success.
- *
- * @param {Object} response Response object.
- * @return {boolean} True if successful.
- */
-export function isSuccessResponse( response ) {
-	return response?.success === true;
-}
-
-/**
- * Check if response indicates error.
- *
- * @param {Object} response Response object.
- * @return {boolean} True if error.
- */
-export function isErrorResponse( response ) {
-	return response?.success === false;
-}
-
-/**
- * Get data from response.
- *
- * @param {Object} response Response object.
- * @param {*}      fallback Fallback value if no data.
- * @return {*} Response data or fallback.
- */
-export function getResponseData( response, fallback = null ) {
-	if ( isSuccessResponse( response ) ) {
-		// Return data even if it's null (null is valid data)
-		return 'data' in response ? response.data : fallback;
-	}
-	return fallback;
-}
-
-/**
- * Get error from response.
- *
- * @param {Object} response     Response object.
- * @param {string} defaultError Default error message.
- * @return {string} Error message.
- */
-export function getResponseError( response, defaultError = 'Unknown error' ) {
-	if ( isErrorResponse( response ) ) {
-		return response.error || defaultError;
-	}
-	return defaultError;
-}
-
-/**
- * Get all errors from response.
- *
- * @param {Object} response Response object.
- * @return {Array<string>} Array of error messages.
- */
-export function getResponseErrors( response ) {
-	if ( isErrorResponse( response ) ) {
-		const errors = [];
-		if ( response.error ) {
-			errors.push( response.error );
-		}
-		if ( response.errors && Array.isArray( response.errors ) ) {
-			errors.push( ...response.errors );
-		}
-		return errors;
-	}
-	return [];
 }
