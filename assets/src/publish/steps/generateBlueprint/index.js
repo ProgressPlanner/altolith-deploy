@@ -50,10 +50,13 @@ async function handler( context ) {
 	// Generate blueprint.json
 	let blueprintData;
 	if ( typeof generateBlueprintJson === 'function' ) {
-		blueprintData = await generateBlueprintJson( {
-			assets: discoveredAssets,
-			wpContentZipUrl: zipUrl,
-		} );
+		blueprintData = await generateBlueprintJson(
+			{
+				assets: discoveredAssets,
+				wpContentZipUrl: zipUrl,
+			},
+			setStatusMessage
+		);
 	} else {
 		// Fallback: use API to generate blueprint
 		const blueprintResponse = await api.generateBlueprint( {

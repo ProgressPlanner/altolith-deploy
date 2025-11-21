@@ -38,9 +38,38 @@ export function usePublishAPI() {
 		[ service ]
 	);
 
+	const discoverUrls = useCallback( async () => {
+		return await service.discoverUrls();
+	}, [ service ] );
+
+	const createArchive = useCallback(
+		async ( options ) => {
+			return await service.createArchive( options );
+		},
+		[ service ]
+	);
+
+	const generateBlueprint = useCallback(
+		async ( options ) => {
+			return await service.generateBlueprint( options );
+		},
+		[ service ]
+	);
+
+	const createBlueprintBundle = useCallback(
+		async ( options ) => {
+			return await service.createBlueprintBundle( options );
+		},
+		[ service ]
+	);
+
 	return {
 		discoverBlueprintBundleAssets,
 		getAssetStatus,
 		markAssetChanged,
+		discoverUrls,
+		createArchive,
+		generateBlueprint,
+		createBlueprintBundle,
 	};
 }

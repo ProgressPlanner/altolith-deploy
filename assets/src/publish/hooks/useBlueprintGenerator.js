@@ -27,13 +27,30 @@ export function useBlueprintGenerator() {
 		/**
 		 * Generate blueprint JSON.
 		 *
-		 * @param {Function} setStatusMessage Optional status message callback.
+		 * @param {Object|Function} optionsOrSetStatusMessage Options object with assets/wpContentZipUrl, or setStatusMessage callback (for backward compatibility).
+		 * @param {Array}          [optionsOrSetStatusMessage.assets] Discovered assets.
+		 * @param {string}          [optionsOrSetStatusMessage.wpContentZipUrl] URL to wp-content.zip.
+		 * @param {Function}        [setStatusMessage] Optional status message callback (if first param is options object).
 		 * @return {Promise<Object>} Blueprint JSON object.
 		 */
-		async ( setStatusMessage = null ) => {
+		async ( optionsOrSetStatusMessage = null, setStatusMessage = null ) => {
+			// Handle both old signature (setStatusMessage) and new signature (options object, setStatusMessage)
+			let actualSetStatusMessage = null;
+			let assets = [];
+			let wpContentZipUrl = null;
+
+			if ( typeof optionsOrSetStatusMessage === 'function' ) {
+				// Old signature: generateBlueprint(setStatusMessage)
+				actualSetStatusMessage = optionsOrSetStatusMessage;
+			} else if ( optionsOrSetStatusMessage && typeof optionsOrSetStatusMessage === 'object' ) {
+				// New signature: generateBlueprint({ assets, wpContentZipUrl }, setStatusMessage)
+				assets = optionsOrSetStatusMessage.assets || [];
+				wpContentZipUrl = optionsOrSetStatusMessage.wpContentZipUrl || null;
+				actualSetStatusMessage = setStatusMessage;
+			}
 			// Fetch WordPress.org plugin/theme slugs and site name using browser-based discovery.
-			if ( setStatusMessage ) {
-				setStatusMessage(
+			if ( actualSetStatusMessage ) {
+				actualSetStatusMessage(
 					'Detecting WordPress.org plugins and themes…',
 					'progress',
 					'detectWporgAssets'
@@ -76,8 +93,8 @@ export function useBlueprintGenerator() {
 			wporgThemes = filteredAssets.themes || [];
 
 			// Start configuring Playground settings
-			if ( setStatusMessage ) {
-				setStatusMessage(
+			if ( actualSetStatusMessage ) {
+				actualSetStatusMessage(
 					'Configuring WordPress Playground settings…',
 					'progress',
 					'configurePlayground'
@@ -93,20 +110,20 @@ export function useBlueprintGenerator() {
 			// Construct blueprint JSON.
 			let blueprint = buildBlueprintJson( steps );
 
-			if ( setStatusMessage ) {
-				setStatusMessage(
+			if ( actualSetStatusMessage ) {
+				actualSetStatusMessage(
 					`Blueprint generated: ${ steps.length } total steps`,
 					'success',
 					'generateBlueprint'
 				);
 				// Update detection message to success
-				setStatusMessage(
+				actualSetStatusMessage(
 					'Detected WordPress.org plugins and themes',
 					'success',
 					'detectWporgAssets'
 				);
 				// Update configuration message to success
-				setStatusMessage(
+				actualSetStatusMessage(
 					'Configured WordPress Playground settings',
 					'success',
 					'configurePlayground'
@@ -115,14 +132,14 @@ export function useBlueprintGenerator() {
 				// Keep original message text, just update type to success
 				if ( wporgPlugins.length > 0 ) {
 					const pluginNames = wporgPlugins.join( ', ' );
-					setStatusMessage(
+					actualSetStatusMessage(
 						`Adding ${ wporgPlugins.length } WordPress.org plugin${
 							wporgPlugins.length !== 1 ? 's' : ''
 						} to blueprint`,
 						'success',
 						'addPluginsToBlueprint'
 					);
-					setStatusMessage(
+					actualSetStatusMessage(
 						`Plugins: ${ pluginNames }`,
 						'success',
 						'pluginsList'
@@ -130,14 +147,14 @@ export function useBlueprintGenerator() {
 				}
 				if ( wporgThemes.length > 0 ) {
 					const themeNames = wporgThemes.join( ', ' );
-					setStatusMessage(
+					actualSetStatusMessage(
 						`Adding ${ wporgThemes.length } WordPress.org theme${
 							wporgThemes.length !== 1 ? 's' : ''
 						} to blueprint`,
 						'success',
 						'addThemesToBlueprint'
 					);
-					setStatusMessage(
+					actualSetStatusMessage(
 						`Themes: ${ themeNames }`,
 						'success',
 						'themesList'

@@ -71,4 +71,169 @@ export class PublishAPIService {
 			message: `Marked ${ type } ${ slug } as changed`,
 		};
 	}
+
+	/**
+	 * Discover URLs for static site generation
+	 *
+	 * Calls the REST API to discover all URLs that need to be fetched.
+	 *
+	 * @return {Promise<Object>} Response with urls array and staticSiteUrl
+	 */
+	async discoverUrls() {
+		try {
+			const response = await this.apiFetch( {
+				path: '/aether/site-exporter/publish/steps/getStaticSiteUrls',
+				method: 'GET',
+			} );
+
+			if ( response.success ) {
+				return {
+					success: true,
+					urls: response.urls || [],
+					staticSiteUrl: response.staticSiteUrl || null,
+				};
+			}
+
+			return {
+				success: false,
+				message: response.message || 'Failed to discover URLs',
+				urls: [],
+				staticSiteUrl: null,
+			};
+		} catch ( error ) {
+			return {
+				success: false,
+				message: error.message || 'Failed to discover URLs',
+				urls: [],
+				staticSiteUrl: null,
+			};
+		}
+	}
+
+	/**
+	 * Create site archive
+	 *
+	 * Creates wp-content.zip containing custom plugins, themes, and uploads.
+	 *
+	 * @param {Object}   options              Archive creation options.
+	 * @param {Array}    options.assets       Array of asset objects to include.
+	 * @param {boolean}  options.includeUploads Whether to include uploads directory.
+	 * @return {Promise<Object>} Response with zipPath, zipUrl, and zipSize
+	 */
+	async createArchive( { assets = [], includeUploads = true } = {} ) {
+		try {
+			// Extract slugs from assets array
+			const customAssets = assets.map( ( asset ) => asset.slug || asset );
+
+			const response = await this.apiFetch( {
+				path: '/aether/site-exporter/publish/createArchive',
+				method: 'POST',
+				data: {
+					custom_assets: customAssets,
+					include_uploads: includeUploads,
+				},
+			} );
+
+			if ( response.success && response.data ) {
+				// The PHP endpoint returns data in a 'data' property
+				const archiveData = response.data;
+				return {
+					success: true,
+					zipPath: archiveData.zipPath || null,
+					zipUrl: archiveData.zipUrl || null,
+					zipSize: archiveData.zipSize || 0,
+				};
+			}
+
+			return {
+				success: false,
+				message: response.message || 'Failed to create archive',
+			};
+		} catch ( error ) {
+			return {
+				success: false,
+				message: error.message || 'Failed to create archive',
+			};
+		}
+	}
+
+	/**
+	 * Generate blueprint JSON
+	 *
+	 * This is typically handled client-side via generateBlueprintJson function.
+	 * This method is a fallback if the function is not available.
+	 *
+	 * @param {Object}   options              Blueprint generation options.
+	 * @param {Array}    options.assets       Discovered assets.
+	 * @param {string}   options.wpContentZipUrl URL to wp-content.zip.
+	 * @return {Promise<Object>} Response with blueprint data
+	 */
+	async generateBlueprint( { assets = [], wpContentZipUrl = null } = {} ) {
+		// This is a fallback method - typically blueprint generation is done client-side
+		// via the generateBlueprintJson function from useBlueprintGenerator hook
+		return {
+			success: false,
+			message: 'Blueprint generation must be done client-side. Please ensure generateBlueprintJson function is available.',
+		};
+	}
+
+	/**
+	 * Create blueprint bundle
+	 *
+	 * Creates blueprint-bundle.zip containing blueprint.json and wp-content.zip.
+	 *
+	 * @param {Object}   options                Bundle creation options.
+	 * @param {Object}   options.blueprint     Blueprint JSON data.
+	 * @param {string}   options.wpContentZipPath Path to wp-content.zip.
+	 * @return {Promise<Object>} Response with bundlePath, bundleUrl, and bundleSize
+	 */
+	async createBlueprintBundle( { blueprint, wpContentZipPath } = {} ) {
+		try {
+			if ( ! blueprint ) {
+				return {
+					success: false,
+					message: 'Blueprint data is required',
+				};
+			}
+
+			if ( ! wpContentZipPath ) {
+				return {
+					success: false,
+					message: 'Archive path is required',
+				};
+			}
+
+			const response = await this.apiFetch( {
+				path: '/aether/site-exporter/publish/generateBlueprintBundle',
+				method: 'POST',
+				data: {
+					blueprintData: blueprint,
+					archiveResult: {
+						zipPath: wpContentZipPath,
+					},
+				},
+			} );
+
+			if ( response.success && response.data ) {
+				// The PHP endpoint returns data in a 'data' property
+				const bundleData = response.data;
+				return {
+					success: true,
+					bundlePath: bundleData.bundlePath || null,
+					bundleUrl: bundleData.bundleUrl || null,
+					bundleSize: bundleData.bundleSize || 0,
+				};
+			}
+
+			return {
+				success: false,
+				message: response.message || 'Failed to create blueprint bundle',
+			};
+		} catch ( error ) {
+			return {
+				success: false,
+				message: error.message || 'Failed to create blueprint bundle',
+			};
+		}
+	}
 }

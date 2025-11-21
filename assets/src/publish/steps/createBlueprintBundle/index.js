@@ -61,8 +61,8 @@ async function handler( context ) {
 	const { zipPath, zipUrl, zipSize } = archiveResponse;
 	const sizeFormatted = formatFileSize( zipSize || 0 );
 
-	// Update asset manager if provided
-	if ( assetManager && zipPath ) {
+	// Update asset manager if provided and method exists
+	if ( assetManager && zipPath && typeof assetManager.setArchivePath === 'function' ) {
 		assetManager.setArchivePath( zipPath );
 	}
 
