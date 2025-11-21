@@ -31,6 +31,13 @@ class ProviderRegistry
 	private array $providers = [];
 
 	/**
+	 * Whether providers have been discovered.
+	 *
+	 * @var bool
+	 */
+	private bool $discovered = false;
+
+	/**
 	 * Get singleton instance.
 	 *
 	 * @return ProviderRegistry Registry instance
@@ -57,10 +64,16 @@ class ProviderRegistry
 	 * Can be called multiple times to discover providers registered after
 	 * initial discovery. Duplicate providers (same ID) are skipped.
 	 *
+	 * @param bool $force Force re-discovery even if already discovered.
 	 * @return void
 	 */
-	private function discoverProviders(): void
+	private function discoverProviders(bool $force = false): void
 	{
+		// Skip if already discovered and not forcing
+		if ($this->discovered && ! $force) {
+			return;
+		}
+
 		/**
 		 * Filter to register providers.
 		 *
@@ -78,6 +91,21 @@ class ProviderRegistry
 				}
 			}
 		}
+
+		$this->discovered = true;
+	}
+
+	/**
+	 * Refresh provider discovery.
+	 *
+	 * Forces re-discovery of providers. Useful when providers are registered
+	 * dynamically after initial discovery.
+	 *
+	 * @return void
+	 */
+	public function refresh(): void
+	{
+		$this->discoverProviders(true);
 	}
 
 	/**
@@ -90,21 +118,19 @@ class ProviderRegistry
 	{
 		$providerId = $provider->getId();
 		$this->providers[$providerId] = $provider;
+		// Mark as discovered when manually registering
+		$this->discovered = true;
 	}
 
 	/**
 	 * Get a provider by ID.
-	 *
-	 * Re-discovers providers to ensure all providers registered via the filter
-	 * are included, even if they were registered after the registry was first
-	 * instantiated.
 	 *
 	 * @param string $providerId Provider ID
 	 * @return BaseProvider|null Provider instance or null if not found
 	 */
 	public function get(string $providerId): ?BaseProvider
 	{
-		// Re-discover providers to catch any that were registered after initial discovery
+		// Ensure providers are discovered
 		$this->discoverProviders();
 		return $this->providers[$providerId] ?? null;
 	}
@@ -112,15 +138,11 @@ class ProviderRegistry
 	/**
 	 * Get all registered providers.
 	 *
-	 * Re-discovers providers to ensure all providers registered via the filter
-	 * are included, even if they were registered after the registry was first
-	 * instantiated.
-	 *
 	 * @return array<string, BaseProvider> Array of provider instances keyed by ID
 	 */
 	public function getAll(): array
 	{
-		// Re-discover providers to catch any that were registered after initial discovery
+		// Ensure providers are discovered
 		$this->discoverProviders();
 		return $this->providers;
 	}
@@ -138,16 +160,12 @@ class ProviderRegistry
 	/**
 	 * Get providers that support a specific deployment type.
 	 *
-	 * Re-discovers providers to ensure all providers registered via the filter
-	 * are included, even if they were registered after the registry was first
-	 * instantiated.
-	 *
 	 * @param string $deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
 	 * @return array<BaseProvider> Array of providers that support the deployment type
 	 */
 	public function getByDeploymentType(string $deploymentType): array
 	{
-		// Re-discover providers to catch any that were registered after initial discovery
+		// Ensure providers are discovered
 		$this->discoverProviders();
 		$supported = [];
 		foreach ($this->providers as $provider) {
@@ -161,10 +179,6 @@ class ProviderRegistry
 	/**
 	 * Get default provider.
 	 *
-	 * Re-discovers providers to ensure all providers registered via the filter
-	 * are included, even if they were registered after the registry was first
-	 * instantiated.
-	 *
 	 * Returns the first provider that supports static_site deployment,
 	 * or the first registered provider if none found.
 	 *
@@ -172,7 +186,7 @@ class ProviderRegistry
 	 */
 	public function getDefault(): ?BaseProvider
 	{
-		// Re-discover providers to catch any that were registered after initial discovery
+		// Ensure providers are discovered
 		$this->discoverProviders();
 		// Try to get provider for static_site deployment first
 		$staticSiteProviders = $this->getByDeploymentType('static_site');
@@ -205,16 +219,12 @@ class ProviderRegistry
 	/**
 	 * Check if a provider is registered.
 	 *
-	 * Re-discovers providers to ensure all providers registered via the filter
-	 * are included, even if they were registered after the registry was first
-	 * instantiated.
-	 *
 	 * @param string $providerId Provider ID
 	 * @return bool True if registered
 	 */
 	public function has(string $providerId): bool
 	{
-		// Re-discover providers to catch any that were registered after initial discovery
+		// Ensure providers are discovered
 		$this->discoverProviders();
 		return isset($this->providers[$providerId]);
 	}
