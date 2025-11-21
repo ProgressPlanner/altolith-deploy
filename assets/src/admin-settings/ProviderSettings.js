@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
-import ProviderInstanceCard from '../components/ProviderInstanceCard';
+import ProviderInstanceTable from '../components/ProviderInstanceTable';
 import ProviderConfigModal from '../components/ProviderConfigModal';
 import AddProviderInstanceModal from '../components/AddProviderInstanceModal';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -30,10 +30,8 @@ const statsContainerStyle = {
 	marginBottom: spacing.lg,
 };
 
-const gridContainerStyle = {
-	display: 'grid',
-	gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-	gap: spacing.md,
+const tableWrapperStyle = {
+	overflowX: 'auto',
 };
 
 const emptyStateStyle = {
@@ -374,35 +372,19 @@ export default function ProviderSettings( {
 				</span>
 			</div>
 
-			{ /* Flat Grid of All Provider Instances */ }
+			{ /* Table of All Provider Instances */ }
 			{ allInstances.length > 0 ? (
 				<div
-					className="aether-provider-settings__grid"
-					style={ gridContainerStyle }
+					className="aether-provider-settings__table-wrapper"
+					style={ tableWrapperStyle }
 				>
-					{ allInstances.map( ( instance ) => (
-						<ProviderInstanceCard
-							key={ instance.instanceId }
-							provider={ instance.provider }
-							instance={ {
-								instanceId: instance.instanceId,
-								config: instance.config,
-							} }
-							onConfigure={ () =>
-								handleConfigureInstance( instance.instanceId )
-							}
-							onToggle={ ( enabled ) =>
-								handleToggleInstance(
-									instance.instanceId,
-									enabled
-								)
-							}
-							onDelete={ () =>
-								handleDeleteInstance( instance.instanceId )
-							}
-							onRename={ handleRenameInstance }
-						/>
-					) ) }
+					<ProviderInstanceTable
+						instances={ allInstances }
+						onConfigure={ handleConfigureInstance }
+						onToggle={ handleToggleInstance }
+						onDelete={ handleDeleteInstance }
+						onRename={ handleRenameInstance }
+					/>
 				</div>
 			) : (
 				<div
