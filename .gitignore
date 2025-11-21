@@ -10,3 +10,5 @@ coverage/
 .phpunit.cache/
 coverage/
 /wp-tests-config.php
+
+*.map
