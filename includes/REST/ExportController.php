@@ -377,7 +377,7 @@ class ExportController
 	 * Download completed export.
 	 *
 	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response|WP_Error|void
+	 * @return WP_REST_Response|WP_Error
 	 */
 	public function downloadExport(WP_REST_Request $request): \WP_REST_Response|\WP_Error
 	{

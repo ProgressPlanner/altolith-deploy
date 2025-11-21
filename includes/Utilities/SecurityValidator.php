@@ -177,6 +177,7 @@ class SecurityValidator
 		if ($basePath !== null) {
 			$validation = PathValidator::validatePath($path, $basePath, false);
 			if (! $validation['valid']) {
+				/** @var array{valid: bool, error?: string} $validation */
 				return $validation;
 			}
 		}

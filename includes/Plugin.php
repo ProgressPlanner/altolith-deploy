@@ -430,7 +430,7 @@ class Plugin
 		 * @param string $destinationPath Destination path (instance's export_path).
 		 * @param array  $context         Additional context data.
 		 */
-		\add_action('aether_blueprint_bundle_upload', function ($instanceId, $sourcePath, $destinationPath) {
+		\add_action('aether_blueprint_bundle_upload', function ($instanceId, $sourcePath, $destinationPath, $context = []) {
 			// Only handle local-filesystem provider instances.
 			if (!\is_string($instanceId) || \strpos($instanceId, 'local-filesystem:') !== 0) {
 				return;

@@ -43,6 +43,7 @@ class CookieManager
 
 		// Use SameSite=None for HTTPS (allows cross-site/iframe usage)
 		// Fall back to SameSite=Lax for HTTP sites (still reasonably secure)
+		/** @var 'Lax'|'None' $sameSite */
 		$sameSite = $isSecure ? 'None' : 'Lax';
 
 		if ('set_auth_cookie' === $action) {
@@ -61,36 +62,35 @@ class CookieManager
 	 * @param string $sameSite   SameSite attribute value.
 	 * @return void
 	 */
+	/**
+	 * @param 'Lax'|'None' $sameSite
+	 */
 	private function setAuthCookie(string $authCookie, int $expire, bool $isSecure, string $sameSite): void
 	{
 		// Set the auth cookie (can be AUTH_COOKIE or SECURE_AUTH_COOKIE based on scheme).
 		$authCookieName = $isSecure ? SECURE_AUTH_COOKIE : AUTH_COOKIE;
 
-		\setcookie(
-			$authCookieName,
-			$authCookie,
-			[
-				'expires'  => $expire,
-				'path'     => PLUGINS_COOKIE_PATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => $isSecure,
-				'httponly' => true,
-				'samesite' => $sameSite,
-			]
-		);
+		/** @var array{expires: int, path: string, domain: string, secure: bool, httponly: true, samesite: 'Lax'|'None'|'lax'|'none'} $cookieOptions */
+		$cookieOptions = [
+			'expires'  => $expire,
+			'path'     => PLUGINS_COOKIE_PATH,
+			'domain'   => COOKIE_DOMAIN,
+			'secure'   => $isSecure,
+			'httponly' => true,
+			'samesite' => $sameSite,
+		];
+		\setcookie($authCookieName, $authCookie, $cookieOptions);
 
-		\setcookie(
-			$authCookieName,
-			$authCookie,
-			[
-				'expires'  => $expire,
-				'path'     => ADMIN_COOKIE_PATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => $isSecure,
-				'httponly' => true,
-				'samesite' => $sameSite,
-			]
-		);
+		/** @var array{expires: int, path: string, domain: string, secure: bool, httponly: true, samesite: 'Lax'|'None'|'lax'|'none'} $cookieOptions */
+		$cookieOptions = [
+			'expires'  => $expire,
+			'path'     => ADMIN_COOKIE_PATH,
+			'domain'   => COOKIE_DOMAIN,
+			'secure'   => $isSecure,
+			'httponly' => true,
+			'samesite' => $sameSite,
+		];
+		\setcookie($authCookieName, $authCookie, $cookieOptions);
 	}
 
 	/**
@@ -99,36 +99,32 @@ class CookieManager
 	 * @param string $authCookie Cookie value.
 	 * @param int    $expire     Cookie expiration time.
 	 * @param bool   $isSecure   Whether cookie should be secure (HTTPS only).
-	 * @param string $sameSite   SameSite attribute value.
+	 * @param 'Lax'|'None' $sameSite   SameSite attribute value.
 	 * @return void
 	 */
 	private function setLoggedInCookie(string $authCookie, int $expire, bool $isSecure, string $sameSite): void
 	{
 		// Set the logged-in cookie.
-		\setcookie(
-			LOGGED_IN_COOKIE,
-			$authCookie,
-			[
-				'expires'  => $expire,
-				'path'     => COOKIEPATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => $isSecure,
-				'httponly' => true,
-				'samesite' => $sameSite,
-			]
-		);
+		/** @var array{expires: int, path: string, domain: string, secure: bool, httponly: true, samesite: 'Lax'|'None'|'lax'|'none'} $cookieOptions */
+		$cookieOptions = [
+			'expires'  => $expire,
+			'path'     => COOKIEPATH,
+			'domain'   => COOKIE_DOMAIN,
+			'secure'   => $isSecure,
+			'httponly' => true,
+			'samesite' => $sameSite,
+		];
+		\setcookie(LOGGED_IN_COOKIE, $authCookie, $cookieOptions);
 
-		\setcookie(
-			LOGGED_IN_COOKIE,
-			$authCookie,
-			[
-				'expires'  => $expire,
-				'path'     => SITECOOKIEPATH,
-				'domain'   => COOKIE_DOMAIN,
-				'secure'   => $isSecure,
-				'httponly' => true,
-				'samesite' => $sameSite,
-			]
-		);
+		/** @var array{expires: int, path: string, domain: string, secure: bool, httponly: true, samesite: 'Lax'|'None'|'lax'|'none'} $cookieOptions */
+		$cookieOptions = [
+			'expires'  => $expire,
+			'path'     => SITECOOKIEPATH,
+			'domain'   => COOKIE_DOMAIN,
+			'secure'   => $isSecure,
+			'httponly' => true,
+			'samesite' => $sameSite,
+		];
+		\setcookie(LOGGED_IN_COOKIE, $authCookie, $cookieOptions);
 	}
 }

@@ -460,6 +460,7 @@ class ExportService
 	 *
 	 * @deprecated Use FileBatchService::getOffloadedFilePaths() instead.
 	 * @return array<string> Array of absolute file paths.
+	 * @phpstan-ignore-next-line
 	 */
 	private function getOffloadedFilePaths(): array
 	{
