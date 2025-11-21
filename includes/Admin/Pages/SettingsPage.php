@@ -49,22 +49,41 @@ class SettingsPage extends BaseAdminPage
 			'version'      => \time(),
 		];
 
-		// Webpack chunks are loaded automatically by webpack runtime when needed
-		// No need to manually enqueue them
+		// Enqueue local-filesystem provider script separately (must load before admin-settings)
+		$plugin = \Aether\SiteExporter\Plugin::getInstance();
+		$plugin->enqueueProviderScript('local-filesystem');
 
-		// Enqueue the main script without chunk dependencies
-		// Webpack runtime handles chunk loading automatically
+		// Add provider scripts from aether-site-exporter-providers plugin as dependencies
+		// This ensures providers are registered before admin-settings queries the registry
+		// Note: These scripts are enqueued by the providers plugin at priority 5,
+		// so they should be registered by the time this code runs (priority 10)
+		$providerScriptDependencies = [];
+		$providerScripts = [
+			'aether-sep-provider-cloudflare-r2',
+			'aether-sep-provider-cloudflare',
+			'aether-sep-provider-gitlab',
+			'aether-sep-provider-gitlab-pages',
+		];
+
+		foreach ($providerScripts as $scriptHandle) {
+			// Check if script is registered or enqueued
+			if (\wp_script_is($scriptHandle, 'registered') || \wp_script_is($scriptHandle, 'enqueued')) {
+				$providerScriptDependencies[] = $scriptHandle;
+			}
+		}
+
+		// Merge provider script dependencies with WordPress dependencies
+		$dependencies = \array_merge($asset['dependencies'], $providerScriptDependencies);
+
+		// Enqueue the main script with provider script dependencies
+		// This ensures providers are registered before admin-settings queries the registry
 		\wp_enqueue_script(
 			'aether-admin-settings',
 			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin-settings.js',
-			$asset['dependencies'], // Only use actual WordPress dependencies, not webpack chunks
+			$dependencies,
 			$asset['version'],
 			true
 		);
-
-		// Enqueue local-filesystem provider script separately
-		$plugin = \Aether\SiteExporter\Plugin::getInstance();
-		$plugin->enqueueProviderScript('local-filesystem');
 
 		// Output meta tags for REST API configuration (React fetches from meta tags).
 		\add_action('admin_head', [ $this, 'outputMetaTags' ]);
