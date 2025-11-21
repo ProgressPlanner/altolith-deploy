@@ -77,24 +77,88 @@ export default function ProviderSettings( {
 	useEffect( () => {
 		// Get providers from JavaScript registry
 		const loadProviders = () => {
+			// eslint-disable-next-line no-console
+			console.log( 'ProviderSettings: Loading providers...' );
 			try {
 				// Get provider metadata from JavaScript registry
 				const allProviders = ProviderRegistry.getAll();
-				const providerMetadata = allProviders.map( ( provider ) => ( {
-					id: provider.getId(),
-					name: provider.getName(),
-					description: provider.getDescription?.() || '',
-					type: provider.getType?.() || 'generic',
-					deployment_types:
-						provider.getSupportedDeploymentTypes?.() || [],
-					settings_fields:
-						provider.getProviderSpecificConfigFields?.() || [],
-				} ) );
+				// eslint-disable-next-line no-console
+				console.log(
+					'ProviderSettings: Found',
+					allProviders.length,
+					'providers from registry'
+				);
 
-				setProviders( providerMetadata );
+				// If no providers, wait a bit for them to register
+				if ( allProviders.length === 0 ) {
+					// eslint-disable-next-line no-console
+					console.log(
+						'ProviderSettings: No providers yet, waiting...'
+					);
+					let attempts = 0;
+					const maxAttempts = 20;
+					const interval = setInterval( () => {
+						attempts++;
+						const foundProviders = ProviderRegistry.getAll();
+						// eslint-disable-next-line no-console
+						console.log(
+							'ProviderSettings: Attempt',
+							attempts,
+							'- Found',
+							foundProviders.length,
+							'providers'
+						);
+						if (
+							foundProviders.length > 0 ||
+							attempts >= maxAttempts
+						) {
+							clearInterval( interval );
+							if ( foundProviders.length > 0 ) {
+								processProviders( foundProviders );
+							} else {
+								// eslint-disable-next-line no-console
+								console.warn(
+									'ProviderSettings: No providers found after waiting'
+								);
+								setProviders( [] );
+							}
+						}
+					}, 100 );
+					return;
+				}
+
+				processProviders( allProviders );
 			} catch ( error ) {
-				console.error( 'Failed to load providers:', error );
+				// eslint-disable-next-line no-console
+				console.error( 'ProviderSettings: Failed to load providers:', error );
 			}
+		};
+
+		const processProviders = ( allProviders ) => {
+			// eslint-disable-next-line no-console
+			console.log(
+				'ProviderSettings: Processing',
+				allProviders.length,
+				'providers'
+			);
+			const providerMetadata = allProviders.map( ( provider ) => ( {
+				id: provider.getId(),
+				name: provider.getName(),
+				description: provider.getDescription?.() || '',
+				type: provider.getType?.() || 'generic',
+				deployment_types:
+					provider.getSupportedDeploymentTypes?.() || [],
+				settings_fields:
+					provider.getProviderSpecificConfigFields?.() || [],
+			} ) );
+
+			// eslint-disable-next-line no-console
+			console.log(
+				'ProviderSettings: Processed providers:',
+				providerMetadata.map( ( p ) => p.id )
+			);
+
+			setProviders( providerMetadata );
 		};
 
 		loadProviders();
