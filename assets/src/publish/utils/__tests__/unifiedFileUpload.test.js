@@ -239,7 +239,10 @@ describe( 'unifiedFileUpload', () => {
 					fileContext._uploadPromises = [];
 				}
 				const promise = new Promise( ( resolve ) => {
-					fileContext.result = { success: true, url: 'https://example.com/file.html' };
+					fileContext.result = {
+						success: true,
+						url: 'https://example.com/file.html',
+					};
 					resolve();
 				} );
 				fileContext._uploadPromises.push( promise );
