@@ -39,7 +39,8 @@ export const IMPORT_MAP_PATTERN =
 /**
  * CSS @import pattern.
  */
-export const CSS_IMPORT_PATTERN = /@import\s+(?:url\()?["']?([^"')]+)["']?\)?/gi;
+export const CSS_IMPORT_PATTERN =
+	/@import\s+(?:url\()?["']?([^"')]+)["']?\)?/gi;
 
 /**
  * CSS url() pattern.

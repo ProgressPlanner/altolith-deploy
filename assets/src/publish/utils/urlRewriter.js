@@ -32,7 +32,13 @@ import {
 } from './htmlRewriting';
 
 // Re-export URL utilities for backwards compatibility
-export { resolveRelative, isExternal, forceHttps, stripPlaygroundScope, normalize };
+export {
+	resolveRelative,
+	isExternal,
+	forceHttps,
+	stripPlaygroundScope,
+	normalize,
+};
 
 /**
  * Create URL rewriter instance.
@@ -255,7 +261,8 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 		debug( '  - HTML length:', html.length );
 
 		// Protect inline script content
-		const { html: protectedHtml, placeholders } = protectScriptContent( html );
+		const { html: protectedHtml, placeholders } =
+			protectScriptContent( html );
 		let result = protectedHtml;
 
 		// Extract site host and rewrite URLs
@@ -263,7 +270,12 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 
 		if ( siteHost ) {
 			const matches = collectSiteUrlMatches( result, siteHost );
-			result = replaceSiteUrlMatches( result, matches, rewriteUrl, contextUrl );
+			result = replaceSiteUrlMatches(
+				result,
+				matches,
+				rewriteUrl,
+				contextUrl
+			);
 		}
 
 		// Rewrite absolute paths if static URL has subdirectories

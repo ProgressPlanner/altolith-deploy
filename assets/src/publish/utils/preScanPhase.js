@@ -16,12 +16,12 @@ import StaticSiteCache from '../../utils/staticSiteCache';
  *
  * Fetches all URLs, extracts assets, and caches processed HTML.
  *
- * @param {Object}   options                    Pre-scan options.
- * @param {Array}    options.urls               URLs to scan.
- * @param {string}   options.siteUrl            WordPress site URL.
- * @param {string}   options.providerId         Provider ID.
- * @param {Object}   options.providerConfig     Provider configuration.
- * @param {Function} options.setStatusMessage   Status message updater.
+ * @param {Object}   options                  Pre-scan options.
+ * @param {Array}    options.urls             URLs to scan.
+ * @param {string}   options.siteUrl          WordPress site URL.
+ * @param {string}   options.providerId       Provider ID.
+ * @param {Object}   options.providerConfig   Provider configuration.
+ * @param {Function} options.setStatusMessage Status message updater.
  * @return {Promise<Object>} Pre-scan results.
  */
 export async function executePreScan( {
@@ -37,10 +37,19 @@ export async function executePreScan( {
 	};
 
 	// Fire pre-scan start action
-	doAction( 'aether.static.pre_scan.before', urls, providerId, providerConfig );
+	doAction(
+		'aether.static.pre_scan.before',
+		urls,
+		providerId,
+		providerConfig
+	);
 
 	if ( setStatusMessage ) {
-		setStatusMessage( 'Scanning files to upload…', 'progress', 'scanFiles' );
+		setStatusMessage(
+			'Scanning files to upload…',
+			'progress',
+			'scanFiles'
+		);
 	}
 
 	// Initialize cache

@@ -9,7 +9,10 @@
 
 import { applyFilters, doAction } from '@wordpress/hooks';
 import { buildDeploymentTypesField } from '../utils/configFieldBuilder';
-import { validateAllFields, hasRequiredFields } from '../utils/configValidation';
+import {
+	validateAllFields,
+	hasRequiredFields,
+} from '../utils/configValidation';
 import { sanitizeAllFields } from '../utils/configSanitization';
 
 /**
@@ -393,7 +396,10 @@ export class AbstractProvider {
 	 * @return {Promise<Object>} Validation errors object (empty if valid)
 	 */
 	async validateConfig( config ) {
-		const errors = await validateAllFields( config, this.getConfigFields() );
+		const errors = await validateAllFields(
+			config,
+			this.getConfigFields()
+		);
 
 		/**
 		 * Filter validation errors before returning.

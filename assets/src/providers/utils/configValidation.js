@@ -9,14 +9,12 @@
 /**
  * Validate a configuration value against a field definition.
  *
- * @param {*}      value   Value to validate.
- * @param {Object} field   Field definition.
- * @param {Object} config  Full config object (for cross-field validation).
+ * @param {*}      value  Value to validate.
+ * @param {Object} field  Field definition.
+ * @param {Object} config Full config object (for cross-field validation).
  * @return {Promise<string|null>} Error message or null if valid.
  */
 export async function validateFieldValue( value, field, config ) {
-	const fieldId = field.id;
-
 	// Check required fields
 	if ( field.required && ! value ) {
 		return `${ field.label } is required.`;
@@ -35,22 +33,33 @@ export async function validateFieldValue( value, field, config ) {
 		if ( validation.pattern ) {
 			const regex = new RegExp( validation.pattern );
 			if ( ! regex.test( value ) ) {
-				return validation.message || `${ field.label } format is invalid.`;
+				return (
+					validation.message || `${ field.label } format is invalid.`
+				);
 			}
 		}
 
 		// Min length validation
-		if ( validation.minLength !== undefined && value.length < validation.minLength ) {
+		if (
+			validation.minLength !== undefined &&
+			value.length < validation.minLength
+		) {
 			return `${ field.label } must be at least ${ validation.minLength } characters.`;
 		}
 
 		// Max length validation
-		if ( validation.maxLength !== undefined && value.length > validation.maxLength ) {
+		if (
+			validation.maxLength !== undefined &&
+			value.length > validation.maxLength
+		) {
 			return `${ field.label } must be no more than ${ validation.maxLength } characters.`;
 		}
 
 		// Custom validator callback
-		if ( validation.callback && typeof validation.callback === 'function' ) {
+		if (
+			validation.callback &&
+			typeof validation.callback === 'function'
+		) {
 			const result = await validation.callback( value, config );
 			if ( typeof result === 'string' ) {
 				return result;

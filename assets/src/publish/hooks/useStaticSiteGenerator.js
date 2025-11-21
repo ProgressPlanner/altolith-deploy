@@ -9,11 +9,13 @@
  */
 
 import { useCallback } from '@wordpress/element';
-import { doAction } from '@wordpress/hooks';
+import { doAction, applyFilters } from '@wordpress/hooks';
 import { createAssetTracker } from '../utils/assetTracker';
 import { debug, debugWarn } from '../../utils/debug';
-import { updateManifestEntry, uploadManifest } from '../../utils/manifestManager';
-import { applyFilters } from '@wordpress/hooks';
+import {
+	updateManifestEntry,
+	uploadManifest,
+} from '../../utils/manifestManager';
 
 // Extracted modules
 import {
@@ -58,7 +60,8 @@ export function useStaticSiteGenerator( onProgress ) {
 			const failures = createFailureTracker();
 
 			// Get provider configuration
-			const providerConfig = await fetchProviderConfig( staticSiteProviderId );
+			const providerConfig =
+				await fetchProviderConfig( staticSiteProviderId );
 			const staticPath = providerConfig.static_files_path || 'static/';
 
 			// Build and create storage service
@@ -122,7 +125,9 @@ export function useStaticSiteGenerator( onProgress ) {
 			for ( const url of cachedUrls ) {
 				const cached = await cache.get( url );
 				if ( ! cached ) {
-					debugWarn( `[Aether] Cache miss for URL: ${ url } - skipping` );
+					debugWarn(
+						`[Aether] Cache miss for URL: ${ url } - skipping`
+					);
 					continue;
 				}
 				const { processedHtml: rawHtml, assetUrls } = cached;
@@ -131,7 +136,9 @@ export function useStaticSiteGenerator( onProgress ) {
 					// Update progress message
 					if ( setStatusMessage ) {
 						setStatusMessage(
-							`Uploading files (${ filesUploaded + 1 }/${ totalFilesToUpload })`,
+							`Uploading files (${
+								filesUploaded + 1
+							}/${ totalFilesToUpload })`,
 							'progress',
 							'uploadFilesProgress'
 						);
@@ -214,10 +221,16 @@ export function useStaticSiteGenerator( onProgress ) {
 					// Periodic manifest save
 					if ( filesUploaded % 50 === 0 ) {
 						try {
-							debug( 'Periodic manifest save:', filesUploaded + ' files' );
+							debug(
+								'Periodic manifest save:',
+								filesUploaded + ' files'
+							);
 							await uploadManifest( storageService, manifest );
 						} catch ( error ) {
-							debugWarn( 'Periodic manifest save failed:', error );
+							debugWarn(
+								'Periodic manifest save failed:',
+								error
+							);
 						}
 					}
 				} catch ( error ) {
@@ -251,7 +264,9 @@ export function useStaticSiteGenerator( onProgress ) {
 				skipped: filesSkipped,
 				skipRate:
 					filesUploaded > 0
-						? `${ Math.round( ( filesSkipped / filesUploaded ) * 100 ) }%`
+						? `${ Math.round(
+								( filesSkipped / filesUploaded ) * 100
+						  ) }%`
 						: '0%',
 			} );
 

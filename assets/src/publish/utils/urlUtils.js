@@ -91,7 +91,12 @@ export function isExternal( url, siteUrl ) {
 		isExternalUrl = true;
 	}
 
-	return applyFilters( 'aether.url.is_external', isExternalUrl, url, siteUrl );
+	return applyFilters(
+		'aether.url.is_external',
+		isExternalUrl,
+		url,
+		siteUrl
+	);
 }
 
 /**

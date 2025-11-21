@@ -109,7 +109,10 @@ export function sanitizeAllFields( config, fields ) {
 
 		// Handle checkbox-group with option filtering
 		if ( type === 'checkbox-group' ) {
-			sanitized[ fieldId ] = filterCheckboxGroupValues( value, field.options );
+			sanitized[ fieldId ] = filterCheckboxGroupValues(
+				value,
+				field.options
+			);
 			continue;
 		}
 

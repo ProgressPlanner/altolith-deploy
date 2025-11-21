@@ -114,10 +114,10 @@ export function collectSiteUrlMatches( html, siteHost ) {
 /**
  * Replace site URL matches in HTML.
  *
- * @param {string}   html        HTML content.
- * @param {Array}    matches     Match objects from collectSiteUrlMatches.
- * @param {Function} rewriteUrl  Function to rewrite URLs.
- * @param {string}   contextUrl  Context URL for resolution.
+ * @param {string}   html       HTML content.
+ * @param {Array}    matches    Match objects from collectSiteUrlMatches.
+ * @param {Function} rewriteUrl Function to rewrite URLs.
+ * @param {string}   contextUrl Context URL for resolution.
  * @return {string} HTML with replaced URLs.
  */
 export function replaceSiteUrlMatches( html, matches, rewriteUrl, contextUrl ) {
@@ -192,12 +192,16 @@ export function rewriteAbsolutePaths( html, basePath ) {
 			}
 
 			const rewrittenPath = basePath + path;
-			debug( `[URL Rewriter] Rewriting: ${ path } -> ${ rewrittenPath }` );
+			debug(
+				`[URL Rewriter] Rewriting: ${ path } -> ${ rewrittenPath }`
+			);
 			return attrPart + quote + rewrittenPath + quote;
 		}
 	);
 
-	debug( `[URL Rewriter] Processed ${ replaceCount } absolute path attributes` );
+	debug(
+		`[URL Rewriter] Processed ${ replaceCount } absolute path attributes`
+	);
 	return result;
 }
 

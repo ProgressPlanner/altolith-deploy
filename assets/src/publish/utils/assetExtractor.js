@@ -50,7 +50,12 @@ export async function extractAssetsFromHtml( html, pageUrl, siteUrl ) {
 			const resolvedUrl = resolveRelative( cssUrl, pageUrl );
 			if ( shouldCollectAsset( resolvedUrl, siteUrl, 'css' ) ) {
 				collected.add( resolvedUrl );
-				await collectCssDependencies( resolvedUrl, siteUrl, collected, processed );
+				await collectCssDependencies(
+					resolvedUrl,
+					siteUrl,
+					collected,
+					processed
+				);
 			}
 		}
 	}
@@ -63,7 +68,12 @@ export async function extractAssetsFromHtml( html, pageUrl, siteUrl ) {
 		const resolvedUrl = resolveRelative( jsUrl, pageUrl );
 		if ( shouldCollectAsset( resolvedUrl, siteUrl, 'js' ) ) {
 			collected.add( resolvedUrl );
-			await collectJsDependencies( resolvedUrl, siteUrl, collected, processed );
+			await collectJsDependencies(
+				resolvedUrl,
+				siteUrl,
+				collected,
+				processed
+			);
 		}
 	}
 
@@ -78,14 +88,26 @@ export async function extractAssetsFromHtml( html, pageUrl, siteUrl ) {
 	INLINE_JS_PATTERN.lastIndex = 0;
 	const inlineJsMatches = html.matchAll( INLINE_JS_PATTERN );
 	for ( const match of inlineJsMatches ) {
-		await collectJsInlineDependencies( match[ 1 ], pageUrl, siteUrl, collected, processed );
+		await collectJsInlineDependencies(
+			match[ 1 ],
+			pageUrl,
+			siteUrl,
+			collected,
+			processed
+		);
 	}
 
 	// Collect from import maps
 	IMPORT_MAP_PATTERN.lastIndex = 0;
 	const importMapMatches = html.matchAll( IMPORT_MAP_PATTERN );
 	for ( const match of importMapMatches ) {
-		await collectImportmapModules( match[ 1 ], pageUrl, siteUrl, collected, processed );
+		await collectImportmapModules(
+			match[ 1 ],
+			pageUrl,
+			siteUrl,
+			collected,
+			processed
+		);
 	}
 
 	// Collect from HTML attributes
@@ -93,7 +115,13 @@ export async function extractAssetsFromHtml( html, pageUrl, siteUrl ) {
 
 	let assets = Array.from( collected );
 
-	assets = applyFilters( 'aether.assets.extracted', assets, html, pageUrl, siteUrl );
+	assets = applyFilters(
+		'aether.assets.extracted',
+		assets,
+		html,
+		pageUrl,
+		siteUrl
+	);
 
 	return assets;
 }
@@ -182,7 +210,13 @@ function collectHtmlAttributeAssets( html, pageUrl, siteUrl, collected ) {
 	for ( const match of inlineStyleMatches ) {
 		let inlineCss = match[ 2 ];
 		inlineCss = inlineCss.replace( /\\(["'])/g, '$1' );
-		collectCssInlineDependencies( inlineCss, pageUrl, siteUrl, collected, 'html' );
+		collectCssInlineDependencies(
+			inlineCss,
+			pageUrl,
+			siteUrl,
+			collected,
+			'html'
+		);
 	}
 }
 
@@ -195,10 +229,18 @@ function collectHtmlAttributeAssets( html, pageUrl, siteUrl, collected ) {
  * @param {Set<string>} collected Collected URLs.
  * @param {Set<string>} processed Processed URLs.
  */
-async function collectImportmapModules( json, pageUrl, siteUrl, collected, processed ) {
+async function collectImportmapModules(
+	json,
+	pageUrl,
+	siteUrl,
+	collected,
+	processed
+) {
 	try {
 		const importmap = JSON.parse( json );
-		if ( ! importmap?.imports ) return;
+		if ( ! importmap?.imports ) {
+			return;
+		}
 
 		for ( const moduleName in importmap.imports ) {
 			if ( importmap.imports.hasOwnProperty( moduleName ) ) {
@@ -206,7 +248,12 @@ async function collectImportmapModules( json, pageUrl, siteUrl, collected, proce
 				const resolvedUrl = resolveRelative( moduleUrl, pageUrl );
 				if ( shouldCollectAsset( resolvedUrl, siteUrl, 'js' ) ) {
 					collected.add( resolvedUrl );
-					await collectJsDependencies( resolvedUrl, siteUrl, collected, processed );
+					await collectJsDependencies(
+						resolvedUrl,
+						siteUrl,
+						collected,
+						processed
+					);
 				}
 			}
 		}
@@ -224,7 +271,9 @@ async function collectImportmapModules( json, pageUrl, siteUrl, collected, proce
  * @param {Set<string>} processed Processed URLs.
  */
 async function collectCssDependencies( cssUrl, siteUrl, collected, processed ) {
-	if ( processed.has( cssUrl ) ) return;
+	if ( processed.has( cssUrl ) ) {
+		return;
+	}
 	processed.add( cssUrl );
 
 	try {
@@ -233,7 +282,9 @@ async function collectCssDependencies( cssUrl, siteUrl, collected, processed ) {
 			credentials: 'omit',
 			headers: { 'User-Agent': 'Aether Static Site Generator' },
 		} );
-		if ( ! response.ok ) return;
+		if ( ! response.ok ) {
+			return;
+		}
 
 		const cssContent = await response.text();
 
@@ -244,7 +295,12 @@ async function collectCssDependencies( cssUrl, siteUrl, collected, processed ) {
 			const resolvedUrl = resolveRelative( match[ 1 ], cssUrl );
 			if ( shouldCollectAsset( resolvedUrl, siteUrl, 'css' ) ) {
 				collected.add( resolvedUrl );
-				await collectCssDependencies( resolvedUrl, siteUrl, collected, processed );
+				await collectCssDependencies(
+					resolvedUrl,
+					siteUrl,
+					collected,
+					processed
+				);
 			}
 		}
 
@@ -253,7 +309,9 @@ async function collectCssDependencies( cssUrl, siteUrl, collected, processed ) {
 		const urlMatches = cssContent.matchAll( CSS_URL_PATTERN );
 		for ( const match of urlMatches ) {
 			const assetUrl = match[ 1 ];
-			if ( assetUrl.startsWith( 'data:' ) ) continue;
+			if ( assetUrl.startsWith( 'data:' ) ) {
+				continue;
+			}
 			const resolvedUrl = resolveRelative( assetUrl, cssUrl );
 			if ( shouldCollectAsset( resolvedUrl, siteUrl, 'css' ) ) {
 				collected.add( resolvedUrl );
@@ -273,12 +331,20 @@ async function collectCssDependencies( cssUrl, siteUrl, collected, processed ) {
  * @param {Set<string>} collected  Collected URLs.
  * @param {string}      source     Source type.
  */
-function collectCssInlineDependencies( cssContent, baseUrl, siteUrl, collected, source = 'css' ) {
+function collectCssInlineDependencies(
+	cssContent,
+	baseUrl,
+	siteUrl,
+	collected,
+	source = 'css'
+) {
 	CSS_URL_PATTERN.lastIndex = 0;
 	const urlMatches = cssContent.matchAll( CSS_URL_PATTERN );
 	for ( const match of urlMatches ) {
 		const assetUrl = match[ 1 ];
-		if ( assetUrl.startsWith( 'data:' ) ) continue;
+		if ( assetUrl.startsWith( 'data:' ) ) {
+			continue;
+		}
 		const resolvedUrl = resolveRelative( assetUrl, baseUrl );
 		if ( shouldCollectAsset( resolvedUrl, siteUrl, source ) ) {
 			collected.add( resolvedUrl );
@@ -295,7 +361,9 @@ function collectCssInlineDependencies( cssContent, baseUrl, siteUrl, collected, 
  * @param {Set<string>} processed Processed URLs.
  */
 async function collectJsDependencies( jsUrl, siteUrl, collected, processed ) {
-	if ( processed.has( jsUrl ) ) return;
+	if ( processed.has( jsUrl ) ) {
+		return;
+	}
 	processed.add( jsUrl );
 
 	try {
@@ -304,7 +372,9 @@ async function collectJsDependencies( jsUrl, siteUrl, collected, processed ) {
 			credentials: 'omit',
 			headers: { 'User-Agent': 'Aether Static Site Generator' },
 		} );
-		if ( ! response.ok ) return;
+		if ( ! response.ok ) {
+			return;
+		}
 
 		const jsContent = await response.text();
 
@@ -314,16 +384,29 @@ async function collectJsDependencies( jsUrl, siteUrl, collected, processed ) {
 			const matches = jsContent.matchAll( pattern );
 			for ( const match of matches ) {
 				const importUrl = match[ 1 ];
-				if ( isWebpackModuleId( importUrl ) ) continue;
+				if ( isWebpackModuleId( importUrl ) ) {
+					continue;
+				}
 				const resolvedUrl = resolveRelative( importUrl, jsUrl );
 				if ( shouldCollectAsset( resolvedUrl, siteUrl, 'js' ) ) {
 					collected.add( resolvedUrl );
-					await collectJsDependencies( resolvedUrl, siteUrl, collected, processed );
+					await collectJsDependencies(
+						resolvedUrl,
+						siteUrl,
+						collected,
+						processed
+					);
 				}
 			}
 		}
 
-		await collectJsInlineDependencies( jsContent, jsUrl, siteUrl, collected, processed );
+		await collectJsInlineDependencies(
+			jsContent,
+			jsUrl,
+			siteUrl,
+			collected,
+			processed
+		);
 	} catch {
 		// Failed to fetch
 	}
@@ -338,7 +421,13 @@ async function collectJsDependencies( jsUrl, siteUrl, collected, processed ) {
  * @param {Set<string>} collected Collected URLs.
  * @param {Set<string>} processed Processed URLs.
  */
-async function collectJsInlineDependencies( jsContent, baseUrl, siteUrl, collected, processed ) {
+async function collectJsInlineDependencies(
+	jsContent,
+	baseUrl,
+	siteUrl,
+	collected,
+	processed
+) {
 	for ( const pattern of JS_ASSET_PATTERNS ) {
 		pattern.lastIndex = 0;
 		const matches = jsContent.matchAll( pattern );
@@ -358,9 +447,19 @@ async function collectJsInlineDependencies( jsContent, baseUrl, siteUrl, collect
 
 				const type = getAssetType( resolvedUrl );
 				if ( type === 'css' ) {
-					await collectCssDependencies( resolvedUrl, siteUrl, collected, processed );
+					await collectCssDependencies(
+						resolvedUrl,
+						siteUrl,
+						collected,
+						processed
+					);
 				} else if ( type === 'js' ) {
-					await collectJsDependencies( resolvedUrl, siteUrl, collected, processed );
+					await collectJsDependencies(
+						resolvedUrl,
+						siteUrl,
+						collected,
+						processed
+					);
 				}
 			}
 		}

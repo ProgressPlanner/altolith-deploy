@@ -40,13 +40,13 @@ export function calculateTotalFiles( cachedHtmlCount, uniqueAssets ) {
 /**
  * Build the final result object from upload phase.
  *
- * @param {Object} failures          Failure tracking object.
- * @param {Object} assetTracker      Asset tracker instance.
- * @param {number} filesUploaded     Number of files uploaded.
- * @param {number} filesSkipped      Number of files skipped.
+ * @param {Object} failures           Failure tracking object.
+ * @param {Object} assetTracker       Asset tracker instance.
+ * @param {number} filesUploaded      Number of files uploaded.
+ * @param {number} filesSkipped       Number of files skipped.
  * @param {number} totalFilesToUpload Total files to upload.
- * @param {Array}  uploadedFiles     Array of uploaded file info.
- * @param {number} totalUrls         Total URLs processed.
+ * @param {Array}  uploadedFiles      Array of uploaded file info.
+ * @param {number} totalUrls          Total URLs processed.
  * @return {Object} Result object.
  */
 export function buildUploadResult(
@@ -102,7 +102,9 @@ export async function fetchProviderConfig( staticSiteProviderId ) {
 			'../../providers/utils/providerDiscovery'
 		);
 		const discoveredProviderId =
-			await providerDiscovery.getProviderForDeploymentType( 'static_site' );
+			await providerDiscovery.getProviderForDeploymentType(
+				'static_site'
+			);
 
 		const providerIdToUse = staticSiteProviderId || discoveredProviderId;
 
@@ -124,9 +126,9 @@ export async function fetchProviderConfig( staticSiteProviderId ) {
 /**
  * Create and configure storage service.
  *
- * @param {string} staticPath  Static files path.
- * @param {Object} config      Storage configuration.
- * @param {string} providerId  Provider ID.
+ * @param {string} staticPath     Static files path.
+ * @param {Object} config         Storage configuration.
+ * @param {string} providerId     Provider ID.
  * @param {Object} providerConfig Provider configuration.
  * @return {Promise<Object>} Storage service instance.
  */

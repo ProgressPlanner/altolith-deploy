@@ -6,7 +6,7 @@
  * @package
  */
 
-import { doAction, applyFilters } from '@wordpress/hooks';
+import { applyFilters } from '@wordpress/hooks';
 import { processHtml, getStaticFilePath } from './htmlProcessor';
 import { getAssetLocalPath } from './assetExtractor';
 import { uploadFilesWithProgress } from './fileUploadManager';
@@ -23,8 +23,8 @@ import {
 /**
  * Fetch and prepare manifest for upload phase.
  *
- * @param {Object}   storageService  Storage service instance.
- * @param {string}   providerId      Provider ID.
+ * @param {Object}   storageService   Storage service instance.
+ * @param {string}   providerId       Provider ID.
  * @param {Function} setStatusMessage Status message updater.
  * @return {Promise<Object>} Manifest object.
  */
@@ -78,16 +78,16 @@ export async function prepareManifest(
 /**
  * Process and upload assets for a given set of asset URLs.
  *
- * @param {Object} options               Upload options.
- * @param {Array}  options.assetUrls     Asset URLs to process.
- * @param {Object} options.assetTracker  Asset tracker instance.
- * @param {Object} options.storageService Storage service instance.
- * @param {Object} options.manifest      Manifest object.
- * @param {string} options.providerId    Provider ID.
- * @param {number} options.filesUploaded Current files uploaded count.
- * @param {number} options.totalFilesToUpload Total files to upload.
- * @param {Function} options.onProgress  Progress callback.
- * @param {Function} options.setStatusMessage Status message updater.
+ * @param {Object}   options                    Upload options.
+ * @param {Array}    options.assetUrls          Asset URLs to process.
+ * @param {Object}   options.assetTracker       Asset tracker instance.
+ * @param {Object}   options.storageService     Storage service instance.
+ * @param {Object}   options.manifest           Manifest object.
+ * @param {string}   options.providerId         Provider ID.
+ * @param {number}   options.filesUploaded      Current files uploaded count.
+ * @param {number}   options.totalFilesToUpload Total files to upload.
+ * @param {Function} options.onProgress         Progress callback.
+ * @param {Function} options.setStatusMessage   Status message updater.
  * @return {Promise<Object>} Updated counts and manifest.
  */
 export async function processAssets( {
@@ -112,7 +112,12 @@ export async function processAssets( {
 	);
 
 	if ( assetsNotInTracker.length === 0 ) {
-		return { filesUploaded: currentFilesUploaded, filesSkipped, uploadedFiles, manifest: currentManifest };
+		return {
+			filesUploaded: currentFilesUploaded,
+			filesSkipped,
+			uploadedFiles,
+			manifest: currentManifest,
+		};
 	}
 
 	// Fetch and prepare asset data
@@ -165,7 +170,8 @@ export async function processAssets( {
 			assetBlob = filteredAssetData.blob || assetBlob;
 			const finalAssetPath = filteredAssetData.path || assetPath;
 			const finalAssetKey = filteredAssetData.key || assetKey;
-			const finalContentType = filteredAssetData.contentType || contentType;
+			const finalContentType =
+				filteredAssetData.contentType || contentType;
 
 			// Check manifest for skip
 			const existingEntry = currentManifest[ finalAssetKey ];
@@ -229,7 +235,11 @@ export async function processAssets( {
 		concurrency: 5,
 		onProgress: ( uploaded ) => {
 			if ( onProgress ) {
-				onProgress( currentFilesUploaded + uploaded, totalFilesToUpload, null );
+				onProgress(
+					currentFilesUploaded + uploaded,
+					totalFilesToUpload,
+					null
+				);
 			}
 		},
 		keyPrefix: 'upload',
@@ -246,7 +256,8 @@ export async function processAssets( {
 			continue;
 		}
 
-		const { assetUrl, assetPath, assetKey, contentType } = fileData.assetData;
+		const { assetUrl, assetPath, assetKey, contentType } =
+			fileData.assetData;
 
 		if ( result.success ) {
 			assetTracker.markUploaded( assetUrl );
@@ -292,14 +303,14 @@ export async function processAssets( {
 /**
  * Upload a single HTML file.
  *
- * @param {Object} options                  Upload options.
- * @param {string} options.url              Page URL.
- * @param {string} options.rawHtml          Raw HTML content.
- * @param {string} options.siteUrl          WordPress site URL.
- * @param {string} options.staticSiteUrl    Target static site URL.
- * @param {string} options.providerId       Provider ID.
- * @param {Object} options.storageService   Storage service instance.
- * @param {Object} options.manifest         Manifest object.
+ * @param {Object}   options                  Upload options.
+ * @param {string}   options.url              Page URL.
+ * @param {string}   options.rawHtml          Raw HTML content.
+ * @param {string}   options.siteUrl          WordPress site URL.
+ * @param {string}   options.staticSiteUrl    Target static site URL.
+ * @param {string}   options.providerId       Provider ID.
+ * @param {Object}   options.storageService   Storage service instance.
+ * @param {Object}   options.manifest         Manifest object.
  * @param {Function} options.setStatusMessage Status message updater.
  * @return {Promise<Object>} Upload result.
  */
@@ -328,7 +339,7 @@ export async function uploadHtmlFile( {
 
 	const htmlPath = getStaticFilePath( url );
 	const htmlKey = htmlPath;
-	let htmlBlob = new Blob( [ processedHtml ], { type: 'text/html' } );
+	const htmlBlob = new Blob( [ processedHtml ], { type: 'text/html' } );
 
 	const htmlSize = htmlBlob.size;
 	let htmlHash = null;
@@ -339,7 +350,12 @@ export async function uploadHtmlFile( {
 	if ( existingEntry && existingEntry.size === htmlSize ) {
 		try {
 			htmlHash = await calculateFileHash( htmlBlob );
-			shouldSkip = shouldSkipUpload( manifest, htmlKey, htmlSize, htmlHash );
+			shouldSkip = shouldSkipUpload(
+				manifest,
+				htmlKey,
+				htmlSize,
+				htmlHash
+			);
 		} catch ( error ) {
 			debugWarn( 'Failed to calculate hash, will upload:', error );
 			shouldSkip = false;
@@ -369,7 +385,11 @@ export async function uploadHtmlFile( {
 
 	// Upload status
 	if ( setStatusMessage ) {
-		setStatusMessage( `Uploading ${ htmlPath }`, 'progress', `upload-${ htmlPath }` );
+		setStatusMessage(
+			`Uploading ${ htmlPath }`,
+			'progress',
+			`upload-${ htmlPath }`
+		);
 	}
 
 	const htmlUploadResult = await storageService.upload( htmlKey, htmlBlob, {
@@ -377,11 +397,17 @@ export async function uploadHtmlFile( {
 	} );
 
 	if ( ! htmlUploadResult.success ) {
-		throw new Error( `Failed to upload HTML file: ${ htmlUploadResult.error }` );
+		throw new Error(
+			`Failed to upload HTML file: ${ htmlUploadResult.error }`
+		);
 	}
 
 	if ( setStatusMessage ) {
-		setStatusMessage( `Uploaded ${ htmlPath }`, 'success', `upload-${ htmlPath }` );
+		setStatusMessage(
+			`Uploaded ${ htmlPath }`,
+			'success',
+			`upload-${ htmlPath }`
+		);
 	}
 
 	return {
@@ -397,10 +423,10 @@ export async function uploadHtmlFile( {
 /**
  * Finalize manifest after upload phase.
  *
- * @param {Object}   storageService  Storage service instance.
- * @param {Object}   manifest        Manifest object.
- * @param {Array}    uploadedFiles   Array of uploaded file info.
- * @param {string}   providerId      Provider ID.
+ * @param {Object}   storageService   Storage service instance.
+ * @param {Object}   manifest         Manifest object.
+ * @param {Array}    uploadedFiles    Array of uploaded file info.
+ * @param {string}   providerId       Provider ID.
  * @param {Function} setStatusMessage Status message updater.
  * @return {Promise<void>}
  */
@@ -443,7 +469,11 @@ export async function finalizeManifest(
 		await uploadManifest( storageService, cleanedManifest );
 
 		if ( setStatusMessage ) {
-			setStatusMessage( 'Updated file manifest', 'success', 'updateManifest' );
+			setStatusMessage(
+				'Updated file manifest',
+				'success',
+				'updateManifest'
+			);
 		}
 	} catch ( error ) {
 		debugWarn( 'Failed to upload manifest:', error );
