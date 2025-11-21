@@ -27,11 +27,20 @@ export function useBlueprintGenerator() {
 		/**
 		 * Generate blueprint JSON.
 		 *
-		 * @param {Function} [setStatusMessage] Optional status message callback.
+		 * @param {Object}   [options]                    Optional options object.
+		 * @param {Array}    [options.assets]              Discovered assets (currently unused).
+		 * @param {string}   [options.wpContentZipUrl]     wp-content.zip URL (currently unused).
+		 * @param {Function} [setStatusMessage]           Optional status message callback.
 		 * @return {Promise<Object>} Blueprint JSON object.
 		 */
-		async ( setStatusMessage = null ) => {
-			const actualSetStatusMessage = setStatusMessage;
+		async ( options = null, setStatusMessage = null ) => {
+			// Handle case where first argument is setStatusMessage (backwards compatibility).
+			let actualSetStatusMessage;
+			if ( typeof options === 'function' ) {
+				actualSetStatusMessage = options;
+			} else {
+				actualSetStatusMessage = setStatusMessage;
+			}
 			// Fetch WordPress.org plugin/theme slugs and site name using browser-based discovery.
 			if ( actualSetStatusMessage ) {
 				actualSetStatusMessage(
