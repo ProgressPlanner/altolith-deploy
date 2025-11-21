@@ -12,102 +12,31 @@ import {
 	restoreExecutionContext,
 } from '../stateManager';
 
-// Mock IndexedDB
-const mockIndexedDB = () => {
-	const store = new Map();
-	const index = {
-		openCursor: jest.fn( ( range ) => {
-			const entries = Array.from( store.entries() ).filter(
-				( [ key ] ) => {
-					if ( range && range.lower === range.upper ) {
-						return key.startsWith( range.lower );
-					}
-					return true;
-				}
-			);
-
-			let cursorIndex = 0;
-			return {
-				onsuccess: null,
-				onerror: null,
-				result:
-					cursorIndex < entries.length
-						? entries[ cursorIndex ][ 1 ]
-						: null,
-				continue: jest.fn( () => {
-					cursorIndex++;
-					if ( cursorIndex < entries.length ) {
-						setTimeout( () => {
-							// Simulate cursor continue
-						}, 0 );
-					}
-				} ),
-			};
-		} ),
-	};
-
-	return {
-		open: jest.fn( ( name, version ) => {
-			const request = {
-				result: {
-					objectStoreNames: {
-						contains: jest.fn( () => false ),
-					},
-					createObjectStore: jest.fn( () => ( {
-						createIndex: jest.fn( () => index ),
-					} ) ),
-					transaction: jest.fn( () => ( {
-						objectStore: jest.fn( () => ( {
-							put: jest.fn( ( data ) => {
-								store.set( data.stateKey, data );
-								return {
-									onsuccess: null,
-									onerror: null,
-									result: data,
-								};
-							} ),
-							get: jest.fn( ( key ) => {
-								const result = store.get( key ) || null;
-								return {
-									onsuccess: null,
-									onerror: null,
-									result,
-								};
-							} ),
-							delete: jest.fn( ( key ) => {
-								store.delete( key );
-								return {
-									onsuccess: null,
-									onerror: null,
-								};
-							} ),
-							index: jest.fn( () => index ),
-						} ) ),
-					} ) ),
-				},
-				onsuccess: null,
-				onerror: null,
-				onupgradeneeded: null,
-			};
-
-			// Simulate async behavior
-			setTimeout( () => {
-				if ( request.onsuccess ) {
-					request.onsuccess();
-				}
-			}, 0 );
-
-			return request;
-		} ),
-	};
+// Mock IndexedDB store
+const mockIndexedDBStore = {
+	get: jest.fn(),
+	set: jest.fn(),
+	delete: jest.fn(),
+	clear: jest.fn(),
+	getByIndex: jest.fn(),
+	getAll: jest.fn(),
 };
 
-// Mock IndexedDB globally
-global.indexedDB = mockIndexedDB();
+jest.mock( '../../../utils/indexedDB', () => {
+	return {
+		__esModule: true,
+		default: jest.fn( () => mockIndexedDBStore ),
+		isIndexedDBAvailable: jest.fn( () => true ),
+	};
+} );
 
 describe( 'stateManager', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
+		mockIndexedDBStore.get.mockResolvedValue( null );
+		mockIndexedDBStore.set.mockResolvedValue( true );
+		mockIndexedDBStore.delete.mockResolvedValue( true );
+		mockIndexedDBStore.getByIndex.mockResolvedValue( [] );
 	} );
 
 	describe( 'createStateManager()', () => {
@@ -130,9 +59,19 @@ describe( 'stateManager', () => {
 				state: { result: 'test' },
 			};
 
+			// Mock get to return saved state
+			mockIndexedDBStore.get.mockResolvedValue( {
+				stateKey: 'workflow-1',
+				workflowId: 'workflow-1',
+				providerInstance: null,
+				state,
+				timestamp: Date.now(),
+			} );
+
 			await manager.save( state );
 			const loaded = await manager.load();
 
+			expect( mockIndexedDBStore.set ).toHaveBeenCalled();
 			expect( loaded ).toEqual( state );
 		} );
 
@@ -144,6 +83,23 @@ describe( 'stateManager', () => {
 			await manager.save( state1, 'provider1' );
 			await manager.save( state2, 'provider2' );
 
+			// Mock get to return different states based on key
+			mockIndexedDBStore.get
+				.mockResolvedValueOnce( {
+					stateKey: 'workflow-1::provider1',
+					workflowId: 'workflow-1',
+					providerInstance: 'provider1',
+					state: state1,
+					timestamp: Date.now(),
+				} )
+				.mockResolvedValueOnce( {
+					stateKey: 'workflow-1::provider2',
+					workflowId: 'workflow-1',
+					providerInstance: 'provider2',
+					state: state2,
+					timestamp: Date.now(),
+				} );
+
 			const loaded1 = await manager.load( 'provider1' );
 			const loaded2 = await manager.load( 'provider2' );
 
@@ -152,6 +108,8 @@ describe( 'stateManager', () => {
 		} );
 
 		test( 'should return null for non-existent state', async () => {
+			mockIndexedDBStore.get.mockResolvedValue( null );
+
 			const manager = createStateManager( 'workflow-1' );
 			const loaded = await manager.load();
 
@@ -167,6 +125,7 @@ describe( 'stateManager', () => {
 			await manager.clear();
 			const loaded = await manager.load();
 
+			expect( mockIndexedDBStore.delete ).toHaveBeenCalled();
 			expect( loaded ).toBeNull();
 		} );
 
@@ -177,11 +136,53 @@ describe( 'stateManager', () => {
 
 			await manager.clear( 'provider1' );
 
-			const loaded1 = await manager.load( 'provider1' );
-			const loaded2 = await manager.load( 'provider2' );
+			expect( mockIndexedDBStore.delete ).toHaveBeenCalledWith(
+				'workflow-1::provider1'
+			);
+		} );
 
-			expect( loaded1 ).toBeNull();
-			expect( loaded2 ).toEqual( { provider: 'provider2' } );
+		test( 'should clear all states for workflow when no provider specified', async () => {
+			const manager = createStateManager( 'workflow-1' );
+			mockIndexedDBStore.getByIndex.mockResolvedValue( [
+				{ stateKey: 'workflow-1::provider1' },
+				{ stateKey: 'workflow-1::provider2' },
+			] );
+
+			await manager.clear();
+
+			expect( mockIndexedDBStore.getByIndex ).toHaveBeenCalledWith(
+				'workflowId',
+				'workflow-1'
+			);
+			expect( mockIndexedDBStore.delete ).toHaveBeenCalledTimes( 2 );
+		} );
+	} );
+
+	describe( 'list()', () => {
+		test( 'should list all states for workflow', async () => {
+			const manager = createStateManager( 'workflow-1' );
+			const states = [
+				{
+					stateKey: 'workflow-1::provider1',
+					providerInstance: 'provider1',
+					timestamp: Date.now(),
+				},
+				{
+					stateKey: 'workflow-1::provider2',
+					providerInstance: 'provider2',
+					timestamp: Date.now(),
+				},
+			];
+
+			mockIndexedDBStore.getByIndex.mockResolvedValue( states );
+
+			const listed = await manager.list();
+
+			expect( listed ).toEqual( states );
+			expect( mockIndexedDBStore.getByIndex ).toHaveBeenCalledWith(
+				'workflowId',
+				'workflow-1'
+			);
 		} );
 	} );
 
@@ -198,10 +199,11 @@ describe( 'stateManager', () => {
 
 			await saveExecutionContext( manager, context );
 
-			const loaded = await manager.load();
-			expect( loaded.completedSteps ).toEqual( [ 'step1' ] );
-			expect( loaded.state ).toEqual( { result: 'test' } );
-			expect( loaded.providers.staticSiteProviders ).toEqual( [
+			expect( mockIndexedDBStore.set ).toHaveBeenCalled();
+			const setCall = mockIndexedDBStore.set.mock.calls[ 0 ];
+			expect( setCall[ 1 ].completedSteps ).toEqual( [ 'step1' ] );
+			expect( setCall[ 1 ].state ).toEqual( { result: 'test' } );
+			expect( setCall[ 1 ].providers.staticSiteProviders ).toEqual( [
 				'provider1',
 			] );
 		} );
@@ -218,9 +220,9 @@ describe( 'stateManager', () => {
 
 			await saveExecutionContext( manager, context );
 
-			const loaded = await manager.load();
-			expect( loaded.stepResults.blueprintBundle ).toBeDefined();
-			expect( loaded.stepResults.urlsResult ).toBeDefined();
+			const setCall = mockIndexedDBStore.set.mock.calls[ 0 ];
+			expect( setCall[ 1 ].stepResults.blueprintBundle ).toBeDefined();
+			expect( setCall[ 1 ].stepResults.urlsResult ).toBeDefined();
 		} );
 	} );
 
@@ -240,7 +242,14 @@ describe( 'stateManager', () => {
 				},
 			};
 
-			await manager.save( savedState );
+			mockIndexedDBStore.get.mockResolvedValue( {
+				stateKey: 'workflow-1',
+				workflowId: 'workflow-1',
+				providerInstance: null,
+				state: savedState,
+				timestamp: Date.now(),
+			} );
+
 			const restored = await restoreExecutionContext(
 				manager,
 				baseContext
@@ -258,7 +267,14 @@ describe( 'stateManager', () => {
 				state: { baseData: 'base' },
 			};
 
-			await manager.save( { state: { savedData: 'saved' } } );
+			mockIndexedDBStore.get.mockResolvedValue( {
+				stateKey: 'workflow-1',
+				workflowId: 'workflow-1',
+				providerInstance: null,
+				state: { state: { savedData: 'saved' } },
+				timestamp: Date.now(),
+			} );
+
 			const restored = await restoreExecutionContext(
 				manager,
 				baseContext
@@ -269,6 +285,8 @@ describe( 'stateManager', () => {
 		} );
 
 		test( 'should return base context if no saved state', async () => {
+			mockIndexedDBStore.get.mockResolvedValue( null );
+
 			const manager = createStateManager( 'workflow-1' );
 			const baseContext = { siteUrl: 'https://example.com' };
 

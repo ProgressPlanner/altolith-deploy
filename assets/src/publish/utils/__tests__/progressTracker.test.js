@@ -11,72 +11,29 @@ import {
 	calculateOverallProgress,
 } from '../progressTracker';
 
-// Mock IndexedDB
-const mockIndexedDB = () => {
-	const store = new Map();
-	const requestResult = null;
-
-	return {
-		open: jest.fn( ( name, version ) => {
-			const request = {
-				result: {
-					objectStoreNames: {
-						contains: jest.fn( () => false ),
-					},
-					createObjectStore: jest.fn( () => ( {
-						createIndex: jest.fn(),
-					} ) ),
-					transaction: jest.fn( () => ( {
-						objectStore: jest.fn( () => ( {
-							put: jest.fn( ( data ) => {
-								store.set( data.workflowId, data );
-								return {
-									onsuccess: null,
-									onerror: null,
-									result: data,
-								};
-							} ),
-							get: jest.fn( ( key ) => {
-								const result = store.get( key ) || null;
-								return {
-									onsuccess: null,
-									onerror: null,
-									result,
-								};
-							} ),
-							delete: jest.fn( ( key ) => {
-								store.delete( key );
-								return {
-									onsuccess: null,
-									onerror: null,
-								};
-							} ),
-						} ) ),
-					} ) ),
-				},
-				onsuccess: null,
-				onerror: null,
-				onupgradeneeded: null,
-			};
-
-			// Simulate async behavior
-			setTimeout( () => {
-				if ( request.onsuccess ) {
-					request.onsuccess();
-				}
-			}, 0 );
-
-			return request;
-		} ),
-	};
+// Mock IndexedDB store
+const mockIndexedDBStore = {
+	get: jest.fn(),
+	set: jest.fn(),
+	delete: jest.fn(),
+	clear: jest.fn(),
+	count: jest.fn(),
 };
 
-// Mock IndexedDB globally
-global.indexedDB = mockIndexedDB();
+jest.mock( '../../../utils/indexedDB', () => {
+	return {
+		__esModule: true,
+		default: jest.fn( () => mockIndexedDBStore ),
+		isIndexedDBAvailable: jest.fn( () => true ),
+	};
+} );
 
 describe( 'progressTracker', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
+		mockIndexedDBStore.get.mockResolvedValue( null );
+		mockIndexedDBStore.set.mockResolvedValue( true );
+		mockIndexedDBStore.delete.mockResolvedValue( true );
 	} );
 
 	describe( 'createProgressTracker()', () => {
@@ -115,6 +72,7 @@ describe( 'progressTracker', () => {
 
 			const progress = tracker.getProgress();
 			expect( progress.stepProgress.step1 ).toBe( 50 );
+			expect( mockIndexedDBStore.set ).toHaveBeenCalled();
 		} );
 
 		test( 'should clamp progress to 0-100', async () => {
@@ -179,6 +137,56 @@ describe( 'progressTracker', () => {
 			expect(
 				progress.completedSteps.filter( ( s ) => s === 'step1' ).length
 			).toBe( 1 );
+		} );
+	} );
+
+	describe( 'load()', () => {
+		test( 'should load progress from IndexedDB', async () => {
+			const stepIds = [ 'step1', 'step2' ];
+			const savedProgress = {
+				workflowId: 'workflow-1',
+				stepIds,
+				stepWeight: 50,
+				stepProgress: { step1: 100 },
+				overallProgress: 50,
+				completedSteps: [ 'step1' ],
+				startedAt: Date.now(),
+				updatedAt: Date.now(),
+			};
+
+			mockIndexedDBStore.get.mockResolvedValue( savedProgress );
+
+			const tracker = createProgressTracker( 'workflow-1', stepIds );
+			const loaded = await tracker.load();
+
+			expect( loaded ).toEqual( savedProgress );
+			expect( mockIndexedDBStore.get ).toHaveBeenCalledWith(
+				'workflow-1'
+			);
+		} );
+
+		test( 'should return null if no saved progress', async () => {
+			mockIndexedDBStore.get.mockResolvedValue( null );
+
+			const tracker = createProgressTracker( 'workflow-1', [ 'step1' ] );
+			const loaded = await tracker.load();
+
+			expect( loaded ).toBeNull();
+		} );
+	} );
+
+	describe( 'clear()', () => {
+		test( 'should clear progress from IndexedDB', async () => {
+			const tracker = createProgressTracker( 'workflow-1', [ 'step1' ] );
+			await tracker.updateStepProgress( 'step1', 50 );
+
+			await tracker.clear();
+
+			expect( mockIndexedDBStore.delete ).toHaveBeenCalledWith(
+				'workflow-1'
+			);
+			const progress = tracker.getProgress();
+			expect( progress.overallProgress ).toBe( 0 );
 		} );
 	} );
 
