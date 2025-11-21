@@ -31,9 +31,6 @@ if (! \defined('ABSPATH')) {
 // Load autoloader.
 require_once AETHER_SITE_EXPORTER_PLUGIN_DIR . 'includes/autoloader.php';
 
-// Load helper functions.
-require_once AETHER_SITE_EXPORTER_PLUGIN_DIR . 'includes/helpers.php';
-
 function init(): void
 {
 	Plugin::getInstance();
