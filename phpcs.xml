@@ -229,7 +229,6 @@
 
 		<exclude name="WordPress.WP.AlternativeFunctions"/>
 		<exclude name="WordPress.DB.DirectDatabaseQuery"/>
-		<exclude name="WordPress.WP.I18n"/>
 		<exclude name="WordPress.PHP.DiscouragedPHPFunctions" />
 		<exclude name="WordPress.Security.NonceVerification" />
 	</rule>

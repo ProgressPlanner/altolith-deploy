@@ -328,6 +328,7 @@ class PublishStepsController
 		if (($status['currentStep'] ?? '') !== $stepName) {
 			return new WP_Error(
 				'invalid_step',
+				/* translators: 1: Expected step name, 2: Current step name */
 				\sprintf(\__('Job is not on %1$s step. Current step: %2$s', 'aether-site-exporter'), $stepName, $status['currentStep'] ?? 'unknown'),
 				['status' => 422]
 			);
@@ -420,6 +421,7 @@ class PublishStepsController
 
 			return new WP_Error(
 				'step_execution_failed',
+				/* translators: %s: Error message */
 				\sprintf(\__('Step execution failed: %s', 'aether-site-exporter'), $sanitizedMessage),
 				['status' => 500]
 			);
@@ -489,6 +491,7 @@ class PublishStepsController
 			if (! $result['success'] || empty($result['body'])) {
 				return new WP_Error(
 					'fetch_failed',
+					/* translators: %s: URL */
 					\sprintf(\__('Failed to fetch HTML content from URL: %s', 'aether-site-exporter'), $url),
 					['status' => 500]
 				);
@@ -526,6 +529,7 @@ class PublishStepsController
 
 			return new WP_Error(
 				'html_fetch_failed',
+				/* translators: %s: Error message */
 				\sprintf(\__('Failed to fetch HTML: %s', 'aether-site-exporter'), $sanitizedMessage),
 				['status' => 500]
 			);

@@ -116,6 +116,7 @@ class ProviderConfigController
 		if (! $provider) {
 			return new WP_Error(
 				'provider_not_found',
+				/* translators: %s: Provider instance ID */
 				\sprintf(\__('Provider not found for instance: %s', 'aether-site-exporter'), $instanceId),
 				[ 'status' => 404 ]
 			);
@@ -183,6 +184,7 @@ class ProviderConfigController
 		if (! $provider) {
 			return new WP_Error(
 				'provider_not_found',
+				/* translators: %s: Provider instance ID */
 				\sprintf(\__('Provider not found for instance: %s', 'aether-site-exporter'), $instanceId),
 				[ 'status' => 404 ]
 			);
@@ -434,6 +436,7 @@ class ProviderConfigController
 		if (! $provider) {
 			return new WP_Error(
 				'provider_not_found',
+				/* translators: %s: Provider instance ID */
 				\sprintf(\__('Provider not found for instance: %s', 'aether-site-exporter'), $instanceId),
 				[ 'status' => 404 ]
 			);
@@ -448,6 +451,7 @@ class ProviderConfigController
 			if (! \file_exists($exportDir)) {
 				return new WP_Error(
 					'export_dir_not_found',
+					/* translators: %s: Export directory path */
 					\sprintf(\__('Export directory not found: %s', 'aether-site-exporter'), $exportDir),
 					[ 'status' => 404 ]
 				);
@@ -456,6 +460,7 @@ class ProviderConfigController
 			if (! \is_writable($exportDir)) {
 				return new WP_Error(
 					'export_dir_not_writable',
+					/* translators: %s: Export directory path */
 					\sprintf(\__('Export directory is not writable: %s', 'aether-site-exporter'), $exportDir),
 					[ 'status' => 500 ]
 				);
@@ -473,6 +478,7 @@ class ProviderConfigController
 		// For other providers, return not implemented
 		return new WP_Error(
 			'not_implemented',
+			/* translators: %s: Provider ID */
 			\sprintf(\__('Connection testing is not implemented for provider: %s', 'aether-site-exporter'), $provider->getId()),
 			[ 'status' => 501 ]
 		);

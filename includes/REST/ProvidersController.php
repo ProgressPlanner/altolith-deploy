@@ -138,6 +138,7 @@ class ProvidersController
 			if (! $provider) {
 				return new WP_Error(
 					'provider_not_found',
+					/* translators: %s: Provider ID */
 					\sprintf(\__('Provider instance not found: %s', 'aether-site-exporter'), $providerId),
 					[ 'status' => 404 ]
 				);
@@ -163,6 +164,7 @@ class ProvidersController
 			if (! $provider) {
 				return new WP_Error(
 					'provider_not_found',
+					/* translators: %s: Provider ID */
 					\sprintf(\__('Provider not found: %s', 'aether-site-exporter'), $providerId),
 					[ 'status' => 404 ]
 				);
@@ -327,6 +329,7 @@ class ProvidersController
 		if (! $provider) {
 			return new WP_Error(
 				'provider_not_found',
+				/* translators: %s: Provider type */
 				\sprintf(\__('Provider type not found: %s', 'aether-site-exporter'), $providerType),
 				[ 'status' => 404 ]
 			);

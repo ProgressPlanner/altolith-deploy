@@ -277,6 +277,7 @@ class LocalStorageController
 		if (!$validation['valid']) {
 			return new WP_Error(
 				'invalid_path',
+				/* translators: %s: Validation error message */
 				\sprintf(\__('Invalid file path: %s', 'aether-site-exporter'), $validation['error']),
 				[ 'status' => 400 ]
 			);
@@ -434,6 +435,7 @@ class LocalStorageController
 		if (!$validation['valid']) {
 			return new WP_Error(
 				'invalid_path',
+				/* translators: %s: Validation error message */
 				\sprintf(\__('Invalid file path: %s', 'aether-site-exporter'), $validation['error']),
 				[ 'status' => 400 ]
 			);
@@ -581,6 +583,7 @@ class LocalStorageController
 		if (!$validation['valid']) {
 			return new WP_Error(
 				'invalid_path',
+				/* translators: %s: Validation error message */
 				\sprintf(\__('Invalid file path: %s', 'aether-site-exporter'), $validation['error']),
 				[ 'status' => 400 ]
 			);
@@ -698,6 +701,7 @@ class LocalStorageController
 		if (!$sourceValidation['valid']) {
 			return new WP_Error(
 				'invalid_source_path',
+				/* translators: %s: Validation error message */
 				\sprintf(\__('Invalid source path: %s', 'aether-site-exporter'), $sourceValidation['error']),
 				[ 'status' => 400 ]
 			);
@@ -707,6 +711,7 @@ class LocalStorageController
 		if (!$destinationValidation['valid']) {
 			return new WP_Error(
 				'invalid_destination_path',
+				/* translators: %s: Validation error message */
 				\sprintf(\__('Invalid destination path: %s', 'aether-site-exporter'), $destinationValidation['error']),
 				[ 'status' => 400 ]
 			);
@@ -716,6 +721,7 @@ class LocalStorageController
 		if (!\file_exists($sourceFullPath) || !\is_file($sourceFullPath)) {
 			return new WP_Error(
 				'source_file_not_found',
+				/* translators: %s: Source file path */
 				\sprintf(\__('Source file not found: %s', 'aether-site-exporter'), $sourcePath),
 				[ 'status' => 404 ]
 			);
@@ -737,6 +743,7 @@ class LocalStorageController
 			if (!\wp_mkdir_p($destinationDir)) {
 				return new WP_Error(
 					'directory_creation_failed',
+					/* translators: %s: Destination directory path */
 					\sprintf(\__('Failed to create destination directory: %s', 'aether-site-exporter'), $destinationDir),
 					[ 'status' => 500 ]
 				);
@@ -747,6 +754,7 @@ class LocalStorageController
 		if (!\is_dir($destinationDir)) {
 			return new WP_Error(
 				'directory_missing',
+				/* translators: %s: Destination directory path */
 				\sprintf(\__('Destination directory does not exist: %s', 'aether-site-exporter'), $destinationDir),
 				[ 'status' => 500 ]
 			);
@@ -866,7 +874,11 @@ class LocalStorageController
 			if (!\file_exists($sourceFullPath)) {
 				return new WP_Error(
 					'source_file_not_found',
-					\sprintf(\__('Source file not found: %s', 'aether-site-exporter'), $sourcePath),
+					\sprintf(
+						/* translators: %s: Source file path */
+						\__('Source file not found: %s', 'aether-site-exporter'),
+						$sourcePath
+					),
 					[ 'status' => 404 ]
 				);
 			}

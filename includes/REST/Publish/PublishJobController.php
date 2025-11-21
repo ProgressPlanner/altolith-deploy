@@ -145,6 +145,7 @@ class PublishJobController
 			return new \WP_Error(
 				'too_many_assets',
 				\sprintf(
+					/* translators: %d: Maximum number of assets */
 					\__('Too many changed assets provided. Maximum allowed: %d', 'aether-site-exporter'),
 					$maxAssetCount
 				),
@@ -156,6 +157,7 @@ class PublishJobController
 			return new \WP_Error(
 				'too_many_assets',
 				\sprintf(
+					/* translators: %d: Maximum number of assets */
 					\__('Too many discovered assets provided. Maximum allowed: %d', 'aether-site-exporter'),
 					$maxAssetCount
 				),

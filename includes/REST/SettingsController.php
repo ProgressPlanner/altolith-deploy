@@ -215,6 +215,7 @@ class SettingsController
 				return new WP_Error(
 					'too_many_providers',
 					\sprintf(
+						/* translators: %d: Maximum number of providers */
 						\__('Too many provider configurations. Maximum allowed: %d', 'aether-site-exporter'),
 						$maxProviders
 					),
@@ -228,6 +229,7 @@ class SettingsController
 					return new WP_Error(
 						'provider_config_too_large',
 						\sprintf(
+							/* translators: 1: Provider ID, 2: Maximum number of fields */
 							\__('Provider configuration "%1$s" is too large. Maximum allowed fields: %2$d', 'aether-site-exporter'),
 							\sanitize_text_field((string) $providerId),
 							$maxConfigSize
@@ -250,6 +252,7 @@ class SettingsController
 
 				return new WP_Error(
 					'encryption_failed',
+					/* translators: %s: Error message */
 					\sprintf(\__('Failed to encrypt provider settings: %s', 'aether-site-exporter'), $sanitizedMessage),
 					[ 'status' => 500 ]
 				);
