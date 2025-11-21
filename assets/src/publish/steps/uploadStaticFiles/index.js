@@ -2,13 +2,13 @@
  * Upload Static Files Step
  *
  * Generates static HTML/CSS/JS and uploads to storage providers.
- * Uses hook-based architecture where providers handle URL rewriting and uploading.
+ * Uses useStaticSiteGenerator to process URLs and upload files via unified action system.
  *
  * @package
  */
 
 import { __, sprintf, _n } from '@wordpress/i18n';
-import { doActionAsync, applyFilters } from '@wordpress/hooks';
+import { applyFilters } from '@wordpress/hooks';
 import { calculateOverallProgress } from '../../utils/progressManager';
 
 /**
@@ -20,9 +20,10 @@ import { calculateOverallProgress } from '../../utils/progressManager';
  * @param {string}   context.staticSiteUrl           Static site URL.
  * @param {Object}   context.blueprintData           Blueprint data.
  * @param {string}   context.siteUrl                 WordPress site URL.
+ * @param {Function} context.processStaticSiteUrls    Static site generator function.
  * @param {Function} context.setStatusMessage        Status message updater.
  * @param {Function} context.setStepProgress         Step progress updater.
- * @param {Function} context.setOverallProgressValue Overall progress updater.
+ * @param {Function} context.setOverallProgressValue  Overall progress updater.
  * @return {Promise<Object>} Step result with uploaded files.
  */
 async function handler( context ) {
@@ -32,6 +33,7 @@ async function handler( context ) {
 		blueprintData,
 		siteUrl,
 		staticSiteProviders = [],
+		processStaticSiteUrls,
 		setStatusMessage,
 		setStepProgress,
 		setOverallProgressValue,
@@ -43,6 +45,12 @@ async function handler( context ) {
 				'URLs not found. Please run getStaticSiteUrls first.',
 				'aether-site-exporter'
 			)
+		);
+	}
+
+	if ( ! processStaticSiteUrls ) {
+		throw new Error(
+			__( 'Static site generator not available', 'aether-site-exporter' )
 		);
 	}
 
@@ -84,28 +92,26 @@ async function handler( context ) {
 		providers,
 	} );
 
-	// Track results per provider
+	// Process URLs for each provider using useStaticSiteGenerator
 	const providerResults = {};
-	providers.forEach( ( providerId ) => {
-		providerResults[ providerId ] = {
-			filesProcessed: 0,
-			filesUploaded: 0,
-			errors: [],
-		};
-	} );
+	let totalFilesUploaded = 0;
+	let totalFilesSkipped = 0;
+	let totalUrlsProcessed = 0;
+	let totalUrlsSucceeded = 0;
+	let totalUrlsFailed = 0;
+	const allFailedUrls = [];
 
-	// Process each file through hooks
-	const totalFiles = filteredUrls.length;
-	let processedCount = 0;
-
-	for ( const urlData of filteredUrls ) {
-		processedCount++;
-
-		// Update progress
+	// Progress tracking callback
+	const onProgress = ( uploadedFiles, totalFiles, message ) => {
 		if ( setStepProgress && setOverallProgressValue ) {
+			// Calculate progress across all providers
+			const totalProviders = providers.length;
+			const currentProviderIndex = Object.keys( providerResults ).length;
+			const providerProgress = ( currentProviderIndex + 1 ) / totalProviders;
+			const fileProgress = totalFiles > 0 ? uploadedFiles / totalFiles : 0;
 			const stepProgress = Math.min(
 				100,
-				Math.round( ( processedCount / totalFiles ) * 100 )
+				Math.round( providerProgress * 100 * fileProgress )
 			);
 			setStepProgress( 'uploadStaticFiles', stepProgress );
 			setOverallProgressValue(
@@ -115,75 +121,86 @@ async function handler( context ) {
 				} )
 			);
 		}
+	};
 
-		// Create file context for hooks
-		const fileContext = {
-			url: urlData.url || urlData,
-			path: urlData.path || urlData.url || urlData,
-			content: urlData.content || null,
-			contentType: urlData.contentType || 'text/html',
-			siteUrl,
-			staticSiteUrl,
-			blueprintData,
-			providers,
-			setStatusMessage,
-		};
+	// Process each provider
+	for ( const providerId of providers ) {
+		try {
+			setStatusMessage(
+				sprintf(
+					/* translators: %s: Provider ID */
+					__( 'Processing static site for provider: %s', 'aether-site-exporter' ),
+					providerId
+				),
+				'progress',
+				`uploadStaticFiles-${ providerId }`
+			);
 
-		/**
-		 * Action: Process a static site file.
-		 *
-		 * Providers hook into this action to:
-		 * 1. Perform URL rewriting/HTML transformations
-		 * 2. Upload the file to their storage
-		 *
-		 * @param {Object}   fileContext                  File context object.
-		 * @param {string}   fileContext.url              Original URL.
-		 * @param {string}   fileContext.path             File path.
-		 * @param {string}   fileContext.content          File content (may be null, provider fetches if needed).
-		 * @param {string}   fileContext.contentType      Content type.
-		 * @param {string}   fileContext.siteUrl          WordPress site URL.
-		 * @param {string}   fileContext.staticSiteUrl    Target static site URL.
-		 * @param {Object}   fileContext.blueprintData    Blueprint data.
-		 * @param {Array}    fileContext.providers        Provider IDs.
-		 * @param {Function} fileContext.setStatusMessage Status updater.
-		 */
-		await doActionAsync( 'aether.staticSite.file.process', fileContext );
+			// Process URLs for this provider
+			const result = await processStaticSiteUrls(
+				filteredUrls,
+				staticSiteUrl,
+				providerId,
+				siteUrl,
+				setStatusMessage,
+				blueprintData
+			);
 
-		// Also fire provider-specific actions for more granular control
-		for ( const providerId of providers ) {
-			/**
-			 * Action: Process a file for a specific provider.
-			 *
-			 * @param {Object} fileContext File context object.
-			 * @param {string} providerId  Provider ID.
-			 */
-			await doActionAsync(
-				`aether.staticSite.file.process.${ providerId }`,
-				fileContext,
-				providerId
+			// Aggregate results
+			providerResults[ providerId ] = {
+				success: result.success,
+				urlsProcessed: result.urlsProcessed || 0,
+				urlsSucceeded: result.urlsSucceeded || 0,
+				urlsFailed: result.urlsFailed || 0,
+				filesUploaded: result.filesUploaded || 0,
+				filesSkipped: result.filesSkipped || 0,
+				assetsUploaded: result.assetsUploaded || 0,
+				assetsFailed: result.assetsFailed || 0,
+				failedUrls: result.failedUrls || [],
+				uploadedFiles: result.uploadedFiles || [],
+			};
+
+			totalFilesUploaded += result.filesUploaded || 0;
+			totalFilesSkipped += result.filesSkipped || 0;
+			totalUrlsProcessed += result.urlsProcessed || 0;
+			totalUrlsSucceeded += result.urlsSucceeded || 0;
+			totalUrlsFailed += result.urlsFailed || 0;
+			if ( result.failedUrls ) {
+				allFailedUrls.push( ...result.failedUrls );
+			}
+		} catch ( error ) {
+			providerResults[ providerId ] = {
+				success: false,
+				error: error.message || __( 'Unknown error', 'aether-site-exporter' ),
+				urlsProcessed: 0,
+				urlsSucceeded: 0,
+				urlsFailed: filteredUrls.length,
+				filesUploaded: 0,
+				filesSkipped: 0,
+				assetsUploaded: 0,
+				assetsFailed: 0,
+				failedUrls: filteredUrls.map( ( url ) => ( {
+					url: typeof url === 'string' ? url : url.url || url,
+					reason: error.message || 'Unknown error',
+				} ) ),
+				uploadedFiles: [],
+			};
+			totalUrlsFailed += filteredUrls.length;
+			allFailedUrls.push(
+				...filteredUrls.map( ( url ) => ( {
+					url: typeof url === 'string' ? url : url.url || url,
+					reason: error.message || 'Unknown error',
+				} ) )
 			);
 		}
 	}
 
-	// Gather results from providers via filter
-	const results = applyFilters(
-		'aether.staticSite.upload.results',
-		providerResults,
-		providers,
-		{ siteUrl, blueprintData, staticSiteUrl }
-	);
-
 	// Calculate totals
-	const successfulProviders = Object.entries( results ).filter(
-		( [ , data ] ) => data.filesUploaded > 0 || data.errors.length === 0
+	const successfulProviders = Object.entries( providerResults ).filter(
+		( [ , data ] ) => data.success !== false && data.filesUploaded > 0
 	);
-	const failedProviders = Object.entries( results ).filter(
-		( [ , data ] ) => data.errors.length > 0 && data.filesUploaded === 0
-	);
-
-	const totalFilesUploaded = Object.values( results ).reduce(
-		( sum, data ) => sum + ( data.filesUploaded || 0 ),
-		0
+	const failedProviders = Object.entries( providerResults ).filter(
+		( [ , data ] ) => data.success === false || data.filesUploaded === 0
 	);
 
 	if ( successfulProviders.length > 0 ) {
@@ -218,10 +235,15 @@ async function handler( context ) {
 		'aether.upload.result',
 		{
 			providers,
-			results,
+			results: providerResults,
 			successCount: successfulProviders.length,
 			failureCount: failedProviders.length,
 			totalFilesUploaded,
+			totalFilesSkipped,
+			totalUrlsProcessed,
+			totalUrlsSucceeded,
+			totalUrlsFailed,
+			failedUrls: allFailedUrls,
 		},
 		providers,
 		{ siteUrl, blueprintData, staticSiteUrl }

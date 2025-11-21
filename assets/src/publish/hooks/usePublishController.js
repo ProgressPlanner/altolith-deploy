@@ -7,7 +7,6 @@
  */
 
 import { useCallback, useState, useRef } from '@wordpress/element';
-import { __, sprintf } from '@wordpress/i18n';
 import { usePublishAPI } from './usePublishAPI';
 import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
@@ -15,7 +14,6 @@ import { useBlueprintGenerator } from './useBlueprintGenerator';
 import apiFetch from '../../utils/api';
 import { calculateOverallProgress } from '../utils/progressManager';
 import { debug, debugError } from '../../utils/debug';
-import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
 import { executeSteps } from '../executor';
 import { getActiveSteps, getRegisteredSteps } from '../steps';
@@ -107,303 +105,6 @@ export function usePublishController( publishState ) {
 				setStepProgress( 'uploadStaticSiteFiles', stepProgress );
 			}
 		}
-	);
-
-	// Helper function to upload blueprint-bundle.zip archive file.
-	// Detects upload method from provider's upload strategy (git, storage, or direct).
-	const handleSiteArchiveUpload = useCallback(
-		async ( providerId, context ) => {
-			try {
-				// providerId is an instance ID (e.g., 'local-filesystem:abc-123')
-				// Use provider ID passed from executeSteps (avoids redundant settings fetch).
-				// Get default provider if none configured
-				let fetchedStorageProviderId = providerId;
-				if ( ! fetchedStorageProviderId ) {
-					const { getDefaultProvider } = await import(
-						'../../providers/utils/providerDiscovery'
-					);
-					fetchedStorageProviderId = await getDefaultProvider();
-				}
-
-				if ( ! fetchedStorageProviderId ) {
-					throw new Error(
-						__(
-							'No provider instance ID provided for blueprint bundle upload',
-							'aether-site-exporter'
-						)
-					);
-				}
-
-				// Fetch provider metadata from REST API to check upload strategy
-				// The endpoint handles both instance IDs and provider type IDs
-				let providerMetadata = null;
-				let instanceConfig = null;
-				try {
-					const providerResponse = await apiFetch( {
-						path: `/aether/site-exporter/providers/${ fetchedStorageProviderId }`,
-					} );
-
-					if ( ! providerResponse ) {
-						throw new Error(
-							sprintf(
-								/* translators: %s: Provider ID */
-								__(
-									'REST API returned null response for provider %s',
-									'aether-site-exporter'
-								),
-								fetchedStorageProviderId
-							)
-						);
-					}
-
-					if ( ! providerResponse.success ) {
-						const errorMessage =
-							providerResponse.message ||
-							providerResponse.error ||
-							__( 'Unknown error', 'aether-site-exporter' );
-						throw new Error(
-							sprintf(
-								/* translators: 1: Provider ID, 2: Error message */
-								__(
-									'REST API error for provider %1$s: %2$s',
-									'aether-site-exporter'
-								),
-								fetchedStorageProviderId,
-								errorMessage
-							)
-						);
-					}
-
-					if ( providerResponse.provider ) {
-						providerMetadata = providerResponse.provider;
-					} else {
-						throw new Error(
-							sprintf(
-								/* translators: %s: Provider ID */
-								__(
-									'Provider metadata not found in REST API response for %s',
-									'aether-site-exporter'
-								),
-								fetchedStorageProviderId
-							)
-						);
-					}
-
-					if ( providerResponse.config ) {
-						instanceConfig = providerResponse.config;
-					}
-
-					debug(
-						`[Aether] Fetched provider metadata for ${ fetchedStorageProviderId }:`,
-						{
-							providerType: providerMetadata?.type,
-							hasConfig: !! instanceConfig,
-							instanceEnabled: instanceConfig?.enabled,
-						}
-					);
-				} catch ( error ) {
-					debugError(
-						`[Aether] Failed to fetch provider metadata for instance ${ fetchedStorageProviderId }:`,
-						error
-					);
-					throw new Error(
-						sprintf(
-							/* translators: 1: Provider instance ID, 2: Error message */
-							__(
-								'Failed to fetch provider metadata for instance %1$s: %2$s',
-								'aether-site-exporter'
-							),
-							fetchedStorageProviderId,
-							error.message
-						)
-					);
-				}
-
-				if ( ! providerMetadata ) {
-					throw new Error(
-						sprintf(
-							/* translators: %s: Provider instance ID */
-							__(
-								'Provider instance not found: %s',
-								'aether-site-exporter'
-							),
-							fetchedStorageProviderId
-						)
-					);
-				}
-
-				// Determine upload strategy from provider type
-				// Local filesystem has type 'local-storage' and uses direct file operations
-				let uploadStrategy = 'storage'; // Default for cloud storage providers
-				if ( providerMetadata.type === 'local-storage' ) {
-					uploadStrategy = 'direct';
-				}
-
-				// Allow providers to override upload strategy via filter
-				const filteredStrategy = applyFilters(
-					'aether.provider.upload_strategy',
-					uploadStrategy,
-					fetchedStorageProviderId,
-					providerMetadata
-				);
-				uploadStrategy = filteredStrategy;
-
-				// DECISION POINT: Storage provider upload strategy
-				if ( uploadStrategy === 'direct' ) {
-					// METHOD 2: Direct provider upload (LocalFilesystem)
-					// For 'direct' strategy, we use the provider's uploadFile method
-					// This allows the provider to handle the file operation (copy, verify, etc.)
-
-					// Get blueprintBundle data from context (set by generateBlueprint step)
-					// Note: The workflow executor merges step results into context
-					const blueprintBundlePath =
-						context.blueprintBundle?.bundlePath;
-
-					if ( ! blueprintBundlePath ) {
-						throw new Error(
-							__(
-								'Blueprint bundle not found. generateBlueprint must run before uploadSiteArchive.',
-								'aether-site-exporter'
-							)
-						);
-					}
-
-					debug(
-						'Uploading blueprint bundle via provider:',
-						blueprintBundlePath
-					);
-
-					// Use hook-based upload instead of provider method
-					// Get upload handler for this provider via filter
-					// Pass instance ID (fetchedStorageProviderId) to the filter
-					// The handler will receive the instance ID and can extract provider type if needed
-
-					debug(
-						`[Aether] Looking for upload handler for instance ${ fetchedStorageProviderId }, strategy: ${ uploadStrategy }`
-					);
-
-					const uploadHandler = applyFilters(
-						'aether.provider.upload',
-						null,
-						fetchedStorageProviderId, // Instance ID (e.g., 'local-filesystem:abc-123')
-						{
-							filePath: blueprintBundlePath,
-							fileName: 'blueprint-bundle.zip',
-							context: {
-								...context,
-								instanceId: fetchedStorageProviderId,
-								instanceConfig, // Include instance config in context
-								exportPath: context.exportPath, // Include exportPath from uploadSiteArchiveStep
-							},
-						}
-					);
-
-					if (
-						! uploadHandler ||
-						typeof uploadHandler !== 'function'
-					) {
-						// Extract provider type from instance ID for better error message
-						const providerType = fetchedStorageProviderId.includes(
-							':'
-						)
-							? fetchedStorageProviderId.split( ':' )[ 0 ]
-							: fetchedStorageProviderId;
-
-						debugError(
-							`[Aether] No upload handler found for provider type: ${ providerType } (instance: ${ fetchedStorageProviderId })`
-						);
-
-						throw new Error(
-							sprintf(
-								/* translators: 1: Provider type, 2: Provider instance ID */
-								__(
-									"No upload handler registered for provider type: %1$s (instance: %2$s). Make sure the provider has registered an upload handler via the 'aether.provider.upload' filter.",
-									'aether-site-exporter'
-								),
-								providerType,
-								fetchedStorageProviderId
-							)
-						);
-					}
-
-					debug(
-						`[Aether] Upload handler found for ${ fetchedStorageProviderId }, calling handler...`
-					);
-
-					// Call the upload handler
-					// Pass context which includes exportPath from uploadSiteArchiveStep
-					const uploadResult = await uploadHandler(
-						blueprintBundlePath,
-						'blueprint-bundle.zip',
-						{
-							...context,
-							instanceId: fetchedStorageProviderId,
-							instanceConfig, // Include instance config
-							exportPath: context.exportPath, // Include exportPath from uploadSiteArchiveStep
-						}
-					);
-
-					if ( ! uploadResult ) {
-						throw new Error(
-							sprintf(
-								/* translators: %s: Provider instance ID */
-								__(
-									'Upload handler returned null/undefined for instance %s',
-									'aether-site-exporter'
-								),
-								fetchedStorageProviderId
-							)
-						);
-					}
-
-					if ( ! uploadResult.success ) {
-						const errorMessage =
-							uploadResult?.error ||
-							uploadResult?.message ||
-							__(
-								'Unknown upload error',
-								'aether-site-exporter'
-							);
-						debugError(
-							`[Aether] Upload handler returned error for instance ${ fetchedStorageProviderId }:`,
-							errorMessage
-						);
-						throw new Error(
-							sprintf(
-								/* translators: 1: Provider instance ID, 2: Error message */
-								__(
-									'Failed to upload blueprint bundle to instance %1$s: %2$s',
-									'aether-site-exporter'
-								),
-								fetchedStorageProviderId,
-								errorMessage
-							)
-						);
-					}
-
-					debug(
-						`[Aether] Blueprint bundle upload complete for instance ${ fetchedStorageProviderId }:`,
-						uploadResult
-					);
-
-					// Progress updates are handled at the step handler level (uploadSiteArchiveStep.js)
-					// to properly track progress across multiple provider instances.
-				} else {
-					// ERROR: No upload method configured (no provider configured).
-					throw new Error(
-						__(
-							'No supported upload method available',
-							'aether-site-exporter'
-						)
-					);
-				}
-
-				// Upload complete - control returns to workflow executor.
-			} catch ( error ) {
-				throw error;
-			}
-		},
-		[]
 	);
 
 	const startPublish = useCallback( async () => {
@@ -499,7 +200,6 @@ export function usePublishController( publishState ) {
 					assetManager,
 					setStatusMessage,
 					setStepProgress,
-					handleSiteArchiveUpload,
 				}
 			);
 
@@ -559,7 +259,6 @@ export function usePublishController( publishState ) {
 		updateStaticSiteProgressContext,
 		processStaticSiteUrls,
 		generateBlueprintJson,
-		handleSiteArchiveUpload,
 		setStatusMessage,
 		setStepProgress,
 		removeMessage,
