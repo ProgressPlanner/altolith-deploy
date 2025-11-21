@@ -17,7 +17,8 @@ import { calculateOverallProgress } from '../utils/progressManager';
 import { debug, debugError } from '../../utils/debug';
 import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '../../constants/deploymentTypes';
-import { executeJobs } from '../workflows/jobExecutor';
+import { executeSteps } from '../executor';
+import { getActiveSteps } from '../steps';
 import {
 	preparePublishConfiguration,
 	determineProvidersByDeploymentType,
@@ -349,10 +350,8 @@ export function usePublishController( publishState ) {
 			} );
 
 			// Use pure function to extract configuration
-			const publishConfig = preparePublishConfiguration(
-				settingsResponse,
-				storageProviderId
-			);
+			const publishConfig =
+				preparePublishConfiguration( settingsResponse );
 
 			// Update storage provider ID state
 			if ( settingsResponse.success && publishConfig.storageProviderId ) {
@@ -436,40 +435,27 @@ export function usePublishController( publishState ) {
 
 			// Set up workflow lifecycle callbacks for UI updates
 			const workflowOptions = {
-				onJobStart: ( jobId ) => {
-					debug( `[Workflow] Job starting: ${ jobId }` );
-				},
-				onJobComplete: ( jobId, state ) => {
-					debug( `[Workflow] Job completed: ${ jobId }`, state );
-				},
-				onPhaseStart: ( jobId, phaseId ) => {
-					debug( `[Workflow] Phase starting: ${ jobId }.${ phaseId }` );
-				},
-				onPhaseComplete: ( jobId, phaseId, state ) => {
-					debug( `[Workflow] Phase completed: ${ jobId }.${ phaseId }`, state );
-				},
-				onStepStart: ( jobId, phaseId, stepId ) => {
-					debug( `[Workflow] Step starting: ${ jobId }.${ phaseId }.${ stepId }` );
+				onStepStart: ( stepId ) => {
+					debug( `[Workflow] Step starting: ${ stepId }` );
 					// Update UI with step ID
 					updateFromStep( stepId );
 				},
-				onStepComplete: ( jobId, phaseId, stepId, result ) => {
-					debug( `[Workflow] Step completed: ${ jobId }.${ phaseId }.${ stepId }`, result );
+				onStepComplete: ( stepId, result ) => {
+					debug( `[Workflow] Step completed: ${ stepId }`, result );
 				},
-				onProgress: ( current ) => {
-					setOverallProgressValue( current );
+				onStepSkipped: ( stepId ) => {
+					debug( `[Workflow] Step skipped: ${ stepId }` );
+				},
+				onError: ( stepId, error ) => {
+					debugError( `[Workflow] Step error: ${ stepId }`, error );
 				},
 			};
 
-			// Execute jobs using new job system
-			// For now, execute all three jobs in sequence
-			// Later, jobs can be selected based on deployment type
-			const jobsToExecute = [ 'buildBlueprintBundle', 'publishStaticSite', 'uploadAssets' ];
-			await executeJobs(
-				jobsToExecute,
-				workflowContext,
-				workflowOptions
-			);
+			// Get steps filtered by enabled providers
+			const activeSteps = getActiveSteps( workflowContext );
+
+			// Execute steps using flat executor with dependency resolution
+			await executeSteps( activeSteps, workflowContext, workflowOptions );
 
 			debug( '[Workflow] All steps completed successfully' );
 

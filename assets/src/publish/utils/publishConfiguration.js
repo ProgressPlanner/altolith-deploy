@@ -15,14 +15,10 @@ import { debugError } from '../../utils/debug';
  * Extracts provider IDs and settings from API response.
  * Pure function - no side effects, easily testable.
  *
- * @param {Object} settingsResponse          - Response from settings API
- * @param {string} fallbackStorageProviderId - Fallback provider ID if not in settings
+ * @param {Object} settingsResponse - Response from settings API
  * @return {Object} Configuration object with provider IDs
  */
-export function preparePublishConfiguration(
-	settingsResponse,
-	fallbackStorageProviderId = ''
-) {
+export function preparePublishConfiguration( settingsResponse ) {
 	const settings = settingsResponse?.settings || {};
 	const providerTypes = settings.provider_types || {};
 

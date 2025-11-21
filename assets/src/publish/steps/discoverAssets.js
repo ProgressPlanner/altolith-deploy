@@ -7,8 +7,6 @@
  * @package
  */
 
-import { addFilter } from '@wordpress/hooks';
-
 /**
  * Discover assets step handler.
  *
@@ -17,7 +15,7 @@ import { addFilter } from '@wordpress/hooks';
  * @param {Function} context.setStatusMessage Status message updater.
  * @return {Promise<Object>} Step result with discovered assets.
  */
-export async function handler( context ) {
+async function handler( context ) {
 	const { api, setStatusMessage } = context;
 
 	setStatusMessage(
@@ -70,26 +68,20 @@ export async function handler( context ) {
 
 	setStatusMessage( message, 'success', 'discoverAssets' );
 
-	// Return data to merge into job status
+	// Return data to merge into execution state
 	return {
 		discoveredAssets: assets,
 	};
 }
 
 /**
- * Register discoverAssets step for discover phase
+ * Discover Assets step definition.
  */
-addFilter(
-	'aether.publish.buildBlueprintBundle.discover.steps.register',
-	'aether/build-blueprint-bundle-discover-assets-step',
-	( steps ) => {
-		steps.push( {
-			id: 'discoverAssets',
-			label: 'Discover Assets',
-			description: 'Find custom plugins and themes',
-			dependencies: [],
-			handler,
-		} );
-		return steps;
-	}
-);
+export const discoverAssetsStep = {
+	id: 'discoverAssets',
+	label: 'Discover Assets',
+	description: 'Find custom plugins and themes',
+	dependencies: [],
+	provides: [ 'discoveredAssets' ],
+	handler,
+};

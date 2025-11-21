@@ -1,0 +1,79 @@
+/**
+ * Step Registry
+ *
+ * Flat step definitions with explicit dependencies for the publish workflow.
+ * Steps are executed in parallel when their dependencies are satisfied.
+ *
+ * @package
+ */
+
+import { applyFilters } from '@wordpress/hooks';
+import { discoverAssetsStep } from './discoverAssets';
+import { getStaticSiteUrlsStep } from './getStaticSiteUrls';
+import { createSiteArchiveStep } from './createSiteArchive';
+import { generateBlueprintStep } from './generateBlueprint';
+import { uploadBlueprintBundleStep } from './uploadBlueprintBundle';
+import { uploadStaticFilesStep } from './uploadStaticFiles';
+
+/**
+ * Get all registered steps.
+ *
+ * Steps are filtered through hooks to allow extension.
+ *
+ * @return {Array<Object>} Array of step definitions.
+ */
+export function getRegisteredSteps() {
+	const steps = [
+		discoverAssetsStep,
+		getStaticSiteUrlsStep,
+		createSiteArchiveStep,
+		generateBlueprintStep,
+		uploadBlueprintBundleStep,
+		uploadStaticFilesStep,
+	];
+
+	/**
+	 * Filter registered steps.
+	 *
+	 * Allows plugins to add, remove, or modify steps.
+	 *
+	 * @param {Array<Object>} steps Array of step definitions.
+	 */
+	return applyFilters( 'aether.publish.steps', steps );
+}
+
+/**
+ * Get steps filtered by which providers are enabled.
+ *
+ * @param {Object} context Execution context with provider arrays.
+ * @return {Array<Object>} Filtered steps based on enabled providers.
+ */
+export function getActiveSteps( context ) {
+	const { staticSiteProviders = [], blueprintBundleProviders = [] } = context;
+
+	const steps = getRegisteredSteps();
+
+	// Filter out steps that should be skipped based on provider configuration
+	return steps.filter( ( step ) => {
+		// If step has a static skip function, check it
+		if ( typeof step.shouldSkip === 'function' ) {
+			return ! step.shouldSkip( context );
+		}
+
+		// Skip blueprint-related steps if no blueprint providers
+		if (
+			step.id === 'createSiteArchive' ||
+			step.id === 'generateBlueprint' ||
+			step.id === 'uploadBlueprintBundle'
+		) {
+			return blueprintBundleProviders.length > 0;
+		}
+
+		// Skip static site upload if no static site providers
+		if ( step.id === 'uploadStaticFiles' ) {
+			return staticSiteProviders.length > 0;
+		}
+
+		return true;
+	} );
+}

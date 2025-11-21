@@ -4,11 +4,7 @@
  * @package
  */
 
-import {
-	PUBLISH_STEPS,
-	getStep,
-	supportsProgress,
-} from '../steps';
+import { PUBLISH_STEPS, getStep, supportsProgress } from '../steps';
 
 describe( 'steps', () => {
 	describe( 'PUBLISH_STEPS', () => {

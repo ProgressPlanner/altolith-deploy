@@ -38,10 +38,6 @@ initializeErrorHandlers();
 // This is the default/fallback provider and must be available for upload operations
 import '../providers/local-filesystem/index';
 
-// Import job definitions to trigger their registration with JobRegistry
-// This must happen before any component tries to load jobs
-import './jobs';
-
 // Load providers dynamically to reduce initial bundle size
 // Don't wait for providers to load - render immediately
 // Providers will load in the background
