@@ -383,15 +383,15 @@ class MyController {
 
 ### No Breaking Changes to Provider API
 
-The PHP provider API remains stable. However, you can now leverage new features:
+Providers are now registered entirely in JavaScript. You can leverage these features:
 
 ### 1. Provider Dependencies
 
 If your provider depends on another provider being enabled, declare dependencies:
 
-```php
+```javascript
 class MyProvider extends AbstractProvider {
-    public function getDependencies(): array {
+    getDependencies() {
         return ['local-filesystem']; // This provider requires local-filesystem
     }
 }
