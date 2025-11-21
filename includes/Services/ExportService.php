@@ -14,6 +14,9 @@ use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Sync\JobStateManager;
 use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use Aether\SiteExporter\Providers\ProviderRegistry;
+use Aether\SiteExporter\Services\ZipService;
+use Aether\SiteExporter\Services\FileBatchService;
+use Aether\SiteExporter\Services\ProgressTracker;
 
 \defined('ABSPATH') || exit;
 
@@ -27,7 +30,28 @@ class ExportService
 	 *
 	 * @var Plugin
 	 */
-	private $plugin;
+	private Plugin $plugin;
+
+	/**
+	 * ZIP service instance.
+	 *
+	 * @var ZipService
+	 */
+	private ZipService $zipService;
+
+	/**
+	 * File batch service instance.
+	 *
+	 * @var FileBatchService
+	 */
+	private FileBatchService $fileBatchService;
+
+	/**
+	 * Progress tracker instance.
+	 *
+	 * @var ProgressTracker
+	 */
+	private ProgressTracker $progressTracker;
 
 	/**
 	 * Constructor.
@@ -37,6 +61,9 @@ class ExportService
 	public function __construct(Plugin $plugin)
 	{
 		$this->plugin = $plugin;
+		$this->fileBatchService = new FileBatchService();
+		$this->zipService = new ZipService($this->fileBatchService);
+		$this->progressTracker = new ProgressTracker();
 	}
 
 	/**
@@ -199,53 +226,7 @@ class ExportService
 		}
 
 		// Initialize progress tracking.
-		// Supports both job-based (with JobStateManager) and simple transient-based tracking.
-		$processedFiles = 0;
-		$progressCallback = null;
-		if ($jobId && $totalFiles > 0) {
-			$progressCallback = function () use ($jobId, $stateManager, $totalFiles, &$processedFiles) {
-				// Prevent integer overflow: use PHP_INT_MAX for portability across systems
-				if ($processedFiles < PHP_INT_MAX) {
-					$processedFiles++;
-				} else {
-					// Log warning if maximum integer value is exceeded
-					if (\defined('WP_DEBUG') && WP_DEBUG) {
-						\error_log('Aether: File count exceeded maximum integer value');
-					}
-				}
-
-				// Update progress more granularly for better UX, especially for small file counts
-				// Update every N files OR every 1% (whichever is more frequent)
-				// Use float division to prevent overflow
-				// $updateInterval is always >= 1 due to max(1, ...)
-				$updateInterval = \max(1, (int) \floor((float) $totalFiles / 100.0));
-
-				// Prevent modulo by zero and handle overflow in modulo operation
-				if ($processedFiles % $updateInterval === 0) {
-					// Use float math to prevent integer overflow on large file counts
-					// Cast to float before division to ensure accurate calculation
-					$progressFloat = \min(100.0, ((float) $processedFiles / (float) $totalFiles) * 100.0);
-					$progress = (int) \round($progressFloat);
-
-					// Overflow protection: clamp to valid range
-					if ($progress < 0 || $progress > 100) {
-						$progress = \min(100, \max(0, $progress));
-					}
-
-					// Use JobStateManager if provided (job tracking).
-					if ($stateManager) {
-						$status = $stateManager->getStatus($jobId);
-						if ($status) {
-							$status['createBlueprintBundle_progress'] = $progress;
-							$stateManager->updateStatus($jobId, $status);
-						}
-					} else {
-						// Use simple transient for stateless progress tracking.
-						\set_transient($jobId, ['progress' => $progress], 1800);
-					}
-				}
-			};
-		}
+		$progressCallback = $this->progressTracker->createProgressCallback($jobId, $stateManager, $totalFiles);
 
 		// 1. Add database file first (most critical for site restoration).
 		// Database is stored in wp-content/database/ subdirectory in the zip.
@@ -264,7 +245,7 @@ class ExportService
 		// This prevents duplicate uploads and reduces zip size.
 		$uploadsDir = WP_CONTENT_DIR . '/uploads';
 		if (\is_dir($uploadsDir)) {
-			$this->addDirectoryToZip($zip, $uploadsDir, 'wp-content/uploads', '', null, null, $progressCallback);
+			$this->zipService->addDirectoryToZip($zip, $uploadsDir, 'wp-content/uploads', '', null, null, $progressCallback);
 		}
 
 		// 3. Add custom plugins only (non-wordpress.org plugins).
@@ -303,7 +284,7 @@ class ExportService
 
 				$pluginDir = WP_PLUGIN_DIR . '/' . $slug;
 				if (\is_dir($pluginDir)) {
-					$this->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $slug, '', null, null, $progressCallback);
+					$this->zipService->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $slug, '', null, null, $progressCallback);
 				}
 			}
 		} else {
@@ -317,7 +298,7 @@ class ExportService
 					}
 					$pluginDir = WP_PLUGIN_DIR . '/' . $asset['slug'];
 					if (\is_dir($pluginDir)) {
-						$this->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $asset['slug'], '', null, null, $progressCallback);
+						$this->zipService->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $asset['slug'], '', null, null, $progressCallback);
 					}
 				}
 			}
@@ -352,7 +333,7 @@ class ExportService
 
 				$themeDir = \get_theme_root() . '/' . $slug;
 				if (\is_dir($themeDir)) {
-					$this->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $slug, '', null, null, $progressCallback);
+					$this->zipService->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $slug, '', null, null, $progressCallback);
 				}
 			}
 		} else {
@@ -361,7 +342,7 @@ class ExportService
 				if ('theme' === $asset['type']) {
 					$themeDir = \get_theme_root() . '/' . $asset['slug'];
 					if (\is_dir($themeDir)) {
-						$this->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $asset['slug'], '', null, null, $progressCallback);
+						$this->zipService->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $asset['slug'], '', null, null, $progressCallback);
 					}
 				}
 			}
@@ -372,17 +353,11 @@ class ExportService
 		// No wordpress.org equivalent exists for mu-plugins.
 		$mupluginsDir = WP_CONTENT_DIR . '/mu-plugins';
 		if (\is_dir($mupluginsDir)) {
-			$this->addDirectoryToZip($zip, $mupluginsDir, 'wp-content/mu-plugins', '', null, null, $progressCallback);
+			$this->zipService->addDirectoryToZip($zip, $mupluginsDir, 'wp-content/mu-plugins', '', null, null, $progressCallback);
 		}
 
 		// Final progress update (100%).
-		if ($progressCallback && $totalFiles > 0 && $jobId && $stateManager) {
-			$status = $stateManager->getStatus($jobId);
-			if ($status) {
-				$status['createBlueprintBundle_progress'] = 100;
-				$stateManager->updateStatus($jobId, $status);
-			}
-		}
+		$this->progressTracker->markComplete($jobId, $stateManager);
 
 		// Close zip archive to finalize writing.
 		$zip->close();
@@ -422,6 +397,7 @@ class ExportService
 	/**
 	 * Add directory to zip archive recursively.
 	 *
+	 * @deprecated Use ZipService::addDirectoryToZip() instead.
 	 * @param \ZipArchive             $zip          ZipArchive instance.
 	 * @param string                  $sourceDir   Source directory path.
 	 * @param string                  $zipPath     Path inside zip.
@@ -433,142 +409,8 @@ class ExportService
 	 */
 	public function addDirectoryToZip(\ZipArchive $zip, string $sourceDir, string $zipPath, string $relativePath = '', ?array $excludePatterns = null, ?array $offloadedFiles = null, ?callable $progressCallback = null): void
 	{
-		// Normalize directory paths (remove trailing slashes for consistent handling).
-		$sourceDir = \rtrim($sourceDir, '/');
-		$zipPath   = \rtrim($zipPath, '/');
-
-		// Build full filesystem path for the current directory being processed.
-		// On first call: $relativePath is empty, so fullPath = sourceDir.
-		// On recursive calls: $relativePath contains subdirectory structure.
-		$fullPath = $sourceDir . ( $relativePath ? '/' . $relativePath : '' );
-
-		// Security: use realpath() to resolve symlinks and prevent path traversal.
-		$realFullPath = \realpath($fullPath);
-		$realSourceDir = \realpath($sourceDir);
-
-		// Guard against non-existent or invalid directories, and path traversal attacks.
-		// Allow processing the root directory itself, but check subdirectories are within sourceDir.
-		if (false === $realFullPath || false === $realSourceDir || ($realFullPath !== $realSourceDir && 0 !== \strpos($realFullPath, $realSourceDir . DIRECTORY_SEPARATOR))) {
-			return;
-		}
-
-		// Use resolved path for directory operations.
-		$fullPath = $realFullPath;
-
-		// Detect if we're processing the uploads directory.
-		// This determines whether to skip offloaded files (external storage).
-		$isUploadsDir = false !== \strpos($zipPath, 'wp-content/uploads');
-
-		// Detect if we're processing plugin/theme/mu-plugin directories.
-		// These directories need development files excluded (node_modules, .git, etc).
-		$shouldExcludeDevFiles = (
-			false !== \strpos($zipPath, 'wp-content/plugins') ||
-			false !== \strpos($zipPath, 'wp-content/themes') ||
-			false !== \strpos($zipPath, 'wp-content/mu-plugins')
-		);
-
-		// Lazy-load offloaded files list (only on first call, not on recursive calls).
-		// Query database once and pass result through recursion for performance.
-		// Check: null (not set) + isUploadsDir + empty relativePath (first call).
-		if (null === $offloadedFiles && $isUploadsDir && '' === $relativePath) {
-			$offloadedFiles = $this->getOffloadedFilePaths();
-		}
-		if (null === $offloadedFiles) {
-			$offloadedFiles = [];
-		}
-
-		// Lazy-load exclusion patterns (only on first call, not on recursive calls).
-		// Patterns are generated once from composer.json, package.json, etc.
-		// Pass through recursion to avoid regenerating on every subdirectory.
-		if (null === $excludePatterns && $shouldExcludeDevFiles && '' === $relativePath) {
-			$excludePatterns = self::getExclusionPatterns($sourceDir, true);
-		}
-		if (null === $excludePatterns) {
-			$excludePatterns = [];
-		}
-
-		// Read directory contents (files + subdirectories).
-		$files = \scandir($fullPath);
-
-		// Process each file/directory in the current directory.
-		foreach ($files as $file) {
-			// Skip Unix directory navigation entries.
-			if ('.' === $file || '..' === $file) {
-				continue;
-			}
-
-			// Build absolute filesystem path for this file/directory.
-			$filePath     = $fullPath . '/' . $file;
-
-			// Security: validate file path to prevent path traversal.
-			$realFilePath = \realpath($filePath);
-			if (false === $realFilePath || 0 !== \strpos($realFilePath, $realSourceDir . DIRECTORY_SEPARATOR)) {
-				continue;
-			}
-
-			// Use resolved path for file operations.
-			$filePath = $realFilePath;
-
-			// Build path as it will appear inside the zip archive.
-			$zipFilePath = $zipPath . ( $relativePath ? '/' . $relativePath : '' ) . '/' . $file;
-
-			// Check if this file/directory matches any exclusion patterns.
-			// Patterns include: node_modules, .git, vendor, tests, etc.
-			// Simple substring matching for performance (vs regex).
-			$excluded = false;
-			if (! empty($excludePatterns)) {
-				foreach ($excludePatterns as $pattern) {
-					if (false !== \strpos($filePath, $pattern)) {
-						$excluded = true;
-						break;
-					}
-				}
-			}
-
-			if ($excluded) {
-				continue;
-			}
-
-			// Handle directories recursively.
-			if (\is_dir($filePath)) {
-				// Create the directory structure in the zip (even if empty).
-				$zip->addEmptyDir($zipFilePath);
-
-				// Recurse into subdirectory.
-				// Pass exclusion patterns and offloaded files through to avoid re-querying.
-				// Build new relativePath by appending current directory name.
-				$this->addDirectoryToZip(
-					$zip,
-					$sourceDir,
-					$zipPath,
-					$relativePath ? $relativePath . '/' . $file : $file,
-					$excludePatterns,
-					$offloadedFiles,
-					$progressCallback
-				);
-			} else {
-				// Handle regular files.
-
-				// Skip files that have been offloaded to external storage.
-				// Offloaded files are already on external storage, no need to include in zip.
-				if ($isUploadsDir && ! empty($offloadedFiles)) {
-					// Normalize file path before comparison to handle symlinks and path variations.
-					$normalizedFilePath = \realpath($filePath);
-					$pathToCheck = false !== $normalizedFilePath ? $normalizedFilePath : $filePath;
-					if (\in_array($pathToCheck, $offloadedFiles, true)) {
-						continue;
-					}
-				}
-
-				// Add file to zip archive.
-				$zip->addFile($filePath, $zipFilePath);
-
-				// Update progress if callback provided.
-				if ($progressCallback) {
-					$progressCallback();
-				}
-			}
-		}
+		// Delegate to ZipService for backward compatibility.
+		$this->zipService->addDirectoryToZip($zip, $sourceDir, $zipPath, $relativePath, $excludePatterns, $offloadedFiles, $progressCallback);
 	}
 
 	/**
@@ -592,7 +434,7 @@ class ExportService
 		// Count files in uploads directory.
 		$uploadsDir = WP_CONTENT_DIR . '/uploads';
 		if (\is_dir($uploadsDir)) {
-			$count += $this->countFilesInDirectory($uploadsDir);
+			$count += $this->fileBatchService->countFilesInDirectory($uploadsDir);
 		}
 
 		// Count files in custom plugins.
@@ -601,7 +443,7 @@ class ExportService
 			if ('plugin' === $asset['type']) {
 				$pluginDir = WP_PLUGIN_DIR . '/' . $asset['slug'];
 				if (\is_dir($pluginDir)) {
-					$count += $this->countFilesInDirectory($pluginDir);
+					$count += $this->fileBatchService->countFilesInDirectory($pluginDir);
 				}
 			}
 		}
@@ -611,7 +453,7 @@ class ExportService
 			if ('theme' === $asset['type']) {
 				$themeDir = \get_theme_root() . '/' . $asset['slug'];
 				if (\is_dir($themeDir)) {
-					$count += $this->countFilesInDirectory($themeDir);
+					$count += $this->fileBatchService->countFilesInDirectory($themeDir);
 				}
 			}
 		}
@@ -619,51 +461,7 @@ class ExportService
 		// Count files in mu-plugins directory.
 		$mupluginsDir = WP_CONTENT_DIR . '/mu-plugins';
 		if (\is_dir($mupluginsDir)) {
-			$count += $this->countFilesInDirectory($mupluginsDir);
-		}
-
-		return $count;
-	}
-
-	/**
-	 * Count files in a directory recursively.
-	 *
-	 * @param string $dir Directory path.
-	 * @return int Number of files.
-	 */
-	private function countFilesInDirectory(string $dir): int
-	{
-		$count = 0;
-		$realDir = \realpath($dir);
-
-		if (false === $realDir || ! \is_dir($realDir)) {
-			return 0;
-		}
-
-		$files = \scandir($realDir);
-		if (false === $files) {
-			return 0;
-		}
-
-		foreach ($files as $file) {
-			if ('.' === $file || '..' === $file) {
-				continue;
-			}
-
-			$filePath = $realDir . '/' . $file;
-			$realFilePath = \realpath($filePath);
-
-			if (false === $realFilePath || 0 !== \strpos($realFilePath, $realDir . DIRECTORY_SEPARATOR)) {
-				continue;
-			}
-
-			if (\is_dir($realFilePath)) {
-				// Recurse into subdirectory.
-				$count += $this->countFilesInDirectory($realFilePath);
-			} else {
-				// Count regular file.
-				$count++;
-			}
+			$count += $this->fileBatchService->countFilesInDirectory($mupluginsDir);
 		}
 
 		return $count;
@@ -672,66 +470,13 @@ class ExportService
 	/**
 	 * Get file paths of all attachments offloaded to external storage.
 	 *
+	 * @deprecated Use FileBatchService::getOffloadedFilePaths() instead.
 	 * @return array<string> Array of absolute file paths.
 	 */
 	private function getOffloadedFilePaths(): array
 	{
-		global $wpdb;
-
-		// Query for all attachments with external storage metadata.
-		// Use JOIN instead of subquery for better performance.
-		$attachmentIds = $wpdb->get_col(
-			$wpdb->prepare(
-				"SELECT pm.post_id
-				FROM `{$wpdb->postmeta}` pm
-				INNER JOIN `{$wpdb->posts}` p ON pm.post_id = p.ID
-				WHERE pm.meta_key = %s
-				AND p.post_type = 'attachment'",
-				'_aether_media_metadata'
-			)
-		);
-
-		if (empty($attachmentIds)) {
-			return [];
-		}
-
-		$filePaths = [];
-		foreach ($attachmentIds as $attachmentId) {
-			$filePath = \get_attached_file($attachmentId);
-			if ($filePath && \file_exists($filePath)) {
-				// Normalize path using realpath() to handle symlinks and ensure exact match.
-				$normalizedPath = \realpath($filePath);
-				if (false !== $normalizedPath) {
-					$filePaths[] = $normalizedPath;
-				} else {
-					// Fallback to original path if realpath() fails (shouldn't happen if file exists).
-					$filePaths[] = $filePath;
-				}
-
-				// Also get image sizes.
-				$metadata = \wp_get_attachment_metadata($attachmentId);
-				if (\is_array($metadata) && ! empty($metadata['sizes'])) {
-					$baseDir = \dirname($filePath);
-
-					foreach ($metadata['sizes'] as $sizeData) {
-						if (isset($sizeData['file'])) {
-							$sizeFile = $baseDir . '/' . $sizeData['file'];
-							if (\file_exists($sizeFile)) {
-								// Normalize path for size variants too.
-								$normalizedSizePath = \realpath($sizeFile);
-								if (false !== $normalizedSizePath) {
-									$filePaths[] = $normalizedSizePath;
-								} else {
-									$filePaths[] = $sizeFile;
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		return $filePaths;
+		// Delegate to FileBatchService for backward compatibility.
+		return $this->fileBatchService->getOffloadedFilePaths();
 	}
 
 	/**
@@ -764,66 +509,19 @@ class ExportService
 		return false;
 	}
 
-		/**
+	/**
 	 * Get exclusion patterns for development files and large dependencies.
 	 *
-	 * This method generates patterns for files/folders that should typically
-	 * be excluded from production zips: .git, node_modules, vendor, etc.
-	 *
+	 * @deprecated Use FileBatchService::getExclusionPatterns() instead.
 	 * @param string $sourceDir Source directory path to check for large folders.
 	 * @param bool   $autoExclude Enable automatic exclusion of .git and large vendor folders.
-	 * @return string[] Array of exclusion patterns.
+	 * @return array<string> Array of exclusion patterns.
 	 */
-	public static function getExclusionPatterns($sourceDir, $autoExclude = true)
+	public static function getExclusionPatterns(string $sourceDir, bool $autoExclude = true): array
 	{
-		$excludePatterns = [];
-
-		if (! $autoExclude) {
-			return $excludePatterns;
-		}
-
-		// Exclude .git directories.
-		$excludePatterns[] = '/.git/';
-		$excludePatterns[] = '/.git';
-
-		// Always exclude development-only folders.
-		$excludePatterns[] = '/.github/';
-		$excludePatterns[] = '/.github';
-		$excludePatterns[] = '/tests/';
-		$excludePatterns[] = '/tests';
-		$excludePatterns[] = '/Test/';
-		$excludePatterns[] = '/Test';
-		$excludePatterns[] = '/.vscode/';
-		$excludePatterns[] = '/.vscode';
-		$excludePatterns[] = '/.idea/';
-		$excludePatterns[] = '/.idea';
-
-		// Exclude development config files.
-		$excludePatterns[] = '/phpcs.xml';
-		$excludePatterns[] = '/phpunit.xml';
-		$excludePatterns[] = '/.phpcs.xml';
-		$excludePatterns[] = '/.phpunit.xml';
-		$excludePatterns[] = '/composer.json';
-		$excludePatterns[] = '/composer.lock';
-		$excludePatterns[] = '/package.json';
-		$excludePatterns[] = '/package-lock.json';
-		$excludePatterns[] = '/yarn.lock';
-		$excludePatterns[] = '/.eslintrc';
-		$excludePatterns[] = '/.eslintrc.js';
-		$excludePatterns[] = '/.eslintrc.json';
-		$excludePatterns[] = '/.editorconfig';
-		$excludePatterns[] = '/.gitignore';
-		$excludePatterns[] = '/.gitattributes';
-
-		// Always exclude vendor and node_modules directories.
-		// These are development dependencies and should never be in production zips.
-		// Pattern will match at any directory level (e.g., /path/to/vendor/, /path/to/node_modules/).
-		$excludePatterns[] = '/vendor/';
-		$excludePatterns[] = '/vendor';
-		$excludePatterns[] = '/node_modules/';
-		$excludePatterns[] = '/node_modules';
-
-		return $excludePatterns;
+		// Delegate to FileBatchService for backward compatibility.
+		$fileBatchService = new FileBatchService();
+		return $fileBatchService->getExclusionPatterns($sourceDir, $autoExclude);
 	}
 
 	/**
@@ -928,7 +626,7 @@ class ExportService
 
 		$phases = $currentProgress['phases'] ?? [];
 		$phases['database'] = ['status' => 'completed', 'filesProcessed' => $filesAdded];
-		$overallProgress = $this->calculateOverallProgress($filesProcessed, $totalFiles, $phases);
+		$overallProgress = $this->progressTracker->calculateOverallProgress($filesProcessed, $totalFiles);
 
 		return [
 			'success' => true,
@@ -960,8 +658,8 @@ class ExportService
 			return [];
 		}
 
-		$files = $this->getFilesInDirectory($uploadsDir);
-		$offloadedFiles = $this->getOffloadedFilePaths();
+		$files = $this->fileBatchService->getFilesInDirectory($uploadsDir);
+		$offloadedFiles = $this->fileBatchService->getOffloadedFilePaths();
 		$offloadedFilesSet = \array_flip($offloadedFiles);
 
 		// Filter out offloaded files.
@@ -970,7 +668,7 @@ class ExportService
 			return false !== $realPath && !isset($offloadedFilesSet[$realPath]);
 		});
 
-		return $this->createBatches($files, 100, 50 * 1024 * 1024); // 100 files or 50MB
+		return $this->fileBatchService->createBatches($files, 100, 50 * 1024 * 1024); // 100 files or 50MB
 	}
 
 	/**
@@ -1021,7 +719,7 @@ class ExportService
 			$zipFilePath = 'wp-content/uploads/' . $relativePath;
 
 			// Check exclusion patterns.
-			$excludePatterns = self::getExclusionPatterns($uploadsDir, false);
+			$excludePatterns = $this->fileBatchService->getExclusionPatterns($uploadsDir, false);
 			$excluded = false;
 			foreach ($excludePatterns as $pattern) {
 				if (false !== \strpos($filePath, $pattern)) {
@@ -1049,7 +747,7 @@ class ExportService
 		$phases['uploads'] = $uploadsPhase;
 
 		$phaseProgress = $currentBatchCount > 0 ? (int) \round(($completedBatches / $currentBatchCount) * 100) : 100;
-		$overallProgress = $this->calculateOverallProgress($filesProcessed, $totalFiles, $phases);
+		$overallProgress = $this->progressTracker->calculateOverallProgress($filesProcessed, $totalFiles);
 
 		return [
 			'success' => true,
@@ -1164,8 +862,8 @@ class ExportService
 		$pluginsPhase = $phases['plugins'] ?? ['status' => 'pending', 'items' => [], 'completedItems' => [], 'filesProcessed' => 0];
 
 		$filesAdded = 0;
-		$excludePatterns = self::getExclusionPatterns($pluginDir, true);
-		$this->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $pluginSlug, '', $excludePatterns, null, function () use (&$filesAdded, &$filesProcessed) {
+		$excludePatterns = $this->fileBatchService->getExclusionPatterns($pluginDir, true);
+		$this->zipService->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $pluginSlug, '', $excludePatterns, null, function () use (&$filesAdded, &$filesProcessed) {
 			$filesAdded++;
 			$filesProcessed++;
 		});
@@ -1180,7 +878,7 @@ class ExportService
 		$phases['plugins'] = $pluginsPhase;
 
 		$phaseProgress = \count($pluginsPhase['items'] ?? []) > 0 ? (int) \round((\count($completedItems) / \count($pluginsPhase['items'])) * 100) : 100;
-		$overallProgress = $this->calculateOverallProgress($filesProcessed, $totalFiles, $phases);
+		$overallProgress = $this->progressTracker->calculateOverallProgress($filesProcessed, $totalFiles);
 
 		return [
 			'success' => true,
@@ -1295,8 +993,8 @@ class ExportService
 		$themesPhase = $phases['themes'] ?? ['status' => 'pending', 'items' => [], 'completedItems' => [], 'filesProcessed' => 0];
 
 		$filesAdded = 0;
-		$excludePatterns = self::getExclusionPatterns($themeDir, true);
-		$this->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $themeSlug, '', $excludePatterns, null, function () use (&$filesAdded, &$filesProcessed) {
+		$excludePatterns = $this->fileBatchService->getExclusionPatterns($themeDir, true);
+		$this->zipService->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $themeSlug, '', $excludePatterns, null, function () use (&$filesAdded, &$filesProcessed) {
 			$filesAdded++;
 			$filesProcessed++;
 		});
@@ -1311,7 +1009,7 @@ class ExportService
 		$phases['themes'] = $themesPhase;
 
 		$phaseProgress = \count($themesPhase['items'] ?? []) > 0 ? (int) \round((\count($completedItems) / \count($themesPhase['items'])) * 100) : 100;
-		$overallProgress = $this->calculateOverallProgress($filesProcessed, $totalFiles, $phases);
+		$overallProgress = $this->progressTracker->calculateOverallProgress($filesProcessed, $totalFiles);
 
 		return [
 			'success' => true,
@@ -1344,8 +1042,8 @@ class ExportService
 			return [];
 		}
 
-		$files = $this->getFilesInDirectory($mupluginsDir);
-		return $this->createBatches($files, 50, 25 * 1024 * 1024); // 50 files or 25MB
+		$files = $this->fileBatchService->getFilesInDirectory($mupluginsDir);
+		return $this->fileBatchService->createBatches($files, 50, 25 * 1024 * 1024); // 50 files or 25MB
 	}
 
 	/**
@@ -1396,7 +1094,7 @@ class ExportService
 			$zipFilePath = 'wp-content/mu-plugins/' . $relativePath;
 
 			// Check exclusion patterns.
-			$excludePatterns = self::getExclusionPatterns($mupluginsDir, true);
+			$excludePatterns = $this->fileBatchService->getExclusionPatterns($mupluginsDir, true);
 			$excluded = false;
 			foreach ($excludePatterns as $pattern) {
 				if (false !== \strpos($filePath, $pattern)) {
@@ -1424,7 +1122,7 @@ class ExportService
 		$phases['mu-plugins'] = $muPluginsPhase;
 
 		$phaseProgress = $currentBatchCount > 0 ? (int) \round(($completedBatches / $currentBatchCount) * 100) : 100;
-		$overallProgress = $this->calculateOverallProgress($filesProcessed, $totalFiles, $phases);
+		$overallProgress = $this->progressTracker->calculateOverallProgress($filesProcessed, $totalFiles);
 
 		return [
 			'success' => true,
@@ -1551,8 +1249,8 @@ class ExportService
 		// Count uploads files (excluding offloaded files).
 		$uploadsDir = WP_CONTENT_DIR . '/uploads';
 		if (\is_dir($uploadsDir)) {
-			$files = $this->getFilesInDirectory($uploadsDir);
-			$offloadedFiles = $this->getOffloadedFilePaths();
+			$files = $this->fileBatchService->getFilesInDirectory($uploadsDir);
+			$offloadedFiles = $this->fileBatchService->getOffloadedFilePaths();
 			$offloadedFilesSet = \array_flip($offloadedFiles);
 			$files = \array_filter($files, function ($filePath) use ($offloadedFilesSet) {
 				$realPath = \realpath($filePath);
@@ -1566,7 +1264,7 @@ class ExportService
 		foreach ($plugins as $slug) {
 			$pluginDir = WP_PLUGIN_DIR . '/' . $slug;
 			if (\is_dir($pluginDir)) {
-				$count += $this->countFilesInDirectoryWithExclusions($pluginDir, true);
+				$count += $this->fileBatchService->countFilesInDirectoryWithExclusions($pluginDir, true);
 			}
 		}
 
@@ -1575,187 +1273,17 @@ class ExportService
 		foreach ($themes as $slug) {
 			$themeDir = \get_theme_root() . '/' . $slug;
 			if (\is_dir($themeDir)) {
-				$count += $this->countFilesInDirectoryWithExclusions($themeDir, true);
+				$count += $this->fileBatchService->countFilesInDirectoryWithExclusions($themeDir, true);
 			}
 		}
 
 		// Count mu-plugins files (excluding dev files).
 		$mupluginsDir = WP_CONTENT_DIR . '/mu-plugins';
 		if (\is_dir($mupluginsDir)) {
-			$count += $this->countFilesInDirectoryWithExclusions($mupluginsDir, true);
+			$count += $this->fileBatchService->countFilesInDirectoryWithExclusions($mupluginsDir, true);
 		}
 
 		return $count;
 	}
 
-	/**
-	 * Count files in directory with exclusion patterns applied.
-	 *
-	 * @param string $dir Directory path.
-	 * @param bool $excludeDevFiles Whether to exclude development files.
-	 * @return int Number of files (excluding matched patterns).
-	 */
-	private function countFilesInDirectoryWithExclusions(string $dir, bool $excludeDevFiles = false): int
-	{
-		$count = 0;
-		$realDir = \realpath($dir);
-
-		if (false === $realDir || !\is_dir($realDir)) {
-			return 0;
-		}
-
-		$excludePatterns = $excludeDevFiles ? self::getExclusionPatterns($dir, true) : [];
-
-		$files = \scandir($realDir);
-		if (false === $files) {
-			return 0;
-		}
-
-		// Sort for consistency
-		\sort($files);
-
-		foreach ($files as $file) {
-			if ('.' === $file || '..' === $file) {
-				continue;
-			}
-
-			$filePath = $realDir . '/' . $file;
-			$realFilePath = \realpath($filePath);
-
-			if (false === $realFilePath || 0 !== \strpos($realFilePath, $realDir . DIRECTORY_SEPARATOR)) {
-				continue;
-			}
-
-			// Check exclusion patterns
-			$excluded = false;
-			if (!empty($excludePatterns)) {
-				foreach ($excludePatterns as $pattern) {
-					if (false !== \strpos($realFilePath, $pattern)) {
-						$excluded = true;
-						break;
-					}
-				}
-			}
-
-			if ($excluded) {
-				continue;
-			}
-
-			if (\is_dir($realFilePath)) {
-				// Recurse into subdirectory.
-				$count += $this->countFilesInDirectoryWithExclusions($realFilePath, $excludeDevFiles);
-			} else {
-				// Count regular file.
-				$count++;
-			}
-		}
-
-		return $count;
-	}
-
-	/**
-	 * Get all files in a directory recursively.
-	 *
-	 * @param string $dir Directory path.
-	 * @return array<string> List of file paths (sorted for consistency).
-	 */
-	private function getFilesInDirectory(string $dir): array
-	{
-		$files = [];
-		$realDir = \realpath($dir);
-
-		if (false === $realDir || !\is_dir($realDir)) {
-			return [];
-		}
-
-		$items = \scandir($realDir);
-		if (false === $items) {
-			return [];
-		}
-
-		// Sort items for consistent ordering
-		\sort($items);
-
-		foreach ($items as $item) {
-			if ('.' === $item || '..' === $item) {
-				continue;
-			}
-
-			$itemPath = $realDir . '/' . $item;
-			$realItemPath = \realpath($itemPath);
-
-			if (false === $realItemPath || 0 !== \strpos($realItemPath, $realDir . DIRECTORY_SEPARATOR)) {
-				continue;
-			}
-
-			if (\is_dir($realItemPath)) {
-				$files = \array_merge($files, $this->getFilesInDirectory($realItemPath));
-			} else {
-				$files[] = $realItemPath;
-			}
-		}
-
-		// Sort final file list for consistent batch creation
-		\sort($files);
-
-		return $files;
-	}
-
-	/**
-	 * Create batches from file list.
-	 *
-	 * @param array<string> $files List of file paths.
-	 * @param int $maxFiles Maximum files per batch.
-	 * @param int $maxSize Maximum size per batch in bytes.
-	 * @return array<int, array<string, mixed>> List of batches.
-	 */
-	private function createBatches(array $files, int $maxFiles, int $maxSize): array
-	{
-		$batches = [];
-		$currentBatch = ['files' => [], 'size' => 0];
-		$batchIndex = 0;
-
-		foreach ($files as $filePath) {
-			$fileSize = \file_exists($filePath) ? \filesize($filePath) : 0;
-
-			// Start new batch if current batch is full.
-			if (
-				\count($currentBatch['files']) >= $maxFiles ||
-				($currentBatch['size'] + $fileSize) > $maxSize
-			) {
-				if (!empty($currentBatch['files'])) {
-					$batches[$batchIndex] = $currentBatch;
-					$batchIndex++;
-				}
-				$currentBatch = ['files' => [], 'size' => 0];
-			}
-
-			$currentBatch['files'][] = $filePath;
-			$currentBatch['size'] += $fileSize;
-		}
-
-		// Add final batch if it has files.
-		if (!empty($currentBatch['files'])) {
-			$batches[$batchIndex] = $currentBatch;
-		}
-
-		return $batches;
-	}
-
-	/**
-	 * Calculate overall progress percentage.
-	 *
-	 * @param int $filesProcessed Files processed so far.
-	 * @param int $totalFiles Total files expected.
-	 * @return int Overall progress (0-100).
-	 */
-	private function calculateOverallProgress(int $filesProcessed, int $totalFiles): int
-	{
-		if ($totalFiles <= 0) {
-			return 100;
-		}
-
-		$progress = (int) \round(($filesProcessed / $totalFiles) * 100);
-		return \min(100, \max(0, $progress));
-	}
 }
