@@ -7,7 +7,7 @@
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { doAction, applyFilters } from '@wordpress/hooks';
+import { doAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from './assetExtractor';
 import { debug, debugWarn } from '@aether/utils/debug';
 import StaticSiteCache from '@aether/utils/staticSiteCache';

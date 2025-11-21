@@ -23,15 +23,19 @@ describe( 'htmlRewriting', () => {
 	describe( 'protectScriptContent()', () => {
 		test( 'should protect inline script content', () => {
 			const html = '<script>const x = 1;</script>';
-			const { html: protectedHtml, placeholders } = protectScriptContent( html );
+			const { html: protectedHtml, placeholders } =
+				protectScriptContent( html );
 
 			expect( protectedHtml ).toContain( '___SCRIPT_CONTENT_0___' );
-			expect( placeholders[ '___SCRIPT_CONTENT_0___' ] ).toBe( 'const x = 1;' );
+			expect( placeholders.___SCRIPT_CONTENT_0___ ).toBe(
+				'const x = 1;'
+			);
 		} );
 
 		test( 'should handle multiple scripts', () => {
 			const html = '<script>a();</script><script>b();</script>';
-			const { html: protectedHtml, placeholders } = protectScriptContent( html );
+			const { html: protectedHtml, placeholders } =
+				protectScriptContent( html );
 
 			expect( protectedHtml ).toContain( '___SCRIPT_CONTENT_0___' );
 			expect( protectedHtml ).toContain( '___SCRIPT_CONTENT_1___' );
@@ -40,7 +44,8 @@ describe( 'htmlRewriting', () => {
 
 		test( 'should not protect empty scripts', () => {
 			const html = '<script src="app.js"></script>';
-			const { html: protectedHtml, placeholders } = protectScriptContent( html );
+			const { html: protectedHtml, placeholders } =
+				protectScriptContent( html );
 
 			expect( protectedHtml ).toBe( html );
 			expect( Object.keys( placeholders ) ).toHaveLength( 0 );
@@ -48,14 +53,16 @@ describe( 'htmlRewriting', () => {
 
 		test( 'should not protect importmap scripts', () => {
 			const html = '<script type="importmap">{"imports":{}}</script>';
-			const { html: protectedHtml, placeholders } = protectScriptContent( html );
+			const { html: protectedHtml, placeholders } =
+				protectScriptContent( html );
 
 			expect( protectedHtml ).toBe( html );
 			expect( Object.keys( placeholders ) ).toHaveLength( 0 );
 		} );
 
 		test( 'should preserve script attributes', () => {
-			const html = '<script type="text/javascript" defer>code();</script>';
+			const html =
+				'<script type="text/javascript" defer>code();</script>';
 			const { html: protectedHtml } = protectScriptContent( html );
 
 			expect( protectedHtml ).toContain( 'type="text/javascript"' );
@@ -66,7 +73,7 @@ describe( 'htmlRewriting', () => {
 	describe( 'restoreScriptContent()', () => {
 		test( 'should restore placeholders', () => {
 			const html = '<script>___SCRIPT_CONTENT_0___</script>';
-			const placeholders = { '___SCRIPT_CONTENT_0___': 'restored()' };
+			const placeholders = { ___SCRIPT_CONTENT_0___: 'restored()' };
 
 			const result = restoreScriptContent( html, placeholders );
 
@@ -76,8 +83,8 @@ describe( 'htmlRewriting', () => {
 		test( 'should restore multiple placeholders', () => {
 			const html = '___SCRIPT_CONTENT_0___ and ___SCRIPT_CONTENT_1___';
 			const placeholders = {
-				'___SCRIPT_CONTENT_0___': 'first',
-				'___SCRIPT_CONTENT_1___': 'second',
+				___SCRIPT_CONTENT_0___: 'first',
+				___SCRIPT_CONTENT_1___: 'second',
 			};
 
 			const result = restoreScriptContent( html, placeholders );
@@ -144,7 +151,9 @@ describe( 'htmlRewriting', () => {
 	} );
 
 	describe( 'replaceSiteUrlMatches()', () => {
-		const mockRewrite = jest.fn( ( url ) => url.replace( 'https://example.com', '' ) );
+		const mockRewrite = jest.fn( ( url ) =>
+			url.replace( 'https://example.com', '' )
+		);
 
 		beforeEach( () => {
 			mockRewrite.mockClear();
@@ -153,10 +162,20 @@ describe( 'htmlRewriting', () => {
 		test( 'should replace URLs with rewritten versions', () => {
 			const html = '<a href="https://example.com/page">Link</a>';
 			const matches = [
-				{ index: 9, length: 24, match: 'https://example.com/page', type: 'https' },
+				{
+					index: 9,
+					length: 24,
+					match: 'https://example.com/page',
+					type: 'https',
+				},
 			];
 
-			const result = replaceSiteUrlMatches( html, matches, mockRewrite, '' );
+			const result = replaceSiteUrlMatches(
+				html,
+				matches,
+				mockRewrite,
+				''
+			);
 
 			expect( result ).toBe( '<a href="/page">Link</a>' );
 		} );
@@ -167,7 +186,12 @@ describe( 'htmlRewriting', () => {
 				{ index: 5, length: 10, match: 'overlap', type: 'https' },
 			];
 
-			const result = replaceSiteUrlMatches( 'first-test', matches, mockRewrite, '' );
+			const result = replaceSiteUrlMatches(
+				'first-test',
+				matches,
+				mockRewrite,
+				''
+			);
 
 			// Second match should be skipped
 			expect( mockRewrite ).toHaveBeenCalledTimes( 1 );
@@ -175,22 +199,45 @@ describe( 'htmlRewriting', () => {
 
 		test( 'should skip CF Images URLs', () => {
 			const matches = [
-				{ index: 0, length: 30, match: 'https://imagedelivery.net/abc', type: 'https' },
+				{
+					index: 0,
+					length: 30,
+					match: 'https://imagedelivery.net/abc',
+					type: 'https',
+				},
 			];
 
-			const result = replaceSiteUrlMatches( 'https://imagedelivery.net/abc', matches, mockRewrite, '' );
+			const result = replaceSiteUrlMatches(
+				'https://imagedelivery.net/abc',
+				matches,
+				mockRewrite,
+				''
+			);
 
 			expect( mockRewrite ).not.toHaveBeenCalled();
 		} );
 
 		test( 'should add https to protocol-relative URLs', () => {
 			const matches = [
-				{ index: 0, length: 15, match: '//example.com/a', type: 'protocol-relative' },
+				{
+					index: 0,
+					length: 15,
+					match: '//example.com/a',
+					type: 'protocol-relative',
+				},
 			];
 
-			replaceSiteUrlMatches( '//example.com/a', matches, mockRewrite, '' );
+			replaceSiteUrlMatches(
+				'//example.com/a',
+				matches,
+				mockRewrite,
+				''
+			);
 
-			expect( mockRewrite ).toHaveBeenCalledWith( 'https://example.com/a', '' );
+			expect( mockRewrite ).toHaveBeenCalledWith(
+				'https://example.com/a',
+				''
+			);
 		} );
 	} );
 
@@ -248,14 +295,17 @@ describe( 'htmlRewriting', () => {
 	} );
 
 	describe( 'rewriteSrcsetUrls()', () => {
-		const mockRewrite = jest.fn( ( url ) => url.replace( 'https://example.com', '' ) );
+		const mockRewrite = jest.fn( ( url ) =>
+			url.replace( 'https://example.com', '' )
+		);
 
 		beforeEach( () => {
 			mockRewrite.mockClear();
 		} );
 
 		test( 'should rewrite srcset URLs', () => {
-			const html = '<img srcset="https://example.com/small.jpg 300w, https://example.com/large.jpg 600w">';
+			const html =
+				'<img srcset="https://example.com/small.jpg 300w, https://example.com/large.jpg 600w">';
 			const result = rewriteSrcsetUrls( html, mockRewrite, '' );
 
 			expect( result ).toContain( '/small.jpg 300w' );
@@ -285,14 +335,17 @@ describe( 'htmlRewriting', () => {
 	} );
 
 	describe( 'rewriteImportMaps()', () => {
-		const mockRewrite = jest.fn( ( url ) => url.replace( 'https://example.com', '' ) );
+		const mockRewrite = jest.fn( ( url ) =>
+			url.replace( 'https://example.com', '' )
+		);
 
 		beforeEach( () => {
 			mockRewrite.mockClear();
 		} );
 
 		test( 'should rewrite import map URLs', () => {
-			const html = '<script type="importmap">{"imports":{"module":"https://example.com/mod.js"}}</script>';
+			const html =
+				'<script type="importmap">{"imports":{"module":"https://example.com/mod.js"}}</script>';
 			const result = rewriteImportMaps( html, mockRewrite, '' );
 
 			expect( result ).toContain( '"/mod.js"' );
@@ -305,7 +358,9 @@ describe( 'htmlRewriting', () => {
 					b: 'https://example.com/b.js',
 				},
 			};
-			const html = `<script type="importmap">${ JSON.stringify( importmap ) }</script>`;
+			const html = `<script type="importmap">${ JSON.stringify(
+				importmap
+			) }</script>`;
 			const result = rewriteImportMaps( html, mockRewrite, '' );
 
 			expect( mockRewrite ).toHaveBeenCalledTimes( 2 );

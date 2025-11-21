@@ -16,7 +16,12 @@ jest.mock( '../indexedDB', () => {
 		default: jest.fn().mockImplementation( () => ( {
 			get: jest.fn( ( key ) => Promise.resolve( mockStore.get( key ) ) ),
 			set: jest.fn( ( key, value, extra ) => {
-				mockStore.set( key, { ...value, url: key, ...extra, timestamp: Date.now() } );
+				mockStore.set( key, {
+					...value,
+					url: key,
+					...extra,
+					timestamp: Date.now(),
+				} );
 				return Promise.resolve( true );
 			} ),
 			delete: jest.fn( ( key ) => {
@@ -37,11 +42,13 @@ jest.mock( '../indexedDB', () => {
 				} );
 				return Promise.resolve( results );
 			} ),
-			getStorageEstimate: jest.fn( () => Promise.resolve( {
-				usage: 1000000,
-				quota: 10000000,
-				percentUsed: 10,
-			} ) ),
+			getStorageEstimate: jest.fn( () =>
+				Promise.resolve( {
+					usage: 1000000,
+					quota: 10000000,
+					percentUsed: 10,
+				} )
+			),
 			deleteOlderThan: jest.fn( () => Promise.resolve( 5 ) ),
 		} ) ),
 		isIndexedDBAvailable: jest.fn( () => mockIndexedDBAvailable ),
@@ -83,7 +90,11 @@ describe( 'StaticSiteCache', () => {
 
 	describe( 'set()', () => {
 		test( 'should cache HTML and assets', async () => {
-			const result = await cache.set( 'https://example.com/', '<html></html>', [ '/style.css' ] );
+			const result = await cache.set(
+				'https://example.com/',
+				'<html></html>',
+				[ '/style.css' ]
+			);
 			expect( result ).toBe( true );
 		} );
 
@@ -91,16 +102,24 @@ describe( 'StaticSiteCache', () => {
 			mockIndexedDBAvailable = false;
 			const fallbackCache = new StaticSiteCache();
 
-			const result = await fallbackCache.set( 'https://example.com/', '<html></html>', [] );
+			const result = await fallbackCache.set(
+				'https://example.com/',
+				'<html></html>',
+				[]
+			);
 
 			expect( result ).toBe( true );
-			expect( fallbackCache.memoryCache.has( 'https://example.com/' ) ).toBe( true );
+			expect(
+				fallbackCache.memoryCache.has( 'https://example.com/' )
+			).toBe( true );
 		} );
 	} );
 
 	describe( 'get()', () => {
 		test( 'should retrieve cached data', async () => {
-			await cache.set( 'https://example.com/', '<html></html>', [ '/a.css' ] );
+			await cache.set( 'https://example.com/', '<html></html>', [
+				'/a.css',
+			] );
 
 			const result = await cache.get( 'https://example.com/' );
 
@@ -132,7 +151,11 @@ describe( 'StaticSiteCache', () => {
 			mockIndexedDBAvailable = false;
 			const fallbackCache = new StaticSiteCache();
 
-			await fallbackCache.set( 'https://example.com/', '<html></html>', [] );
+			await fallbackCache.set(
+				'https://example.com/',
+				'<html></html>',
+				[]
+			);
 			const result = await fallbackCache.get( 'https://example.com/' );
 
 			expect( result ).not.toBeNull();
@@ -164,7 +187,11 @@ describe( 'StaticSiteCache', () => {
 			mockIndexedDBAvailable = false;
 			const fallbackCache = new StaticSiteCache();
 
-			await fallbackCache.set( 'https://example.com/', '<html></html>', [] );
+			await fallbackCache.set(
+				'https://example.com/',
+				'<html></html>',
+				[]
+			);
 			const result = await fallbackCache.delete( 'https://example.com/' );
 
 			expect( result ).toBe( true );
@@ -282,7 +309,11 @@ describe( 'StaticSiteCache', () => {
 			await cache.set( 'https://a.com/', '<a></a>', [] );
 			await cache.set( 'https://b.com/', '<b></b>', [] );
 
-			const results = await cache.batchGet( [ 'https://a.com/', 'https://b.com/', 'https://c.com/' ] );
+			const results = await cache.batchGet( [
+				'https://a.com/',
+				'https://b.com/',
+				'https://c.com/',
+			] );
 
 			expect( results.has( 'https://a.com/' ) ).toBe( true );
 			expect( results.has( 'https://b.com/' ) ).toBe( true );
@@ -304,7 +335,11 @@ describe( 'StaticSiteCache', () => {
 
 		test( 'should support legacy processedHtml field', async () => {
 			const items = [
-				{ url: 'https://legacy.com/', processedHtml: '<old></old>', assetUrls: [] },
+				{
+					url: 'https://legacy.com/',
+					processedHtml: '<old></old>',
+					assetUrls: [],
+				},
 			];
 
 			const count = await cache.batchSet( items );
@@ -326,7 +361,9 @@ describe( 'StaticSiteCache', () => {
 
 	describe( 'getRecommendations()', () => {
 		test( 'should recommend when using fallback', () => {
-			const recommendations = cache.getRecommendations( { usingFallback: true } );
+			const recommendations = cache.getRecommendations( {
+				usingFallback: true,
+			} );
 			expect( recommendations.length ).toBeGreaterThan( 0 );
 			expect( recommendations[ 0 ] ).toContain( 'IndexedDB' );
 		} );
@@ -336,7 +373,9 @@ describe( 'StaticSiteCache', () => {
 				storagePercent: 85,
 				usingFallback: false,
 			} );
-			expect( recommendations.some( ( r ) => r.includes( '85%' ) ) ).toBe( true );
+			expect( recommendations.some( ( r ) => r.includes( '85%' ) ) ).toBe(
+				true
+			);
 		} );
 
 		test( 'should warn about nearly full storage', () => {
@@ -344,7 +383,9 @@ describe( 'StaticSiteCache', () => {
 				storagePercent: 96,
 				usingFallback: false,
 			} );
-			expect( recommendations.some( ( r ) => r.includes( 'nearly full' ) ) ).toBe( true );
+			expect(
+				recommendations.some( ( r ) => r.includes( 'nearly full' ) )
+			).toBe( true );
 		} );
 
 		test( 'should suggest cleanup when old data detected', () => {
@@ -353,7 +394,9 @@ describe( 'StaticSiteCache', () => {
 				sessionCached: 10,
 				usingFallback: false,
 			} );
-			expect( recommendations.some( ( r ) => r.includes( 'cleanup' ) ) ).toBe( true );
+			expect(
+				recommendations.some( ( r ) => r.includes( 'cleanup' ) )
+			).toBe( true );
 		} );
 
 		test( 'should return empty array when healthy', () => {

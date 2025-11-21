@@ -1,3 +1,5 @@
+const path = require( 'path' );
+
 module.exports = {
 	extends: [ 'plugin:@wordpress/eslint-plugin/recommended' ],
 	globals: {
@@ -11,6 +13,51 @@ module.exports = {
 		alert: 'readonly',
 		location: 'readonly',
 		requestAnimationFrame: 'readonly',
+	},
+	settings: {
+		'import/resolver': {
+			alias: {
+				map: [
+					[
+						'@aether/utils',
+						path.resolve( __dirname, 'assets/src/utils' ),
+					],
+					[
+						'@aether/components',
+						path.resolve( __dirname, 'assets/src/components' ),
+					],
+					[
+						'@aether/hooks',
+						path.resolve( __dirname, 'assets/src/hooks' ),
+					],
+					[
+						'@aether/constants',
+						path.resolve( __dirname, 'assets/src/constants' ),
+					],
+					[
+						'@aether/contexts',
+						path.resolve( __dirname, 'assets/src/contexts' ),
+					],
+					[
+						'@aether/services',
+						path.resolve( __dirname, 'assets/src/services' ),
+					],
+					[
+						'@aether/providers',
+						path.resolve( __dirname, 'assets/src/providers' ),
+					],
+					[
+						'@aether/publish',
+						path.resolve( __dirname, 'assets/src/publish' ),
+					],
+					[
+						'@aether/admin',
+						path.resolve( __dirname, 'assets/src/admin-settings' ),
+					],
+				],
+				extensions: [ '.js', '.jsx', '.json' ],
+			},
+		},
 	},
 	rules: {
 		'no-console': 'off', // Allow console statements in this project
