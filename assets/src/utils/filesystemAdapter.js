@@ -58,11 +58,13 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 				apiError?.data?.message ||
 				apiError?.code ||
 				'Upload failed';
-			
+
 			// Include additional error details if available (destination, source, etc.)
 			const errorDetails = [];
 			if ( apiError?.data?.destination ) {
-				errorDetails.push( `Destination: ${ apiError.data.destination }` );
+				errorDetails.push(
+					`Destination: ${ apiError.data.destination }`
+				);
 			}
 			if ( apiError?.data?.source ) {
 				errorDetails.push( `Source: ${ apiError.data.source }` );
@@ -70,20 +72,22 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 			if ( apiError?.data?.system_error ) {
 				errorDetails.push( `System: ${ apiError.data.system_error }` );
 			}
-			
-			const fullErrorMessage = errorDetails.length > 0
-				? `${ errorMessage } (${ errorDetails.join( ', ' ) })`
-				: errorMessage;
-			
+
+			const fullErrorMessage =
+				errorDetails.length > 0
+					? `${ errorMessage } (${ errorDetails.join( ', ' ) })`
+					: errorMessage;
+
 			debug( 'filesystemAdapter.uploadFile API error:', apiError );
 			return createErrorResponse( fullErrorMessage );
 		}
 
 		if ( ! response.success ) {
 			// Extract detailed error information from response
-			const errorMessage = response.error || response.message || 'Upload failed';
+			const errorMessage =
+				response.error || response.message || 'Upload failed';
 			const errorDetails = [];
-			
+
 			if ( response.destination ) {
 				errorDetails.push( `Destination: ${ response.destination }` );
 			}
@@ -93,11 +97,12 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 			if ( response.system_error ) {
 				errorDetails.push( `System: ${ response.system_error }` );
 			}
-			
-			const fullErrorMessage = errorDetails.length > 0
-				? `${ errorMessage } (${ errorDetails.join( ', ' ) })`
-				: errorMessage;
-			
+
+			const fullErrorMessage =
+				errorDetails.length > 0
+					? `${ errorMessage } (${ errorDetails.join( ', ' ) })`
+					: errorMessage;
+
 			return createErrorResponse( fullErrorMessage );
 		}
 

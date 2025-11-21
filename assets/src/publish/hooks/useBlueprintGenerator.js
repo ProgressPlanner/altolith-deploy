@@ -27,10 +27,10 @@ export function useBlueprintGenerator() {
 		/**
 		 * Generate blueprint JSON.
 		 *
-		 * @param {Object}   [options]                    Optional options object.
-		 * @param {Array}    [options.assets]              Discovered assets (currently unused).
-		 * @param {string}   [options.wpContentZipUrl]     wp-content.zip URL (currently unused).
-		 * @param {Function} [setStatusMessage]           Optional status message callback.
+		 * @param {Object}   [options]                 Optional options object.
+		 * @param {Array}    [options.assets]          Discovered assets (currently unused).
+		 * @param {string}   [options.wpContentZipUrl] wp-content.zip URL (currently unused).
+		 * @param {Function} [setStatusMessage]        Optional status message callback.
 		 * @return {Promise<Object>} Blueprint JSON object.
 		 */
 		async ( options = null, setStatusMessage = null ) => {
