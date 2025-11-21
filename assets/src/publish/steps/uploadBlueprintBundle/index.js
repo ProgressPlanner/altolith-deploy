@@ -80,7 +80,7 @@ async function handler( context ) {
 			let exportPath = 'blueprint-bundle/bundle.zip';
 			try {
 				const providerResponse = await apiFetch( {
-					path: `/aether/site-exporter/providers/${ providerIdItem }`,
+					path: `/aether/site-exporter/providers/${ providerIdItem }/config`,
 				} );
 				if ( providerResponse.success && providerResponse.config ) {
 					const providerConfig = providerResponse.config || {};

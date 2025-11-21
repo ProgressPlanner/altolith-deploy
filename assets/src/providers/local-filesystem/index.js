@@ -74,7 +74,7 @@ async function handleUnifiedFileUpload( fileContext ) {
 		// Fetch provider config
 		try {
 			const providerResponse = await apiFetch( {
-				path: `/aether/site-exporter/providers/${ providerId }`,
+				path: `/aether/site-exporter/providers/${ providerId }/config`,
 			} );
 			if ( providerResponse.success && providerResponse.config ) {
 				const config = providerResponse.config;
