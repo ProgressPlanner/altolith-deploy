@@ -118,11 +118,11 @@ class MenuManager
 	 */
 	private function isAetherPage(): bool
 	{
-		if (! isset($_GET['page'])) {
+		if (! isset($_GET['page'])) { // phpcs:ignore WordPress.Security.NonceVerification
 			return false;
 		}
 
-		$currentPage = \sanitize_text_field(\wp_unslash($_GET['page']));
+		$currentPage = \sanitize_text_field(\wp_unslash($_GET['page'])); // phpcs:ignore WordPress.Security.NonceVerification
 
 		// Check if current page is registered.
 		return isset($this->pages[ $currentPage ]);

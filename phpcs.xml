@@ -225,11 +225,11 @@
 		<exclude name="Generic.Files.LineLength.TooLong"/>
 		<exclude name="Generic.Files.EndFileNoNewline.Found"/>
 		<exclude name="Generic.Files.LowercasedFilename.NotFound"/>
-		<exclude name="WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode"/>
 
 		<exclude name="WordPress.WP.AlternativeFunctions"/>
 		<exclude name="WordPress.DB.DirectDatabaseQuery"/>
 		<exclude name="WordPress.PHP.DiscouragedPHPFunctions" />
-		<exclude name="WordPress.Security.NonceVerification" />
 	</rule>
+
+	<exclude name="WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode"/>
 </ruleset>

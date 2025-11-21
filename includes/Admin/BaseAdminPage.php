@@ -193,11 +193,11 @@ abstract class BaseAdminPage
 	 */
 	public function isCurrentPage(): bool
 	{
-		if (! isset($_GET['page'])) {
+		if (! isset($_GET['page'])) { // phpcs:ignore WordPress.Security.NonceVerification
 			return false;
 		}
 
-		$page = \sanitize_text_field(\wp_unslash($_GET['page']));
+		$page = \sanitize_text_field(\wp_unslash($_GET['page'])); // phpcs:ignore WordPress.Security.NonceVerification
 		return $page === $this->pageSlug;
 	}
 }
