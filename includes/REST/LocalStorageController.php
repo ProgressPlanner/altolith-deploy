@@ -237,9 +237,8 @@ class LocalStorageController
 					// For JavaScript files, allow common misidentifications
 					if ($fileExtension === 'js' && \in_array($detectedMimeType, ['text/x-java', 'text/plain', 'application/x-javascript'], true)) {
 						$mimeTypeAllowed = true;
-					}
-					// For other text-based files, allow text/plain as fallback
-					elseif (\in_array($fileExtension, ['css', 'html', 'htm', 'xml', 'txt', 'md'], true) && $detectedMimeType === 'text/plain') {
+					} elseif (\in_array($fileExtension, ['css', 'html', 'htm', 'xml', 'txt', 'md'], true) && $detectedMimeType === 'text/plain') {
+						// For other text-based files, allow text/plain as fallback
 						$mimeTypeAllowed = true;
 					}
 				}
