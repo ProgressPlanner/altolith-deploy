@@ -86,6 +86,8 @@ async function doActionAsync( actionName, fileContext ) {
  * Upload a file using the unified action system.
  *
  * Fires `aether.file.upload` action which providers hook into to handle the upload.
+ * Providers should set `fileContext.result = { success: true/false, error?: string }`
+ * to communicate the upload result.
  *
  * @param {Object} fileContext File context object from createFileContext().
  * @return {Promise<Object>} Upload result with success status and optional error.
@@ -102,9 +104,15 @@ export async function uploadFile( fileContext ) {
 	// Providers hook into this action to handle the actual upload
 	await doActionAsync( 'aether.file.upload', filteredContext );
 
-	// Return result (providers should update context with result)
-	// For now, we assume success if no error is thrown
-	// In the future, providers could set fileContext.result
+	// Check if provider set a result on the context
+	if ( filteredContext.result ) {
+		return {
+			...filteredContext.result,
+			fileContext: filteredContext,
+		};
+	}
+
+	// Default to success if no result was set (backwards compatibility)
 	return {
 		success: true,
 		fileContext: filteredContext,

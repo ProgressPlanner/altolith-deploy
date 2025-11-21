@@ -119,6 +119,12 @@ async function handleUnifiedFileUpload( fileContext ) {
 			} );
 
 			if ( ! response.success ) {
+				fileContext.result = {
+					success: false,
+					error:
+						response.message ||
+						'Failed to trigger blueprint bundle upload',
+				};
 				throw new Error(
 					response.message ||
 						'Failed to trigger blueprint bundle upload'
@@ -129,6 +135,8 @@ async function handleUnifiedFileUpload( fileContext ) {
 			debug(
 				`Uploaded blueprint bundle ${ filePath } to ${ exportPath } for provider ${ providerId }`
 			);
+			// Set result on fileContext for unified upload system
+			fileContext.result = { success: true };
 			return;
 		}
 
@@ -166,6 +174,11 @@ async function handleUnifiedFileUpload( fileContext ) {
 					url: filePath,
 					error: fetchError.message,
 				} );
+				// Set result on fileContext for unified upload system
+				fileContext.result = {
+					success: false,
+					error: fetchError.message,
+				};
 				return;
 			}
 		} else {
@@ -177,6 +190,11 @@ async function handleUnifiedFileUpload( fileContext ) {
 				url: filePath,
 				error: 'Failed to get file content',
 			} );
+			// Set result on fileContext for unified upload system
+			fileContext.result = {
+				success: false,
+				error: 'Failed to get file content',
+			};
 			return;
 		}
 
@@ -259,6 +277,8 @@ async function handleUnifiedFileUpload( fileContext ) {
 			debug(
 				`Uploaded ${ finalStorageKey } to ${ staticPath } for provider ${ providerId }`
 			);
+			// Set result on fileContext for unified upload system
+			fileContext.result = { success: true };
 		} else {
 			uploadResults[ providerId ].errors.push( {
 				url: filePath,
@@ -269,6 +289,11 @@ async function handleUnifiedFileUpload( fileContext ) {
 				`Failed to upload ${ finalStorageKey } for provider ${ providerId }:`,
 				uploadResult.error
 			);
+			// Set result on fileContext for unified upload system
+			fileContext.result = {
+				success: false,
+				error: uploadResult.error || 'Upload failed',
+			};
 		}
 	} catch ( error ) {
 		uploadResults[ providerId ].errors.push( {
@@ -279,6 +304,11 @@ async function handleUnifiedFileUpload( fileContext ) {
 			`Error processing file for provider ${ providerId }:`,
 			error
 		);
+		// Set result on fileContext for unified upload system
+		fileContext.result = {
+			success: false,
+			error: error.message || 'Unknown error',
+		};
 	}
 }
 

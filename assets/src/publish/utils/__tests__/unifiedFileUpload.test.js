@@ -200,6 +200,66 @@ describe( 'unifiedFileUpload', () => {
 
 			expect( handlerCompleted ).toBe( true );
 		} );
+
+		test( 'should return provider result when set on fileContext', async () => {
+			const handler = jest.fn( ( fileContext ) => {
+				if ( ! fileContext._uploadPromises ) {
+					fileContext._uploadPromises = [];
+				}
+				const promise = new Promise( ( resolve ) => {
+					// Provider sets result on context
+					fileContext.result = {
+						success: false,
+						error: 'Storage quota exceeded',
+					};
+					resolve();
+				} );
+				fileContext._uploadPromises.push( promise );
+			} );
+
+			addAction( 'aether.file.upload', 'test-provider', handler );
+
+			const context = createFileContext( {
+				fileType: FILE_TYPES.STATIC_HTML,
+				fileContent: new Blob( [ 'test' ] ),
+				contentType: 'text/html',
+				storageKey: 'test.html',
+				providerId: 'test-provider',
+			} );
+
+			const result = await uploadFile( context );
+
+			expect( result.success ).toBe( false );
+			expect( result.error ).toBe( 'Storage quota exceeded' );
+		} );
+
+		test( 'should return success when provider sets success result', async () => {
+			const handler = jest.fn( ( fileContext ) => {
+				if ( ! fileContext._uploadPromises ) {
+					fileContext._uploadPromises = [];
+				}
+				const promise = new Promise( ( resolve ) => {
+					fileContext.result = { success: true, url: 'https://example.com/file.html' };
+					resolve();
+				} );
+				fileContext._uploadPromises.push( promise );
+			} );
+
+			addAction( 'aether.file.upload', 'test-provider', handler );
+
+			const context = createFileContext( {
+				fileType: FILE_TYPES.STATIC_HTML,
+				fileContent: new Blob( [ 'test' ] ),
+				contentType: 'text/html',
+				storageKey: 'test.html',
+				providerId: 'test-provider',
+			} );
+
+			const result = await uploadFile( context );
+
+			expect( result.success ).toBe( true );
+			expect( result.url ).toBe( 'https://example.com/file.html' );
+		} );
 	} );
 
 	describe( 'uploadFiles()', () => {

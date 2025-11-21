@@ -14,6 +14,8 @@
 export function createAssetTracker() {
 	// Track uploaded assets by normalized URL.
 	const uploadedAssets = new Set();
+	// Track failed assets by normalized URL.
+	const failedAssets = new Set();
 
 	/**
 	 * Check if an asset has already been uploaded.
@@ -38,6 +40,27 @@ export function createAssetTracker() {
 	}
 
 	/**
+	 * Mark an asset as failed.
+	 *
+	 * @param {string} url Asset URL.
+	 */
+	function markFailed( url ) {
+		const normalized = normalizeUrl( url );
+		failedAssets.add( normalized );
+	}
+
+	/**
+	 * Check if an asset has failed.
+	 *
+	 * @param {string} url Asset URL.
+	 * @return {boolean} True if failed.
+	 */
+	function isFailed( url ) {
+		const normalized = normalizeUrl( url );
+		return failedAssets.has( normalized );
+	}
+
+	/**
 	 * Get count of uploaded assets.
 	 *
 	 * @return {number} Number of uploaded assets.
@@ -47,10 +70,20 @@ export function createAssetTracker() {
 	}
 
 	/**
+	 * Get count of failed assets.
+	 *
+	 * @return {number} Number of failed assets.
+	 */
+	function getFailedCount() {
+		return failedAssets.size;
+	}
+
+	/**
 	 * Clear all tracked assets.
 	 */
 	function clear() {
 		uploadedAssets.clear();
+		failedAssets.clear();
 	}
 
 	/**
@@ -78,7 +111,10 @@ export function createAssetTracker() {
 	return {
 		isUploaded,
 		markUploaded,
+		markFailed,
+		isFailed,
 		getCount,
+		getFailedCount,
 		clear,
 	};
 }

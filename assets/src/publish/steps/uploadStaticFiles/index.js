@@ -235,11 +235,13 @@ async function handler( context ) {
 	}
 
 	// Calculate totals
+	// A provider is successful if it uploaded at least one file
+	// (success === false just means some URLs had errors, not total failure)
 	const successfulProviders = Object.entries( providerResults ).filter(
-		( [ , data ] ) => data.success !== false && data.filesUploaded > 0
+		( [ , data ] ) => data.filesUploaded > 0
 	);
 	const failedProviders = Object.entries( providerResults ).filter(
-		( [ , data ] ) => data.success === false || data.filesUploaded === 0
+		( [ , data ] ) => data.filesUploaded === 0
 	);
 
 	if ( successfulProviders.length > 0 ) {
@@ -262,10 +264,22 @@ async function handler( context ) {
 	}
 
 	if ( failedProviders.length === providers.length ) {
+		// Collect error details from all failed providers
+		const errorDetails = failedProviders
+			.map( ( [ providerId, data ] ) => {
+				const error = data.error || 'Unknown error';
+				return `${ providerId }: ${ error }`;
+			} )
+			.join( '; ' );
+
 		throw new Error(
-			__(
-				'Failed to upload static site to any provider',
-				'aether-site-exporter'
+			sprintf(
+				/* translators: %s: Error details from providers */
+				__(
+					'Failed to upload static site to any provider. Details: %s',
+					'aether-site-exporter'
+				),
+				errorDetails
 			)
 		);
 	}
