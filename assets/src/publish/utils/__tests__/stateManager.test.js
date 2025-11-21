@@ -122,10 +122,19 @@ describe( 'stateManager', () => {
 			const manager = createStateManager( 'workflow-1' );
 			await manager.save( { test: 'data' } );
 
+			// Mock getByIndex to return the state we saved (for clear all)
+			mockIndexedDBStore.getByIndex.mockResolvedValue( [
+				{ stateKey: 'workflow-1' },
+			] );
+			// Mock get to return null after clear
+			mockIndexedDBStore.get.mockResolvedValue( null );
+
 			await manager.clear();
 			const loaded = await manager.load();
 
-			expect( mockIndexedDBStore.delete ).toHaveBeenCalled();
+			expect( mockIndexedDBStore.delete ).toHaveBeenCalledWith(
+				'workflow-1'
+			);
 			expect( loaded ).toBeNull();
 		} );
 
@@ -133,6 +142,9 @@ describe( 'stateManager', () => {
 			const manager = createStateManager( 'workflow-1' );
 			await manager.save( { provider: 'provider1' }, 'provider1' );
 			await manager.save( { provider: 'provider2' }, 'provider2' );
+
+			// Mock get to return null after clear
+			mockIndexedDBStore.get.mockResolvedValue( null );
 
 			await manager.clear( 'provider1' );
 
@@ -201,9 +213,12 @@ describe( 'stateManager', () => {
 
 			expect( mockIndexedDBStore.set ).toHaveBeenCalled();
 			const setCall = mockIndexedDBStore.set.mock.calls[ 0 ];
-			expect( setCall[ 1 ].completedSteps ).toEqual( [ 'step1' ] );
-			expect( setCall[ 1 ].state ).toEqual( { result: 'test' } );
-			expect( setCall[ 1 ].providers.staticSiteProviders ).toEqual( [
+			// set(key, value, metadata) - value is the second argument
+			// The value is wrapped in stateData with stateKey, workflowId, etc.
+			const savedValue = setCall[ 1 ];
+			expect( savedValue.state.completedSteps ).toEqual( [ 'step1' ] );
+			expect( savedValue.state.state ).toEqual( { result: 'test' } );
+			expect( savedValue.state.providers.staticSiteProviders ).toEqual( [
 				'provider1',
 			] );
 		} );
@@ -221,8 +236,11 @@ describe( 'stateManager', () => {
 			await saveExecutionContext( manager, context );
 
 			const setCall = mockIndexedDBStore.set.mock.calls[ 0 ];
-			expect( setCall[ 1 ].stepResults.blueprintBundle ).toBeDefined();
-			expect( setCall[ 1 ].stepResults.urlsResult ).toBeDefined();
+			// set(key, value, metadata) - value is the second argument
+			// The value is wrapped in stateData with stateKey, workflowId, etc.
+			const savedValue = setCall[ 1 ];
+			expect( savedValue.state.stepResults.blueprintBundle ).toBeDefined();
+			expect( savedValue.state.stepResults.urlsResult ).toBeDefined();
 		} );
 	} );
 
