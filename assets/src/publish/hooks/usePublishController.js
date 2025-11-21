@@ -96,9 +96,9 @@ export function usePublishController( publishState ) {
 					);
 				}
 
-				// Use step progress directly as overall progress for upload steps
-				setOverallProgressValue( stepProgress );
-				setStepProgress( 'uploadStaticSiteFiles', stepProgress );
+				// Only update step progress - let the progress tracker handle overall progress
+				// This prevents progress jumps when this step starts
+				setStepProgress( 'uploadStaticFiles', stepProgress );
 			}
 		}
 	);
