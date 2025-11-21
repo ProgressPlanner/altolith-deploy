@@ -317,14 +317,123 @@ class LocalStorageController
 			);
 		}
 
+		// Verify parent directory is writable
+		if (!\is_writable($fileDir)) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Parent directory is not writable: %s',
+					$fileDir
+				));
+			}
+			return new WP_Error(
+				'directory_not_writable',
+				/* translators: %s: Directory path */
+				\sprintf(\__('Upload directory is not writable: %s', 'aether-site-exporter'), $fileDir),
+				[
+					'status' => 500,
+					'directory' => $fileDir,
+				]
+			);
+		}
+
+		// CRITICAL FIX: Check if destination path exists as a directory
+		// move_uploaded_file() fails if destination is a directory instead of a file
+		if (\file_exists($fullPath) && \is_dir($fullPath)) {
+			// Try to remove empty directory, otherwise return error
+			if ($this->isDirectoryEmpty($fullPath)) {
+				if (!\rmdir($fullPath)) {
+					if (\defined('WP_DEBUG') && WP_DEBUG) {
+						\error_log(\sprintf(
+							'Aether: Failed to remove empty directory at destination path: %s',
+							$fullPath
+						));
+					}
+					return new WP_Error(
+						'destination_is_directory',
+						/* translators: %s: File path */
+						\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $fullPath),
+						[
+							'status' => 500,
+							'destination' => $fullPath,
+							'source' => $file['tmp_name'] ?? 'unknown',
+						]
+					);
+				}
+				// Directory removed, continue with file upload
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Removed empty directory at destination path: %s',
+						$fullPath
+					));
+				}
+			} else {
+				// Directory is not empty, cannot proceed
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Destination path exists as non-empty directory: %s',
+						$fullPath
+					));
+				}
+				return new WP_Error(
+					'destination_is_directory',
+					/* translators: %s: File path */
+					\sprintf(\__('Destination path exists as directory: %s', 'aether-site-exporter'), $fullPath),
+					[
+						'status' => 500,
+						'destination' => $fullPath,
+						'source' => $file['tmp_name'] ?? 'unknown',
+					]
+				);
+			}
+		}
+
 		// Move uploaded file to target location
 		if (isset($file['tmp_name']) && \is_uploaded_file($file['tmp_name'])) {
 			// Handle actual uploaded file
 			if (!\move_uploaded_file($file['tmp_name'], $fullPath)) {
+				// Capture system error details for better diagnostics
+				$lastError = \error_get_last();
+				$errorMessage = \__('Failed to move uploaded file.', 'aether-site-exporter');
+				$errorDetails = [
+					'status' => 500,
+					'source' => $file['tmp_name'] ?? 'unknown',
+					'destination' => $fullPath,
+				];
+
+				// Include system error details if available
+				if ($lastError && \strpos($lastError['message'], 'move_uploaded_file') !== false) {
+					$errorMessage = \sprintf(
+						/* translators: %1$s: Original error, %2$s: Destination path */
+						\__('Failed to move uploaded file: %1$s (destination: %2$s)', 'aether-site-exporter'),
+						$lastError['message'],
+						$fullPath
+					);
+					$errorDetails['system_error'] = $lastError['message'];
+					$errorDetails['system_file'] = $lastError['file'] ?? null;
+					$errorDetails['system_line'] = $lastError['line'] ?? null;
+				} else {
+					// Fallback: include paths in error message
+					$errorMessage = \sprintf(
+						/* translators: %1$s: Source path, %2$s: Destination path */
+						\__('Failed to move uploaded file from %1$s to %2$s', 'aether-site-exporter'),
+						$file['tmp_name'] ?? 'unknown',
+						$fullPath
+					);
+				}
+
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: move_uploaded_file() failed. Source: %s, Destination: %s, System error: %s',
+						$file['tmp_name'] ?? 'unknown',
+						$fullPath,
+						$lastError['message'] ?? 'unknown'
+					));
+				}
+
 				return new WP_Error(
 					'upload_failed',
-					\__('Failed to move uploaded file.', 'aether-site-exporter'),
-					[ 'status' => 500 ]
+					$errorMessage,
+					$errorDetails
 				);
 			}
 
@@ -899,5 +1008,34 @@ class LocalStorageController
 			}
 			@\unlink($path);
 		}
+	}
+
+	/**
+	 * Check if a directory is empty.
+	 *
+	 * @param string $dir Directory path to check.
+	 * @return bool True if directory is empty or doesn't exist, false otherwise.
+	 */
+	private function isDirectoryEmpty(string $dir): bool
+	{
+		if (!\is_dir($dir)) {
+			return true;
+		}
+
+		$handle = @\opendir($dir);
+		if ($handle === false) {
+			return false;
+		}
+
+		// Read directory entries, skipping . and ..
+		while (($entry = \readdir($handle)) !== false) {
+			if ($entry !== '.' && $entry !== '..') {
+				\closedir($handle);
+				return false;
+			}
+		}
+
+		\closedir($handle);
+		return true;
 	}
 }
