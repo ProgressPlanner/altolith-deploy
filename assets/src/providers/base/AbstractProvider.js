@@ -9,6 +9,8 @@
 
 import { applyFilters, doAction } from '@wordpress/hooks';
 import { buildDeploymentTypesField } from '../utils/configFieldBuilder';
+import { validateAllFields, hasRequiredFields } from '../utils/configValidation';
+import { sanitizeAllFields } from '../utils/configSanitization';
 
 /**
  * Abstract base class for providers.
@@ -381,15 +383,7 @@ export class AbstractProvider {
 			return false;
 		}
 
-		// Check that all required fields are present
-		const fields = this.getConfigFields();
-		for ( const field of fields ) {
-			if ( field.required && ! config[ field.id ] ) {
-				return false;
-			}
-		}
-
-		return true;
+		return hasRequiredFields( config, this.getConfigFields() );
 	}
 
 	/**
@@ -399,70 +393,7 @@ export class AbstractProvider {
 	 * @return {Promise<Object>} Validation errors object (empty if valid)
 	 */
 	async validateConfig( config ) {
-		const errors = {};
-		const fields = this.getConfigFields();
-
-		for ( const field of fields ) {
-			const fieldId = field.id;
-			const value = config[ fieldId ];
-
-			// Check required fields
-			if ( field.required && ! value ) {
-				errors[ fieldId ] = `${ field.label } is required.`;
-				continue;
-			}
-
-			// Skip validation if field is empty and not required
-			if ( ! value ) {
-				continue;
-			}
-
-			// Type validation
-			if ( field.validation ) {
-				const validation = field.validation;
-
-				// Pattern validation
-				if ( validation.pattern ) {
-					const regex = new RegExp( validation.pattern );
-					if ( ! regex.test( value ) ) {
-						errors[ fieldId ] =
-							validation.message ||
-							`${ field.label } format is invalid.`;
-					}
-				}
-
-				// Min length validation
-				if (
-					validation.minLength !== undefined &&
-					value.length < validation.minLength
-				) {
-					errors[
-						fieldId
-					] = `${ field.label } must be at least ${ validation.minLength } characters.`;
-				}
-
-				// Max length validation
-				if (
-					validation.maxLength !== undefined &&
-					value.length > validation.maxLength
-				) {
-					errors[
-						fieldId
-					] = `${ field.label } must be no more than ${ validation.maxLength } characters.`;
-				}
-
-				// Custom validator callback
-				if (
-					validation.callback &&
-					typeof validation.callback === 'function'
-				) {
-					const result = await validation.callback( value, config );
-					if ( typeof result === 'string' ) {
-						errors[ fieldId ] = result;
-					}
-				}
-			}
-		}
+		const errors = await validateAllFields( config, this.getConfigFields() );
 
 		/**
 		 * Filter validation errors before returning.
@@ -498,81 +429,7 @@ export class AbstractProvider {
 	 * @return {Promise<Object>} Sanitized configuration
 	 */
 	async sanitizeConfig( config ) {
-		const sanitized = {};
-		const fields = this.getConfigFields();
-
-		for ( const field of fields ) {
-			const fieldId = field.id;
-			if ( ! ( fieldId in config ) ) {
-				continue;
-			}
-
-			let value = config[ fieldId ];
-			const type = field.type || 'text';
-
-			// Sanitize based on type
-			switch ( type ) {
-				case 'password':
-				case 'text':
-				case 'textarea':
-					value = String( value ).trim();
-					break;
-
-				case 'email':
-					value = String( value ).trim().toLowerCase();
-					break;
-
-				case 'url':
-					value = String( value ).trim();
-					// Remove trailing slash
-					value = value.replace( /\/$/, '' );
-					break;
-
-				case 'checkbox':
-					value = Boolean( value );
-					break;
-
-				case 'number':
-					value = Number( value ) || 0;
-					break;
-
-				case 'select':
-					// Ensure value is in allowed options
-					const options = ( field.options || [] ).map(
-						( opt ) => opt.value
-					);
-					if ( options.includes( value ) ) {
-						sanitized[ fieldId ] = value;
-					}
-					continue;
-
-				case 'checkbox-group':
-					// Ensure value is an array and filter to valid options
-					if ( ! Array.isArray( value ) ) {
-						value = [];
-					} else {
-						// Validate against allowed options if defined
-						const allowedOptions = ( field.options || [] ).map(
-							( opt ) => opt.value
-						);
-						if ( allowedOptions.length > 0 ) {
-							value = value.filter( ( v ) =>
-								allowedOptions.includes( v )
-							);
-						}
-					}
-					sanitized[ fieldId ] = value;
-					continue;
-
-				default:
-					value = String( value ).trim();
-					break;
-			}
-
-			sanitized[ fieldId ] = value;
-
-			// Note: Encryption of sensitive fields handled server-side via REST API
-		}
+		const sanitized = sanitizeAllFields( config, this.getConfigFields() );
 
 		/**
 		 * Filter sanitized configuration before returning.
