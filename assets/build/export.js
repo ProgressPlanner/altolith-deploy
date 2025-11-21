@@ -6498,6 +6498,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wordpress/api-fetch */ 1455);
 /* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _LocalFilesystemProvider__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./LocalFilesystemProvider */ 4767);
+/* harmony import */ var _utils_filesystemAdapter__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../utils/filesystemAdapter */ 4259);
+/* harmony import */ var _utils_debug__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../utils/debug */ 1742);
 /**
  * Local Filesystem Provider Registration
  *
@@ -6511,8 +6513,147 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
 // Create provider instance for hook registration
 const provider = new _LocalFilesystemProvider__WEBPACK_IMPORTED_MODULE_2__.LocalFilesystemProvider();
+
+// Track upload results per provider instance
+const uploadResults = {};
+
+// Track processed files per provider to avoid duplicate processing
+const processedFiles = new Map();
+
+/**
+ * Process a single file for a provider instance.
+ *
+ * @param {Object} fileContext File context object.
+ * @param {string} providerId  Provider instance ID.
+ * @return {Promise<void>}
+ */
+async function processFileForProvider(fileContext, providerId) {
+  // Create a unique key for this file+provider combination
+  const fileKey = `${providerId}:${fileContext.url || fileContext.path}`;
+
+  // Skip if already processed (prevents duplicate processing from general + provider-specific actions)
+  if (processedFiles.has(fileKey)) {
+    return;
+  }
+  processedFiles.set(fileKey, true);
+
+  // Initialize results tracking for this provider if needed
+  if (!uploadResults[providerId]) {
+    uploadResults[providerId] = {
+      filesProcessed: 0,
+      filesUploaded: 0,
+      errors: []
+    };
+  }
+  uploadResults[providerId].filesProcessed++;
+  try {
+    // Fetch provider config to get static_files_path
+    let staticPath = 'static/';
+    try {
+      const providerResponse = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
+        path: `/aether/site-exporter/providers/${providerId}`
+      });
+      if (providerResponse.success && providerResponse.config) {
+        staticPath = providerResponse.config.static_files_path || 'static/';
+        // Ensure path doesn't have trailing slash
+        staticPath = staticPath.replace(/\/$/, '');
+      }
+    } catch (configError) {
+      (0,_utils_debug__WEBPACK_IMPORTED_MODULE_4__.debugWarn)(`Failed to fetch provider config for ${providerId}:`, configError);
+    }
+
+    // Get file content as Blob
+    let fileBlob = null;
+    if (fileContext.content) {
+      // Content is provided - convert to Blob
+      if (typeof fileContext.content === 'string') {
+        fileBlob = new Blob([fileContext.content], {
+          type: fileContext.contentType || 'text/html'
+        });
+      } else if (fileContext.content instanceof Blob) {
+        fileBlob = fileContext.content;
+      }
+    } else {
+      // Content not provided - fetch from URL
+      try {
+        const response = await fetch(fileContext.url, {
+          method: 'GET',
+          credentials: 'omit'
+        });
+        if (response.ok) {
+          fileBlob = await response.blob();
+        } else {
+          throw new Error(`Failed to fetch ${fileContext.url}: HTTP ${response.status}`);
+        }
+      } catch (fetchError) {
+        uploadResults[providerId].errors.push({
+          url: fileContext.url,
+          error: fetchError.message
+        });
+        return;
+      }
+    }
+    if (!fileBlob) {
+      uploadResults[providerId].errors.push({
+        url: fileContext.url,
+        error: 'Failed to get file content'
+      });
+      return;
+    }
+
+    // Determine storage key from path or URL
+    let storageKey = fileContext.path || fileContext.url;
+    if (storageKey.startsWith('http://') || storageKey.startsWith('https://')) {
+      // Extract path from URL
+      try {
+        const urlObj = new URL(storageKey);
+        storageKey = urlObj.pathname;
+        // Remove query string if present
+        if (urlObj.search) {
+          storageKey = storageKey.replace(urlObj.search, '');
+        }
+      } catch (urlError) {
+        // If URL parsing fails, use the path as-is
+        (0,_utils_debug__WEBPACK_IMPORTED_MODULE_4__.debugWarn)(`Failed to parse URL ${storageKey}:`, urlError);
+      }
+    }
+
+    // Remove leading slash and ensure relative path
+    storageKey = storageKey.replace(/^\/+/, '');
+
+    // Handle directory paths (add index.html)
+    if (storageKey === '' || storageKey.endsWith('/')) {
+      storageKey = storageKey.replace(/\/+$/, '') + '/index.html';
+    }
+
+    // Upload file via filesystemAdapter
+    const uploadResult = await (0,_utils_filesystemAdapter__WEBPACK_IMPORTED_MODULE_3__.uploadFile)(staticPath, storageKey, fileBlob, {
+      contentType: fileContext.contentType || 'text/html',
+      jobId: ''
+    });
+    if (uploadResult.success) {
+      uploadResults[providerId].filesUploaded++;
+      (0,_utils_debug__WEBPACK_IMPORTED_MODULE_4__.debug)(`Uploaded ${storageKey} to ${staticPath} for provider ${providerId}`);
+    } else {
+      uploadResults[providerId].errors.push({
+        url: fileContext.url,
+        path: storageKey,
+        error: uploadResult.error || 'Upload failed'
+      });
+      (0,_utils_debug__WEBPACK_IMPORTED_MODULE_4__.debugWarn)(`Failed to upload ${storageKey} for provider ${providerId}:`, uploadResult.error);
+    }
+  } catch (error) {
+    uploadResults[providerId].errors.push({
+      url: fileContext.url,
+      error: error.message || 'Unknown error'
+    });
+    (0,_utils_debug__WEBPACK_IMPORTED_MODULE_4__.debugWarn)(`Error processing file for provider ${providerId}:`, error);
+  }
+}
 
 /**
  * Register upload handler hook.
@@ -6593,6 +6734,46 @@ const provider = new _LocalFilesystemProvider__WEBPACK_IMPORTED_MODULE_2__.Local
     return 'direct';
   }
   return strategy;
+}, 10);
+
+/**
+ * Register static site file processing action hook.
+ *
+ * Handles file uploads for static site generation.
+ * Each provider instance processes files for its configured static_files_path.
+ */
+(0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_0__.addAction)('aether.staticSite.file.process', 'aether/local-filesystem', async fileContext => {
+  // Only process if this is a local-filesystem provider
+  const providers = fileContext.providers || [];
+  const localFilesystemProviders = providers.filter(id => id.startsWith('local-filesystem'));
+  if (localFilesystemProviders.length === 0) {
+    return;
+  }
+
+  // Process for each local-filesystem provider instance
+  for (const providerId of localFilesystemProviders) {
+    await processFileForProvider(fileContext, providerId);
+  }
+}, 10);
+
+/**
+ * Register results filter to report upload statistics.
+ *
+ * Providers use this filter to report their upload results.
+ */
+(0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_0__.addFilter)('aether.staticSite.upload.results', 'aether/local-filesystem', (results, providers) => {
+  // Merge our tracked results into the results object
+  const localFilesystemProviders = providers.filter(id => id.startsWith('local-filesystem'));
+  for (const providerId of localFilesystemProviders) {
+    if (uploadResults[providerId]) {
+      // Merge results, preserving existing data
+      results[providerId] = {
+        ...results[providerId],
+        ...uploadResults[providerId]
+      };
+    }
+  }
+  return results;
 }, 10);
 
 /***/ }),

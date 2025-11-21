@@ -791,6 +791,190 @@ configureAPI();
 
 /***/ }),
 
+/***/ 1742:
+/*!***********************************!*\
+  !*** ./assets/src/utils/debug.js ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   debug: () => (/* binding */ debug),
+/* harmony export */   debugError: () => (/* binding */ debugError),
+/* harmony export */   debugGroup: () => (/* binding */ debugGroup),
+/* harmony export */   debugGroupEnd: () => (/* binding */ debugGroupEnd),
+/* harmony export */   debugInfo: () => (/* binding */ debugInfo),
+/* harmony export */   debugTable: () => (/* binding */ debugTable),
+/* harmony export */   debugTime: () => (/* binding */ debugTime),
+/* harmony export */   debugTimeEnd: () => (/* binding */ debugTimeEnd),
+/* harmony export */   debugWarn: () => (/* binding */ debugWarn),
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   disableDebug: () => (/* binding */ disableDebug),
+/* harmony export */   enableDebug: () => (/* binding */ enableDebug)
+/* harmony export */ });
+/**
+ * Debug Utility
+ *
+ * Centralized logging utility for development debugging.
+ * Can be enabled/disabled via window.aetherDebug flag.
+ *
+ * @package
+ */
+
+/**
+ * Check if debug mode is enabled.
+ *
+ * @return {boolean} True if debug mode is enabled.
+ */
+function isDebugEnabled() {
+  return typeof window !== 'undefined' && window.aetherDebug === true;
+}
+
+/**
+ * Log a message to console (only in debug mode).
+ *
+ * @param {...*} args Arguments to log.
+ */
+function debug(...args) {
+  if (isDebugEnabled() && window.console && window.console.log) {
+    window.console.log('[Aether]', ...args);
+  }
+}
+
+/**
+ * Log an error to console (only in debug mode).
+ *
+ * @param {...*} args Arguments to log.
+ */
+function debugError(...args) {
+  if (isDebugEnabled() && window.console && window.console.error) {
+    window.console.error('[Aether Error]', ...args);
+  }
+}
+
+/**
+ * Log a warning to console (only in debug mode).
+ *
+ * @param {...*} args Arguments to log.
+ */
+function debugWarn(...args) {
+  if (isDebugEnabled() && window.console && window.console.warn) {
+    window.console.warn('[Aether Warning]', ...args);
+  }
+}
+
+/**
+ * Log an info message to console (only in debug mode).
+ *
+ * @param {...*} args Arguments to log.
+ */
+function debugInfo(...args) {
+  if (isDebugEnabled() && window.console && window.console.info) {
+    window.console.info('[Aether Info]', ...args);
+  }
+}
+
+/**
+ * Log a table to console (only in debug mode).
+ *
+ * @param {*} data Data to display as table.
+ */
+function debugTable(data) {
+  if (isDebugEnabled() && window.console && window.console.table) {
+    window.console.table(data);
+  }
+}
+
+/**
+ * Start a performance timer (only in debug mode).
+ *
+ * @param {string} label Timer label.
+ */
+function debugTime(label) {
+  if (isDebugEnabled() && window.console && window.console.time) {
+    window.console.time(`[Aether] ${label}`);
+  }
+}
+
+/**
+ * End a performance timer (only in debug mode).
+ *
+ * @param {string} label Timer label.
+ */
+function debugTimeEnd(label) {
+  if (isDebugEnabled() && window.console && window.console.timeEnd) {
+    window.console.timeEnd(`[Aether] ${label}`);
+  }
+}
+
+/**
+ * Group console messages (only in debug mode).
+ *
+ * @param {string} label Group label.
+ */
+function debugGroup(label) {
+  if (isDebugEnabled() && window.console && window.console.group) {
+    window.console.group(`[Aether] ${label}`);
+  }
+}
+
+/**
+ * End console message group (only in debug mode).
+ */
+function debugGroupEnd() {
+  if (isDebugEnabled() && window.console && window.console.groupEnd) {
+    window.console.groupEnd();
+  }
+}
+
+/**
+ * Enable debug mode.
+ *
+ * Usage: aetherDebug.enable() in browser console.
+ */
+function enableDebug() {
+  if (typeof window !== 'undefined') {
+    window.aetherDebug = true;
+    debug('Debug mode enabled');
+  }
+}
+
+/**
+ * Disable debug mode.
+ *
+ * Usage: aetherDebug.disable() in browser console.
+ */
+function disableDebug() {
+  if (typeof window !== 'undefined') {
+    window.aetherDebug = false;
+  }
+}
+
+// Export as single object for easier importing
+const debugUtil = {
+  debug,
+  error: debugError,
+  warn: debugWarn,
+  info: debugInfo,
+  table: debugTable,
+  time: debugTime,
+  timeEnd: debugTimeEnd,
+  group: debugGroup,
+  groupEnd: debugGroupEnd,
+  enable: enableDebug,
+  disable: disableDebug,
+  isEnabled: isDebugEnabled
+};
+
+// Make available globally for easy browser console access
+if (typeof window !== 'undefined') {
+  window.aetherDebug = window.aetherDebug || false;
+  window.aetherDebugUtil = debugUtil;
+}
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (debugUtil);
+
+/***/ }),
+
 /***/ 2391:
 /*!*****************************************************!*\
   !*** ./assets/src/providers/utils/configStorage.js ***!
@@ -1190,6 +1374,197 @@ class ConfigStorage {
 /***/ ((module) => {
 
 module.exports = window["wp"]["hooks"];
+
+/***/ }),
+
+/***/ 2623:
+/*!**********************************************!*\
+  !*** ./assets/src/utils/standardResponse.js ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   createErrorResponse: () => (/* binding */ createErrorResponse),
+/* harmony export */   createSuccessResponse: () => (/* binding */ createSuccessResponse),
+/* harmony export */   getResponseData: () => (/* binding */ getResponseData),
+/* harmony export */   getResponseError: () => (/* binding */ getResponseError),
+/* harmony export */   getResponseErrors: () => (/* binding */ getResponseErrors),
+/* harmony export */   isErrorResponse: () => (/* binding */ isErrorResponse),
+/* harmony export */   isSuccessResponse: () => (/* binding */ isSuccessResponse),
+/* harmony export */   normalizeResponse: () => (/* binding */ normalizeResponse)
+/* harmony export */ });
+/**
+ * Standard Response Format Utility
+ *
+ * Provides standardized response object format for all API operations.
+ * Eliminates inconsistent response structures across the codebase.
+ *
+ * Standard format:
+ * {
+ *   success: boolean,
+ *   data?: any,           // Success data
+ *   error?: string,       // Single error message
+ *   errors?: string[]     // Multiple errors (optional)
+ * }
+ *
+ * @package
+ */
+
+/**
+ * Create a success response.
+ *
+ * @param {*}      data    Success data (can be any type).
+ * @param {string} message Optional success message.
+ * @return {Object} Standardized success response.
+ */
+function createSuccessResponse(data = null, message = null) {
+  const response = {
+    success: true,
+    data
+  };
+
+  // Add message to data if provided
+  if (message && typeof data === 'object' && data !== null) {
+    response.data = {
+      ...data,
+      message
+    };
+  } else if (message) {
+    response.data = {
+      message
+    };
+  }
+  return response;
+}
+
+/**
+ * Create an error response.
+ *
+ * @param {string|Error} error  Error message or Error object.
+ * @param {Array}        errors Optional array of multiple errors.
+ * @return {Object} Standardized error response.
+ */
+function createErrorResponse(error, errors = null) {
+  const errorMessage = typeof error === 'string' ? error : error?.message || 'Unknown error';
+  const response = {
+    success: false,
+    error: errorMessage
+  };
+  if (errors && Array.isArray(errors) && errors.length > 0) {
+    response.errors = errors;
+  }
+  return response;
+}
+
+/**
+ * Normalize a response to standard format.
+ *
+ * Takes various response formats and converts to standard format.
+ *
+ * @param {Object} response Response to normalize.
+ * @return {Object} Normalized response in standard format.
+ */
+function normalizeResponse(response) {
+  // Already in standard format
+  if (response && typeof response.success === 'boolean' && (response.data !== undefined || response.error !== undefined)) {
+    return response;
+  }
+
+  // Format with error field
+  if (response && response.error) {
+    return createErrorResponse(response.error, response.errors);
+  }
+
+  // Format with success=true but no data field
+  if (response && response.success === true) {
+    // Extract data from non-standard fields
+    const {
+      success,
+      error,
+      errors,
+      ...data
+    } = response;
+    return createSuccessResponse(data);
+  }
+
+  // Format with success=false
+  if (response && response.success === false) {
+    return createErrorResponse(response.message || response.error || 'Operation failed', response.errors);
+  }
+
+  // Fallback for unknown format
+  return response;
+}
+
+/**
+ * Check if response indicates success.
+ *
+ * @param {Object} response Response object.
+ * @return {boolean} True if successful.
+ */
+function isSuccessResponse(response) {
+  return response?.success === true;
+}
+
+/**
+ * Check if response indicates error.
+ *
+ * @param {Object} response Response object.
+ * @return {boolean} True if error.
+ */
+function isErrorResponse(response) {
+  return response?.success === false;
+}
+
+/**
+ * Get data from response.
+ *
+ * @param {Object} response Response object.
+ * @param {*}      fallback Fallback value if no data.
+ * @return {*} Response data or fallback.
+ */
+function getResponseData(response, fallback = null) {
+  if (isSuccessResponse(response)) {
+    // Return data even if it's null (null is valid data)
+    return 'data' in response ? response.data : fallback;
+  }
+  return fallback;
+}
+
+/**
+ * Get error from response.
+ *
+ * @param {Object} response     Response object.
+ * @param {string} defaultError Default error message.
+ * @return {string} Error message.
+ */
+function getResponseError(response, defaultError = 'Unknown error') {
+  if (isErrorResponse(response)) {
+    return response.error || defaultError;
+  }
+  return defaultError;
+}
+
+/**
+ * Get all errors from response.
+ *
+ * @param {Object} response Response object.
+ * @return {Array<string>} Array of error messages.
+ */
+function getResponseErrors(response) {
+  if (isErrorResponse(response)) {
+    const errors = [];
+    if (response.error) {
+      errors.push(response.error);
+    }
+    if (response.errors && Array.isArray(response.errors)) {
+      errors.push(...response.errors);
+    }
+    return errors;
+  }
+  return [];
+}
 
 /***/ }),
 
@@ -2110,6 +2485,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @wordpress/api-fetch */ 1455);
 /* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _LocalFilesystemProvider__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./LocalFilesystemProvider */ 4767);
+/* harmony import */ var _utils_filesystemAdapter__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../utils/filesystemAdapter */ 4259);
+/* harmony import */ var _utils_debug__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../utils/debug */ 1742);
 /**
  * Local Filesystem Provider Registration
  *
@@ -2123,8 +2500,147 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
 // Create provider instance for hook registration
 const provider = new _LocalFilesystemProvider__WEBPACK_IMPORTED_MODULE_2__.LocalFilesystemProvider();
+
+// Track upload results per provider instance
+const uploadResults = {};
+
+// Track processed files per provider to avoid duplicate processing
+const processedFiles = new Map();
+
+/**
+ * Process a single file for a provider instance.
+ *
+ * @param {Object} fileContext File context object.
+ * @param {string} providerId  Provider instance ID.
+ * @return {Promise<void>}
+ */
+async function processFileForProvider(fileContext, providerId) {
+  // Create a unique key for this file+provider combination
+  const fileKey = `${providerId}:${fileContext.url || fileContext.path}`;
+
+  // Skip if already processed (prevents duplicate processing from general + provider-specific actions)
+  if (processedFiles.has(fileKey)) {
+    return;
+  }
+  processedFiles.set(fileKey, true);
+
+  // Initialize results tracking for this provider if needed
+  if (!uploadResults[providerId]) {
+    uploadResults[providerId] = {
+      filesProcessed: 0,
+      filesUploaded: 0,
+      errors: []
+    };
+  }
+  uploadResults[providerId].filesProcessed++;
+  try {
+    // Fetch provider config to get static_files_path
+    let staticPath = 'static/';
+    try {
+      const providerResponse = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_1___default()({
+        path: `/aether/site-exporter/providers/${providerId}`
+      });
+      if (providerResponse.success && providerResponse.config) {
+        staticPath = providerResponse.config.static_files_path || 'static/';
+        // Ensure path doesn't have trailing slash
+        staticPath = staticPath.replace(/\/$/, '');
+      }
+    } catch (configError) {
+      (0,_utils_debug__WEBPACK_IMPORTED_MODULE_4__.debugWarn)(`Failed to fetch provider config for ${providerId}:`, configError);
+    }
+
+    // Get file content as Blob
+    let fileBlob = null;
+    if (fileContext.content) {
+      // Content is provided - convert to Blob
+      if (typeof fileContext.content === 'string') {
+        fileBlob = new Blob([fileContext.content], {
+          type: fileContext.contentType || 'text/html'
+        });
+      } else if (fileContext.content instanceof Blob) {
+        fileBlob = fileContext.content;
+      }
+    } else {
+      // Content not provided - fetch from URL
+      try {
+        const response = await fetch(fileContext.url, {
+          method: 'GET',
+          credentials: 'omit'
+        });
+        if (response.ok) {
+          fileBlob = await response.blob();
+        } else {
+          throw new Error(`Failed to fetch ${fileContext.url}: HTTP ${response.status}`);
+        }
+      } catch (fetchError) {
+        uploadResults[providerId].errors.push({
+          url: fileContext.url,
+          error: fetchError.message
+        });
+        return;
+      }
+    }
+    if (!fileBlob) {
+      uploadResults[providerId].errors.push({
+        url: fileContext.url,
+        error: 'Failed to get file content'
+      });
+      return;
+    }
+
+    // Determine storage key from path or URL
+    let storageKey = fileContext.path || fileContext.url;
+    if (storageKey.startsWith('http://') || storageKey.startsWith('https://')) {
+      // Extract path from URL
+      try {
+        const urlObj = new URL(storageKey);
+        storageKey = urlObj.pathname;
+        // Remove query string if present
+        if (urlObj.search) {
+          storageKey = storageKey.replace(urlObj.search, '');
+        }
+      } catch (urlError) {
+        // If URL parsing fails, use the path as-is
+        (0,_utils_debug__WEBPACK_IMPORTED_MODULE_4__.debugWarn)(`Failed to parse URL ${storageKey}:`, urlError);
+      }
+    }
+
+    // Remove leading slash and ensure relative path
+    storageKey = storageKey.replace(/^\/+/, '');
+
+    // Handle directory paths (add index.html)
+    if (storageKey === '' || storageKey.endsWith('/')) {
+      storageKey = storageKey.replace(/\/+$/, '') + '/index.html';
+    }
+
+    // Upload file via filesystemAdapter
+    const uploadResult = await (0,_utils_filesystemAdapter__WEBPACK_IMPORTED_MODULE_3__.uploadFile)(staticPath, storageKey, fileBlob, {
+      contentType: fileContext.contentType || 'text/html',
+      jobId: ''
+    });
+    if (uploadResult.success) {
+      uploadResults[providerId].filesUploaded++;
+      (0,_utils_debug__WEBPACK_IMPORTED_MODULE_4__.debug)(`Uploaded ${storageKey} to ${staticPath} for provider ${providerId}`);
+    } else {
+      uploadResults[providerId].errors.push({
+        url: fileContext.url,
+        path: storageKey,
+        error: uploadResult.error || 'Upload failed'
+      });
+      (0,_utils_debug__WEBPACK_IMPORTED_MODULE_4__.debugWarn)(`Failed to upload ${storageKey} for provider ${providerId}:`, uploadResult.error);
+    }
+  } catch (error) {
+    uploadResults[providerId].errors.push({
+      url: fileContext.url,
+      error: error.message || 'Unknown error'
+    });
+    (0,_utils_debug__WEBPACK_IMPORTED_MODULE_4__.debugWarn)(`Error processing file for provider ${providerId}:`, error);
+  }
+}
 
 /**
  * Register upload handler hook.
@@ -2206,6 +2722,305 @@ const provider = new _LocalFilesystemProvider__WEBPACK_IMPORTED_MODULE_2__.Local
   }
   return strategy;
 }, 10);
+
+/**
+ * Register static site file processing action hook.
+ *
+ * Handles file uploads for static site generation.
+ * Each provider instance processes files for its configured static_files_path.
+ */
+(0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_0__.addAction)('aether.staticSite.file.process', 'aether/local-filesystem', async fileContext => {
+  // Only process if this is a local-filesystem provider
+  const providers = fileContext.providers || [];
+  const localFilesystemProviders = providers.filter(id => id.startsWith('local-filesystem'));
+  if (localFilesystemProviders.length === 0) {
+    return;
+  }
+
+  // Process for each local-filesystem provider instance
+  for (const providerId of localFilesystemProviders) {
+    await processFileForProvider(fileContext, providerId);
+  }
+}, 10);
+
+/**
+ * Register results filter to report upload statistics.
+ *
+ * Providers use this filter to report their upload results.
+ */
+(0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_0__.addFilter)('aether.staticSite.upload.results', 'aether/local-filesystem', (results, providers) => {
+  // Merge our tracked results into the results object
+  const localFilesystemProviders = providers.filter(id => id.startsWith('local-filesystem'));
+  for (const providerId of localFilesystemProviders) {
+    if (uploadResults[providerId]) {
+      // Merge results, preserving existing data
+      results[providerId] = {
+        ...results[providerId],
+        ...uploadResults[providerId]
+      };
+    }
+  }
+  return results;
+}, 10);
+
+/***/ }),
+
+/***/ 4259:
+/*!***********************************************!*\
+  !*** ./assets/src/utils/filesystemAdapter.js ***!
+  \***********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   batchCopy: () => (/* binding */ batchCopy),
+/* harmony export */   batchDelete: () => (/* binding */ batchDelete),
+/* harmony export */   copyFile: () => (/* binding */ copyFile),
+/* harmony export */   deleteFile: () => (/* binding */ deleteFile),
+/* harmony export */   downloadFile: () => (/* binding */ downloadFile),
+/* harmony export */   getObjectUrl: () => (/* binding */ getObjectUrl),
+/* harmony export */   listObjects: () => (/* binding */ listObjects),
+/* harmony export */   uploadFile: () => (/* binding */ uploadFile)
+/* harmony export */ });
+/* harmony import */ var _api__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./api */ 1561);
+/* harmony import */ var _debug__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./debug */ 1742);
+/* harmony import */ var _standardResponse__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./standardResponse */ 2623);
+/**
+ * Filesystem Adapter
+ *
+ * Adapter for local filesystem storage operations via REST API.
+ * Replaces workerEndpointClient.js for local storage.
+ *
+ * @package
+ */
+
+
+
+
+
+/**
+ * Upload a file to local filesystem via REST API.
+ *
+ * @param {string}    staticPath Base path for static files.
+ * @param {string}    key        File path/key relative to static path.
+ * @param {File|Blob} file       File to upload.
+ * @param {Object}    options    Optional options (contentType, cacheControl, onProgress, jobId).
+ * @return {Promise<Object>} Upload result with success and optional url/error.
+ */
+async function uploadFile(staticPath, key, file, options = {}) {
+  try {
+    // Validate key parameter
+    if (!key || key === '') {
+      const error = new Error(`Upload key is empty. File: ${file?.name || 'unknown'}, staticPath: ${staticPath}`);
+      return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createErrorResponse)(error.message);
+    }
+
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('key', key);
+    formData.append('static_path', staticPath);
+    formData.append('job_id', options.jobId || '');
+    if (options.contentType) {
+      formData.append('content_type', options.contentType);
+    }
+    const response = await (0,_api__WEBPACK_IMPORTED_MODULE_0__["default"])({
+      path: '/aether/site-exporter/local-storage/upload',
+      method: 'POST',
+      body: formData
+    });
+    if (!response.success) {
+      return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createErrorResponse)(response.error || 'Upload failed');
+    }
+
+    // Call progress callback if provided (100% since we don't have chunked upload yet)
+    if (options.onProgress) {
+      options.onProgress(file.size, file.size, 100);
+    }
+    return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createSuccessResponse)();
+  } catch (error) {
+    (0,_debug__WEBPACK_IMPORTED_MODULE_1__.debug)('filesystemAdapter.uploadFile error:', error);
+    return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createErrorResponse)(error.message || 'Upload failed');
+  }
+}
+
+/**
+ * Delete a file from local filesystem.
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {string} key        File path/key to delete.
+ * @param {Object} options    Optional options (jobId).
+ * @return {Promise<Object>} Delete result.
+ */
+async function deleteFile(staticPath, key, options = {}) {
+  (0,_debug__WEBPACK_IMPORTED_MODULE_1__.debug)('filesystemAdapter.deleteFile:', {
+    staticPath,
+    key
+  });
+  try {
+    const response = await (0,_api__WEBPACK_IMPORTED_MODULE_0__["default"])({
+      path: '/aether/site-exporter/local-storage/delete',
+      method: 'DELETE',
+      data: {
+        key,
+        static_path: staticPath,
+        job_id: options.jobId || ''
+      }
+    });
+    if (!response.success) {
+      return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createErrorResponse)(response.error || 'Delete failed');
+    }
+    return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createSuccessResponse)();
+  } catch (error) {
+    (0,_debug__WEBPACK_IMPORTED_MODULE_1__.debug)('filesystemAdapter.deleteFile error:', error);
+    return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createErrorResponse)(error.message || 'Delete failed');
+  }
+}
+
+/**
+ * Copy a file (not needed for local filesystem - files are uploaded directly).
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {string} sourceKey  Source file path/key.
+ * @param {string} destKey    Destination file path/key.
+ * @return {Promise<Object>} Copy result.
+ */
+async function copyFile(staticPath, sourceKey, destKey) {
+  // Parameters kept for API consistency, but not used for local filesystem
+  // eslint-disable-next-line no-unused-vars
+  const _unused = {
+    staticPath,
+    sourceKey,
+    destKey
+  };
+  // Not implemented for local filesystem
+  // Files are uploaded directly to their final location
+  (0,_debug__WEBPACK_IMPORTED_MODULE_1__.debug)('filesystemAdapter.copyFile: Not implemented (not needed for local storage)');
+  return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createSuccessResponse)();
+}
+
+/**
+ * List objects in a directory (not needed for static site generation).
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {string} prefix     Directory prefix to list.
+ * @param {number} limit      Maximum number of objects to return.
+ * @return {Promise<Object>} List result.
+ */
+async function listObjects(staticPath, prefix = '', limit = 1000) {
+  // Parameters kept for API consistency, but not used for local filesystem
+  // eslint-disable-next-line no-unused-vars
+  const _unused = {
+    staticPath,
+    prefix,
+    limit
+  };
+  // Not implemented - not needed for static site generation
+  // Static site generator doesn't need to list existing files
+  (0,_debug__WEBPACK_IMPORTED_MODULE_1__.debug)('filesystemAdapter.listObjects: Not implemented (not needed for static site generation)');
+  return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createSuccessResponse)({
+    objects: []
+  });
+}
+
+/**
+ * Batch copy files (not needed for local filesystem).
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {Array}  operations Array of {source, dest} operations.
+ * @return {Promise<Object>} Batch copy result.
+ */
+async function batchCopy(staticPath, operations) {
+  // Parameters kept for API consistency, but not used for local filesystem
+  // eslint-disable-next-line no-unused-vars
+  const _unused = {
+    staticPath,
+    operations
+  };
+  // Not implemented for local filesystem
+  (0,_debug__WEBPACK_IMPORTED_MODULE_1__.debug)('filesystemAdapter.batchCopy: Not implemented (not needed for local storage)');
+  return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createSuccessResponse)();
+}
+
+/**
+ * Batch delete files.
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {Array}  keys       Array of file paths/keys to delete.
+ * @param {Object} options    Optional options (jobId).
+ * @return {Promise<Object>} Batch delete result.
+ */
+async function batchDelete(staticPath, keys, options = {}) {
+  (0,_debug__WEBPACK_IMPORTED_MODULE_1__.debug)('filesystemAdapter.batchDelete:', {
+    staticPath,
+    count: keys.length
+  });
+  try {
+    const response = await (0,_api__WEBPACK_IMPORTED_MODULE_0__["default"])({
+      path: '/aether/site-exporter/local-storage/batch-delete',
+      method: 'DELETE',
+      data: {
+        keys,
+        static_path: staticPath,
+        job_id: options.jobId || ''
+      }
+    });
+    if (!response.success) {
+      return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createErrorResponse)(response.error || 'Batch delete failed');
+    }
+    return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createSuccessResponse)();
+  } catch (error) {
+    (0,_debug__WEBPACK_IMPORTED_MODULE_1__.debug)('filesystemAdapter.batchDelete error:', error);
+    return (0,_standardResponse__WEBPACK_IMPORTED_MODULE_2__.createErrorResponse)(error.message || 'Batch delete failed');
+  }
+}
+
+/**
+ * Download a file (manifest).
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {string} key        File path/key to download.
+ * @param {Object} options    Optional options (jobId).
+ * @return {Promise<Blob|null>} File blob or null if not found.
+ */
+async function downloadFile(staticPath, key, options = {}) {
+  (0,_debug__WEBPACK_IMPORTED_MODULE_1__.debug)('filesystemAdapter.downloadFile:', {
+    staticPath,
+    key
+  });
+  try {
+    const response = await (0,_api__WEBPACK_IMPORTED_MODULE_0__["default"])({
+      path: `/aether/site-exporter/local-storage/download?key=${encodeURIComponent(key)}&static_path=${encodeURIComponent(staticPath)}&job_id=${options.jobId || ''}`,
+      method: 'GET',
+      parse: false // Get raw response
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return await response.blob();
+  } catch (error) {
+    (0,_debug__WEBPACK_IMPORTED_MODULE_1__.debug)('filesystemAdapter.downloadFile error:', error);
+    return null;
+  }
+}
+
+/**
+ * Get public URL for a file.
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {string} baseUrl    Base URL for static files.
+ * @param {string} key        File path/key.
+ * @return {string} Public URL.
+ */
+function getObjectUrl(staticPath, baseUrl, key) {
+  // For local filesystem, construct URL from baseUrl and key
+  // Remove any trailing slash from baseUrl
+  const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+
+  // Remove leading slash from key if present
+  const cleanKey = key.replace(/^\//, '');
+  return `${cleanBaseUrl}/${cleanKey}`;
+}
 
 /***/ }),
 
