@@ -746,122 +746,163 @@ All PHP hooks use WordPress's native `add_filter()` and `add_action()` functions
 
 ### Provider Registration
 
-#### `aether_providers`
+**Note**: Providers are now registered entirely in JavaScript, not PHP. See JavaScript hooks section below for provider registration.
 
-**Type**: Filter
-**Location**: `includes/Providers/ProviderRegistry.php`
+---
 
-Registers provider instances. This is the primary way to register providers in PHP.
+#### `aether_blueprint_bundle_upload`
+
+**Type**: Action
+**Location**: `includes/Plugin.php`
+
+Fired when a blueprint bundle needs to be uploaded to a provider instance.
 
 **Parameters**:
-- `$providers` (array): Array of `BaseProvider` instances
+- `$instanceId` (string): Provider instance ID (e.g., 'local-filesystem:abc-123')
+- `$sourcePath` (string): Source path of the generated blueprint bundle
+- `$destinationPath` (string): Destination path (instance's export_path)
+- `$context` (array): Additional context data
 
 **Example**:
 ```php
-add_filter('aether_providers', function($providers) {
-    $providers[] = new MyCustomProvider();
-    return $providers;
-});
-```
-
-**Provider Class Structure**:
-```php
-class MyCustomProvider extends \Aether\SiteExporter\Providers\BaseProvider {
-    public function getId(): string {
-        return 'my-custom-provider';
+add_action('aether_blueprint_bundle_upload', function($instanceId, $sourcePath, $destinationPath, $context = []) {
+    if (strpos($instanceId, 'my-provider:') === 0) {
+        // Handle blueprint bundle upload for my provider
+        copy($sourcePath, $destinationPath);
     }
-    
-    public function getName(): string {
-        return 'My Custom Provider';
-    }
-    
-    public function getDescription(): string {
-        return 'Description of my provider';
-    }
-    
-    public function getDeploymentTypes(): array {
-        return ['static_site', 'blueprint_bundle'];
-    }
-    
-    public function getSettings(): array {
-        return [
-            [
-                'type' => 'text',
-                'label' => 'API Key',
-                'name' => 'api_key',
-                'sanitize_callback' => function($value) {
-                    return sanitize_text_field($value);
-                },
-                'get' => function() {
-                    $settings = get_option('aether_site_exporter_settings', []);
-                    return $settings['providers']['my-custom-provider']['api_key'] ?? '';
-                },
-                'set' => function($value) {
-                    $settings = get_option('aether_site_exporter_settings', []);
-                    if (!isset($settings['providers'])) {
-                        $settings['providers'] = [];
-                    }
-                    $settings['providers']['my-custom-provider']['api_key'] = $value;
-                    update_option('aether_site_exporter_settings', $settings);
-                },
-            ],
-        ];
-    }
-    
-    public function registerRoutes(): void {
-        // Register custom REST API endpoints if needed
-        register_rest_route('aether/v1', '/providers/my-custom-provider/custom-endpoint', [
-            'methods' => 'GET',
-            'callback' => [$this, 'handleCustomEndpoint'],
-            'permission_callback' => '__return_true',
-        ]);
-    }
-}
+}, 10, 4);
 ```
 
 ---
 
-#### `aether_get_default_provider`
+#### `aether_provider_config_load`
 
 **Type**: Filter
-**Location**: `includes/Plugin.php`
+**Location**: `includes/REST/ProviderConfigController.php`
 
-Filters the default provider ID. Used when no provider is explicitly configured.
+Filters provider configuration after loading from database.
 
 **Parameters**:
-- `$providerId` (string|null): Default provider ID (null if not set)
-
-**Returns**: (string) Provider ID
+- `$config` (array): The provider configuration
+- `$instanceId` (string): The instance ID
 
 **Example**:
 ```php
-add_filter('aether_get_default_provider', function($providerId) {
-    // Return custom default provider
-    return 'my-custom-provider';
+add_filter('aether_provider_config_load', function($config, $instanceId) {
+    if (str_starts_with($instanceId, 'my-provider:')) {
+        $config['custom_field'] = 'custom value';
+    }
+    return $config;
+}, 10, 2);
+```
+
+---
+
+#### `aether_provider_config_save`
+
+**Type**: Filter
+**Location**: `includes/REST/ProviderConfigController.php`
+
+Filters provider configuration before saving to database.
+
+**Parameters**:
+- `$config` (array): The provider configuration to save
+- `$instanceId` (string): The instance ID
+
+**Example**:
+```php
+add_filter('aether_provider_config_save', function($config, $instanceId) {
+    if (str_starts_with($instanceId, 'my-provider:')) {
+        $config['custom_field'] = 'processed value';
+    }
+    return $config;
+}, 10, 2);
+```
+
+---
+
+#### `aether_provider_config_saved`
+
+**Type**: Action
+**Location**: `includes/REST/ProviderConfigController.php`
+
+Fired after provider configuration is saved.
+
+**Parameters**:
+- `$instanceId` (string): The instance ID
+- `$config` (array): The saved configuration (decrypted for hook access)
+
+**Example**:
+```php
+add_action('aether_provider_config_saved', function($instanceId, $config) {
+    error_log("Instance {$instanceId} configuration updated");
+}, 10, 2);
+```
+
+---
+
+#### `aether_provider_config_before_delete`
+
+**Type**: Action
+**Location**: `includes/REST/ProviderConfigController.php`
+
+Fired before provider configuration is deleted.
+
+**Parameters**:
+- `$instanceId` (string): The instance ID being deleted
+
+**Example**:
+```php
+add_action('aether_provider_config_before_delete', function($instanceId) {
+    // Clean up associated resources
+    delete_option("my_provider_{$instanceId}_cache");
 });
 ```
 
 ---
 
-#### `aether_get_provider_for_deployment_type`
+#### `aether_provider_config_deleted`
 
-**Type**: Filter
-**Location**: `includes/Plugin.php`
+**Type**: Action
+**Location**: `includes/REST/ProviderConfigController.php`
 
-Filters the provider ID for a specific deployment type.
+Fired after provider configuration is deleted.
 
 **Parameters**:
-- `$providerId` (string|null): Provider ID (null if not set)
-- `$deploymentType` (string): Deployment type (e.g., 'static_site', 'blueprint_bundle')
-
-**Returns**: (string) Provider ID
+- `$instanceId` (string): The instance ID that was deleted
 
 **Example**:
 ```php
-add_filter('aether_get_provider_for_deployment_type', function($providerId, $deploymentType) {
-    if ($deploymentType === 'static_site') {
-        return 'my-static-site-provider';
-    }
+add_action('aether_provider_config_deleted', function($instanceId) {
+    error_log("Instance {$instanceId} configuration removed");
+});
+```
+
+---
+
+#### `aether_provider_config_loaded`
+
+**Type**: Action
+**Location**: `includes/REST/ProviderConfigController.php`
+
+Fired after provider configuration is loaded.
+
+**Parameters**:
+- `$instanceId` (string): The instance ID
+- `$config` (array): The loaded configuration
+
+**Example**:
+```php
+add_action('aether_provider_config_loaded', function($instanceId, $config) {
+    // Process loaded configuration
+}, 10, 2);
+```
+
+---
+
+### JavaScript Provider Registration
+
+Providers are registered in JavaScript using the `aether.providers.register` action hook. See the JavaScript hooks section for details.
     return $providerId;
 }, 10, 2);
 ```
@@ -1256,80 +1297,9 @@ add_action('aether_publish_job_deleted', function($job_id, $request) {
 
 Providers require both PHP and JavaScript components:
 
-1. **PHP Class**: Handles registration, settings management, and REST API endpoints
-2. **JavaScript Class**: Handles upload/deployment implementation
+**JavaScript Only** (`my-provider.js`):
 
-**PHP** (`my-provider-plugin.php`):
-
-```php
-<?php
-/**
- * Plugin Name: My Custom Aether Provider
- * Description: Custom deployment provider for Aether Site Exporter
- */
-
-use Aether\SiteExporter\Providers\BaseProvider;
-
-class MyCustomProvider extends BaseProvider {
-    public function getId(): string {
-        return 'my-custom-provider';
-    }
-    
-    public function getName(): string {
-        return 'My Custom Provider';
-    }
-    
-    public function getDescription(): string {
-        return 'Custom deployment provider';
-    }
-    
-    public function getDeploymentTypes(): array {
-        return ['static_site', 'blueprint_bundle'];
-    }
-    
-    public function getSettings(): array {
-        return [
-            [
-                'type' => 'text',
-                'label' => 'API Key',
-                'name' => 'api_key',
-                'sanitize_callback' => function($value) {
-                    return sanitize_text_field($value);
-                },
-                'get' => function() {
-                    $settings = get_option('aether_site_exporter_settings', []);
-                    return $settings['providers']['my-custom-provider']['api_key'] ?? '';
-                },
-                'set' => function($value) {
-                    $settings = get_option('aether_site_exporter_settings', []);
-                    if (!isset($settings['providers'])) {
-                        $settings['providers'] = [];
-                    }
-                    $settings['providers']['my-custom-provider']['api_key'] = $value;
-                    update_option('aether_site_exporter_settings', $settings);
-                },
-            ],
-        ];
-    }
-    
-    public function registerRoutes(): void {
-        // Register custom REST endpoints if needed
-        register_rest_route('aether/v1', '/providers/my-custom-provider/custom', [
-            'methods' => 'GET',
-            'callback' => [$this, 'handleCustomRequest'],
-            'permission_callback' => '__return_true',
-        ]);
-    }
-}
-
-// Register provider
-add_filter('aether_providers', function($providers) {
-    $providers[] = new MyCustomProvider();
-    return $providers;
-});
-```
-
-**JavaScript** (`my-provider.js`):
+Providers are now registered entirely in JavaScript. PHP is only used for REST API endpoints if your provider needs custom server-side operations.
 
 ```javascript
 import { AbstractProvider } from '../providers/base/AbstractProvider';
@@ -1351,11 +1321,16 @@ class MyCustomProvider extends AbstractProvider {
     }
 }
 
-// Register JavaScript provider
-ProviderRegistry.register('my-custom-provider', MyCustomProvider);
+// Create provider instance
+const provider = new MyCustomProvider();
 
-// Also register via hook for auto-discovery
-addAction('aether.providers.register', 'my-plugin/my-custom-provider', (registry) => {
+// Register provider in JavaScript registry
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+ProviderRegistry.register(provider.getId(), provider);
+
+// Also trigger the hook for any listeners
+import { doAction } from '@wordpress/hooks';
+doAction('aether.providers.register', provider);
     registry.register('my-custom-provider', MyCustomProvider);
 });
 ```

@@ -155,12 +155,19 @@ class MyCustomProvider extends BaseProvider {
 }
 ```
 
-**Step 2: Register Provider**
-```php
-add_filter('aether_providers', function($providers) {
-    $providers[] = new \MyPlugin\Providers\MyCustomProvider();
-    return $providers;
-});
+**Step 2: Register Provider in JavaScript**
+```javascript
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import { doAction } from '@wordpress/hooks';
+
+// Create provider instance
+const provider = new MyCustomProvider();
+
+// Register in JavaScript registry
+ProviderRegistry.register(provider.getId(), provider);
+
+// Also trigger hook for auto-discovery
+doAction('aether.providers.register', provider);
 ```
 
 **Step 3: JavaScript Upload Handler (Optional)**

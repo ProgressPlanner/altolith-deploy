@@ -128,11 +128,11 @@ test('processes data', () => {
 
 - Providers MUST be completely isolated to their own files
 - NO provider-specific logic in core architecture or abstractions
-- Core code should only interact with `BaseProvider` interface
-- Providers register via `aether_providers` filter for 3rd-party extensibility
-- Each provider is self-contained: all logic, configuration, validation within provider class
-- 3rd-party plugins can hook in and add their own providers
-- Example: `LocalFilesystemProvider` contains ALL local filesystem logic - nothing in core
+- Core code should only interact with provider interface via JavaScript ProviderRegistry
+- Providers register via `aether.providers.register` JavaScript hook for 3rd-party extensibility
+- Each provider is self-contained: all logic, configuration, validation within JavaScript provider class
+- 3rd-party plugins can hook in and add their own providers in JavaScript
+- Example: `LocalFilesystemProvider` (JavaScript) contains ALL local filesystem logic - nothing in core
 
 **Provider Instances Architecture**
 
@@ -145,9 +145,9 @@ test('processes data', () => {
 
 **Provider Extension Pattern for 3rd-Party Plugins**
 
-- 3rd-party providers extend `BaseProvider` in PHP
-- JavaScript providers implement `IProvider` interface and are dynamically loaded
-- Register via `add_filter('aether_providers', ...)` hook
+- 3rd-party providers extend `AbstractProvider` in JavaScript
+- JavaScript providers implement the provider interface and are dynamically loaded
+- Register via `aether.providers.register` JavaScript hook or directly with `ProviderRegistry.register()`
 
 ### Aether Ecosystem Integration
 
@@ -258,10 +258,10 @@ Key principles:
    - Manages provider registry
 
 2. **Provider System** (Extensible architecture)
-   - `ProviderRegistry` - Singleton registry managing all provider types and instances
-   - `BaseProvider` - Abstract base class for storage providers
-   - `LocalFilesystemProvider` - Stores exports locally
-   - Providers register via `aether_providers` filter
+   - `ProviderRegistry` (JavaScript) - Singleton registry managing all provider types and instances
+   - `AbstractProvider` (JavaScript) - Abstract base class for storage providers
+   - `LocalFilesystemProvider` (JavaScript) - Stores exports locally
+   - Providers register via `aether.providers.register` JavaScript hook
    - Instance IDs format: `{provider_type}:{uuid}`
 
 3. **REST API Controllers** (`includes/REST/`)
@@ -464,28 +464,42 @@ describe('MyProvider', () => {
 });
 ```
 
-**2. Create Provider Class (PHP)**
-```php
-// includes/Providers/MyProvider.php
-class MyProvider extends BaseProvider {
+**2. Create Provider Class (JavaScript)**
+```javascript
+// assets/src/providers/my-provider/MyProvider.js
+import { AbstractProvider } from '@aether/providers/base/AbstractProvider';
+
+class MyProvider extends AbstractProvider {
+    getId() {
+        return 'my-provider';
+    }
+    
+    getName() {
+        return 'My Provider';
+    }
+    
     // Implement ALL provider logic here - nothing in core
+    getProviderSpecificConfigFields() {
+        // Configuration fields
+    }
+    
+    async uploadFile(sourcePath, destinationPath, options = {}) {
+        // Upload implementation
+    }
 }
 ```
 
-**3. Create Provider Implementation (JavaScript)**
+**3. Register Provider**
 ```javascript
 // assets/src/providers/my-provider/index.js
-// Implement IProvider interface
-// ALL provider-specific logic here - nothing in core
-```
+import { MyProvider } from './MyProvider';
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import { doAction } from '@wordpress/hooks';
 
-**4. Register Provider**
-```php
-// In Plugin.php or dedicated plugin
-add_filter('aether_providers', function($providers) {
-    $providers[] = new MyProvider();
-    return $providers;
-});
+// Create and register provider
+const provider = new MyProvider();
+ProviderRegistry.register(provider.getId(), provider);
+doAction('aether.providers.register', provider);
 ```
 
 **Key Rules:**
