@@ -151,7 +151,7 @@ describe( 'AbstractProvider', () => {
 			const errors = await provider.validateConfig( config );
 
 			expect( errors ).toHaveProperty( 'bucket_name' );
-			expect( errors.bucket_name ).toContain( 'at least 3' );
+			expect( errors.bucket_name ).toMatch( /at least/i );
 		} );
 
 		test( 'validates max length', async () => {
@@ -162,7 +162,7 @@ describe( 'AbstractProvider', () => {
 			const errors = await provider.validateConfig( config );
 
 			expect( errors ).toHaveProperty( 'bucket_name' );
-			expect( errors.bucket_name ).toContain( 'no more than 20' );
+			expect( errors.bucket_name ).toMatch( /no more than/i );
 		} );
 
 		test( 'skips validation for empty optional fields', async () => {

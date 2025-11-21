@@ -380,7 +380,6 @@ describe( 'publishConfiguration', () => {
 			const mockAssetManager = {};
 			const mockSetStatus = jest.fn();
 			const mockSetProgress = jest.fn();
-			const mockHandleArchive = jest.fn();
 
 			const dependencies = {
 				api: mockApi,
@@ -390,7 +389,6 @@ describe( 'publishConfiguration', () => {
 				assetManager: mockAssetManager,
 				setStatusMessage: mockSetStatus,
 				setStepProgress: mockSetProgress,
-				handleSiteArchiveUpload: mockHandleArchive,
 			};
 
 			const result = buildWorkflowContext( config, dependencies );
@@ -414,9 +412,6 @@ describe( 'publishConfiguration', () => {
 				// State setters
 				setStatusMessage: mockSetStatus,
 				setStepProgress: mockSetProgress,
-
-				// Upload handlers
-				handleSiteArchiveUpload: mockHandleArchive,
 
 				// Discovered assets
 				discoveredAssets: null,

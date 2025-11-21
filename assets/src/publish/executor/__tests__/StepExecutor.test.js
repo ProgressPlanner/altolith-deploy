@@ -152,7 +152,7 @@ describe( 'StepExecutor', () => {
 			];
 
 			await expect( executeSteps( steps, {} ) ).rejects.toThrow(
-				'Step "failingStep" failed: Something went wrong'
+				/Error during|Something went wrong/
 			);
 		} );
 

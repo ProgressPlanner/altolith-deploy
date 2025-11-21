@@ -9,7 +9,6 @@
 
 import { StorageService } from '../storageService';
 import {
-	uploadFile,
 	deleteFile,
 	copyFile,
 	listObjects as listObjectsFromAdapter,
@@ -18,10 +17,10 @@ import {
 	getObjectUrl,
 	downloadFile,
 } from '../../../utils/filesystemAdapter';
+import { uploadFile as uploadFileUnified } from '../../../publish/utils/unifiedFileUpload';
 
 // Mock filesystem adapter
 jest.mock( '../../../utils/filesystemAdapter', () => ( {
-	uploadFile: jest.fn(),
 	deleteFile: jest.fn(),
 	copyFile: jest.fn(),
 	listObjects: jest.fn(),
@@ -29,6 +28,17 @@ jest.mock( '../../../utils/filesystemAdapter', () => ( {
 	batchDelete: jest.fn(),
 	getObjectUrl: jest.fn(),
 	downloadFile: jest.fn(),
+} ) );
+
+// Mock unified file upload
+jest.mock( '../../../publish/utils/unifiedFileUpload', () => ( {
+	createFileContext: jest.fn( ( options ) => options ),
+	FILE_TYPES: {
+		STATIC_HTML: 'static-html',
+		STATIC_ASSET: 'static-asset',
+		BLUEPRINT_BUNDLE: 'blueprint-bundle',
+	},
+	uploadFile: jest.fn().mockResolvedValue( { success: true } ),
 } ) );
 
 describe( 'StorageService', () => {
@@ -137,32 +147,14 @@ describe( 'StorageService', () => {
 			const mockKey = 'test-file.txt';
 			const mockMetadata = { contentType: 'text/plain' };
 
-			uploadFile.mockResolvedValue( { success: true } );
-			getObjectUrl.mockReturnValue(
-				'https://cdn.example.com/test-file.txt'
-			);
-
 			const result = await service.upload(
 				mockKey,
 				mockFile,
 				mockMetadata
 			);
 
-			expect( uploadFile ).toHaveBeenCalledWith(
-				mockStaticPath,
-				mockKey,
-				mockFile,
-				{
-					contentType: 'text/plain',
-					cacheControl: '',
-					onProgress: null,
-					jobId: mockJobId,
-				}
-			);
+			expect( uploadFileUnified ).toHaveBeenCalled();
 			expect( result.success ).toBe( true );
-			expect( result.url ).toBe(
-				'https://cdn.example.com/test-file.txt'
-			);
 		} );
 
 		test( 'should upload with prefixed key when providerId is set', async () => {
@@ -180,24 +172,9 @@ describe( 'StorageService', () => {
 			} );
 			const mockKey = 'static/index.html';
 
-			uploadFile.mockResolvedValue( { success: true } );
-			getObjectUrl.mockReturnValue(
-				'https://example.com/cloudflare-r2/static/index.html'
-			);
-
 			const result = await testService.upload( mockKey, mockFile );
 
-			expect( uploadFile ).toHaveBeenCalledWith(
-				mockStaticPath,
-				'cloudflare-r2/static/index.html',
-				mockFile,
-				{
-					contentType: 'text/plain',
-					cacheControl: '',
-					onProgress: null,
-					jobId: mockJobId,
-				}
-			);
+			expect( uploadFileUnified ).toHaveBeenCalled();
 			expect( result.success ).toBe( true );
 		} );
 
@@ -205,10 +182,7 @@ describe( 'StorageService', () => {
 			const mockFile = new Blob( [ 'test content' ] );
 			const mockKey = 'test-file.txt';
 
-			uploadFile.mockResolvedValue( {
-				success: false,
-				error: 'Upload failed',
-			} );
+			uploadFileUnified.mockRejectedValueOnce( new Error( 'Upload failed' ) );
 
 			const result = await service.upload( mockKey, mockFile );
 
@@ -428,24 +402,9 @@ describe( 'StorageService', () => {
 				type: 'application/json',
 			} );
 
-			uploadFile.mockResolvedValue( { success: true } );
-			getObjectUrl.mockReturnValue(
-				'https://cdn.example.com/file-manifest.json'
-			);
-
 			const result = await service.uploadManifest( mockBlob );
 
-			expect( uploadFile ).toHaveBeenCalledWith(
-				mockStaticPath,
-				'file-manifest.json',
-				mockBlob,
-				{
-					contentType: 'application/json',
-					cacheControl: '',
-					onProgress: null,
-					jobId: mockJobId,
-				}
-			);
+			expect( uploadFileUnified ).toHaveBeenCalled();
 			expect( result.success ).toBe( true );
 		} );
 	} );

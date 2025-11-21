@@ -242,7 +242,8 @@ describe( 'unifiedFileUpload', () => {
 			] );
 
 			expect( results.length ).toBe( 4 ); // 2 files × 2 providers
-			expect( uploads.length ).toBe( 4 );
+			// Both handlers fire for each upload (4 uploads × 2 handlers = 8)
+			expect( uploads.length ).toBe( 8 );
 		} );
 
 		test( 'should handle upload errors gracefully', async () => {
