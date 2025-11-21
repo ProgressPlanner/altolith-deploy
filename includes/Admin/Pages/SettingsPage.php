@@ -53,10 +53,9 @@ class SettingsPage extends BaseAdminPage
 		$plugin = \Aether\SiteExporter\Plugin::getInstance();
 		$plugin->enqueueProviderScript('local-filesystem');
 
-		// Add provider scripts from aether-site-exporter-providers plugin as dependencies
-		// This ensures providers are registered before admin-settings queries the registry
-		// Note: These scripts are enqueued by the providers plugin at priority 5,
-		// so they should be registered by the time this code runs (priority 10)
+		// Provider scripts from aether-site-exporter-providers are enqueued at priority 5
+		// We need to ensure they load before admin-settings. Since they're enqueued earlier,
+		// they should already be registered. We'll add them as dependencies if they exist.
 		$providerScriptDependencies = [];
 		$providerScripts = [
 			'aether-sep-provider-cloudflare-r2',
@@ -65,18 +64,21 @@ class SettingsPage extends BaseAdminPage
 			'aether-sep-provider-gitlab-pages',
 		];
 
+		// Check and add provider scripts as dependencies only if they're registered
 		foreach ($providerScripts as $scriptHandle) {
-			// Check if script is registered or enqueued
-			if (\wp_script_is($scriptHandle, 'registered') || \wp_script_is($scriptHandle, 'enqueued')) {
+			if (\wp_script_is($scriptHandle, 'registered')) {
 				$providerScriptDependencies[] = $scriptHandle;
 			}
 		}
 
 		// Merge provider script dependencies with WordPress dependencies
-		$dependencies = \array_merge($asset['dependencies'], $providerScriptDependencies);
+		// Only add if we found any provider scripts (don't break if providers plugin isn't active)
+		$dependencies = $asset['dependencies'];
+		if (!empty($providerScriptDependencies)) {
+			$dependencies = \array_merge($dependencies, $providerScriptDependencies);
+		}
 
-		// Enqueue the main script with provider script dependencies
-		// This ensures providers are registered before admin-settings queries the registry
+		// Enqueue the main script with dependencies
 		\wp_enqueue_script(
 			'aether-admin-settings',
 			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin-settings.js',
