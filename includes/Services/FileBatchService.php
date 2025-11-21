@@ -288,9 +288,9 @@ class FileBatchService
 	 *
 	 * @param string $sourceDir    Source directory path to check for large folders.
 	 * @param bool   $autoExclude Enable automatic exclusion of .git and large vendor folders.
-	 * @return string[] Array of exclusion patterns.
+	 * @return array<string> Array of exclusion patterns.
 	 */
-	public function getExclusionPatterns($sourceDir, $autoExclude = true)
+	public function getExclusionPatterns(string $sourceDir, bool $autoExclude = true): array
 	{
 		$excludePatterns = [];
 

@@ -29,7 +29,7 @@ class CorsHandler
 	 * @param \WP_REST_Request $request Request used to generate the response.
 	 * @return mixed Response or null to continue with normal processing.
 	 */
-	public function handlePreflight($result, $server, $request)
+	public function handlePreflight($result, \WP_REST_Server $server, \WP_REST_Request $request)
 	{
 		// Only handle OPTIONS requests for Aether endpoints.
 		if ($request->get_method() !== 'OPTIONS') {
@@ -57,7 +57,7 @@ class CorsHandler
 	 * @param \WP_REST_Server   $server Server instance.
 	 * @return bool Unchanged served status.
 	 */
-	public function addHeadersFilter($served, $result, $request, $server) // phpcs:ignore VariableAnalysis.CodeAnalysis
+	public function addHeadersFilter(bool $served, \WP_REST_Response $result, $request, \WP_REST_Server $server): bool // phpcs:ignore VariableAnalysis.CodeAnalysis
 	{
 		// Only add headers for Aether endpoints
 		if ($request instanceof \WP_REST_Request) {

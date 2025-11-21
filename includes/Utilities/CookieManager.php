@@ -32,7 +32,7 @@ class CookieManager
 	 * @param string $token         Session token.
 	 * @return void
 	 */
-	public function setSameSiteCookies($authCookie, $expire, $expiration, $userId, $scheme, $token): void // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+	public function setSameSiteCookies(string $authCookie, int $expire, int $expiration, int $userId, string $scheme, string $token): void // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 	{
 		// Determine which cookies to set based on the action hook.
 		$action = \current_action();
