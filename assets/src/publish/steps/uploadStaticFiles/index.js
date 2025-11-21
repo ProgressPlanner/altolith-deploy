@@ -9,6 +9,10 @@
 
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
+import StaticSiteCache from '../../../utils/staticSiteCache';
+import { executePreScan } from '../../utils/preScanPhase';
+import { fetchProviderConfig } from '../../utils/staticSiteConfig';
+import { debug, debugWarn } from '../../../utils/debug';
 
 /**
  * Upload static files step handler.
@@ -87,6 +91,42 @@ async function handler( context ) {
 		providers,
 	} );
 
+	// Create shared cache instance for all providers
+	// This ensures URLs and HTML are fetched only once, then shared across providers
+	const sharedCache = new StaticSiteCache();
+
+	// Pre-scan once: Fetch all URLs and cache raw HTML before processing providers
+	// This prevents duplicate network requests when multiple providers are enabled
+	let preScanResult = null;
+	try {
+		// Get provider config for first provider (for pre-scan)
+		// Pre-scan doesn't need provider-specific config, but executePreScan expects it
+		const firstProviderId = providers[ 0 ];
+		const providerConfig = await fetchProviderConfig( firstProviderId );
+
+		setStatusMessage(
+			__( 'Pre-scanning URLs and caching HTML…', 'aether-site-exporter' ),
+			'progress',
+			'uploadStaticFiles-prescan'
+		);
+
+		preScanResult = await executePreScan( {
+			urls: filteredUrls,
+			siteUrl,
+			providerId: firstProviderId,
+			providerConfig,
+			setStatusMessage,
+			cache: sharedCache, // Use shared cache
+		} );
+
+		debug(
+			`[Aether] Pre-scan complete: ${ preScanResult.cacheStats.sessionCached } URLs cached, ${ preScanResult.allUniqueAssets.size } unique assets`
+		);
+	} catch ( error ) {
+		debugWarn( '[Aether] Pre-scan failed:', error );
+		// Continue with empty cache - processStaticSiteUrls will handle it
+	}
+
 	// Process URLs for each provider using useStaticSiteGenerator
 	const providerResults = {};
 	let totalFilesUploaded = 0;
@@ -100,79 +140,97 @@ async function handler( context ) {
 	// No need for separate onProgress callback here
 
 	// Process each provider
-	for ( const providerId of providers ) {
-		try {
-			setStatusMessage(
-				sprintf(
-					/* translators: %s: Provider ID */
-					__(
-						'Processing static site for provider: %s',
-						'aether-site-exporter'
+	// Each provider will use the shared cache to get raw HTML and process it independently
+	try {
+		for ( const providerId of providers ) {
+			try {
+				setStatusMessage(
+					sprintf(
+						/* translators: %s: Provider ID */
+						__(
+							'Processing static site for provider: %s',
+							'aether-site-exporter'
+						),
+						providerId
 					),
-					providerId
-				),
-				'progress',
-				`uploadStaticFiles-${ providerId }`
-			);
+					'progress',
+					`uploadStaticFiles-${ providerId }`
+				);
 
-			// Process URLs for this provider
-			const result = await processStaticSiteUrls(
-				filteredUrls,
-				staticSiteUrl,
-				providerId,
-				siteUrl,
-				setStatusMessage,
-				blueprintData
-			);
+				// Process URLs for this provider
+				// Pass shared cache so it uses cached raw HTML instead of fetching again
+				const result = await processStaticSiteUrls(
+					filteredUrls,
+					staticSiteUrl,
+					providerId,
+					siteUrl,
+					setStatusMessage,
+					blueprintData,
+					null, // removeMessage
+					sharedCache // Pass shared cache
+				);
 
-			// Aggregate results
-			providerResults[ providerId ] = {
-				success: result.success,
-				urlsProcessed: result.urlsProcessed || 0,
-				urlsSucceeded: result.urlsSucceeded || 0,
-				urlsFailed: result.urlsFailed || 0,
-				filesUploaded: result.filesUploaded || 0,
-				filesSkipped: result.filesSkipped || 0,
-				assetsUploaded: result.assetsUploaded || 0,
-				assetsFailed: result.assetsFailed || 0,
-				failedUrls: result.failedUrls || [],
-				uploadedFiles: result.uploadedFiles || [],
-			};
+				// Aggregate results
+				providerResults[ providerId ] = {
+					success: result.success,
+					urlsProcessed: result.urlsProcessed || 0,
+					urlsSucceeded: result.urlsSucceeded || 0,
+					urlsFailed: result.urlsFailed || 0,
+					filesUploaded: result.filesUploaded || 0,
+					filesSkipped: result.filesSkipped || 0,
+					assetsUploaded: result.assetsUploaded || 0,
+					assetsFailed: result.assetsFailed || 0,
+					failedUrls: result.failedUrls || [],
+					uploadedFiles: result.uploadedFiles || [],
+				};
 
-			totalFilesUploaded += result.filesUploaded || 0;
-			totalFilesSkipped += result.filesSkipped || 0;
-			totalUrlsProcessed += result.urlsProcessed || 0;
-			totalUrlsSucceeded += result.urlsSucceeded || 0;
-			totalUrlsFailed += result.urlsFailed || 0;
-			if ( result.failedUrls ) {
-				allFailedUrls.push( ...result.failedUrls );
+				totalFilesUploaded += result.filesUploaded || 0;
+				totalFilesSkipped += result.filesSkipped || 0;
+				totalUrlsProcessed += result.urlsProcessed || 0;
+				totalUrlsSucceeded += result.urlsSucceeded || 0;
+				totalUrlsFailed += result.urlsFailed || 0;
+				if ( result.failedUrls ) {
+					allFailedUrls.push( ...result.failedUrls );
+				}
+			} catch ( error ) {
+				providerResults[ providerId ] = {
+					success: false,
+					error:
+						error.message ||
+						__( 'Unknown error', 'aether-site-exporter' ),
+					urlsProcessed: 0,
+					urlsSucceeded: 0,
+					urlsFailed: filteredUrls.length,
+					filesUploaded: 0,
+					filesSkipped: 0,
+					assetsUploaded: 0,
+					assetsFailed: 0,
+					failedUrls: filteredUrls.map( ( url ) => ( {
+						url: typeof url === 'string' ? url : url.url || url,
+						reason: error.message || 'Unknown error',
+					} ) ),
+					uploadedFiles: [],
+				};
+				totalUrlsFailed += filteredUrls.length;
+				allFailedUrls.push(
+					...filteredUrls.map( ( url ) => ( {
+						url: typeof url === 'string' ? url : url.url || url,
+						reason: error.message || 'Unknown error',
+					} ) )
+				);
 			}
-		} catch ( error ) {
-			providerResults[ providerId ] = {
-				success: false,
-				error:
-					error.message ||
-					__( 'Unknown error', 'aether-site-exporter' ),
-				urlsProcessed: 0,
-				urlsSucceeded: 0,
-				urlsFailed: filteredUrls.length,
-				filesUploaded: 0,
-				filesSkipped: 0,
-				assetsUploaded: 0,
-				assetsFailed: 0,
-				failedUrls: filteredUrls.map( ( url ) => ( {
-					url: typeof url === 'string' ? url : url.url || url,
-					reason: error.message || 'Unknown error',
-				} ) ),
-				uploadedFiles: [],
-			};
-			totalUrlsFailed += filteredUrls.length;
-			allFailedUrls.push(
-				...filteredUrls.map( ( url ) => ( {
-					url: typeof url === 'string' ? url : url.url || url,
-					reason: error.message || 'Unknown error',
-				} ) )
-			);
+		}
+	} finally {
+		// Clean up cache when publish finishes (success or failure)
+		try {
+			const cacheCleanedCount = await sharedCache.clearSession();
+			if ( cacheCleanedCount > 0 ) {
+				debug(
+					`[Aether] Cleared ${ cacheCleanedCount } cache entries from session`
+				);
+			}
+		} catch ( cleanupError ) {
+			debugWarn( '[Aether] Failed to cleanup cache:', cleanupError );
 		}
 	}
 
