@@ -14,6 +14,7 @@ use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
 use Aether\SiteExporter\Providers\ProviderRegistry;
+use Aether\SiteExporter\REST\Helpers\ProviderMetadataMapper;
 
 /**
  * Providers REST controller.
@@ -21,6 +22,21 @@ use Aether\SiteExporter\Providers\ProviderRegistry;
 class ProvidersController
 {
 	use RESTHelpersTrait;
+
+	/**
+	 * Provider metadata mapper instance.
+	 *
+	 * @var ProviderMetadataMapper
+	 */
+	private ProviderMetadataMapper $metadataMapper;
+
+	/**
+	 * Constructor.
+	 */
+	public function __construct()
+	{
+		$this->metadataMapper = new ProviderMetadataMapper();
+	}
 
 	/**
 	 * Register REST routes.
@@ -94,7 +110,7 @@ class ProvidersController
 		$metadata = [];
 		foreach ($providers as $provider) {
 			try {
-				$metadata[] = $this->getProviderMetadata($provider);
+				$metadata[] = $this->metadataMapper->map($provider);
 			} catch (\Throwable $e) {
 				// Log error but continue processing other providers
 				\error_log(\sprintf(
@@ -152,7 +168,7 @@ class ProvidersController
 			return new WP_REST_Response(
 				[
 					'success' => true,
-					'provider' => $this->getProviderMetadata($provider),
+					'provider' => $this->metadataMapper->map($provider),
 					'config' => $instanceConfig,
 				],
 				200
@@ -173,7 +189,7 @@ class ProvidersController
 			return new WP_REST_Response(
 				[
 					'success' => true,
-					'provider' => $this->getProviderMetadata($provider),
+					'provider' => $this->metadataMapper->map($provider),
 				],
 				200
 			);
@@ -202,7 +218,7 @@ class ProvidersController
 			// Get provider metadata for the instance's provider type
 			$provider = $registry->getProviderForInstance($instance['instanceId']);
 			if ($provider) {
-				$metadata = [$this->getProviderMetadata($provider)];
+				$metadata = [$this->metadataMapper->map($provider)];
 			} else {
 				$metadata = [];
 			}
@@ -211,7 +227,7 @@ class ProvidersController
 			$providers = $registry->getByDeploymentType($deploymentType);
 			$metadata = [];
 			foreach ($providers as $provider) {
-				$metadata[] = $this->getProviderMetadata($provider);
+				$metadata[] = $this->metadataMapper->map($provider);
 			}
 		}
 
@@ -225,90 +241,6 @@ class ProvidersController
 		);
 	}
 
-	/**
-	 * Get provider metadata array.
-	 *
-	 * @param \Aether\SiteExporter\Providers\BaseProvider $provider Provider instance.
-	 * @return array<string, mixed> Provider metadata.
-	 */
-	private function getProviderMetadata($provider): array
-	{
-		$settings = $provider->getSettings();
-
-		// Get provider-specific deployment types from config
-		$providerId = $provider->getId();
-		$providerSettings = \get_option('aether_site_exporter_settings', []);
-		$providerConfig = $providerSettings['providers'][$providerId] ?? [];
-		$providerDeploymentTypes = $providerConfig['deployment_types'] ?? null;
-
-		// Get global deployment types
-		$globalDeploymentTypes = $providerSettings['global_deployment_types'] ?? null;
-
-		// Merge: use provider-specific if set, otherwise use global defaults, otherwise use provider's supported types
-		$deploymentTypes = $providerDeploymentTypes;
-		if (!\is_array($deploymentTypes) || empty($deploymentTypes)) {
-			if (\is_array($globalDeploymentTypes) && !empty($globalDeploymentTypes)) {
-				$deploymentTypes = $globalDeploymentTypes;
-			} else {
-				$deploymentTypes = $provider->getDeploymentTypes();
-			}
-		}
-
-		// Include all settings fields (no filtering - fields will be hidden via CSS)
-		$settingsFields = [];
-		foreach ($settings as $field) {
-			// Include all field properties needed by the frontend
-			$fieldData = [
-				'type' => $field['type'] ?? 'text',
-				'label' => $field['label'] ?? '',
-				'name' => $field['name'] ?? '',
-			];
-
-			// Include optional field properties
-			if (isset($field['description'])) {
-				$fieldData['description'] = $field['description'];
-			}
-			if (isset($field['options'])) {
-				$fieldData['options'] = $field['options'];
-			}
-			if (isset($field['defaultValue'])) {
-				$fieldData['defaultValue'] = $field['defaultValue'];
-			}
-			if (isset($field['required'])) {
-				$fieldData['required'] = $field['required'];
-			}
-			if (isset($field['placeholder'])) {
-				$fieldData['placeholder'] = $field['placeholder'];
-			}
-			if (isset($field['sensitive'])) {
-				$fieldData['sensitive'] = $field['sensitive'];
-			}
-			// Include deploymentType property if present (for CSS-based hiding)
-			if (isset($field['deploymentType'])) {
-				$fieldData['deploymentType'] = $field['deploymentType'];
-			}
-			// Include hidden property if present (for hiding fields)
-			if (isset($field['hidden'])) {
-				$fieldData['hidden'] = (bool) $field['hidden'];
-			}
-			// Include is_advanced property if present (defaults to false)
-			if (isset($field['is_advanced'])) {
-				$fieldData['is_advanced'] = (bool) $field['is_advanced'];
-			}
-
-			$settingsFields[] = $fieldData;
-		}
-
-		return [
-			'id' => $provider->getId(),
-			'name' => $provider->getName(),
-			'description' => $provider->getDescription(),
-			'type' => $provider->getType(),
-			'deployment_types' => $provider->getDeploymentTypes(), // Always return supported types for UI
-			'dependencies' => $provider->getDependencies(), // Provider dependencies (provider IDs)
-			'settings_fields' => $settingsFields,
-		];
-	}
 
 	/**
 	 * Create a new provider instance.
