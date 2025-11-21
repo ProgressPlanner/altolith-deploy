@@ -14,9 +14,9 @@ import ProviderInstancePanel from '@aether/components/ProviderInstancePanel';
 import AddProviderInstanceModal from '@aether/components/AddProviderInstanceModal';
 import LoadingSpinner from '@aether/components/LoadingSpinner';
 import SectionHeader from '@aether/components/SectionHeader';
-import apiFetch from '@aether/utils/api';
 import { colors, spacing } from '@aether/utils/styles';
 import { useProviderSettings } from '@aether/hooks/useProviderSettings';
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 // Styles - extracted to module level for performance
 const emptyMessageStyle = {
@@ -75,22 +75,29 @@ export default function ProviderSettings( {
 	} = useProviderSettings();
 
 	useEffect( () => {
-		// Fetch providers from REST API (PHP registry is source of truth)
-		const loadProviders = async () => {
+		// Get providers from JavaScript registry
+		const loadProviders = () => {
 			try {
-				// Fetch provider metadata from REST API
-				const providersResponse = await apiFetch( {
-					path: '/aether/site-exporter/providers',
-				} );
+				// Get provider metadata from JavaScript registry
+				const allProviders = ProviderRegistry.getAll();
+				const providerMetadata = allProviders.map( ( provider ) => ( {
+					id: provider.getId(),
+					name: provider.getName(),
+					description: provider.getDescription?.() || '',
+					type: provider.getType?.() || 'generic',
+					deployment_types: provider.getSupportedDeploymentTypes?.() || [],
+					settings_fields: provider.getProviderSpecificConfigFields?.() || [],
+				} ) );
 
-				if (
-					providersResponse.success &&
-					providersResponse.providers
-				) {
-					setProviders( providersResponse.providers );
-				}
+				setProviders( providerMetadata );
+			} catch ( error ) {
+				console.error( 'Failed to load providers:', error );
+			}
+		};
 
-				// Configs are now managed by parent component
+		loadProviders();
+
+		// Configs are now managed by parent component
 				// If parent hasn't loaded them yet, trigger initial load
 				if ( onConfigsUpdate && Object.keys( configs ).length === 0 ) {
 					const configsResponse = await apiFetch( {

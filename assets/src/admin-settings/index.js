@@ -35,7 +35,7 @@ import { initializeErrorHandlers } from '../utils/errorHandler';
 // Initialize global error handlers
 initializeErrorHandlers();
 
-// Providers are registered via PHP using the 'aether_providers' filter.
+// Providers are registered in JavaScript via aether.providers.register hooks.
 // JavaScript providers register implementation hooks (aether.provider.upload, aether.provider.test, etc.).
 
 /**

@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useRef, useCallback } from '@wordpress/element';
-import apiFetch from '@aether/utils/api';
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 /**
  * Hook to reload provider metadata when deployment types change
@@ -62,78 +62,41 @@ export function useProviderMetadataReload(
 
 		previousDeploymentTypesRef.current = deploymentTypesString;
 
-		const reloadProviders = async () => {
+		const reloadProviders = () => {
 			try {
-				const providersResponse = await apiFetch( {
-					path: '/aether/site-exporter/providers',
+				// Get providers from JavaScript registry
+				const allProviders = ProviderRegistry.getAll();
+				const providerMetadata = allProviders.map( ( provider ) => {
+					const configFields = provider.getProviderSpecificConfigFields?.() || [];
+					return {
+						id: provider.getId(),
+						metadata: {
+							name: provider.getName(),
+							description: provider.getDescription?.() || '',
+							supportedDeploymentTypes:
+								provider.getSupportedDeploymentTypes?.() || [],
+							type: provider.getType?.() || 'generic',
+							dependencies: provider.getDependencies?.() || [],
+							icon: provider.getIcon?.() || '',
+						},
+						settingsFields: configFields.map( ( field ) => ( {
+							...field,
+							id: field.id || field.name,
+							name: field.name || field.id,
+						} ) ),
+					};
 				} );
 
-				if (
-					providersResponse.success &&
-					providersResponse.providers
-				) {
-					const providerMetadata = providersResponse.providers.map(
-						( provider ) => ( {
-							id: provider.id,
-							metadata: {
-								name: provider.name,
-								description: provider.description,
-								supportedDeploymentTypes:
-									provider.deployment_types || [],
-								type: provider.type,
-								dependencies: provider.dependencies || [],
-								icon: '',
-							},
-							settingsFields: (
-								provider.settings_fields || []
-							).map( ( field ) => ( {
-								...field,
-								id: field.name,
-							} ) ),
-						} )
+				setProviders( providerMetadata );
+
+				// If a provider modal is open, update the selected provider with latest metadata
+				// This ensures the modal shows the correct fields when deployment types change
+				if ( selectedProvider && isModalOpen ) {
+					const updatedProvider = providerMetadata.find(
+						( p ) => p.id === selectedProvider.id
 					);
-
-					setProviders( providerMetadata );
-
-					// If a provider modal is open, update the selected provider with latest metadata
-					// This ensures the modal shows the correct fields when deployment types change
-					if ( selectedProvider && isModalOpen ) {
-						const updatedProvider = providerMetadata.find(
-							( p ) => p.id === selectedProvider.id
-						);
-						if ( updatedProvider ) {
-							// Reload the provider from the API to get filtered settings fields
-							try {
-								const providerResponse = await apiFetch( {
-									path: `/aether/site-exporter/providers/${ updatedProvider.id }`,
-								} );
-
-								if (
-									providerResponse.success &&
-									providerResponse.provider
-								) {
-									const refreshedProvider = {
-										...updatedProvider,
-										settingsFields: (
-											providerResponse.provider
-												.settings_fields || []
-										).map( ( field ) => ( {
-											...field,
-											id: field.name,
-										} ) ),
-									};
-									setSelectedProvider( refreshedProvider );
-								} else {
-									setSelectedProvider( updatedProvider );
-								}
-							} catch ( error ) {
-								console.error(
-									'Failed to refresh provider metadata:',
-									error
-								);
-								setSelectedProvider( updatedProvider );
-							}
-						}
+					if ( updatedProvider ) {
+						setSelectedProvider( updatedProvider );
 					}
 				}
 			} catch ( error ) {

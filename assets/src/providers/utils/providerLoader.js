@@ -14,7 +14,7 @@
  * @package
  */
 
-import apiFetch from '@aether/utils/api';
+import ProviderRegistry from '../registry/ProviderRegistry';
 import { debugError, debugWarn } from '@aether/utils/debug';
 import { applyFilters } from '@wordpress/hooks';
 
@@ -432,20 +432,8 @@ export async function loadProviders( providerIds, options = {} ) {
  * });
  */
 export async function loadAllProviders( options = {} ) {
-	// Fetch provider IDs from REST API (PHP registry)
-	let allProviderIds = [];
-
-	try {
-		const response = await apiFetch( {
-			path: '/aether/site-exporter/providers',
-		} );
-
-		if ( response.success && response.providers ) {
-			allProviderIds = response.providers.map( ( p ) => p.id );
-		}
-	} catch ( error ) {
-		debugWarn( 'Failed to fetch providers from REST API:', error );
-	}
+	// Get provider IDs from JavaScript registry
+	let allProviderIds = ProviderRegistry.getAllIds();
 
 	// Allow plugins to extend provider IDs via filter
 	allProviderIds = applyFilters( 'aether.provider_ids', allProviderIds );
