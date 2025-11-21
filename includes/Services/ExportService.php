@@ -708,13 +708,8 @@ class ExportService
 				}
 
 				$slug = \sanitize_file_name($slug);
-				if (
-					empty($slug) ||
-					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
-					\strpos($slug, "\0") !== false ||
-					$slug === '.' ||
-					$slug === '..'
-				) {
+				$validation = SecurityValidator::validateSlug($slug);
+				if (!$validation['valid']) {
 					continue;
 				}
 
@@ -834,13 +829,8 @@ class ExportService
 				}
 
 				$slug = \sanitize_file_name($slug);
-				if (
-					empty($slug) ||
-					\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug) ||
-					\strpos($slug, "\0") !== false ||
-					$slug === '.' ||
-					$slug === '..'
-				) {
+				$validation = SecurityValidator::validateSlug($slug);
+				if (!$validation['valid']) {
 					continue;
 				}
 
