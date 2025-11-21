@@ -11,14 +11,15 @@ import { applyFilters } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
 import { formatFileSize } from '../../../utils/helpers';
 import { calculateOverallProgress } from '../../utils/progressManager';
+import { createFileContext, FILE_TYPES, uploadFile } from '../../utils/unifiedFileUpload';
 
 /**
  * Upload blueprint bundle step handler.
  *
  * @param {Object}   context                          Execution context.
- * @param {Function} context.handleSiteArchiveUpload  Archive upload function.
  * @param {Array}    context.blueprintBundleProviders Providers for blueprint bundle.
  * @param {Object}   context.blueprintBundle          Bundle data from generateBlueprint.
+ * @param {string}   context.siteUrl                   WordPress site URL.
  * @param {Function} context.setStatusMessage         Status message updater.
  * @param {Function} context.setStepProgress          Step progress updater.
  * @param {Function} context.setOverallProgressValue  Overall progress updater.
@@ -26,9 +27,9 @@ import { calculateOverallProgress } from '../../utils/progressManager';
  */
 async function handler( context ) {
 	const {
-		handleSiteArchiveUpload,
 		blueprintBundleProviders = [],
 		blueprintBundle,
+		siteUrl,
 		setStatusMessage,
 		setStepProgress,
 		setOverallProgressValue,
@@ -74,7 +75,7 @@ async function handler( context ) {
 
 	for ( const providerIdItem of providers ) {
 		try {
-			// Fetch provider config
+			// Fetch provider config to get export_path
 			let exportPath = 'blueprint-bundle/bundle.zip';
 			try {
 				const providerResponse = await apiFetch( {
@@ -90,17 +91,24 @@ async function handler( context ) {
 				// Use default path on error
 			}
 
-			const deploymentConfig = applyFilters(
-				'aether.deployment.config',
-				{
+			// Create unified file context for blueprint bundle
+			const fileContext = createFileContext( {
+				fileType: FILE_TYPES.BLUEPRINT_BUNDLE,
+				filePath: blueprintBundle.bundlePath,
+				fileContent: null,
+				contentType: 'application/zip',
+				storageKey: exportPath,
+				providerId: providerIdItem,
+				metadata: {
 					...context,
-					providerId: providerIdItem,
+					siteUrl,
 					exportPath,
 				},
-				providerIdItem
-			);
+			} );
 
-			await handleSiteArchiveUpload( providerIdItem, deploymentConfig );
+			// Upload file using unified upload system
+			// This fires aether.file.upload action which providers hook into
+			await uploadFile( fileContext );
 
 			successCount++;
 			uploadResults.push( {
