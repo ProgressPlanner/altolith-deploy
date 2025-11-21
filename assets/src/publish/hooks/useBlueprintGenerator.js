@@ -27,31 +27,11 @@ export function useBlueprintGenerator() {
 		/**
 		 * Generate blueprint JSON.
 		 *
-		 * @param {Object|Function} optionsOrSetStatusMessage                   Options object with assets/wpContentZipUrl, or setStatusMessage callback (for backward compatibility).
-		 * @param {Array}           [optionsOrSetStatusMessage.assets]          Discovered assets.
-		 * @param {string}          [optionsOrSetStatusMessage.wpContentZipUrl] URL to wp-content.zip.
-		 * @param {Function}        [setStatusMessage]                          Optional status message callback (if first param is options object).
+		 * @param {Function} [setStatusMessage] Optional status message callback.
 		 * @return {Promise<Object>} Blueprint JSON object.
 		 */
-		async ( optionsOrSetStatusMessage = null, setStatusMessage = null ) => {
-			// Handle both old signature (setStatusMessage) and new signature (options object, setStatusMessage)
-			let actualSetStatusMessage = null;
-			let assets = [];
-			let wpContentZipUrl = null;
-
-			if ( typeof optionsOrSetStatusMessage === 'function' ) {
-				// Old signature: generateBlueprint(setStatusMessage)
-				actualSetStatusMessage = optionsOrSetStatusMessage;
-			} else if (
-				optionsOrSetStatusMessage &&
-				typeof optionsOrSetStatusMessage === 'object'
-			) {
-				// New signature: generateBlueprint({ assets, wpContentZipUrl }, setStatusMessage)
-				assets = optionsOrSetStatusMessage.assets || [];
-				wpContentZipUrl =
-					optionsOrSetStatusMessage.wpContentZipUrl || null;
-				actualSetStatusMessage = setStatusMessage;
-			}
+		async ( setStatusMessage = null ) => {
+			const actualSetStatusMessage = setStatusMessage;
 			// Fetch WordPress.org plugin/theme slugs and site name using browser-based discovery.
 			if ( actualSetStatusMessage ) {
 				actualSetStatusMessage(

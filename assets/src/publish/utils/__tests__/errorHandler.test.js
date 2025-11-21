@@ -26,10 +26,14 @@ describe( 'errorHandler', () => {
 			expect( categorizeError( error ) ).toBe( ERROR_CATEGORIES.NETWORK );
 
 			const error2 = new Error( 'Failed to fetch' );
-			expect( categorizeError( error2 ) ).toBe( ERROR_CATEGORIES.NETWORK );
+			expect( categorizeError( error2 ) ).toBe(
+				ERROR_CATEGORIES.NETWORK
+			);
 
 			const error3 = { code: 'econnrefused' };
-			expect( categorizeError( error3 ) ).toBe( ERROR_CATEGORIES.NETWORK );
+			expect( categorizeError( error3 ) ).toBe(
+				ERROR_CATEGORIES.NETWORK
+			);
 		} );
 
 		test( 'should categorize timeout errors', () => {
@@ -37,34 +41,50 @@ describe( 'errorHandler', () => {
 			expect( categorizeError( error ) ).toBe( ERROR_CATEGORIES.TIMEOUT );
 
 			const error2 = { status: 408 };
-			expect( categorizeError( error2 ) ).toBe( ERROR_CATEGORIES.TIMEOUT );
+			expect( categorizeError( error2 ) ).toBe(
+				ERROR_CATEGORIES.TIMEOUT
+			);
 		} );
 
 		test( 'should categorize rate limit errors', () => {
 			const error = new Error( 'Rate limit exceeded' );
-			expect( categorizeError( error ) ).toBe( ERROR_CATEGORIES.RATE_LIMIT );
+			expect( categorizeError( error ) ).toBe(
+				ERROR_CATEGORIES.RATE_LIMIT
+			);
 
 			const error2 = { status: 429 };
-			expect( categorizeError( error2 ) ).toBe( ERROR_CATEGORIES.RATE_LIMIT );
+			expect( categorizeError( error2 ) ).toBe(
+				ERROR_CATEGORIES.RATE_LIMIT
+			);
 		} );
 
 		test( 'should categorize permission errors', () => {
 			const error = new Error( 'Permission denied' );
-			expect( categorizeError( error ) ).toBe( ERROR_CATEGORIES.PERMISSION );
+			expect( categorizeError( error ) ).toBe(
+				ERROR_CATEGORIES.PERMISSION
+			);
 
 			const error2 = { status: 401 };
-			expect( categorizeError( error2 ) ).toBe( ERROR_CATEGORIES.PERMISSION );
+			expect( categorizeError( error2 ) ).toBe(
+				ERROR_CATEGORIES.PERMISSION
+			);
 
 			const error3 = { status: 403 };
-			expect( categorizeError( error3 ) ).toBe( ERROR_CATEGORIES.PERMISSION );
+			expect( categorizeError( error3 ) ).toBe(
+				ERROR_CATEGORIES.PERMISSION
+			);
 		} );
 
 		test( 'should categorize validation errors', () => {
 			const error = new Error( 'Invalid input' );
-			expect( categorizeError( error ) ).toBe( ERROR_CATEGORIES.VALIDATION );
+			expect( categorizeError( error ) ).toBe(
+				ERROR_CATEGORIES.VALIDATION
+			);
 
 			const error2 = { status: 400 };
-			expect( categorizeError( error2 ) ).toBe( ERROR_CATEGORIES.VALIDATION );
+			expect( categorizeError( error2 ) ).toBe(
+				ERROR_CATEGORIES.VALIDATION
+			);
 		} );
 
 		test( 'should return unknown for unrecognized errors', () => {
@@ -260,4 +280,3 @@ describe( 'errorHandler', () => {
 		} );
 	} );
 } );
-

@@ -9,21 +9,18 @@
 
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
-import { calculateOverallProgress } from '../../utils/progressManager';
 
 /**
  * Upload static files step handler.
  *
- * @param {Object}   context                         Execution context.
- * @param {Array}    context.staticSiteProviders     Providers for static site.
- * @param {Array}    context.urls                    URLs from getStaticSiteUrls.
- * @param {string}   context.staticSiteUrl           Static site URL.
- * @param {Object}   context.blueprintData           Blueprint data.
- * @param {string}   context.siteUrl                 WordPress site URL.
- * @param {Function} context.processStaticSiteUrls    Static site generator function.
- * @param {Function} context.setStatusMessage        Status message updater.
- * @param {Function} context.setStepProgress         Step progress updater.
- * @param {Function} context.setOverallProgressValue  Overall progress updater.
+ * @param {Object}   context                       Execution context.
+ * @param {Array}    context.staticSiteProviders   Providers for static site.
+ * @param {Array}    context.urls                  URLs from getStaticSiteUrls.
+ * @param {string}   context.staticSiteUrl         Static site URL.
+ * @param {Object}   context.blueprintData         Blueprint data.
+ * @param {string}   context.siteUrl               WordPress site URL.
+ * @param {Function} context.processStaticSiteUrls Static site generator function.
+ * @param {Function} context.setStatusMessage      Status message updater.
  * @return {Promise<Object>} Step result with uploaded files.
  */
 async function handler( context ) {
@@ -35,8 +32,6 @@ async function handler( context ) {
 		staticSiteProviders = [],
 		processStaticSiteUrls,
 		setStatusMessage,
-		setStepProgress,
-		setOverallProgressValue,
 	} = context;
 
 	if ( ! urls || ! Array.isArray( urls ) ) {
@@ -101,27 +96,8 @@ async function handler( context ) {
 	let totalUrlsFailed = 0;
 	const allFailedUrls = [];
 
-	// Progress tracking callback
-	const onProgress = ( uploadedFiles, totalFiles, message ) => {
-		if ( setStepProgress && setOverallProgressValue ) {
-			// Calculate progress across all providers
-			const totalProviders = providers.length;
-			const currentProviderIndex = Object.keys( providerResults ).length;
-			const providerProgress = ( currentProviderIndex + 1 ) / totalProviders;
-			const fileProgress = totalFiles > 0 ? uploadedFiles / totalFiles : 0;
-			const stepProgress = Math.min(
-				100,
-				Math.round( providerProgress * 100 * fileProgress )
-			);
-			setStepProgress( 'uploadStaticFiles', stepProgress );
-			setOverallProgressValue(
-				calculateOverallProgress( {
-					step: 'uploadStaticFiles',
-					progress: stepProgress,
-				} )
-			);
-		}
-	};
+	// Note: Progress tracking is handled by processStaticSiteUrls internally
+	// No need for separate onProgress callback here
 
 	// Process each provider
 	for ( const providerId of providers ) {
@@ -129,7 +105,10 @@ async function handler( context ) {
 			setStatusMessage(
 				sprintf(
 					/* translators: %s: Provider ID */
-					__( 'Processing static site for provider: %s', 'aether-site-exporter' ),
+					__(
+						'Processing static site for provider: %s',
+						'aether-site-exporter'
+					),
 					providerId
 				),
 				'progress',
@@ -171,7 +150,9 @@ async function handler( context ) {
 		} catch ( error ) {
 			providerResults[ providerId ] = {
 				success: false,
-				error: error.message || __( 'Unknown error', 'aether-site-exporter' ),
+				error:
+					error.message ||
+					__( 'Unknown error', 'aether-site-exporter' ),
 				urlsProcessed: 0,
 				urlsSucceeded: 0,
 				urlsFailed: filteredUrls.length,

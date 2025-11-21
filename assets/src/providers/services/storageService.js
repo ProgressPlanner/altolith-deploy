@@ -8,7 +8,6 @@
  */
 
 import {
-	uploadFile,
 	deleteFile,
 	copyFile,
 	listObjects as listObjectsFromAdapter,

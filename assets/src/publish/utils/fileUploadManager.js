@@ -371,7 +371,7 @@ export async function uploadFilesWithProgress( {
 							return result;
 						},
 						{
-							onRetry: ( error, attempt, delay ) => {
+							onRetry: ( error, attempt ) => {
 								if ( setStatusMessage ) {
 									setStatusMessage(
 										sprintf(
@@ -470,19 +470,17 @@ export async function uploadFilesWithProgress( {
 					filesFailed++;
 
 					const errorMessage =
-						lastError ||
-						'Upload failed after ${ maxRetries } attempts';
+						uploadResult?.error || 'Upload failed after retries';
 
 					if ( setStatusMessage ) {
 						setStatusMessage(
 							sprintf(
-								/* translators: %1$s: File name, %2$d: Number of attempts */
+								/* translators: %s: File name */
 								__(
-									'Failed to upload %1$s after %2$d attempts',
+									'Failed to upload %s',
 									'aether-site-exporter'
 								),
-								displayName,
-								maxRetries
+								displayName
 							),
 							'error',
 							uploadKey,

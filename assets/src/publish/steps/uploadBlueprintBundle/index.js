@@ -7,7 +7,6 @@
  */
 
 import { __, sprintf, _n } from '@wordpress/i18n';
-import { applyFilters } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
 import { formatFileSize } from '../../../utils/helpers';
 import { calculateOverallProgress } from '../../utils/progressManager';

@@ -8,37 +8,39 @@
  */
 
 import { debug, debugWarn } from '../../utils/debug';
+import IndexedDBStore, { isIndexedDBAvailable } from '../../utils/indexedDB';
 
-const DB_NAME = 'aether-publish-progress';
-const DB_VERSION = 1;
-const STORE_NAME = 'progress';
+const DB_CONFIG = {
+	dbName: 'aether-publish-progress',
+	version: 1,
+	stores: {
+		progress: {
+			keyPath: 'workflowId',
+		},
+	},
+};
+
+// Initialize store instance
+let storeInstance = null;
 
 /**
- * Open IndexedDB database for progress tracking.
+ * Get or create IndexedDB store instance.
  *
- * @return {Promise<IDBDatabase>} Database instance.
+ * @return {IndexedDBStore|null} Store instance or null if unavailable.
  */
-function openDatabase() {
-	return new Promise( ( resolve, reject ) => {
-		const request = indexedDB.open( DB_NAME, DB_VERSION );
+function getStore() {
+	if ( ! isIndexedDBAvailable() ) {
+		debugWarn(
+			'[ProgressTracker] IndexedDB not available, progress will not persist'
+		);
+		return null;
+	}
 
-		request.onerror = () => {
-			reject( new Error( 'Failed to open progress database' ) );
-		};
+	if ( ! storeInstance ) {
+		storeInstance = new IndexedDBStore( 'progress', DB_CONFIG );
+	}
 
-		request.onsuccess = () => {
-			resolve( request.result );
-		};
-
-		request.onupgradeneeded = ( event ) => {
-			const db = event.target.result;
-
-			// Create object store if it doesn't exist
-			if ( ! db.objectStoreNames.contains( STORE_NAME ) ) {
-				db.createObjectStore( STORE_NAME, { keyPath: 'workflowId' } );
-			}
-		};
-	} );
+	return storeInstance;
 }
 
 /**
@@ -49,20 +51,15 @@ function openDatabase() {
  * @return {Promise<void>}
  */
 async function saveProgress( workflowId, progress ) {
+	const store = getStore();
+	if ( ! store ) {
+		return; // Silently fail if IndexedDB unavailable
+	}
+
 	try {
-		const db = await openDatabase();
-		const transaction = db.transaction( [ STORE_NAME ], 'readwrite' );
-		const store = transaction.objectStore( STORE_NAME );
-
-		await new Promise( ( resolve, reject ) => {
-			const request = store.put( {
-				workflowId,
-				...progress,
-				timestamp: Date.now(),
-			} );
-
-			request.onsuccess = () => resolve();
-			request.onerror = () => reject( request.error );
+		await store.set( workflowId, {
+			...progress,
+			timestamp: Date.now(),
 		} );
 	} catch ( error ) {
 		debugWarn( '[ProgressTracker] Failed to save progress:', error );
@@ -77,20 +74,14 @@ async function saveProgress( workflowId, progress ) {
  * @return {Promise<Object|null>} Progress data or null if not found.
  */
 async function loadProgress( workflowId ) {
+	const store = getStore();
+	if ( ! store ) {
+		return null;
+	}
+
 	try {
-		const db = await openDatabase();
-		const transaction = db.transaction( [ STORE_NAME ], 'readonly' );
-		const store = transaction.objectStore( STORE_NAME );
-
-		return new Promise( ( resolve, reject ) => {
-			const request = store.get( workflowId );
-
-			request.onsuccess = () => {
-				resolve( request.result || null );
-			};
-
-			request.onerror = () => reject( request.error );
-		} );
+		const result = await store.get( workflowId );
+		return result || null;
 	} catch ( error ) {
 		debugWarn( '[ProgressTracker] Failed to load progress:', error );
 		return null;
@@ -104,17 +95,13 @@ async function loadProgress( workflowId ) {
  * @return {Promise<void>}
  */
 async function deleteProgress( workflowId ) {
+	const store = getStore();
+	if ( ! store ) {
+		return;
+	}
+
 	try {
-		const db = await openDatabase();
-		const transaction = db.transaction( [ STORE_NAME ], 'readwrite' );
-		const store = transaction.objectStore( STORE_NAME );
-
-		await new Promise( ( resolve, reject ) => {
-			const request = store.delete( workflowId );
-
-			request.onsuccess = () => resolve();
-			request.onerror = () => reject( request.error );
-		} );
+		await store.delete( workflowId );
 	} catch ( error ) {
 		debugWarn( '[ProgressTracker] Failed to delete progress:', error );
 		// Don't throw - cleanup is non-critical
@@ -124,12 +111,16 @@ async function deleteProgress( workflowId ) {
 /**
  * Create a progress tracker instance.
  *
- * @param {string}   workflowId        Unique workflow identifier.
- * @param {Array<string>} stepIds      Array of step IDs in execution order.
- * @param {Function} [onProgressChange] Callback when progress changes.
+ * @param {string}        workflowId         Unique workflow identifier.
+ * @param {Array<string>} stepIds            Array of step IDs in execution order.
+ * @param {Function}      [onProgressChange] Callback when progress changes.
  * @return {Object} Progress tracker instance.
  */
-export function createProgressTracker( workflowId, stepIds, onProgressChange = null ) {
+export function createProgressTracker(
+	workflowId,
+	stepIds,
+	onProgressChange = null
+) {
 	// Calculate equal step weight
 	const stepWeight = stepIds.length > 0 ? 100 / stepIds.length : 0;
 
@@ -149,15 +140,13 @@ export function createProgressTracker( workflowId, stepIds, onProgressChange = n
 	 * Update progress for a specific step.
 	 *
 	 * @param {string} stepId   Step identifier.
-	 * @param {number} progress  Step progress (0-100).
+	 * @param {number} progress Step progress (0-100).
 	 * @return {Promise<void>}
 	 */
 	async function updateStepProgress( stepId, progress ) {
 		// Validate step ID
 		if ( ! stepIds.includes( stepId ) ) {
-			debugWarn(
-				`[ProgressTracker] Unknown step ID: ${ stepId }`
-			);
+			debugWarn( `[ProgressTracker] Unknown step ID: ${ stepId }` );
 			return;
 		}
 
@@ -176,7 +165,10 @@ export function createProgressTracker( workflowId, stepIds, onProgressChange = n
 			totalProgress += ( stepWeight * stepProg ) / 100;
 		}
 
-		progressState.overallProgress = Math.min( 100, Math.round( totalProgress ) );
+		progressState.overallProgress = Math.min(
+			100,
+			Math.round( totalProgress )
+		);
 
 		// Save to IndexedDB
 		await saveProgress( workflowId, progressState );
@@ -269,7 +261,7 @@ export function createProgressTracker( workflowId, stepIds, onProgressChange = n
  * Calculate overall progress with equal step weights.
  *
  * @param {Array<string>} stepIds      Array of step IDs.
- * @param {Object}        stepProgress  Object mapping step IDs to progress (0-100).
+ * @param {Object}        stepProgress Object mapping step IDs to progress (0-100).
  * @return {number} Overall progress (0-100).
  */
 export function calculateOverallProgress( stepIds, stepProgress ) {
@@ -287,4 +279,3 @@ export function calculateOverallProgress( stepIds, stepProgress ) {
 
 	return Math.min( 100, Math.round( totalProgress ) );
 }
-

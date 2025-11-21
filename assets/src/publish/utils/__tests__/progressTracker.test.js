@@ -14,7 +14,7 @@ import {
 // Mock IndexedDB
 const mockIndexedDB = () => {
 	const store = new Map();
-	let requestResult = null;
+	const requestResult = null;
 
 	return {
 		open: jest.fn( ( name, version ) => {
@@ -176,7 +176,9 @@ describe( 'progressTracker', () => {
 			await tracker.completeStep( 'step1' );
 
 			const progress = tracker.getProgress();
-			expect( progress.completedSteps.filter( ( s ) => s === 'step1' ).length ).toBe( 1 );
+			expect(
+				progress.completedSteps.filter( ( s ) => s === 'step1' ).length
+			).toBe( 1 );
 		} );
 	} );
 
@@ -210,4 +212,3 @@ describe( 'progressTracker', () => {
 		} );
 	} );
 } );
-

@@ -32,16 +32,20 @@ jest.mock( '@wordpress/hooks', () => {
 		} ),
 		applyFilters: jest.fn( ( filter, value ) => value ),
 		hasAction: jest.fn( ( actionName ) => actions.has( actionName ) ),
-		addAction: jest.fn( ( actionName, namespace, handler, priority = 10 ) => {
-			if ( ! actions.has( actionName ) ) {
-				actions.set( actionName, [] );
+		addAction: jest.fn(
+			( actionName, namespace, handler, priority = 10 ) => {
+				if ( ! actions.has( actionName ) ) {
+					actions.set( actionName, [] );
+				}
+				actions.get( actionName ).push( handler );
 			}
-			actions.get( actionName ).push( handler );
-		} ),
+		),
 		removeAction: jest.fn( ( actionName, namespace ) => {
 			if ( actions.has( actionName ) ) {
 				const handlers = actions.get( actionName );
-				const index = handlers.findIndex( ( h ) => h.namespace === namespace );
+				const index = handlers.findIndex(
+					( h ) => h.namespace === namespace
+				);
 				if ( index > -1 ) {
 					handlers.splice( index, 1 );
 				}
@@ -73,7 +77,9 @@ describe( 'unifiedFileUpload', () => {
 		} );
 
 		test( 'should create file context for static HTML', () => {
-			const htmlBlob = new Blob( [ '<html></html>' ], { type: 'text/html' } );
+			const htmlBlob = new Blob( [ '<html></html>' ], {
+				type: 'text/html',
+			} );
 			const context = createFileContext( {
 				fileType: FILE_TYPES.STATIC_HTML,
 				fileContent: htmlBlob,
@@ -128,7 +134,10 @@ describe( 'unifiedFileUpload', () => {
 
 			const result = await uploadFile( context );
 
-			expect( doAction ).toHaveBeenCalledWith( 'aether.file.upload', expect.any( Object ) );
+			expect( doAction ).toHaveBeenCalledWith(
+				'aether.file.upload',
+				expect.any( Object )
+			);
 			expect( handler ).toHaveBeenCalled();
 			expect( result.success ).toBe( true );
 		} );
@@ -227,7 +236,10 @@ describe( 'unifiedFileUpload', () => {
 				} ),
 			];
 
-			const results = await uploadFiles( contexts, [ 'provider1', 'provider2' ] );
+			const results = await uploadFiles( contexts, [
+				'provider1',
+				'provider2',
+			] );
 
 			expect( results.length ).toBe( 4 ); // 2 files × 2 providers
 			expect( uploads.length ).toBe( 4 );
@@ -253,7 +265,10 @@ describe( 'unifiedFileUpload', () => {
 				providerId: 'failing-provider',
 			} );
 
-			const results = await uploadFiles( [ context ], [ 'failing-provider' ] );
+			const results = await uploadFiles(
+				[ context ],
+				[ 'failing-provider' ]
+			);
 
 			expect( results[ 0 ].success ).toBe( false );
 			expect( results[ 0 ].error ).toBe( 'Upload failed' );
@@ -339,14 +354,15 @@ describe( 'unifiedFileUpload', () => {
 			// Each provider instance should receive its own files
 			expect( uploads.length ).toBe( 4 ); // 2 files × 2 instances
 			expect(
-				uploads.filter( ( u ) => u.providerId === 'local-filesystem:instance1' )
-					.length
+				uploads.filter(
+					( u ) => u.providerId === 'local-filesystem:instance1'
+				).length
 			).toBe( 2 );
 			expect(
-				uploads.filter( ( u ) => u.providerId === 'local-filesystem:instance2' )
-					.length
+				uploads.filter(
+					( u ) => u.providerId === 'local-filesystem:instance2'
+				).length
 			).toBe( 2 );
 		} );
 	} );
 } );
-

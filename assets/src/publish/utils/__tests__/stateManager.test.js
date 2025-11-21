@@ -17,18 +17,23 @@ const mockIndexedDB = () => {
 	const store = new Map();
 	const index = {
 		openCursor: jest.fn( ( range ) => {
-			const entries = Array.from( store.entries() ).filter( ( [ key ] ) => {
-				if ( range && range.lower === range.upper ) {
-					return key.startsWith( range.lower );
+			const entries = Array.from( store.entries() ).filter(
+				( [ key ] ) => {
+					if ( range && range.lower === range.upper ) {
+						return key.startsWith( range.lower );
+					}
+					return true;
 				}
-				return true;
-			} );
+			);
 
 			let cursorIndex = 0;
 			return {
 				onsuccess: null,
 				onerror: null,
-				result: cursorIndex < entries.length ? entries[ cursorIndex ][ 1 ] : null,
+				result:
+					cursorIndex < entries.length
+						? entries[ cursorIndex ][ 1 ]
+						: null,
 				continue: jest.fn( () => {
 					cursorIndex++;
 					if ( cursorIndex < entries.length ) {
@@ -120,7 +125,10 @@ describe( 'stateManager', () => {
 	describe( 'save() and load()', () => {
 		test( 'should save and load state', async () => {
 			const manager = createStateManager( 'workflow-1' );
-			const state = { completedSteps: [ 'step1' ], state: { result: 'test' } };
+			const state = {
+				completedSteps: [ 'step1' ],
+				state: { result: 'test' },
+			};
 
 			await manager.save( state );
 			const loaded = await manager.load();
@@ -273,4 +281,3 @@ describe( 'stateManager', () => {
 		} );
 	} );
 } );
-

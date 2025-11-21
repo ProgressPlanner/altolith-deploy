@@ -7,7 +7,7 @@
  * @package
  */
 
-import { doAction, applyFilters, hasAction } from '@wordpress/hooks';
+import { doAction, applyFilters } from '@wordpress/hooks';
 
 /**
  * File types supported by the unified upload system.

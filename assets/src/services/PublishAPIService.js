@@ -163,12 +163,9 @@ export class PublishAPIService {
 	 * This is typically handled client-side via generateBlueprintJson function.
 	 * This method is a fallback if the function is not available.
 	 *
-	 * @param {Object} options                 Blueprint generation options.
-	 * @param {Array}  options.assets          Discovered assets.
-	 * @param {string} options.wpContentZipUrl URL to wp-content.zip.
 	 * @return {Promise<Object>} Response with blueprint data
 	 */
-	async generateBlueprint( { assets = [], wpContentZipUrl = null } = {} ) {
+	async generateBlueprint() {
 		// This is a fallback method - typically blueprint generation is done client-side
 		// via the generateBlueprintJson function from useBlueprintGenerator hook
 		return {

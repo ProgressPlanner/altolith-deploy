@@ -68,7 +68,11 @@ const mockIndexedDB = () => {
 			const request = {
 				result: {
 					objectStoreNames: {
-						contains: jest.fn( ( name ) => name === 'progress' || name === 'workflowState' ),
+						contains: jest.fn(
+							( storeName ) =>
+								storeName === 'progress' ||
+								storeName === 'workflowState'
+						),
 					},
 					createObjectStore: jest.fn( () => ( {
 						createIndex: jest.fn(),
@@ -204,15 +208,23 @@ describe( 'StepExecutor Integration', () => {
 						progressUpdates.push( { stepId, progress } );
 					} ),
 					completeStep: jest.fn( async ( stepId ) => {
-						progressUpdates.push( { stepId, progress: 100, completed: true } );
+						progressUpdates.push( {
+							stepId,
+							progress: 100,
+							completed: true,
+						} );
 					} ),
 				},
 			} );
 
 			// Should initialize each step to 0
-			expect( progressUpdates.filter( ( u ) => u.progress === 0 ).length ).toBeGreaterThan( 0 );
+			expect(
+				progressUpdates.filter( ( u ) => u.progress === 0 ).length
+			).toBeGreaterThan( 0 );
 			// Should complete each step
-			expect( progressUpdates.filter( ( u ) => u.completed ).length ).toBe( 3 );
+			expect(
+				progressUpdates.filter( ( u ) => u.completed ).length
+			).toBe( 3 );
 		} );
 
 		test( 'should calculate overall progress correctly', async () => {
@@ -270,9 +282,9 @@ describe( 'StepExecutor Integration', () => {
 
 			// Should save state after each parallel group
 			expect( savedStates.length ).toBeGreaterThan( 0 );
-			expect( savedStates[ savedStates.length - 1 ].state ).toHaveProperty(
-				'step1Result'
-			);
+			expect(
+				savedStates[ savedStates.length - 1 ].state
+			).toHaveProperty( 'step1Result' );
 		} );
 
 		test( 'should restore state on workflow start', async () => {
@@ -383,7 +395,10 @@ describe( 'StepExecutor Integration', () => {
 			} );
 
 			// Verify execution order
-			expect( executionLog ).toEqual( [ 'step1-executed', 'step2-executed' ] );
+			expect( executionLog ).toEqual( [
+				'step1-executed',
+				'step2-executed',
+			] );
 
 			// Verify results
 			expect( result.data1 ).toBe( 'value1' );
@@ -433,4 +448,3 @@ describe( 'StepExecutor Integration', () => {
 		} );
 	} );
 } );
-

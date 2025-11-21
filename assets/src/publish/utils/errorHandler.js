@@ -8,7 +8,7 @@
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { debug, debugError, debugWarn } from '../../utils/debug';
+import { debugError, debugWarn } from '../../utils/debug';
 
 /**
  * Error categories for error handling strategies.
@@ -150,10 +150,9 @@ export function categorizeError( error ) {
  * Determine error severity based on category and context.
  *
  * @param {string} category Error category.
- * @param {Object} context  Error context (step, operation, etc.).
  * @return {string} Error severity level.
  */
-export function determineSeverity( category, context = {} ) {
+export function determineSeverity( category ) {
 	// Critical errors that should stop the workflow
 	if (
 		category === ERROR_CATEGORIES.PERMISSION ||
@@ -184,7 +183,7 @@ export function determineSeverity( category, context = {} ) {
 /**
  * Check if an error is retryable.
  *
- * @param {Error} error Error to check.
+ * @param {Error}  error  Error to check.
  * @param {Object} config Retry configuration.
  * @return {boolean} True if error is retryable.
  */
@@ -213,10 +212,10 @@ export function calculateRetryDelay( attemptNumber, config = {} ) {
 /**
  * Execute a function with retry logic.
  *
- * @param {Function} fn              Function to execute.
- * @param {Object}   options         Retry options.
- * @param {number}   options.maxRetries Maximum number of retries.
- * @param {Function} options.onRetry   Callback called before each retry.
+ * @param {Function} fn                  Function to execute.
+ * @param {Object}   options             Retry options.
+ * @param {number}   options.maxRetries  Maximum number of retries.
+ * @param {Function} options.onRetry     Callback called before each retry.
  * @param {Function} options.shouldRetry Function to determine if error is retryable.
  * @return {Promise<any>} Result of function execution.
  */
@@ -250,7 +249,9 @@ export async function withRetry( fn, options = {} ) {
 			// Calculate delay and wait
 			const delay = calculateRetryDelay( attempt, config );
 			debugWarn(
-				`[ErrorHandler] Retry attempt ${ attempt + 1 }/${ maxRetries } after ${ delay }ms:`,
+				`[ErrorHandler] Retry attempt ${
+					attempt + 1
+				}/${ maxRetries } after ${ delay }ms:`,
 				error.message
 			);
 
@@ -264,7 +265,9 @@ export async function withRetry( fn, options = {} ) {
 
 	// All retries exhausted
 	debugError(
-		`[ErrorHandler] All retry attempts exhausted after ${ maxRetries + 1 } attempts`
+		`[ErrorHandler] All retry attempts exhausted after ${
+			maxRetries + 1
+		} attempts`
 	);
 	throw lastError;
 }
@@ -272,7 +275,7 @@ export async function withRetry( fn, options = {} ) {
 /**
  * Format error message for user display.
  *
- * @param {Error} error Error object.
+ * @param {Error}  error   Error object.
  * @param {Object} context Error context.
  * @return {string} Formatted error message.
  */
@@ -280,7 +283,9 @@ export function formatErrorMessage( error, context = {} ) {
 	const category = categorizeError( error );
 	const { stepId, operation } = context;
 
-	let message = error.message || __( 'An unknown error occurred', 'aether-site-exporter' );
+	let message =
+		error.message ||
+		__( 'An unknown error occurred', 'aether-site-exporter' );
 
 	// Add context information
 	if ( stepId ) {
@@ -304,34 +309,44 @@ export function formatErrorMessage( error, context = {} ) {
 	// Add category-specific guidance
 	switch ( category ) {
 		case ERROR_CATEGORIES.NETWORK:
-			message += ' ' + __(
-				'Please check your internet connection and try again.',
-				'aether-site-exporter'
-			);
+			message +=
+				' ' +
+				__(
+					'Please check your internet connection and try again.',
+					'aether-site-exporter'
+				);
 			break;
 		case ERROR_CATEGORIES.TIMEOUT:
-			message += ' ' + __(
-				'The operation took too long. Please try again.',
-				'aether-site-exporter'
-			);
+			message +=
+				' ' +
+				__(
+					'The operation took too long. Please try again.',
+					'aether-site-exporter'
+				);
 			break;
 		case ERROR_CATEGORIES.RATE_LIMIT:
-			message += ' ' + __(
-				'Too many requests. Please wait a moment and try again.',
-				'aether-site-exporter'
-			);
+			message +=
+				' ' +
+				__(
+					'Too many requests. Please wait a moment and try again.',
+					'aether-site-exporter'
+				);
 			break;
 		case ERROR_CATEGORIES.QUOTA_EXCEEDED:
-			message += ' ' + __(
-				'Storage quota exceeded. Please free up space and try again.',
-				'aether-site-exporter'
-			);
+			message +=
+				' ' +
+				__(
+					'Storage quota exceeded. Please free up space and try again.',
+					'aether-site-exporter'
+				);
 			break;
 		case ERROR_CATEGORIES.PERMISSION:
-			message += ' ' + __(
-				'Permission denied. Please check your access rights.',
-				'aether-site-exporter'
-			);
+			message +=
+				' ' +
+				__(
+					'Permission denied. Please check your access rights.',
+					'aether-site-exporter'
+				);
 			break;
 	}
 
@@ -351,7 +366,7 @@ export function createErrorHandler( config = {} ) {
 		/**
 		 * Execute function with retry logic.
 		 *
-		 * @param {Function} fn Function to execute.
+		 * @param {Function} fn      Function to execute.
 		 * @param {Object}   options Additional retry options.
 		 * @return {Promise<any>} Result.
 		 */
@@ -382,7 +397,7 @@ export function createErrorHandler( config = {} ) {
 		/**
 		 * Format error message.
 		 *
-		 * @param {Error} error Error to format.
+		 * @param {Error}  error   Error to format.
 		 * @param {Object} context Error context.
 		 * @return {string} Formatted message.
 		 */
@@ -396,4 +411,3 @@ export function createErrorHandler( config = {} ) {
  * Default error handler instance.
  */
 export const errorHandler = createErrorHandler();
-

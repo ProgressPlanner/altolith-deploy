@@ -9,15 +9,48 @@
  */
 
 import { debug, debugWarn } from '../../utils/debug';
+import IndexedDBStore, { isIndexedDBAvailable } from '../../utils/indexedDB';
 
-const DB_NAME = 'aether-publish-state';
-const DB_VERSION = 1;
-const STORE_NAME = 'workflowState';
+const DB_CONFIG = {
+	dbName: 'aether-publish-state',
+	version: 1,
+	stores: {
+		workflowState: {
+			keyPath: 'stateKey',
+			indexes: [
+				{ name: 'workflowId', keyPath: 'workflowId', unique: false },
+			],
+		},
+	},
+};
+
+// Initialize store instance
+let storeInstance = null;
+
+/**
+ * Get or create IndexedDB store instance.
+ *
+ * @return {IndexedDBStore|null} Store instance or null if unavailable.
+ */
+function getStore() {
+	if ( ! isIndexedDBAvailable() ) {
+		debugWarn(
+			'[StateManager] IndexedDB not available, state will not persist'
+		);
+		return null;
+	}
+
+	if ( ! storeInstance ) {
+		storeInstance = new IndexedDBStore( 'workflowState', DB_CONFIG );
+	}
+
+	return storeInstance;
+}
 
 /**
  * Generate a state key from workflow ID and provider instance.
  *
- * @param {string} workflowId      Workflow identifier.
+ * @param {string} workflowId       Workflow identifier.
  * @param {string} providerInstance Provider instance ID (optional).
  * @return {string} State key.
  */
@@ -29,68 +62,31 @@ function generateStateKey( workflowId, providerInstance = null ) {
 }
 
 /**
- * Open IndexedDB database for state management.
- *
- * @return {Promise<IDBDatabase>} Database instance.
- */
-function openDatabase() {
-	return new Promise( ( resolve, reject ) => {
-		const request = indexedDB.open( DB_NAME, DB_VERSION );
-
-		request.onerror = () => {
-			reject( new Error( 'Failed to open state database' ) );
-		};
-
-		request.onsuccess = () => {
-			resolve( request.result );
-		};
-
-		request.onupgradeneeded = ( event ) => {
-			const db = event.target.result;
-
-			// Create object store if it doesn't exist
-			if ( ! db.objectStoreNames.contains( STORE_NAME ) ) {
-				const store = db.createObjectStore( STORE_NAME, {
-					keyPath: 'stateKey',
-				} );
-
-				// Create index for workflow ID lookups
-				store.createIndex( 'workflowId', 'workflowId', { unique: false } );
-			}
-		};
-	} );
-}
-
-/**
  * Save workflow state to IndexedDB.
  *
- * @param {string} workflowId      Workflow identifier.
- * @param {Object} state           State object to save.
+ * @param {string} workflowId       Workflow identifier.
+ * @param {Object} state            State object to save.
  * @param {string} providerInstance Provider instance ID (optional).
  * @return {Promise<void>}
  */
 async function saveState( workflowId, state, providerInstance = null ) {
+	const store = getStore();
+	if ( ! store ) {
+		return; // Silently fail if IndexedDB unavailable
+	}
+
+	const stateKey = generateStateKey( workflowId, providerInstance );
+
+	const stateData = {
+		stateKey,
+		workflowId,
+		providerInstance: providerInstance || null,
+		state,
+		timestamp: Date.now(),
+	};
+
 	try {
-		const db = await openDatabase();
-		const transaction = db.transaction( [ STORE_NAME ], 'readwrite' );
-		const store = transaction.objectStore( STORE_NAME );
-		const stateKey = generateStateKey( workflowId, providerInstance );
-
-		const stateData = {
-			stateKey,
-			workflowId,
-			providerInstance: providerInstance || null,
-			state,
-			timestamp: Date.now(),
-		};
-
-		await new Promise( ( resolve, reject ) => {
-			const request = store.put( stateData );
-
-			request.onsuccess = () => resolve();
-			request.onerror = () => reject( request.error );
-		} );
-
+		await store.set( stateKey, stateData );
 		debug( `[StateManager] Saved state for ${ stateKey }` );
 	} catch ( error ) {
 		debugWarn( '[StateManager] Failed to save state:', error );
@@ -101,32 +97,25 @@ async function saveState( workflowId, state, providerInstance = null ) {
 /**
  * Load workflow state from IndexedDB.
  *
- * @param {string} workflowId      Workflow identifier.
+ * @param {string} workflowId       Workflow identifier.
  * @param {string} providerInstance Provider instance ID (optional).
  * @return {Promise<Object|null>} State object or null if not found.
  */
 async function loadState( workflowId, providerInstance = null ) {
+	const store = getStore();
+	if ( ! store ) {
+		return null;
+	}
+
+	const stateKey = generateStateKey( workflowId, providerInstance );
+
 	try {
-		const db = await openDatabase();
-		const transaction = db.transaction( [ STORE_NAME ], 'readonly' );
-		const store = transaction.objectStore( STORE_NAME );
-		const stateKey = generateStateKey( workflowId, providerInstance );
-
-		return new Promise( ( resolve, reject ) => {
-			const request = store.get( stateKey );
-
-			request.onsuccess = () => {
-				const result = request.result;
-				if ( result && result.state ) {
-					debug( `[StateManager] Loaded state for ${ stateKey }` );
-					resolve( result.state );
-				} else {
-					resolve( null );
-				}
-			};
-
-			request.onerror = () => reject( request.error );
-		} );
+		const result = await store.get( stateKey );
+		if ( result && result.state ) {
+			debug( `[StateManager] Loaded state for ${ stateKey }` );
+			return result.state;
+		}
+		return null;
 	} catch ( error ) {
 		debugWarn( '[StateManager] Failed to load state:', error );
 		return null;
@@ -136,47 +125,40 @@ async function loadState( workflowId, providerInstance = null ) {
 /**
  * Delete workflow state from IndexedDB.
  *
- * @param {string} workflowId      Workflow identifier.
+ * @param {string} workflowId       Workflow identifier.
  * @param {string} providerInstance Provider instance ID (optional, null deletes all for workflow).
  * @return {Promise<void>}
  */
 async function deleteState( workflowId, providerInstance = null ) {
-	try {
-		const db = await openDatabase();
-		const transaction = db.transaction( [ STORE_NAME ], 'readwrite' );
-		const store = transaction.objectStore( STORE_NAME );
-		const index = store.index( 'workflowId' );
+	const store = getStore();
+	if ( ! store ) {
+		return;
+	}
 
+	try {
 		if ( providerInstance ) {
 			// Delete specific provider instance state
 			const stateKey = generateStateKey( workflowId, providerInstance );
-			await new Promise( ( resolve, reject ) => {
-				const request = store.delete( stateKey );
-
-				request.onsuccess = () => resolve();
-				request.onerror = () => reject( request.error );
-			} );
+			await store.delete( stateKey );
 		} else {
 			// Delete all states for this workflow
-			const range = IDBKeyRange.only( workflowId );
-			await new Promise( ( resolve, reject ) => {
-				const request = index.openCursor( range );
+			// Get all states for this workflow using index
+			const allStates = await store.getByIndex(
+				'workflowId',
+				workflowId
+			);
 
-				request.onsuccess = ( event ) => {
-					const cursor = event.target.result;
-					if ( cursor ) {
-						cursor.delete();
-						cursor.continue();
-					} else {
-						resolve();
-					}
-				};
-
-				request.onerror = () => reject( request.error );
-			} );
+			// Delete each state
+			for ( const stateItem of allStates ) {
+				await store.delete( stateItem.stateKey );
+			}
 		}
 
-		debug( `[StateManager] Deleted state for ${ workflowId }${ providerInstance ? `::${ providerInstance }` : '' }` );
+		debug(
+			`[StateManager] Deleted state for ${ workflowId }${
+				providerInstance ? `::${ providerInstance }` : ''
+			}`
+		);
 	} catch ( error ) {
 		debugWarn( '[StateManager] Failed to delete state:', error );
 		// Don't throw - cleanup is non-critical
@@ -190,33 +172,18 @@ async function deleteState( workflowId, providerInstance = null ) {
  * @return {Promise<Array<Object>>} Array of state objects.
  */
 async function listStates( workflowId ) {
+	const store = getStore();
+	if ( ! store ) {
+		return [];
+	}
+
 	try {
-		const db = await openDatabase();
-		const transaction = db.transaction( [ STORE_NAME ], 'readonly' );
-		const store = transaction.objectStore( STORE_NAME );
-		const index = store.index( 'workflowId' );
-		const range = IDBKeyRange.only( workflowId );
-
-		return new Promise( ( resolve, reject ) => {
-			const request = index.openCursor( range );
-			const states = [];
-
-			request.onsuccess = ( event ) => {
-				const cursor = event.target.result;
-				if ( cursor ) {
-					states.push( {
-						stateKey: cursor.value.stateKey,
-						providerInstance: cursor.value.providerInstance,
-						timestamp: cursor.value.timestamp,
-					} );
-					cursor.continue();
-				} else {
-					resolve( states );
-				}
-			};
-
-			request.onerror = () => reject( request.error );
-		} );
+		const allStates = await store.getByIndex( 'workflowId', workflowId );
+		return allStates.map( ( stateItem ) => ( {
+			stateKey: stateItem.stateKey,
+			providerInstance: stateItem.providerInstance,
+			timestamp: stateItem.timestamp,
+		} ) );
 	} catch ( error ) {
 		debugWarn( '[StateManager] Failed to list states:', error );
 		return [];
@@ -233,7 +200,7 @@ export function createStateManager( workflowId ) {
 	/**
 	 * Save workflow state.
 	 *
-	 * @param {Object} state           State object to save.
+	 * @param {Object} state            State object to save.
 	 * @param {string} providerInstance Provider instance ID (optional).
 	 * @return {Promise<void>}
 	 */
@@ -283,9 +250,9 @@ export function createStateManager( workflowId ) {
  *
  * This is a helper function that saves the relevant parts of the execution context.
  *
- * @param {Object} stateManager      State manager instance.
- * @param {Object} executionContext  Execution context to save.
- * @param {string} providerInstance  Provider instance ID (optional).
+ * @param {Object} stateManager     State manager instance.
+ * @param {Object} executionContext Execution context to save.
+ * @param {string} providerInstance Provider instance ID (optional).
  * @return {Promise<void>}
  */
 export async function saveExecutionContext(
@@ -305,8 +272,7 @@ export async function saveExecutionContext(
 			staticSiteProviders: executionContext.staticSiteProviders || [],
 			blueprintBundleProviders:
 				executionContext.blueprintBundleProviders || [],
-			edgeFunctionProviders:
-				executionContext.edgeFunctionProviders || [],
+			edgeFunctionProviders: executionContext.edgeFunctionProviders || [],
 		},
 		// Save configuration
 		siteUrl: executionContext.siteUrl,
@@ -335,9 +301,9 @@ export async function saveExecutionContext(
 /**
  * Restore execution context from saved state.
  *
- * @param {Object} stateManager      State manager instance.
- * @param {Object} baseContext       Base context to merge with.
- * @param {string} providerInstance  Provider instance ID (optional).
+ * @param {Object} stateManager     State manager instance.
+ * @param {Object} baseContext      Base context to merge with.
+ * @param {string} providerInstance Provider instance ID (optional).
  * @return {Promise<Object>} Restored execution context.
  */
 export async function restoreExecutionContext(
@@ -389,4 +355,3 @@ export async function restoreExecutionContext(
 
 	return restoredContext;
 }
-

@@ -7,7 +7,6 @@
  * @package
  */
 
-import { __, sprintf } from '@wordpress/i18n';
 import { doAction, applyFilters } from '@wordpress/hooks';
 import { buildParallelPlan, validateDependencies } from './DependencyResolver';
 import {
@@ -22,6 +21,7 @@ import {
 	saveExecutionContext,
 	restoreExecutionContext,
 } from '../utils/stateManager';
+import { debug, debugWarn } from '../../utils/debug';
 
 /**
  * Execute a workflow with the given steps.
