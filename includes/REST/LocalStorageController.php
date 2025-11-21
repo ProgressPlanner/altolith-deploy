@@ -409,8 +409,8 @@ class LocalStorageController
 						$fullPath
 					);
 					$errorDetails['system_error'] = $lastError['message'];
-					$errorDetails['system_file'] = $lastError['file'] ?? null;
-					$errorDetails['system_line'] = $lastError['line'] ?? null;
+					$errorDetails['system_file'] = $lastError['file'];
+					$errorDetails['system_line'] = $lastError['line'];
 				} else {
 					// Fallback: include paths in error message
 					$errorMessage = \sprintf(
