@@ -189,23 +189,25 @@ testGetAllJobsLimitsSqlInjection()        // LIMIT parameter sanitized
 
 ---
 
-### 3.2 ProviderRegistry Tests
-**File**: `tests/Unit/Providers/ProviderRegistryTest.php`
+### 3.2 Provider System Tests
+**Note**: ProviderRegistry is now JavaScript-only. PHP tests focus on:
+- ProviderConfigController (config CRUD operations)
+- Instance ID validation
+- Config encryption/decryption
 
-**What We're Testing**: Provider system correctly discovers, registers, and retrieves providers and instances
+**What We're Testing**: Provider configuration management, instance ID validation, and encryption
 
 **Critical Test Cases**:
 ```php
-// Registry basics:
-testSingletonInstanceConsistent()         // Same instance always returned
-testProvidersDiscoveredViaFilter()        // 'aether_providers' filter works
-testProvidersRegisteredCorrectly()        // Can register and retrieve
+// Config management:
+testSaveAndRetrieveConfig()              // Config CRUD works
+testCredentialsEncryptedInStorage()      // Sensitive fields encrypted
+testCredentialsDecryptedOnRetrieval()   // Decryption works
 
-// Instance management:
-testInstanceIdParsedCorrectly()           // "type:uuid" format parsed
-testInvalidInstanceIdRejected()           // Malformed IDs rejected
-testUuidGenerationUnique()                // No collisions in UUIDs
-testGetProviderForInstanceWorks()         // Can find provider from instance ID
+// Instance ID validation:
+testInstanceIdValidatedCorrectly()       // Valid format accepted
+testInvalidInstanceIdRejected()          // Malformed IDs rejected
+testInstanceIdParsedCorrectly()          // "type:uuid" format parsed
 
 // Filtering:
 testGetByDeploymentTypeFilters()          // Returns only matching providers

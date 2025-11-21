@@ -390,7 +390,7 @@ The PHP provider API remains stable. However, you can now leverage new features:
 If your provider depends on another provider being enabled, declare dependencies:
 
 ```php
-class MyProvider extends BaseProvider {
+class MyProvider extends AbstractProvider {
     public function getDependencies(): array {
         return ['local-filesystem']; // This provider requires local-filesystem
     }
@@ -403,23 +403,23 @@ class MyProvider extends BaseProvider {
 
 If your provider has fields that only apply to certain deployment types:
 
-```php
-public function getSettings(): array {
+```javascript
+getProviderSpecificConfigFields() {
     return [
-        [
-            'name'           => 'api_key',
-            'type'           => 'text',
-            'label'          => 'API Key',
-            'required'       => true,
-            'deploymentType' => 'static_site', // Only show for static_site
-        ],
-        [
-            'name'           => 'bundle_path',
-            'type'           => 'text',
-            'label'          => 'Bundle Path',
-            'required'       => true,
-            'deploymentType' => 'blueprint_bundle', // Only show for blueprint_bundle
-        ],
+        {
+            id: 'api_key',
+            type: 'text',
+            label: 'API Key',
+            required: true,
+            deploymentType: 'static_site', // Only show for static_site
+        },
+        {
+            id: 'bundle_path',
+            type: 'text',
+            label: 'Bundle Path',
+            required: true,
+            deploymentType: 'blueprint_bundle', // Only show for blueprint_bundle
+        },
     ];
 }
 ```
