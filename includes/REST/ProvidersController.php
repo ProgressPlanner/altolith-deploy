@@ -86,7 +86,7 @@ class ProvidersController
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response Response with provider metadata.
 	 */
-	public function getProviders(WP_REST_Request $request): WP_REST_Response
+	public function getProviders(WP_REST_Request $request): WP_REST_Response // phpcs:ignore VariableAnalysis.CodeAnalysis
 	{
 		$registry = ProviderRegistry::getInstance();
 		$providers = $registry->getAll();

@@ -80,12 +80,6 @@ class HTTPClient
 	{
 		// Check for WP_Error.
 		if (\is_wp_error($response)) {
-			$errorMessage = \sprintf(
-				'HTTP request failed for %s: %s',
-				$url,
-				$response->get_error_message()
-			);
-
 			return [
 				'success'    => false,
 				'error'      => $response->get_error_message(),
@@ -98,13 +92,6 @@ class HTTPClient
 
 		// Check if status code is allowed.
 		if (! \in_array($statusCode, $allowedStatusCodes, true)) {
-			$errorMessage = \sprintf(
-				'HTTP request to %s returned unexpected status %d (allowed: %s)',
-				$url,
-				$statusCode,
-				\implode(', ', $allowedStatusCodes)
-			);
-
 			$errorResponse = [
 				'success'     => false,
 				'error'       => \sprintf('Unexpected status code: %d', $statusCode),

@@ -80,18 +80,9 @@ class SettingsPage extends BaseAdminPage
 	 */
 	protected function render(): void
 	{
-		?>
-		<div class="wrap aether-admin-settings-wrap">
-			<div id="aether-admin-settings">
-				<!-- React will mount here -->
-				<noscript>
-					<div class="notice notice-error">
-						<p><?php \esc_html_e('JavaScript is required for the Aether settings page to function.', 'aether-site-exporter'); ?></p>
-					</div>
-				</noscript>
-			</div>
-		</div>
-		<?php
+		$viewPath = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'views/admin/pages/settings.php';
+		if (\file_exists($viewPath)) {
+			include $viewPath;
+		}
 	}
 }
-

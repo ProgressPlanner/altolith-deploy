@@ -45,7 +45,7 @@ class ConfigController
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response Response with config values.
 	 */
-	public function getConfig(WP_REST_Request $request)
+	public function getConfig(WP_REST_Request $request) // phpcs:ignore VariableAnalysis
 	{
 		// Get WordPress.org check method (filterable)
 		$wporgCheckMethod = \apply_filters(

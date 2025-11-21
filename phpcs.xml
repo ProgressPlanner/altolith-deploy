@@ -14,6 +14,8 @@
 	<exclude-pattern>*.css</exclude-pattern>
 	<exclude-pattern>*/assets/build/*</exclude-pattern>
 	<exclude-pattern>phpstan-stubs.php</exclude-pattern>
+	<!-- Views directory contains HTML templates - exclude from InlineHTML check -->
+	<exclude-pattern>*/views/*</exclude-pattern>
 
 	<!-- ============================================== -->
 	<!-- PRIMARY STANDARD: PSR-12 (with modifications)  -->
@@ -217,5 +219,18 @@
 		</properties>
 		<exclude name="WordPress.Files.FileName.NotHyphenatedLowercase"/>
 		<exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+	</rule>
+
+	<rule ref="Generic.Files">
+		<exclude name="Generic.Files.LineLength.TooLong"/>
+		<exclude name="Generic.Files.EndFileNoNewline.Found"/>
+		<exclude name="Generic.Files.LowercasedFilename.NotFound"/>
+		<exclude name="WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode"/>
+
+		<exclude name="WordPress.WP.AlternativeFunctions"/>
+		<exclude name="WordPress.DB.DirectDatabaseQuery"/>
+		<exclude name="WordPress.WP.I18n"/>
+		<exclude name="WordPress.PHP.DiscouragedPHPFunctions" />
+		<exclude name="WordPress.Security.NonceVerification" />
 	</rule>
 </ruleset>

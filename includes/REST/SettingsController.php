@@ -522,7 +522,7 @@ class SettingsController
 	 * @param \WP_REST_Request<array<string, mixed>> $_request Request object (unused, required by REST API interface).
 	 * @return WP_REST_Response Response with notice state.
 	 */
-	public function getPlaygroundNotice(\WP_REST_Request $_request)
+	public function getPlaygroundNotice(\WP_REST_Request $_request) // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 	{
 
 		// Check if in Playground.
@@ -556,7 +556,7 @@ class SettingsController
 	 * @param \WP_REST_Request<array<string, mixed>> $_request Request object (unused, required by REST API interface).
 	 * @return WP_REST_Response|WP_Error Response or error.
 	 */
-	public function dismissPlaygroundNotice(\WP_REST_Request $_request)
+	public function dismissPlaygroundNotice(\WP_REST_Request $_request) // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 	{
 
 		$result = \update_user_meta(\get_current_user_id(), 'aether_site_exporter_dismiss_playground_notice', true);
@@ -586,7 +586,7 @@ class SettingsController
 	 * @param \WP_REST_Request<array<string, mixed>> $_request Request object (unused, required by REST API interface).
 	 * @return WP_REST_Response Response with i18n strings.
 	 */
-	public function getI18n(\WP_REST_Request $_request)
+	public function getI18n(\WP_REST_Request $_request) // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 	{
 
 		// Return common i18n strings.

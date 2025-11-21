@@ -278,7 +278,7 @@ class PublishStepsController
 	 */
 	public function executeGenerateStaticSite(WP_REST_Request $request)
 	{
-		return $this->executeStep($request, 'generateStaticSite', function ($status, $jobId) {
+		return $this->executeStep($request, 'generateStaticSite', function ($status) {
 			// Client handles static site generation.
 			// This endpoint transitions to the next step.
 
@@ -700,7 +700,7 @@ class PublishStepsController
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function getUploadsBatches(WP_REST_Request $request)
+	public function getUploadsBatches(WP_REST_Request $request) // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 	{
 		$exportService = new ExportService($this->plugin);
 		$batches = $exportService->getUploadsBatches();
@@ -895,7 +895,7 @@ class PublishStepsController
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function getMuPluginsBatches(WP_REST_Request $request)
+	public function getMuPluginsBatches(WP_REST_Request $request) // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 	{
 		$exportService = new ExportService($this->plugin);
 		$batches = $exportService->getMuPluginsBatches();

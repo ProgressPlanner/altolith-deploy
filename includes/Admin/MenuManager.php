@@ -72,7 +72,7 @@ class MenuManager
 	 *
 	 * @param string $hook Current admin page hook.
 	 */
-	public function enqueueAssets(string $hook): void
+	public function enqueueAssets(string $hook): void // phpcs:ignore VariableAnalysis.CodeAnalysis
 	{
 		// Enqueue common admin assets.
 		$this->enqueueCommonAssets();

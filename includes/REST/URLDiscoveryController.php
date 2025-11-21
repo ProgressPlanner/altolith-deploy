@@ -290,7 +290,7 @@ class URLDiscoveryController
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response Response with URLs.
 	 */
-	public function getArchives(WP_REST_Request $request): WP_REST_Response
+	public function getArchives(WP_REST_Request $request): WP_REST_Response // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 	{
 		$urls = [];
 

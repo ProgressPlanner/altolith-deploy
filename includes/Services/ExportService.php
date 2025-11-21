@@ -1747,10 +1747,9 @@ class ExportService
 	 *
 	 * @param int $filesProcessed Files processed so far.
 	 * @param int $totalFiles Total files expected.
-	 * @param array<string, mixed> $phases Phase status information.
 	 * @return int Overall progress (0-100).
 	 */
-	private function calculateOverallProgress(int $filesProcessed, int $totalFiles, array $phases): int
+	private function calculateOverallProgress(int $filesProcessed, int $totalFiles): int
 	{
 		if ($totalFiles <= 0) {
 			return 100;

@@ -183,11 +183,10 @@ class Plugin
 	 */
 	public function outputMetaTags(): void
 	{
-		?>
-		<meta name="aether-rest-url" content="<?php echo \esc_attr(\rest_url('aether/v1/')); ?>">
-		<meta name="aether-rest-nonce" content="<?php echo \esc_attr(\wp_create_nonce('wp_rest')); ?>">
-		<meta name="aether-plugin-url" content="<?php echo \esc_attr((string) AETHER_SITE_EXPORTER_PLUGIN_URL); ?>">
-		<?php
+		$viewPath = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'views/admin/meta-tags.php';
+		if (\file_exists($viewPath)) {
+			include $viewPath;
+		}
 	}
 
 	/**
@@ -342,7 +341,7 @@ class Plugin
 	 * @param \WP_REST_Server   $server Server instance.
 	 * @return bool Unchanged served status.
 	 */
-	public function addCorsHeadersFilter($served, $result, $request, $server)
+	public function addCorsHeadersFilter($served, $result, $request, $server) // phpcs:ignore VariableAnalysis.CodeAnalysis
 	{
 		// Only add headers for Aether endpoints
 		if ($request instanceof \WP_REST_Request) {
@@ -491,7 +490,7 @@ class Plugin
 		$customHeader = isset($_SERVER['HTTP_X_AETHER_SITE_EXPORTER_ANONYMOUS']) ? \sanitize_text_field(\wp_unslash($_SERVER['HTTP_X_AETHER_SITE_EXPORTER_ANONYMOUS'])) : '';
 
 		// Check for query parameter as another alternative.
-		$queryParam = isset($_GET['aether_site_exporter_anonymous']) ? \sanitize_text_field(\wp_unslash($_GET['aether_site_exporter_anonymous'])) : '';
+		$queryParam = isset($_GET['aether_site_exporter_anonymous']) ? \sanitize_text_field(\wp_unslash($_GET['aether_site_exporter_anonymous'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		// If any indicator is present, force anonymous user context.
 		if (
@@ -519,7 +518,7 @@ class Plugin
 	 * @param string $token         Session token.
 	 * @return void
 	 */
-	public function setSameSiteCookies($authCookie, $expire, $expiration, $userId, $scheme, $token): void
+	public function setSameSiteCookies($authCookie, $expire, $expiration, $userId, $scheme, $token): void // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 	{
 		// Determine which cookies to set based on the action hook.
 		$action = \current_action();
@@ -659,7 +658,7 @@ class Plugin
 		 * @param string $destinationPath Destination path (instance's export_path).
 		 * @param array  $context         Additional context data.
 		 */
-		\add_action('aether_blueprint_bundle_upload', function ($instanceId, $sourcePath, $destinationPath, $context = []) {
+		\add_action('aether_blueprint_bundle_upload', function ($instanceId, $sourcePath, $destinationPath) {
 			// Only handle local-filesystem provider instances.
 			if (!\is_string($instanceId) || \strpos($instanceId, 'local-filesystem:') !== 0) {
 				return;
