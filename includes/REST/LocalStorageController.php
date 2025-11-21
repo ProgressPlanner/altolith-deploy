@@ -199,11 +199,23 @@ class LocalStorageController
 
 		// Also validate MIME type if file is actually uploaded (not just content)
 		if (isset($file['tmp_name']) && \file_exists($file['tmp_name'])) {
-			$finfo = \finfo_open(FILEINFO_MIME_TYPE);
-			if (false !== $finfo) {
-				$mimeType = \finfo_file($finfo, $file['tmp_name']);
-				\finfo_close($finfo);
+			// First, try to get MIME type from extension (more reliable)
+			$expectedMimeType = $this->getMimeTypeForExtension($fileExtension);
+			$detectedMimeType = null;
 
+			// Fall back to MIME detection if we don't have a mapping
+			if ($expectedMimeType === null) {
+				$finfo = \finfo_open(FILEINFO_MIME_TYPE);
+				if (false !== $finfo) {
+					$detectedMimeType = \finfo_file($finfo, $file['tmp_name']);
+					\finfo_close($finfo);
+				}
+			}
+
+			// Use extension-based MIME type if available, otherwise use detected
+			$mimeType = $expectedMimeType ?? $detectedMimeType;
+
+			if ($mimeType !== null) {
 				$allowedMimeTypes = [
 					'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
 					'text/css', 'application/javascript', 'text/javascript', 'application/json',
@@ -212,11 +224,27 @@ class LocalStorageController
 					'application/pdf', 'text/plain', 'text/markdown',
 					'application/zip', 'application/x-tar', 'application/gzip', 'application/x-gzip',
 					'text/html', 'application/xhtml+xml', 'application/xml', 'text/xml',
+					'application/vnd.ms-fontobject', // EOT fonts
 					'application/octet-stream',  // Generic binary - allow for files without extension
 					'inode/x-empty',              // Empty files
 				];
 
-				if (!\in_array($mimeType, $allowedMimeTypes, true)) {
+				$mimeTypeAllowed = \in_array($mimeType, $allowedMimeTypes, true);
+
+				// If MIME type was detected (not from extension) and extension is allowed,
+				// allow common misidentifications for known extensions
+				if (!$mimeTypeAllowed && $expectedMimeType === null && $detectedMimeType !== null && !empty($fileExtension)) {
+					// For JavaScript files, allow common misidentifications
+					if ($fileExtension === 'js' && \in_array($detectedMimeType, ['text/x-java', 'text/plain', 'application/x-javascript'], true)) {
+						$mimeTypeAllowed = true;
+					}
+					// For other text-based files, allow text/plain as fallback
+					elseif (\in_array($fileExtension, ['css', 'html', 'htm', 'xml', 'txt', 'md'], true) && $detectedMimeType === 'text/plain') {
+						$mimeTypeAllowed = true;
+					}
+				}
+
+				if (!$mimeTypeAllowed) {
 					return new WP_Error(
 						'mime_type_not_allowed',
 						\sprintf(
@@ -339,51 +367,39 @@ class LocalStorageController
 		// CRITICAL FIX: Check if destination path exists as a directory
 		// move_uploaded_file() fails if destination is a directory instead of a file
 		if (\file_exists($fullPath) && \is_dir($fullPath)) {
-			// Try to remove empty directory, otherwise return error
-			if ($this->isDirectoryEmpty($fullPath)) {
-				if (!\rmdir($fullPath)) {
-					if (\defined('WP_DEBUG') && WP_DEBUG) {
-						\error_log(\sprintf(
-							'Aether: Failed to remove empty directory at destination path: %s',
-							$fullPath
-						));
-					}
-					return new WP_Error(
-						'destination_is_directory',
-						/* translators: %s: File path */
-						\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $fullPath),
-						[
-							'status' => 500,
-							'destination' => $fullPath,
-							'source' => $file['tmp_name'] ?? 'unknown',
-						]
-					);
-				}
-				// Directory removed, continue with file upload
+			// Recursively remove the directory and its contents
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Removing directory at destination path to allow file upload: %s',
+					$fullPath
+				));
+			}
+
+			if (!$this->removeDirectoryRecursively($fullPath)) {
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
 					\error_log(\sprintf(
-						'Aether: Removed empty directory at destination path: %s',
-						$fullPath
-					));
-				}
-			} else {
-				// Directory is not empty, cannot proceed
-				if (\defined('WP_DEBUG') && WP_DEBUG) {
-					\error_log(\sprintf(
-						'Aether: Destination path exists as non-empty directory: %s',
+						'Aether: Failed to remove directory at destination path: %s',
 						$fullPath
 					));
 				}
 				return new WP_Error(
 					'destination_is_directory',
 					/* translators: %s: File path */
-					\sprintf(\__('Destination path exists as directory: %s', 'aether-site-exporter'), $fullPath),
+					\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $fullPath),
 					[
 						'status' => 500,
 						'destination' => $fullPath,
 						'source' => $file['tmp_name'] ?? 'unknown',
 					]
 				);
+			}
+
+			// Directory removed, continue with file upload
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Successfully removed directory at destination path: %s',
+					$fullPath
+				));
 			}
 		}
 
@@ -842,50 +858,39 @@ class LocalStorageController
 
 		// Check if destination path exists as a directory (copy() fails if destination is a directory).
 		if (\file_exists($destinationFullPath) && \is_dir($destinationFullPath)) {
-			// Try to remove empty directory, otherwise return error.
-			if ($this->isDirectoryEmpty($destinationFullPath)) {
-				if (!\rmdir($destinationFullPath)) {
-					if (\defined('WP_DEBUG') && WP_DEBUG) {
-						\error_log(\sprintf(
-							'Aether: Failed to remove empty directory at destination path: %s',
-							$destinationFullPath
-						));
-					}
-					return new WP_Error(
-						'destination_is_directory',
-						/* translators: %s: File path */
-						\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $destinationFullPath),
-						[
-							'status' => 500,
-							'destination' => $destinationFullPath,
-							'source' => $sourceFullPath,
-						]
-					);
-				}
+			// Recursively remove the directory and its contents
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Removing directory at destination path to allow file copy: %s',
+					$destinationFullPath
+				));
+			}
+
+			if (!$this->removeDirectoryRecursively($destinationFullPath)) {
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
 					\error_log(\sprintf(
-						'Aether: Removed empty directory at destination path: %s',
-						$destinationFullPath
-					));
-				}
-			} else {
-				// Directory is not empty, cannot proceed.
-				if (\defined('WP_DEBUG') && WP_DEBUG) {
-					\error_log(\sprintf(
-						'Aether: Destination path exists as non-empty directory: %s',
+						'Aether: Failed to remove directory at destination path: %s',
 						$destinationFullPath
 					));
 				}
 				return new WP_Error(
 					'destination_is_directory',
 					/* translators: %s: File path */
-					\sprintf(\__('Destination path exists as directory: %s', 'aether-site-exporter'), $destinationFullPath),
+					\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $destinationFullPath),
 					[
 						'status' => 500,
 						'destination' => $destinationFullPath,
 						'source' => $sourceFullPath,
 					]
 				);
+			}
+
+			// Directory removed, continue with file copy
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Successfully removed directory at destination path: %s',
+					$destinationFullPath
+				));
 			}
 		}
 
@@ -1060,31 +1065,118 @@ class LocalStorageController
 	}
 
 	/**
-	 * Check if a directory is empty.
+	 * Recursively remove a directory and its contents.
 	 *
-	 * @param string $dir Directory path to check.
-	 * @return bool True if directory is empty or doesn't exist, false otherwise.
+	 * Safely removes a directory and all its contents, with security checks
+	 * to ensure we only remove directories within ABSPATH.
+	 *
+	 * @param string $dir Directory path to remove.
+	 * @return bool True on success, false on failure.
 	 */
-	private function isDirectoryEmpty(string $dir): bool
+	private function removeDirectoryRecursively(string $dir): bool
 	{
 		if (!\is_dir($dir)) {
-			return true;
+			return true; // Already removed or doesn't exist
 		}
 
-		$handle = @\opendir($dir);
-		if ($handle === false) {
+		// Security: Ensure directory is within ABSPATH
+		$validation = PathValidator::validatePath($dir, ABSPATH, false);
+		if (!$validation['valid']) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Cannot remove directory outside ABSPATH: %s',
+					$dir
+				));
+			}
 			return false;
 		}
 
-		// Read directory entries, skipping . and ..
-		while (($entry = \readdir($handle)) !== false) {
-			if ($entry !== '.' && $entry !== '..') {
-				\closedir($handle);
-				return false;
+		$iterator = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+			\RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ($iterator as $file) {
+			if ($file->isDir()) {
+				if (!\rmdir($file->getPathname())) {
+					if (\defined('WP_DEBUG') && WP_DEBUG) {
+						\error_log(\sprintf(
+							'Aether: Failed to remove directory: %s',
+							$file->getPathname()
+						));
+					}
+					return false;
+				}
+			} else {
+				if (!\unlink($file->getPathname())) {
+					if (\defined('WP_DEBUG') && WP_DEBUG) {
+						\error_log(\sprintf(
+							'Aether: Failed to remove file: %s',
+							$file->getPathname()
+						));
+					}
+					return false;
+				}
 			}
 		}
 
-		\closedir($handle);
+		// Remove the directory itself
+		if (!\rmdir($dir)) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Failed to remove root directory: %s',
+					$dir
+				));
+			}
+			return false;
+		}
+
 		return true;
+	}
+
+	/**
+	 * Get MIME type for a file extension.
+	 *
+	 * Returns the correct MIME type based on file extension to avoid
+	 * misidentifications from MIME detection libraries.
+	 *
+	 * @param string $extension File extension (without leading dot).
+	 * @return string|null MIME type if known, null otherwise.
+	 */
+	private function getMimeTypeForExtension(string $extension): ?string
+	{
+		$extension = \strtolower($extension);
+		$mimeTypes = [
+			// Images
+			'jpg'  => 'image/jpeg',
+			'jpeg' => 'image/jpeg',
+			'png'  => 'image/png',
+			'gif'  => 'image/gif',
+			'webp' => 'image/webp',
+			'svg'  => 'image/svg+xml',
+			// Web assets
+			'css'  => 'text/css',
+			'js'   => 'application/javascript',
+			'json' => 'application/json',
+			// Fonts
+			'woff'  => 'font/woff',
+			'woff2' => 'font/woff2',
+			'ttf'   => 'font/ttf',
+			'eot'   => 'application/vnd.ms-fontobject',
+			// Documents
+			'pdf' => 'application/pdf',
+			'txt' => 'text/plain',
+			'md'  => 'text/markdown',
+			// Archives
+			'zip' => 'application/zip',
+			'tar' => 'application/x-tar',
+			'gz'  => 'application/gzip',
+			// Markup
+			'html' => 'text/html',
+			'htm'  => 'text/html',
+			'xml'  => 'application/xml',
+		];
+
+		return $mimeTypes[$extension] ?? null;
 	}
 }
