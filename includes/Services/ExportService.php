@@ -403,19 +403,6 @@ class ExportService
 	}
 
 	/**
-	 * Get file paths of all attachments offloaded to external storage.
-	 *
-	 * Delegates to FileBatchService for the actual implementation.
-	 *
-	 * @return array<string> Array of absolute file paths.
-	 * @phpstan-ignore-next-line
-	 */
-	private function getOffloadedFilePaths(): array
-	{
-		return $this->fileBatchService->getOffloadedFilePaths();
-	}
-
-	/**
 	 * Get the path to the SQLite database file.
 	 *
 	 * @return string|false Path to database file, or false if not found.
