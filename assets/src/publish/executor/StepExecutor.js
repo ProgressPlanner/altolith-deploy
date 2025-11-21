@@ -17,6 +17,11 @@ import {
 	ERROR_SEVERITY,
 } from '../utils/errorHandler';
 import { createProgressTracker } from '../utils/progressTracker';
+import {
+	createStateManager,
+	saveExecutionContext,
+	restoreExecutionContext,
+} from '../utils/stateManager';
 
 /**
  * Execute a workflow with the given steps.
@@ -48,28 +53,43 @@ export async function executeSteps( steps, context, options = {} ) {
 	// Get all step IDs in execution order
 	const stepIds = steps.map( ( step ) => step.id );
 
-	// Create progress tracker with equal step weights
+	// Create workflow ID
 	const workflowId = context.workflowId || `workflow-${ Date.now() }`;
+
+	// Create progress tracker with equal step weights
 	const progressTracker = createProgressTracker( workflowId, stepIds );
 
-	// Try to load previous progress (for resume capability)
+	// Create state manager
+	const stateManager = createStateManager( workflowId );
+
+	// Try to restore previous state (for resume capability)
+	let restoredState = null;
 	try {
 		const savedProgress = await progressTracker.load();
 		if ( savedProgress ) {
 			debug( '[StepExecutor] Loaded previous progress:', savedProgress );
 		}
+
+		// Try to restore execution context
+		restoredState = await restoreExecutionContext( stateManager, context );
+		if ( restoredState && restoredState.completedSteps?.length > 0 ) {
+			debug(
+				`[StepExecutor] Restored state with ${ restoredState.completedSteps.length } completed steps`
+			);
+		}
 	} catch ( error ) {
-		debugWarn( '[StepExecutor] Failed to load previous progress:', error );
+		debugWarn( '[StepExecutor] Failed to restore state:', error );
 	}
 
-	// Create execution context
+	// Create execution context (use restored state if available)
 	const executionContext = {
-		...context,
+		...( restoredState || context ),
 		workflowId,
 		progressTracker,
-		completedSteps: [],
-		skippedSteps: [],
-		state: {},
+		stateManager,
+		completedSteps: restoredState?.completedSteps || [],
+		skippedSteps: restoredState?.skippedSteps || [],
+		state: restoredState?.state || {},
 	};
 
 	// Fire workflow start action
@@ -130,6 +150,14 @@ export async function executeSteps( steps, context, options = {} ) {
 
 			// Mark as completed
 			executionContext.completedSteps.push( ...stepsToRun );
+
+			// Save state after each parallel group completes
+			try {
+				await saveExecutionContext( stateManager, executionContext );
+			} catch ( error ) {
+				debugWarn( '[StepExecutor] Failed to save state:', error );
+				// Don't throw - state saving is non-critical
+			}
 		}
 
 		// Fire workflow complete action
@@ -139,8 +167,9 @@ export async function executeSteps( steps, context, options = {} ) {
 			executionContext
 		);
 
-		// Clear progress tracker on successful completion
+		// Clear progress tracker and state on successful completion
 		await progressTracker.clear();
+		await stateManager.clear();
 
 		return executionContext.state;
 	} catch ( error ) {
