@@ -1,106 +1,75 @@
 /**
  * Provider Metadata Utilities
  *
- * Fetches and caches provider metadata from REST API.
+ * Gets provider metadata from JavaScript ProviderRegistry.
  *
  * @package
  */
 
-import apiFetch from '@wordpress/api-fetch';
-
-/**
- * Cache for provider metadata.
- *
- * @type {Object<string, any>|null}
- */
-let metadataCache = null;
+import ProviderRegistry from '../registry/ProviderRegistry';
 
 /**
  * Get all provider metadata.
  *
- * @return {Promise<Array<Object>>} Array of provider metadata objects
+ * @return {Array<Object>} Array of provider metadata objects
  */
-export async function getProviderMetadata() {
-	if ( metadataCache ) {
-		return metadataCache;
-	}
-
-	try {
-		const response = await apiFetch( {
-			path: '/aether/site-exporter/providers',
-		} );
-
-		if ( response.success && response.providers ) {
-			metadataCache = response.providers;
-			return response.providers;
-		}
-	} catch ( error ) {
-		// eslint-disable-next-line no-console
-		console.error( '[Aether] Failed to fetch provider metadata:', error );
-	}
-
-	return [];
+export function getProviderMetadata() {
+	const providers = ProviderRegistry.getAll();
+	return providers.map( ( provider ) => ( {
+		id: provider.getId(),
+		name: provider.getName(),
+		description: provider.getDescription?.() || '',
+		type: provider.getType?.() || 'generic',
+		deployment_types: provider.getSupportedDeploymentTypes?.() || [],
+	} ) );
 }
 
 /**
  * Get providers by deployment type.
  *
  * @param {string} deploymentType Deployment type
- * @return {Promise<Array<Object>>} Array of provider metadata objects
+ * @return {Array<Object>} Array of provider metadata objects
  */
-export async function getProvidersByDeploymentType( deploymentType ) {
-	try {
-		const response = await apiFetch( {
-			path: `/aether/site-exporter/providers/by-deployment-type/${ deploymentType }`,
-		} );
-
-		if ( response.success && response.providers ) {
-			return response.providers;
-		}
-	} catch ( error ) {
-		// eslint-disable-next-line no-console
-		console.error(
-			`[Aether] Failed to fetch providers for deployment type ${ deploymentType }:`,
-			error
-		);
-	}
-
-	return [];
+export function getProvidersByDeploymentType( deploymentType ) {
+	const providers = ProviderRegistry.getByDeploymentType( deploymentType );
+	return providers.map( ( provider ) => ( {
+		id: provider.getId(),
+		name: provider.getName(),
+		description: provider.getDescription?.() || '',
+		type: provider.getType?.() || 'generic',
+		deployment_types: provider.getSupportedDeploymentTypes?.() || [],
+	} ) );
 }
 
 /**
  * Get specific provider metadata.
  *
  * @param {string} providerId Provider ID
- * @return {Promise<Object|null>} Provider metadata or null if not found
+ * @return {Object|null} Provider metadata or null if not found
  */
-export async function getProviderById( providerId ) {
-	try {
-		const response = await apiFetch( {
-			path: `/aether/site-exporter/providers/${ providerId }`,
-		} );
-
-		if ( response.success && response.provider ) {
-			return response.provider;
-		}
-	} catch ( error ) {
-		// eslint-disable-next-line no-console
-		console.error(
-			`[Aether] Failed to fetch provider ${ providerId }:`,
-			error
-		);
+export function getProviderById( providerId ) {
+	const provider = ProviderRegistry.get( providerId );
+	if ( ! provider ) {
+		return null;
 	}
 
-	return null;
+	return {
+		id: provider.getId(),
+		name: provider.getName(),
+		description: provider.getDescription?.() || '',
+		type: provider.getType?.() || 'generic',
+		deployment_types: provider.getSupportedDeploymentTypes?.() || [],
+	};
 }
 
 /**
  * Clear metadata cache.
  *
- * Call this when providers are registered/unregistered.
+ * No-op since we're using the registry directly now.
+ * Kept for backward compatibility.
  *
  * @return {void}
  */
 export function clearMetadataCache() {
-	metadataCache = null;
+	// No-op: metadata comes directly from registry
 }
