@@ -709,7 +709,7 @@ aether-site-exporter/
 │   ├── Admin/            # WordPress admin integration
 │   ├── CLI/              # WP-CLI commands
 │   ├── Core/             # Core utilities (settings, etc.)
-│   ├── Providers/        # Storage provider system (isolated)
+│   ├── (Providers directory removed - providers are JavaScript-only)
 │   ├── REST/             # REST API controllers (provider-agnostic)
 │   │   └── Publish/      # Publish workflow controllers
 │   ├── Services/         # Business logic services (provider-agnostic)

@@ -2,7 +2,7 @@
  * Abstract Provider Base Class
  *
  * Provides common functionality for all providers.
- * JavaScript equivalent of includes/Providers/AbstractProvider.php
+ * Abstract base class for all providers (JavaScript-only, no PHP equivalent)
  *
  * @package
  */

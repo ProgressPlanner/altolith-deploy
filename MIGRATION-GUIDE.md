@@ -41,7 +41,7 @@ const PROVIDER_CONFIG_KEYS = [...];   // No longer available
 
 The `scripts/create-provider.js` scaffolding script has been removed.
 
-**Migration:** Use the provider examples in the codebase as templates. See `includes/Providers/LocalFilesystemProvider.php` for a complete implementation.
+**Migration:** Use the provider examples in the codebase as templates. See `assets/src/providers/local-filesystem/LocalFilesystemProvider.js` for a complete JavaScript implementation.
 
 ---
 
@@ -737,7 +737,7 @@ Use this checklist to ensure your plugin is compatible:
 ### Documentation
 
 - **Refactoring Summary:** `.refactoring-summary.md` - Complete technical breakdown
-- **Provider Examples:** `includes/Providers/LocalFilesystemProvider.php`
+- **Provider Examples:** `assets/src/providers/local-filesystem/LocalFilesystemProvider.js`
 - **Hook Examples:** `assets/src/hooks/useProviderSettings.js`
 - **REST Examples:** `includes/REST/ProvidersController.php`
 

@@ -2,7 +2,7 @@
  * Config Field Builder
  *
  * Provides a fluent interface for defining configuration fields.
- * JavaScript equivalent of includes/Providers/ConfigFieldBuilder.php
+ * Configuration field builder utility (JavaScript-only)
  *
  * Example usage:
  * ```javascript

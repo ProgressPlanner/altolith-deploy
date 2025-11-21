@@ -119,7 +119,7 @@ addFilter('aether.provider.deployment_url', 'my-plugin',
 <?php
 namespace MyPlugin\Providers;
 
-use Aether\SiteExporter\Providers\BaseProvider;
+import { AbstractProvider } from '@aether/providers/base/AbstractProvider';
 
 class MyCustomProvider extends BaseProvider {
     public function getId(): string {
