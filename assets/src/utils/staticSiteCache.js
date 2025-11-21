@@ -1,7 +1,7 @@
 /**
  * Static Site Cache - IndexedDB-based cache for static site generation
  *
- * Provides persistent browser storage for processed HTML and discovered assets
+ * Provides persistent browser storage for raw HTML and discovered assets
  * during static site generation. Eliminates memory limits by storing data in
  * IndexedDB instead of RAM.
  *
@@ -40,7 +40,7 @@ const MAX_CACHE_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 /**
  * Static Site Cache Manager
  *
- * Manages caching of processed HTML and assets during static site generation.
+ * Manages caching of raw HTML and assets during static site generation.
  */
 export class StaticSiteCache {
 	/**
@@ -85,7 +85,17 @@ export class StaticSiteCache {
 	 */
 	async get( url ) {
 		if ( ! this.isAvailable ) {
-			return this.memoryCache.get( url ) || null;
+			const cached = this.memoryCache.get( url );
+			if ( ! cached ) {
+				return null;
+			}
+			// Support legacy processedHtml for backward compatibility
+			return {
+				rawHtml: cached.rawHtml || cached.processedHtml,
+				assetUrls: cached.assetUrls,
+				url: cached.url,
+				timestamp: cached.timestamp,
+			};
 		}
 
 		try {
@@ -103,7 +113,7 @@ export class StaticSiteCache {
 
 			return cached
 				? {
-						processedHtml: cached.processedHtml,
+						rawHtml: cached.rawHtml || cached.processedHtml, // Support legacy processedHtml for backward compatibility
 						assetUrls: cached.assetUrls,
 						url: cached.url,
 						timestamp: cached.timestamp,
@@ -119,17 +129,17 @@ export class StaticSiteCache {
 	}
 
 	/**
-	 * Cache processed HTML and assets for a URL
+	 * Cache raw HTML and assets for a URL
 	 *
-	 * @param {string}        url           - The URL being cached
-	 * @param {string}        processedHtml - The processed HTML content
-	 * @param {Array<string>} assetUrls     - Array of discovered asset URLs
+	 * @param {string}        url       - The URL being cached
+	 * @param {string}        rawHtml   - The raw HTML content (before processing)
+	 * @param {Array<string>} assetUrls - Array of discovered asset URLs
 	 * @return {Promise<boolean>} True if successful
 	 */
-	async set( url, processedHtml, assetUrls ) {
+	async set( url, rawHtml, assetUrls ) {
 		if ( ! this.isAvailable ) {
 			this.memoryCache.set( url, {
-				processedHtml,
+				rawHtml,
 				assetUrls,
 				url,
 				timestamp: Date.now(),
@@ -141,7 +151,7 @@ export class StaticSiteCache {
 			return await this.store.set(
 				url,
 				{
-					processedHtml,
+					rawHtml,
 					assetUrls,
 				},
 				{
@@ -358,7 +368,7 @@ export class StaticSiteCache {
 	/**
 	 * Batch set multiple URLs
 	 *
-	 * @param {Array<Object>} items - Array of {url, processedHtml, assetUrls}
+	 * @param {Array<Object>} items - Array of {url, rawHtml, assetUrls}
 	 * @return {Promise<number>} Number of items successfully cached
 	 */
 	async batchSet( items ) {
@@ -369,7 +379,7 @@ export class StaticSiteCache {
 			items.map( async ( item ) => {
 				const success = await this.set(
 					item.url,
-					item.processedHtml,
+					item.rawHtml || item.processedHtml, // Support legacy processedHtml for backward compatibility
 					item.assetUrls
 				);
 				if ( success ) {
