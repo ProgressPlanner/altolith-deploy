@@ -19,6 +19,25 @@ module.exports = {
 	setupFilesAfterEnv: [ '<rootDir>/tests/js/setup.js' ],
 	moduleNameMapper: {
 		'\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+		// Path aliases for cleaner imports (must match webpack.config.js)
+		'^@aether/utils/(.*)$': '<rootDir>/assets/src/utils/$1',
+		'^@aether/utils$': '<rootDir>/assets/src/utils',
+		'^@aether/components/(.*)$': '<rootDir>/assets/src/components/$1',
+		'^@aether/components$': '<rootDir>/assets/src/components',
+		'^@aether/hooks/(.*)$': '<rootDir>/assets/src/hooks/$1',
+		'^@aether/hooks$': '<rootDir>/assets/src/hooks',
+		'^@aether/constants/(.*)$': '<rootDir>/assets/src/constants/$1',
+		'^@aether/constants$': '<rootDir>/assets/src/constants',
+		'^@aether/contexts/(.*)$': '<rootDir>/assets/src/contexts/$1',
+		'^@aether/contexts$': '<rootDir>/assets/src/contexts',
+		'^@aether/services/(.*)$': '<rootDir>/assets/src/services/$1',
+		'^@aether/services$': '<rootDir>/assets/src/services',
+		'^@aether/providers/(.*)$': '<rootDir>/assets/src/providers/$1',
+		'^@aether/providers$': '<rootDir>/assets/src/providers',
+		'^@aether/publish/(.*)$': '<rootDir>/assets/src/publish/$1',
+		'^@aether/publish$': '<rootDir>/assets/src/publish',
+		'^@aether/admin/(.*)$': '<rootDir>/assets/src/admin-settings/$1',
+		'^@aether/admin$': '<rootDir>/assets/src/admin-settings',
 	},
 	transform: {
 		'^.+\\.(js|jsx)$': [

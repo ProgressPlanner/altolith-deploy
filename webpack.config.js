@@ -1,5 +1,6 @@
 const defaultConfig = require( '@wordpress/scripts/config/webpack.config' );
 const { RawSource } = require( 'webpack-sources' );
+const path = require( 'path' );
 
 // Allow disabling minification via environment variable for easier debugging
 // By default, minification is disabled for easier debugging
@@ -108,6 +109,37 @@ module.exports = {
 	},
 	resolve: {
 		...defaultConfig.resolve,
+		alias: {
+			...defaultConfig.resolve?.alias,
+			// Path aliases for cleaner imports
+			'@aether/utils': path.resolve( __dirname, 'assets/src/utils' ),
+			'@aether/components': path.resolve(
+				__dirname,
+				'assets/src/components'
+			),
+			'@aether/hooks': path.resolve( __dirname, 'assets/src/hooks' ),
+			'@aether/constants': path.resolve(
+				__dirname,
+				'assets/src/constants'
+			),
+			'@aether/contexts': path.resolve(
+				__dirname,
+				'assets/src/contexts'
+			),
+			'@aether/services': path.resolve(
+				__dirname,
+				'assets/src/services'
+			),
+			'@aether/providers': path.resolve(
+				__dirname,
+				'assets/src/providers'
+			),
+			'@aether/publish': path.resolve( __dirname, 'assets/src/publish' ),
+			'@aether/admin': path.resolve(
+				__dirname,
+				'assets/src/admin-settings'
+			),
+		},
 		fallback: {
 			...defaultConfig.resolve?.fallback,
 			// html-minifier-terser uses clean-css which requires Node.js modules
