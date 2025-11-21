@@ -1,5 +1,5 @@
 /**
- * Create Site Archive Step
+ * Create Blueprint Bundle Step
  *
  * Creates wp-content.zip containing custom plugins, themes, and uploads.
  * Used for blueprint bundle generation.
@@ -11,12 +11,12 @@ import { applyFilters } from '@wordpress/hooks';
 import { formatFileSize } from '../../../utils/helpers';
 
 /**
- * Create site archive step handler.
+ * Create blueprint bundle step handler.
  *
  * @param {Object}   context                  Execution context.
  * @param {Object}   context.api              PublishAPI instance.
  * @param {Object}   context.assetManager     Asset manager instance.
- * @param {Array}    context.discoveredAssets Discovered assets from discoverAssets step.
+ * @param {Array}    context.discoveredAssets Discovered assets from discoverBlueprintBundleAssets step.
  * @param {Function} context.setStatusMessage Status message updater.
  * @return {Promise<Object>} Step result with archive info.
  */
@@ -29,14 +29,14 @@ async function handler( context ) {
 	} = context;
 
 	setStatusMessage(
-		'Creating site archive…',
+		'Creating blueprint bundle…',
 		'progress',
-		'createSiteArchive'
+		'createBlueprintBundle'
 	);
 
 	// Determine which files to include
 	const filesToInclude = applyFilters(
-		'aether.publish.step.createSiteArchive.files',
+		'aether.publish.step.createBlueprintBundle.files',
 		discoveredAssets,
 		context
 	);
@@ -49,7 +49,7 @@ async function handler( context ) {
 
 	if ( ! archiveResponse.success ) {
 		throw new Error(
-			archiveResponse.message || 'Failed to create site archive'
+			archiveResponse.message || 'Failed to create blueprint bundle'
 		);
 	}
 
@@ -62,9 +62,9 @@ async function handler( context ) {
 	}
 
 	setStatusMessage(
-		`Created site archive (${ sizeFormatted })`,
+		`Created blueprint bundle (${ sizeFormatted })`,
 		'success',
-		'createSiteArchive'
+		'createBlueprintBundle'
 	);
 
 	// Return data to merge into execution state
@@ -76,13 +76,13 @@ async function handler( context ) {
 }
 
 /**
- * Create Site Archive step definition.
+ * Create Blueprint Bundle step definition.
  */
-export const createSiteArchiveStep = {
-	id: 'createSiteArchive',
-	label: 'Create Archive',
+export const createBlueprintBundleStep = {
+	id: 'createBlueprintBundle',
+	label: 'Create Bundle',
 	description: 'Package custom plugins, themes, and uploads',
-	dependencies: [ 'discoverAssets' ],
+	dependencies: [ 'discoverBlueprintBundleAssets' ],
 	provides: [ 'zipPath', 'zipUrl', 'zipSize' ],
 	handler,
 };

@@ -1,14 +1,14 @@
 /**
- * Discover Assets Step
+ * Discover Blueprint Bundle Assets Step
  *
  * Discovers custom plugins and themes that are not from WordPress.org.
- * These assets need to be included in wp-content.zip.
+ * These assets need to be included in the blueprint bundle.
  *
  * @package
  */
 
 /**
- * Discover assets step handler.
+ * Discover blueprint bundle assets step handler.
  *
  * @param {Object}   context                  Execution context.
  * @param {Object}   context.api              PublishAPI instance.
@@ -21,7 +21,7 @@ async function handler( context ) {
 	setStatusMessage(
 		'Discovering plugins and themes…',
 		'progress',
-		'discoverAssets'
+		'discoverBlueprintBundleAssets'
 	);
 
 	// Call client-side asset discovery
@@ -66,7 +66,7 @@ async function handler( context ) {
 		) }. These will be included in the blueprint bundle.`;
 	}
 
-	setStatusMessage( message, 'success', 'discoverAssets' );
+	setStatusMessage( message, 'success', 'discoverBlueprintBundleAssets' );
 
 	// Return data to merge into execution state
 	return {
@@ -75,12 +75,12 @@ async function handler( context ) {
 }
 
 /**
- * Discover Assets step definition.
+ * Discover Blueprint Bundle Assets step definition.
  */
-export const discoverAssetsStep = {
-	id: 'discoverAssets',
+export const discoverBlueprintBundleAssetsStep = {
+	id: 'discoverBlueprintBundleAssets',
 	label: 'Discover Assets',
-	description: 'Find custom plugins and themes',
+	description: 'Find custom plugins and themes for blueprint bundle',
 	dependencies: [],
 	provides: [ 'discoveredAssets' ],
 	handler,

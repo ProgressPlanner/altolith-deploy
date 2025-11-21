@@ -8,9 +8,9 @@
  */
 
 import { applyFilters } from '@wordpress/hooks';
-import { discoverAssetsStep } from './discoverAssets';
+import { discoverBlueprintBundleAssetsStep } from './discoverBlueprintBundleAssets';
 import { getStaticSiteUrlsStep } from './getStaticSiteUrls';
-import { createSiteArchiveStep } from './createSiteArchive';
+import { createBlueprintBundleStep } from './createBlueprintBundle';
 import { generateBlueprintStep } from './generateBlueprint';
 import { uploadBlueprintBundleStep } from './uploadBlueprintBundle';
 import { uploadStaticFilesStep } from './uploadStaticFiles';
@@ -24,9 +24,9 @@ import { uploadStaticFilesStep } from './uploadStaticFiles';
  */
 export function getRegisteredSteps() {
 	const steps = [
-		discoverAssetsStep,
+		discoverBlueprintBundleAssetsStep,
 		getStaticSiteUrlsStep,
-		createSiteArchiveStep,
+		createBlueprintBundleStep,
 		generateBlueprintStep,
 		uploadBlueprintBundleStep,
 		uploadStaticFilesStep,
@@ -62,7 +62,8 @@ export function getActiveSteps( context ) {
 
 		// Skip blueprint-related steps if no blueprint providers
 		if (
-			step.id === 'createSiteArchive' ||
+			step.id === 'discoverBlueprintBundleAssets' ||
+			step.id === 'createBlueprintBundle' ||
 			step.id === 'generateBlueprint' ||
 			step.id === 'uploadBlueprintBundle'
 		) {
