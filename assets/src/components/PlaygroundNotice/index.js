@@ -8,7 +8,7 @@
 
 import { Notice } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
-import { usePlaygroundNotice } from '../../hooks/usePlaygroundNotice';
+import { usePlaygroundNotice } from '@aether/hooks/usePlaygroundNotice';
 
 export default function PlaygroundNotice() {
 	const { shouldShow, loading, dismiss } = usePlaygroundNotice();

@@ -8,7 +8,7 @@
  * @package
  */
 
-import { statusBadgeStyles } from '../../utils/styles';
+import { statusBadgeStyles } from '@aether/utils/styles';
 
 // Base badge style - extracted to module level for performance
 const baseBadgeStyle = {

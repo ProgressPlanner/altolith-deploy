@@ -8,7 +8,7 @@
  */
 
 import { Button } from '@wordpress/components';
-import { spacing } from '../../utils/styles';
+import { spacing } from '@aether/utils/styles';
 
 // Styles - extracted to module level for performance
 const actionsContainerStyle = {

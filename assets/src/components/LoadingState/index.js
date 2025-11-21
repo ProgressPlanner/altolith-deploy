@@ -6,7 +6,7 @@
 
 import { Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { spacing, colors } from '../../utils/styles';
+import { spacing, colors } from '@aether/utils/styles';
 
 export default function LoadingState( {
 	message = __( 'Loading…', 'aether-site-exporter' ),

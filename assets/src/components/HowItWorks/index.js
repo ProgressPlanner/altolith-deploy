@@ -5,7 +5,7 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { colors, spacing, commonStyles } from '../../utils/styles';
+import { colors, spacing, commonStyles } from '@aether/utils/styles';
 import SectionHeader from '../SectionHeader';
 import InfoCard, { InfoParagraph } from '../InfoCard';
 

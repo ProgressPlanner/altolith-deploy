@@ -20,7 +20,12 @@ import {
 import { __ } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import apiFetch from '@aether/utils/api';
-import { colors, spacing, fontSize, createFlexStyle } from '@aether/utils/styles';
+import {
+	colors,
+	spacing,
+	fontSize,
+	createFlexStyle,
+} from '@aether/utils/styles';
 
 /**
  * ProviderSettings Component

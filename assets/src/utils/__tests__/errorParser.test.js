@@ -12,52 +12,80 @@ import {
 describe( 'errorParser', () => {
 	describe( 'parseErrorResponse()', () => {
 		test( 'should return default message for empty response', () => {
-			expect( parseErrorResponse( '', 'Default error' ) ).toBe( 'Default error' );
-			expect( parseErrorResponse( null, 'Default error' ) ).toBe( 'Default error' );
-			expect( parseErrorResponse( undefined, 'Default error' ) ).toBe( 'Default error' );
+			expect( parseErrorResponse( '', 'Default error' ) ).toBe(
+				'Default error'
+			);
+			expect( parseErrorResponse( null, 'Default error' ) ).toBe(
+				'Default error'
+			);
+			expect( parseErrorResponse( undefined, 'Default error' ) ).toBe(
+				'Default error'
+			);
 		} );
 
 		test( 'should parse API errors array format', () => {
 			const response = JSON.stringify( {
 				errors: [ { message: 'First error message' } ],
 			} );
-			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'First error message' );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe(
+				'First error message'
+			);
 		} );
 
 		test( 'should handle empty errors array', () => {
 			const response = JSON.stringify( { errors: [] } );
-			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Default' );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe(
+				'Default'
+			);
 		} );
 
 		test( 'should handle errors array without message property', () => {
-			const response = JSON.stringify( { errors: [ { code: 'ERR_001' } ] } );
-			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Default' );
+			const response = JSON.stringify( {
+				errors: [ { code: 'ERR_001' } ],
+			} );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe(
+				'Default'
+			);
 		} );
 
 		test( 'should parse generic error string format', () => {
-			const response = JSON.stringify( { error: 'Something went wrong' } );
-			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Something went wrong' );
+			const response = JSON.stringify( {
+				error: 'Something went wrong',
+			} );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe(
+				'Something went wrong'
+			);
 		} );
 
 		test( 'should stringify error object', () => {
-			const response = JSON.stringify( { error: { code: 'ERR', details: 'info' } } );
+			const response = JSON.stringify( {
+				error: { code: 'ERR', details: 'info' },
+			} );
 			const result = parseErrorResponse( response, 'Default' );
 			expect( result ).toContain( 'ERR' );
 			expect( result ).toContain( 'details' );
 		} );
 
 		test( 'should parse message format', () => {
-			const response = JSON.stringify( { message: 'Error message here' } );
-			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Error message here' );
+			const response = JSON.stringify( {
+				message: 'Error message here',
+			} );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe(
+				'Error message here'
+			);
 		} );
 
 		test( 'should return default for unrecognized JSON format', () => {
 			const response = JSON.stringify( { unknown: 'format' } );
-			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Default' );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe(
+				'Default'
+			);
 		} );
 
 		test( 'should return plain text for invalid JSON', () => {
-			expect( parseErrorResponse( 'Plain text error', 'Default' ) ).toBe( 'Plain text error' );
+			expect( parseErrorResponse( 'Plain text error', 'Default' ) ).toBe(
+				'Plain text error'
+			);
 		} );
 
 		test( 'should prioritize errors array over other formats', () => {
@@ -66,7 +94,9 @@ describe( 'errorParser', () => {
 				error: 'Generic error',
 				message: 'Message error',
 			} );
-			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Array error' );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe(
+				'Array error'
+			);
 		} );
 
 		test( 'should prioritize error over message', () => {
@@ -74,37 +104,61 @@ describe( 'errorParser', () => {
 				error: 'Generic error',
 				message: 'Message error',
 			} );
-			expect( parseErrorResponse( response, 'Default' ) ).toBe( 'Generic error' );
+			expect( parseErrorResponse( response, 'Default' ) ).toBe(
+				'Generic error'
+			);
 		} );
 	} );
 
 	describe( 'parseErrorResponseWithStatus()', () => {
 		test( 'should add HTTP status to error message', () => {
 			const response = JSON.stringify( { message: 'Not found' } );
-			const result = parseErrorResponseWithStatus( response, 404, 'Resource fetch' );
+			const result = parseErrorResponseWithStatus(
+				response,
+				404,
+				'Resource fetch'
+			);
 			expect( result ).toBe( 'Not found (HTTP 404)' );
 		} );
 
 		test( 'should use operation name for default message', () => {
-			const result = parseErrorResponseWithStatus( '', null, 'Worker deployment' );
+			const result = parseErrorResponseWithStatus(
+				'',
+				null,
+				'Worker deployment'
+			);
 			expect( result ).toBe( 'Worker deployment failed' );
 		} );
 
 		test( 'should not duplicate status code if already in message', () => {
-			const response = JSON.stringify( { message: 'Error 500: Server error' } );
-			const result = parseErrorResponseWithStatus( response, 500, 'API call' );
+			const response = JSON.stringify( {
+				message: 'Error 500: Server error',
+			} );
+			const result = parseErrorResponseWithStatus(
+				response,
+				500,
+				'API call'
+			);
 			expect( result ).toBe( 'Error 500: Server error' );
 		} );
 
 		test( 'should handle null status code', () => {
 			const response = JSON.stringify( { error: 'Some error' } );
-			const result = parseErrorResponseWithStatus( response, null, 'Operation' );
+			const result = parseErrorResponseWithStatus(
+				response,
+				null,
+				'Operation'
+			);
 			expect( result ).toBe( 'Some error' );
 		} );
 
 		test( 'should handle zero status code', () => {
 			const response = JSON.stringify( { error: 'Network error' } );
-			const result = parseErrorResponseWithStatus( response, 0, 'Request' );
+			const result = parseErrorResponseWithStatus(
+				response,
+				0,
+				'Request'
+			);
 			expect( result ).toBe( 'Network error' );
 		} );
 	} );

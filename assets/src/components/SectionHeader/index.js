@@ -7,7 +7,7 @@
  * @package
  */
 
-import { colors, fontSize, commonStyles } from '../../utils/styles';
+import { colors, fontSize, commonStyles } from '@aether/utils/styles';
 
 // Styles - extracted to module level for performance
 const sectionHeaderStyle = {

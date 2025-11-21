@@ -13,7 +13,7 @@ import {
 	fontSize,
 	fontWeight,
 	utilityStyles,
-} from '../../utils/styles';
+} from '@aether/utils/styles';
 
 // Styles - extracted to module level for performance
 const cardStyle = {

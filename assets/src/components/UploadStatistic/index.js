@@ -15,7 +15,7 @@ import {
 	fontSize,
 	fontWeight,
 	createFlexStyle,
-} from '../../utils/styles';
+} from '@aether/utils/styles';
 
 /**
  * Upload Statistic Component

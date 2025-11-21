@@ -16,7 +16,7 @@ import {
 	commonStyles,
 	createGridStyle,
 	createFlexStyle,
-} from '../../utils/styles';
+} from '@aether/utils/styles';
 
 // Styles - extracted to module level for performance
 const sectionStyle = {

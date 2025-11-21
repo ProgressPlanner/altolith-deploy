@@ -8,7 +8,7 @@
  */
 
 import { Spinner } from '@wordpress/components';
-import { colors, spacing, fontSize } from '../../utils/styles';
+import { colors, spacing, fontSize } from '@aether/utils/styles';
 
 // Styles - extracted to module level for performance
 const containerStyle = {

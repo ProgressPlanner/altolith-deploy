@@ -13,7 +13,7 @@ import {
 	createFileContext,
 	FILE_TYPES,
 	uploadFile,
-} from '../../utils/unifiedFileUpload';
+} from '@aether/publish/utils/unifiedFileUpload';
 
 /**
  * Upload blueprint bundle step handler.

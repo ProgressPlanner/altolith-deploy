@@ -13,7 +13,7 @@ import { Modal, TextControl, SelectControl } from '@wordpress/components';
 // eslint-disable-next-line import/no-unresolved
 import { v4 as uuidv4 } from 'uuid';
 import ModalActions from '../ModalActions';
-import { spacing } from '../../utils/styles';
+import { spacing } from '@aether/utils/styles';
 
 // Styles - extracted to module level for performance
 const formStyle = {

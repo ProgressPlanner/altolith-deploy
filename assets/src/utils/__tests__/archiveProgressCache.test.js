@@ -16,7 +16,10 @@ jest.mock( '../indexedDB', () => {
 	return jest.fn().mockImplementation( () => ( {
 		get: jest.fn( ( key ) => Promise.resolve( mockStore.get( key ) ) ),
 		set: jest.fn( ( key, value, meta ) => {
-			mockStore.set( key, { ...value, timestamp: meta?.timestamp || Date.now() } );
+			mockStore.set( key, {
+				...value,
+				timestamp: meta?.timestamp || Date.now(),
+			} );
 			return Promise.resolve();
 		} ),
 		delete: jest.fn( ( key ) => {

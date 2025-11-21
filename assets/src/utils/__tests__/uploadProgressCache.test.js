@@ -24,7 +24,9 @@ jest.mock( '../indexedDB', () => {
 			mockStore.delete( key );
 			return Promise.resolve();
 		} ),
-		getAll: jest.fn( () => Promise.resolve( Array.from( mockStore.values() ) ) ),
+		getAll: jest.fn( () =>
+			Promise.resolve( Array.from( mockStore.values() ) )
+		),
 		deleteOlderThan: jest.fn( () => Promise.resolve( 0 ) ),
 		clear: jest.fn( () => {
 			mockStore.clear();
@@ -131,7 +133,9 @@ describe( 'uploadProgressCache', () => {
 
 			const updated = await cache.getSession( session.sessionId );
 			expect( updated.uploadedFilesList ).toHaveLength( 1 );
-			expect( updated.uploadedFilesList[ 0 ].storageKey ).toBe( 'file1.txt' );
+			expect( updated.uploadedFilesList[ 0 ].storageKey ).toBe(
+				'file1.txt'
+			);
 		} );
 
 		test( 'should add completed steps without duplicates', async () => {
@@ -150,7 +154,9 @@ describe( 'uploadProgressCache', () => {
 			expect( updated.completedSteps ).toContain( 'step1' );
 			expect( updated.completedSteps ).toContain( 'step2' );
 			expect( updated.completedSteps ).toContain( 'step3' );
-			expect( updated.completedSteps.filter( ( s ) => s === 'step2' ) ).toHaveLength( 1 );
+			expect(
+				updated.completedSteps.filter( ( s ) => s === 'step2' )
+			).toHaveLength( 1 );
 		} );
 
 		test( 'should return false for non-existent session', async () => {
@@ -180,11 +186,16 @@ describe( 'uploadProgressCache', () => {
 				providerId: 'test-provider',
 			} );
 
-			await cache.failSession( session.sessionId, 'Something went wrong' );
+			await cache.failSession(
+				session.sessionId,
+				'Something went wrong'
+			);
 
 			const updated = await cache.getSession( session.sessionId );
 			expect( updated.status ).toBe( SESSION_STATUS.FAILED );
-			expect( updated.workflowState.error ).toBe( 'Something went wrong' );
+			expect( updated.workflowState.error ).toBe(
+				'Something went wrong'
+			);
 		} );
 	} );
 
@@ -214,7 +225,10 @@ describe( 'uploadProgressCache', () => {
 				uploadedFiles: [ { storageKey: 'index.html' } ],
 			} );
 
-			const result = await cache.isFileUploaded( session.sessionId, 'index.html' );
+			const result = await cache.isFileUploaded(
+				session.sessionId,
+				'index.html'
+			);
 			expect( result ).toBe( true );
 		} );
 
@@ -223,12 +237,18 @@ describe( 'uploadProgressCache', () => {
 				providerId: 'test-provider',
 			} );
 
-			const result = await cache.isFileUploaded( session.sessionId, 'missing.html' );
+			const result = await cache.isFileUploaded(
+				session.sessionId,
+				'missing.html'
+			);
 			expect( result ).toBe( false );
 		} );
 
 		test( 'should return false for non-existent session', async () => {
-			const result = await cache.isFileUploaded( 'non-existent', 'file.txt' );
+			const result = await cache.isFileUploaded(
+				'non-existent',
+				'file.txt'
+			);
 			expect( result ).toBe( false );
 		} );
 	} );

@@ -29,23 +29,41 @@ describe( 'filesystemAdapter', () => {
 
 	describe( 'getObjectUrl()', () => {
 		test( 'should construct URL from baseUrl and key', () => {
-			const result = getObjectUrl( '/static', 'https://example.com', 'file.html' );
+			const result = getObjectUrl(
+				'/static',
+				'https://example.com',
+				'file.html'
+			);
 			expect( result ).toBe( 'https://example.com/file.html' );
 		} );
 
 		test( 'should remove trailing slash from baseUrl', () => {
-			const result = getObjectUrl( '/static', 'https://example.com/', 'file.html' );
+			const result = getObjectUrl(
+				'/static',
+				'https://example.com/',
+				'file.html'
+			);
 			expect( result ).toBe( 'https://example.com/file.html' );
 		} );
 
 		test( 'should remove leading slash from key', () => {
-			const result = getObjectUrl( '/static', 'https://example.com', '/file.html' );
+			const result = getObjectUrl(
+				'/static',
+				'https://example.com',
+				'/file.html'
+			);
 			expect( result ).toBe( 'https://example.com/file.html' );
 		} );
 
 		test( 'should handle nested paths', () => {
-			const result = getObjectUrl( '/static', 'https://cdn.example.com', 'assets/css/style.css' );
-			expect( result ).toBe( 'https://cdn.example.com/assets/css/style.css' );
+			const result = getObjectUrl(
+				'/static',
+				'https://cdn.example.com',
+				'assets/css/style.css'
+			);
+			expect( result ).toBe(
+				'https://cdn.example.com/assets/css/style.css'
+			);
 		} );
 	} );
 
@@ -80,11 +98,18 @@ describe( 'filesystemAdapter', () => {
 			const file = new Blob( [ 'content' ] );
 			await uploadFile( '/static', 'test.txt', file, { onProgress } );
 
-			expect( onProgress ).toHaveBeenCalledWith( file.size, file.size, 100 );
+			expect( onProgress ).toHaveBeenCalledWith(
+				file.size,
+				file.size,
+				100
+			);
 		} );
 
 		test( 'should return error on API failure', async () => {
-			apiFetch.mockResolvedValue( { success: false, error: 'Server error' } );
+			apiFetch.mockResolvedValue( {
+				success: false,
+				error: 'Server error',
+			} );
 
 			const file = new Blob( [ 'content' ] );
 			const result = await uploadFile( '/static', 'test.txt', file );
@@ -110,7 +135,10 @@ describe( 'filesystemAdapter', () => {
 		} );
 
 		test( 'should return error on failure', async () => {
-			apiFetch.mockResolvedValue( { success: false, error: 'Not found' } );
+			apiFetch.mockResolvedValue( {
+				success: false,
+				error: 'Not found',
+			} );
 
 			const result = await deleteFile( '/static', 'test.txt' );
 
@@ -135,7 +163,9 @@ describe( 'filesystemAdapter', () => {
 
 	describe( 'batchCopy()', () => {
 		test( 'should return success (not implemented)', async () => {
-			const result = await batchCopy( '/static', [ { source: 'a', dest: 'b' } ] );
+			const result = await batchCopy( '/static', [
+				{ source: 'a', dest: 'b' },
+			] );
 			expect( result.success ).toBe( true );
 		} );
 	} );
@@ -156,7 +186,10 @@ describe( 'filesystemAdapter', () => {
 		} );
 
 		test( 'should return error on failure', async () => {
-			apiFetch.mockResolvedValue( { success: false, error: 'Batch delete failed' } );
+			apiFetch.mockResolvedValue( {
+				success: false,
+				error: 'Batch delete failed',
+			} );
 
 			const result = await batchDelete( '/static', [ 'a.txt' ] );
 

@@ -9,7 +9,9 @@ import { CacheMonitor } from '../cacheMonitor';
 // Mock all cache dependencies
 jest.mock( '../wporgCache', () => ( {
 	getWpOrgCache: jest.fn( () => ( {
-		getStats: jest.fn().mockResolvedValue( { totalCached: 5, memoryCached: 3 } ),
+		getStats: jest
+			.fn()
+			.mockResolvedValue( { totalCached: 5, memoryCached: 3 } ),
 		clear: jest.fn().mockResolvedValue( true ),
 		cleanup: jest.fn().mockResolvedValue( 2 ),
 	} ) ),
@@ -28,11 +30,18 @@ jest.mock( '../uploadProgressCache', () => ( {
 		getStats: jest.fn().mockResolvedValue( {
 			totalSessions: 3,
 			resumableSessions: 1,
-			statusBreakdown: { in_progress: 1, paused: 0, completed: 2, failed: 0 },
+			statusBreakdown: {
+				in_progress: 1,
+				paused: 0,
+				completed: 2,
+				failed: 0,
+			},
 		} ),
 		clear: jest.fn().mockResolvedValue( true ),
 		cleanup: jest.fn().mockResolvedValue( 0 ),
-		getResumableSessions: jest.fn().mockResolvedValue( [ { id: 'session1' } ] ),
+		getResumableSessions: jest
+			.fn()
+			.mockResolvedValue( [ { id: 'session1' } ] ),
 	} ) ),
 } ) );
 

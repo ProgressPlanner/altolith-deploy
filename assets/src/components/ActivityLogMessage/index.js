@@ -14,7 +14,7 @@ import {
 	fontWeight,
 	noticeStyles,
 	createFlexStyle,
-} from '../../utils/styles';
+} from '@aether/utils/styles';
 
 /**
  * Get activity item style based on message type
