@@ -840,6 +840,55 @@ class LocalStorageController
 			);
 		}
 
+		// Check if destination path exists as a directory (copy() fails if destination is a directory).
+		if (\file_exists($destinationFullPath) && \is_dir($destinationFullPath)) {
+			// Try to remove empty directory, otherwise return error.
+			if ($this->isDirectoryEmpty($destinationFullPath)) {
+				if (!\rmdir($destinationFullPath)) {
+					if (\defined('WP_DEBUG') && WP_DEBUG) {
+						\error_log(\sprintf(
+							'Aether: Failed to remove empty directory at destination path: %s',
+							$destinationFullPath
+						));
+					}
+					return new WP_Error(
+						'destination_is_directory',
+						/* translators: %s: File path */
+						\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $destinationFullPath),
+						[
+							'status' => 500,
+							'destination' => $destinationFullPath,
+							'source' => $sourceFullPath,
+						]
+					);
+				}
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Removed empty directory at destination path: %s',
+						$destinationFullPath
+					));
+				}
+			} else {
+				// Directory is not empty, cannot proceed.
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Destination path exists as non-empty directory: %s',
+						$destinationFullPath
+					));
+				}
+				return new WP_Error(
+					'destination_is_directory',
+					/* translators: %s: File path */
+					\sprintf(\__('Destination path exists as directory: %s', 'aether-site-exporter'), $destinationFullPath),
+					[
+						'status' => 500,
+						'destination' => $destinationFullPath,
+						'source' => $sourceFullPath,
+					]
+				);
+			}
+		}
+
 		// Copy file from source to destination
 		if (!\copy($sourceFullPath, $destinationFullPath)) {
 			return new WP_Error(
