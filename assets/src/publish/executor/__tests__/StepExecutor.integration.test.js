@@ -14,92 +14,32 @@ jest.mock( '@wordpress/hooks', () => ( {
 	applyFilters: jest.fn( ( filter, value ) => value ),
 } ) );
 
-// Mock IndexedDB for ProgressTracker and StateManager
-const mockIndexedDB = () => {
-	const progressStore = new Map();
-	const stateStore = new Map();
-
-	const createStore = ( storeName ) => ( {
-		put: jest.fn( ( data ) => {
-			if ( storeName === 'progress' ) {
-				progressStore.set( data.workflowId, data );
-			} else {
-				stateStore.set( data.stateKey, data );
-			}
-			return {
-				onsuccess: null,
-				onerror: null,
-				result: data,
-			};
-		} ),
-		get: jest.fn( ( key ) => {
-			const result =
-				storeName === 'progress'
-					? progressStore.get( key )
-					: stateStore.get( key );
-			return {
-				onsuccess: null,
-				onerror: null,
-				result: result || null,
-			};
-		} ),
-		delete: jest.fn( ( key ) => {
-			if ( storeName === 'progress' ) {
-				progressStore.delete( key );
-			} else {
-				stateStore.delete( key );
-			}
-			return {
-				onsuccess: null,
-				onerror: null,
-			};
-		} ),
-		index: jest.fn( () => ( {
-			openCursor: jest.fn( () => ( {
-				onsuccess: null,
-				onerror: null,
-				result: null,
-			} ) ),
-		} ) ),
-	} );
-
-	return {
-		open: jest.fn( ( name, version ) => {
-			const request = {
-				result: {
-					objectStoreNames: {
-						contains: jest.fn(
-							( storeName ) =>
-								storeName === 'progress' ||
-								storeName === 'workflowState'
-						),
-					},
-					createObjectStore: jest.fn( () => ( {
-						createIndex: jest.fn(),
-					} ) ),
-					transaction: jest.fn( ( stores ) => ( {
-						objectStore: jest.fn( ( storeName ) =>
-							createStore( storeName )
-						),
-					} ) ),
-				},
-				onsuccess: null,
-				onerror: null,
-				onupgradeneeded: null,
-			};
-
-			setTimeout( () => {
-				if ( request.onsuccess ) {
-					request.onsuccess();
-				}
-			}, 0 );
-
-			return request;
-		} ),
-	};
+// Mock IndexedDB store for ProgressTracker and StateManager
+const mockProgressStore = {
+	get: jest.fn().mockResolvedValue( null ),
+	set: jest.fn().mockResolvedValue( true ),
+	delete: jest.fn().mockResolvedValue( true ),
 };
 
-global.indexedDB = mockIndexedDB();
+const mockStateStore = {
+	get: jest.fn().mockResolvedValue( null ),
+	set: jest.fn().mockResolvedValue( true ),
+	delete: jest.fn().mockResolvedValue( true ),
+	getByIndex: jest.fn().mockResolvedValue( [] ),
+};
+
+jest.mock( '../../../utils/indexedDB', () => {
+	return {
+		__esModule: true,
+		default: jest.fn( ( storeName ) => {
+			if ( storeName === 'progress' ) {
+				return mockProgressStore;
+			}
+			return mockStateStore;
+		} ),
+		isIndexedDBAvailable: jest.fn( () => true ),
+	};
+} );
 
 // Mock debug utilities
 jest.mock( '../../../utils/debug', () => ( {
@@ -111,6 +51,14 @@ jest.mock( '../../../utils/debug', () => ( {
 describe( 'StepExecutor Integration', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
+		// Reset mock stores
+		mockProgressStore.get.mockResolvedValue( null );
+		mockProgressStore.set.mockResolvedValue( true );
+		mockProgressStore.delete.mockResolvedValue( true );
+		mockStateStore.get.mockResolvedValue( null );
+		mockStateStore.set.mockResolvedValue( true );
+		mockStateStore.delete.mockResolvedValue( true );
+		mockStateStore.getByIndex.mockResolvedValue( [] );
 	} );
 
 	describe( 'ErrorHandler Integration', () => {
