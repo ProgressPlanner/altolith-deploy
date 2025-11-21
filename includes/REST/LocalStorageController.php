@@ -285,17 +285,7 @@ class LocalStorageController
 
 		// NOW safe to create directories
 		if (!\is_dir($uploadDir)) {
-			// Check if a FILE exists where we need a DIRECTORY (legacy bug cleanup)
-			// This can happen if paths with trailing slashes were uploaded before the fix
-			if (\file_exists($uploadDir) && \is_file($uploadDir)) {
-				if (\defined('WP_DEBUG') && WP_DEBUG) {
-					\error_log(\sprintf(
-						'Aether: Removing legacy blocking file to create directory: %s',
-						$uploadDir
-					));
-				}
-				@\unlink($uploadDir);
-			}
+			$this->removeLegacyBlockingFile($uploadDir);
 
 			if (!\wp_mkdir_p($uploadDir)) {
 				return new WP_Error(
@@ -307,17 +297,7 @@ class LocalStorageController
 		}
 
 		if (!\is_dir($fileDir)) {
-			// Check if a FILE exists where we need a DIRECTORY (legacy bug cleanup)
-			// This can happen if paths with trailing slashes were uploaded before the fix
-			if (\file_exists($fileDir) && \is_file($fileDir)) {
-				if (\defined('WP_DEBUG') && WP_DEBUG) {
-					\error_log(\sprintf(
-						'Aether: Removing legacy blocking file to create directory: %s',
-						$fileDir
-					));
-				}
-				@\unlink($fileDir);
-			}
+			$this->removeLegacyBlockingFile($fileDir);
 
 			if (!\wp_mkdir_p($fileDir)) {
 				return new WP_Error(
@@ -729,16 +709,7 @@ class LocalStorageController
 
 		// Create destination directory if it doesn't exist
 		if (!\is_dir($destinationDir)) {
-			// Check if a FILE exists where we need a DIRECTORY (legacy bug cleanup)
-			if (\file_exists($destinationDir) && \is_file($destinationDir)) {
-				if (\defined('WP_DEBUG') && WP_DEBUG) {
-					\error_log(\sprintf(
-						'Aether: Removing legacy blocking file to create directory: %s',
-						$destinationDir
-					));
-				}
-				@\unlink($destinationDir);
-			}
+			$this->removeLegacyBlockingFile($destinationDir);
 
 			if (!\wp_mkdir_p($destinationDir)) {
 				return new WP_Error(
@@ -906,5 +877,27 @@ class LocalStorageController
 			],
 			200
 		);
+	}
+
+	/**
+	 * Remove a legacy blocking file if it exists where a directory is needed.
+	 *
+	 * This handles cleanup from a historical bug where paths with trailing
+	 * slashes were uploaded as files instead of creating directories.
+	 *
+	 * @param string $path Path to check and clean up.
+	 * @return void
+	 */
+	private function removeLegacyBlockingFile(string $path): void
+	{
+		if (\file_exists($path) && \is_file($path)) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf(
+					'Aether: Removing legacy blocking file to create directory: %s',
+					$path
+				));
+			}
+			@\unlink($path);
+		}
 	}
 }

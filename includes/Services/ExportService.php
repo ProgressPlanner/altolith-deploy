@@ -207,7 +207,7 @@ class ExportService
 		// This is a quick scan that doesn't process files, just counts them.
 		$totalFiles = 0;
 		if ($jobId) {
-			$totalFiles = $this->countTotalFiles();
+			$totalFiles = $this->countTotalFilesForPhases(null);
 		}
 
 		// Initialize zip archive with CREATE and OVERWRITE flags.
@@ -385,7 +385,8 @@ class ExportService
 	/**
 	 * Add directory to zip archive recursively.
 	 *
-	 * @deprecated Use ZipService::addDirectoryToZip() instead.
+	 * Delegates to ZipService for the actual implementation.
+	 *
 	 * @param \ZipArchive             $zip          ZipArchive instance.
 	 * @param string                  $sourceDir   Source directory path.
 	 * @param string                  $zipPath     Path inside zip.
@@ -402,69 +403,15 @@ class ExportService
 	}
 
 	/**
-	 * Count total files that will be added to the zip archive.
-	 *
-	 * This is a quick scan that doesn't process files, just counts them.
-	 * Used for progress tracking.
-	 *
-	 * @return int Total number of files.
-	 */
-	private function countTotalFiles(): int
-	{
-		$count = 0;
-
-		// Count database file.
-		$dbPath = $this->getDatabasePath();
-		if (false !== $dbPath && \file_exists($dbPath)) {
-			$count++;
-		}
-
-		// Count files in uploads directory.
-		$uploadsDir = WP_CONTENT_DIR . '/uploads';
-		if (\is_dir($uploadsDir)) {
-			$count += $this->fileBatchService->countFilesInDirectory($uploadsDir);
-		}
-
-		// Count files in custom plugins.
-		$customAssets = $this->plugin->getAssetDiscovery()->getAllCustomAssets();
-		foreach ($customAssets as $asset) {
-			if ('plugin' === $asset['type']) {
-				$pluginDir = WP_PLUGIN_DIR . '/' . $asset['slug'];
-				if (\is_dir($pluginDir)) {
-					$count += $this->fileBatchService->countFilesInDirectory($pluginDir);
-				}
-			}
-		}
-
-		// Count files in custom themes.
-		foreach ($customAssets as $asset) {
-			if ('theme' === $asset['type']) {
-				$themeDir = \get_theme_root() . '/' . $asset['slug'];
-				if (\is_dir($themeDir)) {
-					$count += $this->fileBatchService->countFilesInDirectory($themeDir);
-				}
-			}
-		}
-
-		// Count files in mu-plugins directory.
-		$mupluginsDir = WP_CONTENT_DIR . '/mu-plugins';
-		if (\is_dir($mupluginsDir)) {
-			$count += $this->fileBatchService->countFilesInDirectory($mupluginsDir);
-		}
-
-		return $count;
-	}
-
-	/**
 	 * Get file paths of all attachments offloaded to external storage.
 	 *
-	 * @deprecated Use FileBatchService::getOffloadedFilePaths() instead.
+	 * Delegates to FileBatchService for the actual implementation.
+	 *
 	 * @return array<string> Array of absolute file paths.
 	 * @phpstan-ignore-next-line
 	 */
 	private function getOffloadedFilePaths(): array
 	{
-		// Delegate to FileBatchService for backward compatibility.
 		return $this->fileBatchService->getOffloadedFilePaths();
 	}
 
@@ -501,14 +448,14 @@ class ExportService
 	/**
 	 * Get exclusion patterns for development files and large dependencies.
 	 *
-	 * @deprecated Use FileBatchService::getExclusionPatterns() instead.
+	 * Delegates to FileBatchService for the actual implementation.
+	 *
 	 * @param string $sourceDir Source directory path to check for large folders.
 	 * @param bool   $autoExclude Enable automatic exclusion of .git and large vendor folders.
 	 * @return array<string> Array of exclusion patterns.
 	 */
 	public static function getExclusionPatterns(string $sourceDir, bool $autoExclude = true): array
 	{
-		// Delegate to FileBatchService for backward compatibility.
 		$fileBatchService = new FileBatchService();
 		return $fileBatchService->getExclusionPatterns($sourceDir, $autoExclude);
 	}

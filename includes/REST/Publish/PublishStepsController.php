@@ -650,12 +650,9 @@ class PublishStepsController
 		$jsonParams = $request->get_json_params();
 		$customAssets = $jsonParams['custom_assets'] ?? null;
 
-		if ($customAssets !== null && !\is_array($customAssets)) {
-			return new WP_Error(
-				'invalid_custom_assets',
-				\__('custom_assets must be an array of plugin/theme slugs', 'aether-site-exporter'),
-				['status' => 422]
-			);
+		$error = $this->validateCustomAssets($customAssets);
+		if ($error) {
+			return $error;
 		}
 
 		$exportService = new ExportService($this->plugin);
@@ -680,12 +677,9 @@ class PublishStepsController
 		$zipPath = $jsonParams['zipPath'] ?? '';
 		$currentProgress = $jsonParams['progress'] ?? [];
 
-		if (empty($zipPath)) {
-			return new WP_Error(
-				'missing_zip_path',
-				\__('zipPath is required', 'aether-site-exporter'),
-				['status' => 422]
-			);
+		$error = $this->validateZipPath($zipPath);
+		if ($error) {
+			return $error;
 		}
 
 		$exportService = new ExportService($this->plugin);
@@ -731,12 +725,9 @@ class PublishStepsController
 		$batchIndex = isset($jsonParams['batch']) ? (int) $jsonParams['batch'] : -1;
 		$currentProgress = $jsonParams['progress'] ?? [];
 
-		if (empty($zipPath)) {
-			return new WP_Error(
-				'missing_zip_path',
-				\__('zipPath is required', 'aether-site-exporter'),
-				['status' => 422]
-			);
+		$error = $this->validateZipPath($zipPath);
+		if ($error) {
+			return $error;
 		}
 
 		if ($batchIndex < 0) {
@@ -765,15 +756,7 @@ class PublishStepsController
 	 */
 	public function getPluginsList(WP_REST_Request $request)
 	{
-		// Support both query params and JSON body for flexibility.
-		$customAssets = $request->get_param('custom_assets');
-		if (null === $customAssets) {
-			$jsonParams = $request->get_json_params();
-			$customAssets = $jsonParams['custom_assets'] ?? null;
-		}
-		if (\is_string($customAssets)) {
-			$customAssets = \json_decode($customAssets, true);
-		}
+		$customAssets = $this->extractCustomAssets($request);
 
 		$exportService = new ExportService($this->plugin);
 		$plugins = $exportService->getPluginsList($customAssets);
@@ -799,20 +782,14 @@ class PublishStepsController
 		$pluginSlug = $jsonParams['slug'] ?? '';
 		$currentProgress = $jsonParams['progress'] ?? [];
 
-		if (empty($zipPath)) {
-			return new WP_Error(
-				'missing_zip_path',
-				\__('zipPath is required', 'aether-site-exporter'),
-				['status' => 422]
-			);
+		$error = $this->validateZipPath($zipPath);
+		if ($error) {
+			return $error;
 		}
 
-		if (empty($pluginSlug)) {
-			return new WP_Error(
-				'missing_plugin_slug',
-				\__('slug is required', 'aether-site-exporter'),
-				['status' => 422]
-			);
+		$error = $this->validateAssetSlug($pluginSlug, 'plugin');
+		if ($error) {
+			return $error;
 		}
 
 		$exportService = new ExportService($this->plugin);
@@ -833,15 +810,7 @@ class PublishStepsController
 	 */
 	public function getThemesList(WP_REST_Request $request)
 	{
-		// Support both query params and JSON body for flexibility.
-		$customAssets = $request->get_param('custom_assets');
-		if (null === $customAssets) {
-			$jsonParams = $request->get_json_params();
-			$customAssets = $jsonParams['custom_assets'] ?? null;
-		}
-		if (\is_string($customAssets)) {
-			$customAssets = \json_decode($customAssets, true);
-		}
+		$customAssets = $this->extractCustomAssets($request);
 
 		$exportService = new ExportService($this->plugin);
 		$themes = $exportService->getThemesList($customAssets);
@@ -867,20 +836,14 @@ class PublishStepsController
 		$themeSlug = $jsonParams['slug'] ?? '';
 		$currentProgress = $jsonParams['progress'] ?? [];
 
-		if (empty($zipPath)) {
-			return new WP_Error(
-				'missing_zip_path',
-				\__('zipPath is required', 'aether-site-exporter'),
-				['status' => 422]
-			);
+		$error = $this->validateZipPath($zipPath);
+		if ($error) {
+			return $error;
 		}
 
-		if (empty($themeSlug)) {
-			return new WP_Error(
-				'missing_theme_slug',
-				\__('slug is required', 'aether-site-exporter'),
-				['status' => 422]
-			);
+		$error = $this->validateAssetSlug($themeSlug, 'theme');
+		if ($error) {
+			return $error;
 		}
 
 		$exportService = new ExportService($this->plugin);
@@ -926,12 +889,9 @@ class PublishStepsController
 		$batchIndex = isset($jsonParams['batch']) ? (int) $jsonParams['batch'] : -1;
 		$currentProgress = $jsonParams['progress'] ?? [];
 
-		if (empty($zipPath)) {
-			return new WP_Error(
-				'missing_zip_path',
-				\__('zipPath is required', 'aether-site-exporter'),
-				['status' => 422]
-			);
+		$error = $this->validateZipPath($zipPath);
+		if ($error) {
+			return $error;
 		}
 
 		if ($batchIndex < 0) {
@@ -1184,5 +1144,81 @@ class PublishStepsController
 			'success' => true,
 			'data' => $bundleResult,
 		]);
+	}
+
+	/**
+	 * Validate that zipPath is provided.
+	 *
+	 * @param string $zipPath The zip path to validate.
+	 * @return WP_Error|null WP_Error if invalid, null if valid.
+	 */
+	private function validateZipPath(string $zipPath): ?WP_Error
+	{
+		if (empty($zipPath)) {
+			return new WP_Error(
+				'missing_zip_path',
+				\__('zipPath is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+		return null;
+	}
+
+	/**
+	 * Validate custom_assets parameter.
+	 *
+	 * @param mixed $customAssets The custom assets value to validate.
+	 * @return WP_Error|null WP_Error if invalid, null if valid.
+	 */
+	private function validateCustomAssets($customAssets): ?WP_Error
+	{
+		if ($customAssets !== null && !\is_array($customAssets)) {
+			return new WP_Error(
+				'invalid_custom_assets',
+				\__('custom_assets must be an array of plugin/theme slugs', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+		return null;
+	}
+
+	/**
+	 * Validate that an asset slug is provided.
+	 *
+	 * @param string $slug The slug to validate.
+	 * @param string $type The asset type ('plugin' or 'theme').
+	 * @return WP_Error|null WP_Error if invalid, null if valid.
+	 */
+	private function validateAssetSlug(string $slug, string $type): ?WP_Error
+	{
+		if (empty($slug)) {
+			return new WP_Error(
+				'missing_' . $type . '_slug',
+				\__('slug is required', 'aether-site-exporter'),
+				['status' => 422]
+			);
+		}
+		return null;
+	}
+
+	/**
+	 * Extract custom_assets parameter from request.
+	 *
+	 * Supports both query params and JSON body.
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 * @return array<string>|null The custom assets array or null.
+	 */
+	private function extractCustomAssets(WP_REST_Request $request): ?array
+	{
+		$customAssets = $request->get_param('custom_assets');
+		if (null === $customAssets) {
+			$jsonParams = $request->get_json_params();
+			$customAssets = $jsonParams['custom_assets'] ?? null;
+		}
+		if (\is_string($customAssets)) {
+			$customAssets = \json_decode($customAssets, true);
+		}
+		return $customAssets;
 	}
 }
