@@ -56,13 +56,19 @@ export function initializeErrorHandlers() {
 function showErrorNotification( message ) {
 	// Use WordPress notices if available
 	if ( window.wp && window.wp.data && window.wp.data.dispatch ) {
-		const { createErrorNotice } = window.wp.data.dispatch( 'core/notices' );
-		if ( createErrorNotice ) {
-			createErrorNotice( message, {
-				id: 'aether-global-error',
-				isDismissible: true,
-			} );
-			return;
+		// Store dispatch result in a variable first to safely check it
+		const noticesDispatch = window.wp.data.dispatch( 'core/notices' );
+		
+		// Check if result is a valid object before destructuring
+		if ( noticesDispatch && typeof noticesDispatch === 'object' ) {
+			const { createErrorNotice } = noticesDispatch;
+			if ( createErrorNotice && typeof createErrorNotice === 'function' ) {
+				createErrorNotice( message, {
+					id: 'aether-global-error',
+					isDismissible: true,
+				} );
+				return;
+			}
 		}
 	}
 
