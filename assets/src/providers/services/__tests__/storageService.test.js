@@ -182,7 +182,9 @@ describe( 'StorageService', () => {
 			const mockFile = new Blob( [ 'test content' ] );
 			const mockKey = 'test-file.txt';
 
-			uploadFileUnified.mockRejectedValueOnce( new Error( 'Upload failed' ) );
+			uploadFileUnified.mockRejectedValueOnce(
+				new Error( 'Upload failed' )
+			);
 
 			const result = await service.upload( mockKey, mockFile );
 

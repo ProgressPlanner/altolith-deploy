@@ -58,11 +58,14 @@ function showErrorNotification( message ) {
 	if ( window.wp && window.wp.data && window.wp.data.dispatch ) {
 		// Store dispatch result in a variable first to safely check it
 		const noticesDispatch = window.wp.data.dispatch( 'core/notices' );
-		
+
 		// Check if result is a valid object before destructuring
 		if ( noticesDispatch && typeof noticesDispatch === 'object' ) {
 			const { createErrorNotice } = noticesDispatch;
-			if ( createErrorNotice && typeof createErrorNotice === 'function' ) {
+			if (
+				createErrorNotice &&
+				typeof createErrorNotice === 'function'
+			) {
 				createErrorNotice( message, {
 					id: 'aether-global-error',
 					isDismissible: true,
