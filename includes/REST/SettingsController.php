@@ -104,6 +104,37 @@ class SettingsController
 				'permission_callback' => [ $this, 'permissionCheck' ],
 			]
 		);
+
+		// Create provider instance.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/providers/(?P<provider_type>[a-z0-9_-]+)/instances',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'createProviderInstance' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+				'args'                => [
+					'provider_type' => [
+						'required'          => true,
+						'type'              => 'string',
+						'description'       => \__('Provider type (e.g., "cloudflare-r2")', 'aether-site-exporter'),
+						'sanitize_callback' => 'sanitize_key',
+					],
+					'instance_id' => [
+						'required'          => true,
+						'type'              => 'string',
+						'description'       => \__('Instance ID (format: provider_type:uuid)', 'aether-site-exporter'),
+						'sanitize_callback' => 'sanitize_text_field',
+					],
+					'instance_name' => [
+						'required'          => true,
+						'type'              => 'string',
+						'description'       => \__('User-friendly instance name', 'aether-site-exporter'),
+						'sanitize_callback' => 'sanitize_text_field',
+					],
+				],
+			]
+		);
 	}
 
 	/**
@@ -610,6 +641,97 @@ class SettingsController
 				'i18n'    => $i18n,
 			],
 			200
+		);
+	}
+
+	/**
+	 * Create a provider instance.
+	 *
+	 * Creates a new provider instance configuration in the providers settings.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error Response with created instance or error.
+	 */
+	public function createProviderInstance(WP_REST_Request $request)
+	{
+		$providerType = $request->get_param('provider_type');
+		$instanceId   = $request->get_param('instance_id');
+		$instanceName = $request->get_param('instance_name');
+
+		if (empty($providerType) || empty($instanceId) || empty($instanceName)) {
+			return new WP_Error(
+				'missing_params',
+				\__('Provider type, instance ID, and instance name are required.', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		// Validate instance ID format (should be provider_type:uuid)
+		if (!\preg_match('/^[a-z0-9_-]+:[a-z0-9-]+$/', $instanceId)) {
+			return new WP_Error(
+				'invalid_instance_id',
+				\__('Instance ID must be in format: provider_type:uuid', 'aether-site-exporter'),
+				['status' => 400]
+			);
+		}
+
+		// Get current settings
+		$settings = \get_option('aether_site_exporter_settings', []);
+		$providers = $settings['providers'] ?? [];
+
+		// Decrypt existing providers if needed
+		if (!empty($providers) && \is_array($providers)) {
+			try {
+				$providers = $this->decryptProviderSettings($providers);
+			} catch (\Exception $e) {
+				// If decryption fails, start fresh
+				$providers = [];
+			}
+		}
+
+		// Check if instance already exists
+		if (isset($providers[$instanceId])) {
+			return new WP_Error(
+				'instance_exists',
+				\__('Provider instance with this ID already exists.', 'aether-site-exporter'),
+				['status' => 409]
+			);
+		}
+
+		// Create new instance configuration
+		$providers[$instanceId] = [
+			'instance_name' => $instanceName,
+			'provider_type' => $providerType,
+			'enabled'        => false, // New instances start disabled
+		];
+
+		// Encrypt and save
+		try {
+			$encryptedProviders = $this->encryptProviderSettings($providers);
+			$settings['providers'] = $encryptedProviders;
+			\update_option('aether_site_exporter_settings', $settings);
+		} catch (\Exception $e) {
+			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
+			return new WP_Error(
+				'encryption_failed',
+				/* translators: %s: Error message */
+				\sprintf(\__('Failed to save provider instance: %s', 'aether-site-exporter'), $sanitizedMessage),
+				['status' => 500]
+			);
+		}
+
+		// Return created instance (decrypted for response)
+		$createdInstance = $providers[$instanceId];
+
+		return new WP_REST_Response(
+			[
+				'success'       => true,
+				'message'       => \__('Provider instance created successfully.', 'aether-site-exporter'),
+				'instance_id'   => $instanceId,
+				'instance'      => $createdInstance,
+				'providers'     => $this->sanitizeSettingsForResponse($providers),
+			],
+			201
 		);
 	}
 }
