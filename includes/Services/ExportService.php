@@ -14,7 +14,6 @@ use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Sync\JobStateManager;
 use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use Aether\SiteExporter\Utilities\SecurityValidator;
-use Aether\SiteExporter\Providers\ProviderRegistry;
 use Aether\SiteExporter\Services\ZipService;
 use Aether\SiteExporter\Services\FileBatchService;
 use Aether\SiteExporter\Services\ProgressTracker;
@@ -103,8 +102,7 @@ class ExportService
 		}
 
 		// Get export path from enabled instance config.
-		$registry = ProviderRegistry::getInstance();
-		$instance = $registry->getEnabledInstanceForDeploymentType('blueprint_bundle');
+		$instance = $this->getEnabledInstanceForDeploymentType('blueprint_bundle');
 		$exportPath = 'blueprint-bundle/bundle.zip';
 
 		if ($instance && isset($instance['config']['export_path'])) {
@@ -1055,8 +1053,7 @@ class ExportService
 	public function finalizeArchive(string $zipPath)
 	{
 		// Get export path from enabled instance config.
-		$registry = ProviderRegistry::getInstance();
-		$instance = $registry->getEnabledInstanceForDeploymentType('blueprint_bundle');
+		$instance = $this->getEnabledInstanceForDeploymentType('blueprint_bundle');
 		$exportPath = 'blueprint-bundle/bundle.zip';
 
 		if ($instance && isset($instance['config']['export_path'])) {
@@ -1184,5 +1181,39 @@ class ExportService
 		}
 
 		return $count;
+	}
+
+	/**
+	 * Get enabled instance for a deployment type.
+	 *
+	 * Finds the first enabled provider instance that supports the given deployment type.
+	 *
+	 * @param string $deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
+	 * @return array{instanceId: string, config: array<string, mixed>}|null Instance data or null if not found
+	 */
+	private function getEnabledInstanceForDeploymentType(string $deploymentType): ?array
+	{
+		$settings = \get_option('aether_site_exporter_settings', []);
+		$providers = $settings['providers'] ?? [];
+
+		foreach ($providers as $instanceId => $config) {
+			// Check if instance is enabled (default to enabled if not set)
+			if (isset($config['enabled']) && $config['enabled'] === false) {
+				continue;
+			}
+
+			// Check if instance supports this deployment type
+			$instanceDeploymentTypes = $config['deployment_types'] ?? [];
+			if (! \is_array($instanceDeploymentTypes) || ! \in_array($deploymentType, $instanceDeploymentTypes, true)) {
+				continue;
+			}
+
+			return [
+				'instanceId' => $instanceId,
+				'config' => $config,
+			];
+		}
+
+		return null;
 	}
 }

@@ -24,7 +24,6 @@ use WP_REST_Response;
 use WP_Error;
 use Aether\SiteExporter\Utilities\CredentialEncryption;
 use Aether\SiteExporter\Utilities\EncryptionHelper;
-use Aether\SiteExporter\Providers\ProviderRegistry;
 
 /**
  * Provider configuration REST endpoints.
@@ -109,16 +108,13 @@ class ProviderConfigController
 	{
 		$instanceId = $request->get_param('instance_id');
 
-		// Get provider instance from registry using instance ID.
-		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->getProviderForInstance($instanceId);
-
-		if (! $provider) {
+		// Validate instance ID format: {provider_type}:{uuid}
+		if (! $this->isValidInstanceId($instanceId)) {
 			return new WP_Error(
-				'provider_not_found',
+				'invalid_instance_id',
 				/* translators: %s: Provider instance ID */
-				\sprintf(\__('Provider not found for instance: %s', 'aether-site-exporter'), $instanceId),
-				[ 'status' => 404 ]
+				\sprintf(\__('Invalid instance ID format: %s. Expected format: provider_type:uuid', 'aether-site-exporter'), $instanceId),
+				[ 'status' => 400 ]
 			);
 		}
 
@@ -177,21 +173,18 @@ class ProviderConfigController
 			return new WP_Error('invalid_config', \__('Config must be an object.', 'aether-site-exporter'), [ 'status' => 400 ]);
 		}
 
-		// Get provider instance from registry using instance ID.
-		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->getProviderForInstance($instanceId);
-
-		if (! $provider) {
+		// Validate instance ID format: {provider_type}:{uuid}
+		if (! $this->isValidInstanceId($instanceId)) {
 			return new WP_Error(
-				'provider_not_found',
+				'invalid_instance_id',
 				/* translators: %s: Provider instance ID */
-				\sprintf(\__('Provider not found for instance: %s', 'aether-site-exporter'), $instanceId),
-				[ 'status' => 404 ]
+				\sprintf(\__('Invalid instance ID format: %s. Expected format: provider_type:uuid', 'aether-site-exporter'), $instanceId),
+				[ 'status' => 400 ]
 			);
 		}
 
 		// Ensure provider_type and instance_name are preserved.
-		$parsed = $registry->parseInstanceId($instanceId);
+		$parsed = $this->parseInstanceId($instanceId);
 		if ($parsed) {
 			$config['provider_type'] = $parsed['provider_type'];
 		}
@@ -429,22 +422,31 @@ class ProviderConfigController
 	{
 		$instanceId = $request->get_param('instance_id');
 
-		// Get provider instance from registry using instance ID.
-		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->getProviderForInstance($instanceId);
-
-		if (! $provider) {
+		// Validate instance ID format: {provider_type}:{uuid}
+		if (! $this->isValidInstanceId($instanceId)) {
 			return new WP_Error(
-				'provider_not_found',
+				'invalid_instance_id',
 				/* translators: %s: Provider instance ID */
-				\sprintf(\__('Provider not found for instance: %s', 'aether-site-exporter'), $instanceId),
-				[ 'status' => 404 ]
+				\sprintf(\__('Invalid instance ID format: %s. Expected format: provider_type:uuid', 'aether-site-exporter'), $instanceId),
+				[ 'status' => 400 ]
 			);
 		}
 
+		// Parse instance ID to get provider type
+		$parsed = $this->parseInstanceId($instanceId);
+		if (! $parsed) {
+			return new WP_Error(
+				'invalid_instance_id',
+				/* translators: %s: Provider instance ID */
+				\sprintf(\__('Invalid instance ID format: %s', 'aether-site-exporter'), $instanceId),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$providerType = $parsed['provider_type'];
+
 		// For local filesystem provider, verify export directory is writable.
-		// This check is provider-specific, so we check by provider type.
-		if ($provider->getType() === 'local-storage') {
+		if ($providerType === 'local-filesystem') {
 			$exportDir = \trailingslashit(WP_CONTENT_DIR) . 'aether-exports';
 
 			// Check if directory exists and is writable
@@ -478,9 +480,55 @@ class ProviderConfigController
 		// For other providers, return not implemented
 		return new WP_Error(
 			'not_implemented',
-			/* translators: %s: Provider ID */
-			\sprintf(\__('Connection testing is not implemented for provider: %s', 'aether-site-exporter'), $provider->getId()),
+			/* translators: %s: Provider type */
+			\sprintf(\__('Connection testing is not implemented for provider: %s', 'aether-site-exporter'), $providerType),
 			[ 'status' => 501 ]
 		);
+	}
+
+	/**
+	 * Validate instance ID format.
+	 *
+	 * Instance IDs have format: {provider_type}:{uuid}
+	 * Example: "local-filesystem:a3f2c1b0-4e5d-6789-abcd-ef1234567890"
+	 *
+	 * @param string $instanceId Instance ID to validate.
+	 * @return bool True if valid format, false otherwise.
+	 */
+	private function isValidInstanceId(string $instanceId): bool
+	{
+		if (empty($instanceId) || ! \is_string($instanceId)) {
+			return false;
+		}
+
+		// Check format: provider_type:uuid
+		// Provider type: lowercase alphanumeric, hyphens, underscores
+		// UUID: standard UUID v4 format
+		return (bool) \preg_match(
+			'/^[a-z0-9_-]+:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i',
+			$instanceId
+		);
+	}
+
+	/**
+	 * Parse instance ID into provider type and UUID.
+	 *
+	 * Instance IDs have format: {provider_type}:{uuid}
+	 * Example: "local-filesystem:a3f2c1b0-4e5d-6789-abcd-ef1234567890"
+	 *
+	 * @param string $instanceId Instance ID to parse.
+	 * @return array{provider_type: string, uuid: string}|null Parsed components or null if invalid format.
+	 */
+	private function parseInstanceId(string $instanceId): ?array
+	{
+		$parts = \explode(':', $instanceId, 2);
+		if (\count($parts) !== 2 || empty($parts[0]) || empty($parts[1])) {
+			return null;
+		}
+
+		return [
+			'provider_type' => $parts[0],
+			'uuid' => $parts[1],
+		];
 	}
 }

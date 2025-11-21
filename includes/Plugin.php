@@ -15,8 +15,6 @@ use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use Aether\SiteExporter\Utilities\CorsHandler;
 use Aether\SiteExporter\Utilities\CookieManager;
 use Aether\SiteExporter\Utilities\SecurityValidator;
-use Aether\SiteExporter\Providers\ProviderRegistry;
-use Aether\SiteExporter\Providers\LocalFilesystemProvider;
 
 /**
  * Main plugin orchestrator class.
@@ -114,8 +112,6 @@ class Plugin
 		\add_action('rest_api_init', [ $this, 'registerRestRoutes' ]);
 
 		// Add provider discovery filters.
-		\add_filter('aether_get_default_provider', [ $this, 'getDefaultProvider' ]);
-		\add_filter('aether_get_provider_for_deployment_type', [ $this, 'getProviderForDeploymentType' ], 10, 2);
 
 		// Cleanup temporary export files daily (uses WordPress scheduled delete event)
 		\add_action('wp_scheduled_delete', [ $this, 'cleanupExpiredExports' ]);
@@ -459,21 +455,15 @@ class Plugin
 	}
 
 	/**
-	 * Initialize provider registry and register providers.
+	 * Initialize provider hooks.
+	 *
+	 * Note: Provider metadata is now registered in JavaScript, not PHP.
+	 * This only initializes PHP-side hooks for provider functionality.
 	 *
 	 * @return void
 	 */
 	private function initProviders(): void
 	{
-		// Register local filesystem provider via filter.
-		\add_filter('aether_providers', function ($providers) {
-			$providers[] = new LocalFilesystemProvider();
-			return $providers;
-		});
-
-		// Initialize registry (will discover providers via filter).
-		ProviderRegistry::getInstance();
-
 		// Register local-filesystem provider hooks for blueprint bundle uploads.
 		$this->initLocalFilesystemProviderHooks();
 	}
@@ -695,36 +685,6 @@ class Plugin
 		return true;
 	}
 
-	/**
-	 * Get default provider ID.
-	 *
-	 * Filter hook for getting the default provider.
-	 *
-	 * @param string|null $providerId Default provider ID (null if not set).
-	 * @return string Provider ID
-	 */
-	public function getDefaultProvider(?string $providerId = null): string
-	{
-		$registry = ProviderRegistry::getInstance();
-		$default = $registry->getDefault();
-		return $default ? $default->getId() : ($providerId ?? '');
-	}
-
-	/**
-	 * Get provider ID for a deployment type.
-	 *
-	 * Filter hook for getting provider by deployment type.
-	 *
-	 * @param string|null $providerId Provider ID (null if not set).
-	 * @param string      $deploymentType Deployment type.
-	 * @return string Provider ID
-	 */
-	public function getProviderForDeploymentType(?string $providerId = null, string $deploymentType = ''): string
-	{
-		$registry = ProviderRegistry::getInstance();
-		$provider = $registry->getForDeploymentType($deploymentType);
-		return $provider ? $provider->getId() : ($providerId ?? '');
-	}
 
 	/**
 	 * Check if a directory is empty.
