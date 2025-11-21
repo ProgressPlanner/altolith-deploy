@@ -41,7 +41,7 @@ export function usePublishController( publishState ) {
 
 	// State for storage provider ID (set before starting publish)
 	// Must be declared before hooks that use it
-	const [ storageProviderId, setStorageProviderId ] = useState( '' );
+	const [ setStorageProviderId ] = useState( '' );
 
 	const api = usePublishAPI();
 	const assetManager = useAssetManager();
@@ -481,7 +481,6 @@ export function usePublishController( publishState ) {
 		setStorageProviderId,
 		updateFromStep,
 		updateStaticSiteProgressContext,
-		storageProviderId,
 		processStaticSiteUrls,
 		generateBlueprintJson,
 		handleSiteArchiveUpload,

@@ -119,15 +119,15 @@ async function handler( context ) {
 		 * 1. Perform URL rewriting/HTML transformations
 		 * 2. Upload the file to their storage
 		 *
-		 * @param {Object} fileContext File context object.
-		 * @param {string} fileContext.url       Original URL.
-		 * @param {string} fileContext.path      File path.
-		 * @param {string} fileContext.content   File content (may be null, provider fetches if needed).
-		 * @param {string} fileContext.contentType Content type.
-		 * @param {string} fileContext.siteUrl   WordPress site URL.
-		 * @param {string} fileContext.staticSiteUrl Target static site URL.
-		 * @param {Object} fileContext.blueprintData Blueprint data.
-		 * @param {Array}  fileContext.providers Provider IDs.
+		 * @param {Object}   fileContext                  File context object.
+		 * @param {string}   fileContext.url              Original URL.
+		 * @param {string}   fileContext.path             File path.
+		 * @param {string}   fileContext.content          File content (may be null, provider fetches if needed).
+		 * @param {string}   fileContext.contentType      Content type.
+		 * @param {string}   fileContext.siteUrl          WordPress site URL.
+		 * @param {string}   fileContext.staticSiteUrl    Target static site URL.
+		 * @param {Object}   fileContext.blueprintData    Blueprint data.
+		 * @param {Array}    fileContext.providers        Provider IDs.
 		 * @param {Function} fileContext.setStatusMessage Status updater.
 		 */
 		doAction( 'aether.staticSite.file.process', fileContext );
