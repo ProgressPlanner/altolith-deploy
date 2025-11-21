@@ -233,7 +233,7 @@ class Plugin
 		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-common.asset.php';
 		$asset = \file_exists($assetFile) ? require $assetFile : [
 			'dependencies' => [],
-			'version' => AETHER_SITE_EXPORTER_VERSION,
+			'version' => \time(),
 		];
 
 		\wp_enqueue_script(

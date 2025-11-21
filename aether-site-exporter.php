@@ -23,7 +23,6 @@ if (! \defined('ABSPATH')) {
 
 // Define plugin constants.
 // Use time() for cache-busting during development.
-\define('AETHER_SITE_EXPORTER_VERSION', \defined('WP_DEBUG') && WP_DEBUG ? \time() : '1.0.0');
 \define('AETHER_SITE_EXPORTER_PLUGIN_DIR', \plugin_dir_path(__FILE__));
 \define('AETHER_SITE_EXPORTER_PLUGIN_URL', \plugin_dir_url(__FILE__));
 \define('AETHER_SITE_EXPORTER_PLUGIN_FILE', __FILE__);

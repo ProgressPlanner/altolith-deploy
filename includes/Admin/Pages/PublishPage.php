@@ -45,7 +45,7 @@ class PublishPage extends BaseAdminPage
 		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/export.asset.php';
 		$asset     = \file_exists($assetFile) ? require $assetFile : [
 			'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n' ],
-			'version'      => AETHER_SITE_EXPORTER_VERSION,
+			'version'      => \time(),
 		];
 
 		// Webpack is configured to never create chunks - all code is bundled into single files

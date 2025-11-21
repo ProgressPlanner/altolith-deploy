@@ -46,7 +46,7 @@ class SettingsPage extends BaseAdminPage
 		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-settings.asset.php';
 		$asset     = \file_exists($assetFile) ? require $assetFile : [
 			'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n' ],
-			'version'      => AETHER_SITE_EXPORTER_VERSION,
+			'version'      => \time(),
 		];
 
 		// Webpack chunks are loaded automatically by webpack runtime when needed
