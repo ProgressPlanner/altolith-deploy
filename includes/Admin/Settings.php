@@ -10,6 +10,8 @@
 
 namespace Aether\SiteExporter\Admin;
 
+use Aether\SiteExporter\Core\SettingsRepository;
+
 \defined('ABSPATH') || exit;
 
 /**
@@ -81,7 +83,8 @@ class Settings
 	 */
 	public function get(): array
 	{
-		return \Aether\SiteExporter\getStorageConfig();
+		$repository = new SettingsRepository();
+		return $repository->getAll();
 	}
 
 	/**
@@ -92,14 +95,12 @@ class Settings
 	 */
 	public function update(array $settings): bool
 	{
-		// Important: We must clear the static cache in getStorageConfig()
-		// First update the option directly.
 		$result = \update_option('aether_site_exporter_settings', $settings);
 
-		// Force cache refresh by calling get_storage_config with bypass_cache.
+		// Force cache refresh by re-reading from database.
 		if ($result) {
-			// Get fresh settings to ensure cache is updated.
-			\Aether\SiteExporter\getStorageConfig(true);
+			$repository = new SettingsRepository();
+			$repository->getAll();
 		}
 
 		return $result;
