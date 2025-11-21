@@ -10,8 +10,6 @@
 
 namespace Aether\SiteExporter\Admin;
 
-use Aether\SiteExporter\Admin\Settings;
-
 /**
  * Class MenuManager
  *

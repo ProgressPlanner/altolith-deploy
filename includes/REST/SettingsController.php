@@ -13,9 +13,7 @@ namespace Aether\SiteExporter\REST;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
-use Aether\SiteExporter\Utilities\CredentialEncryption;
 use Aether\SiteExporter\Utilities\EncryptionHelper;
-use Aether\SiteExporter\Admin\Settings;
 
 /**
  * Handles REST API endpoints for settings operations.
