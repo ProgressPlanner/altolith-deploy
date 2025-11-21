@@ -362,7 +362,6 @@ class Plugin
 		$settingsController = new REST\SettingsController();
 		$exportController  = new REST\ExportController($this);
 		$providerConfigController = new REST\ProviderConfigController();
-		$providersController = new REST\ProvidersController();
 		$configController = new REST\ConfigController();
 		$assetsController = new REST\AssetsController();
 		$wporgCheckController = new REST\WPOrgCheckController();
@@ -377,7 +376,6 @@ class Plugin
 		$settingsController->registerRoutes();
 		$exportController->registerRoutes();
 		$providerConfigController->registerRoutes();
-		$providersController->registerRoutes();
 		$configController->registerRoutes();
 		$assetsController->registerRoutes();
 		$wporgCheckController->registerRoutes();
