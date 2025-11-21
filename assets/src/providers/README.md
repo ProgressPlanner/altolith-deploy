@@ -85,12 +85,15 @@ doAction('aether.providers.register', provider);
 Registry collects all providers and makes them available:
 
 ```javascript
-import { useProviderRegistry } from '../hooks/useProviderRegistry';
+import { useProviderRegistry } from '@aether/providers/hooks/useProviderRegistry';
 
-const { providers, getProviderById } = useProviderRegistry();
+const { providerIds, isLoading } = useProviderRegistry();
 
-// Get specific provider
-const localProvider = getProviderById('local-filesystem');
+// Or use useProviderMetadata for full provider objects
+import { useProviderMetadata } from '@aether/providers/hooks/useProviderRegistry';
+
+const { providers, isLoading } = useProviderMetadata();
+const localProvider = providers.find(p => p.id === 'local-filesystem');
 ```
 
 ### 3. Configuration
@@ -280,13 +283,18 @@ doAction('aether.providers.register', new MyProvider());
 Access all registered providers:
 
 ```javascript
-import { useProviderRegistry } from '../hooks/useProviderRegistry';
+import { useProviderMetadata } from '@aether/providers/hooks/useProviderRegistry';
+import { useProviderContext } from '@aether/hooks/useProviderContext';
 
 function MyComponent() {
+    // Option 1: Get provider metadata array
+    const { providers, isLoading } = useProviderMetadata();
+    
+    // Option 2: Get full context with helper methods
     const {
-        providers,           // All providers
-        getProviderById,     // Get by ID
-        getProvidersByCapability,  // Filter by capability
+        providers: contextProviders,  // All providers
+        getProvider,                   // Get by ID
+        getProvidersByCapability,      // Filter by deployment type
         loading,
         error,
     } = useProviderRegistry();

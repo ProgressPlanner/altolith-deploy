@@ -93,20 +93,30 @@ Access all registered providers.
 ```javascript
 const {
     providers,                   // All providers
+    providerIds,                // Array of provider IDs
     loading,                     // Loading state
     error,                       // Error state
-    getProviderById,            // Get provider by ID
-    getProvidersByCapability,   // Filter by capability
+    getProvider,                 // Get provider by ID
+    getProvidersByCapability,   // Filter by deployment type
+    getProvidersByType,         // Filter by provider type
+    providerExists,              // Check if provider exists
+    providerCount,               // Number of providers
+    refresh,                     // Refresh providers list
 } = useProviderRegistry();
 ```
 
 **Usage:**
 ```javascript
-// Get all storage providers
-const storageProviders = getProvidersByCapability('storage');
+// Get all providers that support static_site deployment
+const staticSiteProviders = getProvidersByCapability('static_site');
 
 // Get specific provider
-const localProvider = getProviderById('local-filesystem');
+const localProvider = getProvider('local-filesystem');
+
+// Check if provider exists
+if (providerExists('local-filesystem')) {
+    // Provider is available
+}
 ```
 
 ### useProvider
