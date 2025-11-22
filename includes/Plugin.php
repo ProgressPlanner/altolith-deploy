@@ -210,15 +210,18 @@ class Plugin
 	 */
 	public function addAPIConfigScript(string $scriptHandle): void
 	{
-		$restUrl = \rest_url('aether/site-exporter/');
+		// Base REST API URL (without namespace) - paths will include full namespace.
+		$restUrl = \rest_url();
+		$namespace = 'aether/site-exporter/';
 		$nonce   = \wp_create_nonce('wp_rest');
 		$pluginUrl = (string) AETHER_SITE_EXPORTER_PLUGIN_URL;
 		$publicUrl = \home_url();
 		$adminUrl = \admin_url();
 
 		$script = \sprintf(
-			'window.aetherData = window.aetherData || {}; window.aetherData.restUrl = %s; window.aetherData.nonce = %s; window.aetherData.pluginUrl = %s; window.aetherData.publicUrl = %s; window.aetherData.adminUrl = %s;',
+			'window.aetherData = window.aetherData || {}; window.aetherData.restUrl = %s; window.aetherData.restNamespace = %s; window.aetherData.nonce = %s; window.aetherData.pluginUrl = %s; window.aetherData.publicUrl = %s; window.aetherData.adminUrl = %s;',
 			\wp_json_encode($restUrl),
+			\wp_json_encode($namespace),
 			\wp_json_encode($nonce),
 			\wp_json_encode($pluginUrl),
 			\wp_json_encode($publicUrl),
@@ -417,6 +420,7 @@ class Plugin
 		$assetsController = new REST\AssetsController();
 		$localStorageController = new REST\LocalStorageController();
 		$urlDiscoveryController = new REST\URLDiscoveryController();
+		$scriptsController = new REST\ScriptsController();
 
 		// Initialize export controllers.
 		$exportJobController = new REST\Export\ExportJobController($this);
@@ -429,6 +433,7 @@ class Plugin
 		$assetsController->registerRoutes();
 		$localStorageController->registerRoutes();
 		$urlDiscoveryController->registerRoutes();
+		$scriptsController->registerRoutes();
 
 		// Register export routes.
 		$exportJobController->registerRoutes();

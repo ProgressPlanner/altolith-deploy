@@ -2,15 +2,16 @@
  * Get REST API URL Utility
  *
  * Reads the REST API base URL from window.aetherData or returns a default.
+ * Returns base REST API URL (without namespace) so paths can include full namespace.
  * This ensures WordPress Playground scoped URLs work correctly.
  *
  * @package
  */
 
 /**
- * Get REST API URL from window.aetherData or default.
+ * Get REST API base URL from window.aetherData or default.
  *
- * @return {string} REST API base URL.
+ * @return {string} REST API base URL (without namespace).
  */
 export function getRestUrl() {
 	if (
@@ -20,5 +21,5 @@ export function getRestUrl() {
 	) {
 		return window.aetherData.restUrl;
 	}
-	return '/wp-json/aether/site-exporter/';
+	return '/wp-json/';
 }
