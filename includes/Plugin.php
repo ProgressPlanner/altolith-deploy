@@ -320,7 +320,6 @@ class Plugin
 		// List of known Aether admin page slugs
 		$aetherPages = [
 			'aether',
-			'aether-publish',
 		];
 
 		return \in_array($currentPage, $aetherPages, true);
@@ -411,7 +410,6 @@ class Plugin
 		$settingsController = new REST\SettingsController();
 		$exportController  = new REST\ExportController($this);
 		$providerConfigController = new REST\ProviderConfigController();
-		$configController = new REST\ConfigController();
 		$assetsController = new REST\AssetsController();
 		$localStorageController = new REST\LocalStorageController();
 		$urlDiscoveryController = new REST\URLDiscoveryController();
@@ -424,7 +422,6 @@ class Plugin
 		$settingsController->registerRoutes();
 		$exportController->registerRoutes();
 		$providerConfigController->registerRoutes();
-		$configController->registerRoutes();
 		$assetsController->registerRoutes();
 		$localStorageController->registerRoutes();
 		$urlDiscoveryController->registerRoutes();
