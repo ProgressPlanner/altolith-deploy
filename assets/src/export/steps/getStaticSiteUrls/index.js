@@ -65,7 +65,9 @@ async function handler( context ) {
 	);
 
 	// Return data to merge into execution state
+	// Global cache requires success: true
 	return {
+		success: true,
 		urls,
 		staticSiteUrl,
 		urlsCount,

@@ -109,7 +109,9 @@ async function handler( context ) {
 	setStatusMessage( message, 'success', 'discoverBlueprintBundleAssets' );
 
 	// Return data to merge into execution state
+	// Global cache requires success: true
 	return {
+		success: true,
 		discoveredAssets: assets,
 	};
 }
