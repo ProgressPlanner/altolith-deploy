@@ -58,7 +58,7 @@ export default function HowItWorks() {
 				>
 					<InfoParagraph isLast>
 						{ __(
-							'When you click "Publish Site Now", Aether performs a series of automated steps to sync your WordPress site to your configured providers. The process is designed to be fast, reliable, and error-resistant.',
+							'When you click "Export Site", Aether performs a series of automated steps to sync your WordPress site to your configured providers. The process is designed to be fast, reliable, and error-resistant.',
 							'aether-site-exporter'
 						) }
 					</InfoParagraph>
@@ -75,78 +75,84 @@ export default function HowItWorks() {
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
 								{ __(
-									'Blueprint Generation:',
+									'Discover Assets:',
 									'aether-site-exporter'
 								) }
 							</strong>{ ' ' }
 							{ __(
-								'Creates a WordPress Playground blueprint with your site content, theme, and plugins.',
-								'aether-site-exporter'
-							) }
-						</li>
-						<li className="aether-how-it-works__step">
-							<strong className="aether-how-it-works__step-label">
-								{ __( 'Site Export:', 'aether-site-exporter' ) }
-							</strong>{ ' ' }
-							{ __(
-								'Exports your complete WordPress site including database, uploads, and configuration.',
+								'Finds custom plugins, themes, and uploads to include in blueprint bundle.',
 								'aether-site-exporter'
 							) }
 						</li>
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
 								{ __(
-									'Static Site Generation:',
+									'Discover URLs:',
 									'aether-site-exporter'
 								) }
 							</strong>{ ' ' }
 							{ __(
-								'If enabled, converts your site to static HTML, CSS, and JavaScript files.',
+								'Finds all URLs for static site generation.',
 								'aether-site-exporter'
 							) }
 						</li>
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
 								{ __(
-									'Upload to Storage:',
+									'Pre-Scan Static Site:',
 									'aether-site-exporter'
 								) }
 							</strong>{ ' ' }
 							{ __(
-								'Uploads blueprint and static files to your configured storage provider.',
+								'Fetches HTML pages and extracts assets (CSS, JS, images) to add to URL list.',
 								'aether-site-exporter'
 							) }
 						</li>
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
 								{ __(
-									'Atomic Deployment:',
+									'Create Bundle:',
 									'aether-site-exporter'
 								) }
 							</strong>{ ' ' }
 							{ __(
-								'Atomically switches to the new version, ensuring zero downtime.',
+								'Packages custom plugins, themes, and uploads into wp-content.zip archive.',
 								'aether-site-exporter'
 							) }
 						</li>
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
 								{ __(
-									'Verification:',
+									'Generate Blueprint:',
 									'aether-site-exporter'
 								) }
 							</strong>{ ' ' }
 							{ __(
-								'Verifies that all files were uploaded successfully and are accessible.',
+								'Creates blueprint-bundle.zip with blueprint.json containing your site data.',
 								'aether-site-exporter'
 							) }
 						</li>
 						<li className="aether-how-it-works__step">
 							<strong className="aether-how-it-works__step-label">
-								{ __( 'Cleanup:', 'aether-site-exporter' ) }
+								{ __(
+									'Upload Blueprint Bundle:',
+									'aether-site-exporter'
+								) }
 							</strong>{ ' ' }
 							{ __(
-								'Removes temporary files and old versions to keep storage clean.',
+								'Uploads blueprint bundle to configured providers (only if blueprint deployment is enabled).',
+								'aether-site-exporter'
+							) }
+						</li>
+						<li className="aether-how-it-works__step">
+							<strong className="aether-how-it-works__step-label">
+								{ __(
+									'Upload Static Files:',
+									'aether-site-exporter'
+								) }
+							</strong>{ ' ' }
+							{ __(
+								'Generates and uploads static HTML/CSS/JS files (only if static site deployment is enabled).',
 								'aether-site-exporter'
 							) }
 						</li>
@@ -159,7 +165,7 @@ export default function HowItWorks() {
 				>
 					<InfoParagraph isLast>
 						{ __(
-							'Your WordPress site is packaged as a Playground blueprint - a complete, portable version that can run in WordPress Playground. This blueprint is stored in your configured storage provider and can be accessed via the /wp-admin URL of your published site.',
+							'Your WordPress site is packaged as a WordPress Playground blueprint - a complete, portable version that can run in any WordPress Playground environment. This blueprint contains your site data as JSON (not a database), along with your custom plugins, themes, and uploads. The blueprint is stored in your configured storage provider and can be loaded into WordPress Playground to recreate your site.',
 							'aether-site-exporter'
 						) }
 					</InfoParagraph>
@@ -174,7 +180,7 @@ export default function HowItWorks() {
 				>
 					<InfoParagraph isLast>
 						{ __(
-							'When static site generation is enabled, Aether crawls your site, generates HTML for all pages, collects assets, and deploys everything to your configured hosting provider. Visitors see the fast, secure static version while you maintain full WordPress editing capabilities.',
+							'When static site generation is enabled, Aether discovers all URLs, pre-scans pages to extract assets (CSS, JS, images), generates HTML for all pages, rewrites URLs, and uploads everything to your configured hosting provider. Visitors see the fast, secure static version while you maintain full WordPress editing capabilities.',
 							'aether-site-exporter'
 						) }
 					</InfoParagraph>
@@ -246,7 +252,10 @@ export default function HowItWorks() {
 							className="aether-how-it-works__published-item"
 							style={ benefitListItemStyle }
 						>
-							{ __( 'Database content', 'aether-site-exporter' ) }
+							{ __(
+								'Site data (as JSON in blueprint)',
+								'aether-site-exporter'
+							) }
 						</li>
 					</ul>
 				</InfoCard>
@@ -256,24 +265,11 @@ export default function HowItWorks() {
 					className="aether-how-it-works__item aether-how-it-works__item--last"
 					isLast
 				>
-					<InfoParagraph>
-						{ __(
-							'If a publish fails, check the error message in the recent jobs list above. Common issues include missing provider configuration, network errors, or insufficient storage. You can retry the publish after fixing the issue.',
-							'aether-site-exporter'
-						) }
-					</InfoParagraph>
 					<InfoParagraph isLast>
 						{ __(
-							'For detailed debugging information, visit the',
+							'If a publish fails, check the error message in the publish progress modal. Common issues include missing provider configuration, network errors, or insufficient storage. You can retry the publish after fixing the issue. Each step executes independently with automatic retry logic for network errors.',
 							'aether-site-exporter'
-						) }{ ' ' }
-						<a
-							className="aether-how-it-works__link"
-							href="/wp-admin/admin.php?page=aether-logs"
-						>
-							{ __( 'Logs', 'aether-site-exporter' ) }
-						</a>{ ' ' }
-						{ __( 'page.', 'aether-site-exporter' ) }
+						) }
 					</InfoParagraph>
 				</InfoCard>
 			</div>
