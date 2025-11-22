@@ -13,7 +13,7 @@ describe( 'ExportButton', () => {
 			ready: true,
 			issues: [],
 		},
-		onPublishClick: jest.fn(),
+		onExportClick: jest.fn(),
 		isExporting: false,
 	};
 
@@ -32,25 +32,22 @@ describe( 'ExportButton', () => {
 	it( 'should render export button when ready', () => {
 		render( <ExportButton { ...defaultProps } /> );
 
-		expect( screen.getByText( 'Publish Site Now' ) ).toBeInTheDocument();
+		expect( screen.getByText( 'Export Site Now' ) ).toBeInTheDocument();
 		expect(
 			screen.getByText( 'Your site is ready to export!' )
 		).toBeInTheDocument();
 	} );
 
-	it( 'should call onPublishClick when button is clicked', () => {
-		const onPublishClick = jest.fn();
+	it( 'should call onExportClick when button is clicked', () => {
+		const onExportClick = jest.fn();
 		render(
-			<ExportButton
-				{ ...defaultProps }
-				onPublishClick={ onPublishClick }
-			/>
+			<ExportButton { ...defaultProps } onExportClick={ onExportClick } />
 		);
 
-		const button = screen.getByText( 'Publish Site Now' );
+		const button = screen.getByText( 'Export Site Now' );
 		fireEvent.click( button );
 
-		expect( onPublishClick ).toHaveBeenCalledTimes( 1 );
+		expect( onExportClick ).toHaveBeenCalledTimes( 1 );
 	} );
 
 	it( 'should disable button when not ready', () => {
@@ -61,7 +58,7 @@ describe( 'ExportButton', () => {
 			/>
 		);
 
-		const button = screen.getByText( 'Publish Site Now' );
+		const button = screen.getByText( 'Export Site Now' );
 		expect( button ).toBeDisabled();
 	} );
 
@@ -115,7 +112,7 @@ describe( 'ExportButton', () => {
 
 		expect( screen.getByText( 'Exporting…' ) ).toBeInTheDocument();
 		expect(
-			screen.queryByText( 'Publish Site Now' )
+			screen.queryByText( 'Export Site Now' )
 		).not.toBeInTheDocument();
 	} );
 } );

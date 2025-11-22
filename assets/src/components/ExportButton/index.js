@@ -1,5 +1,5 @@
 /**
- * Publish Button Component
+ * Export Button Component
  *
  * @package
  */
@@ -18,7 +18,7 @@ import {
 
 export default function ExportButton( {
 	readiness,
-	onPublishClick,
+	onExportClick,
 	isExporting,
 } ) {
 	const config = useConfig();
@@ -180,14 +180,14 @@ export default function ExportButton( {
 					className="aether-export-button__button"
 					variant="primary"
 					isLarge
-					onClick={ onPublishClick }
+					onClick={ onExportClick }
 					disabled={ ! isReady || isExporting }
 					isBusy={ isExporting }
 				>
 					<span className="dashicons dashicons-upload aether-export-button__icon" />
 					{ isExporting
 						? __( 'Exporting…', 'aether-site-exporter' )
-						: __( 'Publish Site Now', 'aether-site-exporter' ) }
+						: __( 'Export Site Now', 'aether-site-exporter' ) }
 				</Button>
 			</div>
 		</div>

@@ -30,7 +30,7 @@ if ( typeof __webpack_public_path__ !== 'undefined' ) {
 import { render } from '@wordpress/element';
 import AdminSettings from './AdminSettings';
 import ErrorBoundary from '../components/ErrorBoundary';
-import { PublishProvider } from '../contexts/ExportContext';
+import { ExportProvider } from '../contexts/ExportContext';
 import { initializeErrorHandlers } from '../utils/errorHandler';
 
 // Initialize global error handlers
@@ -61,9 +61,9 @@ const init = () => {
 	try {
 		render(
 			<ErrorBoundary>
-				<PublishProvider>
+				<ExportProvider>
 					<AdminSettings />
-				</PublishProvider>
+				</ExportProvider>
 			</ErrorBoundary>,
 			container
 		);

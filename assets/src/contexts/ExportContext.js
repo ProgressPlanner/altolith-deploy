@@ -1,5 +1,5 @@
 /**
- * Publish Context
+ * Export Context
  *
  * Centralized export workflow state management using React Context API.
  * Provides global export state with step tracking, progress management, and status updates.
@@ -16,7 +16,7 @@ import {
 } from '@wordpress/element';
 
 /**
- * Publish Context
+ * Export Context
  *
  * @type {Object}
  */
@@ -47,7 +47,7 @@ export const ExportContext = createContext( {
 } );
 
 /**
- * Publish Provider Component
+ * Export Provider Component
  *
  * Wraps the export workflow to provide global state management.
  * Features:
@@ -62,7 +62,7 @@ export const ExportContext = createContext( {
  * @param {JSX.Element} props.children Child components
  * @return {JSX.Element} Provider component
  */
-export function PublishProvider( { children } ) {
+export function ExportProvider( { children } ) {
 	// Core state
 	const [ steps, setSteps ] = useState( [] );
 	const [ isExporting, setIsExporting ] = useState( false );

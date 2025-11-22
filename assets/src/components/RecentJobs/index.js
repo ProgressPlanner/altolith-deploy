@@ -137,7 +137,7 @@ export default function RecentJobs( { jobs = [], loading = false } ) {
 	return (
 		<div className="aether-recent-jobs" style={ sectionStyle }>
 			<SectionHeader
-				title={ __( 'Recent Publish Jobs', 'aether-site-exporter' ) }
+				title={ __( 'Recent Export Jobs', 'aether-site-exporter' ) }
 				description={ __(
 					'History of your recent export operations.',
 					'aether'
@@ -170,7 +170,7 @@ export default function RecentJobs( { jobs = [], loading = false } ) {
 						style={ utilityStyles.noMargin }
 					>
 						{ __(
-							'No export jobs yet. Click the "Publish Site Now" button above to get started.',
+							'No export jobs yet. Click the "Export Site Now" button above to get started.',
 							'aether'
 						) }
 					</p>

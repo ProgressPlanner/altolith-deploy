@@ -49,7 +49,7 @@ class ExportJobController
 			'/export',
 			[
 				'methods'             => 'POST',
-				'callback'            => [ $this, 'startPublish' ],
+				'callback'            => [ $this, 'startExport' ],
 				'permission_callback' => [ $this, 'permissionCheck' ],
 			]
 		);
@@ -103,7 +103,7 @@ class ExportJobController
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function startPublish(WP_REST_Request $request)
+	public function startExport(WP_REST_Request $request)
 	{
 		// Get changed assets and discovered assets from request body.
 		$body = $request->get_params();

@@ -13,10 +13,10 @@ import { ExportContext } from '../contexts/ExportContext';
 /**
  * Hook to access export context
  *
- * Must be used within a PublishProvider.
+ * Must be used within an ExportProvider.
  *
- * @throws {Error} If used outside PublishProvider
- * @return {Object} Publish context value
+ * @throws {Error} If used outside ExportProvider
+ * @return {Object} Export context value
  * @property {Array}    steps                   - All workflow steps
  * @property {boolean}  isExporting             - Exporting flag
  * @property {string}   jobId                   - Current job ID
@@ -30,7 +30,7 @@ import { ExportContext } from '../contexts/ExportContext';
  * @property {Function} updateFromStep          - Transition to a step
  * @property {Function} markAllComplete         - Mark all steps complete
  * @property {Function} showError               - Show error message
- * @property {Function} setIsExporting          - Set publishing flag
+ * @property {Function} setIsExporting          - Set exporting flag
  * @property {Function} setJobId                - Set job ID
  * @property {Function} setStatusMessage        - Set status message
  * @property {Function} setOverallProgressValue - Set overall progress
@@ -86,7 +86,7 @@ export function useExportContext() {
 
 	if ( ! context ) {
 		throw new Error(
-			'useExportContext must be used within a PublishProvider'
+			'useExportContext must be used within an ExportProvider'
 		);
 	}
 
