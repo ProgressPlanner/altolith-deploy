@@ -154,12 +154,7 @@ class ProviderQueueExecutor {
 					);
 
 					// Fire error hook
-					doAction(
-						'aether.step.error',
-						step.id,
-						providerId,
-						error
-					);
+					doAction( 'aether.step.error', step.id, providerId, error );
 
 					return {
 						providerId,
@@ -221,12 +216,7 @@ class ProviderQueueExecutor {
 			Object.assign( providerContext, cachedResult );
 
 			// Fire cached hook
-			doAction(
-				'aether.step.cached',
-				step.id,
-				providerId,
-				cachedResult
-			);
+			doAction( 'aether.step.cached', step.id, providerId, cachedResult );
 
 			return;
 		}

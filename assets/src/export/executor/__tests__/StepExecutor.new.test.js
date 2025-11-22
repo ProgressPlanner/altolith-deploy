@@ -3,10 +3,25 @@
  */
 
 import { executeSteps } from '../StepExecutor';
-import { GlobalStepCache } from '../../utils/globalStepCache';
 
-// Mock GlobalStepCache
-jest.mock( '../../utils/globalStepCache' );
+// Mock globalStepState module
+jest.mock( '../../utils/globalStepState', () => ( {
+	globalStepState: {
+		clear: jest.fn(),
+		lock: jest.fn(),
+		unlock: jest.fn(),
+		get: jest.fn(),
+		set: jest.fn(),
+		setError: jest.fn(),
+		wait: jest.fn(),
+		getState: jest.fn( () => ( {
+			jobId: 'test-job',
+			stepCount: 0,
+			steps: [],
+		} ) ),
+		results: new Map(),
+	},
+} ) );
 
 // Mock hooks
 jest.mock( '@wordpress/hooks', () => ( {
@@ -15,65 +30,28 @@ jest.mock( '@wordpress/hooks', () => ( {
 } ) );
 
 describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
-	let mockGlobalCache;
+	let globalStepState;
 
 	beforeEach( () => {
 		// Reset mocks
 		jest.clearAllMocks();
 
-		// Simulate real cache behavior with state
-		const cacheState = {
-			steps: {},
-		};
+		// Get the mocked globalStepState
+		globalStepState =
+			require( '../../utils/globalStepState' ).globalStepState;
 
-		// Create mock global cache with realistic behavior
-		mockGlobalCache = {
-			initialize: jest.fn().mockResolvedValue( undefined ),
-			getStepResult: jest.fn().mockImplementation( ( stepId ) => {
-				const step = cacheState.steps[ stepId ];
-				if ( step && step.status === 'completed' ) {
-					return Promise.resolve( step.result );
-				}
-				return Promise.resolve( null );
-			} ),
-			setStepRunning: jest.fn().mockImplementation( ( stepId ) => {
-				if ( cacheState.steps[ stepId ] ) {
-					// Already running, completed, or errored
-					return Promise.resolve( false );
-				}
-				// Acquire lock
-				cacheState.steps[ stepId ] = { status: 'running' };
-				return Promise.resolve( true );
-			} ),
-			setStepResult: jest.fn().mockImplementation( ( stepId, result ) => {
-				cacheState.steps[ stepId ] = {
-					status: 'completed',
-					result,
-				};
-				return Promise.resolve();
-			} ),
-			setStepError: jest.fn().mockImplementation( ( stepId, error ) => {
-				cacheState.steps[ stepId ] = {
-					status: 'error',
-					error,
-				};
-				return Promise.resolve();
-			} ),
-			waitForStep: jest.fn().mockImplementation( ( stepId ) => {
-				// In tests, immediately return the result if available
-				const step = cacheState.steps[ stepId ];
-				if ( step && step.status === 'completed' ) {
-					return Promise.resolve( step.result );
-				}
-				if ( step && step.status === 'error' ) {
-					return Promise.reject( step.error );
-				}
-				return Promise.resolve( {} );
-			} ),
-			clearCache: jest.fn().mockResolvedValue( undefined ),
-		};
+		// Reset implementation for each test
+		globalStepState.clear.mockClear();
+		globalStepState.lock.mockClear();
+		globalStepState.get.mockClear();
+		globalStepState.set.mockClear();
+		globalStepState.setError.mockClear();
+		globalStepState.wait.mockClear();
 
-		GlobalStepCache.mockImplementation( () => mockGlobalCache );
+		// Set up default implementations
+		globalStepState.get.mockReturnValue( null ); // No cached result
+		globalStepState.lock.mockReturnValue( true ); // Lock acquired
+		globalStepState.wait.mockResolvedValue( {} ); // Wait returns empty object
 	} );
 
 	describe( 'basic execution', () => {
@@ -100,10 +78,8 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 
 			await executeSteps( steps, context );
 
-			// Should initialize global cache
-			expect( mockGlobalCache.initialize ).toHaveBeenCalledWith(
-				'job-123'
-			);
+			// Should clear global state
+			expect( globalStepState.clear ).toHaveBeenCalledWith( 'job-123' );
 
 			// Should execute handler once for the provider
 			expect( step1Handler ).toHaveBeenCalledTimes( 1 );
@@ -192,6 +168,18 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 
 	describe( 'global cache steps', () => {
 		it( 'should execute global cache step only once', async () => {
+			// First provider acquires lock, others wait
+			globalStepState.lock
+				.mockReturnValueOnce( true ) // Provider 1 gets lock
+				.mockReturnValueOnce( false ) // Provider 2 waits
+				.mockReturnValueOnce( false ); // Provider 3 waits
+
+			// Waiting providers get the result
+			globalStepState.wait.mockResolvedValue( {
+				success: true,
+				data: 'cached-result',
+			} );
+
 			const globalStepHandler = jest
 				.fn()
 				.mockResolvedValue( { success: true, data: 'cached-result' } );
@@ -217,17 +205,17 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 			expect( globalStepHandler ).toHaveBeenCalledTimes( 1 );
 
 			// Should store result in global cache
-			expect( mockGlobalCache.setStepResult ).toHaveBeenCalledWith(
-				'globalStep',
-				{ success: true, data: 'cached-result' }
-			);
+			expect( globalStepState.set ).toHaveBeenCalledWith( 'globalStep', {
+				success: true,
+				data: 'cached-result',
+			} );
 		} );
 
 		it( 'should use cached result if available', async () => {
 			const cachedResult = { success: true, data: 'from-cache' };
 
 			// Mock cache to return cached result
-			mockGlobalCache.getStepResult.mockResolvedValue( cachedResult );
+			globalStepState.get.mockResolvedValue( cachedResult );
 
 			const globalStepHandler = jest.fn();
 
@@ -252,21 +240,19 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 			expect( globalStepHandler ).not.toHaveBeenCalled();
 
 			// Should retrieve from cache
-			expect( mockGlobalCache.getStepResult ).toHaveBeenCalledWith(
-				'globalStep'
-			);
+			expect( globalStepState.get ).toHaveBeenCalledWith( 'globalStep' );
 		} );
 
 		it( 'should wait for global step if another provider is executing it', async () => {
 			const completedResult = { success: true, data: 'completed' };
 
 			// First provider acquires lock
-			mockGlobalCache.setStepRunning
+			globalStepState.lock
 				.mockResolvedValueOnce( true ) // Provider 1 gets lock
 				.mockResolvedValueOnce( false ); // Provider 2 doesn't
 
 			// Provider 2 waits and gets result
-			mockGlobalCache.waitForStep.mockResolvedValue( completedResult );
+			globalStepState.wait.mockResolvedValue( completedResult );
 
 			const globalStepHandler = jest
 				.fn()
@@ -293,9 +279,7 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 			expect( globalStepHandler ).toHaveBeenCalledTimes( 1 );
 
 			// Other provider should wait
-			expect( mockGlobalCache.waitForStep ).toHaveBeenCalledWith(
-				'globalStep'
-			);
+			expect( globalStepState.wait ).toHaveBeenCalledWith( 'globalStep' );
 		} );
 
 		it( 'should inject cached result into context for subsequent steps', async () => {
@@ -435,8 +419,8 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 	} );
 
 	describe( 'callback notifications', () => {
-		it( 'should call onStepStart for each provider-step combination', async () => {
-			const onStepStart = jest.fn();
+		it( 'should fire aether.step.start hook for each provider-step combination', async () => {
+			const { doAction } = require( '@wordpress/hooks' );
 
 			const steps = [
 				{
@@ -453,12 +437,19 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 				jobId: 'job-123',
 			};
 
-			await executeSteps( steps, context, { onStepStart } );
+			await executeSteps( steps, context );
 
-			// Should be called once per provider
-			expect( onStepStart ).toHaveBeenCalledTimes( 2 );
-			expect( onStepStart ).toHaveBeenCalledWith( 'step1', 'provider-1' );
-			expect( onStepStart ).toHaveBeenCalledWith( 'step1', 'provider-2' );
+			// Should fire hook once per provider
+			expect( doAction ).toHaveBeenCalledWith(
+				'aether.step.start',
+				'step1',
+				'provider-1'
+			);
+			expect( doAction ).toHaveBeenCalledWith(
+				'aether.step.start',
+				'step1',
+				'provider-2'
+			);
 		} );
 
 		it( 'should call onStepComplete after each step completes', async () => {
@@ -494,7 +485,7 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 			const onStepCached = jest.fn();
 			const cachedResult = { success: true, data: 'cached' };
 
-			mockGlobalCache.getStepResult.mockResolvedValue( cachedResult );
+			globalStepState.get.mockResolvedValue( cachedResult );
 
 			const steps = [
 				{
@@ -521,11 +512,11 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 			const onStepWaiting = jest.fn();
 
 			// First provider gets lock, second waits
-			mockGlobalCache.setStepRunning
+			globalStepState.lock
 				.mockResolvedValueOnce( true )
 				.mockResolvedValueOnce( false );
 
-			mockGlobalCache.waitForStep.mockResolvedValue( {
+			globalStepState.wait.mockResolvedValue( {
 				success: true,
 			} );
 
@@ -684,7 +675,7 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 			await executeSteps( steps, context );
 
 			// Should store error in cache
-			expect( mockGlobalCache.setStepError ).toHaveBeenCalledWith(
+			expect( globalStepState.setError ).toHaveBeenCalledWith(
 				'globalStep',
 				error
 			);

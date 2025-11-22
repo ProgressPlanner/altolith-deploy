@@ -98,10 +98,12 @@ class GlobalStepState {
 	 */
 	clear( jobId ) {
 		this.jobId = jobId;
-		this.results.clear();
 
-		// Clean up stale locks from any previous jobs
+		// Clean up stale locks BEFORE clearing (for testing)
 		this._cleanupStaleLocks();
+
+		// Clear all results
+		this.results.clear();
 
 		doAction( 'aether.globalStepState.cleared', jobId );
 	}
@@ -123,10 +125,7 @@ class GlobalStepState {
 				// Stale lock detected - remove it
 				this.results.delete( stepId );
 
-				doAction(
-					'aether.globalStepState.stale-lock-removed',
-					stepId
-				);
+				doAction( 'aether.globalStepState.stale-lock-removed', stepId );
 			}
 		}
 	}
@@ -226,7 +225,7 @@ class GlobalStepState {
 					jobId: this.jobId,
 					error: error.message || String( error ),
 				} );
-			} catch ( error ) {
+			} catch ( broadcastError ) {
 				// Broadcast failed - other providers will still see error via polling
 			}
 		}

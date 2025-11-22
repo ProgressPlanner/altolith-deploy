@@ -153,11 +153,31 @@ export function useExportController( exportState ) {
 		};
 
 		// Register all hook listeners
-		addAction( 'aether.step.start', 'aether/export-controller', handleStepStart );
-		addAction( 'aether.step.complete', 'aether/export-controller', handleStepComplete );
-		addAction( 'aether.step.cached', 'aether/export-controller', handleStepCached );
-		addAction( 'aether.step.waiting', 'aether/export-controller', handleStepWaiting );
-		addAction( 'aether.step.error', 'aether/export-controller', handleStepError );
+		addAction(
+			'aether.step.start',
+			'aether/export-controller',
+			handleStepStart
+		);
+		addAction(
+			'aether.step.complete',
+			'aether/export-controller',
+			handleStepComplete
+		);
+		addAction(
+			'aether.step.cached',
+			'aether/export-controller',
+			handleStepCached
+		);
+		addAction(
+			'aether.step.waiting',
+			'aether/export-controller',
+			handleStepWaiting
+		);
+		addAction(
+			'aether.step.error',
+			'aether/export-controller',
+			handleStepError
+		);
 
 		// Cleanup: Remove all hook listeners on unmount
 		return () => {
