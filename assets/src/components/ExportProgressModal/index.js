@@ -9,8 +9,8 @@
 import { useEffect, useMemo, useCallback, useRef } from '@wordpress/element';
 import { Modal, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { usePublishState } from '@aether/publish/hooks/usePublishState';
-import { usePublishController } from '@aether/publish/hooks/usePublishController';
+import { useExportState } from '@aether/export/hooks/useExportState';
+import { useExportController } from '@aether/export/hooks/useExportController';
 import {
 	colors,
 	spacing,
@@ -112,13 +112,13 @@ const loadingParagraphStyle = {
 	color: colors.textMuted,
 };
 
-export default function PublishProgressModal( {
+export default function ExportProgressModal( {
 	isOpen,
 	onClose,
 	onComplete,
 } ) {
-	const publishState = usePublishState();
-	const { startPublish } = usePublishController( publishState );
+	const publishState = useExportState();
+	const { startExport } = useExportController( publishState );
 	const {
 		steps,
 		isPublishing,
@@ -164,7 +164,7 @@ export default function PublishProgressModal( {
 		if ( isOpen && ! isPublishing ) {
 			// Only start if we haven't started yet (no steps initialized and no job ID)
 			if ( steps.length === 0 && ! jobId ) {
-				startPublish();
+				startExport();
 			}
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps

@@ -57,7 +57,7 @@ _prefixKey( key ) {
 
 ### 2. Raw HTML Caching + Per-Provider URL Rewriting
 
-**File:** `assets/src/publish/hooks/useStaticSiteGenerator.js`
+**File:** `assets/src/export/hooks/useStaticSiteGenerator.js`
 
 **Changes:**
 
@@ -79,7 +79,7 @@ const { processedHtml: rawHtml, assetUrls } = cached;
 
 // Apply provider-specific URL rewriting
 let processedHtml = applyFilters(
-    'aether.publish.step.uploadStaticSiteFiles.html.process',
+    'aether.export.step.uploadStaticSiteFiles.html.process',
     rawHtml,
     url,
     siteUrl,
@@ -108,7 +108,7 @@ processedHtml = processHtml(
 
 ### 3. Provider ID Config Passing
 
-**File:** `assets/src/publish/hooks/useStaticSiteGenerator.js`
+**File:** `assets/src/export/hooks/useStaticSiteGenerator.js`
 
 **Changes:**
 ```javascript
@@ -123,7 +123,7 @@ StorageService now receives provider ID and automatically prefixes all paths.
 
 ### 4. Multi-Provider Upload (Already Existed!)
 
-**File:** `assets/src/publish/steps/uploadStaticSiteFilesStep.js`
+**File:** `assets/src/export/steps/uploadStaticSiteFilesStep.js`
 
 **Already Implemented:**
 - Accepts array of `staticSiteProviders`
@@ -360,7 +360,7 @@ addFilter('aether.static.html.raw', 'my-plugin', (html, url, siteUrl) => {
 **Runs:** Once per provider per page
 
 ```javascript
-addFilter('aether.publish.step.uploadStaticSiteFiles.html.process', 'my-plugin', (html, url, siteUrl, staticSiteUrl, providerId) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin', (html, url, siteUrl, staticSiteUrl, providerId) => {
     // Modify HTML with provider-specific logic
     if (providerId === 'cloudflare-r2') {
         return html + '<!-- Deployed via Cloudflare R2 -->';

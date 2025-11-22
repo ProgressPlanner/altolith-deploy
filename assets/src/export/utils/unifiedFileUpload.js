@@ -8,7 +8,7 @@
  */
 
 import { doAction, applyFilters } from '@wordpress/hooks';
-import { processHtml } from '@aether/publish/utils/htmlProcessor';
+import { processHtml } from '@aether/export/utils/htmlProcessor';
 import apiFetch from '@wordpress/api-fetch';
 import { debugWarn } from '@aether/utils/debug';
 
@@ -175,7 +175,7 @@ export async function uploadFile( fileContext ) {
 				if ( htmlText ) {
 					// Apply HTML filter hook (for consistency with Path 1)
 					const filteredHtml = applyFilters(
-						'aether.publish.step.uploadStaticSiteFiles.html.process',
+						'aether.export.step.uploadStaticSiteFiles.html.process',
 						htmlText,
 						filePath,
 						metadata.siteUrl,

@@ -133,7 +133,7 @@ module.exports = {
 				__dirname,
 				'assets/src/providers'
 			),
-			'@aether/publish': path.resolve( __dirname, 'assets/src/publish' ),
+			'@aether/export': path.resolve( __dirname, 'assets/src/export' ),
 			'@aether/admin': path.resolve(
 				__dirname,
 				'assets/src/admin-settings'

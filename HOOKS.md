@@ -683,7 +683,7 @@ addAction('aether.admin.provider.settings.saved', 'my-plugin', (providerId) => {
 #### `aether.publish.workflow.before`
 
 **Type**: Action
-**Location**: `assets/src/publish/executor/StepExecutor.js`
+**Location**: `assets/src/export/executor/StepExecutor.js`
 
 Fires before the publish workflow execution begins.
 
@@ -695,7 +695,7 @@ Fires before the publish workflow execution begins.
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.workflow.before', 'my-plugin', (executionContext, steps) => {
+addAction('aether.export.workflow.before', 'my-plugin', (executionContext, steps) => {
     console.log('Starting publish workflow with', steps.length, 'steps');
 });
 ```
@@ -705,7 +705,7 @@ addAction('aether.publish.workflow.before', 'my-plugin', (executionContext, step
 #### `aether.publish.workflow.after`
 
 **Type**: Action
-**Location**: `assets/src/publish/executor/StepExecutor.js`
+**Location**: `assets/src/export/executor/StepExecutor.js`
 
 Fires after the publish workflow completes successfully.
 
@@ -717,7 +717,7 @@ Fires after the publish workflow completes successfully.
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.workflow.after', 'my-plugin', (state, executionContext) => {
+addAction('aether.export.workflow.after', 'my-plugin', (state, executionContext) => {
     console.log('Workflow completed successfully');
 });
 ```
@@ -727,7 +727,7 @@ addAction('aether.publish.workflow.after', 'my-plugin', (state, executionContext
 #### `aether.publish.workflow.error`
 
 **Type**: Action
-**Location**: `assets/src/publish/executor/StepExecutor.js`
+**Location**: `assets/src/export/executor/StepExecutor.js`
 
 Fires when the publish workflow encounters an error.
 
@@ -739,7 +739,7 @@ Fires when the publish workflow encounters an error.
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.workflow.error', 'my-plugin', (error, executionContext) => {
+addAction('aether.export.workflow.error', 'my-plugin', (error, executionContext) => {
     console.error('Workflow error:', error.message);
 });
 ```
@@ -749,9 +749,9 @@ addAction('aether.publish.workflow.error', 'my-plugin', (error, executionContext
 #### `aether.publish.step.{stepId}.before`
 
 **Type**: Action
-**Location**: `assets/src/publish/executor/StepExecutor.js`
+**Location**: `assets/src/export/executor/StepExecutor.js`
 
-Fires before a specific workflow step executes. Replace `{stepId}` with the actual step ID (e.g., `generateBlueprint`, `uploadStaticSiteFiles`).
+Fires before a specific workflow step executes. Replace `{stepId}` with the actual step ID (e.g., `createWpContentArchive`, `uploadStaticSiteFiles`).
 
 **Parameters**:
 - `executionContext` (Object): Execution context
@@ -760,8 +760,8 @@ Fires before a specific workflow step executes. Replace `{stepId}` with the actu
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.generateBlueprint.before', 'my-plugin', (executionContext) => {
-    console.log('Starting generateBlueprint step');
+addAction('aether.export.step.generateBlueprint.before', 'my-plugin', (executionContext) => {
+    console.log('Starting createWpContentArchive step');
 });
 ```
 
@@ -770,7 +770,7 @@ addAction('aether.publish.step.generateBlueprint.before', 'my-plugin', (executio
 #### `aether.publish.step.{stepId}.after`
 
 **Type**: Action
-**Location**: `assets/src/publish/executor/StepExecutor.js`
+**Location**: `assets/src/export/executor/StepExecutor.js`
 
 Fires after a specific workflow step completes successfully.
 
@@ -782,8 +782,8 @@ Fires after a specific workflow step completes successfully.
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.generateBlueprint.after', 'my-plugin', (result, executionContext) => {
-    console.log('Completed generateBlueprint step');
+addAction('aether.export.step.generateBlueprint.after', 'my-plugin', (result, executionContext) => {
+    console.log('Completed createWpContentArchive step');
 });
 ```
 
@@ -792,7 +792,7 @@ addAction('aether.publish.step.generateBlueprint.after', 'my-plugin', (result, e
 #### `aether.publish.step.{stepId}.error`
 
 **Type**: Action
-**Location**: `assets/src/publish/executor/StepExecutor.js`
+**Location**: `assets/src/export/executor/StepExecutor.js`
 
 Fires when a specific workflow step fails.
 
@@ -804,7 +804,7 @@ Fires when a specific workflow step fails.
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.generateBlueprint.error', 'my-plugin', (error, executionContext) => {
+addAction('aether.export.step.generateBlueprint.error', 'my-plugin', (error, executionContext) => {
     console.error('Step failed:', error.formattedMessage);
 });
 ```
@@ -814,7 +814,7 @@ addAction('aether.publish.step.generateBlueprint.error', 'my-plugin', (error, ex
 #### `aether.publish.step.{stepId}.skip`
 
 **Type**: Filter
-**Location**: `assets/src/publish/executor/StepExecutor.js`
+**Location**: `assets/src/export/executor/StepExecutor.js`
 
 Determines whether a specific workflow step should be skipped.
 
@@ -828,7 +828,7 @@ Determines whether a specific workflow step should be skipped.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.generateBlueprint.skip', 'my-plugin', (shouldSkip, executionContext) => {
+addFilter('aether.export.step.generateBlueprint.skip', 'my-plugin', (shouldSkip, executionContext) => {
     // Skip if blueprint already exists
     if (executionContext.state.blueprintData) {
         return true;
@@ -842,7 +842,7 @@ addFilter('aether.publish.step.generateBlueprint.skip', 'my-plugin', (shouldSkip
 #### `aether.publish.step.{stepId}.skipped`
 
 **Type**: Action
-**Location**: `assets/src/publish/executor/StepExecutor.js`
+**Location**: `assets/src/export/executor/StepExecutor.js`
 
 Fires when a specific workflow step is skipped.
 
@@ -853,8 +853,8 @@ Fires when a specific workflow step is skipped.
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.generateBlueprint.skipped', 'my-plugin', (executionContext) => {
-    console.log('generateBlueprint step was skipped');
+addAction('aether.export.step.generateBlueprint.skipped', 'my-plugin', (executionContext) => {
+    console.log('createWpContentArchive step was skipped');
 });
 ```
 
@@ -863,7 +863,7 @@ addAction('aether.publish.step.generateBlueprint.skipped', 'my-plugin', (executi
 #### `aether.publish.step.{stepId}.retry`
 
 **Type**: Action
-**Location**: `assets/src/publish/executor/StepExecutor.js`
+**Location**: `assets/src/export/executor/StepExecutor.js`
 
 Fires when a specific workflow step retries after an error.
 
@@ -877,7 +877,7 @@ Fires when a specific workflow step retries after an error.
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.generateBlueprint.retry', 'my-plugin', (error, attempt, delay, executionContext) => {
+addAction('aether.export.step.generateBlueprint.retry', 'my-plugin', (error, attempt, delay, executionContext) => {
     console.log(`Retrying step (attempt ${attempt}) after ${delay}ms`);
 });
 ```
@@ -887,7 +887,7 @@ addAction('aether.publish.step.generateBlueprint.retry', 'my-plugin', (error, at
 #### `aether.publish.step.{stepId}.result`
 
 **Type**: Filter
-**Location**: `assets/src/publish/executor/StepExecutor.js`
+**Location**: `assets/src/export/executor/StepExecutor.js`
 
 Filters the result of a specific workflow step before it's merged into the workflow state.
 
@@ -901,7 +901,7 @@ Filters the result of a specific workflow step before it's merged into the workf
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.generateBlueprint.result', 'my-plugin', (result, executionContext) => {
+addFilter('aether.export.step.generateBlueprint.result', 'my-plugin', (result, executionContext) => {
     return {
         ...result,
         customMetadata: 'added by plugin'
@@ -914,7 +914,7 @@ addFilter('aether.publish.step.generateBlueprint.result', 'my-plugin', (result, 
 #### `aether.publish.step.generateBlueprint.data`
 
 **Type**: Filter
-**Location**: `assets/src/publish/steps/generateBlueprint/index.js`
+**Location**: `assets/src/export/steps/generateBlueprint/index.js`
 
 Filters blueprint data before the blueprint bundle is created.
 
@@ -928,7 +928,7 @@ Filters blueprint data before the blueprint bundle is created.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.generateBlueprint.data', 'my-plugin', (blueprintData, context) => {
+addFilter('aether.export.step.generateBlueprint.data', 'my-plugin', (blueprintData, context) => {
     // Add custom metadata
     blueprintData.description = 'My custom blueprint';
     return blueprintData;
@@ -940,7 +940,7 @@ addFilter('aether.publish.step.generateBlueprint.data', 'my-plugin', (blueprintD
 #### `aether.publish.step.createBlueprintBundle.files`
 
 **Type**: Filter
-**Location**: `assets/src/publish/steps/createBlueprintBundle/index.js`
+**Location**: `assets/src/export/steps/createBlueprintBundle/index.js`
 
 Filters the list of files to include in the blueprint bundle.
 
@@ -954,7 +954,7 @@ Filters the list of files to include in the blueprint bundle.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.createBlueprintBundle.files', 'my-plugin', (files, context) => {
+addFilter('aether.export.step.createBlueprintBundle.files', 'my-plugin', (files, context) => {
     // Exclude specific files
     return files.filter(file => !file.includes('exclude-me'));
 });
@@ -967,7 +967,7 @@ addFilter('aether.publish.step.createBlueprintBundle.files', 'my-plugin', (files
 #### `aether.file.upload`
 
 **Type**: Action
-**Location**: `assets/src/publish/utils/unifiedFileUpload.js`
+**Location**: `assets/src/export/utils/unifiedFileUpload.js`
 
 Unified action for all file uploads (blueprint bundles, static HTML, static assets). Providers should hook into this action to handle uploads.
 
@@ -1015,7 +1015,7 @@ addAction('aether.file.upload', 'my-provider', async (fileContext) => {
 #### `aether.file.upload.context`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/unifiedFileUpload.js`
+**Location**: `assets/src/export/utils/unifiedFileUpload.js`
 
 Filters the file context before the upload action is fired. Allows modifying the context or file content before upload.
 
@@ -1041,7 +1041,7 @@ addFilter('aether.file.upload.context', 'my-plugin', (fileContext, providerId) =
 #### `aether.publish.step.uploadStaticSiteFiles.urls`
 
 **Type**: Filter
-**Location**: `assets/src/publish/steps/uploadStaticFiles/index.js`
+**Location**: `assets/src/export/steps/uploadStaticFiles/index.js`
 
 Filters the URLs array before static site upload processing begins.
 
@@ -1056,7 +1056,7 @@ Filters the URLs array before static site upload processing begins.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls, providers, context) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls, providers, context) => {
     // Add custom URL
     return [...urls, { url: '/custom-page/', type: 'page' }];
 });
@@ -1067,7 +1067,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls, 
 #### `aether.publish.step.uploadStaticSiteFiles.result`
 
 **Type**: Filter
-**Location**: `assets/src/publish/steps/uploadStaticFiles/index.js`
+**Location**: `assets/src/export/steps/uploadStaticFiles/index.js`
 
 Filters the final upload result before it's returned from the upload step.
 
@@ -1082,7 +1082,7 @@ Filters the final upload result before it's returned from the upload step.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.result', 'my-plugin', (result, providers, context) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.result', 'my-plugin', (result, providers, context) => {
     return {
         ...result,
         customMetadata: 'added by plugin'
@@ -1097,7 +1097,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.result', 'my-plugin', (resu
 #### `aether.assets.extracted`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/assetExtractor.js`
+**Location**: `assets/src/export/utils/assetExtractor.js`
 
 Filters extracted assets before returning from HTML parsing.
 
@@ -1121,7 +1121,7 @@ addFilter('aether.assets.extracted', 'my-plugin', (assets, html, pageUrl, siteUr
 #### `aether.assets.should_collect`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/assetExtractor.js`
+**Location**: `assets/src/export/utils/assetExtractor.js`
 
 Filters whether a specific asset should be collected.
 
@@ -1150,7 +1150,7 @@ addFilter('aether.assets.should_collect', 'my-plugin', (shouldCollect, url, site
 #### `aether.url.resolve`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/urlRewriter.js`
+**Location**: `assets/src/export/utils/urlRewriter.js`
 
 Filters resolved URL after relative-to-absolute conversion.
 
@@ -1175,7 +1175,7 @@ addFilter('aether.url.resolve', 'my-plugin', (resolvedUrl, url, baseUrl) => {
 #### `aether.url.is_external`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/urlRewriter.js`
+**Location**: `assets/src/export/utils/urlRewriter.js`
 
 Filters external URL detection result.
 
@@ -1200,7 +1200,7 @@ addFilter('aether.url.is_external', 'my-plugin', (isExternal, url, siteUrl) => {
 #### `aether.url.normalize`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/urlRewriter.js`
+**Location**: `assets/src/export/utils/urlRewriter.js`
 
 Filters normalized URL.
 
@@ -1227,7 +1227,7 @@ addFilter('aether.url.normalize', 'my-plugin', (url, siteUrl) => {
 #### `aether.url.rewrite`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/urlRewriter.js`
+**Location**: `assets/src/export/utils/urlRewriter.js`
 
 Filters rewritten URL after static site conversion.
 
@@ -1254,7 +1254,7 @@ addFilter('aether.url.rewrite', 'my-plugin', (rewrittenUrl, url, contextUrl, sit
 #### `aether.url.rewrite_html`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/urlRewriter.js`
+**Location**: `assets/src/export/utils/urlRewriter.js`
 
 Filters HTML after URL rewriting.
 
@@ -1279,7 +1279,7 @@ addFilter('aether.url.rewrite_html', 'my-plugin', (html, contextUrl, siteUrl, st
 #### `aether.storage.service.config`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/staticSiteConfig.js`
+**Location**: `assets/src/export/utils/staticSiteConfig.js`
 
 Filters the storage service configuration before the service is created.
 
@@ -1308,7 +1308,7 @@ addFilter('aether.storage.service.config', 'my-plugin', (config, staticPath, pro
 #### `aether.storage.service.create`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/staticSiteConfig.js`
+**Location**: `assets/src/export/utils/staticSiteConfig.js`
 
 Filters the storage service instance creation. Allows providing a custom storage service implementation.
 
@@ -1339,7 +1339,7 @@ addFilter('aether.storage.service.create', 'my-plugin', (service, staticPath, co
 #### `aether.publish.step.uploadStaticSiteFiles.manifest.fetch`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/uploadPhase.js`
+**Location**: `assets/src/export/utils/uploadPhase.js`
 
 Filters manifest fetching. Allows providing a custom manifest or modifying the fetch behavior.
 
@@ -1354,7 +1354,7 @@ Filters manifest fetching. Allows providing a custom manifest or modifying the f
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.fetch', 'my-plugin', (manifest, storageService, providerId) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.manifest.fetch', 'my-plugin', (manifest, storageService, providerId) => {
     // Return custom manifest or null to use default fetching
     if (providerId === 'my-provider') {
         return { custom: 'manifest' };
@@ -1368,7 +1368,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.fetch', 'my-plugin
 #### `aether.publish.step.uploadStaticSiteFiles.manifest.update`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/uploadPhase.js`, `assets/src/publish/hooks/useStaticSiteGenerator.js`
+**Location**: `assets/src/export/utils/uploadPhase.js`, `assets/src/export/hooks/useStaticSiteGenerator.js`
 
 Filters manifest updates after a file is uploaded.
 
@@ -1383,7 +1383,7 @@ Filters manifest updates after a file is uploaded.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.update', 'my-plugin', (manifest, storageKey, providerId) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.manifest.update', 'my-plugin', (manifest, storageKey, providerId) => {
     // Add custom metadata to manifest entry
     if (manifest[storageKey]) {
         manifest[storageKey].customMetadata = 'value';
@@ -1397,7 +1397,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.update', 'my-plugi
 #### `aether.publish.step.uploadStaticSiteFiles.manifest.cleanup`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/uploadPhase.js`
+**Location**: `assets/src/export/utils/uploadPhase.js`
 
 Filters manifest cleanup before final manifest upload. Allows keeping additional entries or modifying cleanup behavior.
 
@@ -1412,7 +1412,7 @@ Filters manifest cleanup before final manifest upload. Allows keeping additional
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.cleanup', 'my-plugin', (manifest, currentFileKeys, providerId) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.manifest.cleanup', 'my-plugin', (manifest, currentFileKeys, providerId) => {
     // Keep additional entries
     return { ...manifest, 'custom-file.html': { size: 100, hash: 'abc' } };
 });
@@ -1425,7 +1425,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.cleanup', 'my-plug
 #### `aether.publish.step.generateBlueprint.steps`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/blueprintStepBuilders.js`
+**Location**: `assets/src/export/utils/blueprintStepBuilders.js`
 
 Filters blueprint steps array before final JSON generation.
 
@@ -1435,7 +1435,7 @@ Filters blueprint steps array before final JSON generation.
 
 **Example**:
 ```javascript
-addFilter('aether.publish.step.generateBlueprint.steps', 'my-plugin', (steps, config) => {
+addFilter('aether.export.step.generateBlueprint.steps', 'my-plugin', (steps, config) => {
     // Add custom step at the end
     steps.push({
         step: 'runPHP',
@@ -1450,7 +1450,7 @@ addFilter('aether.publish.step.generateBlueprint.steps', 'my-plugin', (steps, co
 #### `aether.publish.step.generateBlueprint.json`
 
 **Type**: Filter
-**Location**: `assets/src/publish/utils/blueprintStepBuilders.js`
+**Location**: `assets/src/export/utils/blueprintStepBuilders.js`
 
 Filters complete blueprint JSON object.
 
@@ -1460,7 +1460,7 @@ Filters complete blueprint JSON object.
 
 **Example**:
 ```javascript
-addFilter('aether.publish.step.generateBlueprint.json', 'my-plugin', (blueprint, steps) => {
+addFilter('aether.export.step.generateBlueprint.json', 'my-plugin', (blueprint, steps) => {
     // Customize landing page
     blueprint.landingPage = '/wp-admin/';
 
@@ -1482,7 +1482,7 @@ addFilter('aether.publish.step.generateBlueprint.json', 'my-plugin', (blueprint,
 #### `aether.publish.step.generateBlueprint.assets`
 
 **Type**: Filter
-**Location**: `assets/src/publish/hooks/useBlueprintGenerator.js`
+**Location**: `assets/src/export/hooks/useBlueprintGenerator.js`
 
 Filters discovered WordPress.org assets before blueprint generation.
 
@@ -1494,7 +1494,7 @@ Filters discovered WordPress.org assets before blueprint generation.
 
 **Example**:
 ```javascript
-addFilter('aether.publish.step.generateBlueprint.assets', 'my-plugin', (assets) => {
+addFilter('aether.export.step.generateBlueprint.assets', 'my-plugin', (assets) => {
     // Exclude specific plugins
     assets.plugins = assets.plugins.filter(slug => slug !== 'unwanted-plugin');
 
@@ -1510,7 +1510,7 @@ addFilter('aether.publish.step.generateBlueprint.assets', 'my-plugin', (assets) 
 #### `aether.publish.step.generateBlueprint.generated`
 
 **Type**: Filter
-**Location**: `assets/src/publish/hooks/useBlueprintGenerator.js`
+**Location**: `assets/src/export/hooks/useBlueprintGenerator.js`
 
 Filters final generated blueprint before deployment.
 
@@ -1521,7 +1521,7 @@ Filters final generated blueprint before deployment.
 
 **Example**:
 ```javascript
-addFilter('aether.publish.step.generateBlueprint.generated', 'my-plugin', (blueprint) => {
+addFilter('aether.export.step.generateBlueprint.generated', 'my-plugin', (blueprint) => {
     // Add custom metadata
     blueprint.description = 'My custom WordPress site';
     return blueprint;
@@ -1838,10 +1838,10 @@ add_action('aether_provider_config_deleted', function($provider_id, $request) {
 
 ### Publishing & Deployment
 
-#### `aether_publish_validate_config`
+#### `aether_export_validate_config`
 
 **Type**: Filter
-**Location**: `includes/REST/Publish/PublishStepsController.php`
+**Location**: `includes/REST/Export/ExportStepsController.php`
 
 Filters validation errors for publish configuration.
 
@@ -1852,7 +1852,7 @@ Filters validation errors for publish configuration.
 
 **Example**:
 ```php
-add_filter('aether_publish_validate_config', function($errors, $config, $request) {
+add_filter('aether_export_validate_config', function($errors, $config, $request) {
     // Validate custom deployment settings
     if (!isset($config['deployment_type'])) {
         $errors->add('missing_deployment_type', 'Deployment type is required');
@@ -1863,10 +1863,10 @@ add_filter('aether_publish_validate_config', function($errors, $config, $request
 
 ---
 
-#### `aether_publish_before_upload`
+#### `aether_export_before_upload`
 
 **Type**: Action
-**Location**: `includes/REST/Publish/PublishStepsController.php`
+**Location**: `includes/REST/Export/ExportStepsController.php`
 
 Fires before file upload to deployment target.
 
@@ -1877,7 +1877,7 @@ Fires before file upload to deployment target.
 
 **Example**:
 ```php
-add_action('aether_publish_before_upload', function($file_path, $config, $request) {
+add_action('aether_export_before_upload', function($file_path, $config, $request) {
     // Log upload
     error_log("Uploading file: {$file_path}");
 
@@ -1890,10 +1890,10 @@ add_action('aether_publish_before_upload', function($file_path, $config, $reques
 
 ---
 
-#### `aether_publish_after_upload`
+#### `aether_export_after_upload`
 
 **Type**: Action
-**Location**: `includes/REST/Publish/PublishStepsController.php`
+**Location**: `includes/REST/Export/ExportStepsController.php`
 
 Fires after successful file upload.
 
@@ -1905,7 +1905,7 @@ Fires after successful file upload.
 
 **Example**:
 ```php
-add_action('aether_publish_after_upload', function($file_path, $remote_url, $config, $request) {
+add_action('aether_export_after_upload', function($file_path, $remote_url, $config, $request) {
     // Log success
     error_log("Successfully uploaded to: {$remote_url}");
 
@@ -1918,10 +1918,10 @@ add_action('aether_publish_after_upload', function($file_path, $remote_url, $con
 
 ---
 
-#### `aether_publish_upload_error`
+#### `aether_export_upload_error`
 
 **Type**: Action
-**Location**: `includes/REST/Publish/PublishStepsController.php`
+**Location**: `includes/REST/Export/ExportStepsController.php`
 
 Fires when file upload fails.
 
@@ -1933,7 +1933,7 @@ Fires when file upload fails.
 
 **Example**:
 ```php
-add_action('aether_publish_upload_error', function($error, $file_path, $config, $request) {
+add_action('aether_export_upload_error', function($error, $file_path, $config, $request) {
     // Log error
     error_log("Upload failed: {$error->get_error_message()}");
 
@@ -1948,10 +1948,10 @@ add_action('aether_publish_upload_error', function($error, $file_path, $config, 
 
 ---
 
-#### `aether_publish_job_created`
+#### `aether_export_job_created`
 
 **Type**: Action
-**Location**: `includes/REST/Publish/PublishJobController.php`
+**Location**: `includes/REST/Export/ExportJobController.php`
 
 Fires when a new publish job is created.
 
@@ -1962,7 +1962,7 @@ Fires when a new publish job is created.
 
 **Example**:
 ```php
-add_action('aether_publish_job_created', function($job_id, $config, $request) {
+add_action('aether_export_job_created', function($job_id, $config, $request) {
     // Track job creation
     error_log("Created publish job: {$job_id}");
 
@@ -1973,10 +1973,10 @@ add_action('aether_publish_job_created', function($job_id, $config, $request) {
 
 ---
 
-#### `aether_publish_job_status_changed`
+#### `aether_export_job_status_changed`
 
 **Type**: Action
-**Location**: `includes/REST/Publish/PublishJobController.php`
+**Location**: `includes/REST/Export/ExportJobController.php`
 
 Fires when publish job status changes.
 
@@ -1988,7 +1988,7 @@ Fires when publish job status changes.
 
 **Example**:
 ```php
-add_action('aether_publish_job_status_changed', function($job_id, $new_status, $old_status, $data) {
+add_action('aether_export_job_status_changed', function($job_id, $new_status, $old_status, $data) {
     // Send notifications
     if ($new_status === 'completed') {
         wp_mail(
@@ -2002,10 +2002,10 @@ add_action('aether_publish_job_status_changed', function($job_id, $new_status, $
 
 ---
 
-#### `aether_publish_job_completed`
+#### `aether_export_job_completed`
 
 **Type**: Action
-**Location**: `includes/REST/Publish/PublishJobController.php`
+**Location**: `includes/REST/Export/ExportJobController.php`
 
 Fires when publish job completes successfully.
 
@@ -2016,7 +2016,7 @@ Fires when publish job completes successfully.
 
 **Example**:
 ```php
-add_action('aether_publish_job_completed', function($job_id, $result, $request) {
+add_action('aether_export_job_completed', function($job_id, $result, $request) {
     // Cleanup temporary files
     // Trigger post-deployment tasks
     // Update analytics
@@ -2026,10 +2026,10 @@ add_action('aether_publish_job_completed', function($job_id, $result, $request) 
 
 ---
 
-#### `aether_publish_job_failed`
+#### `aether_export_job_failed`
 
 **Type**: Action
-**Location**: `includes/REST/Publish/PublishJobController.php`
+**Location**: `includes/REST/Export/ExportJobController.php`
 
 Fires when publish job fails.
 
@@ -2040,7 +2040,7 @@ Fires when publish job fails.
 
 **Example**:
 ```php
-add_action('aether_publish_job_failed', function($job_id, $error, $request) {
+add_action('aether_export_job_failed', function($job_id, $error, $request) {
     $error_message = is_wp_error($error) ? $error->get_error_message() : $error;
 
     // Send failure notification
@@ -2054,10 +2054,10 @@ add_action('aether_publish_job_failed', function($job_id, $error, $request) {
 
 ---
 
-#### `aether_publish_job_deleted`
+#### `aether_export_job_deleted`
 
 **Type**: Action
-**Location**: `includes/REST/Publish/PublishJobController.php`
+**Location**: `includes/REST/Export/ExportJobController.php`
 
 Fires when publish job is deleted.
 
@@ -2067,7 +2067,7 @@ Fires when publish job is deleted.
 
 **Example**:
 ```php
-add_action('aether_publish_job_deleted', function($job_id, $request) {
+add_action('aether_export_job_deleted', function($job_id, $request) {
     // Cleanup related resources
     delete_option("aether_job_{$job_id}_created_at");
 
@@ -2139,7 +2139,7 @@ add_action('admin_enqueue_scripts', function() {
 import { addFilter } from '@wordpress/hooks';
 
 // Exclude specific plugins from blueprint
-addFilter('aether.publish.step.generateBlueprint.assets', 'my-customizations', (assets) => {
+addFilter('aether.export.step.generateBlueprint.assets', 'my-customizations', (assets) => {
     assets.plugins = assets.plugins.filter(slug => {
         return !['jetpack', 'akismet'].includes(slug);
     });
@@ -2147,7 +2147,7 @@ addFilter('aether.publish.step.generateBlueprint.assets', 'my-customizations', (
 });
 
 // Customize blueprint settings
-addFilter('aether.publish.step.generateBlueprint.json', 'my-customizations', (blueprint) => {
+addFilter('aether.export.step.generateBlueprint.json', 'my-customizations', (blueprint) => {
     // Use different PHP version
     blueprint.preferredVersions.php = '8.2';
 
@@ -2173,13 +2173,13 @@ addFilter('aether.publish.step.generateBlueprint.json', 'my-customizations', (bl
 <?php
 
 // Track deployment metrics
-add_action('aether_publish_job_created', function($job_id, $config) {
+add_action('aether_export_job_created', function($job_id, $config) {
     update_option("deployment_count", (int) get_option("deployment_count", 0) + 1);
     update_option("last_deployment", time());
 }, 10, 2);
 
 // Send notifications on status changes
-add_action('aether_publish_job_status_changed', function($job_id, $new_status, $old_status) {
+add_action('aether_export_job_status_changed', function($job_id, $new_status, $old_status) {
     if ($new_status === 'completed') {
         // Send success notification via webhook
         wp_remote_post('https://api.slack.com/webhooks/...', [

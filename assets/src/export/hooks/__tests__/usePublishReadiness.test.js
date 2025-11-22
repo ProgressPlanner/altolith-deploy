@@ -1,5 +1,5 @@
 /**
- * Tests for usePublishReadiness Hook
+ * Tests for useExportReadiness Hook
  *
  * Updated to work with refactored hook using useAPIData
  *
@@ -7,12 +7,12 @@
  */
 
 import { renderHook, waitFor } from '@testing-library/react';
-import { usePublishReadiness } from '../usePublishReadiness';
+import { useExportReadiness } from '../useExportReadiness';
 import apiFetch from '../../../utils/api';
 
 jest.mock( '../../../utils/api' );
 
-describe( 'usePublishReadiness', () => {
+describe( 'useExportReadiness', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
 	} );
@@ -38,7 +38,7 @@ describe( 'usePublishReadiness', () => {
 			configured: true,
 		} );
 
-		const { result } = renderHook( () => usePublishReadiness() );
+		const { result } = renderHook( () => useExportReadiness() );
 
 		await waitFor( () => {
 			expect( result.current.loading ).toBe( false );
@@ -59,7 +59,7 @@ describe( 'usePublishReadiness', () => {
 			},
 		} );
 
-		const { result } = renderHook( () => usePublishReadiness() );
+		const { result } = renderHook( () => useExportReadiness() );
 
 		await waitFor( () => {
 			// When no storage provider, loading may be falsy but not strictly false
@@ -91,7 +91,7 @@ describe( 'usePublishReadiness', () => {
 			configured: true,
 		} );
 
-		const { result } = renderHook( () => usePublishReadiness() );
+		const { result } = renderHook( () => useExportReadiness() );
 
 		await waitFor( () => {
 			expect( result.current.loading ).toBe( false );
@@ -121,7 +121,7 @@ describe( 'usePublishReadiness', () => {
 			configured: false,
 		} );
 
-		const { result } = renderHook( () => usePublishReadiness() );
+		const { result } = renderHook( () => useExportReadiness() );
 
 		await waitFor( () => {
 			expect( result.current.loading ).toBe( false );
@@ -137,7 +137,7 @@ describe( 'usePublishReadiness', () => {
 	it( 'should handle API errors gracefully', async () => {
 		apiFetch.mockRejectedValue( new Error( 'Network error' ) );
 
-		const { result } = renderHook( () => usePublishReadiness() );
+		const { result } = renderHook( () => useExportReadiness() );
 
 		// Should still return a result structure
 		await waitFor(

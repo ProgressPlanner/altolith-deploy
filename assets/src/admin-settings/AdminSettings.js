@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
-import PublishProgressModal from '../components/PublishProgressModal';
+import ExportProgressModal from '../components/ExportProgressModal';
 import ProviderSettings from './ProviderSettings';
 import StatusNotice from '../components/StatusNotice';
 import HowItWorks from '../components/HowItWorks';
@@ -147,7 +147,7 @@ export default function AdminSettings() {
 				<HowItWorks />
 			</div>
 
-			<PublishProgressModal
+			<ExportProgressModal
 				isOpen={ isExportModalOpen }
 				onClose={ () => setIsExportModalOpen( false ) }
 			/>

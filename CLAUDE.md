@@ -305,7 +305,7 @@ Key principles:
    - Custom hooks consume contexts
    - State flows reactively through component tree
 
-2. **Multi-Step Workflow System** (`assets/src/publish/`)
+2. **Multi-Step Workflow System** (`assets/src/export/`)
    - Steps defined in `constants/steps.js`
    - Each step is an async function returning standard response format
    - `usePublishController.js` orchestrates step execution
@@ -495,7 +495,7 @@ doAction('aether.providers.register', provider);
 
 **1. Write Tests First**
 ```javascript
-// assets/src/publish/steps/__tests__/myStep.test.js
+// assets/src/export/steps/__tests__/myStep.test.js
 describe('myStep', () => {
     it('should return standard response format', async () => {
         // Test implementation
@@ -511,7 +511,7 @@ export const STEP_MY_STEP = 'my_step';
 
 **3. Create Step Function (Prefer JavaScript)**
 ```javascript
-// assets/src/publish/steps/myStep.js
+// assets/src/export/steps/myStep.js
 export async function myStep(jobId, config) {
     // Implementation in JavaScript (preferred)
     // Returns standard response format
@@ -520,13 +520,13 @@ export async function myStep(jobId, config) {
 
 **4. Add to Workflow**
 ```javascript
-// assets/src/publish/utils/steps.js
+// assets/src/export/utils/steps.js
 // Add step to appropriate workflow
 ```
 
 **5. Create REST Endpoint (If Needed)**
 ```php
-// includes/REST/Publish/PublishStepsController.php
+// includes/REST/Export/ExportStepsController.php
 // Add endpoint ONLY if server-side processing required
 // Keep it thin - delegate to JavaScript when possible
 ```

@@ -20,7 +20,7 @@ import {
  *
  * @type {Object}
  */
-export const PublishContext = createContext( {
+export const ExportContext = createContext( {
 	steps: [],
 	isPublishing: false,
 	jobId: null,
@@ -538,8 +538,8 @@ export function PublishProvider( { children } ) {
 	);
 
 	return (
-		<PublishContext.Provider value={ value }>
+		<ExportContext.Provider value={ value }>
 			{ children }
-		</PublishContext.Provider>
+		</ExportContext.Provider>
 	);
 }

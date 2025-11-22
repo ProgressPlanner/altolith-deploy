@@ -12,7 +12,7 @@ import apiFetch from '@wordpress/api-fetch';
 import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 import { uploadFile as uploadFileToStorage } from '@aether/utils/filesystemAdapter';
 import { debug, debugWarn } from '@aether/utils/debug';
-import { FILE_TYPES } from '@aether/publish/utils/unifiedFileUpload';
+import { FILE_TYPES } from '@aether/export/utils/unifiedFileUpload';
 import ProviderRegistry from '../registry/ProviderRegistry';
 
 // Create provider instance for hook registration

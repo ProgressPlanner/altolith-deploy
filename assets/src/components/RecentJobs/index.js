@@ -20,7 +20,7 @@ import {
 import {
 	formatJobTime,
 	getStatusDisplay,
-} from '@aether/publish/utils/jobFormatters';
+} from '@aether/export/utils/jobFormatters';
 import StatusBadge from '../StatusBadge';
 import SectionHeader from '../SectionHeader';
 

@@ -87,7 +87,7 @@ addFilter('aether.static.html.raw', 'my-plugin', (html, url, siteUrl) => {
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.html.process', 'my-plugin',
+addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
     (html, url, siteUrl, staticSiteUrl, providerId) => {
         // Runs once per provider per page
         if (providerId === 'my-provider') {
@@ -298,7 +298,7 @@ static/
 // Cache expensive operations outside the filter
 const compiledTemplate = compileTemplate();
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.html.process', 'my-plugin', (html) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin', (html) => {
     // Fast operation using pre-compiled template
     return compiledTemplate.apply(html);
 });

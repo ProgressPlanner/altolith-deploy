@@ -1,7 +1,7 @@
 /**
  * Step Registry
  *
- * Flat step definitions with explicit dependencies for the publish workflow.
+ * Flat step definitions with explicit dependencies for the export workflow.
  * Steps are executed in parallel when their dependencies are satisfied.
  *
  * @package
@@ -11,8 +11,8 @@ import { applyFilters } from '@wordpress/hooks';
 import { discoverBlueprintBundleAssetsStep } from './discoverBlueprintBundleAssets';
 import { getStaticSiteUrlsStep } from './getStaticSiteUrls';
 import { preScanStaticSiteStep } from './preScanStaticSite';
+import { createWpContentArchiveStep } from './createWpContentArchive';
 import { createBlueprintBundleStep } from './createBlueprintBundle';
-import { generateBlueprintStep } from './generateBlueprint';
 import { uploadBlueprintBundleStep } from './uploadBlueprintBundle';
 import { uploadStaticFilesStep } from './uploadStaticFiles';
 
@@ -28,8 +28,8 @@ export function getRegisteredSteps() {
 		discoverBlueprintBundleAssetsStep,
 		getStaticSiteUrlsStep,
 		preScanStaticSiteStep,
+		createWpContentArchiveStep,
 		createBlueprintBundleStep,
-		generateBlueprintStep,
 		uploadBlueprintBundleStep,
 		uploadStaticFilesStep,
 	];
@@ -41,7 +41,7 @@ export function getRegisteredSteps() {
 	 *
 	 * @param {Array<Object>} steps Array of step definitions.
 	 */
-	return applyFilters( 'aether.publish.steps', steps );
+	return applyFilters( 'aether.export.steps', steps );
 }
 
 /**
@@ -62,11 +62,11 @@ export function getActiveSteps( context ) {
 			return ! step.shouldSkip( context );
 		}
 
-		// Skip blueprint-related steps if no blueprint providers
+		// Skip blueprint-related steps if no blueprint bundle providers
 		if (
 			step.id === 'discoverBlueprintBundleAssets' ||
+			step.id === 'createWpContentArchive' ||
 			step.id === 'createBlueprintBundle' ||
-			step.id === 'generateBlueprint' ||
 			step.id === 'uploadBlueprintBundle'
 		) {
 			return blueprintBundleProviders.length > 0;

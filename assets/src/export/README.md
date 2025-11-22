@@ -1,10 +1,10 @@
-# Publish Workflow
+# Export Workflow
 
 Static site generation and deployment orchestration for the Aether plugin.
 
 ## Overview
 
-The publish workflow converts a WordPress site running in WordPress Playground into a static site and deploys it to a cloud provider. It uses a **hook-based step orchestration** model (`@wordpress/hooks`) with React and PHP coordination via REST API.
+The export workflow converts a WordPress site running in WordPress Playground into a static site and deploys it to a cloud provider. It uses a **hook-based step orchestration** model (`@wordpress/hooks`) with React and PHP coordination via REST API.
 
 ## Architecture
 
@@ -19,7 +19,7 @@ The workflow is split between React (client-side) and PHP (server-side):
 - Upload manifest processing (skips already-uploaded files)
 
 **PHP handles:**
-- All other steps via REST endpoints (`PublishStepsController.php`)
+- All other steps via REST endpoints (`ExportStepsController.php`)
 - `generateBlueprint` - Create WordPress Playground blueprint (98% storage reduction)
 - `prepare_upload_manifest` - List files for upload
 - Job status management and persistence
@@ -40,19 +40,19 @@ Steps are defined in `steps/index.js` and registered via `@wordpress/hooks`. Eac
 5. **getStaticSiteUrls** - Discover all URLs for static site generation
 6. **uploadStaticFiles** - Generate and upload static HTML/CSS/JS
 
-Steps register via `@wordpress/hooks` and can be extended by third-party plugins via the `aether.publish.steps` filter.
+Steps register via `@wordpress/hooks` and can be extended by third-party plugins via the `aether.export.steps` filter.
 
 ## Directory Structure
 
 ```
-publish/
-├── components/          # React components for publish UI
-│   ├── PublishProgressModal.js  # Main publish modal with progress
+export/
+├── components/          # React components for export UI
+│   ├── ExportProgressModal.js  # Main export modal with progress
 │   └── ...
-├── hooks/               # Custom hooks for publish logic
-│   ├── usePublishController.js  # Main orchestration using step system
+├── hooks/               # Custom hooks for export logic
+│   ├── useExportController.js  # Main orchestration using step system
 │   ├── useStaticSiteGenerator.js  # Static site generation (React)
-│   ├── usePublishAPI.js         # REST API calls
+│   ├── useExportAPI.js         # REST API calls
 │   ├── useBlueprintGenerator.js # Blueprint generation
 │   └── ...
 ├── steps/               # Step definitions
@@ -74,11 +74,11 @@ publish/
 
 ## Key Components
 
-### PublishProgressModal
+### ExportProgressModal
 
-Main publish modal component that shows workflow progress.
+Main export modal component that shows workflow progress.
 
-**Location:** `components/PublishProgressModal.js`
+**Location:** `components/ExportProgressModal.js`
 
 **Features:**
 - Step-by-step progress display
@@ -89,20 +89,20 @@ Main publish modal component that shows workflow progress.
 
 **Usage:**
 ```javascript
-import PublishProgressModal from '../components/PublishProgressModal';
+import ExportProgressModal from '../components/ExportProgressModal';
 
-<PublishProgressModal
+<ExportProgressModal
     isOpen={isOpen}
     onClose={handleClose}
     onComplete={handleComplete}
 />
 ```
 
-### usePublishController
+### useExportController
 
 Main orchestration hook using the step-based workflow system.
 
-**Location:** `hooks/usePublishController.js`
+**Location:** `hooks/useExportController.js`
 
 **Responsibilities:**
 - Step execution via `executeJobs()` from `workflows/jobExecutor.js`
@@ -115,7 +115,7 @@ Main orchestration hook using the step-based workflow system.
 - Uses `@wordpress/hooks` for step orchestration
 - Steps declare dependencies and provided data
 - Automatic dependency resolution
-- Extensible via `aether.publish.steps` filter
+- Extensible via `aether.export.steps` filter
 
 ### useStaticSiteGenerator
 
@@ -157,12 +157,12 @@ const steps = getRegisteredSteps();
 // - handler: async function that executes the step
 ```
 
-Steps can be extended via the `aether.publish.steps` filter:
+Steps can be extended via the `aether.export.steps` filter:
 
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.steps', 'my-plugin/custom-step', (steps) => {
+addFilter('aether.export.steps', 'my-plugin/custom-step', (steps) => {
     return [...steps, myCustomStep];
 });
 ```
@@ -171,12 +171,12 @@ addFilter('aether.publish.steps', 'my-plugin/custom-step', (steps) => {
 
 ### REST Endpoints
 
-All publish endpoints are defined in `constants/api.js`:
+All export endpoints are defined in `constants/api.js`:
 
 ```javascript
 import { ENDPOINTS } from '../../constants';
 
-// Start publish job
+// Start export job
 apiFetch({
     path: ENDPOINTS.PUBLISH.START,
     method: 'POST',
@@ -196,19 +196,19 @@ apiFetch({
 });
 ```
 
-### usePublishAPI Hook
+### useExportAPI Hook
 
-Centralizes all publish-related API calls:
+Centralizes all export-related API calls:
 
 ```javascript
-import { usePublishAPI } from '../hooks/usePublishAPI';
+import { useExportAPI } from '../hooks/useExportAPI';
 
 const {
-    startPublish,
+    startExport,
     getJobStatus,
     executeStep,
     markUploadsComplete,
-} = usePublishAPI();
+} = useExportAPI();
 ```
 
 ## Asset Extraction
@@ -282,11 +282,11 @@ while (attempt < maxRetries) {
 ### Unit Tests
 
 ```bash
-# Run all publish tests
-npm run test:js -- assets/src/publish
+# Run all export tests
+npm run test:js -- assets/src/export
 
 # Watch mode
-npm run test:js -- --watch assets/src/publish
+npm run test:js -- --watch assets/src/export
 ```
 
 ## Performance Considerations
@@ -301,7 +301,7 @@ Large operations are chunked to avoid timeouts:
 
 ### Cancellation
 
-Users can cancel long-running publishes:
+Users can cancel long-running exportes:
 
 ```javascript
 const abortController = new AbortController();

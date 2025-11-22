@@ -30,7 +30,7 @@ Enhanced the export workflow with improved file upload handling, better progress
 
 ### 3. File Sizes in Upload Messages
 
-**File:** `assets/src/publish/utils/fileUploadManager.js`
+**File:** `assets/src/export/utils/fileUploadManager.js`
 
 - All upload status messages now include file sizes
 - Examples:
@@ -41,7 +41,7 @@ Enhanced the export workflow with improved file upload handling, better progress
 
 ### 4. Multi-Provider Context Banners
 
-**File:** `assets/src/publish/steps/uploadStaticSiteFilesStep.js`
+**File:** `assets/src/export/steps/uploadStaticSiteFilesStep.js`
 
 - Provider context banner shows which provider is being processed:
   - `"Uploading to Production (Provider 2 of 3)"`
@@ -52,7 +52,7 @@ Enhanced the export workflow with improved file upload handling, better progress
 
 ### 5. Retry Logic with Exponential Backoff
 
-**File:** `assets/src/publish/utils/fileUploadManager.js`
+**File:** `assets/src/export/utils/fileUploadManager.js`
 
 - Automatic retry for failed uploads (max 3 attempts)
 - Exponential backoff delays: 1s, 2s, 4s
@@ -157,8 +157,8 @@ formatFileSize(2500000, 2)     // "2.38 MB"
 
 1. `assets/src/utils/helpers.js` - File size formatting
 2. `assets/src/contexts/PublishContext.js` - Message metadata support
-3. `assets/src/publish/utils/fileUploadManager.js` - File sizes, retry logic
-4. `assets/src/publish/steps/uploadStaticSiteFilesStep.js` - Multi-provider context
+3. `assets/src/export/utils/fileUploadManager.js` - File sizes, retry logic
+4. `assets/src/export/steps/uploadStaticSiteFilesStep.js` - Multi-provider context
 
 ## Backward Compatibility
 

@@ -2,7 +2,7 @@
  * Publish Configuration Utilities
  *
  * Pure functions for preparing publish workflow configuration.
- * These functions are extracted from usePublishController for testability.
+ * These functions are extracted from useExportController for testability.
  *
  * @package
  */

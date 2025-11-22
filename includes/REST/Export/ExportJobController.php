@@ -1,14 +1,14 @@
 <?php
 
 /**
- * Publish Job Controller
+ * Export Job Controller
  *
  * Handles job management endpoints (start job, get status, list jobs).
  *
- * @package Aether\REST\Publish
+ * @package Aether\REST\Export
  */
 
-namespace Aether\SiteExporter\REST\Publish;
+namespace Aether\SiteExporter\REST\Export;
 
 use Aether\SiteExporter\REST\RESTHelpersTrait;
 use Aether\SiteExporter\Plugin;
@@ -18,12 +18,12 @@ use WP_REST_Request;
 use WP_Error;
 
 /**
- * Handles publish job management endpoints.
+ * Handles export job management endpoints.
  */
-class PublishJobController
+class ExportJobController
 {
 	use RESTHelpersTrait;
-	use PublishHelpersTrait;
+	use ExportHelpersTrait;
 	use EncryptionHelper;
 
 	/**
@@ -33,7 +33,7 @@ class PublishJobController
 	 */
 	public function __construct(Plugin $plugin)
 	{
-		$this->initPublishHelpers($plugin);
+		$this->initExportHelpers($plugin);
 	}
 
 	/**
@@ -43,10 +43,10 @@ class PublishJobController
 	 */
 	public function registerRoutes(): void
 	{
-		// Start publish job.
+		// Start export job.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish',
+			'/export',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'startPublish' ],
@@ -57,7 +57,7 @@ class PublishJobController
 		// Get job status (simple getter, no orchestration).
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/(?P<jobId>[a-zA-Z0-9_]+)/status',
+			'/export/(?P<jobId>[a-zA-Z0-9_]+)/status',
 			[
 				[
 					'methods'             => 'GET',
@@ -72,10 +72,10 @@ class PublishJobController
 			]
 		);
 
-		// Get recent publish jobs.
+		// Get recent export jobs.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/jobs',
+			'/export/jobs',
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'getRecentJobs' ],
@@ -86,7 +86,7 @@ class PublishJobController
 		// Mark uploads as complete and transition to next step.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/(?P<jobId>[a-zA-Z0-9_]+)/mark-uploads-complete',
+			'/export/(?P<jobId>[a-zA-Z0-9_]+)/mark-uploads-complete',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'markUploadsComplete' ],
@@ -185,7 +185,7 @@ class PublishJobController
 		}
 
 		/**
-		 * Filter initial job data before creating publish job.
+		 * Filter initial job data before creating export job.
 		 *
 		 * Allows modification of job initialization data.
 		 *
@@ -195,40 +195,40 @@ class PublishJobController
 		 * @param array  $discoveredAssets Discovered assets array.
 		 *
 		 * @example
-		 * add_filter('aether_publish_job_data', function($jobData, $jobId, $changedAssets, $discoveredAssets) {
+		 * add_filter('aether_export_job_data', function($jobData, $jobId, $changedAssets, $discoveredAssets) {
 		 *     $jobData['custom_metadata'] = 'added by filter';
 		 *     return $jobData;
 		 * }, 10, 4);
 		 */
-		$jobData = \apply_filters('aether_publish_job_data', $jobData, $jobId, $changedAssets, $discoveredAssets);
+		$jobData = \apply_filters('aether_export_job_data', $jobData, $jobId, $changedAssets, $discoveredAssets);
 
 		/**
-		 * Action fired before publish job is created.
+		 * Action fired before export job is created.
 		 *
 		 * @param string $jobId  Job ID.
 		 * @param array  $jobData Job initialization data.
 		 *
 		 * @example
-		 * add_action('aether_publish_job_before_create', function($jobId, $jobData) {
-		 *     error_log("Creating publish job: {$jobId}");
+		 * add_action('aether_export_job_before_create', function($jobId, $jobData) {
+		 *     error_log("Creating export job: {$jobId}");
 		 * }, 10, 2);
 		 */
-		\do_action('aether_publish_job_before_create', $jobId, $jobData);
+		\do_action('aether_export_job_before_create', $jobId, $jobData);
 
 		$this->stateManager->updateStatus($jobId, $jobData);
 
 		/**
-		 * Action fired after publish job is created.
+		 * Action fired after export job is created.
 		 *
 		 * @param string $jobId   Job ID.
 		 * @param array  $jobData Job data.
 		 *
 		 * @example
-		 * add_action('aether_publish_job_created', function($jobId, $jobData) {
+		 * add_action('aether_export_job_created', function($jobId, $jobData) {
 		 *     error_log("Publish job created: {$jobId}");
 		 * }, 10, 2);
 		 */
-		\do_action('aether_publish_job_created', $jobId, $jobData);
+		\do_action('aether_export_job_created', $jobId, $jobData);
 
 		return \rest_ensure_response([
 			'success' => true,
@@ -302,12 +302,12 @@ class PublishJobController
 		 * @param array  $newStatus     New status fields.
 		 *
 		 * @example
-		 * add_filter('aether_publish_job_status_update', function($mergedStatus, $jobId, $currentStatus, $newStatus) {
+		 * add_filter('aether_export_job_status_update', function($mergedStatus, $jobId, $currentStatus, $newStatus) {
 		 *     $mergedStatus['last_modified'] = time();
 		 *     return $mergedStatus;
 		 * }, 10, 4);
 		 */
-		$mergedStatus = \apply_filters('aether_publish_job_status_update', $mergedStatus, $jobId, $currentStatus, $newStatus);
+		$mergedStatus = \apply_filters('aether_export_job_status_update', $mergedStatus, $jobId, $currentStatus, $newStatus);
 
 		// Update job status.
 		$this->stateManager->updateStatus($jobId, $mergedStatus);
@@ -320,11 +320,11 @@ class PublishJobController
 		 * @param array  $newStatus    New status fields that were merged.
 		 *
 		 * @example
-		 * add_action('aether_publish_job_status_updated', function($jobId, $mergedStatus, $newStatus) {
+		 * add_action('aether_export_job_status_updated', function($jobId, $mergedStatus, $newStatus) {
 		 *     error_log("Job {$jobId} status updated");
 		 * }, 10, 3);
 		 */
-		\do_action('aether_publish_job_status_updated', $jobId, $mergedStatus, $newStatus);
+		\do_action('aether_export_job_status_updated', $jobId, $mergedStatus, $newStatus);
 
 		return \rest_ensure_response([
 			'success' => true,
@@ -365,7 +365,7 @@ class PublishJobController
 	}
 
 	/**
-	 * Get recent publish jobs.
+	 * Get recent export jobs.
 	 *
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|WP_Error
@@ -378,7 +378,7 @@ class PublishJobController
 		$jobs = $this->stateManager->getAllJobs($limit);
 
 		/**
-		 * Filter recent publish jobs list.
+		 * Filter recent export jobs list.
 		 *
 		 * Allows modification of jobs array before returning to client.
 		 *
@@ -386,7 +386,7 @@ class PublishJobController
 		 * @param int   $limit Requested limit.
 		 *
 		 * @example
-		 * add_filter('aether_publish_jobs_list', function($jobs, $limit) {
+		 * add_filter('aether_export_jobs_list', function($jobs, $limit) {
 		 *     // Add custom metadata to each job
 		 *     return array_map(function($job) {
 		 *         $job['custom_field'] = 'added by filter';
@@ -394,7 +394,7 @@ class PublishJobController
 		 *     }, $jobs);
 		 * }, 10, 2);
 		 */
-		$jobs = \apply_filters('aether_publish_jobs_list', $jobs, $limit);
+		$jobs = \apply_filters('aether_export_jobs_list', $jobs, $limit);
 
 		return \rest_ensure_response([
 			'success' => true,
@@ -433,17 +433,17 @@ class PublishJobController
 		}
 
 		/**
-		 * Action fired before marking publish job as complete.
+		 * Action fired before marking export job as complete.
 		 *
 		 * @param string $jobId  Job ID.
 		 * @param array  $status Current job status.
 		 *
 		 * @example
-		 * add_action('aether_publish_job_before_complete', function($jobId, $status) {
+		 * add_action('aether_export_job_before_complete', function($jobId, $status) {
 		 *     error_log("Job {$jobId} completing");
 		 * }, 10, 2);
 		 */
-		\do_action('aether_publish_job_before_complete', $jobId, $status);
+		\do_action('aether_export_job_before_complete', $jobId, $status);
 
 		// Mark job as complete.
 		$newStatus = \array_merge($status, [
@@ -513,28 +513,28 @@ class PublishJobController
 		 * @param string $deploymentUrl Deployment URL (may be empty).
 		 *
 		 * @example
-		 * add_filter('aether_publish_job_complete_status', function($newStatus, $jobId, $deploymentUrl) {
+		 * add_filter('aether_export_job_complete_status', function($newStatus, $jobId, $deploymentUrl) {
 		 *     $newStatus['completion_metadata'] = 'added by filter';
 		 *     return $newStatus;
 		 * }, 10, 3);
 		 */
-		$newStatus = \apply_filters('aether_publish_job_complete_status', $newStatus, $jobId, $deploymentUrl);
+		$newStatus = \apply_filters('aether_export_job_complete_status', $newStatus, $jobId, $deploymentUrl);
 
 		$this->stateManager->updateStatus($jobId, $newStatus);
 
 		/**
-		 * Action fired after publish job is marked as complete.
+		 * Action fired after export job is marked as complete.
 		 *
 		 * @param string $jobId         Job ID.
 		 * @param array  $newStatus     Final job status.
 		 * @param string $deploymentUrl Deployment URL (may be empty).
 		 *
 		 * @example
-		 * add_action('aether_publish_job_completed', function($jobId, $newStatus, $deploymentUrl) {
+		 * add_action('aether_export_job_completed', function($jobId, $newStatus, $deploymentUrl) {
 		 *     error_log("Job {$jobId} completed. Site URL: {$deploymentUrl}");
 		 * }, 10, 3);
 		 */
-		\do_action('aether_publish_job_completed', $jobId, $newStatus, $deploymentUrl);
+		\do_action('aether_export_job_completed', $jobId, $newStatus, $deploymentUrl);
 
 		return \rest_ensure_response([
 			'success' => true,

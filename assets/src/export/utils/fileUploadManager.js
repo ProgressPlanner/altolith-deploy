@@ -6,7 +6,7 @@
  *
  * Used by:
  * - Static site file uploads (useStaticSiteGenerator.js)
- * - wp-content.zip uploads (usePublishController.js)
+ * - wp-content.zip uploads (useExportController.js)
  *
  * @package
  */

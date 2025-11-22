@@ -132,31 +132,31 @@ This document provides a comprehensive analysis of all JavaScript hooks in the A
 ```
 1. User initiates publish
    ↓
-2. doAction('aether.publish.workflow.before', executionContext, steps)
+2. doAction('aether.export.workflow.before', executionContext, steps)
    ↓
 3. For each step in execution plan:
    ↓
-   a. applyFilters('aether.publish.step.{stepId}.skip', shouldSkip, context)
+   a. applyFilters('aether.export.step.{stepId}.skip', shouldSkip, context)
       ↓
    b. If skipped:
-      - doAction('aether.publish.step.{stepId}.skipped', context)
+      - doAction('aether.export.step.{stepId}.skipped', context)
       ↓
    c. If not skipped:
-      - doAction('aether.publish.step.{stepId}.before', context)
+      - doAction('aether.export.step.{stepId}.before', context)
       ↓
       - Step handler executes
       ↓
       - If error occurs:
-        * doAction('aether.publish.step.{stepId}.retry', error, attempt, delay, context)
-        * doAction('aether.publish.step.{stepId}.error', error, context)
+        * doAction('aether.export.step.{stepId}.retry', error, attempt, delay, context)
+        * doAction('aether.export.step.{stepId}.error', error, context)
       ↓
-      - applyFilters('aether.publish.step.{stepId}.result', result, context)
+      - applyFilters('aether.export.step.{stepId}.result', result, context)
       ↓
-      - doAction('aether.publish.step.{stepId}.after', result, context)
+      - doAction('aether.export.step.{stepId}.after', result, context)
    ↓
-4. doAction('aether.publish.workflow.after', state, executionContext)
+4. doAction('aether.export.workflow.after', state, executionContext)
    OR
-   doAction('aether.publish.workflow.error', error, executionContext)
+   doAction('aether.export.workflow.error', error, executionContext)
 ```
 
 **Hooks in this workflow:**
@@ -176,24 +176,24 @@ This document provides a comprehensive analysis of all JavaScript hooks in the A
 ```
 1. uploadStaticSiteFiles step starts
    ↓
-2. applyFilters('aether.publish.step.uploadStaticSiteFiles.urls', urls, providers, context)
+2. applyFilters('aether.export.step.uploadStaticSiteFiles.urls', urls, providers, context)
    ↓
 3. For each provider:
    ↓
    a. Pre-scan phase:
-      - doAction('aether.publish.step.uploadStaticSiteFiles.pre_scan.before', urls, providerId, config)
+      - doAction('aether.export.step.uploadStaticSiteFiles.pre_scan.before', urls, providerId, config)
       ↓
       - For each URL:
-        * applyFilters('aether.publish.step.uploadStaticSiteFiles.html.process', html, url, siteUrl, staticSiteUrl, providerId)
+        * applyFilters('aether.export.step.uploadStaticSiteFiles.html.process', html, url, siteUrl, staticSiteUrl, providerId)
         * Assets extracted (aether.assets.extracted, aether.assets.should_collect)
-        * applyFilters('aether.publish.step.uploadStaticSiteFiles.asset.process', assetData, providerId)
+        * applyFilters('aether.export.step.uploadStaticSiteFiles.asset.process', assetData, providerId)
       ↓
-      - doAction('aether.publish.step.uploadStaticSiteFiles.pre_scan.after', stats, providerId)
+      - doAction('aether.export.step.uploadStaticSiteFiles.pre_scan.after', stats, providerId)
    ↓
    b. Upload phase:
-      - applyFilters('aether.publish.step.uploadStaticSiteFiles.manifest.fetch', manifest, storageService, providerId)
+      - applyFilters('aether.export.step.uploadStaticSiteFiles.manifest.fetch', manifest, storageService, providerId)
       ↓
-      - doAction('aether.publish.step.uploadStaticSiteFiles.upload.before', cachedUrls, totalFiles, providerId)
+      - doAction('aether.export.step.uploadStaticSiteFiles.upload.before', cachedUrls, totalFiles, providerId)
       ↓
       - For each file:
         * doAction('aether.upload.file.before', fileData)
@@ -201,13 +201,13 @@ This document provides a comprehensive analysis of all JavaScript hooks in the A
         * applyFilters('aether.upload.file.options', options, key, blob, contentType, metadata)
         * File uploaded via aether.file.upload action
         * doAction('aether.upload.file.after', result, displayName)
-        * applyFilters('aether.publish.step.uploadStaticSiteFiles.manifest.update', manifest, storageKey, providerId)
+        * applyFilters('aether.export.step.uploadStaticSiteFiles.manifest.update', manifest, storageKey, providerId)
       ↓
-      - applyFilters('aether.publish.step.uploadStaticSiteFiles.manifest.cleanup', manifest, currentFileKeys, providerId)
+      - applyFilters('aether.export.step.uploadStaticSiteFiles.manifest.cleanup', manifest, currentFileKeys, providerId)
       ↓
-      - doAction('aether.publish.step.uploadStaticSiteFiles.upload.after', result, providerId)
+      - doAction('aether.export.step.uploadStaticSiteFiles.upload.after', result, providerId)
    ↓
-4. applyFilters('aether.publish.step.uploadStaticSiteFiles.result', result, providers, context)
+4. applyFilters('aether.export.step.uploadStaticSiteFiles.result', result, providers, context)
 ```
 
 **Hooks in this workflow:**
@@ -234,23 +234,23 @@ This document provides a comprehensive analysis of all JavaScript hooks in the A
 ### Blueprint Generation Workflow
 
 ```
-1. generateBlueprint step starts
+1. createWpContentArchive step starts
    ↓
 2. Asset discovery (WordPress.org plugins/themes)
    ↓
-3. applyFilters('aether.publish.step.generateBlueprint.assets', assets, assetsResponse)
+3. applyFilters('aether.export.step.generateBlueprint.assets', assets, assetsResponse)
    ↓
 4. buildBlueprintSteps() called
    ↓
-5. applyFilters('aether.publish.step.generateBlueprint.steps', steps, config)
+5. applyFilters('aether.export.step.generateBlueprint.steps', steps, config)
    ↓
 6. buildBlueprintJson() called
    ↓
-7. applyFilters('aether.publish.step.generateBlueprint.json', blueprint, steps)
+7. applyFilters('aether.export.step.generateBlueprint.json', blueprint, steps)
    ↓
-8. applyFilters('aether.publish.step.generateBlueprint.data', blueprintData, context)
+8. applyFilters('aether.export.step.generateBlueprint.data', blueprintData, context)
    ↓
-9. applyFilters('aether.publish.step.generateBlueprint.generated', blueprint, wporgPlugins, wporgThemes)
+9. applyFilters('aether.export.step.generateBlueprint.generated', blueprint, wporgPlugins, wporgThemes)
    ↓
 10. Blueprint bundle created
 ```
@@ -269,7 +269,7 @@ This document provides a comprehensive analysis of all JavaScript hooks in the A
    ↓
 2. If HTML file:
    - Get provider staticSiteUrl
-   - applyFilters('aether.publish.step.uploadStaticSiteFiles.html.process', html, filePath, siteUrl, staticSiteUrl, providerId)
+   - applyFilters('aether.export.step.uploadStaticSiteFiles.html.process', html, filePath, siteUrl, staticSiteUrl, providerId)
    - Process HTML with URL rewriting
    ↓
 3. applyFilters('aether.file.upload.context', fileContext, providerId)

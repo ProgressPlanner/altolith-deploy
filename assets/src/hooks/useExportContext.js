@@ -1,14 +1,14 @@
 /**
- * usePublishContext Hook
+ * useExportContext Hook
  *
- * Hook to consume the PublishContext.
+ * Hook to consume the ExportContext.
  * Provides access to global publish workflow state and operations.
  *
  * @package
  */
 
 import { useContext } from '@wordpress/element';
-import { PublishContext } from '../contexts/PublishContext';
+import { ExportContext } from '../contexts/ExportContext';
 
 /**
  * Hook to access publish context
@@ -40,12 +40,12 @@ import { PublishContext } from '../contexts/PublishContext';
  * @property {Function} reset                   - Reset all state
  *
  * @example
- * function PublishButton() {
- *     const { isPublishing, startPublish } = usePublishContext();
+ * function ExportButton() {
+ *     const { isPublishing, startExport } = useExportContext();
  *
  *     return (
- *         <button onClick={startPublish} disabled={isPublishing}>
- *             {isPublishing ? 'Publishing...' : 'Publish'}
+ *         <button onClick={startExport} disabled={isPublishing}>
+ *             {isPublishing ? 'Publishing...' : 'Export'}
  *         </button>
  *     );
  * }
@@ -53,7 +53,7 @@ import { PublishContext } from '../contexts/PublishContext';
  * @example
  * // Get steps for display
  * function ProgressSteps() {
- *     const { steps } = usePublishContext();
+ *     const { steps } = useExportContext();
  *
  *     return (
  *         <ul>
@@ -69,7 +69,7 @@ import { PublishContext } from '../contexts/PublishContext';
  * @example
  * // Update step progress
  * function useWorkflowStep() {
- *     const { setStepProgress, updateFromStep } = usePublishContext();
+ *     const { setStepProgress, updateFromStep } = useExportContext();
  *
  *     const runStep = async (stepId) => {
  *         updateFromStep(stepId);
@@ -81,16 +81,16 @@ import { PublishContext } from '../contexts/PublishContext';
  *     return { runStep };
  * }
  */
-export function usePublishContext() {
-	const context = useContext( PublishContext );
+export function useExportContext() {
+	const context = useContext( ExportContext );
 
 	if ( ! context ) {
 		throw new Error(
-			'usePublishContext must be used within a PublishProvider'
+			'useExportContext must be used within a PublishProvider'
 		);
 	}
 
 	return context;
 }
 
-export default usePublishContext;
+export default useExportContext;

@@ -41,7 +41,7 @@ export async function executePreScan( {
 
 	// Fire pre-scan start action
 	doAction(
-		'aether.publish.step.uploadStaticSiteFiles.pre_scan.before',
+		'aether.export.step.uploadStaticSiteFiles.pre_scan.before',
 		urls,
 		providerId,
 		providerConfig
@@ -153,7 +153,7 @@ export async function executePreScan( {
 
 	// Fire completion action
 	doAction(
-		'aether.publish.step.uploadStaticSiteFiles.pre_scan.after',
+		'aether.export.step.uploadStaticSiteFiles.pre_scan.after',
 		{
 			urlsScanned: urls.length,
 			urlsSuccessful: cacheStats.sessionCached,

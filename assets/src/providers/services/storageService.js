@@ -20,7 +20,7 @@ import {
 	createFileContext,
 	FILE_TYPES,
 	uploadFile as uploadFileUnified,
-} from '@aether/publish/utils/unifiedFileUpload';
+} from '@aether/export/utils/unifiedFileUpload';
 
 /**
  * Storage Service class.

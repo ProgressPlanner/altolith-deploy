@@ -13,14 +13,14 @@ import {
 	createFileContext,
 	FILE_TYPES,
 	uploadFile,
-} from '@aether/publish/utils/unifiedFileUpload';
+} from '@aether/export/utils/unifiedFileUpload';
 
 /**
  * Upload blueprint bundle step handler.
  *
  * @param {Object}   context                          Execution context.
  * @param {Array}    context.blueprintBundleProviders Providers for blueprint bundle.
- * @param {Object}   context.blueprintBundle          Bundle data from generateBlueprint.
+ * @param {Object}   context.blueprintBundle          Bundle data from "./createBlueprintBundle.
  * @param {string}   context.siteUrl                  WordPress site URL.
  * @param {Function} context.setStatusMessage         Status message updater.
  * @param {Function} context.setStepProgress          Step progress updater.
@@ -192,7 +192,7 @@ export const uploadBlueprintBundleStep = {
 		'aether-site-exporter'
 	),
 	supportsProgress: true,
-	dependencies: [ 'generateBlueprint' ],
+	dependencies: [ 'createBlueprintBundle' ],
 	provides: [],
 	handler,
 };

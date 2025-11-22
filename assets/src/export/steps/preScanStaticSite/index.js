@@ -7,7 +7,7 @@
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { extractAssetsFromHtml } from '@aether/publish/utils/assetExtractor';
+import { extractAssetsFromHtml } from '@aether/export/utils/assetExtractor';
 import { debug, debugWarn } from '@aether/utils/debug';
 
 /**

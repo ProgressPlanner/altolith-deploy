@@ -414,9 +414,9 @@ class Plugin
 		$localStorageController = new REST\LocalStorageController();
 		$urlDiscoveryController = new REST\URLDiscoveryController();
 
-		// Initialize publish controllers.
-		$publishJobController = new REST\Publish\PublishJobController($this);
-		$publishStepsController = new REST\Publish\PublishStepsController($this);
+		// Initialize export controllers.
+		$exportJobController = new REST\Export\ExportJobController($this);
+		$exportStepsController = new REST\Export\ExportStepsController($this);
 
 		// Register routes from each controller.
 		$settingsController->registerRoutes();
@@ -426,9 +426,9 @@ class Plugin
 		$localStorageController->registerRoutes();
 		$urlDiscoveryController->registerRoutes();
 
-		// Register publish routes.
-		$publishJobController->registerRoutes();
-		$publishStepsController->registerRoutes();
+		// Register export routes.
+		$exportJobController->registerRoutes();
+		$exportStepsController->registerRoutes();
 	}
 
 

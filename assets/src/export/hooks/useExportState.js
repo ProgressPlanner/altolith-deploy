@@ -1,22 +1,22 @@
 /**
  * Publish State Hook
  *
- * Wrapper hook that provides publish state from PublishContext.
+ * Wrapper hook that provides publish state from ExportContext.
  * Delegates to centralized state management.
  *
  * @package
  */
 
-import { usePublishContext } from '@aether/hooks/usePublishContext';
+import { useExportContext } from '@aether/hooks/useExportContext';
 
 /**
  * Get publish workflow state
  *
  * Returns all publish state and operations from context.
- * Simplified from 202 lines to delegate to PublishContext.
+ * Simplified from 202 lines to delegate to ExportContext.
  *
  * @return {Object} Publish state and operations
  */
-export function usePublishState() {
-	return usePublishContext();
+export function useExportState() {
+	return useExportContext();
 }

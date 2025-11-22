@@ -48,7 +48,7 @@ describe( 'DependencyResolver', () => {
 				{ id: 'getUrls', dependencies: [] },
 				{ id: 'createArchive', dependencies: [ 'discover' ] },
 				{ id: 'uploadStatic', dependencies: [ 'getUrls' ] },
-				{ id: 'generateBlueprint', dependencies: [ 'createArchive' ] },
+				{ id: 'createBlueprintBundle', dependencies: [ 'createArchive' ] },
 			];
 
 			const plan = buildParallelPlan( steps );
@@ -64,7 +64,7 @@ describe( 'DependencyResolver', () => {
 			expect( plan[ 1 ] ).toHaveLength( 2 );
 
 			// Group 3: generateBlueprint (depends on createArchive)
-			expect( plan[ 2 ] ).toEqual( [ 'generateBlueprint' ] );
+			expect( plan[ 2 ] ).toEqual( [ 'createBlueprintBundle' ] );
 		} );
 
 		test( 'should detect circular dependencies', () => {

@@ -1,6 +1,6 @@
 # uploadStaticSiteFiles Step - Hook Reference
 
-Hooks follow a hierarchical pattern: `aether.publish.{jobId}.{phaseId}.{stepId}.{action}`. For the complete hook system documentation, see `WORKFLOW_REFACTOR.md`.
+Hooks follow a hierarchical pattern: `aether.export.{jobId}.{phaseId}.{stepId}.{action}`. For the complete hook system documentation, see `WORKFLOW_REFACTOR.md`.
 
 This document provides a comprehensive reference for all hooks available in the `uploadStaticSiteFiles` step, which generates static HTML/CSS/JS files and uploads them to storage providers.
 
@@ -19,7 +19,7 @@ This document provides a comprehensive reference for all hooks available in the 
 
 These hooks are fired by the workflow executor for the `uploadStaticSiteFiles` step.
 
-### `aether.publish.step.uploadStaticSiteFiles.before`
+### `aether.export.step.uploadStaticSiteFiles.before`
 
 **Type**: Action  
 **Fired**: Before step execution begins  
@@ -35,12 +35,12 @@ These hooks are fired by the workflow executor for the `uploadStaticSiteFiles` s
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.uploadStaticSiteFiles.before', 'my-provider', (context) => {
+addAction('aether.export.step.uploadStaticSiteFiles.before', 'my-provider', (context) => {
   console.log('Starting static site upload:', context.staticSiteProviders);
 });
 ```
 
-### `aether.publish.step.uploadStaticSiteFiles.result`
+### `aether.export.step.uploadStaticSiteFiles.result`
 
 **Type**: Filter  
 **Fired**: After step completes, before result is merged into workflow state  
@@ -54,7 +54,7 @@ addAction('aether.publish.step.uploadStaticSiteFiles.before', 'my-provider', (co
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.result', 'my-provider', (result, context) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.result', 'my-provider', (result, context) => {
   return {
     ...result,
     customMetadata: 'added by provider'
@@ -62,7 +62,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.result', 'my-provider', (re
 });
 ```
 
-### `aether.publish.step.uploadStaticSiteFiles.after`
+### `aether.export.step.uploadStaticSiteFiles.after`
 
 **Type**: Action  
 **Fired**: After step completes successfully  
@@ -74,12 +74,12 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.result', 'my-provider', (re
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.uploadStaticSiteFiles.after', 'my-provider', (result, context) => {
+addAction('aether.export.step.uploadStaticSiteFiles.after', 'my-provider', (result, context) => {
   console.log('Upload complete:', result.filesUploaded, 'files');
 });
 ```
 
-### `aether.publish.step.uploadStaticSiteFiles.error`
+### `aether.export.step.uploadStaticSiteFiles.error`
 
 **Type**: Action  
 **Fired**: When step fails  
@@ -91,14 +91,14 @@ addAction('aether.publish.step.uploadStaticSiteFiles.after', 'my-provider', (res
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.uploadStaticSiteFiles.error', 'my-provider', (error, context) => {
+addAction('aether.export.step.uploadStaticSiteFiles.error', 'my-provider', (error, context) => {
   console.error('Upload failed:', error.message);
 });
 ```
 
 ## Step-Specific Hooks
 
-### `aether.publish.step.uploadStaticSiteFiles.urls`
+### `aether.export.step.uploadStaticSiteFiles.urls`
 
 **Type**: Filter  
 **Location**: `uploadStaticSiteFilesStep.js:94`  
@@ -114,13 +114,13 @@ addAction('aether.publish.step.uploadStaticSiteFiles.error', 'my-provider', (err
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.urls', 'my-provider', (urls, providers, context) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.urls', 'my-provider', (urls, providers, context) => {
   // Add custom URL
   return [...urls, { url: '/custom-page/', type: 'page' }];
 });
 ```
 
-### `aether.publish.step.uploadStaticSiteFiles.result`
+### `aether.export.step.uploadStaticSiteFiles.result`
 
 **Type**: Filter  
 **Location**: `uploadStaticSiteFilesStep.js:212`  
@@ -136,7 +136,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.urls', 'my-provider', (urls
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.result', 'my-provider', (result, providers, context) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.result', 'my-provider', (result, providers, context) => {
   return {
     ...result,
     customMetadata: 'added by provider'
@@ -148,7 +148,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.result', 'my-provider', (re
 
 These hooks are fired during the static site generation phases.
 
-### `aether.publish.step.uploadStaticSiteFiles.pre_scan.before`
+### `aether.export.step.uploadStaticSiteFiles.pre_scan.before`
 
 **Type**: Action  
 **Location**: `preScanPhase.js:43`  
@@ -162,12 +162,12 @@ These hooks are fired during the static site generation phases.
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.uploadStaticSiteFiles.pre_scan.before', 'my-provider', (urls, providerId, config) => {
+addAction('aether.export.step.uploadStaticSiteFiles.pre_scan.before', 'my-provider', (urls, providerId, config) => {
   console.log('Starting pre-scan for', urls.length, 'URLs');
 });
 ```
 
-### `aether.publish.step.uploadStaticSiteFiles.pre_scan.after`
+### `aether.export.step.uploadStaticSiteFiles.pre_scan.after`
 
 **Type**: Action  
 **Location**: `preScanPhase.js:155`  
@@ -184,12 +184,12 @@ addAction('aether.publish.step.uploadStaticSiteFiles.pre_scan.before', 'my-provi
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.uploadStaticSiteFiles.pre_scan.after', 'my-provider', (stats, providerId) => {
+addAction('aether.export.step.uploadStaticSiteFiles.pre_scan.after', 'my-provider', (stats, providerId) => {
   console.log('Pre-scan complete:', stats);
 });
 ```
 
-### `aether.publish.step.uploadStaticSiteFiles.upload.before`
+### `aether.export.step.uploadStaticSiteFiles.upload.before`
 
 **Type**: Action  
 **Location**: `useStaticSiteGenerator.js:119`  
@@ -203,12 +203,12 @@ addAction('aether.publish.step.uploadStaticSiteFiles.pre_scan.after', 'my-provid
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.uploadStaticSiteFiles.upload.before', 'my-provider', (urls, totalFiles, providerId) => {
+addAction('aether.export.step.uploadStaticSiteFiles.upload.before', 'my-provider', (urls, totalFiles, providerId) => {
   console.log('Starting upload phase:', totalFiles, 'files');
 });
 ```
 
-### `aether.publish.step.uploadStaticSiteFiles.upload.after`
+### `aether.export.step.uploadStaticSiteFiles.upload.after`
 
 **Type**: Action  
 **Location**: `useStaticSiteGenerator.js:276`  
@@ -226,7 +226,7 @@ addAction('aether.publish.step.uploadStaticSiteFiles.upload.before', 'my-provide
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.publish.step.uploadStaticSiteFiles.upload.after', 'my-provider', (result, providerId) => {
+addAction('aether.export.step.uploadStaticSiteFiles.upload.after', 'my-provider', (result, providerId) => {
   console.log('Upload phase complete:', result);
 });
 ```
@@ -285,7 +285,7 @@ addFilter('aether.storage.service.create', 'my-provider', (service, staticPath, 
 
 ## HTML Processing Hooks
 
-### `aether.publish.step.uploadStaticSiteFiles.html.process`
+### `aether.export.step.uploadStaticSiteFiles.html.process`
 
 **Type**: Filter  
 **Location**: `uploadPhase.js:336`, `unifiedFileUpload.js:178`  
@@ -303,7 +303,7 @@ addFilter('aether.storage.service.create', 'my-provider', (service, staticPath, 
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.html.process', 'my-provider', (html, url, siteUrl, staticSiteUrl, providerId) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-provider', (html, url, siteUrl, staticSiteUrl, providerId) => {
   // Add custom meta tag
   return html.replace('</head>', '<meta name="custom" content="value" /></head>');
 });
@@ -311,7 +311,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.html.process', 'my-provider
 
 ## Asset Processing Hooks
 
-### `aether.publish.step.uploadStaticSiteFiles.asset.process`
+### `aether.export.step.uploadStaticSiteFiles.asset.process`
 
 **Type**: Filter  
 **Location**: `uploadPhase.js:167`  
@@ -331,7 +331,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.html.process', 'my-provider
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.asset.process', 'my-provider', (assetData, providerId) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.asset.process', 'my-provider', (assetData, providerId) => {
   // Modify asset blob
   return {
     ...assetData,
@@ -342,7 +342,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.asset.process', 'my-provide
 
 ## Manifest Hooks
 
-### `aether.publish.step.uploadStaticSiteFiles.manifest.fetch`
+### `aether.export.step.uploadStaticSiteFiles.manifest.fetch`
 
 **Type**: Filter  
 **Location**: `uploadPhase.js:48`  
@@ -358,7 +358,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.asset.process', 'my-provide
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.fetch', 'my-provider', (manifest, storageService, providerId) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.manifest.fetch', 'my-provider', (manifest, storageService, providerId) => {
   // Return custom manifest or null to use default fetching
   if (providerId === 'my-provider') {
     return { custom: 'manifest' };
@@ -367,7 +367,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.fetch', 'my-provid
 });
 ```
 
-### `aether.publish.step.uploadStaticSiteFiles.manifest.update`
+### `aether.export.step.uploadStaticSiteFiles.manifest.update`
 
 **Type**: Filter  
 **Location**: `uploadPhase.js:287`, `useStaticSiteGenerator.js:185`  
@@ -383,7 +383,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.fetch', 'my-provid
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.update', 'my-provider', (manifest, storageKey, providerId) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.manifest.update', 'my-provider', (manifest, storageKey, providerId) => {
   // Add custom metadata to manifest entry
   if (manifest[storageKey]) {
     manifest[storageKey].customMetadata = 'value';
@@ -392,7 +392,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.update', 'my-provi
 });
 ```
 
-### `aether.publish.step.uploadStaticSiteFiles.manifest.cleanup`
+### `aether.export.step.uploadStaticSiteFiles.manifest.cleanup`
 
 **Type**: Filter  
 **Location**: `uploadPhase.js:471`  
@@ -408,7 +408,7 @@ addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.update', 'my-provi
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.cleanup', 'my-provider', (manifest, currentFileKeys, providerId) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.manifest.cleanup', 'my-provider', (manifest, currentFileKeys, providerId) => {
   // Keep additional entries
   return { ...manifest, 'custom-file.html': { size: 100, hash: 'abc' } };
 });
@@ -594,7 +594,7 @@ addFilter('aether.storage.service.config', 'cloudflare-r2', (config, staticPath,
 });
 
 // Customize HTML processing
-addFilter('aether.publish.step.uploadStaticSiteFiles.html.process', 'cloudflare-r2', (html, url, siteUrl, staticSiteUrl, providerId) => {
+addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'cloudflare-r2', (html, url, siteUrl, staticSiteUrl, providerId) => {
   if (providerId !== 'cloudflare-r2') return html;
   
   // Add R2-specific meta tags or modifications
@@ -617,24 +617,24 @@ addAction('aether.upload.file.after', 'cloudflare-r2', (result, displayName) => 
 
 ## Hook Execution Order
 
-1. `aether.publish.step.uploadStaticSiteFiles.before` - Step starts
-2. `aether.publish.step.uploadStaticSiteFiles.urls` - URLs filtered
+1. `aether.export.step.uploadStaticSiteFiles.before` - Step starts
+2. `aether.export.step.uploadStaticSiteFiles.urls` - URLs filtered
 3. For each provider (in parallel):
-   - `aether.publish.step.uploadStaticSiteFiles.pre_scan.before` - Pre-scan starts
-   - `aether.publish.step.uploadStaticSiteFiles.html.process` - HTML processed (per URL)
-   - `aether.publish.step.uploadStaticSiteFiles.asset.process` - Assets processed (per asset)
-   - `aether.publish.step.uploadStaticSiteFiles.pre_scan.after` - Pre-scan completes
-   - `aether.publish.step.uploadStaticSiteFiles.manifest.fetch` - Manifest fetched
-   - `aether.publish.step.uploadStaticSiteFiles.upload.before` - Upload phase starts
+   - `aether.export.step.uploadStaticSiteFiles.pre_scan.before` - Pre-scan starts
+   - `aether.export.step.uploadStaticSiteFiles.html.process` - HTML processed (per URL)
+   - `aether.export.step.uploadStaticSiteFiles.asset.process` - Assets processed (per asset)
+   - `aether.export.step.uploadStaticSiteFiles.pre_scan.after` - Pre-scan completes
+   - `aether.export.step.uploadStaticSiteFiles.manifest.fetch` - Manifest fetched
+   - `aether.export.step.uploadStaticSiteFiles.upload.before` - Upload phase starts
    - `aether.upload.file.before` - File upload starts (per file)
    - `aether.upload.file.options` - Upload options filtered (per file)
    - `aether.upload.hash.calculate` - Hash calculated (per file)
    - `aether.upload.file.after` - File upload completes (per file)
-   - `aether.publish.step.uploadStaticSiteFiles.manifest.update` - Manifest updated (per file)
-   - `aether.publish.step.uploadStaticSiteFiles.manifest.cleanup` - Manifest cleaned
-   - `aether.publish.step.uploadStaticSiteFiles.upload.after` - Upload phase completes
-4. `aether.publish.step.uploadStaticSiteFiles.result` - Result filtered
-5. `aether.publish.step.uploadStaticSiteFiles.after` - Step completes
+   - `aether.export.step.uploadStaticSiteFiles.manifest.update` - Manifest updated (per file)
+   - `aether.export.step.uploadStaticSiteFiles.manifest.cleanup` - Manifest cleaned
+   - `aether.export.step.uploadStaticSiteFiles.upload.after` - Upload phase completes
+4. `aether.export.step.uploadStaticSiteFiles.result` - Result filtered
+5. `aether.export.step.uploadStaticSiteFiles.after` - Step completes
 
 ## Notes
 

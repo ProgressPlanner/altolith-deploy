@@ -1,7 +1,7 @@
 /**
  * Publish Configuration Tests
  *
- * Tests for publishConfiguration utilities.
+ * Tests for exportConfiguration utilities.
  * Validates pure functions for workflow configuration.
  *
  * @package
@@ -12,7 +12,7 @@ import {
 	getEnabledInstancesForDeploymentType,
 	determineProvidersByDeploymentType,
 	buildWorkflowContext,
-} from '../publishConfiguration';
+} from '../exportConfiguration';
 import { DEPLOYMENT_TYPES } from '../../../constants/deploymentTypes';
 
 // Mock debug utilities
@@ -20,7 +20,7 @@ jest.mock( '../../../utils/debug', () => ( {
 	debugError: jest.fn(),
 } ) );
 
-describe( 'publishConfiguration', () => {
+describe( 'exportConfiguration', () => {
 	describe( 'preparePublishConfiguration()', () => {
 		test( 'should extract provider IDs from settings response', () => {
 			const settingsResponse = {

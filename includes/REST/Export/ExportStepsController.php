@@ -1,16 +1,16 @@
 <?php
 
 /**
- * Consolidated Publish Steps Controller
+ * Consolidated Export Steps Controller
  *
- * Handles all publish workflow step endpoints in a single controller.
+ * Handles all export workflow step endpoints in a single controller.
  * Consolidates: GenerateBlueprintController, createBlueprintBundleController,
  * GenerateStaticSiteController, PrepareUploadManifestController.
  *
- * @package Aether\REST\Publish
+ * @package Aether\REST\Export
  */
 
-namespace Aether\SiteExporter\REST\Publish;
+namespace Aether\SiteExporter\REST\Export;
 
 use Aether\SiteExporter\REST\RESTHelpersTrait;
 use Aether\SiteExporter\Plugin;
@@ -21,12 +21,12 @@ use WP_REST_Request;
 use WP_Error;
 
 /**
- * Unified controller for all publish workflow steps.
+ * Unified controller for all export workflow steps.
  */
-class PublishStepsController
+class ExportStepsController
 {
 	use RESTHelpersTrait;
-	use PublishHelpersTrait;
+	use ExportHelpersTrait;
 
 	/**
 	 * Constructor.
@@ -35,7 +35,7 @@ class PublishStepsController
 	 */
 	public function __construct(Plugin $plugin)
 	{
-		$this->initPublishHelpers($plugin);
+		$this->initExportHelpers($plugin);
 	}
 
 	/**
@@ -48,10 +48,10 @@ class PublishStepsController
 		// Create site archive step.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/steps/createBlueprintBundle',
+			'/export/steps/createBlueprintBundle',
 			[
 				'methods'             => 'POST',
-				'callback'            => [ $this, 'executecreateBlueprintBundle' ],
+				'callback'            => [ $this, 'executeCreateWpContentArchive' ],
 				'permission_callback' => [ $this, 'permissionCheck' ],
 			]
 		);
@@ -59,7 +59,7 @@ class PublishStepsController
 		// Generate static site step.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/steps/generateStaticSite',
+			'/export/steps/generateStaticSite',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'executeGenerateStaticSite' ],
@@ -70,7 +70,7 @@ class PublishStepsController
 		// Get HTML content endpoint.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/steps/getHtmlContent',
+			'/export/steps/getHtmlContent',
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'getHtmlContent' ],
@@ -81,7 +81,7 @@ class PublishStepsController
 		// Create archive without job tracking (stateless).
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive',
+			'/export/createArchive',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'createArchive' ],
@@ -92,7 +92,7 @@ class PublishStepsController
 		// Initialize archive (modular approach).
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/init',
+			'/export/createArchive/init',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'initArchive' ],
@@ -103,7 +103,7 @@ class PublishStepsController
 		// Add database phase.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/phase/database',
+			'/export/createArchive/phase/database',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'addDatabasePhase' ],
@@ -114,7 +114,7 @@ class PublishStepsController
 		// Get uploads batches.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/phase/uploads/batches',
+			'/export/createArchive/phase/uploads/batches',
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'getUploadsBatches' ],
@@ -125,7 +125,7 @@ class PublishStepsController
 		// Add uploads batch.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/phase/uploads/batch',
+			'/export/createArchive/phase/uploads/batch',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'addUploadsBatch' ],
@@ -136,7 +136,7 @@ class PublishStepsController
 		// Get plugins list.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/phase/plugins/list',
+			'/export/createArchive/phase/plugins/list',
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'getPluginsList' ],
@@ -147,7 +147,7 @@ class PublishStepsController
 		// Add plugin.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/phase/plugins/add',
+			'/export/createArchive/phase/plugins/add',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'addPlugin' ],
@@ -158,7 +158,7 @@ class PublishStepsController
 		// Get themes list.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/phase/themes/list',
+			'/export/createArchive/phase/themes/list',
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'getThemesList' ],
@@ -169,7 +169,7 @@ class PublishStepsController
 		// Add theme.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/phase/themes/add',
+			'/export/createArchive/phase/themes/add',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'addTheme' ],
@@ -180,7 +180,7 @@ class PublishStepsController
 		// Get mu-plugins batches.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/phase/mu-plugins/batches',
+			'/export/createArchive/phase/mu-plugins/batches',
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'getMuPluginsBatches' ],
@@ -191,7 +191,7 @@ class PublishStepsController
 		// Add mu-plugins batch.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/phase/mu-plugins/batch',
+			'/export/createArchive/phase/mu-plugins/batch',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'addMuPluginsBatch' ],
@@ -202,7 +202,7 @@ class PublishStepsController
 		// Finalize archive.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/createArchive/finalize',
+			'/export/createArchive/finalize',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'finalizeArchive' ],
@@ -213,7 +213,7 @@ class PublishStepsController
 		// Get archive progress (stateless).
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/archiveProgress/(?P<progressId>[a-zA-Z0-9_]+)',
+			'/export/archiveProgress/(?P<progressId>[a-zA-Z0-9_]+)',
 			[
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'getArchiveProgress' ],
@@ -224,7 +224,7 @@ class PublishStepsController
 		// Generate blueprint bundle.
 		\register_rest_route(
 			$this->getNamespace(),
-			'/publish/generateBlueprintBundle',
+			'/export/generateBlueprintBundle',
 			[
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'generateBlueprintBundle' ],
@@ -234,12 +234,12 @@ class PublishStepsController
 	}
 
 	/**
-	 * Execute the createBlueprintBundle step.
+	 * Execute the createWpContentArchive step.
 	 *
 	 * @param WP_REST_Request $request Request object.
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function executecreateBlueprintBundle(WP_REST_Request $request)
+	public function executeCreateWpContentArchive(WP_REST_Request $request)
 	{
 		return $this->executeStep($request, 'createBlueprintBundle', function ($status, $jobId) {
 			// Get export service.
@@ -341,11 +341,11 @@ class PublishStepsController
 		 * @param array  $status   Current job status.
 		 *
 		 * @example
-		 * add_action('aether_publish_step_before', function($stepName, $jobId, $status) {
+		 * add_action('aether_export_step_before', function($stepName, $jobId, $status) {
 		 *     error_log("Starting step: {$stepName} for job: {$jobId}");
 		 * }, 10, 3);
 		 */
-		\do_action('aether_publish_step_before', $stepName, $jobId, $status);
+		\do_action('aether_export_step_before', $stepName, $jobId, $status);
 
 		try {
 			// Execute step-specific logic.
@@ -361,14 +361,14 @@ class PublishStepsController
 			 * @param string $jobId    Job ID.
 			 *
 			 * @example
-			 * add_filter('aether_publish_step_result', function($result, $stepName, $jobId) {
+			 * add_filter('aether_export_step_result', function($result, $stepName, $jobId) {
 			 *     if ($stepName === 'createBlueprintBundle') {
 			 *         $result['status']['custom_data'] = 'added by filter';
 			 *     }
 			 *     return $result;
 			 * }, 10, 3);
 			 */
-			$result = \apply_filters('aether_publish_step_result', $result, $stepName, $jobId);
+			$result = \apply_filters('aether_export_step_result', $result, $stepName, $jobId);
 
 			// Update job status.
 			$this->stateManager->updateStatus($jobId, $result['status']);
@@ -381,13 +381,13 @@ class PublishStepsController
 			 * @param array  $result   Step result.
 			 *
 			 * @example
-			 * add_action('aether_publish_step_after', function($stepName, $jobId, $result) {
+			 * add_action('aether_export_step_after', function($stepName, $jobId, $result) {
 			 *     if ($stepName === 'createBlueprintBundle') {
 			 *         error_log("Archive created: " . $result['status']['exportResult']['zipPath']);
 			 *     }
 			 * }, 10, 3);
 			 */
-			\do_action('aether_publish_step_after', $stepName, $jobId, $result);
+			\do_action('aether_export_step_after', $stepName, $jobId, $result);
 
 			return \rest_ensure_response([
 				'success' => true,
@@ -408,12 +408,12 @@ class PublishStepsController
 			 * @param string     $message  Sanitized error message.
 			 *
 			 * @example
-			 * add_action('aether_publish_step_error', function($stepName, $jobId, $error, $message) {
+			 * add_action('aether_export_step_error', function($stepName, $jobId, $error, $message) {
 			 *     // Log to external monitoring service
 			 *     error_log("Step failed: {$stepName} - {$message}");
 			 * }, 10, 4);
 			 */
-			\do_action('aether_publish_step_error', $stepName, $jobId, $e, $sanitizedMessage);
+			\do_action('aether_export_step_error', $stepName, $jobId, $e, $sanitizedMessage);
 
 			// Mark job as failed with sanitized message
 			$this->stateManager->markFailed($jobId, $sanitizedMessage, $stepName);

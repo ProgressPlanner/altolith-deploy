@@ -52,7 +52,7 @@ The `scripts/create-provider.js` scaffolding script has been removed.
 #### JavaScript
 
 ```javascript
-// ❌ REMOVED from assets/src/publish/workflows/publishWorkflow.js
+// ❌ REMOVED from assets/src/export/workflows/publishWorkflow.js
 function filterWorkflowByExportTypes(workflow, exportTypes) {
   // This function is no longer available
 }

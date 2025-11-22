@@ -1,21 +1,21 @@
 /**
- * createBlueprintBundle Step Tests
+ * generateBlueprint Step Tests
  *
  * @package
  */
 
-import { createBlueprintBundleStep } from '../index';
+import { generateBlueprintStep } from '../index';
 
 describe( 'createBlueprintBundle', () => {
 	test( 'should have correct step definition', () => {
-		expect( createBlueprintBundleStep ).toHaveProperty(
+		expect( generateBlueprintStep ).toHaveProperty(
 			'id',
 			'createBlueprintBundle'
 		);
-		expect( createBlueprintBundleStep ).toHaveProperty( 'handler' );
-		expect( typeof createBlueprintBundleStep.handler ).toBe( 'function' );
-		expect( createBlueprintBundleStep ).toHaveProperty( 'dependencies' );
-		expect( Array.isArray( createBlueprintBundleStep.dependencies ) ).toBe(
+		expect( generateBlueprintStep ).toHaveProperty( 'handler' );
+		expect( typeof generateBlueprintStep.handler ).toBe( 'function' );
+		expect( generateBlueprintStep ).toHaveProperty( 'dependencies' );
+		expect( Array.isArray( generateBlueprintStep.dependencies ) ).toBe(
 			true
 		);
 	} );

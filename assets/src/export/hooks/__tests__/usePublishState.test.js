@@ -1,27 +1,27 @@
 /**
- * usePublishState Hook Tests
+ * useExportState Hook Tests
  *
  * @package
  */
 
 import { renderHook } from '@testing-library/react';
-import { usePublishState } from '../usePublishState';
-import { usePublishContext } from '../../../hooks/usePublishContext';
+import { useExportState } from '../useExportState';
+import { useExportContext } from '../../../hooks/useExportContext';
 
-jest.mock( '../../../hooks/usePublishContext' );
+jest.mock( '../../../hooks/useExportContext' );
 
-describe( 'usePublishState', () => {
-	test( 'delegates to usePublishContext', () => {
+describe( 'useExportState', () => {
+	test( 'delegates to useExportContext', () => {
 		const mockContextValue = {
 			state: { isPublishing: false },
-			actions: { startPublish: jest.fn() },
+			actions: { startExport: jest.fn() },
 		};
 
-		usePublishContext.mockReturnValue( mockContextValue );
+		useExportContext.mockReturnValue( mockContextValue );
 
-		const { result } = renderHook( () => usePublishState() );
+		const { result } = renderHook( () => useExportState() );
 
-		expect( usePublishContext ).toHaveBeenCalled();
+		expect( useExportContext ).toHaveBeenCalled();
 		expect( result.current ).toEqual( mockContextValue );
 	} );
 
@@ -33,15 +33,15 @@ describe( 'usePublishState', () => {
 				progress: 50,
 			},
 			actions: {
-				startPublish: jest.fn(),
+				startExport: jest.fn(),
 				cancelPublish: jest.fn(),
 			},
 			error: null,
 		};
 
-		usePublishContext.mockReturnValue( mockContextValue );
+		useExportContext.mockReturnValue( mockContextValue );
 
-		const { result } = renderHook( () => usePublishState() );
+		const { result } = renderHook( () => useExportState() );
 
 		expect( result.current ).toEqual( mockContextValue );
 	} );

@@ -17,7 +17,7 @@ import { useAPIData } from '@aether/hooks/useAPIData';
  *
  * @return {Object} Readiness status with ready flag, issues array, and loading state
  */
-export function usePublishReadiness() {
+export function useExportReadiness() {
 	const {
 		data: settings,
 		loading: settingsLoading,

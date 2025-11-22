@@ -16,7 +16,7 @@ import {
 	utilityStyles,
 } from '@aether/utils/styles';
 
-export default function PublishButton( {
+export default function ExportButton( {
 	readiness,
 	onPublishClick,
 	isPublishing,
@@ -176,7 +176,7 @@ export default function PublishButton( {
 				style={ containerStyle }
 			>
 				<Button
-					id="aether-PublishButton"
+					id="aether-ExportButton"
 					className="aether-publish-button__button"
 					variant="primary"
 					isLarge

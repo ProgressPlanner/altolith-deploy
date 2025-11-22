@@ -13,7 +13,7 @@ import useAssetDiscovery from '@aether/utils/useAssetDiscovery';
 import {
 	buildBlueprintSteps,
 	buildBlueprintJson,
-} from '@aether/publish/utils/blueprintStepBuilders';
+} from '@aether/export/utils/blueprintStepBuilders';
 
 /**
  * Hook for generating WordPress Playground blueprint JSON.
@@ -66,7 +66,7 @@ export function useBlueprintGenerator() {
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
 			 *
-			 * addFilter('aether.publish.step.generateBlueprint.assets', 'my-plugin', (assets) => {
+			 * addFilter('aether.export.step.createBlueprintBundle.assets', 'my-plugin', (assets) => {
 			 *     // Exclude specific plugins
 			 *     assets.plugins = assets.plugins.filter(slug => slug !== 'unwanted-plugin');
 			 *
@@ -77,7 +77,7 @@ export function useBlueprintGenerator() {
 			 * });
 			 */
 			const filteredAssets = applyFilters(
-				'aether.publish.step.generateBlueprint.assets',
+				'aether.export.step.createBlueprintBundle.assets',
 				{ plugins: wporgPlugins, themes: wporgThemes },
 				assetsResponse
 			);
@@ -107,7 +107,7 @@ export function useBlueprintGenerator() {
 				actualSetStatusMessage(
 					`Blueprint generated: ${ steps.length } total steps`,
 					'success',
-					'generateBlueprint'
+					'createBlueprintBundle'
 				);
 				// Update detection message to success
 				actualSetStatusMessage(
@@ -167,7 +167,7 @@ export function useBlueprintGenerator() {
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
 			 *
-			 * addFilter('aether.publish.step.generateBlueprint.generated', 'my-plugin', (blueprint) => {
+			 * addFilter('aether.export.step.createBlueprintBundle.generated', 'my-plugin', (blueprint) => {
 			 *     // Add custom metadata
 			 *     blueprint.description = 'My custom WordPress site';
 			 *
@@ -175,7 +175,7 @@ export function useBlueprintGenerator() {
 			 * });
 			 */
 			blueprint = applyFilters(
-				'aether.publish.step.generateBlueprint.generated',
+				'aether.export.step.createBlueprintBundle.generated',
 				blueprint,
 				wporgPlugins,
 				wporgThemes

@@ -6,10 +6,10 @@
  * Provides common functionality for publish REST controllers.
  * Replaces BasePublishController inheritance.
  *
- * @package Aether\REST\Publish
+ * @package Aether\REST\Export
  */
 
-namespace Aether\SiteExporter\REST\Publish;
+namespace Aether\SiteExporter\REST\Export;
 
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Sync\JobStateManager;
@@ -19,7 +19,7 @@ use WP_Error;
 /**
  * Trait providing publish REST API helper methods.
  */
-trait PublishHelpersTrait
+trait ExportHelpersTrait
 {
 	/**
 	 * Plugin instance.
@@ -44,7 +44,7 @@ trait PublishHelpersTrait
 	 * @param JobStateManager|null $stateManager Job state manager (optional, will create if null).
 	 * @return void
 	 */
-	protected function initPublishHelpers(Plugin $plugin, ?JobStateManager $stateManager = null): void
+	protected function initExportHelpers(Plugin $plugin, ?JobStateManager $stateManager = null): void
 	{
 		$this->plugin       = $plugin;
 		$this->stateManager = $stateManager ?? new JobStateManager();

@@ -2,7 +2,7 @@
  * Publish API Hook
  *
  * Handles API calls for publish operations.
- * Uses PublishAPIService for all business logic.
+ * Uses ExportAPIService for all business logic.
  *
  * @package
  */
@@ -11,14 +11,14 @@ import { useCallback, useMemo } from '@wordpress/element';
 import apiFetch from '@aether/utils/api';
 import useAssetDiscovery from '@aether/utils/useAssetDiscovery';
 import { storage } from '@aether/utils/storage';
-import { PublishAPIService } from '@aether/services/PublishAPIService';
+import { ExportAPIService } from '@aether/services/ExportAPIService';
 
-export function usePublishAPI() {
+export function useExportAPI() {
 	const assetDiscovery = useAssetDiscovery();
 
 	// Create service instance (memoized to prevent recreation)
 	const service = useMemo(
-		() => new PublishAPIService( apiFetch, assetDiscovery, storage ),
+		() => new ExportAPIService( apiFetch, assetDiscovery, storage ),
 		[ assetDiscovery ]
 	);
 

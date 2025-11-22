@@ -2,7 +2,7 @@
  * Publish API Service
  *
  * Service for publish-related API operations.
- * Extracted from usePublishAPI hook for testability.
+ * Extracted from useExportAPI hook for testability.
  *
  * @package
  */
@@ -14,7 +14,7 @@ const CHANGED_ASSETS_KEY = 'aether_changed_assets';
  *
  * Handles publish-related API calls and asset tracking.
  */
-export class PublishAPIService {
+export class ExportAPIService {
 	/**
 	 * Create service instance
 	 *

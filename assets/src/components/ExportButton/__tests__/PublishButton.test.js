@@ -1,13 +1,13 @@
 /**
- * Tests for PublishButton Component
+ * Tests for ExportButton Component
  *
  * @package
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';
-import PublishButton from '../index';
+import ExportButton from '../index';
 
-describe( 'PublishButton', () => {
+describe( 'ExportButton', () => {
 	const defaultProps = {
 		readiness: {
 			ready: true,
@@ -30,7 +30,7 @@ describe( 'PublishButton', () => {
 	} );
 
 	it( 'should render publish button when ready', () => {
-		render( <PublishButton { ...defaultProps } /> );
+		render( <ExportButton { ...defaultProps } /> );
 
 		expect( screen.getByText( 'Publish Site Now' ) ).toBeInTheDocument();
 		expect(
@@ -41,7 +41,7 @@ describe( 'PublishButton', () => {
 	it( 'should call onPublishClick when button is clicked', () => {
 		const onPublishClick = jest.fn();
 		render(
-			<PublishButton
+			<ExportButton
 				{ ...defaultProps }
 				onPublishClick={ onPublishClick }
 			/>
@@ -55,7 +55,7 @@ describe( 'PublishButton', () => {
 
 	it( 'should disable button when not ready', () => {
 		render(
-			<PublishButton
+			<ExportButton
 				{ ...defaultProps }
 				readiness={ { ready: false, issues: [] } }
 			/>
@@ -66,7 +66,7 @@ describe( 'PublishButton', () => {
 	} );
 
 	it( 'should disable button when publishing', () => {
-		render( <PublishButton { ...defaultProps } isPublishing={ true } /> );
+		render( <ExportButton { ...defaultProps } isPublishing={ true } /> );
 
 		const button = screen.getByText( 'Publishing…' );
 		expect( button ).toBeDisabled();
@@ -79,7 +79,7 @@ describe( 'PublishButton', () => {
 		];
 
 		render(
-			<PublishButton
+			<ExportButton
 				{ ...defaultProps }
 				readiness={ { ready: false, issues } }
 			/>
@@ -96,7 +96,7 @@ describe( 'PublishButton', () => {
 
 	it( 'should show dashboard link when not ready', () => {
 		render(
-			<PublishButton
+			<ExportButton
 				{ ...defaultProps }
 				readiness={ { ready: false, issues: [ 'Test issue' ] } }
 			/>
@@ -111,7 +111,7 @@ describe( 'PublishButton', () => {
 	} );
 
 	it( 'should show publishing state', () => {
-		render( <PublishButton { ...defaultProps } isPublishing={ true } /> );
+		render( <ExportButton { ...defaultProps } isPublishing={ true } /> );
 
 		expect( screen.getByText( 'Publishing…' ) ).toBeInTheDocument();
 		expect(

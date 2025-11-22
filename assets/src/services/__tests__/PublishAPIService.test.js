@@ -1,15 +1,15 @@
 /**
  * Publish API Service Tests
  *
- * Tests for PublishAPIService and asset discovery operations.
+ * Tests for ExportAPIService and asset discovery operations.
  * Validates API call wrappers and storage operations.
  *
  * @package
  */
 
-import { PublishAPIService } from '../PublishAPIService';
+import { ExportAPIService } from '../ExportAPIService';
 
-describe( 'PublishAPIService', () => {
+describe( 'ExportAPIService', () => {
 	let service;
 	let mockApiFetch;
 	let mockAssetDiscovery;
@@ -24,7 +24,7 @@ describe( 'PublishAPIService', () => {
 			get: jest.fn(),
 			set: jest.fn(),
 		};
-		service = new PublishAPIService(
+		service = new ExportAPIService(
 			mockApiFetch,
 			mockAssetDiscovery,
 			mockStorage

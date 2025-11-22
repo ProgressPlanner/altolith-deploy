@@ -93,7 +93,7 @@ export async function executeSteps( steps, context, options = {} ) {
 	};
 
 	// Fire workflow start action
-	doAction( 'aether.publish.workflow.before', executionContext, steps );
+	doAction( 'aether.export.workflow.before', executionContext, steps );
 
 	try {
 		for ( const parallelGroup of executionPlan ) {
@@ -162,7 +162,7 @@ export async function executeSteps( steps, context, options = {} ) {
 
 		// Fire workflow complete action
 		doAction(
-			'aether.publish.workflow.after',
+			'aether.export.workflow.after',
 			executionContext.state,
 			executionContext
 		);
@@ -173,7 +173,7 @@ export async function executeSteps( steps, context, options = {} ) {
 
 		return executionContext.state;
 	} catch ( error ) {
-		doAction( 'aether.publish.workflow.error', error, executionContext );
+		doAction( 'aether.export.workflow.error', error, executionContext );
 		// Don't clear progress on error - allows for resume
 		throw error;
 	}

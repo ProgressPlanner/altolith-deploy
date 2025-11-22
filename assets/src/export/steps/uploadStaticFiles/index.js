@@ -10,8 +10,8 @@
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import StaticSiteCache from '@aether/utils/staticSiteCache';
-import { executePreScan } from '@aether/publish/utils/preScanPhase';
-import { fetchProviderConfig } from '@aether/publish/utils/staticSiteConfig';
+import { executePreScan } from '@aether/export/utils/preScanPhase';
+import { fetchProviderConfig } from '@aether/export/utils/staticSiteConfig';
 import { debug, debugWarn } from '@aether/utils/debug';
 
 /**
@@ -85,7 +85,7 @@ async function handler( context ) {
 
 	// Filter URLs before processing
 	const filteredUrls = applyFilters(
-		'aether.publish.step.uploadStaticSiteFiles.urls',
+		'aether.export.step.uploadStaticSiteFiles.urls',
 		urls,
 		providers,
 		{
@@ -290,7 +290,7 @@ async function handler( context ) {
 	}
 
 	return applyFilters(
-		'aether.publish.step.uploadStaticSiteFiles.result',
+		'aether.export.step.uploadStaticSiteFiles.result',
 		{
 			providers,
 			results: providerResults,

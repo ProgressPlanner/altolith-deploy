@@ -12,7 +12,7 @@ import { debug, debugWarn } from '@aether/utils/debug';
 import IndexedDBStore, { isIndexedDBAvailable } from '@aether/utils/indexedDB';
 
 const DB_CONFIG = {
-	dbName: 'aether-publish-state',
+	dbName: 'aether-export-state',
 	version: 1,
 	stores: {
 		workflowState: {

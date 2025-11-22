@@ -320,7 +320,7 @@ $posts = get_posts([
 **Impact:** Performance degradation on large sites
 
 #### Affected File
-`assets/src/publish/hooks/useStaticSiteGenerator.js:114-115`
+`assets/src/export/hooks/useStaticSiteGenerator.js:114-115`
 ```javascript
 const MAX_CACHE_SIZE = 500; // Max URLs to cache in memory
 const urlCache = new Map();
@@ -644,7 +644,7 @@ set_transient('aether_job_' . $jobId, $state, 30 * MINUTE_IN_SECONDS);
    - Report cache statistics
 
 **Files to modify:**
-- `assets/src/publish/hooks/useStaticSiteGenerator.js`
+- `assets/src/export/hooks/useStaticSiteGenerator.js`
 - Settings component
 - `includes/REST/SettingsController.php`
 
@@ -858,7 +858,7 @@ All critical compatibility issues have been resolved using a **universal impleme
 - `includes/REST/LocalStorageController.php` - PathValidator + FileManager
 - `includes/Plugin.php` - Cleanup via TempDirectoryManager
 - `assets/src/utils/useAssetDiscovery.js` - Handles `exists: null`
-- `assets/src/publish/hooks/useStaticSiteGenerator.js` - IndexedDB cache
+- `assets/src/export/hooks/useStaticSiteGenerator.js` - IndexedDB cache
 
 ### Design Principles
 
@@ -897,7 +897,7 @@ The Aether Site Exporter plugin is now **fully compatible** with WordPress Playg
 
 ### Related Files in This Plugin
 - `includes/Utilities/HTTPClient.php` - HTTP request documentation
-- `assets/src/publish/README.md` - Architecture decisions
+- `assets/src/export/README.md` - Architecture decisions
 - `SECURITY.md` - CORS and security constraints
 - `README.md` - Plugin overview
 

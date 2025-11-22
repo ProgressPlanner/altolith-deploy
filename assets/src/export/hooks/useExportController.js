@@ -7,22 +7,22 @@
  */
 
 import { useCallback, useState, useRef } from '@wordpress/element';
-import { usePublishAPI } from './usePublishAPI';
+import { useExportAPI } from './useExportAPI';
 import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
 import { useBlueprintGenerator } from './useBlueprintGenerator';
 import apiFetch from '@aether/utils/api';
 import { debug, debugError } from '@aether/utils/debug';
 import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
-import { executeSteps } from '@aether/publish/executor';
-import { getActiveSteps, getRegisteredSteps } from '@aether/publish/steps';
+import { executeSteps } from '@aether/export/executor';
+import { getActiveSteps, getRegisteredSteps } from '@aether/export/steps';
 import {
 	preparePublishConfiguration,
 	determineProvidersByDeploymentType,
 	buildWorkflowContext,
-} from '@aether/publish/utils/publishConfiguration';
+} from '@aether/export/utils/exportConfiguration';
 
-export function usePublishController( publishState ) {
+export function useExportController( publishState ) {
 	const {
 		setIsPublishing,
 		updateFromStep,
@@ -40,7 +40,7 @@ export function usePublishController( publishState ) {
 	// Must be declared before hooks that use it
 	const [ setStorageProviderId ] = useState( '' );
 
-	const api = usePublishAPI();
+	const api = useExportAPI();
 	const assetManager = useAssetManager();
 
 	// Create blueprint generator hook.
@@ -103,9 +103,9 @@ export function usePublishController( publishState ) {
 		}
 	);
 
-	const startPublish = useCallback( async () => {
+	const startExport = useCallback( async () => {
 		try {
-			debug( 'startPublish called' );
+			debug( 'startExport called' );
 
 			// Initialize steps with 'discoverBlueprintBundleAssets' as the active step
 			// This sets up steps array, active step, and lastStepIndex correctly
@@ -264,6 +264,6 @@ export function usePublishController( publishState ) {
 	] );
 
 	return {
-		startPublish,
+		startExport,
 	};
 }

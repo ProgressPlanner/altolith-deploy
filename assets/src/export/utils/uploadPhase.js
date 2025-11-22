@@ -46,7 +46,7 @@ export async function prepareManifest(
 		}
 
 		manifest = applyFilters(
-			'aether.publish.step.uploadStaticSiteFiles.manifest.fetch',
+			'aether.export.step.uploadStaticSiteFiles.manifest.fetch',
 			null,
 			storageService,
 			providerId
@@ -164,7 +164,7 @@ export async function processAssets( {
 
 			// Filter asset before processing
 			const filteredAssetData = applyFilters(
-				'aether.publish.step.uploadStaticSiteFiles.asset.process',
+				'aether.export.step.uploadStaticSiteFiles.asset.process',
 				{
 					blob: assetBlob,
 					path: assetPath,
@@ -285,7 +285,7 @@ export async function processAssets( {
 				);
 
 				currentManifest = applyFilters(
-					'aether.publish.step.uploadStaticSiteFiles.manifest.update',
+					'aether.export.step.uploadStaticSiteFiles.manifest.update',
 					currentManifest,
 					assetKey,
 					providerId
@@ -334,7 +334,7 @@ export async function uploadHtmlFile( {
 } ) {
 	// Filter HTML before processing
 	let processedHtml = applyFilters(
-		'aether.publish.step.uploadStaticSiteFiles.html.process',
+		'aether.export.step.uploadStaticSiteFiles.html.process',
 		rawHtml,
 		url,
 		siteUrl,
@@ -469,7 +469,7 @@ export async function finalizeManifest(
 		let cleanedManifest = cleanupManifest( manifest, currentFileKeys );
 
 		cleanedManifest = applyFilters(
-			'aether.publish.step.uploadStaticSiteFiles.manifest.cleanup',
+			'aether.export.step.uploadStaticSiteFiles.manifest.cleanup',
 			cleanedManifest,
 			currentFileKeys,
 			providerId

@@ -10,7 +10,7 @@
 
 import { useCallback } from '@wordpress/element';
 import { doAction, applyFilters } from '@wordpress/hooks';
-import { createAssetTracker } from '@aether/publish/utils/assetTracker';
+import { createAssetTracker } from '@aether/export/utils/assetTracker';
 import { debug, debugWarn } from '@aether/utils/debug';
 import {
 	updateManifestEntry,
@@ -24,14 +24,14 @@ import {
 	createFailureTracker,
 	fetchProviderConfig,
 	createStorageService,
-} from '@aether/publish/utils/staticSiteConfig';
-import { executePreScan } from '@aether/publish/utils/preScanPhase';
+} from '@aether/export/utils/staticSiteConfig';
+import { executePreScan } from '@aether/export/utils/preScanPhase';
 import {
 	prepareManifest,
 	processAssets,
 	uploadHtmlFile,
 	finalizeManifest,
-} from '@aether/publish/utils/uploadPhase';
+} from '@aether/export/utils/uploadPhase';
 
 /**
  * Process URLs and upload static site files.
@@ -117,7 +117,7 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			// Fire upload start action
 			doAction(
-				'aether.publish.step.uploadStaticSiteFiles.upload.before',
+				'aether.export.step.uploadStaticSiteFiles.upload.before',
 				cachedUrls,
 				totalFilesToUpload,
 				staticSiteProviderId
@@ -183,7 +183,7 @@ export function useStaticSiteGenerator( onProgress ) {
 						);
 
 						manifest = applyFilters(
-							'aether.publish.step.uploadStaticSiteFiles.manifest.update',
+							'aether.export.step.uploadStaticSiteFiles.manifest.update',
 							manifest,
 							htmlResult.htmlKey,
 							staticSiteProviderId
@@ -274,7 +274,7 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			// Fire completion action
 			doAction(
-				'aether.publish.step.uploadStaticSiteFiles.upload.after',
+				'aether.export.step.uploadStaticSiteFiles.upload.after',
 				{
 					filesUploaded,
 					filesSkipped,

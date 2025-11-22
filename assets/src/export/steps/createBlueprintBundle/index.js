@@ -1,8 +1,7 @@
 /**
  * Create Blueprint Bundle Step
  *
- * Creates wp-content.zip containing custom plugins, themes, and uploads.
- * Used for blueprint bundle generation.
+ * Generates blueprint-bundle.zip containing blueprint.json and wp-content.zip.
  *
  * @package
  */
@@ -14,17 +13,21 @@ import { formatFileSize } from '@aether/utils/helpers';
 /**
  * Create blueprint bundle step handler.
  *
- * @param {Object}   context                  Execution context.
- * @param {Object}   context.api              PublishAPI instance.
- * @param {Object}   context.assetManager     Asset manager instance.
- * @param {Array}    context.discoveredAssets Discovered assets from discoverBlueprintBundleAssets step.
- * @param {Function} context.setStatusMessage Status message updater.
- * @return {Promise<Object>} Step result with archive info.
+ * @param {Object}   context                       Execution context.
+ * @param {Object}   context.api                   ExportAPI instance.
+ * @param {Function} context.generateBlueprintJson Blueprint JSON generator function.
+ * @param {string}   context.zipPath               Path to wp-content.zip from createWpContentArchive.
+ * @param {string}   context.zipUrl                URL to wp-content.zip.
+ * @param {Array}    context.discoveredAssets      Discovered assets.
+ * @param {Function} context.setStatusMessage      Status message updater.
+ * @return {Promise<Object>} Step result with blueprint bundle info.
  */
 async function handler( context ) {
 	const {
 		api,
-		assetManager,
+		generateBlueprintJson,
+		zipPath,
+		zipUrl,
 		discoveredAssets = [],
 		setStatusMessage,
 	} = context;
@@ -35,22 +38,57 @@ async function handler( context ) {
 		'createBlueprintBundle'
 	);
 
-	// Determine which files to include
-	const filesToInclude = applyFilters(
-		'aether.publish.step.createBlueprintBundle.files',
-		discoveredAssets,
+	if ( ! zipPath ) {
+		throw new Error(
+			__(
+				'Site archive not found. Please run createWpContentArchive first.',
+				'aether-site-exporter'
+			)
+		);
+	}
+
+	// Generate blueprint.json
+	let blueprintData;
+	if ( typeof generateBlueprintJson === 'function' ) {
+		blueprintData = await generateBlueprintJson(
+			{
+				assets: discoveredAssets,
+				wpContentZipUrl: zipUrl,
+			},
+			setStatusMessage
+		);
+	} else {
+		// Fallback: use API to generate blueprint
+		const blueprintResponse = await api.generateBlueprint( {
+			assets: discoveredAssets,
+			wpContentZipUrl: zipUrl,
+		} );
+
+		if ( ! blueprintResponse.success ) {
+			throw new Error(
+				blueprintResponse.message ||
+					__( 'Failed to generate blueprint', 'aether-site-exporter' )
+			);
+		}
+		blueprintData = blueprintResponse.blueprint;
+	}
+
+	// Allow filtering of blueprint data (JSON only)
+	const filteredBlueprint = applyFilters(
+		'aether.export.step.createBlueprintBundle.blueprintData',
+		blueprintData,
 		context
 	);
 
-	// Create the archive via API
-	const archiveResponse = await api.createArchive( {
-		assets: filesToInclude,
-		includeUploads: true,
+	// Create the blueprint-bundle.zip via API
+	const bundleResponse = await api.createBlueprintBundle( {
+		blueprint: filteredBlueprint,
+		wpContentZipPath: zipPath,
 	} );
 
-	if ( ! archiveResponse.success ) {
+	if ( ! bundleResponse.success ) {
 		throw new Error(
-			archiveResponse.message ||
+			bundleResponse.message ||
 				__(
 					'Failed to create blueprint bundle',
 					'aether-site-exporter'
@@ -58,17 +96,8 @@ async function handler( context ) {
 		);
 	}
 
-	const { zipPath, zipUrl, zipSize } = archiveResponse;
-	const sizeFormatted = formatFileSize( zipSize || 0 );
-
-	// Update asset manager if provided and method exists
-	if (
-		assetManager &&
-		zipPath &&
-		typeof assetManager.setArchivePath === 'function'
-	) {
-		assetManager.setArchivePath( zipPath );
-	}
+	const { bundlePath, bundleUrl, bundleSize } = bundleResponse;
+	const sizeFormatted = formatFileSize( bundleSize || 0 );
 
 	setStatusMessage(
 		sprintf(
@@ -82,9 +111,12 @@ async function handler( context ) {
 
 	// Return data to merge into execution state
 	return {
-		zipPath,
-		zipUrl,
-		zipSize,
+		blueprintData: filteredBlueprint,
+		blueprintBundle: {
+			bundlePath,
+			bundleUrl,
+			bundleSize,
+		},
 	};
 }
 
@@ -93,13 +125,10 @@ async function handler( context ) {
  */
 export const createBlueprintBundleStep = {
 	id: 'createBlueprintBundle',
-	label: __( 'Create Bundle', 'aether-site-exporter' ),
-	description: __(
-		'Package custom plugins, themes, and uploads',
-		'aether-site-exporter'
-	),
-	supportsProgress: true,
-	dependencies: [ 'discoverBlueprintBundleAssets' ],
-	provides: [ 'zipPath', 'zipUrl', 'zipSize' ],
+	label: __( 'Create Blueprint Bundle', 'aether-site-exporter' ),
+	description: __( 'Create blueprint-bundle.zip', 'aether-site-exporter' ),
+	supportsProgress: false,
+	dependencies: [ 'createWpContentArchive' ],
+	provides: [ 'blueprintData', 'blueprintBundle' ],
 	handler,
 };

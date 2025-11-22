@@ -14,8 +14,8 @@ describe( 'steps', () => {
 
 			expect( stepIds ).toContain( 'discoverBlueprintBundleAssets' );
 			expect( stepIds ).toContain( 'getStaticSiteUrls' );
-			expect( stepIds ).toContain( 'generateBlueprint' );
 			expect( stepIds ).toContain( 'createBlueprintBundle' );
+			expect( stepIds ).toContain( 'createWpContentArchive' );
 			expect( stepIds ).toContain( 'uploadStaticFiles' );
 			expect( stepIds ).toContain( 'uploadBlueprintBundle' );
 		} );
@@ -47,7 +47,7 @@ describe( 'steps', () => {
 				'uploadBlueprintBundle'
 			);
 			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
-				'createBlueprintBundle'
+				'createWpContentArchive'
 			);
 
 			// Discovery steps don't support progress
