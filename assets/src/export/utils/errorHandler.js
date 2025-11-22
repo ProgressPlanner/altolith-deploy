@@ -2,7 +2,7 @@
  * Error Handler Utility
  *
  * Provides error categorization, retry logic, and error recovery strategies
- * for the publish workflow.
+ * for the export workflow.
  *
  * @package
  */

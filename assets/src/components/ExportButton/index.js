@@ -84,19 +84,19 @@ export default function ExportButton( {
 	};
 
 	return (
-		<div className="aether-publish-button" style={ sectionStyle }>
+		<div className="aether-export-button" style={ sectionStyle }>
 			<div
-				className="aether-publish-button__header"
+				className="aether-export-button__header"
 				style={ sectionHeaderStyle }
 			>
 				<h2
-					className="aether-publish-button__title"
+					className="aether-export-button__title"
 					style={ headerTitleStyle }
 				>
 					{ __( 'Publish Your Site', 'aether-site-exporter' ) }
 				</h2>
 				<p
-					className="aether-publish-button__description"
+					className="aether-export-button__description"
 					style={ headerDescriptionStyle }
 				>
 					{ __(
@@ -108,40 +108,40 @@ export default function ExportButton( {
 
 			{ ! isReady && (
 				<div
-					className="aether-publish-button__notice aether-publish-button__notice--error"
+					className="aether-export-button__notice aether-export-button__notice--error"
 					style={ noticeErrorStyle }
 				>
 					<p
-						className="aether-publish-button__notice-text"
+						className="aether-export-button__notice-text"
 						style={ noticeParagraphStyle }
 					>
 						<strong>
 							{ __(
-								'Cannot publish - please fix the following issues:',
+								'Cannot export - please fix the following issues:',
 								'aether'
 							) }
 						</strong>
 					</p>
 					<ul
-						className="aether-publish-button__issues-list"
+						className="aether-export-button__issues-list"
 						style={ noticeListStyle }
 					>
 						{ issues.map( ( issue, index ) => (
 							<li
 								key={ index }
-								className="aether-publish-button__issue"
+								className="aether-export-button__issue"
 							>
 								{ issue }
 							</li>
 						) ) }
 					</ul>
 					<p
-						className="aether-publish-button__notice-link"
+						className="aether-export-button__notice-link"
 						style={ utilityStyles.noMargin }
 					>
 						{ __( 'Visit the', 'aether-site-exporter' ) }{ ' ' }
 						<a
-							className="aether-publish-button__link"
+							className="aether-export-button__link"
 							href={ adminUrl }
 						>
 							{ __( 'Dashboard', 'aether-site-exporter' ) }
@@ -156,15 +156,15 @@ export default function ExportButton( {
 
 			{ isReady && (
 				<div
-					className="aether-publish-button__notice aether-publish-button__notice--success"
+					className="aether-export-button__notice aether-export-button__notice--success"
 					style={ noticeSuccessStyle }
 				>
 					<p
-						className="aether-publish-button__notice-text"
+						className="aether-export-button__notice-text"
 						style={ utilityStyles.noMargin }
 					>
 						{ __(
-							'Your site is ready to publish!',
+							'Your site is ready to export!',
 							'aether-site-exporter'
 						) }
 					</p>
@@ -172,19 +172,19 @@ export default function ExportButton( {
 			) }
 
 			<div
-				className="aether-publish-button__actions"
+				className="aether-export-button__actions"
 				style={ containerStyle }
 			>
 				<Button
 					id="aether-ExportButton"
-					className="aether-publish-button__button"
+					className="aether-export-button__button"
 					variant="primary"
 					isLarge
 					onClick={ onPublishClick }
 					disabled={ ! isReady || isPublishing }
 					isBusy={ isPublishing }
 				>
-					<span className="dashicons dashicons-upload aether-publish-button__icon" />
+					<span className="dashicons dashicons-upload aether-export-button__icon" />
 					{ isPublishing
 						? __( 'Publishing…', 'aether-site-exporter' )
 						: __( 'Publish Site Now', 'aether-site-exporter' ) }

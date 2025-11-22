@@ -34,20 +34,22 @@ export const ENDPOINTS = {
 	SETTINGS_UPDATE: `${ API_BASE_PATH }/settings`,
 
 	/**
-	 * Publish workflow endpoints
+	 * Export workflow endpoints (formerly publish)
 	 */
-	PUBLISH: {
-		START: `${ API_BASE_PATH }/publish`,
-		STATUS: `${ API_BASE_PATH }/publish/status`,
-		STEPS: `${ API_BASE_PATH }/publish/steps`,
-		STEP: ( stepId ) => `${ API_BASE_PATH }/publish/steps/${ stepId }`,
-		CANCEL: `${ API_BASE_PATH }/publish/cancel`,
-		RECENT_JOBS: `${ API_BASE_PATH }/publish/recent-jobs`,
-		JOB_STATUS: ( jobId ) => `${ API_BASE_PATH }/publish/${ jobId }/status`,
+	EXPORT_WORKFLOW: {
+		START: `${ API_BASE_PATH }/export`,
+		STATUS: `${ API_BASE_PATH }/export/status`,
+		STEPS: `${ API_BASE_PATH }/export/steps`,
+		STEP: ( stepId ) => `${ API_BASE_PATH }/export/steps/${ stepId }`,
+		CANCEL: `${ API_BASE_PATH }/export/cancel`,
+		RECENT_JOBS: `${ API_BASE_PATH }/export/recent-jobs`,
+		JOB_STATUS: ( jobId ) => `${ API_BASE_PATH }/export/${ jobId }/status`,
 		UPDATE_JOB_STATUS: ( jobId ) =>
-			`${ API_BASE_PATH }/publish/${ jobId }/status`,
+			`${ API_BASE_PATH }/export/${ jobId }/status`,
 		MARK_UPLOADS_COMPLETE: ( jobId ) =>
-			`${ API_BASE_PATH }/publish/${ jobId }/mark-uploads-complete`,
+			`${ API_BASE_PATH }/export/${ jobId }/mark-uploads-complete`,
+		CREATE_ARCHIVE: `${ API_BASE_PATH }/export/createArchive`,
+		GENERATE_BLUEPRINT_BUNDLE: `${ API_BASE_PATH }/export/generateBlueprintBundle`,
 	},
 
 	/**

@@ -1,8 +1,8 @@
 /**
  * Publish Context
  *
- * Centralized publish workflow state management using React Context API.
- * Provides global publish state with step tracking, progress management, and status updates.
+ * Centralized export workflow state management using React Context API.
+ * Provides global export state with step tracking, progress management, and status updates.
  *
  * @package
  */
@@ -49,7 +49,7 @@ export const ExportContext = createContext( {
 /**
  * Publish Provider Component
  *
- * Wraps the publish workflow to provide global state management.
+ * Wraps the export workflow to provide global state management.
  * Features:
  * - Step tracking (pending, active, complete, error)
  * - Progress management (per-step and overall)
@@ -312,7 +312,7 @@ export function PublishProvider( { children } ) {
 	/**
 	 * Mark all steps as complete
 	 *
-	 * Called when publish workflow completes successfully.
+	 * Called when export workflow completes successfully.
 	 *
 	 * @param {Object} status Final status object (includes deployment URL, etc.)
 	 */
@@ -323,7 +323,7 @@ export function PublishProvider( { children } ) {
 			);
 			setFinalStatus( status );
 			setIsPublishing( false );
-			addMessage( 'Site published successfully!', 'success' );
+			addMessage( 'Site exported successfully!', 'success' );
 		},
 		[ addMessage ]
 	);
@@ -459,9 +459,9 @@ export function PublishProvider( { children } ) {
 	);
 
 	/**
-	 * Reset all publish state to initial values
+	 * Reset all export state to initial values
 	 *
-	 * Called when starting a new publish or closing the publish modal.
+	 * Called when starting a new export or closing the export modal.
 	 *
 	 * @param {boolean} keepSteps If true, don't clear steps (useful when immediately reinitializing)
 	 */

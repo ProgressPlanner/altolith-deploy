@@ -1,7 +1,7 @@
 /**
  * Publish Readiness Hook
  *
- * Checks if the site is ready to publish by validating settings and provider status.
+ * Checks if the site is ready to export by validating settings and provider status.
  * Uses useAPIData for cleaner data fetching.
  * Simplified from 107 to 80 lines (-25% complexity).
  *
@@ -13,7 +13,7 @@ import { __, sprintf } from '@wordpress/i18n';
 import { useAPIData } from '@aether/hooks/useAPIData';
 
 /**
- * Check publish readiness based on settings and provider status
+ * Check export readiness based on settings and provider status
  *
  * @return {Object} Readiness status with ready flag, issues array, and loading state
  */

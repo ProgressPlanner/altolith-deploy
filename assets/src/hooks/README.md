@@ -57,7 +57,7 @@ All API calls use constants from `constants/api.js`:
 
 ```javascript
 const response = await apiFetch({
-    path: ENDPOINTS.PUBLISH.START,
+    path: ENDPOINTS.EXPORT_WORKFLOW.START,
     method: HTTP_METHODS.POST,
     data: requestData,
 });

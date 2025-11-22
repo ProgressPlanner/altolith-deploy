@@ -319,7 +319,7 @@
  * Deploy to provider.
  *
  * Main deployment method. Upload files, configure hosting, etc.
- * Called during publish workflow.
+ * Called during export workflow.
  *
  * @memberof IProvider
  * @function deploy

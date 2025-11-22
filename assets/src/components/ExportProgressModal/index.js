@@ -1,7 +1,7 @@
 /**
  * Publish Progress Modal Component
  *
- * Shows publish progress with progress bar and status messages
+ * Shows export progress with progress bar and status messages
  *
  * @package
  */
@@ -117,8 +117,8 @@ export default function ExportProgressModal( {
 	onClose,
 	onComplete,
 } ) {
-	const publishState = useExportState();
-	const { startExport } = useExportController( publishState );
+	const exportState = useExportState();
+	const { startExport } = useExportController( exportState );
 	const {
 		steps,
 		isPublishing,
@@ -130,7 +130,7 @@ export default function ExportProgressModal( {
 		messageHistory,
 		staticSiteProviders,
 		blueprintBundleProviders,
-	} = publishState;
+	} = exportState;
 
 	// Ref for activity log auto-scroll
 	const activityLogRef = useRef( null );
@@ -159,7 +159,7 @@ export default function ExportProgressModal( {
 		}
 	}, [ shouldShowModal, reset ] );
 
-	// Start publish when modal opens
+	// Start export when modal opens
 	useEffect( () => {
 		if ( isOpen && ! isPublishing ) {
 			// Only start if we haven't started yet (no steps initialized and no job ID)
@@ -254,7 +254,7 @@ export default function ExportProgressModal( {
 
 	return (
 		<Modal
-			className="aether-publish-progress-modal"
+			className="aether-export-progress-modal"
 			title={ getModalTitle() }
 			onRequestClose={ handleClose }
 			isFullScreen={ false }
@@ -263,16 +263,16 @@ export default function ExportProgressModal( {
 			__experimentalHideHeader={ false }
 		>
 			<div
-				className="aether-publish-progress-modal__content"
+				className="aether-export-progress-modal__content"
 				style={ modalContentStyle }
 			>
 				{ error && (
 					<div
-						className="aether-publish-progress-modal__notice aether-publish-progress-modal__notice--error"
+						className="aether-export-progress-modal__notice aether-export-progress-modal__notice--error"
 						style={ noticeErrorStyle }
 					>
 						<p
-							className="aether-publish-progress-modal__notice-text"
+							className="aether-export-progress-modal__notice-text"
 							style={ utilityStyles.noMargin }
 						>
 							{ error }
@@ -282,11 +282,11 @@ export default function ExportProgressModal( {
 
 				{ finalStatus && (
 					<div
-						className="aether-publish-progress-modal__notice aether-publish-progress-modal__notice--success"
+						className="aether-export-progress-modal__notice aether-export-progress-modal__notice--success"
 						style={ noticeSuccessStyle }
 					>
 						<p
-							className="aether-publish-progress-modal__notice-text"
+							className="aether-export-progress-modal__notice-text"
 							style={ noticeParagraphStyle }
 						>
 							{ __(
@@ -296,17 +296,17 @@ export default function ExportProgressModal( {
 						</p>
 						{ finalStatus.deploymentUrl && (
 							<p
-								className="aether-publish-progress-modal__deployment"
+								className="aether-export-progress-modal__deployment"
 								style={ utilityStyles.noMargin }
 							>
-								<strong className="aether-publish-progress-modal__deployment-label">
+								<strong className="aether-export-progress-modal__deployment-label">
 									{ __(
 										'View your published site:',
 										'aether'
 									) }
 								</strong>{ ' ' }
 								<a
-									className="aether-publish-progress-modal__deployment-link"
+									className="aether-export-progress-modal__deployment-link"
 									href={ finalStatus.deploymentUrl }
 									target="_blank"
 									rel="noopener noreferrer"
@@ -320,19 +320,19 @@ export default function ExportProgressModal( {
 
 				{ ! finalStatus && ! error && steps.length > 0 && (
 					<div
-						className="aether-publish-progress-modal__progress"
+						className="aether-export-progress-modal__progress"
 						style={ progressContainerStyle }
 					>
 						<div
-							className="aether-publish-progress-modal__progress-container"
+							className="aether-export-progress-modal__progress-container"
 							style={ progressBarContainerStyle }
 						>
 							<div
-								className="aether-publish-progress-modal__progress-bar"
+								className="aether-export-progress-modal__progress-bar"
 								style={ progressBarStyle }
 							>
 								<div
-									className="aether-publish-progress-modal__progress-fill"
+									className="aether-export-progress-modal__progress-fill"
 									style={ {
 										...progressBarFillStyle,
 										width: `${ displayProgress }%`,
@@ -340,7 +340,7 @@ export default function ExportProgressModal( {
 								/>
 							</div>
 							<span
-								className="aether-publish-progress-modal__progress-percentage"
+								className="aether-export-progress-modal__progress-percentage"
 								style={ progressPercentageStyle }
 							>
 								{ displayProgress }%
@@ -357,12 +357,12 @@ export default function ExportProgressModal( {
 
 				{ messageHistory.length > 0 && (
 					<div
-						className="aether-publish-progress-modal__activity-log"
+						className="aether-export-progress-modal__activity-log"
 						style={ activityLogStyle }
 						ref={ activityLogRef }
 					>
 						<ul
-							className="aether-publish-progress-modal__activity-list"
+							className="aether-export-progress-modal__activity-list"
 							style={ activityListStyle }
 						>
 							{ sortedMessageHistory.map( ( item ) => (
@@ -379,16 +379,16 @@ export default function ExportProgressModal( {
 
 				{ steps.length === 0 && ! error && (
 					<div
-						className="aether-publish-progress-modal__loading"
+						className="aether-export-progress-modal__loading"
 						style={ loadingStyle }
 					>
-						<Spinner className="aether-publish-progress-modal__spinner" />
+						<Spinner className="aether-export-progress-modal__spinner" />
 						<p
-							className="aether-publish-progress-modal__loading-text"
+							className="aether-export-progress-modal__loading-text"
 							style={ loadingParagraphStyle }
 						>
 							{ __(
-								'Initializing publish process…',
+								'Initializing export process…',
 								'aether-site-exporter'
 							) }
 						</p>

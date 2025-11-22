@@ -1,7 +1,7 @@
 /**
  * Publish Controller Hook
  *
- * Orchestrates the publish workflow using phase-based execution
+ * Orchestrates the export workflow using phase-based execution
  *
  * @package
  */
@@ -22,7 +22,7 @@ import {
 	buildWorkflowContext,
 } from '@aether/export/utils/exportConfiguration';
 
-export function useExportController( publishState ) {
+export function useExportController( exportState ) {
 	const {
 		setIsPublishing,
 		updateFromStep,
@@ -34,9 +34,9 @@ export function useExportController( publishState ) {
 		setStepProgress,
 		removeMessage,
 		setProviders,
-	} = publishState;
+	} = exportState;
 
-	// State for storage provider ID (set before starting publish)
+	// State for storage provider ID (set before starting export)
 	// Must be declared before hooks that use it
 	const [ setStorageProviderId ] = useState( '' );
 
@@ -115,7 +115,7 @@ export function useExportController( publishState ) {
 			);
 			// Set isPublishing to true to start the workflow
 			setIsPublishing( true );
-			debug( 'Steps initialized, starting publish workflow' );
+			debug( 'Steps initialized, starting export workflow' );
 
 			// Fetch settings to get storage provider ID before starting
 			const settingsResponse = await apiFetch( {
@@ -123,12 +123,12 @@ export function useExportController( publishState ) {
 			} );
 
 			// Use pure function to extract configuration
-			const publishConfig =
+			const exportConfig =
 				prepareExportConfiguration( settingsResponse );
 
 			// Update storage provider ID state
-			if ( settingsResponse.success && publishConfig.storageProviderId ) {
-				setStorageProviderId( publishConfig.storageProviderId );
+			if ( settingsResponse.success && exportConfig.storageProviderId ) {
+				setStorageProviderId( exportConfig.storageProviderId );
 			}
 
 			// Fetch asset status
@@ -156,7 +156,7 @@ export function useExportController( publishState ) {
 
 			// Get arrays of instance IDs for each deployment type (use pure function)
 			const providersByType = determineProvidersByDeploymentType(
-				publishConfig.providerConfigs,
+				exportConfig.providerConfigs,
 				[
 					DEPLOYMENT_TYPES.STATIC_SITE,
 					DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE,
@@ -231,13 +231,13 @@ export function useExportController( publishState ) {
 
 			debug( '[Workflow] All steps completed successfully' );
 
-			// Clear asset upload tracking flags (reset state for next publish)
+			// Clear asset upload tracking flags (reset state for next export)
 			assetManager.clearUploadFlags();
 
 			// Update UI to show all steps as complete with success message
 			markAllComplete( { status: 'complete' } );
 
-			// Release publishing lock (allows user to start new publish)
+			// Release exporting lock (allows user to start new export)
 			setIsPublishing( false );
 		} catch ( error ) {
 			debugError( 'Publish failed:', error );

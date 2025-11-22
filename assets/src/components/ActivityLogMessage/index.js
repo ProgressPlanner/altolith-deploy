@@ -144,11 +144,11 @@ const getIcon = ( type ) => {
 export default function ActivityLogMessage( { message, type, progress } ) {
 	return (
 		<li
-			className={ `aether-publish-progress-modal__activity-item aether-publish-progress-modal__activity-item--${ type }` }
+			className={ `aether-export-progress-modal__activity-item aether-export-progress-modal__activity-item--${ type }` }
 			style={ getActivityItemStyle( type ) }
 		>
 			<span
-				className={ `aether-publish-progress-modal__activity-icon aether-publish-progress-modal__activity-icon--${ type }` }
+				className={ `aether-export-progress-modal__activity-icon aether-export-progress-modal__activity-icon--${ type }` }
 				style={ {
 					...activityIconStyle,
 					color: getActivityIconColor( type ),
@@ -157,22 +157,22 @@ export default function ActivityLogMessage( { message, type, progress } ) {
 				{ getIcon( type ) }
 			</span>
 			<span
-				className="aether-publish-progress-modal__activity-message"
+				className="aether-export-progress-modal__activity-message"
 				style={ activityMessageStyle }
 			>
 				{ message }
 			</span>
 			{ progress && (
 				<div
-					className="aether-publish-progress-modal__file-progress"
+					className="aether-export-progress-modal__file-progress"
 					style={ fileProgressBarContainerStyle }
 				>
 					<div
-						className="aether-publish-progress-modal__file-progress-bar"
+						className="aether-export-progress-modal__file-progress-bar"
 						style={ fileProgressBarStyle }
 					>
 						<div
-							className="aether-publish-progress-modal__file-progress-fill"
+							className="aether-export-progress-modal__file-progress-fill"
 							style={ {
 								...fileProgressBarFillStyle,
 								width: `${ progress.percent }%`,
@@ -180,7 +180,7 @@ export default function ActivityLogMessage( { message, type, progress } ) {
 						/>
 					</div>
 					<span
-						className="aether-publish-progress-modal__file-progress-percentage"
+						className="aether-export-progress-modal__file-progress-percentage"
 						style={ fileProgressPercentageStyle }
 					>
 						{ progress.percent }%

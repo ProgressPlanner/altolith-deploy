@@ -226,7 +226,7 @@ async function handler( context ) {
 			}
 		}
 	} finally {
-		// Clean up cache when publish finishes (success or failure)
+		// Clean up cache when export finishes (success or failure)
 		try {
 			const cacheCleanedCount = await sharedCache.clearSession();
 			if ( cacheCleanedCount > 0 ) {

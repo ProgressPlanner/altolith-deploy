@@ -70,7 +70,7 @@ export default function ConfigurationSummary( {
 			<SectionHeader
 				title={ __( 'What Will Be Published', 'aether-site-exporter' ) }
 				description={ __(
-					'Summary of your current publish configuration.',
+					'Summary of your current export configuration.',
 					'aether'
 				) }
 				className="aether-config-summary__header"

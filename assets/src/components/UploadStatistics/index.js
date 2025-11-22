@@ -2,7 +2,7 @@
  * Upload Statistics Component
  *
  * Displays upload statistics including provider count, files uploaded, and total size.
- * Calculates stats from message history and remains visible throughout publish workflow.
+ * Calculates stats from message history and remains visible throughout export workflow.
  *
  * @package
  */
@@ -138,7 +138,7 @@ export default function UploadStatistics( {
 
 	return (
 		<div
-			className="aether-publish-progress-modal__details"
+			className="aether-export-progress-modal__details"
 			style={ detailsSectionStyle }
 		>
 			<UploadStatistic

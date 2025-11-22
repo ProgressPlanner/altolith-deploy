@@ -277,7 +277,7 @@ export class LocalFilesystemProvider extends AbstractProvider {
 		const _unused = deploymentConfig;
 		try {
 			// For LocalFilesystem, deployment is handled server-side
-			// This method is called during the publish workflow,
+			// This method is called during the export workflow,
 			// but the actual file operations happen in PHP
 
 			return {

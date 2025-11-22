@@ -17,7 +17,7 @@ import {
 	getObjectUrl,
 	downloadFile,
 } from '../../../utils/filesystemAdapter';
-import { uploadFile as uploadFileUnified } from '../../../publish/utils/unifiedFileUpload';
+import { uploadFile as uploadFileUnified } from '../../../export/utils/unifiedFileUpload';
 
 // Mock filesystem adapter
 jest.mock( '../../../utils/filesystemAdapter', () => ( {
@@ -31,7 +31,7 @@ jest.mock( '../../../utils/filesystemAdapter', () => ( {
 } ) );
 
 // Mock unified file upload
-jest.mock( '../../../publish/utils/unifiedFileUpload', () => ( {
+jest.mock( '../../../export/utils/unifiedFileUpload', () => ( {
 	createFileContext: jest.fn( ( options ) => options ),
 	FILE_TYPES: {
 		STATIC_HTML: 'static-html',

@@ -175,7 +175,7 @@ setTimeout( callback, 500 )
 
 // ✅ Use constants
 import { ENDPOINTS, POLLING_INTERVAL } from '../constants';
-path: ENDPOINTS.PUBLISH.START
+path: ENDPOINTS.EXPORT_WORKFLOW.START
 setTimeout( callback, POLLING_INTERVAL )
 ```
 

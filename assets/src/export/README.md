@@ -178,19 +178,19 @@ import { ENDPOINTS } from '../../constants';
 
 // Start export job
 apiFetch({
-    path: ENDPOINTS.PUBLISH.START,
+    path: ENDPOINTS.EXPORT_WORKFLOW.START,
     method: 'POST',
     data: { changedAssets, discoveredAssets },
 });
 
 // Get job status
 apiFetch({
-    path: ENDPOINTS.PUBLISH.JOB_STATUS(jobId),
+    path: ENDPOINTS.EXPORT_WORKFLOW.JOB_STATUS(jobId),
 });
 
 // Execute step
 apiFetch({
-    path: ENDPOINTS.PUBLISH.STEP(stepId),
+    path: ENDPOINTS.EXPORT_WORKFLOW.STEP(stepId),
     method: 'POST',
     data: { jobId },
 });

@@ -2,7 +2,7 @@
  * useExportContext Hook
  *
  * Hook to consume the ExportContext.
- * Provides access to global publish workflow state and operations.
+ * Provides access to global export workflow state and operations.
  *
  * @package
  */
@@ -11,7 +11,7 @@ import { useContext } from '@wordpress/element';
 import { ExportContext } from '../contexts/ExportContext';
 
 /**
- * Hook to access publish context
+ * Hook to access export context
  *
  * Must be used within a PublishProvider.
  *

@@ -54,16 +54,16 @@ export default function UploadStatistic( {
 
 	return (
 		<div
-			className="aether-publish-progress-modal__detail-item"
+			className="aether-export-progress-modal__detail-item"
 			style={ itemStyle }
 		>
 			<span
-				className="aether-publish-progress-modal__detail-label"
+				className="aether-export-progress-modal__detail-label"
 				style={ labelStyle }
 			>
 				{ label }
 			</span>
-			<div className="aether-publish-progress-modal__detail-value">
+			<div className="aether-export-progress-modal__detail-value">
 				{ children }
 			</div>
 		</div>

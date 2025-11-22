@@ -31,7 +31,7 @@ describe( 'useRecentJobs', () => {
 		const { result } = renderHook( () => useRecentJobs() );
 
 		expect( useAPIData ).toHaveBeenCalledWith( {
-			path: '/aether/site-exporter/publish/jobs?limit=5',
+			path: '/aether/site-exporter/export/jobs?limit=5',
 			transform: expect.any( Function ),
 			initialData: [],
 			dependencies: [ 5 ],
@@ -58,7 +58,7 @@ describe( 'useRecentJobs', () => {
 		const { result } = renderHook( () => useRecentJobs( 10 ) );
 
 		expect( useAPIData ).toHaveBeenCalledWith( {
-			path: '/aether/site-exporter/publish/jobs?limit=10',
+			path: '/aether/site-exporter/export/jobs?limit=10',
 			transform: expect.any( Function ),
 			initialData: [],
 			dependencies: [ 10 ],

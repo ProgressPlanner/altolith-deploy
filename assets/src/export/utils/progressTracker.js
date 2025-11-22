@@ -1,7 +1,7 @@
 /**
  * Progress Tracker Utility
  *
- * Tracks publish workflow progress with equal step weights and IndexedDB persistence.
+ * Tracks export workflow progress with equal step weights and IndexedDB persistence.
  * Each step gets equal weight: 100% / number of steps.
  *
  * @package
@@ -11,7 +11,7 @@ import { debug, debugWarn } from '@aether/utils/debug';
 import IndexedDBStore, { isIndexedDBAvailable } from '@aether/utils/indexedDB';
 
 const DB_CONFIG = {
-	dbName: 'aether-publish-progress',
+	dbName: 'aether-export-progress',
 	version: 1,
 	stores: {
 		progress: {

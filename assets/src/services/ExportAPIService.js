@@ -1,7 +1,7 @@
 /**
  * Publish API Service
  *
- * Service for publish-related API operations.
+ * Service for export-related API operations.
  * Extracted from useExportAPI hook for testability.
  *
  * @package
@@ -12,7 +12,7 @@ const CHANGED_ASSETS_KEY = 'aether_changed_assets';
 /**
  * Publish API Service Class
  *
- * Handles publish-related API calls and asset tracking.
+ * Handles export-related API calls and asset tracking.
  */
 export class ExportAPIService {
 	/**
@@ -186,7 +186,7 @@ export class ExportAPIService {
 			const customAssets = assets.map( ( asset ) => asset.slug || asset );
 
 			const response = await this.apiFetch( {
-				path: '/aether/site-exporter/publish/createArchive',
+				path: ENDPOINTS.EXPORT_WORKFLOW.CREATE_ARCHIVE,
 				method: 'POST',
 				data: {
 					custom_assets: customAssets,
@@ -262,7 +262,7 @@ export class ExportAPIService {
 			}
 
 			const response = await this.apiFetch( {
-				path: '/aether/site-exporter/publish/generateBlueprintBundle',
+				path: ENDPOINTS.EXPORT_WORKFLOW.GENERATE_BLUEPRINT_BUNDLE,
 				method: 'POST',
 				data: {
 					blueprintData: blueprint,

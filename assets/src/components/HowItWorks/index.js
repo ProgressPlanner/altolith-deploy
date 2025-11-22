@@ -39,7 +39,7 @@ export default function HowItWorks() {
 			<SectionHeader
 				title={ __( 'How Publishing Works', 'aether-site-exporter' ) }
 				description={ __(
-					'Understanding the Aether publish process.',
+					'Understanding the Aether export process.',
 					'aether-site-exporter'
 				) }
 				className="aether-how-it-works__header"
@@ -192,7 +192,7 @@ export default function HowItWorks() {
 				>
 					<InfoParagraph isLast>
 						{ __(
-							'The publish process shows real-time progress with a task list. Each step is executed independently with automatic retry logic for network errors. You can monitor the progress or close the modal and continue working - the publish will complete in the background.',
+							'The export process shows real-time progress with a task list. Each step is executed independently with automatic retry logic for network errors. You can monitor the progress or close the modal and continue working - the export will complete in the background.',
 							'aether-site-exporter'
 						) }
 					</InfoParagraph>
@@ -267,7 +267,7 @@ export default function HowItWorks() {
 				>
 					<InfoParagraph isLast>
 						{ __(
-							'If a publish fails, check the error message in the publish progress modal. Common issues include missing provider configuration, network errors, or insufficient storage. You can retry the publish after fixing the issue. Each step executes independently with automatic retry logic for network errors.',
+							'If an export fails, check the error message in the export progress modal. Common issues include missing provider configuration, network errors, or insufficient storage. You can retry the export after fixing the issue. Each step executes independently with automatic retry logic for network errors.',
 							'aether-site-exporter'
 						) }
 					</InfoParagraph>

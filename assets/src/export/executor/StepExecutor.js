@@ -1,7 +1,7 @@
 /**
  * Step Executor
  *
- * Executes publish workflow steps with automatic dependency resolution
+ * Executes export workflow steps with automatic dependency resolution
  * and parallel execution support.
  *
  * @package
@@ -104,7 +104,7 @@ export async function executeSteps( steps, context, options = {} ) {
 			for ( const stepId of parallelGroup ) {
 				const step = steps.find( ( s ) => s.id === stepId );
 				const shouldSkip = applyFilters(
-					`aether.publish.step.${ stepId }.skip`,
+					`aether.export.step.${ stepId }.skip`,
 					step.skip ? step.skip( executionContext ) : false,
 					executionContext
 				);
@@ -121,7 +121,7 @@ export async function executeSteps( steps, context, options = {} ) {
 				executionContext.skippedSteps.push( stepId );
 				onStepSkipped( stepId );
 				doAction(
-					`aether.publish.step.${ stepId }.skipped`,
+					`aether.export.step.${ stepId }.skipped`,
 					executionContext
 				);
 			}
@@ -193,7 +193,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 	const { onStepStart, onStepComplete, onError } = options;
 
 	// Fire before hook
-	doAction( `aether.publish.step.${ stepId }.before`, executionContext );
+	doAction( `aether.export.step.${ stepId }.before`, executionContext );
 
 	onStepStart( stepId, step );
 
@@ -218,7 +218,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 				onRetry: ( error, attempt, delay ) => {
 					// Fire retry action
 					doAction(
-						`aether.publish.step.${ stepId }.retry`,
+						`aether.export.step.${ stepId }.retry`,
 						error,
 						attempt,
 						delay,
@@ -230,7 +230,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 		// Apply result filter
 		const filteredResult = applyFilters(
-			`aether.publish.step.${ stepId }.result`,
+			`aether.export.step.${ stepId }.result`,
 			result || {},
 			executionContext
 		);
@@ -244,7 +244,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 		// Fire after hook
 		doAction(
-			`aether.publish.step.${ stepId }.after`,
+			`aether.export.step.${ stepId }.after`,
 			filteredResult,
 			executionContext
 		);
@@ -271,7 +271,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 		onError( stepId, enhancedError );
 		doAction(
-			`aether.publish.step.${ stepId }.error`,
+			`aether.export.step.${ stepId }.error`,
 			enhancedError,
 			executionContext
 		);

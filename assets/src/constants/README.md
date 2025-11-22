@@ -21,7 +21,7 @@ import { ENDPOINTS, HTTP_METHODS, HTTP_STATUS } from '../constants';
 
 // API endpoints
 const response = await apiFetch({
-    path: ENDPOINTS.PUBLISH.START,
+    path: ENDPOINTS.EXPORT_WORKFLOW.START,
     method: HTTP_METHODS.POST,
 });
 
@@ -147,7 +147,7 @@ Add a constant when you find yourself:
 ### Naming Conventions
 
 - **ALL_CAPS** for simple constants: `POLLING_INTERVAL`, `PROVIDER_IDS`
-- **NAMESPACED** objects for grouped constants: `ENDPOINTS.PUBLISH.START`
+- **NAMESPACED** objects for grouped constants: `ENDPOINTS.EXPORT_WORKFLOW.START`
 - **camelCase** for helper functions: `isGitProvider()`, `calculateProgress()`
 - **Descriptive names** that explain purpose: `RETRY_INITIAL_DELAY` not `DELAY_1`
 
@@ -163,7 +163,7 @@ if (providerId === 'local-filesystem') { }
 import { POLLING_INTERVAL, ENDPOINTS, PROVIDER_IDS } from '../constants';
 
 setTimeout(checkStatus, POLLING_INTERVAL);
-fetch(ENDPOINTS.PUBLISH.START);
+fetch(ENDPOINTS.EXPORT_WORKFLOW.START);
 if (providerId === PROVIDER_IDS.CLOUDFLARE_R2) { }
 ```
 

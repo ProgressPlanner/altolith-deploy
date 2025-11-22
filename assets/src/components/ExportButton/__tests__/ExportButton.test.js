@@ -29,12 +29,12 @@ describe( 'ExportButton', () => {
 		delete window.aetherPublish;
 	} );
 
-	it( 'should render publish button when ready', () => {
+	it( 'should render export button when ready', () => {
 		render( <ExportButton { ...defaultProps } /> );
 
 		expect( screen.getByText( 'Publish Site Now' ) ).toBeInTheDocument();
 		expect(
-			screen.getByText( 'Your site is ready to publish!' )
+			screen.getByText( 'Your site is ready to export!' )
 		).toBeInTheDocument();
 	} );
 
@@ -87,7 +87,7 @@ describe( 'ExportButton', () => {
 
 		expect(
 			screen.getByText(
-				/Cannot publish - please fix the following issues/i
+				/Cannot export - please fix the following issues/i
 			)
 		).toBeInTheDocument();
 		expect( screen.getByText( issues[ 0 ] ) ).toBeInTheDocument();

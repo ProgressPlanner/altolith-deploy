@@ -1,7 +1,7 @@
 /**
  * Publish API Hook
  *
- * Handles API calls for publish operations.
+ * Handles API calls for export operations.
  * Uses ExportAPIService for all business logic.
  *
  * @package
