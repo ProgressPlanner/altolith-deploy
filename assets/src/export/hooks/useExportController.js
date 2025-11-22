@@ -17,7 +17,7 @@ import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 import { executeSteps } from '@aether/export/executor';
 import { getActiveSteps, getRegisteredSteps } from '@aether/export/steps';
 import {
-	preparePublishConfiguration,
+	prepareExportConfiguration,
 	determineProvidersByDeploymentType,
 	buildWorkflowContext,
 } from '@aether/export/utils/exportConfiguration';
@@ -124,7 +124,7 @@ export function useExportController( publishState ) {
 
 			// Use pure function to extract configuration
 			const publishConfig =
-				preparePublishConfiguration( settingsResponse );
+				prepareExportConfiguration( settingsResponse );
 
 			// Update storage provider ID state
 			if ( settingsResponse.success && publishConfig.storageProviderId ) {

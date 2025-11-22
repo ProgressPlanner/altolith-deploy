@@ -8,7 +8,7 @@
  */
 
 import {
-	preparePublishConfiguration,
+	prepareExportConfiguration,
 	getEnabledInstancesForDeploymentType,
 	determineProvidersByDeploymentType,
 	buildWorkflowContext,
@@ -21,7 +21,7 @@ jest.mock( '../../../utils/debug', () => ( {
 } ) );
 
 describe( 'exportConfiguration', () => {
-	describe( 'preparePublishConfiguration()', () => {
+	describe( 'prepareExportConfiguration()', () => {
 		test( 'should extract provider IDs from settings response', () => {
 			const settingsResponse = {
 				settings: {
@@ -36,7 +36,7 @@ describe( 'exportConfiguration', () => {
 				},
 			};
 
-			const result = preparePublishConfiguration( settingsResponse );
+			const result = prepareExportConfiguration( settingsResponse );
 
 			expect( result ).toEqual( {
 				storageProviderId: 'local-filesystem:123',
@@ -51,7 +51,7 @@ describe( 'exportConfiguration', () => {
 		test( 'should handle missing settings object', () => {
 			const settingsResponse = {};
 
-			const result = preparePublishConfiguration( settingsResponse );
+			const result = prepareExportConfiguration( settingsResponse );
 
 			expect( result ).toEqual( {
 				storageProviderId: '',
@@ -61,8 +61,8 @@ describe( 'exportConfiguration', () => {
 		} );
 
 		test( 'should handle null/undefined settings response', () => {
-			const result1 = preparePublishConfiguration( null );
-			const result2 = preparePublishConfiguration( undefined );
+			const result1 = prepareExportConfiguration( null );
+			const result2 = prepareExportConfiguration( undefined );
 
 			expect( result1.storageProviderId ).toBe( '' );
 			expect( result2.storageProviderId ).toBe( '' );
@@ -75,7 +75,7 @@ describe( 'exportConfiguration', () => {
 				},
 			};
 
-			const result = preparePublishConfiguration( settingsResponse );
+			const result = prepareExportConfiguration( settingsResponse );
 
 			expect( result.storageProviderId ).toBe( '' );
 			expect( result.staticSiteProviderId ).toBe( '' );

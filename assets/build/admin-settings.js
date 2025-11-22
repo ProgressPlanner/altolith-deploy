@@ -11056,9 +11056,9 @@ function getActiveSteps(context) {
 }
 ;// ./assets/src/export/utils/exportConfiguration.js
 /**
- * Publish Configuration Utilities
+ * Export Configuration Utilities
  *
- * Pure functions for preparing publish workflow configuration.
+ * Pure functions for preparing export workflow configuration.
  * These functions are extracted from useExportController for testability.
  *
  * @package
@@ -11067,7 +11067,7 @@ function getActiveSteps(context) {
 
 
 /**
- * Prepare publish configuration from settings response
+ * Prepare export configuration from settings response
  *
  * Extracts provider IDs and settings from API response.
  * Pure function - no side effects, easily testable.
@@ -11075,7 +11075,7 @@ function getActiveSteps(context) {
  * @param {Object} settingsResponse - Response from settings API
  * @return {Object} Configuration object with provider IDs
  */
-function preparePublishConfiguration(settingsResponse) {
+function prepareExportConfiguration(settingsResponse) {
   const settings = settingsResponse?.settings || {};
   const providerTypes = settings.provider_types || {};
   return {
@@ -11286,7 +11286,7 @@ function useExportController(publishState) {
       });
 
       // Use pure function to extract configuration
-      const publishConfig = preparePublishConfiguration(settingsResponse);
+      const publishConfig = prepareExportConfiguration(settingsResponse);
 
       // Update storage provider ID state
       if (settingsResponse.success && publishConfig.storageProviderId) {

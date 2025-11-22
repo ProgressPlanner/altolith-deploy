@@ -1,7 +1,7 @@
 /**
- * Publish Configuration Utilities
+ * Export Configuration Utilities
  *
- * Pure functions for preparing publish workflow configuration.
+ * Pure functions for preparing export workflow configuration.
  * These functions are extracted from useExportController for testability.
  *
  * @package
@@ -10,7 +10,7 @@
 import { debugError } from '@aether/utils/debug';
 
 /**
- * Prepare publish configuration from settings response
+ * Prepare export configuration from settings response
  *
  * Extracts provider IDs and settings from API response.
  * Pure function - no side effects, easily testable.
@@ -18,7 +18,7 @@ import { debugError } from '@aether/utils/debug';
  * @param {Object} settingsResponse - Response from settings API
  * @return {Object} Configuration object with provider IDs
  */
-export function preparePublishConfiguration( settingsResponse ) {
+export function prepareExportConfiguration( settingsResponse ) {
 	const settings = settingsResponse?.settings || {};
 	const providerTypes = settings.provider_types || {};
 
