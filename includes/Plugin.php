@@ -108,6 +108,10 @@ class Plugin
 			new Admin\Settings();
 		}
 
+		// Initialize admin bar (available on both admin and frontend when admin bar is visible).
+		$adminBar = new Admin\AdminBar($this);
+		$adminBar->init();
+
 		// Register REST API routes.
 		\add_action('rest_api_init', [ $this, 'registerRestRoutes' ]);
 
