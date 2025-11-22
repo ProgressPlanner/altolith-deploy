@@ -334,7 +334,7 @@ class ExportStepsController
 		}
 
 		/**
-		 * Action fired before a publish step executes.
+		 * Action fired before a export step executes.
 		 *
 		 * @param string $stepName Step identifier.
 		 * @param string $jobId    Job ID.
@@ -374,7 +374,7 @@ class ExportStepsController
 			$this->stateManager->updateStatus($jobId, $result['status']);
 
 			/**
-			 * Action fired after a publish step completes successfully.
+			 * Action fired after a export step completes successfully.
 			 *
 			 * @param string $stepName Step identifier.
 			 * @param string $jobId    Job ID.
@@ -400,7 +400,7 @@ class ExportStepsController
 			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
 
 			/**
-			 * Action fired when a publish step fails.
+			 * Action fired when a export step fails.
 			 *
 			 * @param string     $stepName Step identifier.
 			 * @param string     $jobId    Job ID.

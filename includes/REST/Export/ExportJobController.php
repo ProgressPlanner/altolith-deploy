@@ -96,7 +96,7 @@ class ExportJobController
 	}
 
 	/**
-	 * Start publish operation.
+	 * Start export operation.
 	 *
 	 * Initializes job and returns jobId immediately.
 	 *

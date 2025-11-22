@@ -3,7 +3,7 @@
 /**
  * Job State Manager
  *
- * Handles transient get/set operations and state transitions for publish jobs.
+ * Handles transient get/set operations and state transitions for export jobs.
  *
  * @package Aether\Sync
  */
@@ -13,7 +13,7 @@ namespace Aether\SiteExporter\Sync;
 \defined('ABSPATH') || exit;
 
 /**
- * Manages publish job state via WordPress transients.
+ * Manages export job state via WordPress transients.
  */
 class JobStateManager
 {

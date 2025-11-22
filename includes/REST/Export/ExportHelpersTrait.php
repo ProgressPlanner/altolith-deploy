@@ -3,7 +3,7 @@
 /**
  * Publish REST API Helpers Trait
  *
- * Provides common functionality for publish REST controllers.
+ * Provides common functionality for export REST controllers.
  * Replaces BasePublishController inheritance.
  *
  * @package Aether\REST\Export
@@ -17,7 +17,7 @@ use WP_REST_Request;
 use WP_Error;
 
 /**
- * Trait providing publish REST API helper methods.
+ * Trait providing export REST API helper methods.
  */
 trait ExportHelpersTrait
 {
@@ -36,7 +36,7 @@ trait ExportHelpersTrait
 	protected $stateManager;
 
 	/**
-	 * Initialize publish helpers.
+	 * Initialize export helpers.
 	 *
 	 * Call this from your controller's constructor.
 	 *
