@@ -113,7 +113,7 @@ export function useExportController( exportState ) {
 				getRegisteredSteps(),
 				'discoverBlueprintBundleAssets'
 			);
-			// Set isPublishing to true to start the workflow
+			// Set isExporting to true to start the workflow
 			setIsExporting( true );
 			debug( 'Steps initialized, starting export workflow' );
 

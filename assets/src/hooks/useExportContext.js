@@ -18,7 +18,7 @@ import { ExportContext } from '../contexts/ExportContext';
  * @throws {Error} If used outside PublishProvider
  * @return {Object} Publish context value
  * @property {Array}    steps                   - All workflow steps
- * @property {boolean}  isPublishing            - Publishing flag
+ * @property {boolean}  isExporting             - Exporting flag
  * @property {string}   jobId                   - Current job ID
  * @property {Object}   finalStatus             - Final status object (null if not complete)
  * @property {string}   error                   - Error message (null if no error)
@@ -41,11 +41,11 @@ import { ExportContext } from '../contexts/ExportContext';
  *
  * @example
  * function ExportButton() {
- *     const { isPublishing, startExport } = useExportContext();
+ *     const { isExporting, startExport } = useExportContext();
  *
  *     return (
- *         <button onClick={startExport} disabled={isPublishing}>
- *             {isPublishing ? 'Publishing...' : 'Export'}
+ *         <button onClick={startExport} disabled={isExporting}>
+ *             {isExporting ? 'Exporting...' : 'Export'}
  *         </button>
  *     );
  * }

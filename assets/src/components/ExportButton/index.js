@@ -19,7 +19,7 @@ import {
 export default function ExportButton( {
 	readiness,
 	onPublishClick,
-	isPublishing,
+	isExporting,
 } ) {
 	const config = useConfig();
 	const isReady = readiness?.ready ?? false;
@@ -181,12 +181,12 @@ export default function ExportButton( {
 					variant="primary"
 					isLarge
 					onClick={ onPublishClick }
-					disabled={ ! isReady || isPublishing }
-					isBusy={ isPublishing }
+					disabled={ ! isReady || isExporting }
+					isBusy={ isExporting }
 				>
 					<span className="dashicons dashicons-upload aether-export-button__icon" />
-					{ isPublishing
-						? __( 'Publishing…', 'aether-site-exporter' )
+					{ isExporting
+						? __( 'Exporting…', 'aether-site-exporter' )
 						: __( 'Publish Site Now', 'aether-site-exporter' ) }
 				</Button>
 			</div>

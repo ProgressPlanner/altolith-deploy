@@ -117,7 +117,7 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 	const { startExport } = useExportController( exportState );
 	const {
 		steps,
-		isPublishing,
+		isExporting,
 		jobId,
 		finalStatus,
 		error,
@@ -139,14 +139,14 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 	// Only allow closing when job is finished (has finalStatus or error)
 	const handleClose = useCallback( () => {
 		// Prevent closing while job is in progress
-		if ( isPublishing && ! finalStatus && ! error ) {
+		if ( isExporting && ! finalStatus && ! error ) {
 			return;
 		}
 		reset();
 		if ( onClose ) {
 			onClose();
 		}
-	}, [ reset, onClose, isPublishing, finalStatus, error ] );
+	}, [ reset, onClose, isExporting, finalStatus, error ] );
 
 	// Reset state when modal closes (only when shouldShowModal becomes false)
 	useEffect( () => {
@@ -157,7 +157,7 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 
 	// Start export when modal opens
 	useEffect( () => {
-		if ( isOpen && ! isPublishing ) {
+		if ( isOpen && ! isExporting ) {
 			// Only start if we haven't started yet (no steps initialized and no job ID)
 			if ( steps.length === 0 && ! jobId ) {
 				startExport();
@@ -245,7 +245,7 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 		if ( finalStatus ) {
 			return __( 'Site Published Successfully!', 'aether-site-exporter' );
 		}
-		return __( 'Publishing Site', 'aether-site-exporter' );
+		return __( 'Exporting Site', 'aether-site-exporter' );
 	};
 
 	return (

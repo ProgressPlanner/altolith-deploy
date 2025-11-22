@@ -13,7 +13,7 @@ jest.mock( '../../../hooks/useExportContext' );
 describe( 'useExportState', () => {
 	test( 'delegates to useExportContext', () => {
 		const mockContextValue = {
-			state: { isPublishing: false },
+			state: { isExporting: false },
 			actions: { startExport: jest.fn() },
 		};
 
@@ -28,7 +28,7 @@ describe( 'useExportState', () => {
 	test( 'returns all context values', () => {
 		const mockContextValue = {
 			state: {
-				isPublishing: true,
+				isExporting: true,
 				currentStep: 'upload',
 				progress: 50,
 			},

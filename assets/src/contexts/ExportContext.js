@@ -22,7 +22,7 @@ import {
  */
 export const ExportContext = createContext( {
 	steps: [],
-	isPublishing: false,
+	isExporting: false,
 	jobId: null,
 	finalStatus: null,
 	error: null,
@@ -65,7 +65,7 @@ export const ExportContext = createContext( {
 export function PublishProvider( { children } ) {
 	// Core state
 	const [ steps, setSteps ] = useState( [] );
-	const [ isPublishing, setIsExporting ] = useState( false );
+	const [ isExporting, setIsExporting ] = useState( false );
 	const [ jobId, setJobId ] = useState( null );
 	const [ finalStatus, setFinalStatus ] = useState( null );
 	const [ error, setError ] = useState( null );
@@ -485,7 +485,7 @@ export function PublishProvider( { children } ) {
 	const value = useMemo(
 		() => ( {
 			steps,
-			isPublishing,
+			isExporting,
 			jobId,
 			finalStatus,
 			error,
@@ -512,7 +512,7 @@ export function PublishProvider( { children } ) {
 		} ),
 		[
 			steps,
-			isPublishing,
+			isExporting,
 			jobId,
 			finalStatus,
 			error,

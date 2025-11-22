@@ -14,19 +14,19 @@ describe( 'ExportButton', () => {
 			issues: [],
 		},
 		onPublishClick: jest.fn(),
-		isPublishing: false,
+		isExporting: false,
 	};
 
 	beforeEach( () => {
 		jest.clearAllMocks();
-		// Mock window.aetherPublish
-		window.aetherPublish = {
+		// Mock window.aetherExport
+		window.aetherExport = {
 			adminUrl: '/wp-admin/admin.php?page=aether',
 		};
 	} );
 
 	afterEach( () => {
-		delete window.aetherPublish;
+		delete window.aetherExport;
 	} );
 
 	it( 'should render export button when ready', () => {
@@ -66,9 +66,9 @@ describe( 'ExportButton', () => {
 	} );
 
 	it( 'should disable button when exporting', () => {
-		render( <ExportButton { ...defaultProps } isPublishing={ true } /> );
+		render( <ExportButton { ...defaultProps } isExporting={ true } /> );
 
-		const button = screen.getByText( 'Publishing…' );
+		const button = screen.getByText( 'Exporting…' );
 		expect( button ).toBeDisabled();
 	} );
 
@@ -111,9 +111,9 @@ describe( 'ExportButton', () => {
 	} );
 
 	it( 'should show exporting state', () => {
-		render( <ExportButton { ...defaultProps } isPublishing={ true } /> );
+		render( <ExportButton { ...defaultProps } isExporting={ true } /> );
 
-		expect( screen.getByText( 'Publishing…' ) ).toBeInTheDocument();
+		expect( screen.getByText( 'Exporting…' ) ).toBeInTheDocument();
 		expect(
 			screen.queryByText( 'Publish Site Now' )
 		).not.toBeInTheDocument();

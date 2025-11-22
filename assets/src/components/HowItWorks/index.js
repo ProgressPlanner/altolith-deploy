@@ -37,7 +37,7 @@ export default function HowItWorks() {
 	return (
 		<div className="aether-how-it-works" style={ sectionStyle }>
 			<SectionHeader
-				title={ __( 'How Publishing Works', 'aether-site-exporter' ) }
+				title={ __( 'How Exporting Works', 'aether-site-exporter' ) }
 				description={ __(
 					'Understanding the Aether export process.',
 					'aether-site-exporter'
