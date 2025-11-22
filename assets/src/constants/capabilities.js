@@ -136,7 +136,7 @@ export const CAPABILITY_DESCRIPTIONS = {
  * Required capabilities for export workflow
  * @constant {string[]}
  */
-export const PUBLISH_REQUIRED_CAPABILITIES = [ CAP_STORAGE ];
+export const EXPORT_REQUIRED_CAPABILITIES = [ CAP_STORAGE ];
 
 /**
  * Required capabilities for static site generation
@@ -193,10 +193,10 @@ export function hasRequiredCapabilities(
  * @param {string[]} providerCapabilities - Capabilities the provider supports
  * @return {boolean} True if provider can handle export
  */
-export function canPublish( providerCapabilities ) {
+export function canExport( providerCapabilities ) {
 	return hasRequiredCapabilities(
 		providerCapabilities,
-		PUBLISH_REQUIRED_CAPABILITIES
+		EXPORT_REQUIRED_CAPABILITIES
 	);
 }
 

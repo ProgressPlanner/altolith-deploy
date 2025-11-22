@@ -87,11 +87,11 @@ describe( 'exportConfiguration', () => {
 			const providerConfigs = {
 				'provider-1': {
 					enabled: true,
-					deployment_types: [ 'static-site', 'blueprint-bundle' ],
+					deployment_types: [ 'static_site', 'blueprint-bundle' ],
 				},
 				'provider-2': {
 					enabled: true,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 				'provider-3': {
 					enabled: true,
@@ -101,7 +101,7 @@ describe( 'exportConfiguration', () => {
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
-				'static-site'
+				'static_site'
 			);
 
 			expect( result ).toEqual( [ 'provider-1', 'provider-2' ] );
@@ -111,21 +111,21 @@ describe( 'exportConfiguration', () => {
 			const providerConfigs = {
 				'provider-1': {
 					enabled: true,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 				'provider-2': {
 					enabled: false,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 				'provider-3': {
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 					// enabled not specified - defaults to true
 				},
 			};
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
-				'static-site'
+				'static_site'
 			);
 
 			expect( result ).toEqual( [ 'provider-1', 'provider-3' ] );
@@ -135,7 +135,7 @@ describe( 'exportConfiguration', () => {
 			const providerConfigs = {
 				'provider-1': {
 					enabled: true,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 				'provider-2': {
 					enabled: true,
@@ -149,7 +149,7 @@ describe( 'exportConfiguration', () => {
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
-				'static-site'
+				'static_site'
 			);
 
 			expect( result ).toEqual( [ 'provider-1' ] );
@@ -158,7 +158,7 @@ describe( 'exportConfiguration', () => {
 		test( 'should handle empty provider configs', () => {
 			const result = getEnabledInstancesForDeploymentType(
 				{},
-				'static-site'
+				'static_site'
 			);
 
 			expect( result ).toEqual( [] );
@@ -167,11 +167,11 @@ describe( 'exportConfiguration', () => {
 		test( 'should handle null/undefined provider configs', () => {
 			const result1 = getEnabledInstancesForDeploymentType(
 				null,
-				'static-site'
+				'static_site'
 			);
 			const result2 = getEnabledInstancesForDeploymentType(
 				undefined,
-				'static-site'
+				'static_site'
 			);
 
 			expect( result1 ).toEqual( [] );
@@ -188,13 +188,13 @@ describe( 'exportConfiguration', () => {
 				},
 				'provider-4': {
 					enabled: true,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 			};
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
-				'static-site'
+				'static_site'
 			);
 
 			// Only provider-4 should be included
@@ -211,7 +211,7 @@ describe( 'exportConfiguration', () => {
 
 			const result = getEnabledInstancesForDeploymentType(
 				badConfig,
-				'static-site'
+				'static_site'
 			);
 
 			expect( result ).toEqual( [] );
@@ -220,14 +220,14 @@ describe( 'exportConfiguration', () => {
 		test( 'should default enabled to true when not specified', () => {
 			const providerConfigs = {
 				'provider-1': {
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 					// No 'enabled' field
 				},
 			};
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
-				'static-site'
+				'static_site'
 			);
 
 			expect( result ).toEqual( [ 'provider-1' ] );
@@ -237,21 +237,21 @@ describe( 'exportConfiguration', () => {
 			const providerConfigs = {
 				'cloudflare:1': {
 					enabled: true,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 				'cloudflare:2': {
 					enabled: true,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 				'cloudflare:3': {
 					enabled: true,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 			};
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
-				'static-site'
+				'static_site'
 			);
 
 			expect( result ).toHaveLength( 3 );
@@ -266,11 +266,11 @@ describe( 'exportConfiguration', () => {
 			const providerConfigs = {
 				'provider-1': {
 					enabled: true,
-					deployment_types: [ 'static-site', 'blueprint-bundle' ],
+					deployment_types: [ 'static_site', 'blueprint-bundle' ],
 				},
 				'provider-2': {
 					enabled: true,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 				'provider-3': {
 					enabled: true,
@@ -279,7 +279,7 @@ describe( 'exportConfiguration', () => {
 			};
 
 			const deploymentTypes = [
-				'static-site',
+				'static_site',
 				'blueprint-bundle',
 				'edge-functions',
 			];
@@ -290,7 +290,7 @@ describe( 'exportConfiguration', () => {
 			);
 
 			expect( result ).toEqual( {
-				'static-site': [ 'provider-1', 'provider-2' ],
+				'static_site': [ 'provider-1', 'provider-2' ],
 				'blueprint-bundle': [ 'provider-1' ],
 				'edge-functions': [ 'provider-3' ],
 			} );
@@ -300,7 +300,7 @@ describe( 'exportConfiguration', () => {
 			const providerConfigs = {
 				'provider-1': {
 					enabled: true,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 			};
 
@@ -316,11 +316,11 @@ describe( 'exportConfiguration', () => {
 			const providerConfigs = {
 				'provider-1': {
 					enabled: true,
-					deployment_types: [ 'static-site' ],
+					deployment_types: [ 'static_site' ],
 				},
 			};
 
-			const deploymentTypes = [ 'static-site', 'blueprint-bundle' ];
+			const deploymentTypes = [ 'static_site', 'blueprint-bundle' ];
 
 			const result = determineProvidersByDeploymentType(
 				providerConfigs,
@@ -328,7 +328,7 @@ describe( 'exportConfiguration', () => {
 			);
 
 			expect( result ).toEqual( {
-				'static-site': [ 'provider-1' ],
+				'static_site': [ 'provider-1' ],
 				'blueprint-bundle': [],
 			} );
 		} );
