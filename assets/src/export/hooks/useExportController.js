@@ -221,19 +221,40 @@ export function useExportController( exportState ) {
 
 			// Set up workflow lifecycle callbacks for UI updates
 			const workflowOptions = {
-				onStepStart: ( stepId ) => {
-					debug( `[Workflow] Step starting: ${ stepId }` );
+				onStepStart: ( stepId, providerId ) => {
+					debug(
+						`[Workflow] Step starting: ${ stepId }${ providerId ? ` (provider: ${ providerId })` : '' }`
+					);
 					// Update UI with step ID
 					updateFromStep( stepId );
 				},
-				onStepComplete: ( stepId, result ) => {
-					debug( `[Workflow] Step completed: ${ stepId }`, result );
+				onStepComplete: ( stepId, result, providerId ) => {
+					debug(
+						`[Workflow] Step completed: ${ stepId }${ providerId ? ` (provider: ${ providerId })` : '' }`,
+						result
+					);
 				},
-				onStepSkipped: ( stepId ) => {
-					debug( `[Workflow] Step skipped: ${ stepId }` );
+				onStepCached: ( stepId, providerId ) => {
+					debug(
+						`[Workflow] Step using cached result: ${ stepId } (provider: ${ providerId })`
+					);
 				},
-				onError: ( stepId, error ) => {
-					debugError( `[Workflow] Step error: ${ stepId }`, error );
+				onStepWaiting: ( stepId, providerId ) => {
+					debug(
+						`[Workflow] Provider waiting for global step: ${ stepId } (provider: ${ providerId })`
+					);
+					// Optionally update UI to show waiting state
+				},
+				onStepSkipped: ( stepId, providerId ) => {
+					debug(
+						`[Workflow] Step skipped: ${ stepId }${ providerId ? ` (provider: ${ providerId })` : '' }`
+					);
+				},
+				onError: ( stepId, error, providerId ) => {
+					debugError(
+						`[Workflow] Step error: ${ stepId }${ providerId ? ` (provider: ${ providerId })` : '' }`,
+						error
+					);
 				},
 			};
 
