@@ -18,7 +18,7 @@ describe( 'ProviderSettingsAPI', () => {
 		test( 'should merge configurations', () => {
 			const current = {
 				enabled: true,
-				deployment_types: [ 'static-site' ],
+				deployment_types: [ 'static_site' ],
 				apiKey: 'old-key',
 			};
 
@@ -31,7 +31,7 @@ describe( 'ProviderSettingsAPI', () => {
 
 			expect( result ).toEqual( {
 				enabled: true,
-				deployment_types: [ 'static-site' ],
+				deployment_types: [ 'static_site' ],
 				apiKey: 'new-key',
 				region: 'us-west',
 			} );
@@ -51,11 +51,11 @@ describe( 'ProviderSettingsAPI', () => {
 
 		test( 'should preserve deployment_types when requested', () => {
 			const current = {
-				deployment_types: [ 'static-site' ],
+				deployment_types: [ 'static_site' ],
 				apiKey: 'key',
 			};
 			const updated = {
-				deployment_types: [ 'blueprint-bundle' ],
+				deployment_types: [ 'blueprint_bundle' ],
 				apiKey: 'new-key',
 			};
 
@@ -63,19 +63,19 @@ describe( 'ProviderSettingsAPI', () => {
 				preserveDeploymentTypes: true,
 			} );
 
-			expect( result.deployment_types ).toEqual( [ 'static-site' ] ); // Preserved
+			expect( result.deployment_types ).toEqual( [ 'static_site' ] ); // Preserved
 			expect( result.apiKey ).toBe( 'new-key' ); // Updated
 		} );
 
 		test( 'should preserve both when requested', () => {
 			const current = {
 				enabled: true,
-				deployment_types: [ 'static-site' ],
+				deployment_types: [ 'static_site' ],
 				apiKey: 'key',
 			};
 			const updated = {
 				enabled: false,
-				deployment_types: [ 'blueprint-bundle' ],
+				deployment_types: [ 'blueprint_bundle' ],
 				apiKey: 'new-key',
 			};
 
@@ -85,7 +85,7 @@ describe( 'ProviderSettingsAPI', () => {
 			} );
 
 			expect( result.enabled ).toBe( true );
-			expect( result.deployment_types ).toEqual( [ 'static-site' ] );
+			expect( result.deployment_types ).toEqual( [ 'static_site' ] );
 			expect( result.apiKey ).toBe( 'new-key' );
 		} );
 
