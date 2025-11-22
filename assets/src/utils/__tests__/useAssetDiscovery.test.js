@@ -14,28 +14,36 @@ jest.mock( '../api' );
 describe( 'isFromWordPressOrg', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
+		// Setup fetch mock
+		global.fetch = jest.fn();
 	} );
 
 	it( 'returns true for existing WordPress.org plugin', async () => {
-		// Use 'php' method (default) which uses apiFetch
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			exists: true,
+		// Use 'cors-proxy' method (default) which uses fetch
+		global.fetch.mockResolvedValueOnce( {
+			ok: true,
+			json: async () => ( {
+				success: true,
+				exists: true,
+			} ),
 		} );
 
 		const result = await isFromWordPressOrg( 'akismet-test-1', 'plugin' );
 
 		expect( result ).toBe( true );
-		expect( apiFetch ).toHaveBeenCalledWith( {
-			path: expect.stringContaining( '/check-wporg' ),
-		} );
+		expect( global.fetch ).toHaveBeenCalledWith(
+			expect.stringContaining( 'check-wporg' )
+		);
 	} );
 
 	it( 'returns true for existing WordPress.org theme', async () => {
-		// Use 'php' method (default) which uses apiFetch
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			exists: true,
+		// Use 'cors-proxy' method (default) which uses fetch
+		global.fetch.mockResolvedValueOnce( {
+			ok: true,
+			json: async () => ( {
+				success: true,
+				exists: true,
+			} ),
 		} );
 
 		const result = await isFromWordPressOrg(
@@ -44,15 +52,18 @@ describe( 'isFromWordPressOrg', () => {
 		);
 
 		expect( result ).toBe( true );
-		expect( apiFetch ).toHaveBeenCalledWith( {
-			path: expect.stringContaining( '/check-wporg' ),
-		} );
+		expect( global.fetch ).toHaveBeenCalledWith(
+			expect.stringContaining( 'check-wporg' )
+		);
 	} );
 
 	it( 'returns false for non-existent plugin (404)', async () => {
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			exists: false,
+		global.fetch.mockResolvedValueOnce( {
+			ok: true,
+			json: async () => ( {
+				success: true,
+				exists: false,
+			} ),
 		} );
 
 		const result = await isFromWordPressOrg(
@@ -78,7 +89,7 @@ describe( 'isFromWordPressOrg', () => {
 	} );
 
 	it( 'returns false on network error', async () => {
-		apiFetch.mockRejectedValueOnce( new Error( 'Network error' ) );
+		global.fetch.mockRejectedValueOnce( new Error( 'Network error' ) );
 
 		const result = await isFromWordPressOrg( 'test-plugin', 'plugin' );
 
@@ -86,10 +97,7 @@ describe( 'isFromWordPressOrg', () => {
 	} );
 
 	it( 'returns false on CORS error', async () => {
-		// Clear any previous mocks
-		apiFetch.mockClear();
-
-		apiFetch.mockRejectedValueOnce( new TypeError( 'CORS error' ) );
+		global.fetch.mockRejectedValueOnce( new TypeError( 'CORS error' ) );
 
 		const result = await isFromWordPressOrg( 'test-plugin-cors', 'plugin' );
 
@@ -105,6 +113,9 @@ describe( 'useAssetDiscovery', () => {
 		global.window.wp = {
 			siteName: 'Test Site',
 		};
+
+		// Setup fetch mock
+		global.fetch = jest.fn();
 	} );
 
 	afterEach( () => {
@@ -117,14 +128,13 @@ describe( 'useAssetDiscovery', () => {
 			apiFetch.mockClear();
 
 			// Mock apiFetch for config and assets endpoints
-			// Note: apiFetch is called multiple times:
+			// Note: apiFetch is called for:
 			// 1. Config endpoint
 			// 2. Assets endpoint
-			// 3-5. WordPress.org checks for each active asset
 			apiFetch
 				.mockResolvedValueOnce( {
 					// Config response
-					wporgCheckMethod: 'php',
+					wporgCheckMethod: 'cors-proxy',
 				} )
 				.mockResolvedValueOnce( {
 					// Assets response
@@ -157,23 +167,34 @@ describe( 'useAssetDiscovery', () => {
 							is_active: false,
 						},
 					],
-				} )
-				// Mock WordPress.org checks via apiFetch (php method)
-				// Checks are done for active plugins/themes only, in order
+				} );
+
+			// Mock WordPress.org checks via fetch (cors-proxy method)
+			// Checks are done for active plugins/themes only, in order
+			global.fetch
 				.mockResolvedValueOnce( {
 					// akismet-test-2 - from wporg (should be filtered out)
-					success: true,
-					exists: true,
+					ok: true,
+					json: async () => ( {
+						success: true,
+						exists: true,
+					} ),
 				} )
 				.mockResolvedValueOnce( {
 					// custom-plugin-test-2 - not from wporg (should be included)
-					success: true,
-					exists: false,
+					ok: true,
+					json: async () => ( {
+						success: true,
+						exists: false,
+					} ),
 				} )
 				.mockResolvedValueOnce( {
 					// twentytwentyfour-test-2 - from wporg (should be filtered out)
-					success: true,
-					exists: true,
+					ok: true,
+					json: async () => ( {
+						success: true,
+						exists: true,
+					} ),
 				} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
@@ -237,10 +258,10 @@ describe( 'useAssetDiscovery', () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
 
-			// Mock apiFetch to return config and assets, then fail on wporg check
+			// Mock apiFetch to return config and assets
 			apiFetch
 				.mockResolvedValueOnce( {
-					wporgCheckMethod: 'php',
+					wporgCheckMethod: 'cors-proxy',
 				} )
 				.mockResolvedValueOnce( {
 					success: true,
@@ -253,8 +274,10 @@ describe( 'useAssetDiscovery', () => {
 						},
 					],
 					themes: [],
-				} )
-				.mockRejectedValueOnce( new Error( 'Network failure' ) );
+				} );
+
+			// Mock fetch to fail on wporg check
+			global.fetch.mockRejectedValueOnce( new Error( 'Network failure' ) );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
 
@@ -279,7 +302,7 @@ describe( 'useAssetDiscovery', () => {
 			apiFetch
 				.mockResolvedValueOnce( {
 					// Config response
-					wporgCheckMethod: 'php',
+					wporgCheckMethod: 'cors-proxy',
 				} )
 				.mockResolvedValueOnce( {
 					// Assets response
@@ -306,22 +329,33 @@ describe( 'useAssetDiscovery', () => {
 							is_active: true,
 						},
 					],
-				} )
-				// Mock WordPress.org checks via apiFetch (php method)
+				} );
+
+			// Mock WordPress.org checks via fetch (cors-proxy method)
+			global.fetch
 				.mockResolvedValueOnce( {
 					// akismet-test-4 - from wporg, active
-					success: true,
-					exists: true,
+					ok: true,
+					json: async () => ( {
+						success: true,
+						exists: true,
+					} ),
 				} )
 				.mockResolvedValueOnce( {
 					// custom-plugin-test-4 - NOT from wporg
-					success: true,
-					exists: false,
+					ok: true,
+					json: async () => ( {
+						success: true,
+						exists: false,
+					} ),
 				} )
 				.mockResolvedValueOnce( {
 					// twentytwentyfour-test-4 - from wporg, active
-					success: true,
-					exists: true,
+					ok: true,
+					json: async () => ( {
+						success: true,
+						exists: true,
+					} ),
 				} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
@@ -345,7 +379,7 @@ describe( 'useAssetDiscovery', () => {
 
 			apiFetch
 				.mockResolvedValueOnce( {
-					wporgCheckMethod: 'php',
+					wporgCheckMethod: 'cors-proxy',
 				} )
 				.mockResolvedValueOnce( {
 					success: true,
@@ -364,16 +398,25 @@ describe( 'useAssetDiscovery', () => {
 						},
 					],
 					themes: [],
-				} )
+				} );
+
+			// Mock WordPress.org checks via fetch
+			global.fetch
 				.mockResolvedValueOnce( {
 					// aether - from wporg but should be excluded (built-in)
-					success: true,
-					exists: true,
+					ok: true,
+					json: async () => ( {
+						success: true,
+						exists: true,
+					} ),
 				} )
 				.mockResolvedValueOnce( {
 					// sqlite-database-integration - from wporg but should be excluded (built-in)
-					success: true,
-					exists: true,
+					ok: true,
+					json: async () => ( {
+						success: true,
+						exists: true,
+					} ),
 				} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
@@ -396,7 +439,7 @@ describe( 'useAssetDiscovery', () => {
 
 			apiFetch
 				.mockResolvedValueOnce( {
-					wporgCheckMethod: 'php',
+					wporgCheckMethod: 'cors-proxy',
 				} )
 				.mockResolvedValueOnce( {
 					success: true,
@@ -415,12 +458,17 @@ describe( 'useAssetDiscovery', () => {
 						},
 					],
 					themes: [],
-				} )
-				.mockResolvedValueOnce( {
-					// active-plugin-test-6 - from wporg, should be included
+				} );
+
+			// Mock WordPress.org check via fetch
+			global.fetch.mockResolvedValueOnce( {
+				// active-plugin-test-6 - from wporg, should be included
+				ok: true,
+				json: async () => ( {
 					success: true,
 					exists: true,
-				} );
+				} ),
+			} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
 

@@ -197,18 +197,28 @@ class Plugin
 
 
 	/**
-	 * Output meta tags for REST API configuration.
+	 * Add inline script with REST API configuration data.
 	 *
 	 * Shared helper method used by multiple classes.
+	 * Adds configuration data to window.aetherData for JavaScript access.
 	 *
+	 * @param string $scriptHandle Script handle to attach inline script to.
 	 * @return void
 	 */
-	public function outputMetaTags(): void
+	public function addAPIConfigScript(string $scriptHandle): void
 	{
-		$viewPath = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'views/admin/meta-tags.php';
-		if (\file_exists($viewPath)) {
-			include $viewPath;
-		}
+		$restUrl = \rest_url('aether/site-exporter/');
+		$nonce   = \wp_create_nonce('wp_rest');
+		$pluginUrl = (string) AETHER_SITE_EXPORTER_PLUGIN_URL;
+
+		$script = \sprintf(
+			'window.aetherData = window.aetherData || {}; window.aetherData.restUrl = %s; window.aetherData.nonce = %s; window.aetherData.pluginUrl = %s;',
+			\wp_json_encode($restUrl),
+			\wp_json_encode($nonce),
+			\wp_json_encode($pluginUrl)
+		);
+
+		\wp_add_inline_script($scriptHandle, $script, 'before');
 	}
 
 	/**
@@ -364,7 +374,6 @@ class Plugin
 		$providerConfigController = new REST\ProviderConfigController();
 		$configController = new REST\ConfigController();
 		$assetsController = new REST\AssetsController();
-		$wporgCheckController = new REST\WPOrgCheckController();
 		$localStorageController = new REST\LocalStorageController();
 		$urlDiscoveryController = new REST\URLDiscoveryController();
 
@@ -378,7 +387,6 @@ class Plugin
 		$providerConfigController->registerRoutes();
 		$configController->registerRoutes();
 		$assetsController->registerRoutes();
-		$wporgCheckController->registerRoutes();
 		$localStorageController->registerRoutes();
 		$urlDiscoveryController->registerRoutes();
 

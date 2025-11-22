@@ -96,36 +96,14 @@ The plugin uses a universal implementation approach - no environment detection, 
 - **Universal Path Validation**: Works without `realpath()` in WASM environments
 - **Configurable Post Limits**: Prevents timeouts on large sites (default: 10,000 posts)
 - **Browser-Based Generation**: Static site generation runs in browser to avoid PHP timeouts
-- **WordPress.org API**: Uses filter-based approach for asset detection
+- **WordPress.org API**: Browser-based asset detection using CORS proxy
 - **Memory Protection**: 500-URL cache limit prevents browser memory exhaustion
-
-### Configuration
-
-#### WordPress.org Asset Detection
-
-Implement custom WordPress.org API checking using the filter hook:
-
-```php
-add_filter( 'aether_site_exporter_wporg_check_response', function( $response, $slug, $type ) {
-    // Implement custom checking logic here
-    // Use browser-based fetch() or CORS proxy
-    return [
-        'success'    => true,
-        'exists'     => true/false,
-        'slug'       => $slug,
-        'type'       => $type,
-        'method'     => 'custom',
-        'cached'     => false,
-        'checked_at' => gmdate( 'Y-m-d\TH:i:s\Z' ),
-    ];
-}, 10, 3 );
-```
 
 ### Limitations
 
 - **Temporary Storage**: Files in `wp-content/uploads/aether-temp` are cleaned up after 1 hour
 - **Post Limits**: Default limit of 10,000 posts/pages for URL discovery
-- **WordPress.org API**: Requires custom implementation via filter hook
+- **WordPress.org API**: Detection happens browser-side using CORS proxy or direct API calls
 
 ### Technical Details
 

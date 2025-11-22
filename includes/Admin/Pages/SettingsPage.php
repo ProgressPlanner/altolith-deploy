@@ -65,8 +65,9 @@ class SettingsPage extends BaseAdminPage
 			true
 		);
 
-		// Output meta tags for REST API configuration (React fetches from meta tags).
-		\add_action('admin_head', [ $this, 'outputMetaTags' ]);
+		// Add REST API configuration data via inline script.
+		$plugin = \Aether\SiteExporter\Plugin::getInstance();
+		$plugin->addAPIConfigScript('aether-admin-settings');
 	}
 
 	/**

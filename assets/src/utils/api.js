@@ -100,7 +100,6 @@ const CACHE_CONFIG = {
 		'/assets': 10 * 60 * 1000, // 10 minutes - asset lists change infrequently
 		'/settings': 1 * 60 * 1000, // 1 minute - settings may change
 		'/config': 30 * 60 * 1000, // 30 minutes - static configuration
-		'/check-wporg': 60 * 60 * 1000, // 60 minutes - WordPress.org data rarely changes
 	},
 	// Set to true to bypass cache (useful for development/testing)
 	bypassCache: false,

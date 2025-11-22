@@ -382,22 +382,6 @@ Key principles:
 - `PathValidator.php` - Universal path validation
 - `FileManager.php` - Persistent file operations
 
-**Configuration Filters:**
-
-```php
-// Custom WordPress.org API checking (for Playground compatibility)
-add_filter('aether_site_exporter_wporg_check_response', function($response, $slug, $type) {
-    // Implement custom checking logic (e.g., browser-based fetch)
-    return [
-        'success' => true,
-        'exists' => true/false,
-        'slug' => $slug,
-        'type' => $type,
-        'method' => 'custom',
-    ];
-}, 10, 3);
-```
-
 ### Security Considerations
 
 **Path Traversal Prevention:**

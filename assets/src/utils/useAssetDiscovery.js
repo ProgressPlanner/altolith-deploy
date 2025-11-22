@@ -1,8 +1,8 @@
 /**
  * Asset Discovery Hook
  *
- * Replaces PHP-based AssetDiscoveryService with browser-based implementation.
- * Detects WordPress.org plugins/themes by checking wordpress.org URLs.
+ * Browser-based implementation for WordPress.org asset detection.
+ * Detects WordPress.org plugins/themes by checking wordpress.org APIs.
  *
  * @package
  */
@@ -23,8 +23,8 @@ export { normalizePluginSlug };
 /**
  * Check if a plugin or theme exists on WordPress.org
  *
- * Uses filterable method (default: PHP server-side) to check WordPress.org.
- * Can be switched to CORS proxy or direct API calls via WordPress filters.
+ * Uses browser-based method (default: CORS proxy) to check WordPress.org.
+ * Can be switched to direct API calls via config.
  *
  * @param {string} slug   - Plugin or theme slug (will be normalized for plugins)
  * @param {string} type   - 'plugin' or 'theme'
@@ -44,18 +44,18 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 		return cached;
 	}
 
-	// Try PHP method first, then fallback to CORS proxy
-	let result = await checkWithMethod( normalizedSlug, type, 'php', config );
+	// Try CORS proxy method first, then fallback to direct API calls
+	let result = await checkWithMethod( normalizedSlug, type, 'cors-proxy', config );
 
-	// If PHP method returned null (unable to check), try CORS proxy fallback
+	// If CORS proxy method returned null (unable to check), try direct API fallback
 	if ( result === null ) {
 		debugWarn(
-			`PHP WordPress.org check returned null for ${ type } "${ slug }", trying CORS proxy fallback`
+			`CORS proxy WordPress.org check returned null for ${ type } "${ slug }", trying direct API fallback`
 		);
 		result = await checkWithMethod(
 			normalizedSlug,
 			type,
-			'cors-proxy',
+			'direct',
 			config
 		);
 	}
@@ -81,7 +81,7 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
  *
  * @param {string} slug   - Normalized plugin/theme slug
  * @param {string} type   - 'plugin' or 'theme'
- * @param {string} method - 'php', 'cors-proxy', or 'direct'
+ * @param {string} method - 'cors-proxy' or 'direct'
  * @param {Object} config - Configuration object
  * @return {Promise<boolean|null>} True if exists, false if doesn't exist, null if unable to check
  */
@@ -100,7 +100,8 @@ async function checkWithMethod( slug, type, method, config = {} ) {
 				break;
 
 			case 'direct':
-				// Direct WordPress.org API calls (will fail in browsers due to CORS)
+			default:
+				// Direct WordPress.org API calls (may fail in some browsers due to CORS)
 				if ( type === 'theme' ) {
 					checkUrl = `https://api.wordpress.org/themes/info/1.2/?action=theme_information&request[slug]=${ encodeURIComponent(
 						slug
@@ -111,36 +112,18 @@ async function checkWithMethod( slug, type, method, config = {} ) {
 					) }.json`;
 				}
 				break;
-
-			case 'php':
-			default:
-				// PHP server-side method (default, no CORS issues)
-				// apiFetch expects path without /wp-json prefix
-				checkUrl = `/aether/site-exporter/check-wporg?slug=${ encodeURIComponent(
-					slug
-				) }&type=${ encodeURIComponent( type ) }`;
-				break;
 		}
 
-		// For PHP method, use apiFetch (includes WordPress auth)
-		// For other methods, use plain fetch
-		let data;
-		if ( method === 'php' ) {
-			// Use apiFetch for internal WordPress REST API calls
-			// This includes nonce and authentication automatically
-			data = await apiFetch( { path: checkUrl } );
-		} else {
-			// Use plain fetch for external URLs (cors-proxy, direct)
-			const response = await fetch( checkUrl );
+		// Use plain fetch for all methods (browser-based checking)
+		const response = await fetch( checkUrl );
 
-			if ( ! response.ok ) {
-				throw new Error(
-					`WordPress.org check returned ${ response.status }`
-				);
-			}
-
-			data = await response.json();
+		if ( ! response.ok ) {
+			throw new Error(
+				`WordPress.org check returned ${ response.status }`
+			);
 		}
+
+		const data = await response.json();
 
 		// Handle different response formats
 		let exists;
@@ -148,7 +131,7 @@ async function checkWithMethod( slug, type, method, config = {} ) {
 			// Direct WordPress.org API: check for 'error' field
 			exists = ! data.error && ( data.slug || data.name );
 		} else {
-			// PHP or CORS proxy: standardized response with 'success' and 'exists' fields
+			// CORS proxy: standardized response with 'success' and 'exists' fields
 			if ( ! data.success ) {
 				throw new Error(
 					data.error || __( 'Unknown error', 'aether-site-exporter' )

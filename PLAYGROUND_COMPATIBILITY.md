@@ -178,42 +178,21 @@ Replace temp directory usage with WordPress uploads directory:
 
 ### Issue #2: External API Blocking ❌ BLOCKING
 
-**Severity:** CRITICAL
-**Impact:** WordPress.org plugin/theme detection fails
+**Severity:** RESOLVED
+**Impact:** WordPress.org plugin/theme detection now works universally
 
-#### Affected Files
-1. `includes/REST/WPOrgCheckController.php:110-118`
-   ```php
-   $response = wp_remote_get(
-       $apiUrl,  // https://api.wordpress.org/themes/info/1.2/...
-       [
-           'timeout' => 10,
-           'headers' => ['Accept' => 'application/json']
-       ]
-   );
-   ```
+#### Solution Implemented
+WordPress.org checking is now entirely **browser-based** using JavaScript:
+- Default method: CORS proxy (`https://cfp.s12y.org/check-wporg`)
+- Fallback method: Direct WordPress.org API calls
+- No PHP `wp_remote_*` calls used
+- Works identically in Playground and traditional hosting
 
-#### Problem
-WordPress Playground blocks **all external HTTP requests** made via PHP's `wp_remote_*` functions. This includes:
-- `wp_remote_get()`
-- `wp_remote_post()`
-- `wp_remote_request()`
-
-Only internal (same-site) requests work.
-
-#### Existing Mitigation
-Filter hook exists at line 76:
-```php
-$response = apply_filters('aether_site_exporter_wporg_check_response', $response, $slug, $type);
-```
-
-**Problem:** Hook is undocumented and not automatically activated in Playground
-
-#### Solution
-1. Auto-detect Playground environment
-2. Automatically fall back to browser-based fetch
-3. Document the filter hook for custom implementations
-4. Add admin notice about limitation
+#### Implementation
+- `assets/src/utils/useAssetDiscovery.js` - Browser-based checking
+- Uses `fetch()` API for all WordPress.org requests
+- IndexedDB caching with 7-day TTL
+- No server-side dependencies
 
 ---
 
@@ -538,24 +517,16 @@ set_transient('aether_job_' . $jobId, $state, 30 * MINUTE_IN_SECONDS);
    }
    ```
 
-2. Update `WPOrgCheckController.php`:
-   - Auto-detect Playground
-   - Return empty response with filter applied
-   - Document filter hook in code comments
-   - Add admin notice about limitation
+2. **IMPLEMENTED**: Migrated to browser-based WordPress.org checking
+   - Removed `WPOrgCheckController.php` entirely
+   - All WordPress.org checks use browser `fetch()` API
+   - Works universally in Playground and traditional hosting
+   - No server-side HTTP requests needed
 
-3. Update frontend to handle empty responses gracefully
-   - Show "WordPress.org check unavailable" message
-   - Provide manual override option
-   - Document workaround in UI
-
-4. Add filter documentation to README
-
-**Files to modify:**
-- `includes/REST/WPOrgCheckController.php`
-- `includes/Utilities/EnvironmentDetector.php` (new)
-- `assets/src/utils/useAssetDiscovery.js`
-- `README.md`
+**Files modified:**
+- Removed: `includes/REST/WPOrgCheckController.php`
+- Updated: `assets/src/utils/useAssetDiscovery.js` - Browser-based checking
+- Updated: `README.md` - Documented browser-based approach
 
 ---
 
@@ -850,12 +821,15 @@ All critical compatibility issues have been resolved using a **universal impleme
   - `deleteFile()` / `copyFile()` - Verified operations
   - User-friendly error messages for persistence issues
 
-#### 4. WPOrgCheckController Simplification
-**File:** `includes/REST/WPOrgCheckController.php`
-- Removed all `wp_remote_get()` calls
-- Uses filter-based approach only: `aether_site_exporter_wporg_check_response`
-- Returns `exists: null` when WordPress.org check unavailable
-- Frontend handles gracefully with fallback behavior
+#### 4. WordPress.org Checking - Browser-Based
+**Status:** Fully migrated to JavaScript
+- **Removed:** `includes/REST/WPOrgCheckController.php` (entire file)
+- **Implementation:** `assets/src/utils/useAssetDiscovery.js`
+- Uses browser `fetch()` API exclusively
+- Default method: CORS proxy (`https://cfp.s12y.org/check-wporg`)
+- Fallback method: Direct WordPress.org API calls
+- IndexedDB caching with 7-day TTL
+- Works identically in Playground and traditional hosting
 
 #### 5. Paginated URL Discovery
 **File:** `includes/REST/URLDiscoveryController.php`
@@ -928,7 +902,6 @@ The Aether Site Exporter plugin is now **fully compatible** with WordPress Playg
 - `README.md` - Plugin overview
 
 ### Filter Hooks for Playground
-- `aether_site_exporter_wporg_check_response` - Override WordPress.org API response
 - `aether_site_exporter_temp_directory` - Custom temp directory (to be added)
 - `aether_site_exporter_is_playground` - Environment detection (to be added)
 
