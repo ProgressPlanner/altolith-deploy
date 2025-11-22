@@ -962,10 +962,6 @@ addFilter('aether.publish.step.createBlueprintBundle.files', 'my-plugin', (files
 
 ---
 
-**Note**: The `aether.deployment.url` hook has been deprecated. Use `aether.provider.deployment_url` instead to filter provider deployment URLs.
-
----
-
 ### File Upload System
 
 #### `aether.file.upload`
@@ -1540,7 +1536,7 @@ All PHP hooks use WordPress's native `add_filter()` and `add_action()` functions
 
 ### Provider Registration
 
-**Note**: Providers are now registered entirely in JavaScript, not PHP. See JavaScript hooks section below for provider registration.
+Providers are registered in JavaScript using the `aether.providers.register` action hook. See the JavaScript hooks section for details.
 
 ---
 
@@ -1697,9 +1693,6 @@ add_action('aether_provider_config_loaded', function($instanceId, $config) {
 ### JavaScript Provider Registration
 
 Providers are registered in JavaScript using the `aether.providers.register` action hook. See the JavaScript hooks section for details.
-    return $providerId;
-}, 10, 2);
-```
 
 ---
 
@@ -2089,16 +2082,14 @@ add_action('aether_publish_job_deleted', function($job_id, $request) {
 
 ### Creating a Custom Provider
 
-Providers require both PHP and JavaScript components:
+Providers are implemented in JavaScript and registered via the provider registry system.
 
-**JavaScript Only** (`my-provider.js`):
-
-Providers are now registered entirely in JavaScript. PHP is only used for REST API endpoints if your provider needs custom server-side operations.
+**JavaScript Implementation** (`my-provider.js`):
 
 ```javascript
-import { AbstractProvider } from '../providers/base/AbstractProvider';
-import { addAction } from '@wordpress/hooks';
-import ProviderRegistry from '../providers/registry/ProviderRegistry';
+import { AbstractProvider } from '@aether/providers/base/AbstractProvider';
+import { doAction } from '@wordpress/hooks';
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 class MyCustomProvider extends AbstractProvider {
     getId() {
@@ -2119,14 +2110,10 @@ class MyCustomProvider extends AbstractProvider {
 const provider = new MyCustomProvider();
 
 // Register provider in JavaScript registry
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 ProviderRegistry.register(provider.getId(), provider);
 
-// Also trigger the hook for any listeners
-import { doAction } from '@wordpress/hooks';
+// Trigger the registration hook
 doAction('aether.providers.register', provider);
-    registry.register('my-custom-provider', MyCustomProvider);
-});
 ```
 
 **Enqueue JavaScript** (`my-provider-plugin.php`):
