@@ -28,13 +28,14 @@ import { debug, debugWarn } from '@aether/utils/debug';
  */
 async function handler( context ) {
 	const {
+		providerId,
 		urls,
 		staticSiteUrl,
 		blueprintData,
 		siteUrl,
-		staticSiteProviders = [],
 		processStaticSiteUrls,
 		setStatusMessage,
+		sharedCache, // From preScanStaticSite step (global cache)
 	} = context;
 
 	if ( ! urls || ! Array.isArray( urls ) ) {
@@ -52,238 +53,79 @@ async function handler( context ) {
 		);
 	}
 
-	const providers = staticSiteProviders;
-
-	if ( providers.length === 0 ) {
-		setStatusMessage(
-			__(
-				'No providers enabled for static site deployment',
-				'aether-site-exporter'
-			),
-			'warning',
-			'uploadStaticFiles'
+	if ( ! providerId ) {
+		throw new Error(
+			__( 'Provider ID not found in context', 'aether-site-exporter' )
 		);
-		return { skipped: true, reason: 'no_providers' };
 	}
 
 	setStatusMessage(
 		sprintf(
-			/* translators: %1$d: Number of files, %2$d: Number of providers */
+			/* translators: %d: Number of files */
 			_n(
-				'Processing %1$d file for %2$d provider…',
-				'Processing %1$d files for %2$d providers…',
+				'Processing %d file…',
+				'Processing %d files…',
 				urls.length,
 				'aether-site-exporter'
 			),
-			urls.length,
-			providers.length
+			urls.length
 		),
 		'progress',
-		'uploadStaticFiles'
+		`uploadStaticFiles-${ providerId }`
 	);
 
 	// Filter URLs before processing
 	const filteredUrls = applyFilters(
 		'aether.export.step.uploadStaticSiteFiles.urls',
 		urls,
-		providers,
+		[ providerId ],
 		{
 			siteUrl,
 			blueprintData,
 			staticSiteUrl,
-			providers,
+			providerId,
 		}
 	);
 
-	// Create shared cache instance for all providers
-	// This ensures URLs and HTML are fetched only once, then shared across providers
-	const sharedCache = new StaticSiteCache();
-
-	// Pre-scan once: Fetch all URLs and cache raw HTML before processing providers
-	// This prevents duplicate network requests when multiple providers are enabled
-	let preScanResult = null;
-	try {
-		// Get provider config for first provider (for pre-scan)
-		// Pre-scan doesn't need provider-specific config, but executePreScan expects it
-		const firstProviderId = providers[ 0 ];
-		const providerConfig = await fetchProviderConfig( firstProviderId );
-
-		setStatusMessage(
-			__( 'Pre-scanning URLs and caching HTML…', 'aether-site-exporter' ),
-			'progress',
-			'uploadStaticFiles-prescan'
-		);
-
-		preScanResult = await executePreScan( {
-			urls: filteredUrls,
-			siteUrl,
-			providerId: firstProviderId,
-			providerConfig,
-			setStatusMessage,
-			cache: sharedCache, // Use shared cache
-		} );
-
-		debug(
-			`[Aether] Pre-scan complete: ${ preScanResult.cacheStats.sessionCached } URLs cached, ${ preScanResult.allUniqueAssets.size } unique assets`
-		);
-	} catch ( error ) {
-		debugWarn( '[Aether] Pre-scan failed:', error );
-		// Continue with empty cache - processStaticSiteUrls will handle it
-	}
-
-	// Process URLs for each provider using useStaticSiteGenerator
-	const providerResults = {};
-	let totalFilesUploaded = 0;
-	let totalFilesSkipped = 0;
-	let totalUrlsProcessed = 0;
-	let totalUrlsSucceeded = 0;
-	let totalUrlsFailed = 0;
-	const allFailedUrls = [];
-
-	// Note: Progress tracking is handled by processStaticSiteUrls internally
-	// No need for separate onProgress callback here
-
-	// Process each provider
-	// Each provider will use the shared cache to get raw HTML and process it independently
-	try {
-		for ( const providerId of providers ) {
-			try {
-				setStatusMessage(
-					sprintf(
-						/* translators: %s: Provider ID */
-						__(
-							'Processing static site for provider: %s',
-							'aether-site-exporter'
-						),
-						providerId
-					),
-					'progress',
-					`uploadStaticFiles-${ providerId }`
-				);
-
-				// Process URLs for this provider
-				// Pass shared cache so it uses cached raw HTML instead of fetching again
-				const result = await processStaticSiteUrls(
-					filteredUrls,
-					staticSiteUrl,
-					providerId,
-					siteUrl,
-					setStatusMessage,
-					blueprintData,
-					null, // removeMessage
-					sharedCache // Pass shared cache
-				);
-
-				// Aggregate results
-				providerResults[ providerId ] = {
-					success: result.success,
-					urlsProcessed: result.urlsProcessed || 0,
-					urlsSucceeded: result.urlsSucceeded || 0,
-					urlsFailed: result.urlsFailed || 0,
-					filesUploaded: result.filesUploaded || 0,
-					filesSkipped: result.filesSkipped || 0,
-					assetsUploaded: result.assetsUploaded || 0,
-					assetsFailed: result.assetsFailed || 0,
-					failedUrls: result.failedUrls || [],
-					uploadedFiles: result.uploadedFiles || [],
-				};
-
-				totalFilesUploaded += result.filesUploaded || 0;
-				totalFilesSkipped += result.filesSkipped || 0;
-				totalUrlsProcessed += result.urlsProcessed || 0;
-				totalUrlsSucceeded += result.urlsSucceeded || 0;
-				totalUrlsFailed += result.urlsFailed || 0;
-				if ( result.failedUrls ) {
-					allFailedUrls.push( ...result.failedUrls );
-				}
-			} catch ( error ) {
-				providerResults[ providerId ] = {
-					success: false,
-					error:
-						error.message ||
-						__( 'Unknown error', 'aether-site-exporter' ),
-					urlsProcessed: 0,
-					urlsSucceeded: 0,
-					urlsFailed: filteredUrls.length,
-					filesUploaded: 0,
-					filesSkipped: 0,
-					assetsUploaded: 0,
-					assetsFailed: 0,
-					failedUrls: filteredUrls.map( ( url ) => ( {
-						url: typeof url === 'string' ? url : url.url || url,
-						reason: error.message || 'Unknown error',
-					} ) ),
-					uploadedFiles: [],
-				};
-				totalUrlsFailed += filteredUrls.length;
-				allFailedUrls.push(
-					...filteredUrls.map( ( url ) => ( {
-						url: typeof url === 'string' ? url : url.url || url,
-						reason: error.message || 'Unknown error',
-					} ) )
-				);
-			}
-		}
-	} finally {
-		// Clean up cache when export finishes (success or failure)
-		try {
-			const cacheCleanedCount = await sharedCache.clearSession();
-			if ( cacheCleanedCount > 0 ) {
-				debug(
-					`[Aether] Cleared ${ cacheCleanedCount } cache entries from session`
-				);
-			}
-		} catch ( cleanupError ) {
-			debugWarn( '[Aether] Failed to cleanup cache:', cleanupError );
-		}
-	}
-
-	// Calculate totals
-	// A provider is successful if it uploaded at least one file
-	// (success === false just means some URLs had errors, not total failure)
-	const successfulProviders = Object.entries( providerResults ).filter(
-		( [ , data ] ) => data.filesUploaded > 0
-	);
-	const failedProviders = Object.entries( providerResults ).filter(
-		( [ , data ] ) => data.filesUploaded === 0
+	// Process URLs for this provider
+	// Use shared cache from preScanStaticSite step (cached raw HTML)
+	const result = await processStaticSiteUrls(
+		filteredUrls,
+		staticSiteUrl,
+		providerId,
+		siteUrl,
+		setStatusMessage,
+		blueprintData,
+		null, // removeMessage
+		sharedCache // Shared cache from global step
 	);
 
-	if ( successfulProviders.length > 0 ) {
+	// Report success
+	const filesUploaded = result.filesUploaded || 0;
+	const filesSkipped = result.filesSkipped || 0;
+
+	if ( filesUploaded > 0 ) {
 		setStatusMessage(
 			sprintf(
-				/* translators: %1$d: Success count, %2$d: Total providers, %3$d: Total files uploaded */
+				/* translators: %d: Number of files uploaded */
 				_n(
-					'Uploaded static site to %1$d/%2$d provider (%3$d file)',
-					'Uploaded static site to %1$d/%2$d providers (%3$d files)',
-					totalFilesUploaded,
+					'Uploaded %d file',
+					'Uploaded %d files',
+					filesUploaded,
 					'aether-site-exporter'
 				),
-				successfulProviders.length,
-				providers.length,
-				totalFilesUploaded
+				filesUploaded
 			),
-			failedProviders.length > 0 ? 'warning' : 'success',
-			'uploadStaticFiles'
+			result.urlsFailed > 0 ? 'warning' : 'success',
+			`uploadStaticFiles-${ providerId }`
 		);
 	}
 
-	if ( failedProviders.length === providers.length ) {
-		// Collect error details from all failed providers
-		const errorDetails = failedProviders
-			.map( ( [ providerId, data ] ) => {
-				const error = data.error || 'Unknown error';
-				return `${ providerId }: ${ error }`;
-			} )
-			.join( '; ' );
-
+	if ( filesUploaded === 0 ) {
 		throw new Error(
-			sprintf(
-				/* translators: %s: Error details from providers */
-				__(
-					'Failed to upload static site to any provider. Details: %s',
-					'aether-site-exporter'
-				),
-				errorDetails
+			__(
+				'Failed to upload any files for static site',
+				'aether-site-exporter'
 			)
 		);
 	}
@@ -291,19 +133,20 @@ async function handler( context ) {
 	return applyFilters(
 		'aether.export.step.uploadStaticSiteFiles.result',
 		{
-			providers,
-			results: providerResults,
-			successCount: successfulProviders.length,
-			failureCount: failedProviders.length,
-			totalFilesUploaded,
-			totalFilesSkipped,
-			totalUrlsProcessed,
-			totalUrlsSucceeded,
-			totalUrlsFailed,
-			failedUrls: allFailedUrls,
+			success: true,
+			providerId,
+			filesUploaded,
+			filesSkipped,
+			urlsProcessed: result.urlsProcessed || 0,
+			urlsSucceeded: result.urlsSucceeded || 0,
+			urlsFailed: result.urlsFailed || 0,
+			assetsUploaded: result.assetsUploaded || 0,
+			assetsFailed: result.assetsFailed || 0,
+			failedUrls: result.failedUrls || [],
+			uploadedFiles: result.uploadedFiles || [],
 		},
-		providers,
-		{ siteUrl, blueprintData, staticSiteUrl }
+		[ providerId ],
+		{ siteUrl, blueprintData, staticSiteUrl, providerId }
 	);
 }
 
