@@ -29,10 +29,7 @@ export const ConfigContext = createContext( {
  * @return {Object} Configuration object
  */
 function getConfigFromWindow() {
-	if (
-		typeof window !== 'undefined' &&
-		window.aetherData
-	) {
+	if ( typeof window !== 'undefined' && window.aetherData ) {
 		return {
 			publicUrl: window.aetherData.publicUrl || '',
 			adminUrl: window.aetherData.adminUrl || '',
