@@ -4,30 +4,25 @@
  * Executes export workflows with parallel provider queues.
  * Each provider runs its own complete workflow independently.
  * Steps with globalCache=true run once and share results across providers.
+ *
+ * Uses WordPress hooks for extensibility instead of callbacks.
  */
 
-import { GlobalStepCache } from '../utils/globalStepCache';
+import { doAction } from '@wordpress/hooks';
+import { globalStepState } from '../utils/globalStepState';
 import { validateDependencies } from './DependencyResolver';
 import { debug, debugError, debugWarn } from '@aether/utils/debug';
 
 /**
  * Execute workflow for all providers with per-provider queues.
  *
+ * Fires WordPress hooks at all lifecycle points for extensibility.
+ *
  * @param {Array<Object>} steps   Array of step definitions.
  * @param {Object}        context Initial context with providerIds and jobId.
- * @param {Object}        options Execution options with callbacks.
  * @return {Promise<Object>} Results per provider.
  */
-export async function executeSteps( steps, context, options = {} ) {
-	const {
-		onStepStart = () => {},
-		onStepComplete = () => {},
-		onStepCached = () => {},
-		onStepWaiting = () => {},
-		onStepSkipped = () => {},
-		onError = () => {},
-	} = options;
-
+export async function executeSteps( steps, context ) {
 	const { providerIds = [], jobId } = context;
 
 	if ( ! jobId ) {
@@ -49,23 +44,15 @@ export async function executeSteps( steps, context, options = {} ) {
 		);
 	}
 
-	// Initialize global cache
-	const globalCache = new GlobalStepCache();
-	await globalCache.initialize( jobId );
+	// Clear global state for new job
+	globalStepState.clear( jobId );
 
 	debug(
 		`[StepExecutor] Starting execution for ${ providerIds.length } providers`
 	);
 
 	// Create executor for managing provider queues
-	const executor = new ProviderQueueExecutor( steps, context, globalCache, {
-		onStepStart,
-		onStepComplete,
-		onStepCached,
-		onStepWaiting,
-		onStepSkipped,
-		onError,
-	} );
+	const executor = new ProviderQueueExecutor( steps, context );
 
 	// Execute all provider queues in parallel
 	const results = await executor.executeAll( providerIds );
@@ -97,14 +84,13 @@ export function getExecutionPlan( steps ) {
 /**
  * Provider Queue Executor
  *
- * Manages execution of parallel provider queues with global cache coordination.
+ * Manages execution of parallel provider queues with global state coordination.
+ * Fires WordPress hooks at all lifecycle points instead of using callbacks.
  */
 class ProviderQueueExecutor {
-	constructor( steps, baseContext, globalCache, callbacks ) {
+	constructor( steps, baseContext ) {
 		this.steps = steps;
 		this.baseContext = baseContext;
-		this.globalCache = globalCache;
-		this.callbacks = callbacks;
 	}
 
 	/**
@@ -166,7 +152,14 @@ class ProviderQueueExecutor {
 						`[StepExecutor] Provider ${ providerId } step ${ step.id } failed:`,
 						error
 					);
-					this.callbacks.onError( step.id, error, providerId );
+
+					// Fire error hook
+					doAction(
+						'aether.step.error',
+						step.id,
+						providerId,
+						error
+					);
 
 					return {
 						providerId,
@@ -208,7 +201,7 @@ class ProviderQueueExecutor {
 	}
 
 	/**
-	 * Execute global cache step (runs once, shared across providers).
+	 * Execute global step (runs once, shared across providers).
 	 *
 	 * @param {Object} step            Step definition.
 	 * @param {Object} providerContext Provider-specific context.
@@ -216,8 +209,8 @@ class ProviderQueueExecutor {
 	 * @return {Promise<void>}
 	 */
 	async executeGlobalStep( step, providerContext, providerId ) {
-		// Check if result already cached
-		const cachedResult = await this.globalCache.getStepResult( step.id );
+		// Check if result already available
+		const cachedResult = globalStepState.get( step.id );
 
 		if ( cachedResult ) {
 			debug(
@@ -227,14 +220,19 @@ class ProviderQueueExecutor {
 			// Merge cached result into context
 			Object.assign( providerContext, cachedResult );
 
-			// Notify callback
-			this.callbacks.onStepCached( step.id, providerId, cachedResult );
+			// Fire cached hook
+			doAction(
+				'aether.step.cached',
+				step.id,
+				providerId,
+				cachedResult
+			);
 
 			return;
 		}
 
 		// Try to acquire lock to execute step
-		const acquired = await this.globalCache.setStepRunning( step.id );
+		const acquired = globalStepState.lock( step.id );
 
 		if ( ! acquired ) {
 			// Another provider is executing this step, wait for it
@@ -242,15 +240,16 @@ class ProviderQueueExecutor {
 				`[StepExecutor] Provider ${ providerId } waiting for ${ step.id }`
 			);
 
-			this.callbacks.onStepWaiting( step.id, providerId );
+			// Fire waiting hook
+			doAction( 'aether.step.waiting', step.id, providerId );
 
-			const result = await this.globalCache.waitForStep( step.id );
+			const result = await globalStepState.wait( step.id );
 
 			// Merge result into context
 			Object.assign( providerContext, result );
 
-			// Notify that we used cached result
-			this.callbacks.onStepCached( step.id, providerId, result );
+			// Fire cached hook
+			doAction( 'aether.step.cached', step.id, providerId, result );
 
 			return;
 		}
@@ -260,21 +259,23 @@ class ProviderQueueExecutor {
 			`[StepExecutor] Provider ${ providerId } executing global step ${ step.id }`
 		);
 
-		this.callbacks.onStepStart( step.id, providerId );
+		// Fire start hook
+		doAction( 'aether.step.start', step.id, providerId );
 
 		try {
 			const result = await step.handler( providerContext );
 
-			// Store result in global cache
-			await this.globalCache.setStepResult( step.id, result );
+			// Store result in global state
+			globalStepState.set( step.id, result );
 
 			// Merge result into context
 			Object.assign( providerContext, result );
 
-			this.callbacks.onStepComplete( step.id, result, providerId );
+			// Fire complete hook
+			doAction( 'aether.step.complete', step.id, providerId, result );
 		} catch ( error ) {
-			// Store error in cache so other providers know it failed
-			await this.globalCache.setStepError( step.id, error );
+			// Store error in state so other providers know it failed
+			globalStepState.setError( step.id, error );
 
 			throw error;
 		}
@@ -293,14 +294,16 @@ class ProviderQueueExecutor {
 			`[StepExecutor] Provider ${ providerId } executing step ${ step.id }`
 		);
 
-		this.callbacks.onStepStart( step.id, providerId );
+		// Fire start hook
+		doAction( 'aether.step.start', step.id, providerId );
 
 		const result = await step.handler( providerContext );
 
 		// Merge result into context for subsequent steps
 		Object.assign( providerContext, result );
 
-		this.callbacks.onStepComplete( step.id, result, providerId );
+		// Fire complete hook
+		doAction( 'aether.step.complete', step.id, providerId, result );
 	}
 
 	/**
@@ -330,6 +333,7 @@ class ProviderQueueExecutor {
 			'setStepProgress',
 			'setOverallProgressValue',
 			'removeMessage',
+			'sharedCache', // StaticSiteCache instance from preScanStaticSite step
 		] );
 
 		for ( const key in context ) {

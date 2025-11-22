@@ -2,10 +2,12 @@
  * Publish Controller Hook
  *
  * Orchestrates the export workflow using phase-based execution
+ * Listens to WordPress hooks for step lifecycle events
  *
  */
 
-import { useCallback, useState, useRef } from '@wordpress/element';
+import { useCallback, useState, useRef, useEffect } from '@wordpress/element';
+import { addAction, removeAction } from '@wordpress/hooks';
 import { useExportAPI } from './useExportAPI';
 import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
@@ -102,6 +104,70 @@ export function useExportController( exportState ) {
 			}
 		}
 	);
+
+	// Register WordPress hook listeners for step lifecycle events
+	useEffect( () => {
+		// Step start handler
+		const handleStepStart = ( stepId, providerId ) => {
+			debug(
+				`[Workflow] Step starting: ${ stepId }${
+					providerId ? ` (provider: ${ providerId })` : ''
+				}`
+			);
+			// Update UI with step ID
+			updateFromStep( stepId );
+		};
+
+		// Step complete handler
+		const handleStepComplete = ( stepId, providerId, result ) => {
+			debug(
+				`[Workflow] Step completed: ${ stepId }${
+					providerId ? ` (provider: ${ providerId })` : ''
+				}`,
+				result
+			);
+		};
+
+		// Step cached handler
+		const handleStepCached = ( stepId, providerId ) => {
+			debug(
+				`[Workflow] Step using cached result: ${ stepId } (provider: ${ providerId })`
+			);
+		};
+
+		// Step waiting handler
+		const handleStepWaiting = ( stepId, providerId ) => {
+			debug(
+				`[Workflow] Provider waiting for global step: ${ stepId } (provider: ${ providerId })`
+			);
+		};
+
+		// Step error handler
+		const handleStepError = ( stepId, providerId, error ) => {
+			debugError(
+				`[Workflow] Step error: ${ stepId }${
+					providerId ? ` (provider: ${ providerId })` : ''
+				}`,
+				error
+			);
+		};
+
+		// Register all hook listeners
+		addAction( 'aether.step.start', 'aether/export-controller', handleStepStart );
+		addAction( 'aether.step.complete', 'aether/export-controller', handleStepComplete );
+		addAction( 'aether.step.cached', 'aether/export-controller', handleStepCached );
+		addAction( 'aether.step.waiting', 'aether/export-controller', handleStepWaiting );
+		addAction( 'aether.step.error', 'aether/export-controller', handleStepError );
+
+		// Cleanup: Remove all hook listeners on unmount
+		return () => {
+			removeAction( 'aether.step.start', 'aether/export-controller' );
+			removeAction( 'aether.step.complete', 'aether/export-controller' );
+			removeAction( 'aether.step.cached', 'aether/export-controller' );
+			removeAction( 'aether.step.waiting', 'aether/export-controller' );
+			removeAction( 'aether.step.error', 'aether/export-controller' );
+		};
+	}, [ updateFromStep ] );
 
 	const startExport = useCallback( async () => {
 		try {
@@ -242,59 +308,14 @@ export function useExportController( exportState ) {
 			workflowContext.removeMessage = removeMessage;
 
 			// Execute full workflow - individual steps check provider deployment_types
-
-			// Set up workflow lifecycle callbacks for UI updates
-			const workflowOptions = {
-				onStepStart: ( stepId, providerId ) => {
-					debug(
-						`[Workflow] Step starting: ${ stepId }${
-							providerId ? ` (provider: ${ providerId })` : ''
-						}`
-					);
-					// Update UI with step ID
-					updateFromStep( stepId );
-				},
-				onStepComplete: ( stepId, result, providerId ) => {
-					debug(
-						`[Workflow] Step completed: ${ stepId }${
-							providerId ? ` (provider: ${ providerId })` : ''
-						}`,
-						result
-					);
-				},
-				onStepCached: ( stepId, providerId ) => {
-					debug(
-						`[Workflow] Step using cached result: ${ stepId } (provider: ${ providerId })`
-					);
-				},
-				onStepWaiting: ( stepId, providerId ) => {
-					debug(
-						`[Workflow] Provider waiting for global step: ${ stepId } (provider: ${ providerId })`
-					);
-					// Optionally update UI to show waiting state
-				},
-				onStepSkipped: ( stepId, providerId ) => {
-					debug(
-						`[Workflow] Step skipped: ${ stepId }${
-							providerId ? ` (provider: ${ providerId })` : ''
-						}`
-					);
-				},
-				onError: ( stepId, error, providerId ) => {
-					debugError(
-						`[Workflow] Step error: ${ stepId }${
-							providerId ? ` (provider: ${ providerId })` : ''
-						}`,
-						error
-					);
-				},
-			};
+			// Lifecycle events are fired via WordPress hooks (no callbacks needed)
 
 			// Get steps filtered by enabled providers
 			const activeSteps = getActiveSteps( workflowContext );
 
 			// Execute steps using flat executor with dependency resolution
-			await executeSteps( activeSteps, workflowContext, workflowOptions );
+			// Hook listeners registered above will handle all lifecycle events
+			await executeSteps( activeSteps, workflowContext );
 
 			debug( '[Workflow] All steps completed successfully' );
 
