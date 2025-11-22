@@ -9,7 +9,7 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { StaticSiteCache } from '@aether/utils/staticSiteCache';
 import { executePreScan } from '@aether/export/utils/preScanPhase';
-import { debug, debugWarn } from '@aether/utils/debug';
+import { debugWarn } from '@aether/utils/debug';
 import apiFetch from '@aether/utils/api';
 
 /**
@@ -83,11 +83,6 @@ async function handler( context ) {
 		setStatusMessage,
 		setStepProgress,
 		cache: sharedCache,
-	} );
-
-	debug( '[Aether] Pre-scan complete:', {
-		cached: preScanResult.cacheStats.sessionCached,
-		assets: preScanResult.allUniqueAssets.size,
 	} );
 
 	setStatusMessage(

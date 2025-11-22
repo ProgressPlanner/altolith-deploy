@@ -113,8 +113,8 @@ const getMessageTypeColor = ( type ) => {
  * Groups messages by provider instance ID based on message keys.
  * Message keys follow format: `{stepId}-{providerId}`
  *
- * @param {Array}  messageHistory Message history array
- * @param {Array}  providerIds    Array of provider instance IDs
+ * @param {Array} messageHistory Message history array
+ * @param {Array} providerIds    Array of provider instance IDs
  * @return {Object} Map of providerId → latest message
  */
 function extractProviderMessages( messageHistory, providerIds ) {
@@ -187,8 +187,7 @@ function calculateProviderProgress( providerId, steps, providerMessage ) {
 	// Progress = (completed steps / total steps) * 100
 	// Current step is in progress, so it counts as half complete
 	const completedSteps = currentStepIndex;
-	const progress =
-		( ( completedSteps + 0.5 ) / providerSteps.length ) * 100;
+	const progress = ( ( completedSteps + 0.5 ) / providerSteps.length ) * 100;
 
 	return Math.min( 100, Math.round( progress ) );
 }
@@ -196,10 +195,10 @@ function calculateProviderProgress( providerId, steps, providerMessage ) {
 /**
  * Provider Progress Bars Component
  *
- * @param {Object} props                          Component props
- * @param {Array}  props.providerIds              Array of provider instance IDs
- * @param {Array}  props.messageHistory           Message history array
- * @param {Array}  props.steps                    Workflow steps array
+ * @param {Object} props                Component props
+ * @param {Array}  props.providerIds    Array of provider instance IDs
+ * @param {Array}  props.messageHistory Message history array
+ * @param {Array}  props.steps          Workflow steps array
  * @return {JSX.Element|null} Provider progress bars or null if no providers
  */
 export default function ProviderProgressBars( {
@@ -233,10 +232,7 @@ export default function ProviderProgressBars( {
 	}
 
 	return (
-		<div
-			className="aether-provider-progress-bars"
-			style={ containerStyle }
-		>
+		<div className="aether-provider-progress-bars" style={ containerStyle }>
 			{ providerIds.map( ( providerId ) => {
 				const message = providerMessages[ providerId ];
 				const progress = providerProgress[ providerId ];

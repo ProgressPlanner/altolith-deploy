@@ -72,9 +72,7 @@ describe( 'assetExclusions', () => {
 
 			test( 'should exclude wp-comments-post.php', () => {
 				expect(
-					isExcludedUrl(
-						'http://example.com/wp-comments-post.php'
-					)
+					isExcludedUrl( 'http://example.com/wp-comments-post.php' )
 				).toBe( true );
 			} );
 

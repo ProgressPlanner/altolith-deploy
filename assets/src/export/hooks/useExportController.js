@@ -223,14 +223,18 @@ export function useExportController( exportState ) {
 			const workflowOptions = {
 				onStepStart: ( stepId, providerId ) => {
 					debug(
-						`[Workflow] Step starting: ${ stepId }${ providerId ? ` (provider: ${ providerId })` : '' }`
+						`[Workflow] Step starting: ${ stepId }${
+							providerId ? ` (provider: ${ providerId })` : ''
+						}`
 					);
 					// Update UI with step ID
 					updateFromStep( stepId );
 				},
 				onStepComplete: ( stepId, result, providerId ) => {
 					debug(
-						`[Workflow] Step completed: ${ stepId }${ providerId ? ` (provider: ${ providerId })` : '' }`,
+						`[Workflow] Step completed: ${ stepId }${
+							providerId ? ` (provider: ${ providerId })` : ''
+						}`,
 						result
 					);
 				},
@@ -247,12 +251,16 @@ export function useExportController( exportState ) {
 				},
 				onStepSkipped: ( stepId, providerId ) => {
 					debug(
-						`[Workflow] Step skipped: ${ stepId }${ providerId ? ` (provider: ${ providerId })` : '' }`
+						`[Workflow] Step skipped: ${ stepId }${
+							providerId ? ` (provider: ${ providerId })` : ''
+						}`
 					);
 				},
 				onError: ( stepId, error, providerId ) => {
 					debugError(
-						`[Workflow] Step error: ${ stepId }${ providerId ? ` (provider: ${ providerId })` : '' }`,
+						`[Workflow] Step error: ${ stepId }${
+							providerId ? ` (provider: ${ providerId })` : ''
+						}`,
 						error
 					);
 				},

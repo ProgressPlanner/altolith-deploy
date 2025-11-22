@@ -140,8 +140,9 @@ describe( 'uploadPhase', () => {
 			global.fetch = jest.fn();
 
 			// Mock uploadFilesWithProgress to return expected structure
-			const { uploadFilesWithProgress } =
-				require( '../fileUploadManager' );
+			const {
+				uploadFilesWithProgress,
+			} = require( '../fileUploadManager' );
 			uploadFilesWithProgress.mockResolvedValue( {
 				success: true,
 				uploaded: 0,

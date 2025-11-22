@@ -34,11 +34,11 @@ export class GlobalStepCache {
 	 * Open IndexedDB database
 	 *
 	 * @private
-	 * @return {Promise<IDBDatabase>}
+	 * @return {Promise<IDBDatabase>} Database instance
 	 */
 	_openDatabase() {
 		return new Promise( ( resolve, reject ) => {
-			const request = indexedDB.open( DB_NAME, DB_VERSION );
+			const request = window.indexedDB.open( DB_NAME, DB_VERSION );
 
 			request.onerror = () => reject( request.error );
 			request.onsuccess = () => resolve( request.result );
@@ -88,10 +88,7 @@ export class GlobalStepCache {
 	async setStepRunning( stepId ) {
 		// Use a single transaction to check and set atomically
 		return new Promise( ( resolve, reject ) => {
-			const transaction = this.db.transaction(
-				STORE_NAME,
-				'readwrite'
-			);
+			const transaction = this.db.transaction( STORE_NAME, 'readwrite' );
 			const store = transaction.objectStore( STORE_NAME );
 
 			// First check if entry exists
@@ -146,7 +143,7 @@ export class GlobalStepCache {
 	 * Store step error
 	 *
 	 * @param {string} stepId - Step identifier
-	 * @param {Error} error - Error object
+	 * @param {Error}  error  - Error object
 	 * @return {Promise<void>}
 	 */
 	async setStepError( stepId, error ) {
@@ -162,17 +159,13 @@ export class GlobalStepCache {
 	/**
 	 * Wait for a step to complete
 	 *
-	 * @param {string} stepId - Step identifier
+	 * @param {string} stepId       - Step identifier
 	 * @param {number} pollInterval - Polling interval in ms (default: 500)
-	 * @param {number} timeout - Maximum wait time in ms (default: 300000 = 5 minutes)
+	 * @param {number} timeout      - Maximum wait time in ms (default: 300000 = 5 minutes)
 	 * @return {Promise<Object>} Completed step result
 	 * @throws {Error} If step fails or times out
 	 */
-	async waitForStep(
-		stepId,
-		pollInterval = 500,
-		timeout = 300000
-	) {
+	async waitForStep( stepId, pollInterval = 500, timeout = 300000 ) {
 		const startTime = Date.now();
 
 		while ( Date.now() - startTime < timeout ) {
@@ -220,7 +213,7 @@ export class GlobalStepCache {
 	 *
 	 * @private
 	 * @param {string} stepId - Step identifier
-	 * @return {Promise<Object|null>}
+	 * @return {Promise<Object|null>} Step entry or null
 	 */
 	async _getEntry( stepId ) {
 		return new Promise( ( resolve, reject ) => {

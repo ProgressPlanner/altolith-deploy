@@ -5,9 +5,8 @@
  */
 
 import { renderHook } from '@testing-library/react';
-import { createElement } from '@wordpress/element';
+import { createElement, useContext } from '@wordpress/element';
 import { ConfigProvider, ConfigContext } from '../ConfigContext';
-import { useContext } from '@wordpress/element';
 
 /**
  * Wrapper component for testing context
@@ -50,8 +49,7 @@ describe( 'ConfigContext', () => {
 			expect( result.current.config ).toEqual( {
 				publicUrl: 'https://example.com',
 				adminUrl: 'https://example.com/wp-admin',
-				pluginUrl:
-					'https://example.com/wp-content/plugins/aether',
+				pluginUrl: 'https://example.com/wp-content/plugins/aether',
 				restUrl: '/wp-json/',
 			} );
 		} );

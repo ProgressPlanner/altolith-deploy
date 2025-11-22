@@ -75,7 +75,7 @@ export function getProviderInstanceUUID( instanceId ) {
  * If there's only one instance of this provider type, returns just the name.
  * If there are multiple, includes a shortened UUID for identification.
  *
- * @param {string} instanceId    Provider instance ID
+ * @param {string} instanceId     Provider instance ID
  * @param {Array}  allInstanceIds All provider instance IDs in the workflow
  * @return {string} Formatted display name
  */

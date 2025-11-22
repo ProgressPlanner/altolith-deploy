@@ -137,7 +137,9 @@ export function buildWorkflowContext( config, dependencies ) {
 	];
 
 	// Generate unique job ID for this export workflow
-	const jobId = `export-job-${ Date.now() }-${ Math.random().toString( 36 ).substr( 2, 9 ) }`;
+	const jobId = `export-job-${ Date.now() }-${ Math.random()
+		.toString( 36 )
+		.substr( 2, 9 ) }`;
 
 	return {
 		// New per-provider queue architecture fields

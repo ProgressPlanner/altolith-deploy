@@ -35,7 +35,9 @@ export async function executeSteps( steps, context, options = {} ) {
 	}
 
 	if ( providerIds.length === 0 ) {
-		debugWarn( '[StepExecutor] No providers specified, nothing to execute' );
+		debugWarn(
+			'[StepExecutor] No providers specified, nothing to execute'
+		);
 		return {};
 	}
 
@@ -56,19 +58,14 @@ export async function executeSteps( steps, context, options = {} ) {
 	);
 
 	// Create executor for managing provider queues
-	const executor = new ProviderQueueExecutor(
-		steps,
-		context,
-		globalCache,
-		{
-			onStepStart,
-			onStepComplete,
-			onStepCached,
-			onStepWaiting,
-			onStepSkipped,
-			onError,
-		}
-	);
+	const executor = new ProviderQueueExecutor( steps, context, globalCache, {
+		onStepStart,
+		onStepComplete,
+		onStepCached,
+		onStepWaiting,
+		onStepSkipped,
+		onError,
+	} );
 
 	// Execute all provider queues in parallel
 	const results = await executor.executeAll( providerIds );
@@ -185,7 +182,9 @@ class ProviderQueueExecutor {
 			}
 		}
 
-		debug( `[StepExecutor] Provider ${ providerId } completed successfully` );
+		debug(
+			`[StepExecutor] Provider ${ providerId } completed successfully`
+		);
 
 		return {
 			providerId,
@@ -205,11 +204,7 @@ class ProviderQueueExecutor {
 		if ( step.globalCache ) {
 			await this.executeGlobalStep( step, providerContext, providerId );
 		} else {
-			await this.executeProviderStep(
-				step,
-				providerContext,
-				providerId
-			);
+			await this.executeProviderStep( step, providerContext, providerId );
 		}
 	}
 

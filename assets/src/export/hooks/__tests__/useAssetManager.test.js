@@ -551,20 +551,18 @@ describe( 'useAssetManager', () => {
 			mockLoad.mockReturnValue( {} );
 
 			let counter = 0;
-			mockMarkAsChanged.mockImplementation(
-				( prev, type, slug ) => {
-					counter++;
-					return {
-						...prev,
-						[ slug ]: {
-							type,
-							slug,
-							needsUpload: true,
-							order: counter,
-						},
-					};
-				}
-			);
+			mockMarkAsChanged.mockImplementation( ( prev, type, slug ) => {
+				counter++;
+				return {
+					...prev,
+					[ slug ]: {
+						type,
+						slug,
+						needsUpload: true,
+						order: counter,
+					},
+				};
+			} );
 
 			const { result } = renderHook( () => useAssetManager() );
 

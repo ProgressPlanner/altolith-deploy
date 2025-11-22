@@ -45,24 +45,20 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 				cacheState.steps[ stepId ] = { status: 'running' };
 				return Promise.resolve( true );
 			} ),
-			setStepResult: jest
-				.fn()
-				.mockImplementation( ( stepId, result ) => {
-					cacheState.steps[ stepId ] = {
-						status: 'completed',
-						result,
-					};
-					return Promise.resolve();
-				} ),
-			setStepError: jest
-				.fn()
-				.mockImplementation( ( stepId, error ) => {
-					cacheState.steps[ stepId ] = {
-						status: 'error',
-						error,
-					};
-					return Promise.resolve();
-				} ),
+			setStepResult: jest.fn().mockImplementation( ( stepId, result ) => {
+				cacheState.steps[ stepId ] = {
+					status: 'completed',
+					result,
+				};
+				return Promise.resolve();
+			} ),
+			setStepError: jest.fn().mockImplementation( ( stepId, error ) => {
+				cacheState.steps[ stepId ] = {
+					status: 'error',
+					error,
+				};
+				return Promise.resolve();
+			} ),
 			waitForStep: jest.fn().mockImplementation( ( stepId ) => {
 				// In tests, immediately return the result if available
 				const step = cacheState.steps[ stepId ];
@@ -461,14 +457,8 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 
 			// Should be called once per provider
 			expect( onStepStart ).toHaveBeenCalledTimes( 2 );
-			expect( onStepStart ).toHaveBeenCalledWith(
-				'provider-1',
-				'step1'
-			);
-			expect( onStepStart ).toHaveBeenCalledWith(
-				'provider-2',
-				'step1'
-			);
+			expect( onStepStart ).toHaveBeenCalledWith( 'provider-1', 'step1' );
+			expect( onStepStart ).toHaveBeenCalledWith( 'provider-2', 'step1' );
 		} );
 
 		it( 'should call onStepComplete after each step completes', async () => {
@@ -545,9 +535,7 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 					label: 'Global Step',
 					globalCache: true,
 					dependencies: [],
-					handler: jest
-						.fn()
-						.mockResolvedValue( { success: true } ),
+					handler: jest.fn().mockResolvedValue( { success: true } ),
 				},
 			];
 
@@ -598,14 +586,12 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 
 	describe( 'error handling', () => {
 		it( 'should continue other providers if one provider fails', async () => {
-			const handler = jest
-				.fn()
-				.mockImplementation( async ( context ) => {
-					if ( context.providerId === 'provider-1' ) {
-						throw new Error( 'Provider 1 failed' );
-					}
-					return { success: true };
-				} );
+			const handler = jest.fn().mockImplementation( async ( context ) => {
+				if ( context.providerId === 'provider-1' ) {
+					throw new Error( 'Provider 1 failed' );
+				}
+				return { success: true };
+			} );
 
 			const steps = [
 				{
