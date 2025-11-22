@@ -17,7 +17,7 @@
  *
  * Performance Impact:
  * - First export: Fetch from remote, cache locally (no improvement)
- * - Subsequent publishes within 1 hour: Use cached manifest (2-5 second improvement)
+ * - Subsequent exports within 1 hour: Use cached manifest (2-5 second improvement)
  * - After manifest updates: Cache is automatically updated
  *
  * @package
@@ -52,7 +52,7 @@ const MANIFEST_CACHE_CONFIG = {
 
 /**
  * Cache expiration time (1 hour)
- * Manifests update frequently during development/publishing, so short TTL
+ * Manifests update frequently during development/exporting, so short TTL
  */
 const CACHE_EXPIRATION_MS = 60 * 60 * 1000; // 1 hour
 

@@ -36,7 +36,7 @@ export const ExportContext = createContext( {
 	updateFromStep: () => {},
 	markAllComplete: () => {},
 	showError: () => {},
-	setIsPublishing: () => {},
+	setIsExporting: () => {},
 	setJobId: () => {},
 	setStatusMessage: () => {},
 	setOverallProgressValue: () => {},
@@ -65,7 +65,7 @@ export const ExportContext = createContext( {
 export function PublishProvider( { children } ) {
 	// Core state
 	const [ steps, setSteps ] = useState( [] );
-	const [ isPublishing, setIsPublishing ] = useState( false );
+	const [ isPublishing, setIsExporting ] = useState( false );
 	const [ jobId, setJobId ] = useState( null );
 	const [ finalStatus, setFinalStatus ] = useState( null );
 	const [ error, setError ] = useState( null );
@@ -322,7 +322,7 @@ export function PublishProvider( { children } ) {
 				prevSteps.map( ( step ) => ( { ...step, status: 'complete' } ) )
 			);
 			setFinalStatus( status );
-			setIsPublishing( false );
+			setIsExporting( false );
 			addMessage( 'Site exported successfully!', 'success' );
 		},
 		[ addMessage ]
@@ -337,7 +337,7 @@ export function PublishProvider( { children } ) {
 	const showError = useCallback(
 		( errorMessage, stepId = null ) => {
 			setError( errorMessage );
-			setIsPublishing( false );
+			setIsExporting( false );
 			addMessage( errorMessage, 'error' );
 			if ( stepId ) {
 				setStepStatus( stepId, 'error', errorMessage );
@@ -469,7 +469,7 @@ export function PublishProvider( { children } ) {
 		if ( ! keepSteps ) {
 			setSteps( [] );
 		}
-		setIsPublishing( false );
+		setIsExporting( false );
 		setJobId( null );
 		setFinalStatus( null );
 		setError( null );
@@ -500,7 +500,7 @@ export function PublishProvider( { children } ) {
 			updateFromStep,
 			markAllComplete,
 			showError,
-			setIsPublishing,
+			setIsExporting,
 			setJobId,
 			setStatusMessage,
 			setOverallProgressValue,

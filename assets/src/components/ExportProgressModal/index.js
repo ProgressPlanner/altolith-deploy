@@ -286,7 +286,7 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 							style={ noticeParagraphStyle }
 						>
 							{ __(
-								'Your site has been published successfully!',
+								'Your site has been exported successfully!',
 								'aether'
 							) }
 						</p>

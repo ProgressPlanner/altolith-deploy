@@ -449,7 +449,7 @@ class ExportJobController
 		$newStatus = \array_merge($status, [
 			'status'       => 'complete',
 			'currentStep' => 'completed',
-			'message'      => \__('Site published successfully!', 'aether-site-exporter'),
+			'message'      => \__('Site exported successfully!', 'aether-site-exporter'),
 			'completedAt' => \current_time('mysql'),
 		]);
 

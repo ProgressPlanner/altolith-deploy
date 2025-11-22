@@ -65,7 +65,7 @@ describe( 'ExportButton', () => {
 		expect( button ).toBeDisabled();
 	} );
 
-	it( 'should disable button when publishing', () => {
+	it( 'should disable button when exporting', () => {
 		render( <ExportButton { ...defaultProps } isPublishing={ true } /> );
 
 		const button = screen.getByText( 'Publishing…' );
@@ -110,7 +110,7 @@ describe( 'ExportButton', () => {
 		);
 	} );
 
-	it( 'should show publishing state', () => {
+	it( 'should show exporting state', () => {
 		render( <ExportButton { ...defaultProps } isPublishing={ true } /> );
 
 		expect( screen.getByText( 'Publishing…' ) ).toBeInTheDocument();

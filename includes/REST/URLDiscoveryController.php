@@ -143,7 +143,7 @@ class URLDiscoveryController
 	}
 
 	/**
-	 * Get total count of published posts for given post types.
+	 * Get total count of posts with publish status for given post types.
 	 *
 	 * @param array<string> $postTypes Post types to count.
 	 * @return int Total count.

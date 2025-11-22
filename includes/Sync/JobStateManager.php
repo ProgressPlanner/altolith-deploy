@@ -125,7 +125,7 @@ class JobStateManager
 	public function markComplete(string $jobId, string $message = ''): bool
 	{
 		if (empty($message)) {
-			$message = \__('Site published successfully!', 'aether-site-exporter');
+			$message = \__('Site exported successfully!', 'aether-site-exporter');
 		}
 
 		return $this->updateStatus(

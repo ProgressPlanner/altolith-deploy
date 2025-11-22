@@ -30,7 +30,7 @@ import { ExportContext } from '../contexts/ExportContext';
  * @property {Function} updateFromStep          - Transition to a step
  * @property {Function} markAllComplete         - Mark all steps complete
  * @property {Function} showError               - Show error message
- * @property {Function} setIsPublishing         - Set publishing flag
+ * @property {Function} setIsExporting          - Set publishing flag
  * @property {Function} setJobId                - Set job ID
  * @property {Function} setStatusMessage        - Set status message
  * @property {Function} setOverallProgressValue - Set overall progress

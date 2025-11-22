@@ -206,50 +206,50 @@ export default function HowItWorks() {
 					className="aether-how-it-works__item"
 				>
 					<ul
-						className="aether-how-it-works__published-list"
+						className="aether-how-it-works__exported-list"
 						style={ benefitListStyle }
 					>
-						<li className="aether-how-it-works__published-item">
+						<li className="aether-how-it-works__exported-item">
 							{ __(
 								'All published posts and pages',
 								'aether-site-exporter'
 							) }
 						</li>
-						<li className="aether-how-it-works__published-item">
+						<li className="aether-how-it-works__exported-item">
 							{ __(
 								'Custom post types',
 								'aether-site-exporter'
 							) }
 						</li>
-						<li className="aether-how-it-works__published-item">
+						<li className="aether-how-it-works__exported-item">
 							{ __(
 								'Categories, tags, and taxonomies',
 								'aether-site-exporter'
 							) }
 						</li>
-						<li className="aether-how-it-works__published-item">
+						<li className="aether-how-it-works__exported-item">
 							{ __(
 								'Theme files and customizations',
 								'aether-site-exporter'
 							) }
 						</li>
-						<li className="aether-how-it-works__published-item">
+						<li className="aether-how-it-works__exported-item">
 							{ __( 'Active plugins', 'aether-site-exporter' ) }
 						</li>
-						<li className="aether-how-it-works__published-item">
+						<li className="aether-how-it-works__exported-item">
 							{ __(
 								'Media files (images, videos)',
 								'aether-site-exporter'
 							) }
 						</li>
-						<li className="aether-how-it-works__published-item">
+						<li className="aether-how-it-works__exported-item">
 							{ __(
 								'WordPress settings and options',
 								'aether-site-exporter'
 							) }
 						</li>
 						<li
-							className="aether-how-it-works__published-item"
+							className="aether-how-it-works__exported-item"
 							style={ benefitListItemStyle }
 						>
 							{ __(

@@ -24,7 +24,7 @@ import {
 
 export function useExportController( exportState ) {
 	const {
-		setIsPublishing,
+		setIsExporting,
 		updateFromStep,
 		markAllComplete,
 		showError,
@@ -114,7 +114,7 @@ export function useExportController( exportState ) {
 				'discoverBlueprintBundleAssets'
 			);
 			// Set isPublishing to true to start the workflow
-			setIsPublishing( true );
+			setIsExporting( true );
 			debug( 'Steps initialized, starting export workflow' );
 
 			// Fetch settings to get storage provider ID before starting
@@ -237,14 +237,14 @@ export function useExportController( exportState ) {
 			markAllComplete( { status: 'complete' } );
 
 			// Release exporting lock (allows user to start new export)
-			setIsPublishing( false );
+			setIsExporting( false );
 		} catch ( error ) {
 			debugError( 'Publish failed:', error );
 			showError( `Failed to start: ${ error.message }` );
-			setIsPublishing( false );
+			setIsExporting( false );
 		}
 	}, [
-		setIsPublishing,
+		setIsExporting,
 		api,
 		assetManager,
 		showError,
