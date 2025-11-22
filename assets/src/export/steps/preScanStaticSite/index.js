@@ -1,13 +1,16 @@
 /**
  * Pre-Scan Static Site Step
  *
- * Fetches HTML pages and extracts assets (CSS, JS, images) to add to URL list.
+ * Fetches HTML pages, caches them, and extracts assets.
+ * Creates shared StaticSiteCache for all providers to use.
  *
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { extractAssetsFromHtml } from '@aether/export/utils/assetExtractor';
+import { StaticSiteCache } from '@aether/utils/staticSiteCache';
+import { executePreScan } from '@aether/export/utils/preScanPhase';
 import { debug, debugWarn } from '@aether/utils/debug';
+import apiFetch from '@aether/utils/api';
 
 /**
  * Pre-scan static site step handler.
@@ -17,10 +20,11 @@ import { debug, debugWarn } from '@aether/utils/debug';
  * @param {string}   context.siteUrl          WordPress site URL.
  * @param {Function} context.setStatusMessage Status message updater.
  * @param {Function} context.setStepProgress  Step progress updater.
- * @return {Promise<Object>} Step result with expanded URL list including assets.
+ * @return {Promise<Object>} Step result with shared cache and URLs.
  */
 async function handler( context ) {
-	const { urls, siteUrl, setStatusMessage, setStepProgress } = context;
+	const { urls, siteUrl, setStatusMessage, setStepProgress, providerIds } =
+		context;
 
 	if ( ! urls || ! Array.isArray( urls ) ) {
 		throw new Error(
@@ -32,86 +36,82 @@ async function handler( context ) {
 	}
 
 	setStatusMessage(
-		__( 'Scanning pages for assets…', 'aether-site-exporter' ),
+		__( 'Pre-scanning URLs and caching HTML…', 'aether-site-exporter' ),
 		'progress',
 		'preScanStaticSite'
 	);
 
-	const allAssets = new Set();
-	const htmlUrls = [];
-	const totalUrls = urls.length;
+	// Create shared cache instance for all providers
+	// This ensures URLs and HTML are fetched only once, then shared across providers
+	const sharedCache = new StaticSiteCache();
+	await sharedCache.initialize();
 
-	// Fetch each URL and extract assets
-	for ( let i = 0; i < totalUrls; i++ ) {
-		const url = urls[ i ];
+	// Get first provider ID for config (pre-scan doesn't need provider-specific config)
+	const firstProviderId = providerIds && providerIds[ 0 ];
 
-		// Update progress
-		if ( setStepProgress ) {
-			const progress = Math.round( ( ( i + 1 ) / totalUrls ) * 100 );
-			setStepProgress( 'preScanStaticSite', progress );
-		}
+	if ( ! firstProviderId ) {
+		debugWarn(
+			'[Aether] No provider IDs found, using default config for pre-scan'
+		);
+	}
 
+	// Fetch provider config if we have a provider ID
+	let providerConfig = {};
+	if ( firstProviderId ) {
 		try {
-			const response = await fetch( url, {
-				method: 'GET',
-				credentials: 'omit',
-				headers: {
-					'User-Agent': 'Aether Static Site Generator',
-				},
+			const providerResponse = await apiFetch( {
+				path: `/aether/site-exporter/providers/${ firstProviderId }/config`,
 			} );
-
-			if ( ! response.ok ) {
-				debugWarn(
-					`[Aether] Skipping URL with non-200 status: ${ url } (HTTP ${ response.status })`
-				);
-				continue;
-			}
-
-			const contentType = response.headers.get( 'content-type' ) || '';
-			if ( ! contentType.includes( 'text/html' ) ) {
-				// Not HTML, skip asset extraction but keep the URL
-				htmlUrls.push( url );
-				continue;
-			}
-
-			const html = await response.text();
-			htmlUrls.push( url );
-
-			// Extract assets from HTML
-			const assets = await extractAssetsFromHtml( html, url, siteUrl );
-			for ( const asset of assets ) {
-				allAssets.add( asset );
+			if ( providerResponse.success && providerResponse.config ) {
+				providerConfig = providerResponse.config || {};
 			}
 		} catch ( error ) {
-			debugWarn( `[Aether] Error fetching URL: ${ url }`, error.message );
+			debugWarn(
+				'[Aether] Failed to fetch provider config for pre-scan:',
+				error
+			);
 		}
 	}
 
-	// Combine HTML URLs with discovered assets
-	const expandedUrls = [ ...htmlUrls, ...allAssets ];
+	// Execute pre-scan: Fetch all URLs and cache raw HTML
+	// This prevents duplicate network requests when multiple providers are enabled
+	const preScanResult = await executePreScan( {
+		urls,
+		siteUrl,
+		providerId: firstProviderId || 'pre-scan',
+		providerConfig,
+		setStatusMessage,
+		setStepProgress,
+		cache: sharedCache,
+	} );
 
 	debug( '[Aether] Pre-scan complete:', {
-		htmlPages: htmlUrls.length,
-		assetsDiscovered: allAssets.size,
-		totalUrls: expandedUrls.length,
+		cached: preScanResult.cacheStats.sessionCached,
+		assets: preScanResult.allUniqueAssets.size,
 	} );
 
 	setStatusMessage(
 		sprintf(
 			/* translators: %1$d: Number of pages, %2$d: Number of assets */
-			__( 'Found %1$d pages and %2$d assets', 'aether-site-exporter' ),
-			htmlUrls.length,
-			allAssets.size
+			__(
+				'Pre-scanned %1$d pages and found %2$d unique assets',
+				'aether-site-exporter'
+			),
+			preScanResult.cacheStats.sessionCached,
+			preScanResult.allUniqueAssets.size
 		),
 		'success',
 		'preScanStaticSite'
 	);
 
-	// Return expanded URL list
+	// Return shared cache and results for provider steps to use
+	// The sharedCache will be available to all uploadStaticFiles step instances
 	return {
-		urls: expandedUrls,
-		htmlCount: htmlUrls.length,
-		assetCount: allAssets.size,
+		success: true,
+		sharedCache, // Pass cache instance to provider steps
+		urls, // Keep original URLs
+		scannedUrls: preScanResult.cacheStats.sessionCached,
+		assetCount: preScanResult.allUniqueAssets.size,
 	};
 }
 
