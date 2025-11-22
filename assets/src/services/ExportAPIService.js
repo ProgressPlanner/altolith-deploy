@@ -7,6 +7,8 @@
  * @package
  */
 
+import { ENDPOINTS } from '@aether/constants';
+
 const CHANGED_ASSETS_KEY = 'aether_changed_assets';
 
 /**

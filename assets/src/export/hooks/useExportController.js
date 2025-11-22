@@ -123,8 +123,7 @@ export function useExportController( exportState ) {
 			} );
 
 			// Use pure function to extract configuration
-			const exportConfig =
-				prepareExportConfiguration( settingsResponse );
+			const exportConfig = prepareExportConfiguration( settingsResponse );
 
 			// Update storage provider ID state
 			if ( settingsResponse.success && exportConfig.storageProviderId ) {

@@ -1,21 +1,21 @@
 /**
- * createBlueprintBundle Step Tests
+ * createWpContentArchive Step Tests
  *
  * @package
  */
 
-import { createBlueprintBundleStep } from '../index';
+import { createWpContentArchiveStep } from '../index';
 
 describe( 'createWpContentArchive', () => {
 	test( 'should have correct step definition', () => {
-		expect( createBlueprintBundleStep ).toHaveProperty(
+		expect( createWpContentArchiveStep ).toHaveProperty(
 			'id',
 			'createWpContentArchive'
 		);
-		expect( createBlueprintBundleStep ).toHaveProperty( 'handler' );
-		expect( typeof createBlueprintBundleStep.handler ).toBe( 'function' );
-		expect( createBlueprintBundleStep ).toHaveProperty( 'dependencies' );
-		expect( Array.isArray( createBlueprintBundleStep.dependencies ) ).toBe(
+		expect( createWpContentArchiveStep ).toHaveProperty( 'handler' );
+		expect( typeof createWpContentArchiveStep.handler ).toBe( 'function' );
+		expect( createWpContentArchiveStep ).toHaveProperty( 'dependencies' );
+		expect( Array.isArray( createWpContentArchiveStep.dependencies ) ).toBe(
 			true
 		);
 	} );

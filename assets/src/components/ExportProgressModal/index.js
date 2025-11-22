@@ -112,11 +112,7 @@ const loadingParagraphStyle = {
 	color: colors.textMuted,
 };
 
-export default function ExportProgressModal( {
-	isOpen,
-	onClose,
-	onComplete,
-} ) {
+export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 	const exportState = useExportState();
 	const { startExport } = useExportController( exportState );
 	const {

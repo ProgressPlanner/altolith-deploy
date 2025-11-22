@@ -48,7 +48,10 @@ describe( 'DependencyResolver', () => {
 				{ id: 'getUrls', dependencies: [] },
 				{ id: 'createArchive', dependencies: [ 'discover' ] },
 				{ id: 'uploadStatic', dependencies: [ 'getUrls' ] },
-				{ id: 'createBlueprintBundle', dependencies: [ 'createArchive' ] },
+				{
+					id: 'createBlueprintBundle',
+					dependencies: [ 'createArchive' ],
+				},
 			];
 
 			const plan = buildParallelPlan( steps );

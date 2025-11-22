@@ -290,7 +290,7 @@ describe( 'exportConfiguration', () => {
 			);
 
 			expect( result ).toEqual( {
-				'static_site': [ 'provider-1', 'provider-2' ],
+				static_site: [ 'provider-1', 'provider-2' ],
 				'blueprint-bundle': [ 'provider-1' ],
 				'edge-functions': [ 'provider-3' ],
 			} );
@@ -328,7 +328,7 @@ describe( 'exportConfiguration', () => {
 			);
 
 			expect( result ).toEqual( {
-				'static_site': [ 'provider-1' ],
+				static_site: [ 'provider-1' ],
 				'blueprint-bundle': [],
 			} );
 		} );

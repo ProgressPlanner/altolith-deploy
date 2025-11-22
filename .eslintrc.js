@@ -5,7 +5,7 @@ module.exports = {
 	globals: {
 		r2SyncAdmin: 'readonly',
 		r2SyncLogger: 'readonly',
-		r2SyncPublish: 'readonly',
+		aetherExport: 'readonly',
 		localStorage: 'readonly',
 		confirm: 'readonly',
 		jQuery: 'readonly',
@@ -47,8 +47,8 @@ module.exports = {
 						path.resolve( __dirname, 'assets/src/providers' ),
 					],
 					[
-						'@aether/publish',
-						path.resolve( __dirname, 'assets/src/publish' ),
+						'@aether/export',
+						path.resolve( __dirname, 'assets/src/export' ),
 					],
 					[
 						'@aether/admin',
