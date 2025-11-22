@@ -56,8 +56,6 @@ export const ENDPOINTS = {
 	 * Provider endpoints
 	 */
 	PROVIDERS: {
-		LIST: `${ API_BASE_PATH }/providers`,
-		GET: ( providerId ) => `${ API_BASE_PATH }/providers/${ providerId }`,
 		CONFIG: ( providerId ) =>
 			`${ API_BASE_PATH }/providers/${ providerId }/config`,
 		SAVE_CONFIG: ( providerId ) =>
@@ -91,7 +89,6 @@ export const ENDPOINTS = {
 	 * Configuration endpoints
 	 */
 	CONFIG: {
-		GET: `${ API_BASE_PATH }/config`,
 		UPDATE: `${ API_BASE_PATH }/config`,
 		RESET: `${ API_BASE_PATH }/config/reset`,
 	},

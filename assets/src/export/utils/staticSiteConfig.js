@@ -8,7 +8,6 @@
 
 import { applyFilters } from '@wordpress/hooks';
 import { debug } from '@aether/utils/debug';
-import apiFetch from '@aether/utils/api';
 
 /**
  * Build storage configuration object.
@@ -87,41 +86,41 @@ export function createFailureTracker() {
 	};
 }
 
-/**
- * Fetch provider configuration from REST API.
- *
- * @param {string} staticSiteProviderId Provider ID from parameter.
- * @return {Promise<Object>} Provider configuration object.
- */
-export async function fetchProviderConfig( staticSiteProviderId ) {
-	let providerConfig = {};
+	/**
+	 * Fetch provider configuration from REST API.
+	 *
+	 * @param {string} staticSiteProviderId Provider ID from parameter.
+	 * @return {Promise<Object>} Provider configuration object.
+	 */
+	export async function fetchProviderConfig( staticSiteProviderId ) {
+		let providerConfig = {};
 
-	try {
-		// Dynamic import to avoid circular dependencies
-		const providerDiscovery = await import(
-			'../../providers/utils/providerDiscovery'
-		);
-		const discoveredProviderId =
-			await providerDiscovery.getProviderForDeploymentType(
-				'static_site'
+		try {
+			// Dynamic import to avoid circular dependencies
+			const providerDiscovery = await import(
+				'../../providers/utils/providerDiscovery'
 			);
+			const discoveredProviderId =
+				await providerDiscovery.getProviderForDeploymentType(
+					'static_site'
+				);
 
-		const providerIdToUse = staticSiteProviderId || discoveredProviderId;
+			const providerIdToUse = staticSiteProviderId || discoveredProviderId;
 
-		if ( providerIdToUse ) {
-			const configResponse = await apiFetch( {
-				path: `/aether/site-exporter/providers/${ providerIdToUse }`,
-			} );
-			if ( configResponse.success && configResponse.config ) {
-				providerConfig = configResponse.config;
+			if ( providerIdToUse ) {
+				// Use ConfigStorage to load provider config (handles caching and REST API)
+				const { ConfigStorage } = await import(
+					'../../providers/utils/configStorage'
+				);
+				const storage = new ConfigStorage( providerIdToUse );
+				providerConfig = await storage.load();
 			}
+		} catch ( error ) {
+			debug( 'Failed to load provider configuration:', error );
 		}
-	} catch ( error ) {
-		debug( 'Failed to load provider configuration:', error );
-	}
 
-	return providerConfig;
-}
+		return providerConfig;
+	}
 
 /**
  * Create and configure storage service.

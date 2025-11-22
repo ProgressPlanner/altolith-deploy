@@ -420,7 +420,7 @@ class Plugin
 		$assetsController = new REST\AssetsController();
 		$localStorageController = new REST\LocalStorageController();
 		$urlDiscoveryController = new REST\URLDiscoveryController();
-		$scriptsController = new REST\ScriptsController();
+		$adminBarDependenciesController = new REST\AdminBarDependenciesController();
 
 		// Initialize export controllers.
 		$exportJobController = new REST\Export\ExportJobController($this);
@@ -433,7 +433,7 @@ class Plugin
 		$assetsController->registerRoutes();
 		$localStorageController->registerRoutes();
 		$urlDiscoveryController->registerRoutes();
-		$scriptsController->registerRoutes();
+		$adminBarDependenciesController->registerRoutes();
 
 		// Register export routes.
 		$exportJobController->registerRoutes();

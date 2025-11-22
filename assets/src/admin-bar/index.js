@@ -43,9 +43,9 @@
 		// Show simple loading overlay (vanilla JS).
 		showLoadingOverlay();
 
-		// First, ensure WordPress scripts are loaded.
-		loadRequiredScripts(function() {
-			// Once scripts are loaded, load export-modal.js bundle.
+		// First, ensure WordPress scripts and styles are loaded.
+		loadRequiredDependencies(function() {
+			// Once dependencies are loaded, load export-modal.js bundle.
 			const script = document.createElement('script');
 			const scriptUrl = pluginUrl.endsWith('/')
 				? pluginUrl + 'assets/build/export-modal.js'
@@ -66,10 +66,10 @@
 	}
 
 	/**
-	 * Load required WordPress scripts before loading modal.
-	 * Fetches script list from REST API, checks which are loaded, loads missing ones.
+	 * Load required WordPress scripts and styles before loading modal.
+	 * Fetches dependencies list from REST API, checks which are loaded, loads missing ones.
 	 */
-	function loadRequiredScripts(callback) {
+	function loadRequiredDependencies(callback) {
 		const restUrl = (window.aetherData && window.aetherData.restUrl) || '';
 		const namespace = (window.aetherData && window.aetherData.restNamespace) || 'aether/site-exporter/';
 		const nonce = (window.aetherData && window.aetherData.nonce) || '';
@@ -79,7 +79,7 @@
 			return;
 		}
 
-		// Fetch scripts list from REST API with authentication.
+		// Fetch dependencies (scripts and styles) from REST API with authentication.
 		const headers = {
 			'Content-Type': 'application/json',
 		};
@@ -87,55 +87,102 @@
 			headers['X-WP-Nonce'] = nonce;
 		}
 
-		fetch(restUrl + namespace + 'scripts', {
+		fetch(restUrl + namespace + 'admin-bar-dependencies', {
 			method: 'GET',
 			credentials: 'same-origin',
 			headers: headers,
 		})
 			.then(function(response) {
 				if (!response.ok) {
-					throw new Error('Failed to fetch scripts');
+					throw new Error('Failed to fetch dependencies');
 				}
 				return response.json();
 			})
 			.then(function(data) {
-				if (!data.success || !data.scripts) {
-					throw new Error('Invalid scripts response');
+				if (!data.success) {
+					throw new Error('Invalid dependencies response');
 				}
 
+				const scripts = data.scripts || [];
+				const styles = data.styles || [];
+
 				// Filter out scripts that are already loaded.
-				const missingScripts = data.scripts.filter(function(script) {
+				const missingScripts = scripts.filter(function(script) {
 					return !document.getElementById(script.id);
 				});
 
-				if (missingScripts.length === 0) {
-					// All scripts already loaded.
+				// Filter out styles that are already loaded.
+				const missingStyles = styles.filter(function(style) {
+					return !document.getElementById(style.id);
+				});
+
+				// If nothing is missing, call callback immediately.
+				if (missingScripts.length === 0 && missingStyles.length === 0) {
 					callback();
 					return;
 				}
 
-				// Sort scripts by dependencies (topological sort).
-				const sortedScripts = sortScriptsByDependencies(missingScripts, data.scripts);
+				// Track completion of both loading operations.
+				let scriptsDone = false;
+				let stylesDone = false;
 
-				// Load sorted scripts sequentially.
-				loadScriptsSequentially(sortedScripts, 0, callback);
+				function checkComplete() {
+					if (scriptsDone && stylesDone) {
+						callback();
+					}
+				}
+
+				// Load scripts.
+				if (missingScripts.length === 0) {
+					scriptsDone = true;
+					checkComplete();
+				} else {
+					// Sort scripts by dependencies (topological sort).
+					const sortedScripts = sortByDependencies(missingScripts, scripts, '-js');
+
+					// Load sorted scripts sequentially.
+					loadScriptsSequentially(sortedScripts, 0, function() {
+						scriptsDone = true;
+						checkComplete();
+					});
+				}
+
+				// Load styles (can load in parallel with scripts).
+				if (missingStyles.length === 0) {
+					stylesDone = true;
+					checkComplete();
+				} else {
+					// Sort styles by dependencies (topological sort).
+					const sortedStyles = sortByDependencies(missingStyles, styles, '-css');
+
+					// Load sorted styles sequentially.
+					loadStylesSequentially(sortedStyles, 0, function() {
+						stylesDone = true;
+						checkComplete();
+					});
+				}
 			})
 			.catch(function(error) {
-				// On error, try to load modal anyway (scripts might already be there).
-				console.error('Failed to load WordPress scripts:', error);
+				// On error, try to load modal anyway (dependencies might already be there).
+				console.error('Failed to load WordPress dependencies:', error);
 				callback();
 			});
 	}
 
 	/**
-	 * Sort scripts by dependencies (simple topological sort).
-	 * Ensures dependencies are loaded before dependent scripts.
+	 * Sort assets (scripts or styles) by dependencies (simple topological sort).
+	 * Ensures dependencies are loaded before dependent assets.
+	 *
+	 * @param {Array} missingAssets Assets that need to be loaded.
+	 * @param {Array} allAssets All available assets.
+	 * @param {string} suffix Suffix for ID format ('-js' or '-css').
+	 * @return {Array} Sorted assets array.
 	 */
-	function sortScriptsByDependencies(missingScripts, allScripts) {
+	function sortByDependencies(missingAssets, allAssets, suffix) {
 		// Create a map for quick lookup.
-		const scriptMap = {};
-		allScripts.forEach(function(script) {
-			scriptMap[script.handle] = script;
+		const assetMap = {};
+		allAssets.forEach(function(asset) {
+			assetMap[asset.handle] = asset;
 		});
 
 		const sorted = [];
@@ -154,13 +201,13 @@
 			loading[handle] = true;
 
 			// Visit dependencies first.
-			const script = scriptMap[handle];
-			if (script && script.dependencies) {
-				script.dependencies.forEach(function(dep) {
-					// Check if dependency is already loaded or in missing scripts.
-					const isAlreadyLoaded = !!document.getElementById(dep + '-js');
-					const isMissing = missingScripts.some(function(s) {
-						return s.handle === dep;
+			const asset = assetMap[handle];
+			if (asset && asset.dependencies) {
+				asset.dependencies.forEach(function(dep) {
+					// Check if dependency is already loaded or in missing assets.
+					const isAlreadyLoaded = !!document.getElementById(dep + suffix);
+					const isMissing = missingAssets.some(function(a) {
+						return a.handle === dep;
 					});
 					// If it's missing and not already loaded, visit it first.
 					if (isMissing && !isAlreadyLoaded) {
@@ -173,17 +220,17 @@
 			visited[handle] = true;
 
 			// Add to sorted list.
-			const scriptToAdd = missingScripts.find(function(s) {
-				return s.handle === handle;
+			const assetToAdd = missingAssets.find(function(a) {
+				return a.handle === handle;
 			});
-			if (scriptToAdd) {
-				sorted.push(scriptToAdd);
+			if (assetToAdd) {
+				sorted.push(assetToAdd);
 			}
 		}
 
-		// Visit all missing scripts.
-		missingScripts.forEach(function(script) {
-			visit(script.handle);
+		// Visit all missing assets.
+		missingAssets.forEach(function(asset) {
+			visit(asset.handle);
 		});
 
 		return sorted;
@@ -212,6 +259,32 @@
 			loadScriptsSequentially(scripts, index + 1, callback);
 		};
 		document.head.appendChild(script);
+	}
+
+	/**
+	 * Load styles sequentially (simple recursive function).
+	 */
+	function loadStylesSequentially(styles, index, callback) {
+		if (index >= styles.length) {
+			// All styles loaded.
+			callback();
+			return;
+		}
+
+		const styleData = styles[index];
+		const link = document.createElement('link');
+		link.id = styleData.id;
+		link.rel = 'stylesheet';
+		link.href = styleData.src;
+		link.onload = function() {
+			// Load next style.
+			loadStylesSequentially(styles, index + 1, callback);
+		};
+		link.onerror = function() {
+			// Continue even if one style fails (others might succeed).
+			loadStylesSequentially(styles, index + 1, callback);
+		};
+		document.head.appendChild(link);
 	}
 
 	/**

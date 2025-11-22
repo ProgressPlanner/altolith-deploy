@@ -21,6 +21,7 @@ import {
 	determineProvidersByDeploymentType,
 	buildWorkflowContext,
 } from '@aether/export/utils/exportConfiguration';
+import ConfigStorage from '@aether/providers/utils/configStorage';
 
 export function useExportController( exportState ) {
 	const {
@@ -115,6 +116,16 @@ export function useExportController( exportState ) {
 			);
 			// Set isExporting to true to start the workflow
 			setIsExporting( true );
+
+			// Invalidate all provider config caches to ensure fresh data during export
+			try {
+				await ConfigStorage.clearAllCaches();
+				debug( 'Invalidated all provider config caches for fresh export data' );
+			} catch ( cacheError ) {
+				// Cache invalidation failure is not critical - log and continue
+				debugError( 'Failed to invalidate provider config caches:', cacheError );
+			}
+
 			debug( 'Steps initialized, starting export workflow' );
 
 			// Fetch settings to get storage provider ID before starting
