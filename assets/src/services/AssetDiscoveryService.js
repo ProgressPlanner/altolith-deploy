@@ -170,20 +170,33 @@ export class AssetDiscoveryService {
 	}
 
 	/**
-	 * Get plugin configuration from REST API.
+	 * Get plugin configuration from window.aetherData.
+	 *
+	 * Configuration was previously fetched from REST API endpoint /config,
+	 * but that endpoint was removed in favor of reading from window.aetherData
+	 * which is injected by PHP.
 	 *
 	 * @return {Promise<Object>} Configuration object.
 	 */
 	async getConfig() {
-		try {
-			const response = await this.apiFetch( {
-				path: '/aether/site-exporter/config',
-				method: 'GET',
-			} );
-			return response || {};
-		} catch ( error ) {
-			return {};
+		// Read config from window.aetherData (injected by PHP).
+		if (
+			typeof window !== 'undefined' &&
+			window.aetherData
+		) {
+			return {
+				publicUrl: window.aetherData.publicUrl || '',
+				adminUrl: window.aetherData.adminUrl || '',
+				// Note: wporgCheckMethod and corsProxyUrl are not needed
+				// because the JS code uses hardcoded defaults ('cors-proxy' with fallback to 'direct')
+			};
 		}
+
+		// Fallback if window.aetherData is not available.
+		return {
+			publicUrl: '',
+			adminUrl: '',
+		};
 	}
 
 	/**
