@@ -28,6 +28,193 @@ import { addFilter, addAction } from '@wordpress/hooks';
 
 ### Provider System
 
+#### `aether.providers.register`
+
+**Type**: Action
+**Location**: `assets/src/providers/registry/ProviderRegistry.js`
+
+Fires when a provider wants to register itself with the system. Providers should call `doAction('aether.providers.register', provider)` to register.
+
+**Parameters**:
+- `provider` (Object): Provider instance (must have `getId()` and `getName()` methods)
+
+**Example**:
+```javascript
+import { doAction } from '@wordpress/hooks';
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+
+const provider = new MyProvider();
+
+// Register with registry
+ProviderRegistry.register(provider.getId(), provider);
+
+// Also trigger the hook for any listeners
+doAction('aether.providers.register', provider);
+```
+
+---
+
+#### `aether.providers.registered`
+
+**Type**: Action
+**Location**: `assets/src/providers/registry/ProviderRegistry.js`
+
+Fires after a provider is successfully registered in the ProviderRegistry.
+
+**Parameters**:
+- `providerId` (string): Provider identifier
+- `provider` (Object): Provider instance
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.providers.registered', 'my-plugin', (providerId, provider) => {
+    console.log(`Provider ${providerId} registered successfully`);
+    // Initialize provider-specific features
+});
+```
+
+---
+
+#### `aether.provider_ids`
+
+**Type**: Filter
+**Location**: `assets/src/providers/utils/providerLoader.js`
+
+Filters the list of all provider IDs. Allows adding or removing provider IDs from the list.
+
+**Parameters**:
+- `providerIds` (Array): Array of provider ID strings
+
+**Returns**: Modified array of provider IDs
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.provider_ids', 'my-plugin', (providerIds) => {
+    // Add custom provider ID
+    return [...providerIds, 'my-custom-provider'];
+});
+```
+
+---
+
+#### `aether.provider.getDefault`
+
+**Type**: Filter
+**Location**: `assets/src/providers/utils/providerDiscovery.js`
+
+Filters the default provider returned by the discovery system.
+
+**Parameters**:
+- `provider` (Object|null): Default provider instance or null
+
+**Returns**: Provider instance or null
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.provider.getDefault', 'my-plugin', (provider) => {
+    // Override default provider
+    return ProviderRegistry.get('my-preferred-provider');
+});
+```
+
+---
+
+#### `aether.provider.getForDeploymentType`
+
+**Type**: Filter
+**Location**: `assets/src/providers/utils/providerDiscovery.js`
+
+Filters the provider returned for a specific deployment type.
+
+**Parameters**:
+- `provider` (Object|null): Provider instance or null
+- `deploymentType` (string): Deployment type (e.g., 'static_site', 'blueprint_bundle')
+
+**Returns**: Provider instance or null
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.provider.getForDeploymentType', 'my-plugin', (provider, deploymentType) => {
+    if (deploymentType === 'static_site' && !provider) {
+        // Provide fallback provider for static sites
+        return ProviderRegistry.get('my-static-provider');
+    }
+    return provider;
+});
+```
+
+---
+
+#### `aether.provider.test`
+
+**Type**: Filter
+**Location**: `assets/src/providers/local-filesystem/index.js`, `assets/src/components/ProviderSettings/index.js`
+
+Allows providers to register test connection handlers. When a provider test is requested, handlers registered via this filter are called.
+
+**Parameters**:
+- `testHandler` (Function|null): Test handler function or null
+- `providerId` (string): Provider instance ID
+
+**Returns**: Test handler function or null
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.provider.test', 'my-provider', (testHandler, providerId) => {
+    if (providerId.startsWith('my-provider:')) {
+        return async (config) => {
+            // Test provider connection
+            try {
+                await testConnection(config);
+                return { success: true };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        };
+    }
+    return testHandler; // Use default handler
+});
+```
+
+---
+
+#### `aether.provider.upload_strategy`
+
+**Type**: Filter
+**Location**: `assets/src/providers/local-filesystem/index.js`
+
+Allows providers to override the upload strategy used for file uploads.
+
+**Parameters**:
+- `strategy` (string|null): Upload strategy string or null
+- `providerId` (string): Provider instance ID
+
+**Returns**: Strategy string or null
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.provider.upload_strategy', 'my-provider', (strategy, providerId) => {
+    if (providerId.startsWith('my-provider:')) {
+        return 'direct'; // Use direct upload strategy
+    }
+    return strategy; // Use default strategy
+});
+```
+
+---
+
 #### `aether.provider.config.get`
 
 **Type**: Filter
@@ -358,66 +545,418 @@ addAction('aether.storage.config.deleted', 'my-plugin', (providerId) => {
 
 ---
 
+#### `aether.provider.form.before_fields`
+
+**Type**: Action
+**Location**: `assets/src/components/ProviderForm/index.js`
+
+Fires before provider form fields are rendered. Allows adding content before the form fields.
+
+**Parameters**:
+- `hookContext` (Object): Hook context object containing:
+  - `providerId` (string): Provider ID
+  - `values` (Object): Current form values
+  - `handleFieldChange` (Function): Field change handler
+  - `errors` (Object): Validation errors
+  - `saving` (boolean): Whether form is saving
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.provider.form.before_fields', 'my-plugin', (hookContext) => {
+    // Add custom content before form fields
+    console.log('Rendering form for:', hookContext.providerId);
+});
+```
+
+---
+
+#### `aether.provider.form.after_fields`
+
+**Type**: Action
+**Location**: `assets/src/components/ProviderForm/index.js`
+
+Fires after provider form fields are rendered. Allows adding content after the form fields.
+
+**Parameters**:
+- `hookContext` (Object): Hook context object (same as `before_fields`)
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.provider.form.after_fields', 'my-plugin', (hookContext) => {
+    // Add custom content after form fields
+});
+```
+
+---
+
+#### `aether.provider.form.actions`
+
+**Type**: Action
+**Location**: `assets/src/components/ProviderForm/index.js`
+
+Fires in the provider form actions area. Allows adding custom action buttons or controls.
+
+**Parameters**:
+- `hookContext` (Object): Hook context object (same as `before_fields`)
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.provider.form.actions', 'my-plugin', (hookContext) => {
+    // Add custom action buttons
+});
+```
+
+---
+
+#### `aether.provider.panel.before_form`
+
+**Type**: Action
+**Location**: `assets/src/components/ProviderInstancePanel/index.js`
+
+Fires before the provider instance panel form is rendered.
+
+**Parameters**:
+- `hookContext` (Object): Hook context object containing provider instance information
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.provider.panel.before_form', 'my-plugin', (hookContext) => {
+    // Add content before provider panel form
+});
+```
+
+---
+
+#### `aether.provider.panel.after_form`
+
+**Type**: Action
+**Location**: `assets/src/components/ProviderInstancePanel/index.js`
+
+Fires after the provider instance panel form is rendered.
+
+**Parameters**:
+- `hookContext` (Object): Hook context object containing provider instance information
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.provider.panel.after_form', 'my-plugin', (hookContext) => {
+    // Add content after provider panel form
+});
+```
+
+---
+
+#### `aether.admin.provider.settings.saved`
+
+**Type**: Action
+**Location**: `assets/src/hooks/useProviderSettingsForm.js`
+
+Fires after provider settings are successfully saved in the admin interface.
+
+**Parameters**:
+- `providerId` (string): Provider instance ID
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.admin.provider.settings.saved', 'my-plugin', (providerId) => {
+    console.log(`Settings saved for provider: ${providerId}`);
+    // Clear caches, update UI, etc.
+});
+```
+
+---
+
 ### Workflow & Deployment
 
-#### `aether.workflow.step.before`
+#### `aether.publish.workflow.before`
 
 **Type**: Action
-**Location**: `assets/src/publish/workflows/publishWorkflow.js`
+**Location**: `assets/src/publish/executor/StepExecutor.js`
 
-Fires before a workflow step executes.
+Fires before the publish workflow execution begins.
 
 **Parameters**:
-- `stepConfig` (Object): Step configuration
-- `context` (Object): Execution context
+- `executionContext` (Object): Full execution context
+- `steps` (Array): Array of step definitions
 
 **Example**:
 ```javascript
-addAction('aether.workflow.step.before', 'my-plugin', (stepConfig, context) => {
-    console.log(`Starting step: ${stepConfig.id}`);
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.publish.workflow.before', 'my-plugin', (executionContext, steps) => {
+    console.log('Starting publish workflow with', steps.length, 'steps');
 });
 ```
 
 ---
 
-#### `aether.workflow.step.after`
+#### `aether.publish.workflow.after`
 
 **Type**: Action
-**Location**: `assets/src/publish/workflows/publishWorkflow.js`
+**Location**: `assets/src/publish/executor/StepExecutor.js`
 
-Fires after a workflow step completes successfully.
+Fires after the publish workflow completes successfully.
 
 **Parameters**:
-- `stepConfig` (Object): Step configuration
-- `result` (any): Step result
-- `context` (Object): Execution context
+- `state` (Object): Final workflow state
+- `executionContext` (Object): Execution context
 
 **Example**:
 ```javascript
-addAction('aether.workflow.step.after', 'my-plugin', (stepConfig, result, context) => {
-    console.log(`Completed step: ${stepConfig.id}`);
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.publish.workflow.after', 'my-plugin', (state, executionContext) => {
+    console.log('Workflow completed successfully');
 });
 ```
 
 ---
 
-#### `aether.workflow.step.error`
+#### `aether.publish.workflow.error`
 
 **Type**: Action
-**Location**: `assets/src/publish/workflows/publishWorkflow.js`
+**Location**: `assets/src/publish/executor/StepExecutor.js`
 
-Fires when a workflow step fails.
+Fires when the publish workflow encounters an error.
 
 **Parameters**:
-- `stepConfig` (Object): Step configuration
 - `error` (Error): Error object
-- `context` (Object): Execution context
+- `executionContext` (Object): Execution context
 
 **Example**:
 ```javascript
-addAction('aether.workflow.step.error', 'my-plugin', (stepConfig, error, context) => {
-    console.error(`Step ${stepConfig.id} failed:`, error.message);
-    // Send error to analytics, show notification, etc.
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.publish.workflow.error', 'my-plugin', (error, executionContext) => {
+    console.error('Workflow error:', error.message);
+});
+```
+
+---
+
+#### `aether.publish.step.{stepId}.before`
+
+**Type**: Action
+**Location**: `assets/src/publish/executor/StepExecutor.js`
+
+Fires before a specific workflow step executes. Replace `{stepId}` with the actual step ID (e.g., `generateBlueprint`, `uploadStaticSiteFiles`).
+
+**Parameters**:
+- `executionContext` (Object): Execution context
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.publish.step.generateBlueprint.before', 'my-plugin', (executionContext) => {
+    console.log('Starting generateBlueprint step');
+});
+```
+
+---
+
+#### `aether.publish.step.{stepId}.after`
+
+**Type**: Action
+**Location**: `assets/src/publish/executor/StepExecutor.js`
+
+Fires after a specific workflow step completes successfully.
+
+**Parameters**:
+- `result` (Object): Step result
+- `executionContext` (Object): Execution context
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.publish.step.generateBlueprint.after', 'my-plugin', (result, executionContext) => {
+    console.log('Completed generateBlueprint step');
+});
+```
+
+---
+
+#### `aether.publish.step.{stepId}.error`
+
+**Type**: Action
+**Location**: `assets/src/publish/executor/StepExecutor.js`
+
+Fires when a specific workflow step fails.
+
+**Parameters**:
+- `error` (Error): Enhanced error object with category, severity, stepId, etc.
+- `executionContext` (Object): Execution context
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.publish.step.generateBlueprint.error', 'my-plugin', (error, executionContext) => {
+    console.error('Step failed:', error.formattedMessage);
+});
+```
+
+---
+
+#### `aether.publish.step.{stepId}.skip`
+
+**Type**: Filter
+**Location**: `assets/src/publish/executor/StepExecutor.js`
+
+Determines whether a specific workflow step should be skipped.
+
+**Parameters**:
+- `shouldSkip` (boolean): Whether step should be skipped
+- `executionContext` (Object): Execution context
+
+**Returns**: Boolean indicating if step should be skipped
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.publish.step.generateBlueprint.skip', 'my-plugin', (shouldSkip, executionContext) => {
+    // Skip if blueprint already exists
+    if (executionContext.state.blueprintData) {
+        return true;
+    }
+    return shouldSkip;
+});
+```
+
+---
+
+#### `aether.publish.step.{stepId}.skipped`
+
+**Type**: Action
+**Location**: `assets/src/publish/executor/StepExecutor.js`
+
+Fires when a specific workflow step is skipped.
+
+**Parameters**:
+- `executionContext` (Object): Execution context
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.publish.step.generateBlueprint.skipped', 'my-plugin', (executionContext) => {
+    console.log('generateBlueprint step was skipped');
+});
+```
+
+---
+
+#### `aether.publish.step.{stepId}.retry`
+
+**Type**: Action
+**Location**: `assets/src/publish/executor/StepExecutor.js`
+
+Fires when a specific workflow step retries after an error.
+
+**Parameters**:
+- `error` (Error): Error that triggered retry
+- `attempt` (number): Retry attempt number
+- `delay` (number): Delay in milliseconds before retry
+- `executionContext` (Object): Execution context
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.publish.step.generateBlueprint.retry', 'my-plugin', (error, attempt, delay, executionContext) => {
+    console.log(`Retrying step (attempt ${attempt}) after ${delay}ms`);
+});
+```
+
+---
+
+#### `aether.publish.step.{stepId}.result`
+
+**Type**: Filter
+**Location**: `assets/src/publish/executor/StepExecutor.js`
+
+Filters the result of a specific workflow step before it's merged into the workflow state.
+
+**Parameters**:
+- `result` (Object): Step result
+- `executionContext` (Object): Execution context
+
+**Returns**: Modified result object
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.publish.step.generateBlueprint.result', 'my-plugin', (result, executionContext) => {
+    return {
+        ...result,
+        customMetadata: 'added by plugin'
+    };
+});
+```
+
+---
+
+#### `aether.publish.step.generateBlueprint.data`
+
+**Type**: Filter
+**Location**: `assets/src/publish/steps/generateBlueprint/index.js`
+
+Filters blueprint data before the blueprint bundle is created.
+
+**Parameters**:
+- `blueprintData` (Object): Blueprint JSON object
+- `context` (Object): Execution context
+
+**Returns**: Modified blueprint data
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.publish.step.generateBlueprint.data', 'my-plugin', (blueprintData, context) => {
+    // Add custom metadata
+    blueprintData.description = 'My custom blueprint';
+    return blueprintData;
+});
+```
+
+---
+
+#### `aether.publish.step.createBlueprintBundle.files`
+
+**Type**: Filter
+**Location**: `assets/src/publish/steps/createBlueprintBundle/index.js`
+
+Filters the list of files to include in the blueprint bundle.
+
+**Parameters**:
+- `files` (Array): Array of file paths/assets
+- `context` (Object): Execution context
+
+**Returns**: Modified files array
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.publish.step.createBlueprintBundle.files', 'my-plugin', (files, context) => {
+    // Exclude specific files
+    return files.filter(file => !file.includes('exclude-me'));
 });
 ```
 
@@ -443,6 +982,136 @@ addFilter('aether.deployment.url', 'my-plugin', (url, result, provider) => {
         return `${url}?utm_source=aether&utm_medium=deploy`;
     }
     return url;
+});
+```
+
+---
+
+### File Upload System
+
+#### `aether.file.upload`
+
+**Type**: Action
+**Location**: `assets/src/publish/utils/unifiedFileUpload.js`
+
+Unified action for all file uploads (blueprint bundles, static HTML, static assets). Providers should hook into this action to handle uploads.
+
+**Parameters**:
+- `fileContext` (Object): File context object containing:
+  - `fileType` (string): File type (blueprint-bundle, static-html, static-asset)
+  - `filePath` (string): File path or URL
+  - `fileContent` (Blob|string): File content
+  - `contentType` (string): MIME type
+  - `storageKey` (string): Storage key/path
+  - `providerId` (string): Provider instance ID
+  - `metadata` (Object): Additional metadata (siteUrl, staticSiteUrl, etc.)
+  - `_uploadPromises` (Array): Array for handlers to register promises
+
+**Note**: Handlers should set `fileContext.result = { success: true/false, error?: string }` to communicate the upload result.
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.file.upload', 'my-provider', async (fileContext) => {
+    if (!fileContext.providerId.startsWith('my-provider:')) {
+        return; // Not for this provider
+    }
+
+    // Register upload promise
+    if (!fileContext._uploadPromises) {
+        fileContext._uploadPromises = [];
+    }
+
+    const uploadPromise = uploadToMyProvider(fileContext);
+    fileContext._uploadPromises.push(uploadPromise);
+
+    try {
+        const result = await uploadPromise;
+        fileContext.result = { success: true, url: result.url };
+    } catch (error) {
+        fileContext.result = { success: false, error: error.message };
+    }
+});
+```
+
+---
+
+#### `aether.file.upload.context`
+
+**Type**: Filter
+**Location**: `assets/src/publish/utils/unifiedFileUpload.js`
+
+Filters the file context before the upload action is fired. Allows modifying the context or file content before upload.
+
+**Parameters**:
+- `fileContext` (Object): File context object
+- `providerId` (string): Provider instance ID
+
+**Returns**: Modified file context
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.file.upload.context', 'my-plugin', (fileContext, providerId) => {
+    // Add custom metadata
+    fileContext.metadata.customField = 'value';
+    return fileContext;
+});
+```
+
+---
+
+#### `aether.upload.urls`
+
+**Type**: Filter
+**Location**: `assets/src/publish/steps/uploadStaticFiles/index.js`
+
+Filters the URLs array before static site upload processing begins.
+
+**Parameters**:
+- `urls` (Array): Array of URL objects to process
+- `providers` (Array): Array of provider IDs
+- `context` (Object): Enhanced context with siteUrl, blueprintData, staticSiteUrl, providers
+
+**Returns**: Modified URLs array
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.upload.urls', 'my-plugin', (urls, providers, context) => {
+    // Add custom URL
+    return [...urls, { url: '/custom-page/', type: 'page' }];
+});
+```
+
+---
+
+#### `aether.upload.result`
+
+**Type**: Filter
+**Location**: `assets/src/publish/steps/uploadStaticFiles/index.js`
+
+Filters the final upload result before it's returned from the upload step.
+
+**Parameters**:
+- `result` (Object): Aggregated upload result
+- `providers` (Array): Array of provider IDs
+- `context` (Object): Enhanced context
+
+**Returns**: Modified result object
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.upload.result', 'my-plugin', (result, providers, context) => {
+    return {
+        ...result,
+        customMetadata: 'added by plugin'
+    };
 });
 ```
 
@@ -625,6 +1294,152 @@ Filters HTML after URL rewriting.
 addFilter('aether.url.rewrite_html', 'my-plugin', (html, contextUrl, siteUrl, staticUrl) => {
     // Add custom meta tags
     return html.replace('</head>', '<meta name="generator" content="Aether"></head>');
+});
+```
+
+---
+
+### Storage Service
+
+#### `aether.storage.service.config`
+
+**Type**: Filter
+**Location**: `assets/src/publish/utils/staticSiteConfig.js`
+
+Filters the storage service configuration before the service is created.
+
+**Parameters**:
+- `config` (Object): Storage service configuration
+- `staticPath` (string): Static files path
+- `providerId` (string): Provider ID
+- `providerConfig` (Object): Provider configuration
+
+**Returns**: Modified configuration object
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.storage.service.config', 'my-plugin', (config, staticPath, providerId, providerConfig) => {
+    return {
+        ...config,
+        customOption: 'value'
+    };
+});
+```
+
+---
+
+#### `aether.storage.service.create`
+
+**Type**: Filter
+**Location**: `assets/src/publish/utils/staticSiteConfig.js`
+
+Filters the storage service instance creation. Allows providing a custom storage service implementation.
+
+**Parameters**:
+- `storageService` (Object|null): Storage service instance or null
+- `staticPath` (string): Static files path
+- `config` (Object): Storage service configuration
+- `providerId` (string): Provider ID
+
+**Returns**: StorageService instance or null to use default
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.storage.service.create', 'my-plugin', (service, staticPath, config, providerId) => {
+    if (providerId === 'my-provider') {
+        return new CustomStorageService(staticPath, config);
+    }
+    return service; // Use default
+});
+```
+
+---
+
+### Manifest System
+
+#### `aether.manifest.fetch`
+
+**Type**: Filter
+**Location**: `assets/src/publish/hooks/useStaticSiteGenerator.js`
+
+Filters manifest fetching. Allows providing a custom manifest or modifying the fetch behavior.
+
+**Parameters**:
+- `manifest` (Object|null): Manifest object or null to fetch from storage
+- `storageService` (Object): Storage service instance
+- `providerId` (string): Provider ID
+
+**Returns**: Manifest object or null to use default fetching
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.manifest.fetch', 'my-plugin', (manifest, storageService, providerId) => {
+    // Return custom manifest or null to use default fetching
+    if (providerId === 'my-provider') {
+        return { custom: 'manifest' };
+    }
+    return manifest; // Use default
+});
+```
+
+---
+
+#### `aether.manifest.update`
+
+**Type**: Filter
+**Location**: `assets/src/publish/hooks/useStaticSiteGenerator.js`
+
+Filters manifest updates after a file is uploaded.
+
+**Parameters**:
+- `manifest` (Object): Manifest object
+- `storageKey` (string): Storage key that was updated
+- `providerId` (string): Provider ID
+
+**Returns**: Modified manifest object
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.manifest.update', 'my-plugin', (manifest, storageKey, providerId) => {
+    // Add custom metadata to manifest entry
+    if (manifest[storageKey]) {
+        manifest[storageKey].customMetadata = 'value';
+    }
+    return manifest;
+});
+```
+
+---
+
+#### `aether.manifest.cleanup`
+
+**Type**: Filter
+**Location**: `assets/src/publish/hooks/useStaticSiteGenerator.js`
+
+Filters manifest cleanup before final manifest upload. Allows keeping additional entries or modifying cleanup behavior.
+
+**Parameters**:
+- `manifest` (Object): Cleaned manifest object
+- `currentFileKeys` (Set): Set of current file keys
+- `providerId` (string): Provider ID
+
+**Returns**: Modified manifest object
+
+**Example**:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.manifest.cleanup', 'my-plugin', (manifest, currentFileKeys, providerId) => {
+    // Keep additional entries
+    return { ...manifest, 'custom-file.html': { size: 100, hash: 'abc' } };
 });
 ```
 
