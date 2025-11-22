@@ -208,9 +208,9 @@ class JobStateManagementTest extends TestCase {
 	// ========================================================================
 
 	/**
-	 * Test publish can find enabled provider instance.
+	 * Test export can find enabled provider instance.
 	 */
-	public function test_publish_finds_enabled_provider() {
+	public function test_export_finds_enabled_provider() {
 		// Set up enabled provider.
 		$settings = [
 			'providers' => [
@@ -234,9 +234,9 @@ class JobStateManagementTest extends TestCase {
 	}
 
 	/**
-	 * Test publish handles missing provider gracefully.
+	 * Test export handles missing provider gracefully.
 	 */
-	public function test_publish_handles_missing_provider() {
+	public function test_export_handles_missing_provider() {
 		// Clear all provider configs.
 		update_option( 'aether_site_exporter_settings', [] );
 
@@ -248,9 +248,9 @@ class JobStateManagementTest extends TestCase {
 	}
 
 	/**
-	 * Test publish validates deployment type.
+	 * Test export validates deployment type.
 	 */
-	public function test_publish_validates_deployment_type() {
+	public function test_export_validates_deployment_type() {
 		$settings = [
 			'providers' => [
 				'local-filesystem:test-uuid' => [
