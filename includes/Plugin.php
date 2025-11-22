@@ -119,9 +119,8 @@ class Plugin
 		// Fix PHP 8.1+ deprecation: ensure admin page titles are never null.
 		\add_filter('admin_title', [ $this, 'ensureAdminTitleIsString' ], 1, 2);
 
-		// Always enqueue admin-common to ensure global variables are available
+		// Enqueue admin-common only on Aether admin pages
 		\add_action('admin_enqueue_scripts', [ $this, 'enqueueAdminCommon' ]);
-		\add_action('wp_enqueue_scripts', [ $this, 'enqueueAdminCommon' ]);
 
 		// Add filter to add data-provider-id attribute to provider script tags
 		\add_filter('script_loader_tag', [ $this, 'addProviderScriptAttribute' ], 10, 2);
@@ -210,12 +209,16 @@ class Plugin
 		$restUrl = \rest_url('aether/site-exporter/');
 		$nonce   = \wp_create_nonce('wp_rest');
 		$pluginUrl = (string) AETHER_SITE_EXPORTER_PLUGIN_URL;
+		$publicUrl = \home_url();
+		$adminUrl = \admin_url();
 
 		$script = \sprintf(
-			'window.aetherData = window.aetherData || {}; window.aetherData.restUrl = %s; window.aetherData.nonce = %s; window.aetherData.pluginUrl = %s;',
+			'window.aetherData = window.aetherData || {}; window.aetherData.restUrl = %s; window.aetherData.nonce = %s; window.aetherData.pluginUrl = %s; window.aetherData.publicUrl = %s; window.aetherData.adminUrl = %s;',
 			\wp_json_encode($restUrl),
 			\wp_json_encode($nonce),
-			\wp_json_encode($pluginUrl)
+			\wp_json_encode($pluginUrl),
+			\wp_json_encode($publicUrl),
+			\wp_json_encode($adminUrl)
 		);
 
 		\wp_add_inline_script($scriptHandle, $script, 'before');
@@ -247,11 +250,17 @@ class Plugin
 	 * Enqueue admin common script with global variables.
 	 *
 	 * Ensures global variables are always available for JavaScript.
+	 * Only enqueues on Aether admin pages.
 	 *
 	 * @return void
 	 */
 	public function enqueueAdminCommon(): void
 	{
+		// Only enqueue on Aether admin pages
+		if (! $this->isAetherAdminPage()) {
+			return;
+		}
+
 		// Only enqueue if not already enqueued
 		if (\wp_script_is('aether-admin-common', 'enqueued')) {
 			return;
@@ -287,6 +296,34 @@ class Plugin
 
 		// Add REST API configuration data (admin-common exports api.js which needs this)
 		$this->addAPIConfigScript('aether-admin-common');
+	}
+
+	/**
+	 * Check if current page is an Aether admin page.
+	 *
+	 * @return bool True if on an Aether admin page, false otherwise.
+	 */
+	private function isAetherAdminPage(): bool
+	{
+		// Must be in admin area
+		if (! \is_admin()) {
+			return false;
+		}
+
+		// Check if we have a page parameter
+		if (! isset($_GET['page'])) { // phpcs:ignore WordPress.Security.NonceVerification
+			return false;
+		}
+
+		$currentPage = \sanitize_text_field(\wp_unslash($_GET['page'])); // phpcs:ignore WordPress.Security.NonceVerification
+
+		// List of known Aether admin page slugs
+		$aetherPages = [
+			'aether',
+			'aether-publish',
+		];
+
+		return \in_array($currentPage, $aetherPages, true);
 	}
 
 	/**
@@ -360,7 +397,6 @@ class Plugin
 	 * Register REST API routes.
 	 *
 	 * Delegates to dedicated REST controller classes for better separation of concerns.
-	 *
 	 * @return void
 	 */
 	public function registerRestRoutes(): void

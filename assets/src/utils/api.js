@@ -102,7 +102,6 @@ const CACHE_CONFIG = {
 	endpointTTLs: {
 		'/assets': 10 * 60 * 1000, // 10 minutes - asset lists change infrequently
 		'/settings': 1 * 60 * 1000, // 1 minute - settings may change
-		'/config': 30 * 60 * 1000, // 30 minutes - static configuration
 	},
 	// Set to true to bypass cache (useful for development/testing)
 	bypassCache: false,

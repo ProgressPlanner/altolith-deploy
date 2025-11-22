@@ -55,51 +55,25 @@ class AssetsController
 	}
 
 	/**
-	 * Get installed plugins and themes with pagination.
+	 * Get installed plugins and themes.
 	 *
-	 * Returns installed plugins and themes with metadata, paginated for performance.
+	 * Returns all installed plugins and themes with metadata.
 	 * The JavaScript code will determine which are from WordPress.org.
 	 *
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response Response with plugins and themes arrays.
 	 */
-	public function getAssets(WP_REST_Request $request)
+	public function getAssets(WP_REST_Request $request) // phpcs:ignore VariableAnalysis
 	{
 		try {
-			// Get pagination parameters
-			$page = \absint($request->get_param('page') ?? 1);
-			$perPage = \absint($request->get_param('per_page') ?? 50);
-
-			// Validate and cap per_page to prevent memory issues
-			$perPage = \min(\max($perPage, 1), 100); // Min 1, max 100
-			$page = \max($page, 1); // Min 1
-
-			$allPlugins = $this->assetDiscoveryService->getInstalledPlugins();
-			$allThemes  = $this->assetDiscoveryService->getInstalledThemes();
-
-			// Calculate pagination for plugins
-			$totalPlugins = \count($allPlugins);
-			$pluginOffset = ($page - 1) * $perPage;
-			$plugins = \array_slice($allPlugins, $pluginOffset, $perPage);
-
-			// Calculate pagination for themes (use same page/per_page)
-			$totalThemes = \count($allThemes);
-			$themeOffset = ($page - 1) * $perPage;
-			$themes = \array_slice($allThemes, $themeOffset, $perPage);
+			$plugins = $this->assetDiscoveryService->getInstalledPlugins();
+			$themes  = $this->assetDiscoveryService->getInstalledThemes();
 
 			return new WP_REST_Response(
 				[
 					'success' => true,
 					'plugins' => $plugins,
 					'themes'  => $themes,
-					'pagination' => [
-						'page' => $page,
-						'per_page' => $perPage,
-						'total_plugins' => $totalPlugins,
-						'total_themes' => $totalThemes,
-						'total_pages_plugins' => \ceil($totalPlugins / $perPage),
-						'total_pages_themes' => \ceil($totalThemes / $perPage),
-					],
 				],
 				200
 			);

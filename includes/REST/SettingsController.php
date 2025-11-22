@@ -94,17 +94,6 @@ class SettingsController
 			]
 		);
 
-		// Get i18n strings.
-		\register_rest_route(
-			$this->getNamespace(),
-			'/i18n',
-			[
-				'methods'             => 'GET',
-				'callback'            => [ $this, 'getI18n' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
-			]
-		);
-
 		// Create provider instance.
 		\register_rest_route(
 			$this->getNamespace(),
@@ -607,38 +596,6 @@ class SettingsController
 			[
 				'success' => true,
 				'message' => \__('Notice dismissed successfully.', 'aether-site-exporter'),
-			],
-			200
-		);
-	}
-
-	/**
-	 * Get i18n strings.
-	 *
-	 * Returns translation strings for the client.
-	 *
-	 * @param \WP_REST_Request<array<string, mixed>> $_request Request object (unused, required by REST API interface).
-	 * @return WP_REST_Response Response with i18n strings.
-	 */
-	public function getI18n(\WP_REST_Request $_request) // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-	{
-
-		// Return common i18n strings.
-		$i18n = [
-			'confirm'    => \__('Are you sure?', 'aether-site-exporter'),
-			'error'      => \__('An error occurred.', 'aether-site-exporter'),
-			'success'    => \__('Operation completed successfully.', 'aether-site-exporter'),
-			'processing' => \__('Processing...', 'aether-site-exporter'),
-			'saving'     => \__('Saving...', 'aether-site-exporter'),
-			'loading'    => \__('Loading...', 'aether-site-exporter'),
-			'delete'     => \__('Delete', 'aether-site-exporter'),
-			'cancel'     => \__('Cancel', 'aether-site-exporter'),
-		];
-
-		return new WP_REST_Response(
-			[
-				'success' => true,
-				'i18n'    => $i18n,
 			],
 			200
 		);
