@@ -109,13 +109,17 @@ async function handler( context ) {
 	);
 
 	// Return data to merge into execution state
+	// This will be cached globally and shared across all providers
 	return {
+		success: true,
 		blueprintData: filteredBlueprint,
 		blueprintBundle: {
 			bundlePath,
 			bundleUrl,
 			bundleSize,
 		},
+		// Also expose bundlePath at top level for easier access
+		bundlePath,
 	};
 }
 

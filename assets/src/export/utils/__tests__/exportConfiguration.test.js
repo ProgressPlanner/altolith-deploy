@@ -392,12 +392,22 @@ describe( 'exportConfiguration', () => {
 
 			const result = buildWorkflowContext( config, dependencies );
 
-			expect( result ).toEqual( {
+			// New fields: providerIds and jobId are added
+			// providerIds combines all provider arrays
+			expect( result.providerIds ).toEqual( [
+				'cloudflare:1',
+				'cloudflare:2',
+				'local-filesystem:123',
+			] );
+			expect( result.jobId ).toMatch( /^export-job-\d+-[a-z0-9]+$/ );
+
+			// Check all other expected fields
+			expect( result ).toMatchObject( {
 				// API and state
 				api: mockApi,
 				siteUrl: 'https://example.com',
 
-				// Provider arrays
+				// Provider arrays (kept for backward compatibility)
 				staticSiteProviders: [ 'cloudflare:1', 'cloudflare:2' ],
 				blueprintBundleProviders: [ 'local-filesystem:123' ],
 				edgeFunctionProviders: [],
