@@ -5,7 +5,6 @@
  * for upload optimization. The manifest is stored remotely at
  * file-manifest.json in each provider's storage location.
  *
- * @package
  */
 
 import { debug, debugWarn } from './debug';

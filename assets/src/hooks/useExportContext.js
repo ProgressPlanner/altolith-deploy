@@ -4,7 +4,6 @@
  * Hook to consume the ExportContext.
  * Provides access to global export workflow state and operations.
  *
- * @package
  */
 
 import { useContext } from '@wordpress/element';

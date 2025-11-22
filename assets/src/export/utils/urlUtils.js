@@ -3,7 +3,6 @@
  *
  * Pure functions for URL parsing, resolution, and normalization.
  *
- * @package
  */
 
 import { applyFilters } from '@wordpress/hooks';

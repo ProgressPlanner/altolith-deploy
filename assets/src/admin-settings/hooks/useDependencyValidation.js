@@ -4,7 +4,6 @@
  * Monitors provider dependencies and automatically disables providers
  * when their dependencies become unsatisfied.
  *
- * @package
  */
 
 import { useEffect, useRef } from '@wordpress/element';

@@ -4,7 +4,6 @@
  * React hook for managing provider configuration.
  * Handles loading, saving, validating, and deleting provider configs.
  *
- * @package
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';

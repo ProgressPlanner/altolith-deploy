@@ -3,7 +3,6 @@
  *
  * Pure functions for formatting job-related data.
  *
- * @package
  */
 
 import { __ } from '@wordpress/i18n';

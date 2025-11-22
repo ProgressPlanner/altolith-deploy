@@ -11,7 +11,6 @@
  * - Stores zip path, phase status, and overall progress
  * - Works in WordPress Playground WASM environment
  *
- * @package
  */
 
 import IndexedDBStore from './indexedDB';

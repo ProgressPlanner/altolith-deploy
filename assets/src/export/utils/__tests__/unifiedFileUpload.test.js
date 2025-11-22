@@ -3,7 +3,6 @@
  *
  * Tests for unified file upload system and provider hook integration.
  *
- * @package
  */
 
 import {

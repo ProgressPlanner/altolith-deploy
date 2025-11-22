@@ -3,7 +3,6 @@
  *
  * Tracks uploaded assets to prevent duplicate uploads.
  *
- * @package
  */
 
 /**

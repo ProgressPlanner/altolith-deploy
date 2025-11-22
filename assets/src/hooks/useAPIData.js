@@ -4,7 +4,6 @@
  * Generic hook for fetching data from API endpoints with caching and error handling.
  * Provides a reusable pattern for all data fetching operations.
  *
- * @package
  */
 
 import { useState, useEffect, useCallback, useRef } from '@wordpress/element';

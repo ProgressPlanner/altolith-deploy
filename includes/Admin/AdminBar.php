@@ -106,7 +106,8 @@ class AdminBar
 			AETHER_SITE_EXPORTER_PLUGIN_FILE,
 			[ 'Version' => 'Version' ]
 		);
-		$version = $pluginData['Version'] ?? \filemtime($scriptUrl);
+		$fileTime = \filemtime($scriptUrl);
+		$version = $pluginData['Version'] ?? ( $fileTime !== false ? (string) $fileTime : false );
 
 		\wp_enqueue_script(
 			'aether-admin-bar-export',

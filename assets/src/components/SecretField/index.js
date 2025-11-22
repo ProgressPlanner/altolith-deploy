@@ -3,7 +3,6 @@
  *
  * Replaces the aether-secret web component with a React component.
  *
- * @package
  */
 
 import { useState } from '@wordpress/element';

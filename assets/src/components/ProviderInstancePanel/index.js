@@ -5,7 +5,6 @@
  * Each provider instance is displayed as a collapsible panel with basic info in the header
  * and settings form (deployment types and provider settings) in the body.
  *
- * @package
  */
 
 import {

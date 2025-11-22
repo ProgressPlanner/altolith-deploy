@@ -3,7 +3,6 @@
  *
  * Centralized constants to avoid magic numbers and strings throughout the codebase.
  *
- * @package
  */
 
 /**

@@ -8,7 +8,6 @@
  * - External vs internal URLs
  * - Offloaded assets (CF Images)
  *
- * @package
  */
 
 import { extractAssetsFromHtml } from '../assetExtractor';

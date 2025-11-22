@@ -4,7 +4,6 @@
  * Comprehensive test suite for provider configuration validation utilities.
  * Tests field validation, required fields, patterns, lengths, and custom validators.
  *
- * @package Aether\SiteExporter\Tests
  */
 
 import {
@@ -123,7 +122,11 @@ describe( 'configValidation', () => {
 				},
 			};
 
-			const error = await validateFieldValue( 'invalid-email', field, {} );
+			const error = await validateFieldValue(
+				'invalid-email',
+				field,
+				{}
+			);
 
 			expect( error ).toBe( 'Email format is invalid.' );
 		} );
@@ -138,7 +141,11 @@ describe( 'configValidation', () => {
 				},
 			};
 
-			const error = await validateFieldValue( 'ftp://example.com', field, {} );
+			const error = await validateFieldValue(
+				'ftp://example.com',
+				field,
+				{}
+			);
 
 			expect( error ).toBe( 'Must be a valid HTTP or HTTPS URL' );
 		} );
@@ -200,7 +207,9 @@ describe( 'configValidation', () => {
 				{}
 			);
 
-			expect( error ).toBe( 'Username must be no more than 20 characters.' );
+			expect( error ).toBe(
+				'Username must be no more than 20 characters.'
+			);
 		} );
 
 		it( 'should call custom validator callback', async () => {

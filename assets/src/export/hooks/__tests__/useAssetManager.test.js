@@ -9,7 +9,6 @@
  * - Must test service integration
  * - Must fail if implementation loses state or corrupts data
  *
- * @package Aether\SiteExporter\Tests
  */
 
 import { renderHook, act } from '@testing-library/react';
@@ -56,7 +55,11 @@ describe( 'useAssetManager', () => {
 	describe( 'initialization and persistence', () => {
 		it( 'should load assets from storage on mount', () => {
 			const initialAssets = {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
 			};
 
 			mockService.load.mockReturnValue( initialAssets );
@@ -78,7 +81,11 @@ describe( 'useAssetManager', () => {
 		it( 'should save assets to storage when they change', () => {
 			mockService.load.mockReturnValue( {} );
 			mockService.markAsChanged.mockReturnValue( {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
 			} );
 
 			const { result } = renderHook( () => useAssetManager() );
@@ -102,7 +109,9 @@ describe( 'useAssetManager', () => {
 			rerender();
 
 			// Service should not be recreated
-			expect( AssetManagerService.mock.calls.length ).toBe( initialCallCount );
+			expect( AssetManagerService.mock.calls.length ).toBe(
+				initialCallCount
+			);
 		} );
 	} );
 
@@ -110,7 +119,11 @@ describe( 'useAssetManager', () => {
 		it( 'should mark asset as changed', () => {
 			mockService.load.mockReturnValue( {} );
 			mockService.markAsChanged.mockReturnValue( {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
 			} );
 
 			const { result } = renderHook( () => useAssetManager() );
@@ -126,7 +139,11 @@ describe( 'useAssetManager', () => {
 			);
 
 			expect( result.current.assets ).toEqual( {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
 			} );
 		} );
 
@@ -147,11 +164,23 @@ describe( 'useAssetManager', () => {
 
 			mockService.markAsChanged
 				.mockReturnValueOnce( {
-					'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+					'plugin-1': {
+						type: 'plugin',
+						slug: 'plugin-1',
+						needsUpload: true,
+					},
 				} )
 				.mockReturnValueOnce( {
-					'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
-					'theme-1': { type: 'theme', slug: 'theme-1', needsUpload: true },
+					'plugin-1': {
+						type: 'plugin',
+						slug: 'plugin-1',
+						needsUpload: true,
+					},
+					'theme-1': {
+						type: 'theme',
+						slug: 'theme-1',
+						needsUpload: true,
+					},
 				} );
 
 			const { result } = renderHook( () => useAssetManager() );
@@ -165,8 +194,16 @@ describe( 'useAssetManager', () => {
 			} );
 
 			expect( result.current.assets ).toEqual( {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
-				'theme-1': { type: 'theme', slug: 'theme-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
+				'theme-1': {
+					type: 'theme',
+					slug: 'theme-1',
+					needsUpload: true,
+				},
 			} );
 		} );
 	} );
@@ -174,7 +211,11 @@ describe( 'useAssetManager', () => {
 	describe( 'updateFromServer', () => {
 		it( 'should update asset with server data', () => {
 			const initialAssets = {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
 			};
 
 			mockService.load.mockReturnValue( initialAssets );
@@ -232,7 +273,11 @@ describe( 'useAssetManager', () => {
 	describe( 'syncWithServer', () => {
 		it( 'should sync multiple assets from server', () => {
 			const initialAssets = {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
 			};
 
 			mockService.load.mockReturnValue( initialAssets );
@@ -270,10 +315,18 @@ describe( 'useAssetManager', () => {
 
 		it( 'should handle empty server assets array', () => {
 			mockService.load.mockReturnValue( {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
 			} );
 			mockService.syncWithServer.mockReturnValue( {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
 			} );
 
 			const { result } = renderHook( () => useAssetManager() );
@@ -290,7 +343,11 @@ describe( 'useAssetManager', () => {
 
 		it( 'should preserve needsUpload for locally changed assets', () => {
 			const assetsWithLocalChanges = {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
 			};
 
 			mockService.load.mockReturnValue( assetsWithLocalChanges );
@@ -312,16 +369,30 @@ describe( 'useAssetManager', () => {
 			} );
 
 			// Should preserve needsUpload=true despite server saying exists_on_r2=true
-			expect( result.current.assets[ 'plugin-1' ].needsUpload ).toBe( true );
+			expect( result.current.assets[ 'plugin-1' ].needsUpload ).toBe(
+				true
+			);
 		} );
 	} );
 
 	describe( 'getChangedAssets', () => {
 		it( 'should return assets that need upload', () => {
 			const assetsWithChanges = {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
-				'plugin-2': { type: 'plugin', slug: 'plugin-2', needsUpload: false },
-				'theme-1': { type: 'theme', slug: 'theme-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
+				'plugin-2': {
+					type: 'plugin',
+					slug: 'plugin-2',
+					needsUpload: false,
+				},
+				'theme-1': {
+					type: 'theme',
+					slug: 'theme-1',
+					needsUpload: true,
+				},
 			};
 
 			mockService.load.mockReturnValue( assetsWithChanges );
@@ -335,7 +406,11 @@ describe( 'useAssetManager', () => {
 
 		it( 'should return empty array when no assets need upload', () => {
 			mockService.load.mockReturnValue( {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: false },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: false,
+				},
 			} );
 
 			const { result } = renderHook( () => useAssetManager() );
@@ -358,7 +433,11 @@ describe( 'useAssetManager', () => {
 		it( 'should update when assets change', () => {
 			mockService.load.mockReturnValue( {} );
 			mockService.markAsChanged.mockReturnValue( {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
 			} );
 
 			const { result } = renderHook( () => useAssetManager() );
@@ -372,15 +451,25 @@ describe( 'useAssetManager', () => {
 			} );
 
 			// Should now return changed asset
-			expect( result.current.getChangedAssets() ).toEqual( [ 'plugin:plugin-1' ] );
+			expect( result.current.getChangedAssets() ).toEqual( [
+				'plugin:plugin-1',
+			] );
 		} );
 	} );
 
 	describe( 'clearUploadFlags', () => {
 		it( 'should clear upload flags for all assets', () => {
 			const assetsWithFlags = {
-				'plugin-1': { type: 'plugin', slug: 'plugin-1', needsUpload: true },
-				'theme-1': { type: 'theme', slug: 'theme-1', needsUpload: true },
+				'plugin-1': {
+					type: 'plugin',
+					slug: 'plugin-1',
+					needsUpload: true,
+				},
+				'theme-1': {
+					type: 'theme',
+					slug: 'theme-1',
+					needsUpload: true,
+				},
 			};
 
 			mockService.load.mockReturnValue( assetsWithFlags );
@@ -452,13 +541,20 @@ describe( 'useAssetManager', () => {
 			mockService.load.mockReturnValue( {} );
 
 			let counter = 0;
-			mockService.markAsChanged.mockImplementation( ( prev, type, slug ) => {
-				counter++;
-				return {
-					...prev,
-					[ slug ]: { type, slug, needsUpload: true, order: counter },
-				};
-			} );
+			mockService.markAsChanged.mockImplementation(
+				( prev, type, slug ) => {
+					counter++;
+					return {
+						...prev,
+						[ slug ]: {
+							type,
+							slug,
+							needsUpload: true,
+							order: counter,
+						},
+					};
+				}
+			);
 
 			const { result } = renderHook( () => useAssetManager() );
 
@@ -489,11 +585,21 @@ describe( 'useAssetManager', () => {
 
 			rerender();
 
-			expect( result.current.markAsChanged ).toBe( callbacks.markAsChanged );
-			expect( result.current.updateFromServer ).toBe( callbacks.updateFromServer );
-			expect( result.current.syncWithServer ).toBe( callbacks.syncWithServer );
-			expect( result.current.getChangedAssets ).toBe( callbacks.getChangedAssets );
-			expect( result.current.clearUploadFlags ).toBe( callbacks.clearUploadFlags );
+			expect( result.current.markAsChanged ).toBe(
+				callbacks.markAsChanged
+			);
+			expect( result.current.updateFromServer ).toBe(
+				callbacks.updateFromServer
+			);
+			expect( result.current.syncWithServer ).toBe(
+				callbacks.syncWithServer
+			);
+			expect( result.current.getChangedAssets ).toBe(
+				callbacks.getChangedAssets
+			);
+			expect( result.current.clearUploadFlags ).toBe(
+				callbacks.clearUploadFlags
+			);
 		} );
 	} );
 } );

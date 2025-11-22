@@ -4,7 +4,6 @@
  * Provider for local file storage without cloud deployment.
  * Stores exported sites locally in the WordPress uploads directory.
  *
- * @package
  */
 
 import { __ } from '@wordpress/i18n';

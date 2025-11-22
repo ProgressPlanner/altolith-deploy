@@ -3,7 +3,6 @@
  *
  * Tests for preScanStaticSite step - asset discovery and HTML fetching.
  *
- * @package Aether\SiteExporter\Tests
  */
 
 describe( 'preScanStaticSite', () => {

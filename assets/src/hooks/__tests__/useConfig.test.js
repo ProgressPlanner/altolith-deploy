@@ -1,7 +1,6 @@
 /**
  * useConfig Hook Tests
  *
- * @package
  */
 
 import { renderHook } from '@testing-library/react';

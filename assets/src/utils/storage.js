@@ -7,7 +7,6 @@
  * - Consistent API that can be easily mocked in tests
  * - Support for default values
  *
- * @package
  */
 
 /**

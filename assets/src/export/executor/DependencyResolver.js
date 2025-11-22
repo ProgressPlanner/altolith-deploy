@@ -4,7 +4,6 @@
  * Resolves step dependencies and builds parallel execution plan.
  * Uses topological sort to determine execution order.
  *
- * @package
  */
 
 /**

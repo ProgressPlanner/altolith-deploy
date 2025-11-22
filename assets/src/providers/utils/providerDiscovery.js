@@ -4,7 +4,6 @@
  * Helper functions for discovering and working with providers.
  * Now uses JavaScript ProviderRegistry instead of REST API.
  *
- * @package
  */
 
 import { applyFilters } from '@wordpress/hooks';

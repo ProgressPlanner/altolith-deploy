@@ -1,7 +1,6 @@
 /**
  * Asset Filters Tests
  *
- * @package
  */
 
 import { shouldCollectAsset } from '../assetFilters';

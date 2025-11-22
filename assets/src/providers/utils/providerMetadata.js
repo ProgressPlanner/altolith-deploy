@@ -3,7 +3,6 @@
  *
  * Gets provider metadata from JavaScript ProviderRegistry.
  *
- * @package
  */
 
 import ProviderRegistry from '../registry/ProviderRegistry';

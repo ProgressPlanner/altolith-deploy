@@ -4,7 +4,6 @@
  * Tests for asset exclusion configuration and utility functions.
  * These pure functions determine what assets to include/exclude during static site generation.
  *
- * @package
  */
 
 import {

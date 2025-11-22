@@ -1,7 +1,6 @@
 /**
  * getStaticSiteUrls Step Tests
  *
- * @package
  */
 
 import { getStaticSiteUrlsStep } from '../index';

@@ -4,7 +4,6 @@
  * Pure functions for preparing export workflow configuration.
  * These functions are extracted from useExportController for testability.
  *
- * @package
  */
 
 import { debugError } from '@aether/utils/debug';

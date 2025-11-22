@@ -1,7 +1,6 @@
 /**
  * Cache Monitor Tests
  *
- * @package
  */
 
 import { CacheMonitor } from '../cacheMonitor';

@@ -4,7 +4,6 @@
  * Tests for provider metadata retrieval utilities.
  * Validates ProviderRegistry integration.
  *
- * @package
  */
 
 import {

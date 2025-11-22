@@ -3,7 +3,6 @@
  *
  * Tests for progressTracker utility with equal step weights and IndexedDB persistence.
  *
- * @package
  */
 
 import {

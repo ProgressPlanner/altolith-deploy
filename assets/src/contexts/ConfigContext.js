@@ -4,7 +4,6 @@
  * Centralized configuration management using React Context API.
  * Provides global config state from window.aetherData.
  *
- * @package
  */
 
 import {

@@ -5,7 +5,6 @@
  * Tests basic functionality, configuration fields, validation, sanitization,
  * security boundaries, and provider operations.
  *
- * @package Aether\SiteExporter\Tests
  */
 
 import { LocalFilesystemProvider } from '../LocalFilesystemProvider';
@@ -117,7 +116,9 @@ describe( 'LocalFilesystemProvider', () => {
 			);
 
 			expect(
-				exportPathField.validation.pattern.test( 'blueprint-bundle/bundle.zip' )
+				exportPathField.validation.pattern.test(
+					'blueprint-bundle/bundle.zip'
+				)
 			).toBe( true );
 			expect(
 				exportPathField.validation.pattern.test( 'path/file.txt' )

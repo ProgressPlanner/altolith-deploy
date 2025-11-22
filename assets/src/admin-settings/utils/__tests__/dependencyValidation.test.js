@@ -1,7 +1,6 @@
 /**
  * Dependency Validation Tests
  *
- * @package
  */
 
 import {

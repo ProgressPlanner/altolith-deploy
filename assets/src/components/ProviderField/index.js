@@ -3,7 +3,6 @@
  *
  * Dynamically renders a form field based on provider field definition.
  *
- * @package
  */
 
 import {

@@ -4,7 +4,6 @@
  * Tests for exportConfiguration utilities.
  * Validates pure functions for workflow configuration.
  *
- * @package
  */
 
 import {

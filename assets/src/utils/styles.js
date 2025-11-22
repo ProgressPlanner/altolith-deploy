@@ -3,7 +3,6 @@
  *
  * Centralized styles for inline styling across components.
  *
- * @package
  */
 
 export const colors = {

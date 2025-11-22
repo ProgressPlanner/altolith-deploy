@@ -4,7 +4,6 @@
  * Client-side validation utilities for provider configurations.
  * Can be used with zod schemas once zod is installed.
  *
- * @package
  */
 
 /**

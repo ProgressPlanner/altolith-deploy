@@ -4,7 +4,6 @@
  * Creates wp-content.zip containing custom plugins, themes, and uploads.
  * Used for blueprint bundle generation.
  *
- * @package
  */
 
 import { __, sprintf } from '@wordpress/i18n';

@@ -5,7 +5,6 @@
  * Providers are imported directly here rather than via PHP-enqueued scripts
  * to ensure they register before the component queries the provider registry.
  *
- * @package
  */
 
 // Set webpack publicPath before any imports (for asset loading)

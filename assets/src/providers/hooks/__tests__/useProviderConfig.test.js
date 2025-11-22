@@ -3,7 +3,6 @@
  *
  * Comprehensive tests for useProviderConfig, useProviderConfigValue, and useIsProviderConfigured hooks.
  *
- * @package
  */
 
 import { renderHook, waitFor, act } from '@testing-library/react';

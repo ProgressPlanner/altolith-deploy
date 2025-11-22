@@ -4,7 +4,6 @@
  * Displays upload statistics including provider count, files uploaded, and total size.
  * Calculates stats from message history and remains visible throughout export workflow.
  *
- * @package
  */
 
 import { useMemo } from '@wordpress/element';

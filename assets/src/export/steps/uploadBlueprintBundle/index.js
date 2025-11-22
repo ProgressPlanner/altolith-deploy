@@ -3,7 +3,6 @@
  *
  * Uploads blueprint-bundle.zip to configured provider(s).
  *
- * @package
  */
 
 import { __, sprintf, _n } from '@wordpress/i18n';

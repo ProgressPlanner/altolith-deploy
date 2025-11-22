@@ -3,7 +3,6 @@
  *
  * Fetches HTML pages and extracts assets (CSS, JS, images) to add to URL list.
  *
- * @package
  */
 
 import { __, sprintf } from '@wordpress/i18n';

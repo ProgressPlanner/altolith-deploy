@@ -497,7 +497,7 @@ class ProviderConfigController
 	 */
 	private function isValidInstanceId(string $instanceId): bool
 	{
-		if (empty($instanceId) || ! \is_string($instanceId)) {
+		if (empty($instanceId)) {
 			return false;
 		}
 

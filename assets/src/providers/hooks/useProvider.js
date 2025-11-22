@@ -4,7 +4,6 @@
  * React hook for accessing provider instances from the registry.
  * Now uses ProviderContext for centralized state management.
  *
- * @package
  */
 
 import { useProviderContext } from '@aether/hooks/useProviderContext';

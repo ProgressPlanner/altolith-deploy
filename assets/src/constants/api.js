@@ -3,7 +3,6 @@
  *
  * Centralized API endpoints and configuration for WordPress REST API
  *
- * @package
  */
 
 /**

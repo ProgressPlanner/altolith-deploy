@@ -3,7 +3,6 @@
  *
  * Common helper functions used throughout the application.
  *
- * @package
  */
 
 /**

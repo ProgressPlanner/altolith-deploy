@@ -4,7 +4,6 @@
  * Reusable loading indicator with optional message.
  * Wraps WordPress Spinner component with consistent styling and layout.
  *
- * @package
  */
 
 import { Spinner } from '@wordpress/components';

@@ -9,7 +9,6 @@
  * - Persistent caching across sessions
  * - Works reliably in WordPress Playground WASM environment
  *
- * @package
  */
 
 import apiFetch from '@aether/utils/api';

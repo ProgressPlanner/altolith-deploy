@@ -3,7 +3,6 @@
  *
  * Centralized capability names for provider features
  *
- * @package
  */
 
 /**

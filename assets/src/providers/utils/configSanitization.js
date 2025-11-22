@@ -3,7 +3,6 @@
  *
  * Pure functions for sanitizing provider configurations.
  *
- * @package
  */
 
 /**

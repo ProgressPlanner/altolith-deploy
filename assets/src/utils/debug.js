@@ -4,7 +4,6 @@
  * Centralized logging utility for development debugging.
  * Can be enabled/disabled via window.aetherDebug flag.
  *
- * @package
  */
 
 /**

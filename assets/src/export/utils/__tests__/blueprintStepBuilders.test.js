@@ -3,7 +3,6 @@
  *
  * Tests the INTENDED functionality of individual step builders and URL construction.
  *
- * @package
  */
 
 import {

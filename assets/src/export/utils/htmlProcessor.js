@@ -4,7 +4,6 @@
  * Processes HTML for static site generation.
  * Ported from PHP HTMLGeneratorService::processHtml() logic.
  *
- * @package
  */
 
 import { createUrlRewriter, stripPlaygroundScope } from './urlRewriter';

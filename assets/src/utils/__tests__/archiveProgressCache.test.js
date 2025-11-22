@@ -1,7 +1,6 @@
 /**
  * Archive Progress Cache Tests
  *
- * @package
  */
 
 import {

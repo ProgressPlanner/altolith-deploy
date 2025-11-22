@@ -4,7 +4,6 @@
  * Abstraction layer for HTTP requests to enable testing.
  * Provides mockable interface for fetch operations.
  *
- * @package
  */
 
 /**

@@ -1,7 +1,6 @@
 /**
  * createBlueprintBundle Step Tests
  *
- * @package
  */
 
 import { createBlueprintBundleStep } from '../index';

@@ -26,7 +26,7 @@ class AdminBarDependenciesController
 	/**
 	 * Required script handles for export modal.
 	 *
-	 * @var array
+	 * @var array<string>
 	 */
 	private const REQUIRED_SCRIPTS = [
 		'react-jsx-runtime',
@@ -40,7 +40,7 @@ class AdminBarDependenciesController
 	/**
 	 * Required style handles for export modal.
 	 *
-	 * @var array
+	 * @var array<string>
 	 */
 	private const REQUIRED_STYLES = [
 		'wp-components',
@@ -97,7 +97,7 @@ class AdminBarDependenciesController
 	/**
 	 * Get required WordPress scripts data.
 	 *
-	 * @return array Scripts data array.
+	 * @return array<int, array{handle: string, id: string, src: string, version: string|bool, dependencies: array<string>}> Scripts data array.
 	 */
 	private function getScriptsData(): array
 	{
@@ -127,6 +127,11 @@ class AdminBarDependenciesController
 			// Get script source URL.
 			$src = $script->src;
 
+			// If src is false or empty, skip this script.
+			if ($src === false || $src === '') {
+				continue;
+			}
+
 			// If src is relative, make it absolute.
 			if (!\preg_match('|^(https?:)?//|', $src) && !($scripts->content_url && \str_starts_with($src, $scripts->content_url))) {
 				$src = $scripts->base_url . $src;
@@ -140,14 +145,14 @@ class AdminBarDependenciesController
 			// Script ID format: {handle}-js (WordPress standard).
 			$scriptId = $handle . '-js';
 
-			// Get dependencies.
-			$deps = isset($script->deps) ? $script->deps : [];
+			// Get dependencies - deps is always an array in _WP_Dependency.
+			$deps = $script->deps;
 
 			$allScripts[$handle] = [
 				'handle'       => $handle,
 				'id'           => $scriptId,
 				'src'          => $src,
-				'version'      => $script->ver ?? '',
+				'version'      => $script->ver !== false ? $script->ver : '',
 				'dependencies' => $deps,
 			];
 
@@ -166,7 +171,7 @@ class AdminBarDependenciesController
 	/**
 	 * Get required WordPress styles data.
 	 *
-	 * @return array Styles data array.
+	 * @return array<int, array{handle: string, id: string, src: string, version: string|bool, dependencies: array<string>}> Styles data array.
 	 */
 	private function getStylesData(): array
 	{
@@ -196,6 +201,11 @@ class AdminBarDependenciesController
 			// Get style source URL.
 			$src = $style->src;
 
+			// If src is false or empty, skip this style.
+			if ($src === false || $src === '') {
+				continue;
+			}
+
 			// If src is relative, make it absolute.
 			if (!\preg_match('|^(https?:)?//|', $src) && !($styles->content_url && \str_starts_with($src, $styles->content_url))) {
 				$src = $styles->base_url . $src;
@@ -209,14 +219,14 @@ class AdminBarDependenciesController
 			// Style ID format: {handle}-css (WordPress standard).
 			$styleId = $handle . '-css';
 
-			// Get dependencies.
-			$deps = isset($style->deps) ? $style->deps : [];
+			// Get dependencies - deps is always an array in _WP_Dependency.
+			$deps = $style->deps;
 
 			$allStyles[$handle] = [
 				'handle'       => $handle,
 				'id'           => $styleId,
 				'src'          => $src,
-				'version'      => $style->ver ?? '',
+				'version'      => $style->ver !== false ? $style->ver : '',
 				'dependencies' => $deps,
 			];
 
@@ -232,5 +242,3 @@ class AdminBarDependenciesController
 		return \array_values($allStyles);
 	}
 }
-
-

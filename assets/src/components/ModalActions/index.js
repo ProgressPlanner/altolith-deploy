@@ -4,7 +4,6 @@
  * Reusable footer actions component for modals.
  * Provides consistent button layout and spacing.
  *
- * @package
  */
 
 import { Button } from '@wordpress/components';

@@ -1,7 +1,6 @@
 /**
  * IndexedDB Tests
  *
- * @package
  */
 
 import {

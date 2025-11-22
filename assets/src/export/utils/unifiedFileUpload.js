@@ -4,7 +4,6 @@
  * Provides a unified action-based system for all file uploads (blueprint bundles,
  * static HTML, static assets, etc.) to storage providers.
  *
- * @package
  */
 
 import { doAction, applyFilters } from '@wordpress/hooks';

@@ -4,7 +4,6 @@
  * Tests for job formatting utilities.
  * These are pure functions for formatting job data.
  *
- * @package
  */
 
 import { formatJobTime, getStatusDisplay } from '../jobFormatters';

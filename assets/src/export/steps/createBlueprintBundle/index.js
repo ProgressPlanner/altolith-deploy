@@ -3,7 +3,6 @@
  *
  * Generates blueprint-bundle.zip containing blueprint.json and wp-content.zip.
  *
- * @package
  */
 
 import { __, sprintf } from '@wordpress/i18n';

@@ -1,7 +1,6 @@
 /**
  * WpOrgCache Tests
  *
- * @package
  */
 
 import { WpOrgCache, getWpOrgCache } from '../wporgCache';

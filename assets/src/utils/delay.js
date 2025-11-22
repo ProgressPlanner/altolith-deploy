@@ -4,7 +4,6 @@
  * Utility function for creating delays in async operations.
  * Replaces inline setTimeout patterns with a reusable function.
  *
- * @package
  */
 
 import { SHORT_DELAY_MS } from './constants';

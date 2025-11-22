@@ -4,12 +4,12 @@
  * Self-contained bundle with ExportProgressModal and all dependencies.
  * Loaded dynamically when admin bar export button is clicked.
  *
- * @package
  */
 
 // Set webpack publicPath before any imports
 // Note: Webpack is configured to never create chunks - all code is bundled into single files
-// eslint-disable-line camelcase, no-undef
+/* global __webpack_public_path__ */
+/* eslint-disable camelcase */
 if ( typeof __webpack_public_path__ !== 'undefined' ) {
 	if (
 		typeof window !== 'undefined' &&
@@ -21,10 +21,10 @@ if ( typeof __webpack_public_path__ !== 'undefined' ) {
 		const publicPath = pluginUrl.endsWith( '/' )
 			? pluginUrl + 'assets/build/'
 			: pluginUrl + '/assets/build/';
-		// eslint-disable-line camelcase, no-undef
 		__webpack_public_path__ = publicPath;
 	}
 }
+/* eslint-enable camelcase */
 
 import { render } from '@wordpress/element';
 import ExportProgressModal from '../components/ExportProgressModal';
@@ -68,7 +68,10 @@ function initExportModal() {
 		render(
 			<ErrorBoundary>
 				<ExportProvider>
-					<ExportProgressModal isOpen={ true } onClose={ handleClose } />
+					<ExportProgressModal
+						isOpen={ true }
+						onClose={ handleClose }
+					/>
 				</ExportProvider>
 			</ErrorBoundary>,
 			container
@@ -85,4 +88,3 @@ if ( document.readyState === 'loading' ) {
 } else {
 	initExportModal();
 }
-

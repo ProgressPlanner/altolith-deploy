@@ -1,7 +1,6 @@
 /**
  * Static Site Cache Tests
  *
- * @package
  */
 
 import { StaticSiteCache } from '../staticSiteCache';

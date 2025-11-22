@@ -4,7 +4,6 @@
  * Discovers custom plugins and themes that are not from WordPress.org.
  * These assets need to be included in the blueprint bundle.
  *
- * @package
  */
 
 import { __, sprintf, _n } from '@wordpress/i18n';

@@ -4,7 +4,6 @@
  * Hook to consume the ConfigContext.
  * Provides access to global config state and config operations.
  *
- * @package
  */
 
 import { useContext } from '@wordpress/element';

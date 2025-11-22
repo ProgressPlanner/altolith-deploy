@@ -1,7 +1,6 @@
 /**
  * Step Executor Tests
  *
- * @package
  */
 
 import { executeSteps, getExecutionPlan } from '../StepExecutor';

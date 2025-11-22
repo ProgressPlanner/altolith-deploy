@@ -4,7 +4,6 @@
  * Manages asset state in localStorage.
  * Uses AssetManagerService for all business logic.
  *
- * @package
  */
 
 import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';

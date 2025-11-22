@@ -4,7 +4,6 @@
  * Tests for ProviderSettingsAPI service and pure functions.
  * Validates CRUD operations and configuration merging.
  *
- * @package
  */
 
 import {

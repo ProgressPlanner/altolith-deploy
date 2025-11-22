@@ -1,7 +1,6 @@
 /**
  * Settings Helper Utilities Tests
  *
- * @package
  */
 
 import {

@@ -11,10 +11,12 @@
  * - Must test concurrency limiting to prevent resource exhaustion
  * - Must fail if implementation allows ANY data corruption or upload failures
  *
- * @package Aether\SiteExporter\Tests
  */
 
-import { uploadFilesWithProgress, sanitizeKeyForStatus } from '../fileUploadManager';
+import {
+	uploadFilesWithProgress,
+	sanitizeKeyForStatus,
+} from '../fileUploadManager';
 import { calculateFileHash } from '@aether/utils/fileHash';
 import { shouldSkipUpload } from '@aether/utils/manifestManager';
 import { formatFileSize } from '@aether/utils/helpers';
@@ -24,7 +26,9 @@ import { errorHandler } from '../errorHandler';
 jest.mock( '@wordpress/i18n', () => ( {
 	__: ( text ) => text,
 	sprintf: ( format, ...args ) => {
-		return format.replace( /%\d\$s/g, () => args.shift() ).replace( /%s/g, () => args.shift() );
+		return format
+			.replace( /%\d\$s/g, () => args.shift() )
+			.replace( /%s/g, () => args.shift() );
 	},
 } ) );
 
@@ -76,9 +80,15 @@ describe( 'fileUploadManager', () => {
 		 * Reason: Status keys must be safe for object property names
 		 */
 		it( 'should replace special characters with dashes', () => {
-			expect( sanitizeKeyForStatus( 'file/path/to/file.jpg' ) ).toBe( 'file-path-to-file-jpg' );
-			expect( sanitizeKeyForStatus( 'file@#$%.txt' ) ).toBe( 'file-----txt' );
-			expect( sanitizeKeyForStatus( 'file name with spaces.txt' ) ).toBe( 'file-name-with-spaces-txt' );
+			expect( sanitizeKeyForStatus( 'file/path/to/file.jpg' ) ).toBe(
+				'file-path-to-file-jpg'
+			);
+			expect( sanitizeKeyForStatus( 'file@#$%.txt' ) ).toBe(
+				'file-----txt'
+			);
+			expect( sanitizeKeyForStatus( 'file name with spaces.txt' ) ).toBe(
+				'file-name-with-spaces-txt'
+			);
 		} );
 
 		/**
@@ -87,8 +97,12 @@ describe( 'fileUploadManager', () => {
 		 * Purpose: Verify valid characters are kept
 		 */
 		it( 'should preserve alphanumeric characters, dashes, and underscores', () => {
-			expect( sanitizeKeyForStatus( 'file_name-123.txt' ) ).toBe( 'file_name-123-txt' );
-			expect( sanitizeKeyForStatus( 'ABC-def_123' ) ).toBe( 'ABC-def_123' );
+			expect( sanitizeKeyForStatus( 'file_name-123.txt' ) ).toBe(
+				'file_name-123-txt'
+			);
+			expect( sanitizeKeyForStatus( 'ABC-def_123' ) ).toBe(
+				'ABC-def_123'
+			);
 		} );
 
 		/**
@@ -156,7 +170,9 @@ describe( 'fileUploadManager', () => {
 			expect( result.failed ).toBe( 0 );
 			expect( result.results ).toHaveLength( 1 );
 			expect( result.results[ 0 ].success ).toBe( true );
-			expect( result.results[ 0 ].url ).toBe( 'https://example.com/file.jpg' );
+			expect( result.results[ 0 ].url ).toBe(
+				'https://example.com/file.jpg'
+			);
 			expect( mockStorageService.upload ).toHaveBeenCalledTimes( 1 );
 		} );
 
@@ -269,8 +285,12 @@ describe( 'fileUploadManager', () => {
 			// Should set uploading message and success message
 			expect( mockSetStatusMessage ).toHaveBeenCalled();
 			const calls = mockSetStatusMessage.mock.calls;
-			expect( calls.some( ( call ) => call[ 0 ].includes( 'Uploading' ) ) ).toBe( true );
-			expect( calls.some( ( call ) => call[ 0 ].includes( 'Uploaded' ) ) ).toBe( true );
+			expect(
+				calls.some( ( call ) => call[ 0 ].includes( 'Uploading' ) )
+			).toBe( true );
+			expect(
+				calls.some( ( call ) => call[ 0 ].includes( 'Uploaded' ) )
+			).toBe( true );
 		} );
 
 		/**
@@ -452,7 +472,9 @@ describe( 'fileUploadManager', () => {
 		 * Edge Case: Hash calculation error
 		 */
 		it( 'should continue upload if hash calculation fails', async () => {
-			calculateFileHash.mockRejectedValue( new Error( 'Hash calculation failed' ) );
+			calculateFileHash.mockRejectedValue(
+				new Error( 'Hash calculation failed' )
+			);
 
 			const manifest = {
 				'test.jpg': {
@@ -511,19 +533,24 @@ describe( 'fileUploadManager', () => {
 			let attemptCount = 0;
 
 			// Mock retry logic: fail first 2 times, succeed on 3rd
-			errorHandler.executeWithRetry.mockImplementation( async ( fn, options ) => {
-				attemptCount++;
+			errorHandler.executeWithRetry.mockImplementation(
+				async ( fn, options ) => {
+					attemptCount++;
 
-				if ( attemptCount < 3 ) {
-					// Call onRetry callback
-					if ( options?.onRetry ) {
-						options.onRetry( new Error( 'Network error' ), attemptCount );
+					if ( attemptCount < 3 ) {
+						// Call onRetry callback
+						if ( options?.onRetry ) {
+							options.onRetry(
+								new Error( 'Network error' ),
+								attemptCount
+							);
+						}
+						throw new Error( 'Network error' );
 					}
-					throw new Error( 'Network error' );
-				}
 
-				return await fn();
-			} );
+					return await fn();
+				}
+			);
 
 			mockStorageService.upload.mockResolvedValue( {
 				success: true,
@@ -556,7 +583,9 @@ describe( 'fileUploadManager', () => {
 		 * Edge Case: Persistent errors
 		 */
 		it( 'should fail after max retries', async () => {
-			errorHandler.executeWithRetry.mockRejectedValue( new Error( 'Persistent error' ) );
+			errorHandler.executeWithRetry.mockRejectedValue(
+				new Error( 'Persistent error' )
+			);
 
 			const files = [
 				{
@@ -585,13 +614,15 @@ describe( 'fileUploadManager', () => {
 		 * Purpose: Verify retry feedback to user
 		 */
 		it( 'should show retry status messages', async () => {
-			errorHandler.executeWithRetry.mockImplementation( async ( fn, options ) => {
-				// Simulate retry
-				if ( options?.onRetry ) {
-					options.onRetry( new Error( 'Network error' ), 2 );
+			errorHandler.executeWithRetry.mockImplementation(
+				async ( fn, options ) => {
+					// Simulate retry
+					if ( options?.onRetry ) {
+						options.onRetry( new Error( 'Network error' ), 2 );
+					}
+					throw new Error( 'Failed after retries' );
 				}
-				throw new Error( 'Failed after retries' );
-			} );
+			);
 
 			const files = [
 				{
@@ -610,7 +641,9 @@ describe( 'fileUploadManager', () => {
 
 			// Should set retry message
 			const calls = mockSetStatusMessage.mock.calls;
-			expect( calls.some( ( call ) => call[ 0 ].includes( 'Retrying' ) ) ).toBe( true );
+			expect(
+				calls.some( ( call ) => call[ 0 ].includes( 'Retrying' ) )
+			).toBe( true );
 		} );
 	} );
 
@@ -655,7 +688,9 @@ describe( 'fileUploadManager', () => {
 				return result;
 			} );
 
-			errorHandler.executeWithRetry.mockRejectedValue( new Error( 'Storage quota exceeded' ) );
+			errorHandler.executeWithRetry.mockRejectedValue(
+				new Error( 'Storage quota exceeded' )
+			);
 
 			const files = [
 				{
@@ -768,7 +803,9 @@ describe( 'fileUploadManager', () => {
 			} );
 
 			// Concurrency limiter should have been called
-			const { createConcurrencyLimiter } = require( '@aether/utils/concurrencyLimiter' );
+			const {
+				createConcurrencyLimiter,
+			} = require( '@aether/utils/concurrencyLimiter' );
 			expect( createConcurrencyLimiter ).toHaveBeenCalledWith( 3 );
 		} );
 	} );

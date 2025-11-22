@@ -1,7 +1,6 @@
 /**
  * Asset Patterns Tests
  *
- * @package
  */
 
 import {

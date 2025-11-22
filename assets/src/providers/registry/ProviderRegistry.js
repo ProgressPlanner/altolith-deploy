@@ -4,7 +4,6 @@
  * JavaScript-based provider registry that collects providers from
  * aether.providers.register hooks. This replaces the PHP ProviderRegistry.
  *
- * @package
  */
 
 import { addAction, doAction } from '@wordpress/hooks';

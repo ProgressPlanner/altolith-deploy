@@ -9,7 +9,6 @@
  * - Error handling and graceful degradation
  * - Manifest format and structure
  *
- * @package
  */
 
 import {

@@ -6,8 +6,6 @@
  *
  * @example
  * import { ENDPOINTS, PUBLISH_STEPS, CAP_STORAGE } from '../constants';
- *
- * @package
  */
 
 // API Constants

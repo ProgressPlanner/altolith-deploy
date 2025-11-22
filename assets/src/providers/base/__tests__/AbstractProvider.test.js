@@ -1,7 +1,6 @@
 /**
  * AbstractProvider Tests
  *
- * @package
  */
 
 import { AbstractProvider } from '../AbstractProvider';

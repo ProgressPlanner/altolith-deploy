@@ -4,7 +4,6 @@
  * Provides common functionality for all providers.
  * Abstract base class for all providers (JavaScript-only, no PHP equivalent)
  *
- * @package
  */
 
 import { __, sprintf } from '@wordpress/i18n';

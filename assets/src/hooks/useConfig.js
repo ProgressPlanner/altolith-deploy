@@ -7,7 +7,6 @@
  * Now uses ConfigContext for centralized state management.
  * Maintains backward compatibility with previous API.
  *
- * @package
  */
 
 import { useConfigContext } from './useConfigContext';

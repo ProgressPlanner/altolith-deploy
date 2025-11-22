@@ -4,7 +4,6 @@
  * Comprehensive test suite for provider configuration sanitization utilities.
  * Tests field sanitization, type conversions, and option filtering.
  *
- * @package Aether\SiteExporter\Tests
  */
 
 import {
@@ -46,7 +45,10 @@ describe( 'configSanitization', () => {
 
 		it( 'should trim and remove trailing slash from URL', () => {
 			const field = { type: 'url' };
-			const result = sanitizeFieldValue( '  https://example.com/  ', field );
+			const result = sanitizeFieldValue(
+				'  https://example.com/  ',
+				field
+			);
 			expect( result ).toBe( 'https://example.com' );
 		} );
 
@@ -201,9 +203,7 @@ describe( 'configSanitization', () => {
 		} );
 
 		it( 'should return empty array for non-array input', () => {
-			const options = [
-				{ value: 'opt1', label: 'Option 1' },
-			];
+			const options = [ { value: 'opt1', label: 'Option 1' } ];
 
 			expect( filterCheckboxGroupValues( 'not-array', options ) ).toEqual(
 				[]
@@ -315,9 +315,7 @@ describe( 'configSanitization', () => {
 				{
 					id: 'invalid_role',
 					type: 'select',
-					options: [
-						{ value: 'admin', label: 'Admin' },
-					],
+					options: [ { value: 'admin', label: 'Admin' } ],
 				},
 			];
 

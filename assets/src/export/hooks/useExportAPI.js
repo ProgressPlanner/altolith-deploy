@@ -4,7 +4,6 @@
  * Handles API calls for export operations.
  * Uses ExportAPIService for all business logic.
  *
- * @package
  */
 
 import { useCallback, useMemo } from '@wordpress/element';

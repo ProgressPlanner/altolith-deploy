@@ -4,7 +4,6 @@
  * Pure functions and service class for discovering and categorizing WordPress assets.
  * Extracted from useAssetDiscovery hook for better testability.
  *
- * @package
  */
 
 /**
@@ -180,10 +179,7 @@ export class AssetDiscoveryService {
 	 */
 	async getConfig() {
 		// Read config from window.aetherData (injected by PHP).
-		if (
-			typeof window !== 'undefined' &&
-			window.aetherData
-		) {
+		if ( typeof window !== 'undefined' && window.aetherData ) {
 			return {
 				publicUrl: window.aetherData.publicUrl || '',
 				adminUrl: window.aetherData.adminUrl || '',

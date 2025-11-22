@@ -10,7 +10,6 @@
  * - Must test asset extraction accuracy
  * - Must fail if implementation loses URLs or assets
  *
- * @package Aether\SiteExporter\Tests
  */
 
 describe( 'preScanPhase', () => {

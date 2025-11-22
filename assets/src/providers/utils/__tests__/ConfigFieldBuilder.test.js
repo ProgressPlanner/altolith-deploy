@@ -1,7 +1,6 @@
 /**
  * ConfigFieldBuilder Tests
  *
- * @package
  */
 
 import { ConfigFieldBuilder } from '../configFieldBuilder';

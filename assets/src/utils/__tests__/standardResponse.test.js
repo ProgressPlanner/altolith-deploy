@@ -1,7 +1,6 @@
 /**
  * Standard Response Tests
  *
- * @package
  */
 
 import {

@@ -4,7 +4,6 @@
  * Provides automatic retry logic for network requests using p-retry.
  * Uses centralized retry configuration from timing.js constants.
  *
- * @package
  */
 
 import pRetry from 'p-retry';

@@ -3,7 +3,6 @@
  *
  * Provides direct API calls for testing provider connections from React.
  *
- * @package
  */
 
 import { useState, useCallback } from '@wordpress/element';

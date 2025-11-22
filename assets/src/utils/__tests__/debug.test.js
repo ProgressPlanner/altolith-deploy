@@ -1,7 +1,6 @@
 /**
  * Debug Utility Tests
  *
- * @package
  */
 
 import {

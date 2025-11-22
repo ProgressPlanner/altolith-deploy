@@ -1,7 +1,6 @@
 /**
  * Asset Tracker Tests
  *
- * @package
  */
 
 import { createAssetTracker } from '../assetTracker';

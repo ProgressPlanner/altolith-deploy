@@ -5,7 +5,6 @@
  * Supports different status types (success, error, warning, info) with
  * automatic color theming from statusBadgeStyles.
  *
- * @package
  */
 
 import { statusBadgeStyles } from '@aether/utils/styles';

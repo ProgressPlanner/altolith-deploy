@@ -4,7 +4,6 @@
  * Tests for blueprint testing utility functions.
  * These are pure functions used to validate and analyze blueprint structures.
  *
- * @package
  */
 
 import {

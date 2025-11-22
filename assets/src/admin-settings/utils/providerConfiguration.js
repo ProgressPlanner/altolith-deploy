@@ -4,7 +4,6 @@
  * Utilities for checking if providers are properly configured
  * based on required field validation.
  *
- * @package
  */
 
 /**

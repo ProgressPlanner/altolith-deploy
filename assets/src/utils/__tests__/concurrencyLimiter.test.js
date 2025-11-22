@@ -1,7 +1,6 @@
 /**
  * Concurrency Limiter Tests
  *
- * @package
  */
 
 import { createConcurrencyLimiter } from '../concurrencyLimiter';

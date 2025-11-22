@@ -1,7 +1,6 @@
 /**
  * createWpContentArchive Step Tests
  *
- * @package
  */
 
 import { createWpContentArchiveStep } from '../index';

@@ -4,7 +4,6 @@
  * Manages success message timeout with automatic cleanup.
  * Prevents memory leaks and ensures proper cleanup on unmount.
  *
- * @package
  */
 
 import { useRef, useEffect, useCallback } from '@wordpress/element';

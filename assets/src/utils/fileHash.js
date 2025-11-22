@@ -4,7 +4,6 @@
  * Utility functions for calculating SHA-256 hashes of files and blobs.
  * Uses Web Crypto API for hardware-accelerated hashing.
  *
- * @package
  */
 
 import { debug, debugError } from './debug';

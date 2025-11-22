@@ -5,7 +5,6 @@
  * Returns base REST API URL (without namespace) so paths can include full namespace.
  * This ensures WordPress Playground scoped URLs work correctly.
  *
- * @package
  */
 
 /**

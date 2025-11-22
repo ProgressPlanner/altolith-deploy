@@ -4,7 +4,6 @@
  * Fetches recent export jobs using the generic useAPIData hook.
  * Simplified from 49 to 25 lines (-49% complexity).
  *
- * @package
  */
 
 import { useAPIData } from '@aether/hooks/useAPIData';

@@ -3,7 +3,6 @@
  *
  * Discovers all URLs that need to be fetched for static site generation.
  *
- * @package
  */
 
 import { __, sprintf } from '@wordpress/i18n';

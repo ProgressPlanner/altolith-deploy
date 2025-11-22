@@ -3,7 +3,6 @@
  *
  * Provides fixtures, mocks, and validation helpers for testing blueprint generation.
  *
- * @package
  */
 
 /**

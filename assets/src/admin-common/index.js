@@ -1,7 +1,6 @@
 /**
  * Admin Common Utilities
  *
- * @package
  */
 
 // This file can be used for shared utilities, hooks, or components

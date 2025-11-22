@@ -1,7 +1,6 @@
 /**
  * Tests for fetchWithRetry utility.
  *
- * @package
  */
 
 import pRetry from 'p-retry';

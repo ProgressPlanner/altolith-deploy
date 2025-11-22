@@ -1,7 +1,6 @@
 /**
  * Credential Manager Tests
  *
- * @package
  */
 
 import {

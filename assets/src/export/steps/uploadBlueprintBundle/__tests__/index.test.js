@@ -1,7 +1,6 @@
 /**
  * uploadBlueprintBundle Step Tests
  *
- * @package
  */
 
 import { uploadBlueprintBundleStep } from '../index';

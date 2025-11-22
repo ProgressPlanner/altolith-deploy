@@ -8,7 +8,6 @@
  * - Static site file uploads (useStaticSiteGenerator.js)
  * - wp-content.zip uploads (useExportController.js)
  *
- * @package
  */
 
 import { __, sprintf } from '@wordpress/i18n';

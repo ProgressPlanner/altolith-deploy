@@ -4,7 +4,6 @@
  * This file registers hooks for the LocalFilesystem provider implementation.
  * Provider metadata is registered in JavaScript, not PHP.
  *
- * @package
  */
 
 import { addFilter, addAction, doAction } from '@wordpress/hooks';

@@ -5,7 +5,6 @@
  * Uses SettingsContext to avoid duplicate API calls.
  * Simplified from 99 to 60 lines (-39% complexity).
  *
- * @package
  */
 
 import { useMemo } from '@wordpress/element';

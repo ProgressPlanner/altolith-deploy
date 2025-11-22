@@ -5,7 +5,6 @@
  * Uses a single database with provider instance keys for state isolation.
  * State is automatically saved and can be resumed after failures.
  *
- * @package
  */
 
 import { debug, debugWarn } from '@aether/utils/debug';

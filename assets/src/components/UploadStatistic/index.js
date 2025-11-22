@@ -5,7 +5,6 @@
  * and flexible content area. Used within UploadStatistics to show metrics like
  * provider count, file count, and total size.
  *
- * @package
  */
 
 import {

@@ -4,7 +4,6 @@
  * Dynamic provider settings form that renders based on provider's config fields.
  * Replaces the imperative hook-based approach with a declarative component.
  *
- * @package
  */
 
 import { useState, useEffect } from '@wordpress/element';

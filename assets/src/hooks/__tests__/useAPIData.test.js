@@ -1,7 +1,6 @@
 /**
  * useAPIData Hook Tests
  *
- * @package
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';

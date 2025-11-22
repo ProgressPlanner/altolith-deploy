@@ -9,7 +9,6 @@
  * - Must test error handling and timeout scenarios
  * - Must fail if loading state is incorrect
  *
- * @package Aether\SiteExporter\Tests
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';
@@ -61,18 +60,25 @@ describe( 'ProviderContext', () => {
 		it( 'should provide default context values', () => {
 			ProviderRegistry.getAll.mockReturnValue( [] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			expect( result.current ).toHaveProperty( 'providers' );
 			expect( result.current ).toHaveProperty( 'providerIds' );
 			expect( result.current ).toHaveProperty( 'loading' );
 			expect( result.current ).toHaveProperty( 'error' );
 			expect( result.current ).toHaveProperty( 'getProvider' );
-			expect( result.current ).toHaveProperty( 'getProvidersByCapability' );
+			expect( result.current ).toHaveProperty(
+				'getProvidersByCapability'
+			);
 			expect( result.current ).toHaveProperty( 'getProvidersByType' );
-			expect( result.current ).toHaveProperty( 'getProvidersGroupedByType' );
+			expect( result.current ).toHaveProperty(
+				'getProvidersGroupedByType'
+			);
 			expect( result.current ).toHaveProperty(
 				'getProvidersGroupedByCapability'
 			);
@@ -88,7 +94,10 @@ describe( 'ProviderContext', () => {
 					getName: () => 'Local Filesystem',
 					getDescription: () => 'Local storage',
 					getType: () => 'storage',
-					getSupportedDeploymentTypes: () => [ 'static', 'blueprint' ],
+					getSupportedDeploymentTypes: () => [
+						'static',
+						'blueprint',
+					],
 				},
 				{
 					getId: () => 's3',
@@ -101,9 +110,12 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -134,9 +146,12 @@ describe( 'ProviderContext', () => {
 				.mockReturnValueOnce( [] )
 				.mockReturnValueOnce( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			// Initial state should be loading
 			expect( result.current.loading ).toBe( true );
@@ -157,9 +172,12 @@ describe( 'ProviderContext', () => {
 		it( 'should set error after max retry attempts with no providers', async () => {
 			ProviderRegistry.getAll.mockReturnValue( [] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			// Advance timers past max attempts (20 × 100ms = 2000ms)
 			act( () => {
@@ -182,9 +200,12 @@ describe( 'ProviderContext', () => {
 				throw error;
 			} );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -199,9 +220,12 @@ describe( 'ProviderContext', () => {
 				throw new Error();
 			} );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -217,15 +241,21 @@ describe( 'ProviderContext', () => {
 					getName: () => 'Test Provider',
 					getDescription: () => 'Test description',
 					getType: () => 'custom',
-					getSupportedDeploymentTypes: () => [ 'static', 'blueprint' ],
+					getSupportedDeploymentTypes: () => [
+						'static',
+						'blueprint',
+					],
 				},
 			];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -253,9 +283,12 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -278,17 +311,20 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
 			} );
 
-			expect( result.current.providers[ 0 ].supportedDeploymentTypes ).toEqual(
-				[]
-			);
+			expect(
+				result.current.providers[ 0 ].supportedDeploymentTypes
+			).toEqual( [] );
 		} );
 	} );
 
@@ -307,9 +343,12 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -331,9 +370,12 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -346,9 +388,12 @@ describe( 'ProviderContext', () => {
 		it( 'should return null for null provider ID', async () => {
 			ProviderRegistry.getAll.mockReturnValue( [] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -361,9 +406,12 @@ describe( 'ProviderContext', () => {
 		it( 'should return null for undefined provider ID', async () => {
 			ProviderRegistry.getAll.mockReturnValue( [] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -376,9 +424,12 @@ describe( 'ProviderContext', () => {
 		it( 'should return null for empty string provider ID', async () => {
 			ProviderRegistry.getAll.mockReturnValue( [] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -395,7 +446,10 @@ describe( 'ProviderContext', () => {
 				{
 					getId: () => 'provider-1',
 					getName: () => 'Provider 1',
-					getSupportedDeploymentTypes: () => [ 'static', 'blueprint' ],
+					getSupportedDeploymentTypes: () => [
+						'static',
+						'blueprint',
+					],
 				},
 				{
 					getId: () => 'provider-2',
@@ -411,24 +465,27 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
 			} );
 
-			const staticProviders = result.current.getProvidersByCapability( 'static' );
+			const staticProviders =
+				result.current.getProvidersByCapability( 'static' );
 			expect( staticProviders ).toHaveLength( 2 );
 			expect( staticProviders.map( ( p ) => p.id ) ).toEqual( [
 				'provider-1',
 				'provider-2',
 			] );
 
-			const blueprintProviders = result.current.getProvidersByCapability(
-				'blueprint'
-			);
+			const blueprintProviders =
+				result.current.getProvidersByCapability( 'blueprint' );
 			expect( blueprintProviders ).toHaveLength( 2 );
 			expect( blueprintProviders.map( ( p ) => p.id ) ).toEqual( [
 				'provider-1',
@@ -447,9 +504,12 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -472,15 +532,19 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
 			} );
 
-			const providers = result.current.getProvidersByCapability( 'static' );
+			const providers =
+				result.current.getProvidersByCapability( 'static' );
 			expect( providers ).toEqual( [] );
 		} );
 	} );
@@ -507,15 +571,19 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
 			} );
 
-			const storageProviders = result.current.getProvidersByType( 'storage' );
+			const storageProviders =
+				result.current.getProvidersByType( 'storage' );
 			expect( storageProviders ).toHaveLength( 2 );
 			expect( storageProviders.map( ( p ) => p.id ) ).toEqual( [
 				'provider-1',
@@ -534,15 +602,19 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
 			} );
 
-			const providers = result.current.getProvidersByType( 'non-existent' );
+			const providers =
+				result.current.getProvidersByType( 'non-existent' );
 			expect( providers ).toEqual( [] );
 		} );
 	} );
@@ -569,9 +641,12 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -597,9 +672,12 @@ describe( 'ProviderContext', () => {
 			// Manually set type to undefined to test the 'other' fallback
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -613,9 +691,12 @@ describe( 'ProviderContext', () => {
 		it( 'should return empty object when no providers', async () => {
 			ProviderRegistry.getAll.mockReturnValue( [] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			// Advance timers to complete retry logic
 			act( () => {
@@ -637,7 +718,10 @@ describe( 'ProviderContext', () => {
 				{
 					getId: () => 'provider-1',
 					getName: () => 'Provider 1',
-					getSupportedDeploymentTypes: () => [ 'static', 'blueprint' ],
+					getSupportedDeploymentTypes: () => [
+						'static',
+						'blueprint',
+					],
 				},
 				{
 					getId: () => 'provider-2',
@@ -653,9 +737,12 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -669,9 +756,12 @@ describe( 'ProviderContext', () => {
 		it( 'should return empty object when no providers', async () => {
 			ProviderRegistry.getAll.mockReturnValue( [] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			act( () => {
 				jest.advanceTimersByTime( 2100 );
@@ -697,15 +787,20 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
 			} );
 
-			expect( result.current.providerExists( 'provider-1' ) ).toBe( true );
+			expect( result.current.providerExists( 'provider-1' ) ).toBe(
+				true
+			);
 		} );
 
 		it( 'should return false for non-existent provider', async () => {
@@ -718,15 +813,20 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
 			} );
 
-			expect( result.current.providerExists( 'non-existent' ) ).toBe( false );
+			expect( result.current.providerExists( 'non-existent' ) ).toBe(
+				false
+			);
 		} );
 	} );
 
@@ -749,9 +849,12 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -763,9 +866,12 @@ describe( 'ProviderContext', () => {
 		it( 'should return zero when no providers', async () => {
 			ProviderRegistry.getAll.mockReturnValue( [] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			act( () => {
 				jest.advanceTimersByTime( 2100 );
@@ -803,9 +909,12 @@ describe( 'ProviderContext', () => {
 				.mockReturnValueOnce( mockProviders1 )
 				.mockReturnValueOnce( mockProviders2 );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -837,9 +946,12 @@ describe( 'ProviderContext', () => {
 					},
 				] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.error ).toBe( 'First error' );
@@ -862,9 +974,12 @@ describe( 'ProviderContext', () => {
 		it( 'should start with loading true', () => {
 			ProviderRegistry.getAll.mockReturnValue( [] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			expect( result.current.loading ).toBe( true );
 		} );
@@ -879,9 +994,12 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -893,9 +1011,12 @@ describe( 'ProviderContext', () => {
 				throw new Error( 'Error' );
 			} );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -905,9 +1026,12 @@ describe( 'ProviderContext', () => {
 		it( 'should set loading false after timeout', async () => {
 			ProviderRegistry.getAll.mockReturnValue( [] );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			act( () => {
 				jest.advanceTimersByTime( 2100 );
@@ -941,15 +1065,19 @@ describe( 'ProviderContext', () => {
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
-			const { result } = renderHook( () => useContext( ProviderContext ), {
-				wrapper: ProviderProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( ProviderContext ),
+				{
+					wrapper: ProviderProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
 			} );
 
-			const staticProviders = result.current.getProvidersByCapability( 'static' );
+			const staticProviders =
+				result.current.getProvidersByCapability( 'static' );
 			expect( staticProviders ).toHaveLength( 3 );
 		} );
 	} );

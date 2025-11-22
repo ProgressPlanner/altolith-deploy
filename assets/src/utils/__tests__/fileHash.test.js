@@ -8,7 +8,6 @@
  * - Error handling for invalid inputs
  * - Browser API compatibility (Web Crypto API)
  *
- * @package
  */
 
 import { calculateFileHash } from '../fileHash';

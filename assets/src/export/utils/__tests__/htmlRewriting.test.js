@@ -1,7 +1,6 @@
 /**
  * HTML Rewriting Tests
  *
- * @package
  */
 
 import {

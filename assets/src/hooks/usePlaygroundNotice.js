@@ -3,7 +3,6 @@
  *
  * Fetches playground notice state from REST API.
  *
- * @package
  */
 
 import { useState, useEffect } from '@wordpress/element';

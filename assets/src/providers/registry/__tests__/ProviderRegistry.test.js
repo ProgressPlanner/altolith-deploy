@@ -5,7 +5,6 @@
  * Tests singleton pattern, registration validation, retrieval, instance management,
  * and hook integration.
  *
- * @package Aether\SiteExporter\Tests
  */
 
 import { addAction, doAction } from '@wordpress/hooks';
@@ -21,10 +20,10 @@ describe( 'ProviderRegistry', () => {
 	/**
 	 * Create a mock provider instance.
 	 *
-	 * @param {string}        id                 Provider ID
-	 * @param {string}        name               Provider name
-	 * @param {Array<string>} deploymentTypes    Supported deployment types
-	 * @param {Object}        additionalMethods  Additional methods to add
+	 * @param {string}        id                Provider ID
+	 * @param {string}        name              Provider name
+	 * @param {Array<string>} deploymentTypes   Supported deployment types
+	 * @param {Object}        additionalMethods Additional methods to add
 	 * @return {Object} Mock provider instance
 	 */
 	const createMockProvider = (
@@ -150,7 +149,9 @@ describe( 'ProviderRegistry', () => {
 
 			expect( () => {
 				ProviderRegistry.register( 'test-provider', invalidProvider );
-			} ).toThrow( 'Provider test-provider must implement getId() method' );
+			} ).toThrow(
+				'Provider test-provider must implement getId() method'
+			);
 		} );
 
 		it( 'should throw error for provider missing getName() method', () => {
@@ -335,16 +336,12 @@ describe( 'ProviderRegistry', () => {
 
 	describe( 'getByDeploymentType()', () => {
 		it( 'should return providers matching deployment type', () => {
-			const staticProvider1 = createMockProvider(
-				'static1',
-				'Static 1',
-				[ 'static_site' ]
-			);
-			const staticProvider2 = createMockProvider(
-				'static2',
-				'Static 2',
-				[ 'static_site' ]
-			);
+			const staticProvider1 = createMockProvider( 'static1', 'Static 1', [
+				'static_site',
+			] );
+			const staticProvider2 = createMockProvider( 'static2', 'Static 2', [
+				'static_site',
+			] );
 			const blueprintProvider = createMockProvider(
 				'blueprint',
 				'Blueprint',
@@ -384,7 +381,8 @@ describe( 'ProviderRegistry', () => {
 			};
 			ProviderRegistry.register( 'test', provider );
 
-			const result = ProviderRegistry.getByDeploymentType( 'static_site' );
+			const result =
+				ProviderRegistry.getByDeploymentType( 'static_site' );
 
 			expect( result ).toEqual( [] );
 		} );
@@ -393,7 +391,8 @@ describe( 'ProviderRegistry', () => {
 			const provider = createMockProvider( 'test', 'Test', [] );
 			ProviderRegistry.register( 'test', provider );
 
-			const result = ProviderRegistry.getByDeploymentType( 'static_site' );
+			const result =
+				ProviderRegistry.getByDeploymentType( 'static_site' );
 
 			expect( result ).toEqual( [] );
 		} );
@@ -528,9 +527,8 @@ describe( 'ProviderRegistry', () => {
 		} );
 
 		it( 'should parse instance ID with simple UUID', () => {
-			const result = ProviderRegistry.parseInstanceId(
-				'my-provider:12345'
-			);
+			const result =
+				ProviderRegistry.parseInstanceId( 'my-provider:12345' );
 
 			expect( result ).toEqual( {
 				provider_type: 'my-provider',
@@ -577,9 +575,8 @@ describe( 'ProviderRegistry', () => {
 		} );
 
 		it( 'should return null for instance ID with empty UUID', () => {
-			const result = ProviderRegistry.parseInstanceId(
-				'local-filesystem:'
-			);
+			const result =
+				ProviderRegistry.parseInstanceId( 'local-filesystem:' );
 
 			expect( result ).toBeNull();
 		} );
@@ -609,10 +606,8 @@ describe( 'ProviderRegistry', () => {
 		} );
 
 		it( 'should create unique instance IDs', () => {
-			const id1 =
-				ProviderRegistry.createInstanceId( 'local-filesystem' );
-			const id2 =
-				ProviderRegistry.createInstanceId( 'local-filesystem' );
+			const id1 = ProviderRegistry.createInstanceId( 'local-filesystem' );
+			const id2 = ProviderRegistry.createInstanceId( 'local-filesystem' );
 
 			expect( id1 ).not.toBe( id2 );
 		} );

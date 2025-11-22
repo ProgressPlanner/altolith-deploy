@@ -11,9 +11,9 @@
  *
  * Note: This file is vanilla JS in an IIFE, so we test via DOM manipulation
  * and global state changes.
- *
- * @package Aether\SiteExporter\Tests
  */
+
+/* global MouseEvent */
 
 describe( 'Admin Bar Export Handler', () => {
 	let originalAetherData;
@@ -30,7 +30,8 @@ describe( 'Admin Bar Export Handler', () => {
 
 		// Setup window.aetherData
 		window.aetherData = {
-			pluginUrl: 'https://example.com/wp-content/plugins/aether-site-exporter',
+			pluginUrl:
+				'https://example.com/wp-content/plugins/aether-site-exporter',
 			restUrl: 'https://example.com/wp-json/',
 			restNamespace: 'aether/site-exporter/',
 			nonce: 'test-nonce-123',
@@ -74,7 +75,10 @@ describe( 'Admin Bar Export Handler', () => {
 		} );
 
 		it( 'should register click event listener', () => {
-			const addEventListenerSpy = jest.spyOn( document, 'addEventListener' );
+			const addEventListenerSpy = jest.spyOn(
+				document,
+				'addEventListener'
+			);
 
 			// Require the file to execute the IIFE
 			require( '../index.js' );
@@ -139,7 +143,10 @@ describe( 'Admin Bar Export Handler', () => {
 				cancelable: true,
 			} );
 
-			const preventDefaultSpy = jest.spyOn( clickEvent, 'preventDefault' );
+			const preventDefaultSpy = jest.spyOn(
+				clickEvent,
+				'preventDefault'
+			);
 
 			// Dispatch event
 			button.dispatchEvent( clickEvent );
@@ -207,7 +214,9 @@ describe( 'Admin Bar Export Handler', () => {
 			overlay.id = 'aether-export-loading';
 			document.body.appendChild( overlay );
 
-			expect( document.getElementById( 'aether-export-loading' ) ).toBeTruthy();
+			expect(
+				document.getElementById( 'aether-export-loading' )
+			).toBeTruthy();
 
 			// Simulate hiding (remove)
 			const overlayToRemove = document.getElementById(
@@ -217,7 +226,9 @@ describe( 'Admin Bar Export Handler', () => {
 				overlayToRemove.remove();
 			}
 
-			expect( document.getElementById( 'aether-export-loading' ) ).toBeNull();
+			expect(
+				document.getElementById( 'aether-export-loading' )
+			).toBeNull();
 		} );
 
 		it( 'should handle hiding non-existent overlay', () => {
@@ -228,7 +239,9 @@ describe( 'Admin Bar Export Handler', () => {
 			}
 
 			// Should complete without error
-			expect( document.getElementById( 'aether-export-loading' ) ).toBeNull();
+			expect(
+				document.getElementById( 'aether-export-loading' )
+			).toBeNull();
 		} );
 	} );
 
@@ -403,7 +416,11 @@ describe( 'Admin Bar Export Handler', () => {
 			global.fetch.mockResolvedValue( {
 				ok: true,
 				json: () =>
-					Promise.resolve( { success: true, scripts: [], styles: [] } ),
+					Promise.resolve( {
+						success: true,
+						scripts: [],
+						styles: [],
+					} ),
 			} );
 
 			const headers = {
@@ -418,7 +435,7 @@ describe( 'Admin Bar Export Handler', () => {
 			await fetch( 'https://example.com/wp-json/endpoint', {
 				method: 'GET',
 				credentials: 'same-origin',
-				headers: headers,
+				headers,
 			} );
 
 			expect( global.fetch ).toHaveBeenCalledWith(
@@ -437,7 +454,9 @@ describe( 'Admin Bar Export Handler', () => {
 			} );
 
 			try {
-				const response = await fetch( 'https://example.com/wp-json/endpoint' );
+				const response = await fetch(
+					'https://example.com/wp-json/endpoint'
+				);
 				if ( ! response.ok ) {
 					throw new Error( 'Failed to fetch dependencies' );
 				}
@@ -452,7 +471,9 @@ describe( 'Admin Bar Export Handler', () => {
 				json: () => Promise.resolve( { success: false } ),
 			} );
 
-			const response = await fetch( 'https://example.com/wp-json/endpoint' );
+			const response = await fetch(
+				'https://example.com/wp-json/endpoint'
+			);
 			const data = await response.json();
 
 			if ( ! data.success ) {
@@ -480,7 +501,11 @@ describe( 'Admin Bar Export Handler', () => {
 
 			const scripts = [
 				{ id: 'wp-element-js', handle: 'wp-element', src: 'test1.js' },
-				{ id: 'wp-components-js', handle: 'wp-components', src: 'test2.js' },
+				{
+					id: 'wp-components-js',
+					handle: 'wp-components',
+					src: 'test2.js',
+				},
 			];
 
 			const missingScripts = scripts.filter( ( script ) => {
@@ -498,8 +523,16 @@ describe( 'Admin Bar Export Handler', () => {
 			document.head.appendChild( existingStyle );
 
 			const styles = [
-				{ id: 'wp-components-css', handle: 'wp-components', src: 'test1.css' },
-				{ id: 'wp-edit-post-css', handle: 'wp-edit-post', src: 'test2.css' },
+				{
+					id: 'wp-components-css',
+					handle: 'wp-components',
+					src: 'test1.css',
+				},
+				{
+					id: 'wp-edit-post-css',
+					handle: 'wp-edit-post',
+					src: 'test2.css',
+				},
 			];
 
 			const missingStyles = styles.filter( ( style ) => {
@@ -720,7 +753,10 @@ describe( 'Admin Bar Export Handler', () => {
 				await fetch( 'https://example.com/wp-json/endpoint' );
 			} catch ( error ) {
 				// On error, try to load modal anyway
-				console.error( 'Failed to load WordPress dependencies:', error );
+				console.error(
+					'Failed to load WordPress dependencies:',
+					error
+				);
 				callback();
 			}
 
@@ -734,7 +770,9 @@ describe( 'Admin Bar Export Handler', () => {
 			const script = document.createElement( 'script' );
 			script.onerror = () => {
 				window.aetherExportLoading = false;
-				alert( 'Failed to load export modal. Please refresh the page.' );
+				alert(
+					'Failed to load export modal. Please refresh the page.'
+				);
 			};
 
 			script.onerror();

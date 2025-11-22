@@ -3,7 +3,6 @@
  *
  * Phase 1 of static site generation: Fetch all URLs, extract assets, count total files.
  *
- * @package
  */
 
 import { __, sprintf } from '@wordpress/i18n';

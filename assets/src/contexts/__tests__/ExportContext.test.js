@@ -9,7 +9,6 @@
  * - Must test message history management
  * - Must fail if state updates are incorrect
  *
- * @package Aether\SiteExporter\Tests
  */
 
 import { renderHook, act } from '@testing-library/react';
@@ -36,7 +35,9 @@ describe( 'ExportContext', () => {
 			expect( result.current ).toHaveProperty( 'overallProgress' );
 			expect( result.current ).toHaveProperty( 'messageHistory' );
 			expect( result.current ).toHaveProperty( 'staticSiteProviders' );
-			expect( result.current ).toHaveProperty( 'blueprintBundleProviders' );
+			expect( result.current ).toHaveProperty(
+				'blueprintBundleProviders'
+			);
 			expect( result.current ).toHaveProperty( 'initializeSteps' );
 			expect( result.current ).toHaveProperty( 'setStepStatus' );
 			expect( result.current ).toHaveProperty( 'setStepProgress' );
@@ -46,7 +47,9 @@ describe( 'ExportContext', () => {
 			expect( result.current ).toHaveProperty( 'setIsExporting' );
 			expect( result.current ).toHaveProperty( 'setJobId' );
 			expect( result.current ).toHaveProperty( 'setStatusMessage' );
-			expect( result.current ).toHaveProperty( 'setOverallProgressValue' );
+			expect( result.current ).toHaveProperty(
+				'setOverallProgressValue'
+			);
 			expect( result.current ).toHaveProperty( 'addMessage' );
 			expect( result.current ).toHaveProperty( 'updateMessage' );
 			expect( result.current ).toHaveProperty( 'removeMessage' );
@@ -151,7 +154,9 @@ describe( 'ExportContext', () => {
 			// Set error and finalStatus
 			act( () => {
 				result.current.showError( 'Test error' );
-				result.current.markAllComplete( { url: 'https://example.com' } );
+				result.current.markAllComplete( {
+					url: 'https://example.com',
+				} );
 			} );
 
 			expect( result.current.error ).toBe( 'Test error' );
@@ -236,7 +241,11 @@ describe( 'ExportContext', () => {
 			} );
 
 			act( () => {
-				result.current.setStepStatus( 'step1', 'error', 'Test error message' );
+				result.current.setStepStatus(
+					'step1',
+					'error',
+					'Test error message'
+				);
 			} );
 
 			expect( result.current.steps[ 0 ].status ).toBe( 'error' );
@@ -257,10 +266,16 @@ describe( 'ExportContext', () => {
 			} );
 
 			act( () => {
-				result.current.setStepStatus( 'step1', 'error', 'Error message' );
+				result.current.setStepStatus(
+					'step1',
+					'error',
+					'Error message'
+				);
 			} );
 
-			expect( result.current.steps[ 0 ].errorMessage ).toBe( 'Error message' );
+			expect( result.current.steps[ 0 ].errorMessage ).toBe(
+				'Error message'
+			);
 
 			act( () => {
 				result.current.setStepStatus( 'step1', 'active' );
@@ -616,7 +631,9 @@ describe( 'ExportContext', () => {
 			} );
 
 			expect( result.current.messageHistory ).toHaveLength( 1 );
-			expect( result.current.messageHistory[ 0 ].message ).toBe( 'Test error' );
+			expect( result.current.messageHistory[ 0 ].message ).toBe(
+				'Test error'
+			);
 			expect( result.current.messageHistory[ 0 ].type ).toBe( 'error' );
 		} );
 
@@ -636,7 +653,9 @@ describe( 'ExportContext', () => {
 			} );
 
 			expect( result.current.steps[ 0 ].status ).toBe( 'error' );
-			expect( result.current.steps[ 0 ].errorMessage ).toBe( 'Step failed' );
+			expect( result.current.steps[ 0 ].errorMessage ).toBe(
+				'Step failed'
+			);
 		} );
 
 		it( 'should not mark step as error when stepId not provided', () => {
@@ -668,7 +687,9 @@ describe( 'ExportContext', () => {
 				result.current.setStatusMessage( 'Processing...', 'info' );
 			} );
 
-			expect( result.current.currentStatusMessage ).toBe( 'Processing...' );
+			expect( result.current.currentStatusMessage ).toBe(
+				'Processing...'
+			);
 		} );
 
 		it( 'should add message to history without key', () => {
@@ -746,7 +767,9 @@ describe( 'ExportContext', () => {
 				);
 			} );
 
-			expect( result.current.messageHistory[ 0 ].progress ).toEqual( progress );
+			expect( result.current.messageHistory[ 0 ].progress ).toEqual(
+				progress
+			);
 		} );
 
 		it( 'should include metadata when provided', () => {
@@ -766,7 +789,9 @@ describe( 'ExportContext', () => {
 				);
 			} );
 
-			expect( result.current.messageHistory[ 0 ].metadata ).toEqual( metadata );
+			expect( result.current.messageHistory[ 0 ].metadata ).toEqual(
+				metadata
+			);
 		} );
 
 		it( 'should merge metadata when updating message', () => {
@@ -928,8 +953,12 @@ describe( 'ExportContext', () => {
 			} );
 
 			expect( result.current.messageHistory ).toHaveLength( 2 );
-			expect( result.current.messageHistory[ 0 ].message ).toBe( 'Message 2' );
-			expect( result.current.messageHistory[ 1 ].message ).toBe( 'Message 1' );
+			expect( result.current.messageHistory[ 0 ].message ).toBe(
+				'Message 2'
+			);
+			expect( result.current.messageHistory[ 1 ].message ).toBe(
+				'Message 1'
+			);
 		} );
 
 		it( 'should include key when provided', () => {
@@ -966,13 +995,9 @@ describe( 'ExportContext', () => {
 			} );
 
 			act( () => {
-				result.current.addMessage(
-					'Test',
-					'info',
-					null,
-					undefined,
-					{ provider: 'test' }
-				);
+				result.current.addMessage( 'Test', 'info', null, undefined, {
+					provider: 'test',
+				} );
 			} );
 
 			expect( result.current.messageHistory[ 0 ].metadata ).toEqual( {
@@ -993,12 +1018,12 @@ describe( 'ExportContext', () => {
 
 			const after = Date.now();
 
-			expect( result.current.messageHistory[ 0 ].timestamp ).toBeGreaterThanOrEqual(
-				before
-			);
-			expect( result.current.messageHistory[ 0 ].timestamp ).toBeLessThanOrEqual(
-				after
-			);
+			expect(
+				result.current.messageHistory[ 0 ].timestamp
+			).toBeGreaterThanOrEqual( before );
+			expect(
+				result.current.messageHistory[ 0 ].timestamp
+			).toBeLessThanOrEqual( after );
 		} );
 	} );
 
@@ -1009,7 +1034,11 @@ describe( 'ExportContext', () => {
 			} );
 
 			act( () => {
-				result.current.addMessage( 'Original message', 'info', 'test-key' );
+				result.current.addMessage(
+					'Original message',
+					'info',
+					'test-key'
+				);
 			} );
 
 			act( () => {
@@ -1049,15 +1078,14 @@ describe( 'ExportContext', () => {
 			} );
 
 			act( () => {
-				result.current.updateMessage(
-					'test-key',
-					null,
-					null,
-					{ percent: 75 }
-				);
+				result.current.updateMessage( 'test-key', null, null, {
+					percent: 75,
+				} );
 			} );
 
-			expect( result.current.messageHistory[ 0 ].progress.percent ).toBe( 75 );
+			expect( result.current.messageHistory[ 0 ].progress.percent ).toBe(
+				75
+			);
 		} );
 
 		it( 'should remove progress when explicitly null', () => {
@@ -1075,7 +1103,9 @@ describe( 'ExportContext', () => {
 				result.current.updateMessage( 'test-key', null, null, null );
 			} );
 
-			expect( result.current.messageHistory[ 0 ].progress ).toBeUndefined();
+			expect(
+				result.current.messageHistory[ 0 ].progress
+			).toBeUndefined();
 		} );
 
 		it( 'should merge metadata', () => {
@@ -1177,7 +1207,9 @@ describe( 'ExportContext', () => {
 				result.current.setProviders( staticProviders, [] );
 			} );
 
-			expect( result.current.staticSiteProviders ).toEqual( staticProviders );
+			expect( result.current.staticSiteProviders ).toEqual(
+				staticProviders
+			);
 		} );
 
 		it( 'should set blueprint bundle providers', () => {
@@ -1205,10 +1237,15 @@ describe( 'ExportContext', () => {
 			const blueprintProviders = [ 'provider2' ];
 
 			act( () => {
-				result.current.setProviders( staticProviders, blueprintProviders );
+				result.current.setProviders(
+					staticProviders,
+					blueprintProviders
+				);
 			} );
 
-			expect( result.current.staticSiteProviders ).toEqual( staticProviders );
+			expect( result.current.staticSiteProviders ).toEqual(
+				staticProviders
+			);
 			expect( result.current.blueprintBundleProviders ).toEqual(
 				blueprintProviders
 			);

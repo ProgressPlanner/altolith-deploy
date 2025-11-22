@@ -1,7 +1,6 @@
 /**
  * Executor Module
  *
- * @package
  */
 
 export { executeSteps, getExecutionPlan } from './StepExecutor';

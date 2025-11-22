@@ -4,7 +4,6 @@
  * These tests validate the INTENDED functionality of blueprint generation,
  * including correct structure, plugin/theme inclusion, and URL construction.
  *
- * @package
  */
 
 import { renderHook, act } from '@testing-library/react';

@@ -4,7 +4,6 @@
  * Browser-based implementation for WordPress.org asset detection.
  * Detects WordPress.org plugins/themes by checking wordpress.org APIs.
  *
- * @package
  */
 
 import { __ } from '@wordpress/i18n';

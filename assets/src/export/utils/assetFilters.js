@@ -3,7 +3,6 @@
  *
  * Pure functions for determining which assets to collect.
  *
- * @package
  */
 
 import { applyFilters } from '@wordpress/hooks';

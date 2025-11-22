@@ -4,7 +4,6 @@
  * Comprehensive tests for useProvider, useProviderExists, useProvidersByCapability, and useProvidersByType hooks.
  * Updated to work with ProviderContext-based implementation.
  *
- * @package
  */
 
 import { renderHook, waitFor } from '@testing-library/react';

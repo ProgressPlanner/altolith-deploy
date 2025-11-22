@@ -4,7 +4,6 @@
  * Pure functions for calculating upload statistics and progress.
  * These functions are extracted for testability.
  *
- * @package
  */
 
 /**

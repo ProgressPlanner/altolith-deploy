@@ -1,7 +1,6 @@
 /**
  * Tests for LoadingState Component
  *
- * @package
  */
 
 import { render, screen } from '@testing-library/react';

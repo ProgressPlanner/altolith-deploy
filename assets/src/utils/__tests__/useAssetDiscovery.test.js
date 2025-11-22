@@ -1,7 +1,6 @@
 /**
  * Tests for useAssetDiscovery hook
  *
- * @package
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';

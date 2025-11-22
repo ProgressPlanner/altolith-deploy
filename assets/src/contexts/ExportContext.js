@@ -4,7 +4,6 @@
  * Centralized export workflow state management using React Context API.
  * Provides global export state with step tracking, progress management, and status updates.
  *
- * @package
  */
 
 import {

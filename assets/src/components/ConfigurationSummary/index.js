@@ -1,7 +1,6 @@
 /**
  * Configuration Summary Component
  *
- * @package
  */
 
 import { __ } from '@wordpress/i18n';

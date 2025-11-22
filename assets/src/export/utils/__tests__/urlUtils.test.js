@@ -1,7 +1,6 @@
 /**
  * URL Utils Tests
  *
- * @package
  */
 
 import {

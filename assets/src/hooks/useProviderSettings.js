@@ -7,7 +7,6 @@
  * Uses ProviderSettingsAPI service for all business logic.
  * Hook provides React state management (loading/error) around service calls.
  *
- * @package
  */
 
 import { useState, useCallback, useMemo } from '@wordpress/element';

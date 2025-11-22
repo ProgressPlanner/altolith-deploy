@@ -4,7 +4,6 @@
  * Development-only component for debugging context state and API calls.
  * Only renders in development mode (when SCRIPT_DEBUG is true).
  *
- * @package
  */
 
 import { useState, useEffect } from '@wordpress/element';

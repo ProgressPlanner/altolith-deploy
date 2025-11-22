@@ -5,7 +5,6 @@
  * 1. PHASE 1 (Pre-scan): Fetch all URLs, extract assets, count total files
  * 2. PHASE 2 (Upload): Upload all files with accurate progress
  *
- * @package
  */
 
 import { useCallback } from '@wordpress/element';

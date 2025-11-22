@@ -9,7 +9,6 @@
  * - Must test error handling
  * - Must fail if loading state is incorrect
  *
- * @package Aether\SiteExporter\Tests
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';
@@ -35,9 +34,12 @@ describe( 'SettingsContext', () => {
 
 	describe( 'SettingsProvider', () => {
 		it( 'should provide default context values', () => {
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			expect( result.current ).toHaveProperty( 'settings' );
 			expect( result.current ).toHaveProperty( 'loading' );
@@ -52,9 +54,12 @@ describe( 'SettingsContext', () => {
 				settings: { test: 'value' },
 			} );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -77,9 +82,12 @@ describe( 'SettingsContext', () => {
 					} )
 			);
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			expect( result.current.loading ).toBe( true );
 		} );
@@ -95,9 +103,12 @@ describe( 'SettingsContext', () => {
 				settings: mockSettings,
 			} );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -110,9 +121,12 @@ describe( 'SettingsContext', () => {
 		it( 'should handle API error', async () => {
 			apiFetch.mockRejectedValue( new Error( 'Network error' ) );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -128,9 +142,12 @@ describe( 'SettingsContext', () => {
 				message: 'Settings not found',
 			} );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -145,9 +162,12 @@ describe( 'SettingsContext', () => {
 				value: { test: 'value' },
 			} );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -162,9 +182,12 @@ describe( 'SettingsContext', () => {
 				settings: {},
 			} );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -186,9 +209,12 @@ describe( 'SettingsContext', () => {
 					settings: { version: 2 },
 				} );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -216,9 +242,12 @@ describe( 'SettingsContext', () => {
 					settings: { test: 'value' },
 				} );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.error ).toBe( 'First error' );
@@ -244,9 +273,12 @@ describe( 'SettingsContext', () => {
 				settings: {},
 			} );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -256,7 +288,9 @@ describe( 'SettingsContext', () => {
 				result.current.invalidateCache();
 			} );
 
-			expect( invalidateCache ).toHaveBeenCalledWith( '/aether/site-exporter/settings' );
+			expect( invalidateCache ).toHaveBeenCalledWith(
+				'/aether/site-exporter/settings'
+			);
 			expect( apiFetch ).toHaveBeenCalledTimes( 2 ); // Initial + refetch
 		} );
 	} );
@@ -265,9 +299,12 @@ describe( 'SettingsContext', () => {
 		it( 'should handle error without message', async () => {
 			apiFetch.mockRejectedValue( new Error() );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -279,9 +316,12 @@ describe( 'SettingsContext', () => {
 		it( 'should handle non-Error rejections', async () => {
 			apiFetch.mockRejectedValue( 'String error' );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -295,9 +335,12 @@ describe( 'SettingsContext', () => {
 				success: false,
 			} );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -311,9 +354,12 @@ describe( 'SettingsContext', () => {
 		it( 'should start with loading true', () => {
 			apiFetch.mockImplementation( () => new Promise( () => {} ) );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			expect( result.current.loading ).toBe( true );
 		} );
@@ -324,9 +370,12 @@ describe( 'SettingsContext', () => {
 				settings: {},
 			} );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );
@@ -336,9 +385,12 @@ describe( 'SettingsContext', () => {
 		it( 'should set loading false after error', async () => {
 			apiFetch.mockRejectedValue( new Error( 'Error' ) );
 
-			const { result } = renderHook( () => useContext( SettingsContext ), {
-				wrapper: SettingsProvider,
-			} );
+			const { result } = renderHook(
+				() => useContext( SettingsContext ),
+				{
+					wrapper: SettingsProvider,
+				}
+			);
 
 			await waitFor( () => {
 				expect( result.current.loading ).toBe( false );

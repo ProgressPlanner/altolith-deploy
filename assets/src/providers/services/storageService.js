@@ -4,7 +4,6 @@
  * Storage service for local filesystem operations.
  * All operations go through REST API endpoints.
  *
- * @package
  */
 
 import {

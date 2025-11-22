@@ -1,7 +1,6 @@
 /**
  * Get REST URL Utility Tests
  *
- * @package
  */
 
 import { getRestUrl } from '../getRestUrl';

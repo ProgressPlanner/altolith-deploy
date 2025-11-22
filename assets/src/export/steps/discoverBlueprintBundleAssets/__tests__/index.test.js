@@ -1,7 +1,6 @@
 /**
  * discoverBlueprintBundleAssets Step Tests
  *
- * @package
  */
 
 import { discoverBlueprintBundleAssetsStep } from '../index';

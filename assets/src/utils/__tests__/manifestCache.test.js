@@ -1,7 +1,6 @@
 /**
  * ManifestCache Tests
  *
- * @package
  */
 
 import { ManifestCache, getManifestCache } from '../manifestCache';

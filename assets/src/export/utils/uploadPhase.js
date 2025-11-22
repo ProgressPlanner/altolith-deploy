@@ -3,7 +3,6 @@
  *
  * Phase 2 of static site generation: Upload all files with accurate progress tracking.
  *
- * @package
  */
 
 import { __, sprintf } from '@wordpress/i18n';

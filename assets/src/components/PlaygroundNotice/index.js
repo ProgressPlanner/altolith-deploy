@@ -3,7 +3,6 @@
  *
  * Displays a warning notice when plugin is used outside WordPress Playground.
  *
- * @package
  */
 
 import { Notice } from '@wordpress/components';

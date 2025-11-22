@@ -1,7 +1,6 @@
 /**
  * Static Site Config Tests
  *
- * @package
  */
 
 import {

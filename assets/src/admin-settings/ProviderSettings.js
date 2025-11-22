@@ -4,7 +4,6 @@
  * Displays provider types with their instances grouped together.
  * Each provider type section can have multiple named instances.
  *
- * @package
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';

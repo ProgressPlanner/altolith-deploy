@@ -4,7 +4,6 @@
  * Limits the number of concurrent async operations to prevent overwhelming
  * the browser/server with too many simultaneous requests.
  *
- * @package
  */
 
 /**

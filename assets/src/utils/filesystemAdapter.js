@@ -4,7 +4,6 @@
  * Adapter for local filesystem storage operations via REST API.
  * Replaces workerEndpointClient.js for local storage.
  *
- * @package
  */
 
 import apiFetch from './api';

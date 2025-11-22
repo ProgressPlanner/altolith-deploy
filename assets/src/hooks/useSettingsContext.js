@@ -4,7 +4,6 @@
  * Hook to consume the SettingsContext.
  * Provides access to global settings state and operations.
  *
- * @package
  */
 
 import { useContext } from '@wordpress/element';

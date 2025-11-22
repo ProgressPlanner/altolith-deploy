@@ -3,7 +3,6 @@
  *
  * Comprehensive tests for data transformation utilities.
  *
- * @package
  */
 
 import { flattenSettings, unflattenSettings } from '../dataTransform';

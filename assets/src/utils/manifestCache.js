@@ -20,7 +20,6 @@
  * - Subsequent exports within 1 hour: Use cached manifest (2-5 second improvement)
  * - After manifest updates: Cache is automatically updated
  *
- * @package
  */
 
 import IndexedDBStore from './indexedDB';

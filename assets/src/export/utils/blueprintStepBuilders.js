@@ -4,7 +4,6 @@
  * Utility functions for constructing individual WordPress Playground blueprint steps.
  * Each function is responsible for creating a single step or group of related steps.
  *
- * @package
  */
 
 import { applyFilters } from '@wordpress/hooks';

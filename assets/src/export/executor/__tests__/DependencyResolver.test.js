@@ -1,7 +1,6 @@
 /**
  * Dependency Resolver Tests
  *
- * @package
  */
 
 import {

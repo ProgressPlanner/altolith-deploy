@@ -4,7 +4,6 @@
  * Dynamically renders a form based on provider field definitions.
  * Can be enhanced with react-hook-form once installed.
  *
- * @package
  */
 
 import {

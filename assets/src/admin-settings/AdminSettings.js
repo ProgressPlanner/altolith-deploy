@@ -3,7 +3,6 @@
  *
  * Main admin settings page container.
  *
- * @package
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';

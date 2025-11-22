@@ -7,7 +7,6 @@
  * - Dependency provider is enabled
  * - Dependency provider is configured
  *
- * @package
  */
 
 /**

@@ -1,7 +1,6 @@
 /**
  * Tests for ExportButton Component
  *
- * @package
  */
 
 import { render, screen, fireEvent } from '@testing-library/react';

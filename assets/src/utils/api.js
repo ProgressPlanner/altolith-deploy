@@ -7,7 +7,6 @@
  * - Nonce handling from window.aetherData
  * - Auth header utilities for external APIs
  *
- * @package
  */
 
 import apiFetch from '@wordpress/api-fetch';

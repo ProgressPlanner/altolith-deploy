@@ -1,7 +1,6 @@
 /**
  * Upload Progress Cache Tests
  *
- * @package
  */
 
 import {

@@ -4,7 +4,6 @@
  * Centralized provider settings management using React Context API.
  * Provides global settings state with caching, optimistic updates, and validation.
  *
- * @package
  */
 
 import {

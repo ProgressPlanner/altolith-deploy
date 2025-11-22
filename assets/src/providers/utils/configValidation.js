@@ -3,7 +3,6 @@
  *
  * Pure functions for validating provider configurations.
  *
- * @package
  */
 
 import { __, sprintf } from '@wordpress/i18n';

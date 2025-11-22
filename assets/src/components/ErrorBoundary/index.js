@@ -4,7 +4,6 @@
  * Catches errors in React component tree and displays a fallback UI
  * instead of crashing the entire application.
  *
- * @package
  */
 
 import { Component } from '@wordpress/element';

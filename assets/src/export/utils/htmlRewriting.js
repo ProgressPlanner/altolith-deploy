@@ -3,7 +3,6 @@
  *
  * Helper functions for HTML URL rewriting.
  *
- * @package
  */
 
 import { escapeRegex } from './urlUtils';

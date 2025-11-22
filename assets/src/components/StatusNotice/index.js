@@ -4,7 +4,6 @@
  * Reusable notice/alert component for displaying status messages.
  * Wraps WordPress Notice component with consistent styling.
  *
- * @package
  */
 
 import { Notice } from '@wordpress/components';

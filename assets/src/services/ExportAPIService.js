@@ -4,7 +4,6 @@
  * Service for export-related API operations.
  * Extracted from useExportAPI hook for testability.
  *
- * @package
  */
 
 import { ENDPOINTS } from '@aether/constants';

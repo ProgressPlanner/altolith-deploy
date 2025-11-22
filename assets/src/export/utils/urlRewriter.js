@@ -3,7 +3,6 @@
  *
  * Rewrites WordPress URLs to static URLs for the static site.
  *
- * @package
  */
 
 import { debug, debugError } from '@aether/utils/debug';

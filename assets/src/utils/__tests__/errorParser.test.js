@@ -1,7 +1,6 @@
 /**
  * Error Parser Tests
  *
- * @package
  */
 
 import {

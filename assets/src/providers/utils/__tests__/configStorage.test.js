@@ -1,7 +1,6 @@
 /**
  * ConfigStorage Tests
  *
- * @package
  */
 
 import { ConfigStorage } from '../configStorage';

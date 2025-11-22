@@ -1,7 +1,6 @@
 /**
  * Filesystem Adapter Tests
  *
- * @package
  */
 
 import {

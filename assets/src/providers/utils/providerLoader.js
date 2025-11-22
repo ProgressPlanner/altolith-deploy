@@ -11,7 +11,6 @@
  * - Concurrent load support
  * - PHP-enqueued script detection
  *
- * @package
  */
 
 import ProviderRegistry from '../registry/ProviderRegistry';

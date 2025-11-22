@@ -11,7 +11,6 @@
  *   errors?: string[]     // Multiple errors (optional)
  * }
  *
- * @package
  */
 
 /**

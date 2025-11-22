@@ -4,7 +4,6 @@
  * Tests for useSuccessTimeout hook.
  * Validates timer management and cleanup behavior.
  *
- * @package
  */
 
 import { renderHook, act } from '@testing-library/react';

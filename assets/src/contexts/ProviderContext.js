@@ -4,7 +4,6 @@
  * Centralized provider management using React Context API.
  * Provides global provider registry state with caching and operations.
  *
- * @package
  */
 
 import {

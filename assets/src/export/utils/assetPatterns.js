@@ -3,7 +3,6 @@
  *
  * Regex patterns for asset extraction from HTML, CSS, and JS.
  *
- * @package
  */
 
 /**

@@ -4,7 +4,6 @@
  * Modal for creating a new provider instance.
  * Shows provider type selector and instance name input.
  *
- * @package
  */
 
 import { useState } from '@wordpress/element';

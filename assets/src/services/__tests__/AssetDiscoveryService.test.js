@@ -1,7 +1,6 @@
 /**
  * Asset Discovery Service Tests
  *
- * @package
  */
 
 import {

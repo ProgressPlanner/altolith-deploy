@@ -10,13 +10,9 @@
  * - Must test error handling and recovery
  * - Must fail if implementation loses data or corrupts state
  *
- * @package Aether\SiteExporter\Tests
  */
 
-import {
-	prepareManifest,
-	processAssets,
-} from '../uploadPhase';
+import { prepareManifest, processAssets } from '../uploadPhase';
 import { fetchManifest } from '@aether/utils/manifestManager';
 import { calculateFileHash } from '@aether/utils/fileHash';
 

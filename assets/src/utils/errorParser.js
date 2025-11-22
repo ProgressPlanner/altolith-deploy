@@ -4,7 +4,6 @@
  * Centralized error response parsing for API calls.
  * Handles multiple error response formats (generic, plain text).
  *
- * @package
  */
 
 /**

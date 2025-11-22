@@ -4,7 +4,6 @@
  * Reusable card component for displaying informational content.
  * Used in help/documentation sections to present organized information.
  *
- * @package
  */
 
 import {

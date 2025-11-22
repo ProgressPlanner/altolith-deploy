@@ -1,7 +1,6 @@
 /**
  * uploadStaticFiles Step Tests
  *
- * @package
  */
 
 import { uploadStaticFilesStep } from '../index';

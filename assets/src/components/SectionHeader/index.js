@@ -4,7 +4,6 @@
  * Reusable section header with title and optional description.
  * Provides consistent styling across admin pages.
  *
- * @package
  */
 
 import { colors, fontSize, commonStyles } from '@aether/utils/styles';

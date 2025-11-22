@@ -3,7 +3,6 @@
  *
  * Tests for errorHandler utility with retry logic and error categorization.
  *
- * @package
  */
 
 import {

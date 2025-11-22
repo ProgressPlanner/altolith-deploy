@@ -4,7 +4,6 @@
  * Tests for uploadCalculator utilities.
  * Validates pure functions for upload statistics and progress.
  *
- * @package
  */
 
 import {

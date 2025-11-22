@@ -4,7 +4,6 @@
  * Utilities for transforming data structures in React.
  * Uses lodash (available globally in WordPress) for data manipulation.
  *
- * @package
  */
 
 /**

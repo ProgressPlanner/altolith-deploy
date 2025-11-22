@@ -1,7 +1,6 @@
 /**
  * Publish Step Definitions Tests
  *
- * @package
  */
 
 import { getRegisteredSteps } from '../../steps';

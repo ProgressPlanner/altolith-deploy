@@ -4,7 +4,6 @@
  * Shared hook for provider settings form logic.
  * Extracts common patterns from provider Settings components to reduce duplication.
  *
- * @package
  */
 
 import { useState, useEffect, useCallback } from '@wordpress/element';

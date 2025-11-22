@@ -4,7 +4,6 @@
  * Reloads provider metadata when deployment types change to ensure
  * the correct settings fields are displayed.
  *
- * @package
  */
 
 import { useEffect, useRef, useCallback } from '@wordpress/element';

@@ -4,7 +4,6 @@
  * Tests for style utility functions.
  * These are pure functions that create style objects.
  *
- * @package
  */
 
 import { createFlexStyle, createGridStyle, spacing } from '../styles';

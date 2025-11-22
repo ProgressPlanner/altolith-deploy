@@ -4,7 +4,6 @@
  * Centralized configuration for assets and URL patterns that should be excluded
  * from static site generation.
  *
- * @package
  */
 
 /**

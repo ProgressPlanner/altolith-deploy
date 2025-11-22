@@ -1,7 +1,6 @@
 /**
  * Provider Configuration Tests
  *
- * @package
  */
 
 import { isProviderConfigured } from '../providerConfiguration';

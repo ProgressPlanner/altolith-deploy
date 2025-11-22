@@ -3,7 +3,6 @@
  *
  * Orchestrates the export workflow using phase-based execution
  *
- * @package
  */
 
 import { useCallback, useState, useRef } from '@wordpress/element';
@@ -120,10 +119,15 @@ export function useExportController( exportState ) {
 			// Invalidate all provider config caches to ensure fresh data during export
 			try {
 				await ConfigStorage.clearAllCaches();
-				debug( 'Invalidated all provider config caches for fresh export data' );
+				debug(
+					'Invalidated all provider config caches for fresh export data'
+				);
 			} catch ( cacheError ) {
 				// Cache invalidation failure is not critical - log and continue
-				debugError( 'Failed to invalidate provider config caches:', cacheError );
+				debugError(
+					'Failed to invalidate provider config caches:',
+					cacheError
+				);
 			}
 
 			debug( 'Steps initialized, starting export workflow' );

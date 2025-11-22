@@ -4,7 +4,6 @@
  * Comprehensive tests for StorageService class.
  * Tests all storage operations: upload, delete, copy, list, exists, batch operations, and connection testing.
  *
- * @package
  */
 
 import { StorageService } from '../storageService';

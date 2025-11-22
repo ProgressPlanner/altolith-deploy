@@ -3,7 +3,6 @@
  *
  * Centralized timing values for polling intervals, timeouts, and delays
  *
- * @package
  */
 
 /**

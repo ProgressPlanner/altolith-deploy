@@ -4,7 +4,6 @@
  * Tests for ExportAPIService and asset discovery operations.
  * Validates API call wrappers and storage operations.
  *
- * @package
  */
 
 import { ExportAPIService } from '../ExportAPIService';

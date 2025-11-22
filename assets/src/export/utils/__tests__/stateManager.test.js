@@ -3,7 +3,6 @@
  *
  * Tests for stateManager utility with IndexedDB persistence.
  *
- * @package
  */
 
 import {

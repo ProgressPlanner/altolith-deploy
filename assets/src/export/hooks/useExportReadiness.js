@@ -5,7 +5,6 @@
  * Uses useAPIData for cleaner data fetching.
  * Simplified from 107 to 80 lines (-25% complexity).
  *
- * @package
  */
 
 import { useMemo } from '@wordpress/element';

@@ -1,7 +1,6 @@
 /**
  * Loading State Component
  *
- * @package
  */
 
 import { Spinner } from '@wordpress/components';

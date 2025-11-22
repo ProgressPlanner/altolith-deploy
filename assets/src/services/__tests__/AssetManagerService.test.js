@@ -4,7 +4,6 @@
  * Tests for AssetManagerService pure functions and asset operations.
  * Validates asset merging, normalization, and filtering logic.
  *
- * @package
  */
 
 import {

@@ -4,7 +4,6 @@
  * Tests for useConnectionTest hook.
  * Validates connection testing, state management, and error handling.
  *
- * @package
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';

@@ -3,7 +3,6 @@
  *
  * Comprehensive tests for validation utility functions.
  *
- * @package
  */
 
 import { validateField, validateConfig } from '../../utils/validation';

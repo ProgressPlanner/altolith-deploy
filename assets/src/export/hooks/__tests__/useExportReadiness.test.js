@@ -3,7 +3,6 @@
  *
  * Updated to work with refactored hook using useAPIData
  *
- * @package
  */
 
 import { renderHook, waitFor } from '@testing-library/react';

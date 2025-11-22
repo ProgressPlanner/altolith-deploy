@@ -1,7 +1,6 @@
 /**
  * Export Button Component
  *
- * @package
  */
 
 import { Button } from '@wordpress/components';

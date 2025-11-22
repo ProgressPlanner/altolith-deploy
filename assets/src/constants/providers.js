@@ -3,7 +3,6 @@
  *
  * Centralized provider IDs, types, and categorizations
  *
- * @package
  */
 
 /**

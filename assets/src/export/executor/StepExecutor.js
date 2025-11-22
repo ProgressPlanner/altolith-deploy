@@ -4,7 +4,6 @@
  * Executes export workflow steps with automatic dependency resolution
  * and parallel execution support.
  *
- * @package
  */
 
 import { doAction, applyFilters } from '@wordpress/hooks';

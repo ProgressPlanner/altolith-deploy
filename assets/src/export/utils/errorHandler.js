@@ -4,7 +4,6 @@
  * Provides error categorization, retry logic, and error recovery strategies
  * for the export workflow.
  *
- * @package
  */
 
 import { __, sprintf } from '@wordpress/i18n';

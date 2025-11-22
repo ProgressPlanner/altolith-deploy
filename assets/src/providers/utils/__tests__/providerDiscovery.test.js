@@ -4,7 +4,6 @@
  * Tests for provider discovery utilities.
  * Validates provider selection logic using JavaScript ProviderRegistry.
  *
- * @package
  */
 
 import {

@@ -4,7 +4,6 @@
  * Generates WordPress Playground blueprint JSON for site deployment.
  * Fetches WordPress.org plugin/theme slugs and constructs blueprint with bundled resources.
  *
- * @package
  */
 
 import { useCallback } from '@wordpress/element';

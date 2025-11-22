@@ -3,7 +3,6 @@
  *
  * Utilities for working with settings API (no dot notation).
  *
- * @package
  */
 
 /**

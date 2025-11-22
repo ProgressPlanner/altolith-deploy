@@ -9,7 +9,6 @@
  * - Must test error handling and recovery
  * - Must fail if implementation loses data or skips steps
  *
- * @package Aether\SiteExporter\Tests
  */
 
 import { renderHook, act } from '@testing-library/react';
@@ -110,7 +109,9 @@ describe( 'useStaticSiteGenerator', () => {
 
 	describe( 'initialization', () => {
 		it( 'should return processUrls function', () => {
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			expect( result.current ).toBeInstanceOf( Function );
 		} );
@@ -123,7 +124,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -149,7 +152,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -180,7 +185,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -201,7 +208,10 @@ describe( 'useStaticSiteGenerator', () => {
 
 	describe( 'pre-scan phase', () => {
 		it( 'should execute pre-scan with correct parameters', async () => {
-			const urls = [ 'https://example.com/page1', 'https://example.com/page2' ];
+			const urls = [
+				'https://example.com/page1',
+				'https://example.com/page2',
+			];
 
 			executePreScan.mockResolvedValue( {
 				cache: mockCache,
@@ -210,7 +220,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -229,7 +241,9 @@ describe( 'useStaticSiteGenerator', () => {
 				urls,
 				siteUrl: 'https://example.com',
 				providerId: 'provider-id',
-				providerConfig: expect.objectContaining( { static_files_path: 'static/' } ),
+				providerConfig: expect.objectContaining( {
+					static_files_path: 'static/',
+				} ),
 				setStatusMessage: mockSetStatusMessage,
 				cache: mockCache,
 			} );
@@ -242,14 +256,19 @@ describe( 'useStaticSiteGenerator', () => {
 				failures: {
 					urlsFailed: 2,
 					failedUrls: [
-						{ url: 'https://example.com/fail1', reason: 'Network error' },
+						{
+							url: 'https://example.com/fail1',
+							reason: 'Network error',
+						},
 						{ url: 'https://example.com/fail2', reason: 'Timeout' },
 					],
 				},
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			const resultData = await act( async () => {
 				return await result.current(
@@ -281,7 +300,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -311,7 +332,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -342,7 +365,9 @@ describe( 'useStaticSiteGenerator', () => {
 			prepareManifest.mockResolvedValue( {} );
 			finalizeManifest.mockResolvedValue();
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -367,7 +392,10 @@ describe( 'useStaticSiteGenerator', () => {
 		} );
 
 		it( 'should save manifest periodically every 50 files', async () => {
-			const urls = Array.from( { length: 100 }, ( _, i ) => `https://example.com/page${ i }` );
+			const urls = Array.from(
+				{ length: 100 },
+				( _, i ) => `https://example.com/page${ i }`
+			);
 			const cachedUrls = urls.slice( 0, 100 );
 
 			mockCache.getAllUrls.mockResolvedValue( cachedUrls );
@@ -396,7 +424,9 @@ describe( 'useStaticSiteGenerator', () => {
 				manifest: {},
 			} ) );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -446,7 +476,9 @@ describe( 'useStaticSiteGenerator', () => {
 				manifest: {},
 			} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -486,7 +518,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -522,7 +556,9 @@ describe( 'useStaticSiteGenerator', () => {
 			prepareManifest.mockResolvedValue( {} );
 			uploadHtmlFile.mockRejectedValue( new Error( 'Upload failed' ) );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			const resultData = await act( async () => {
 				return await result.current(
@@ -568,7 +604,9 @@ describe( 'useStaticSiteGenerator', () => {
 				manifest: {},
 			} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -629,7 +667,9 @@ describe( 'useStaticSiteGenerator', () => {
 				manifest: {},
 			} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -682,7 +722,9 @@ describe( 'useStaticSiteGenerator', () => {
 				manifest: {},
 			} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -727,7 +769,9 @@ describe( 'useStaticSiteGenerator', () => {
 				manifest: {},
 			} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -759,7 +803,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -790,7 +836,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await act( async () => {
 				await result.current(
@@ -825,7 +873,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 			prepareManifest.mockResolvedValue( {} );
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			const resultData = await act( async () => {
 				return await result.current(
@@ -844,9 +894,13 @@ describe( 'useStaticSiteGenerator', () => {
 		} );
 
 		it( 'should handle missing provider config gracefully', async () => {
-			fetchProviderConfig.mockRejectedValue( new Error( 'Config not found' ) );
+			fetchProviderConfig.mockRejectedValue(
+				new Error( 'Config not found' )
+			);
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await expect(
 				act( async () => {
@@ -865,9 +919,13 @@ describe( 'useStaticSiteGenerator', () => {
 		} );
 
 		it( 'should handle storage service creation failure', async () => {
-			createStorageService.mockRejectedValue( new Error( 'Storage init failed' ) );
+			createStorageService.mockRejectedValue(
+				new Error( 'Storage init failed' )
+			);
 
-			const { result } = renderHook( () => useStaticSiteGenerator( mockOnProgress ) );
+			const { result } = renderHook( () =>
+				useStaticSiteGenerator( mockOnProgress )
+			);
 
 			await expect(
 				act( async () => {

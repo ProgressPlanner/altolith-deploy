@@ -4,7 +4,6 @@
  * Flat step definitions with explicit dependencies for the export workflow.
  * Steps are executed in parallel when their dependencies are satisfied.
  *
- * @package
  */
 
 import { applyFilters } from '@wordpress/hooks';

@@ -4,7 +4,6 @@
  * Service class for managing provider settings via REST API.
  * Extracted from useProviderSettings hook for testability.
  *
- * @package
  */
 
 /**

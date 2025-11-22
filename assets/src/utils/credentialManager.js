@@ -4,7 +4,6 @@
  * Fetches encrypted credentials from REST endpoint and manages them in memory.
  * Credentials are decrypted server-side before being sent to the client.
  *
- * @package
  */
 
 import apiFetch from './api';

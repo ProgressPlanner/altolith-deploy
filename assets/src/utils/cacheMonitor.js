@@ -17,7 +17,6 @@
  * await monitor.clearAll();
  * ```
  *
- * @package
  */
 
 import { getWpOrgCache } from './wporgCache';

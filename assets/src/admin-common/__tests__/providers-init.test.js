@@ -6,8 +6,6 @@
  * Quality Standards:
  * - Test must verify local-filesystem provider registers
  * - Must not crash during import
- *
- * @package Aether\SiteExporter\Tests
  */
 
 // Mock the local-filesystem provider import

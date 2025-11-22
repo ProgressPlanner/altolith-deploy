@@ -1,7 +1,6 @@
 /**
  * Tests for domProcessor utility.
  *
- * @package
  */
 
 import {

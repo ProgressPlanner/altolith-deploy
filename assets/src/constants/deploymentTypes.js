@@ -1,7 +1,6 @@
 /**
  * Deployment type constants and labels
  *
- * @package
  */
 
 import { __ } from '@wordpress/i18n';

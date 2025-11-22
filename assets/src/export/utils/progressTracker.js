@@ -4,7 +4,6 @@
  * Tracks export workflow progress with equal step weights and IndexedDB persistence.
  * Each step gets equal weight: 100% / number of steps.
  *
- * @package
  */
 
 import { debug, debugWarn } from '@aether/utils/debug';

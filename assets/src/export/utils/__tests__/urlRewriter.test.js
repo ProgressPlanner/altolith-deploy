@@ -7,7 +7,6 @@
  * - Static site URL rewriting
  * - Protocol-agnostic comparison
  *
- * @package
  */
 
 import {

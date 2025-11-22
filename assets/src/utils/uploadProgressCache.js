@@ -18,7 +18,6 @@
  * - User accidentally closes tab
  * - Manual export cancellation (can resume later)
  *
- * @package
  */
 
 import IndexedDBStore from './indexedDB';

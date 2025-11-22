@@ -4,7 +4,6 @@
  * Provides DOM-based HTML manipulation using parse5.
  * Async-loaded to avoid bundle size impact.
  *
- * @package
  */
 
 let parse5Module = null;

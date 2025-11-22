@@ -1,7 +1,6 @@
 /**
  * useRecentJobs Hook Tests
  *
- * @package
  */
 
 import { renderHook, waitFor } from '@testing-library/react';

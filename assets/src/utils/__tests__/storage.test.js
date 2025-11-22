@@ -4,7 +4,6 @@
  * Tests for browser storage abstraction that wraps localStorage
  * with error handling, JSON serialization, and testability.
  *
- * @package
  */
 
 import { storage } from '../storage';

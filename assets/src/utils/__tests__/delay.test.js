@@ -1,7 +1,6 @@
 /**
  * Delay Utility Tests
  *
- * @package
  */
 
 import { delay } from '../delay';

@@ -4,7 +4,6 @@
  * Service for managing asset state with pure business logic.
  * Extracted from useAssetManager hook for testability.
  *
- * @package
  */
 
 const STORAGE_KEY = 'aetherAssets';

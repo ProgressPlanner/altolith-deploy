@@ -4,7 +4,6 @@
  * Wrapper hook that provides export state from ExportContext.
  * Delegates to centralized state management.
  *
- * @package
  */
 
 import { useExportContext } from '@aether/hooks/useExportContext';

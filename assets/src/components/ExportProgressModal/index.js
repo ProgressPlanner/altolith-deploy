@@ -3,7 +3,6 @@
  *
  * Shows export progress with progress bar and status messages
  *
- * @package
  */
 
 import { useEffect, useMemo, useCallback, useRef } from '@wordpress/element';

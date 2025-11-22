@@ -3,7 +3,6 @@
  *
  * Renders a single activity log message with icon, text, and optional progress bar
  *
- * @package
  */
 
 import {

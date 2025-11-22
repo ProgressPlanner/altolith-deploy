@@ -3,7 +3,6 @@
  *
  * Handles unhandled promise rejections and runtime errors globally.
  *
- * @package
  */
 
 import { debugError } from './debug';

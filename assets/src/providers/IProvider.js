@@ -8,7 +8,6 @@
  * All providers should extend AbstractProvider, which provides base implementations
  * for common functionality. Override methods as needed to provide provider-specific behavior.
  *
- * @package
  * @interface
  */
 

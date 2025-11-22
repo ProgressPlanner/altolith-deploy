@@ -4,7 +4,6 @@
  * Tests for usePlaygroundNotice hook.
  * Validates API fetching, state management, and dismiss functionality.
  *
- * @package
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';

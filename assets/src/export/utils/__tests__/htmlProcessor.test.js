@@ -4,7 +4,6 @@
  * Tests for HTML processing utilities used in static site generation.
  * These are pure functions that transform HTML without side effects.
  *
- * @package
  */
 
 import { processHtml, getStaticFilePath } from '../htmlProcessor';

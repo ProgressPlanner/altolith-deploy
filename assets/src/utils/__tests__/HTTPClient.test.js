@@ -4,7 +4,6 @@
  * Tests for HTTPClient abstraction layer.
  * Validates both production and mock implementations.
  *
- * @package
  */
 
 import { HTTPClient, MockHTTPClient, defaultHTTPClient } from '../HTTPClient';

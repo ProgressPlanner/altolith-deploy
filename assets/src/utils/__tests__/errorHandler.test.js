@@ -1,7 +1,6 @@
 /**
  * Error Handler Tests
  *
- * @package
  */
 
 import { initializeErrorHandlers } from '../errorHandler';

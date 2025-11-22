@@ -4,7 +4,6 @@
  * Tests for ErrorBoundary component.
  * Validates error catching and fallback UI rendering.
  *
- * @package
  */
 
 import React from 'react';

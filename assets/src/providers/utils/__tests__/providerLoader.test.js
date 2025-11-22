@@ -9,7 +9,6 @@
  * - Must test concurrent loading scenarios
  * - Must fail if loading states are incorrect
  *
- * @package Aether\SiteExporter\Tests
  */
 
 import {
@@ -80,7 +79,9 @@ describe( 'providerLoader', () => {
 
 		it( 'should return true for loading provider', async () => {
 			// Start loading (will timeout since script doesn't exist)
-			const loadPromise = loadProvider( 'test-provider', { throwOnError: false } );
+			const loadPromise = loadProvider( 'test-provider', {
+				throwOnError: false,
+			} );
 
 			// Check loading state
 			expect( isProviderLoading( 'test-provider' ) ).toBe( true );
@@ -127,7 +128,9 @@ describe( 'providerLoader', () => {
 
 		it( 'should return all loading states', async () => {
 			// Start loading provider
-			const loadPromise = loadProvider( 'test-provider', { throwOnError: false } );
+			const loadPromise = loadProvider( 'test-provider', {
+				throwOnError: false,
+			} );
 
 			const states = getAllLoadingStates();
 			expect( states.has( 'test-provider' ) ).toBe( true );
@@ -194,7 +197,9 @@ describe( 'providerLoader', () => {
 				return originalAppendChild.call( document.head, element );
 			} );
 
-			await expect( loadProvider( 'test-provider', { throwOnError: true } ) ).rejects.toThrow();
+			await expect(
+				loadProvider( 'test-provider', { throwOnError: true } )
+			).rejects.toThrow();
 
 			document.head.appendChild = originalAppendChild;
 		} );
@@ -211,7 +216,9 @@ describe( 'providerLoader', () => {
 				return originalAppendChild.call( document.head, element );
 			} );
 
-			const result = await loadProvider( 'test-provider', { throwOnError: false } );
+			const result = await loadProvider( 'test-provider', {
+				throwOnError: false,
+			} );
 
 			expect( result ).toBe( false );
 
@@ -233,7 +240,10 @@ describe( 'providerLoader', () => {
 				return originalAppendChild.call( document.head, element );
 			} );
 
-			const loadPromise = loadProvider( 'test-provider', { throwOnError: false, maxAttempts: 3 } );
+			const loadPromise = loadProvider( 'test-provider', {
+				throwOnError: false,
+				maxAttempts: 3,
+			} );
 
 			// Fast-forward all timers
 			jest.runAllTimers();
@@ -250,7 +260,9 @@ describe( 'providerLoader', () => {
 			// No script URL available (no baseUrl, no existing scripts)
 			delete window.aether.providerScriptsBaseUrl;
 
-			const result = await loadProvider( 'test-provider', { throwOnError: false } );
+			const result = await loadProvider( 'test-provider', {
+				throwOnError: false,
+			} );
 
 			// Should resolve without error
 			expect( result ).toBe( true );
@@ -282,7 +294,8 @@ describe( 'providerLoader', () => {
 		it( 'should detect scripts by src pattern', async () => {
 			// Create script with provider pattern in src
 			const script = document.createElement( 'script' );
-			script.src = 'https://example.com/providers/provider-test-provider.js';
+			script.src =
+				'https://example.com/providers/provider-test-provider.js';
 			document.head.appendChild( script );
 
 			// Mock script ready state
@@ -301,7 +314,8 @@ describe( 'providerLoader', () => {
 		} );
 
 		it( 'should use baseUrl fallback for script URL', async () => {
-			window.aether.providerScriptsBaseUrl = 'https://example.com/providers/';
+			window.aether.providerScriptsBaseUrl =
+				'https://example.com/providers/';
 
 			// Mock successful script load
 			const originalAppendChild = document.head.appendChild;
@@ -318,7 +332,9 @@ describe( 'providerLoader', () => {
 
 			await loadProvider( 'test-provider' );
 
-			expect( scriptSrc ).toBe( 'https://example.com/providers/provider-test-provider.js' );
+			expect( scriptSrc ).toBe(
+				'https://example.com/providers/provider-test-provider.js'
+			);
 
 			document.head.appendChild = originalAppendChild;
 		} );
@@ -344,8 +360,12 @@ describe( 'providerLoader', () => {
 
 			// Should have emitted loading and loaded events
 			expect( events.length ).toBeGreaterThan( 0 );
-			expect( events.some( ( e ) => e.state === LOAD_STATE.LOADING ) ).toBe( true );
-			expect( events.some( ( e ) => e.state === LOAD_STATE.LOADED ) ).toBe( true );
+			expect(
+				events.some( ( e ) => e.state === LOAD_STATE.LOADING )
+			).toBe( true );
+			expect(
+				events.some( ( e ) => e.state === LOAD_STATE.LOADED )
+			).toBe( true );
 
 			document.head.appendChild = originalAppendChild;
 		} );
@@ -364,7 +384,11 @@ describe( 'providerLoader', () => {
 				return originalAppendChild.call( document.head, element );
 			} );
 
-			const results = await loadProviders( [ 'provider1', 'provider2', 'provider3' ] );
+			const results = await loadProviders( [
+				'provider1',
+				'provider2',
+				'provider3',
+			] );
 
 			expect( results.loaded ).toHaveLength( 3 );
 			expect( results.failed ).toHaveLength( 0 );
@@ -395,7 +419,10 @@ describe( 'providerLoader', () => {
 				return originalAppendChild.call( document.head, element );
 			} );
 
-			const results = await loadProviders( [ 'provider1', 'provider2', 'provider3' ], { throwOnError: false } );
+			const results = await loadProviders(
+				[ 'provider1', 'provider2', 'provider3' ],
+				{ throwOnError: false }
+			);
 
 			expect( results.loaded ).toHaveLength( 2 );
 			expect( results.failed ).toHaveLength( 1 );
@@ -417,7 +444,9 @@ describe( 'providerLoader', () => {
 				return originalAppendChild.call( document.head, element );
 			} );
 
-			await expect( loadProviders( [ 'provider1' ], { throwOnError: true } ) ).rejects.toThrow();
+			await expect(
+				loadProviders( [ 'provider1' ], { throwOnError: true } )
+			).rejects.toThrow();
 
 			document.head.appendChild = originalAppendChild;
 		} );
@@ -434,7 +463,9 @@ describe( 'providerLoader', () => {
 				return originalAppendChild.call( document.head, element );
 			} );
 
-			const results = await loadProviders( [ 'provider1' ], { throwOnError: false } );
+			const results = await loadProviders( [ 'provider1' ], {
+				throwOnError: false,
+			} );
 
 			expect( results.errors.provider1 ).toBeInstanceOf( Error );
 
@@ -451,7 +482,10 @@ describe( 'providerLoader', () => {
 
 	describe( 'loadAllProviders', () => {
 		it( 'should load all providers from registry', async () => {
-			ProviderRegistry.getAllIds.mockReturnValue( [ 'provider1', 'provider2' ] );
+			ProviderRegistry.getAllIds.mockReturnValue( [
+				'provider1',
+				'provider2',
+			] );
 
 			// Mock successful script load
 			const originalAppendChild = document.head.appendChild;
@@ -538,7 +572,9 @@ describe( 'providerLoader', () => {
 			expect( isProviderLoaded( 'test-provider' ) ).toBe( true );
 
 			// Should only create one script element
-			const scripts = document.querySelectorAll( 'script[id="aether-provider-test-provider"]' );
+			const scripts = document.querySelectorAll(
+				'script[id="aether-provider-test-provider"]'
+			);
 			expect( scripts.length ).toBe( 1 );
 
 			document.head.appendChild = originalAppendChild;
@@ -558,10 +594,15 @@ describe( 'providerLoader', () => {
 				return originalAppendChild.call( document.head, element );
 			} );
 
-			await loadProvider( 'test-provider', { throwOnError: false, maxAttempts: 1 } );
+			await loadProvider( 'test-provider', {
+				throwOnError: false,
+				maxAttempts: 1,
+			} );
 
 			// Should not have script element in DOM (cleaned up after error)
-			const scripts = document.querySelectorAll( 'script[id="aether-provider-test-provider"]' );
+			const scripts = document.querySelectorAll(
+				'script[id="aether-provider-test-provider"]'
+			);
 			expect( scripts.length ).toBe( 0 );
 
 			document.head.appendChild = originalAppendChild;

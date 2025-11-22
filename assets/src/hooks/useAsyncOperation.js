@@ -4,7 +4,6 @@
  * Generic hook for managing async operations with loading and error states.
  * Consolidates the common pattern of loading/error state management across the app.
  *
- * @package
  */
 
 import { useState, useCallback } from '@wordpress/element';

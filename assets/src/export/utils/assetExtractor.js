@@ -3,7 +3,6 @@
  *
  * Extracts asset URLs (CSS, JS, fonts, images) from HTML content.
  *
- * @package
  */
 
 import { resolveRelative, stripPlaygroundScope } from './urlRewriter';

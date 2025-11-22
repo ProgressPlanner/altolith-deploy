@@ -4,7 +4,6 @@
  * Hook to consume the ProviderContext.
  * Provides access to global provider registry state and operations.
  *
- * @package
  */
 
 import { useContext } from '@wordpress/element';

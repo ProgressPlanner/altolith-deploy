@@ -4,7 +4,6 @@
  * Tests for general utility helper functions.
  * These are pure functions used throughout the application.
  *
- * @package
  */
 
 import {

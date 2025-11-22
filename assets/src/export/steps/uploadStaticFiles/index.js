@@ -4,7 +4,6 @@
  * Generates static HTML/CSS/JS and uploads to storage providers.
  * Uses useStaticSiteGenerator to process URLs and upload files via unified action system.
  *
- * @package
  */
 
 import { __, sprintf, _n } from '@wordpress/i18n';
