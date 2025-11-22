@@ -191,6 +191,7 @@ export const uploadBlueprintBundleStep = {
 		'aether-site-exporter'
 	),
 	supportsProgress: true,
+	globalCache: false,
 	dependencies: [ 'createBlueprintBundle' ],
 	provides: [],
 	handler,

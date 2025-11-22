@@ -127,6 +127,7 @@ export const createBlueprintBundleStep = {
 	label: __( 'Create Blueprint Bundle', 'aether-site-exporter' ),
 	description: __( 'Create blueprint-bundle.zip', 'aether-site-exporter' ),
 	supportsProgress: false,
+	globalCache: true,
 	dependencies: [ 'createWpContentArchive' ],
 	provides: [ 'blueprintData', 'blueprintBundle' ],
 	handler,

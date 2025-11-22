@@ -318,6 +318,7 @@ export const uploadStaticFilesStep = {
 		'aether-site-exporter'
 	),
 	supportsProgress: true,
+	globalCache: false,
 	dependencies: [ 'preScanStaticSite' ],
 	provides: [],
 	handler,

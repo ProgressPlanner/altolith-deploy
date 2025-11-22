@@ -98,6 +98,7 @@ export const createWpContentArchiveStep = {
 		'aether-site-exporter'
 	),
 	supportsProgress: true,
+	globalCache: true,
 	dependencies: [ 'discoverBlueprintBundleAssets' ],
 	provides: [ 'zipPath', 'zipUrl', 'zipSize' ],
 	handler,

@@ -83,6 +83,7 @@ export const getStaticSiteUrlsStep = {
 		'aether-site-exporter'
 	),
 	supportsProgress: false,
+	globalCache: true,
 	dependencies: [],
 	provides: [ 'urls', 'staticSiteUrl', 'urlsCount' ],
 	handler,

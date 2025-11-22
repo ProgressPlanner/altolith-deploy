@@ -1,42 +1,43 @@
 /**
- * Step Executor
+ * Step Executor - Per-Provider Queue Architecture
  *
- * Executes export workflow steps with automatic dependency resolution
- * and parallel execution support.
- *
+ * Executes export workflows with parallel provider queues.
+ * Each provider runs its own complete workflow independently.
+ * Steps with globalCache=true run once and share results across providers.
  */
 
-import { doAction, applyFilters } from '@wordpress/hooks';
-import { buildParallelPlan, validateDependencies } from './DependencyResolver';
-import {
-	errorHandler,
-	formatErrorMessage,
-	determineSeverity,
-	ERROR_SEVERITY,
-} from '../utils/errorHandler';
-import { createProgressTracker } from '../utils/progressTracker';
-import {
-	createStateManager,
-	saveExecutionContext,
-	restoreExecutionContext,
-} from '../utils/stateManager';
-import { debug, debugWarn } from '@aether/utils/debug';
+import { GlobalStepCache } from '../utils/globalStepCache';
+import { validateDependencies } from './DependencyResolver';
+import { debug, debugError, debugWarn } from '@aether/utils/debug';
 
 /**
- * Execute a workflow with the given steps.
+ * Execute workflow for all providers with per-provider queues.
  *
- * @param {Array<Object>} steps   Array of step definitions to execute.
- * @param {Object}        context Initial context with dependencies and state.
- * @param {Object}        options Execution options.
- * @return {Promise<Object>} Final execution state.
+ * @param {Array<Object>} steps   Array of step definitions.
+ * @param {Object}        context Initial context with providerIds and jobId.
+ * @param {Object}        options Execution options with callbacks.
+ * @return {Promise<Object>} Results per provider.
  */
 export async function executeSteps( steps, context, options = {} ) {
 	const {
 		onStepStart = () => {},
 		onStepComplete = () => {},
+		onStepCached = () => {},
+		onStepWaiting = () => {},
 		onStepSkipped = () => {},
 		onError = () => {},
 	} = options;
+
+	const { providerIds = [], jobId } = context;
+
+	if ( ! jobId ) {
+		throw new Error( 'context.jobId is required' );
+	}
+
+	if ( providerIds.length === 0 ) {
+		debugWarn( '[StepExecutor] No providers specified, nothing to execute' );
+		return {};
+	}
 
 	// Validate dependencies
 	const errors = validateDependencies( steps );
@@ -46,251 +47,265 @@ export async function executeSteps( steps, context, options = {} ) {
 		);
 	}
 
-	// Build execution plan with parallel groups
-	const executionPlan = buildParallelPlan( steps );
+	// Initialize global cache
+	const globalCache = new GlobalStepCache();
+	await globalCache.initialize( jobId );
 
-	// Get all step IDs in execution order
-	const stepIds = steps.map( ( step ) => step.id );
+	debug(
+		`[StepExecutor] Starting execution for ${ providerIds.length } providers`
+	);
 
-	// Create workflow ID
-	const workflowId = context.workflowId || `workflow-${ Date.now() }`;
-
-	// Create progress tracker with equal step weights
-	const progressTracker = createProgressTracker( workflowId, stepIds );
-
-	// Create state manager
-	const stateManager = createStateManager( workflowId );
-
-	// Try to restore previous state (for resume capability)
-	let restoredState = null;
-	try {
-		const savedProgress = await progressTracker.load();
-		if ( savedProgress ) {
-			debug( '[StepExecutor] Loaded previous progress:', savedProgress );
+	// Create executor for managing provider queues
+	const executor = new ProviderQueueExecutor(
+		steps,
+		context,
+		globalCache,
+		{
+			onStepStart,
+			onStepComplete,
+			onStepCached,
+			onStepWaiting,
+			onStepSkipped,
+			onError,
 		}
+	);
 
-		// Try to restore execution context
-		restoredState = await restoreExecutionContext( stateManager, context );
-		if ( restoredState && restoredState.completedSteps?.length > 0 ) {
-			debug(
-				`[StepExecutor] Restored state with ${ restoredState.completedSteps.length } completed steps`
-			);
-		}
-	} catch ( error ) {
-		debugWarn( '[StepExecutor] Failed to restore state:', error );
-	}
+	// Execute all provider queues in parallel
+	const results = await executor.executeAll( providerIds );
 
-	// Create execution context (use restored state if available)
-	const executionContext = {
-		...( restoredState || context ),
-		workflowId,
-		progressTracker,
-		stateManager,
-		completedSteps: restoredState?.completedSteps || [],
-		skippedSteps: restoredState?.skippedSteps || [],
-		state: restoredState?.state || {},
-	};
+	debug( '[StepExecutor] All provider queues completed' );
 
-	// Fire workflow start action
-	doAction( 'aether.export.workflow.before', executionContext, steps );
-
-	try {
-		for ( const parallelGroup of executionPlan ) {
-			// Determine which steps to run vs skip
-			const stepsToRun = [];
-			const stepsToSkip = [];
-
-			for ( const stepId of parallelGroup ) {
-				const step = steps.find( ( s ) => s.id === stepId );
-				const shouldSkip = applyFilters(
-					`aether.export.step.${ stepId }.skip`,
-					step.skip ? step.skip( executionContext ) : false,
-					executionContext
-				);
-
-				if ( shouldSkip ) {
-					stepsToSkip.push( stepId );
-				} else {
-					stepsToRun.push( stepId );
-				}
-			}
-
-			// Mark skipped steps
-			for ( const stepId of stepsToSkip ) {
-				executionContext.skippedSteps.push( stepId );
-				onStepSkipped( stepId );
-				doAction(
-					`aether.export.step.${ stepId }.skipped`,
-					executionContext
-				);
-			}
-
-			if ( stepsToRun.length === 0 ) {
-				continue;
-			}
-
-			// Execute steps in parallel
-			const results = await Promise.all(
-				stepsToRun.map( ( stepId ) =>
-					executeStep( stepId, steps, executionContext, {
-						onStepStart,
-						onStepComplete,
-						onError,
-					} )
-				)
-			);
-
-			// Merge results into state
-			for ( const result of results ) {
-				if ( result ) {
-					Object.assign( executionContext.state, result );
-				}
-			}
-
-			// Mark as completed
-			executionContext.completedSteps.push( ...stepsToRun );
-
-			// Save state after each parallel group completes
-			try {
-				await saveExecutionContext( stateManager, executionContext );
-			} catch ( error ) {
-				debugWarn( '[StepExecutor] Failed to save state:', error );
-				// Don't throw - state saving is non-critical
-			}
-		}
-
-		// Fire workflow complete action
-		doAction(
-			'aether.export.workflow.after',
-			executionContext.state,
-			executionContext
-		);
-
-		// Clear progress tracker and state on successful completion
-		await progressTracker.clear();
-		await stateManager.clear();
-
-		return executionContext.state;
-	} catch ( error ) {
-		doAction( 'aether.export.workflow.error', error, executionContext );
-		// Don't clear progress on error - allows for resume
-		throw error;
-	}
+	return results;
 }
 
 /**
- * Execute a single step.
- *
- * @param {string}        stepId           Step ID to execute.
- * @param {Array<Object>} allSteps         All step definitions.
- * @param {Object}        executionContext Current execution context.
- * @param {Object}        options          Execution options.
- * @return {Promise<Object>} Step result data.
- */
-async function executeStep( stepId, allSteps, executionContext, options ) {
-	const step = allSteps.find( ( s ) => s.id === stepId );
-	const { onStepStart, onStepComplete, onError } = options;
-
-	// Fire before hook
-	doAction( `aether.export.step.${ stepId }.before`, executionContext );
-
-	onStepStart( stepId, step );
-
-	// Initialize step progress to 0
-	if ( executionContext.progressTracker ) {
-		await executionContext.progressTracker.updateStepProgress( stepId, 0 );
-	}
-
-	try {
-		// Build context for this step (merge state into context)
-		const stepContext = {
-			...executionContext,
-			...executionContext.state,
-		};
-
-		// Execute handler with retry logic
-		const result = await errorHandler.executeWithRetry(
-			async () => {
-				return await step.handler( stepContext );
-			},
-			{
-				onRetry: ( error, attempt, delay ) => {
-					// Fire retry action
-					doAction(
-						`aether.export.step.${ stepId }.retry`,
-						error,
-						attempt,
-						delay,
-						executionContext
-					);
-				},
-			}
-		);
-
-		// Apply result filter
-		const filteredResult = applyFilters(
-			`aether.export.step.${ stepId }.result`,
-			result || {},
-			executionContext
-		);
-
-		onStepComplete( stepId, filteredResult );
-
-		// Mark step as completed in progress tracker
-		if ( executionContext.progressTracker ) {
-			await executionContext.progressTracker.completeStep( stepId );
-		}
-
-		// Fire after hook
-		doAction(
-			`aether.export.step.${ stepId }.after`,
-			filteredResult,
-			executionContext
-		);
-
-		return filteredResult;
-	} catch ( error ) {
-		// Categorize and format error
-		const category = errorHandler.categorize( error );
-		const severity = determineSeverity( category, { stepId } );
-		const formattedMessage = formatErrorMessage( error, {
-			stepId,
-			operation: step.label || stepId,
-		} );
-
-		// Create enhanced error object
-		const enhancedError = {
-			...error,
-			category,
-			severity,
-			stepId,
-			formattedMessage,
-			originalMessage: error.message,
-		};
-
-		onError( stepId, enhancedError );
-		doAction(
-			`aether.export.step.${ stepId }.error`,
-			enhancedError,
-			executionContext
-		);
-
-		// For critical errors, stop workflow immediately
-		if ( severity === ERROR_SEVERITY.CRITICAL ) {
-			throw new Error( formattedMessage );
-		}
-
-		// For other errors, wrap with step context
-		throw new Error( formattedMessage );
-	}
-}
-
-/**
- * Get the parallel execution plan for steps.
+ * Get execution plan (for backward compatibility and debugging).
  *
  * @param {Array<Object>} steps Array of step definitions.
- * @return {Array<Array<string>>} Execution plan with parallel groups.
+ * @return {Object} Execution plan information.
  */
 export function getExecutionPlan( steps ) {
-	return buildParallelPlan( steps );
+	return {
+		steps: steps.map( ( step ) => ( {
+			id: step.id,
+			label: step.label,
+			globalCache: step.globalCache || false,
+			dependencies: step.dependencies || [],
+		} ) ),
+		globalSteps: steps.filter( ( step ) => step.globalCache ),
+		providerSteps: steps.filter( ( step ) => ! step.globalCache ),
+	};
+}
+
+/**
+ * Provider Queue Executor
+ *
+ * Manages execution of parallel provider queues with global cache coordination.
+ */
+class ProviderQueueExecutor {
+	constructor( steps, baseContext, globalCache, callbacks ) {
+		this.steps = steps;
+		this.baseContext = baseContext;
+		this.globalCache = globalCache;
+		this.callbacks = callbacks;
+	}
+
+	/**
+	 * Execute workflow for all providers in parallel.
+	 *
+	 * @param {Array<string>} providerIds List of provider IDs.
+	 * @return {Promise<Object>} Results per provider.
+	 */
+	async executeAll( providerIds ) {
+		// Execute each provider queue in parallel
+		const queuePromises = providerIds.map( ( providerId ) =>
+			this.executeProviderQueue( providerId ).catch( ( error ) => {
+				// Catch errors to allow other providers to continue
+				debugError(
+					`[StepExecutor] Provider ${ providerId } failed:`,
+					error
+				);
+				return {
+					providerId,
+					success: false,
+					error: error.message || String( error ),
+				};
+			} )
+		);
+
+		const queueResults = await Promise.all( queuePromises );
+
+		// Convert array to object keyed by providerId
+		const results = {};
+		queueResults.forEach( ( result ) => {
+			results[ result.providerId ] = result;
+		} );
+
+		return results;
+	}
+
+	/**
+	 * Execute workflow for single provider.
+	 *
+	 * @param {string} providerId Provider identifier.
+	 * @return {Promise<Object>} Provider execution result.
+	 */
+	async executeProviderQueue( providerId ) {
+		debug( `[StepExecutor] Starting queue for provider: ${ providerId }` );
+
+		// Create provider-specific context
+		const providerContext = {
+			...this.baseContext,
+			providerId,
+		};
+
+		// Execute steps sequentially for this provider
+		for ( const step of this.steps ) {
+			try {
+				await this.executeStep( step, providerContext, providerId );
+			} catch ( error ) {
+				// If a provider-specific step fails, stop this provider's queue
+				if ( ! step.globalCache ) {
+					debugError(
+						`[StepExecutor] Provider ${ providerId } step ${ step.id } failed:`,
+						error
+					);
+					this.callbacks.onError( providerId, step.id, error );
+
+					return {
+						providerId,
+						success: false,
+						error: error.message || String( error ),
+						failedStep: step.id,
+					};
+				}
+
+				// If a global step fails, rethrow to fail all providers
+				throw error;
+			}
+		}
+
+		debug( `[StepExecutor] Provider ${ providerId } completed successfully` );
+
+		return {
+			providerId,
+			success: true,
+		};
+	}
+
+	/**
+	 * Execute single step for a provider.
+	 *
+	 * @param {Object} step            Step definition.
+	 * @param {Object} providerContext Provider-specific context.
+	 * @param {string} providerId      Provider identifier.
+	 * @return {Promise<void>}
+	 */
+	async executeStep( step, providerContext, providerId ) {
+		if ( step.globalCache ) {
+			await this.executeGlobalStep( step, providerContext, providerId );
+		} else {
+			await this.executeProviderStep(
+				step,
+				providerContext,
+				providerId
+			);
+		}
+	}
+
+	/**
+	 * Execute global cache step (runs once, shared across providers).
+	 *
+	 * @param {Object} step            Step definition.
+	 * @param {Object} providerContext Provider-specific context.
+	 * @param {string} providerId      Provider identifier.
+	 * @return {Promise<void>}
+	 */
+	async executeGlobalStep( step, providerContext, providerId ) {
+		// Check if result already cached
+		const cachedResult = await this.globalCache.getStepResult( step.id );
+
+		if ( cachedResult ) {
+			debug(
+				`[StepExecutor] Provider ${ providerId } using cached result for ${ step.id }`
+			);
+
+			// Merge cached result into context
+			Object.assign( providerContext, cachedResult );
+
+			// Notify callback
+			this.callbacks.onStepCached( providerId, step.id, cachedResult );
+
+			return;
+		}
+
+		// Try to acquire lock to execute step
+		const acquired = await this.globalCache.setStepRunning( step.id );
+
+		if ( ! acquired ) {
+			// Another provider is executing this step, wait for it
+			debug(
+				`[StepExecutor] Provider ${ providerId } waiting for ${ step.id }`
+			);
+
+			this.callbacks.onStepWaiting( providerId, step.id );
+
+			const result = await this.globalCache.waitForStep( step.id );
+
+			// Merge result into context
+			Object.assign( providerContext, result );
+
+			// Notify that we used cached result
+			this.callbacks.onStepCached( providerId, step.id, result );
+
+			return;
+		}
+
+		// We have the lock, execute the step
+		debug(
+			`[StepExecutor] Provider ${ providerId } executing global step ${ step.id }`
+		);
+
+		this.callbacks.onStepStart( providerId, step.id );
+
+		try {
+			const result = await step.handler( providerContext );
+
+			// Store result in global cache
+			await this.globalCache.setStepResult( step.id, result );
+
+			// Merge result into context
+			Object.assign( providerContext, result );
+
+			this.callbacks.onStepComplete( providerId, step.id, result );
+		} catch ( error ) {
+			// Store error in cache so other providers know it failed
+			await this.globalCache.setStepError( step.id, error );
+
+			throw error;
+		}
+	}
+
+	/**
+	 * Execute provider-specific step (runs independently per provider).
+	 *
+	 * @param {Object} step            Step definition.
+	 * @param {Object} providerContext Provider-specific context.
+	 * @param {string} providerId      Provider identifier.
+	 * @return {Promise<void>}
+	 */
+	async executeProviderStep( step, providerContext, providerId ) {
+		debug(
+			`[StepExecutor] Provider ${ providerId } executing step ${ step.id }`
+		);
+
+		this.callbacks.onStepStart( providerId, step.id );
+
+		const result = await step.handler( providerContext );
+
+		// Merge result into context for subsequent steps
+		Object.assign( providerContext, result );
+
+		this.callbacks.onStepComplete( providerId, step.id, result );
+	}
 }

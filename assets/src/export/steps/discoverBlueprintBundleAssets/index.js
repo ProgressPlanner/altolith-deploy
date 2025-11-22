@@ -125,6 +125,7 @@ export const discoverBlueprintBundleAssetsStep = {
 		'aether-site-exporter'
 	),
 	supportsProgress: false,
+	globalCache: true,
 	dependencies: [],
 	provides: [ 'discoveredAssets' ],
 	handler,

@@ -126,6 +126,7 @@ export const preScanStaticSiteStep = {
 		'aether-site-exporter'
 	),
 	supportsProgress: true,
+	globalCache: true,
 	dependencies: [ 'getStaticSiteUrls' ],
 	provides: [ 'urls', 'htmlCount', 'assetCount' ],
 	handler,
