@@ -1,9 +1,9 @@
 <?php
 /**
- * Publish Workflow Integration Tests
+ * Job State Management Integration Tests
  *
- * Tests the complete publish workflow including job state management.
- * Validates job lifecycle, state transitions, and error handling.
+ * Tests job lifecycle, state transitions, and error handling.
+ * Validates the JobStateManager functionality throughout export workflows.
  *
  * @package Aether\SiteExporter\Tests
  */
@@ -14,9 +14,9 @@ use Aether\SiteExporter\Tests\Helpers\TestCase;
 use Aether\SiteExporter\Sync\JobStateManager;
 
 /**
- * Publish workflow test case.
+ * Job state management test case.
  */
-class PublishWorkflowTest extends TestCase {
+class JobStateManagementTest extends TestCase {
 
 	/**
 	 * Job state manager instance.
