@@ -17,7 +17,7 @@ export const API_NAMESPACE = 'aether/site-exporter';
  * Note: Does not include /wp-json/ prefix as that's handled by apiFetch root URL middleware
  * @constant {string}
  */
-export const API_BASE_PATH = API_NAMESPACE;
+export const API_BASE_PATH = `/${API_NAMESPACE}`;
 
 /**
  * REST API Endpoints
