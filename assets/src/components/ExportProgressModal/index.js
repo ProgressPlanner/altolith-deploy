@@ -22,6 +22,7 @@ import {
 } from '@aether/utils/styles';
 import ActivityLogMessage from '../ActivityLogMessage';
 import UploadStatistics from '../UploadStatistics';
+import ProviderProgressBars from '../ProviderProgressBars';
 
 // Styles - extracted to module level for performance
 const modalContentStyle = {
@@ -126,6 +127,12 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 		staticSiteProviders,
 		blueprintBundleProviders,
 	} = exportState;
+
+	// Combine all provider IDs for per-provider progress display
+	const allProviderIds = [
+		...staticSiteProviders,
+		...blueprintBundleProviders,
+	];
 
 	// Ref for activity log auto-scroll
 	const activityLogRef = useRef( null );
@@ -314,34 +321,45 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 				) }
 
 				{ ! finalStatus && ! error && steps.length > 0 && (
-					<div
-						className="aether-export-progress-modal__progress"
-						style={ progressContainerStyle }
-					>
+					<>
 						<div
-							className="aether-export-progress-modal__progress-container"
-							style={ progressBarContainerStyle }
+							className="aether-export-progress-modal__progress"
+							style={ progressContainerStyle }
 						>
 							<div
-								className="aether-export-progress-modal__progress-bar"
-								style={ progressBarStyle }
+								className="aether-export-progress-modal__progress-container"
+								style={ progressBarContainerStyle }
 							>
 								<div
-									className="aether-export-progress-modal__progress-fill"
-									style={ {
-										...progressBarFillStyle,
-										width: `${ displayProgress }%`,
-									} }
-								/>
+									className="aether-export-progress-modal__progress-bar"
+									style={ progressBarStyle }
+								>
+									<div
+										className="aether-export-progress-modal__progress-fill"
+										style={ {
+											...progressBarFillStyle,
+											width: `${ displayProgress }%`,
+										} }
+									/>
+								</div>
+								<span
+									className="aether-export-progress-modal__progress-percentage"
+									style={ progressPercentageStyle }
+								>
+									{ displayProgress }%
+								</span>
 							</div>
-							<span
-								className="aether-export-progress-modal__progress-percentage"
-								style={ progressPercentageStyle }
-							>
-								{ displayProgress }%
-							</span>
 						</div>
-					</div>
+
+						{ /* Per-provider progress bars */ }
+						{ allProviderIds.length > 0 && (
+							<ProviderProgressBars
+								providerIds={ allProviderIds }
+								messageHistory={ messageHistory }
+								steps={ steps }
+							/>
+						) }
+					</>
 				) }
 
 				<UploadStatistics
