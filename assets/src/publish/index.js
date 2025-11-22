@@ -8,13 +8,18 @@
 // Note: Webpack is configured to never create chunks - all code is bundled into single files
 // eslint-disable-next-line camelcase, no-undef
 if ( typeof __webpack_public_path__ !== 'undefined' ) {
-	const pluginUrlMeta = document.querySelector(
-		'meta[name="aether-plugin-url"]'
-	);
-	if ( pluginUrlMeta ) {
+	if (
+		typeof window !== 'undefined' &&
+		window.aetherData &&
+		window.aetherData.pluginUrl
+	) {
+		const pluginUrl = window.aetherData.pluginUrl;
+		// Ensure plugin URL ends with slash
+		const publicPath = pluginUrl.endsWith( '/' )
+			? pluginUrl + 'assets/build/'
+			: pluginUrl + '/assets/build/';
 		// eslint-disable-next-line camelcase, no-undef
-		__webpack_public_path__ =
-			pluginUrlMeta.getAttribute( 'content' ) + 'assets/build/';
+		__webpack_public_path__ = publicPath;
 	}
 }
 

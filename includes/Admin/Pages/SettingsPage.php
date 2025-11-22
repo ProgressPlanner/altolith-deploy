@@ -66,18 +66,9 @@ class SettingsPage extends BaseAdminPage
 		);
 
 		// Add REST API configuration data via inline script.
-		$plugin = \Aether\SiteExporter\Plugin::getInstance();
 		$plugin->addAPIConfigScript('aether-admin-settings');
 	}
 
-	/**
-	 * Output meta tags for REST API configuration.
-	 */
-	public function outputMetaTags(): void
-	{
-		$plugin = \Aether\SiteExporter\Plugin::getInstance();
-		$plugin->outputMetaTags();
-	}
 
 	/**
 	 * Render page content.

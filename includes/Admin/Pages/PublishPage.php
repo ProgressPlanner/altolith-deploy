@@ -61,18 +61,10 @@ class PublishPage extends BaseAdminPage
 		$plugin = \Aether\SiteExporter\Plugin::getInstance();
 		$plugin->enqueueProviderScript('local-filesystem');
 
-		// Output meta tags for REST API configuration (React fetches from meta tags).
-		\add_action('admin_head', [ $this, 'outputMetaTags' ]);
+		// Add REST API configuration data via inline script.
+		$plugin->addAPIConfigScript('aether-export');
 	}
 
-	/**
-	 * Output meta tags for REST API configuration.
-	 */
-	public function outputMetaTags(): void
-	{
-		$plugin = \Aether\SiteExporter\Plugin::getInstance();
-		$plugin->outputMetaTags();
-	}
 
 
 	/**

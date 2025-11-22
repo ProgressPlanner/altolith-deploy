@@ -284,6 +284,9 @@ class Plugin
 			),
 			'before'
 		);
+
+		// Add REST API configuration data (admin-common exports api.js which needs this)
+		$this->addAPIConfigScript('aether-admin-common');
 	}
 
 	/**

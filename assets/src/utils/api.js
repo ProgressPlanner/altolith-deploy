@@ -4,7 +4,7 @@
  * Enhanced wrapper around @wordpress/api-fetch with:
  * - Request deduplication (prevents concurrent identical requests)
  * - Response caching with TTL (GET requests only)
- * - Nonce handling from meta tags
+ * - Nonce handling from window.aetherData
  * - Auth header utilities for external APIs
  *
  * @package
@@ -30,14 +30,17 @@ export function createAuthHeaders( token, type = 'Bearer' ) {
 }
 
 /**
- * Get REST API nonce from meta tag or default.
+ * Get REST API nonce from window.aetherData or default.
  *
  * @return {string} REST API nonce.
  */
 function getNonce() {
-	const metaTag = document.querySelector( 'meta[name="aether-rest-nonce"]' );
-	if ( metaTag ) {
-		return metaTag.getAttribute( 'content' ) || '';
+	if (
+		typeof window !== 'undefined' &&
+		window.aetherData &&
+		window.aetherData.nonce
+	) {
+		return window.aetherData.nonce;
 	}
 	return '';
 }
@@ -207,10 +210,10 @@ export function setAPINonce( nonce ) {
 
 /**
  * Configure API fetch with base URL, nonce, and middleware.
- * Automatically fetches from meta tags if not provided.
+ * Automatically fetches from window.aetherData if not provided.
  *
- * @param {string} restUrl Optional REST API base URL (fetches from meta if not provided).
- * @param {string} nonce   Optional WordPress REST API nonce (fetches from meta if not provided).
+ * @param {string} restUrl Optional REST API base URL (fetches from window.aetherData if not provided).
+ * @param {string} nonce   Optional WordPress REST API nonce (fetches from window.aetherData if not provided).
  */
 export function configureAPI( restUrl, nonce ) {
 	const url = restUrl || getRestUrl();

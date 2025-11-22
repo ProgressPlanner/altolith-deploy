@@ -1,24 +1,24 @@
 /**
  * Get REST API URL Utility
  *
- * Reads the REST API base URL from the meta tag or returns a default.
+ * Reads the REST API base URL from window.aetherData or returns a default.
  * This ensures WordPress Playground scoped URLs work correctly.
  *
  * @package
  */
 
 /**
- * Get REST API URL from meta tag or default.
+ * Get REST API URL from window.aetherData or default.
  *
  * @return {string} REST API base URL.
  */
 export function getRestUrl() {
-	const metaTag = document.querySelector( 'meta[name="aether-rest-url"]' );
-	if ( metaTag ) {
-		return (
-			metaTag.getAttribute( 'content' ) ||
-			'/wp-json/aether/site-exporter/'
-		);
+	if (
+		typeof window !== 'undefined' &&
+		window.aetherData &&
+		window.aetherData.restUrl
+	) {
+		return window.aetherData.restUrl;
 	}
 	return '/wp-json/aether/site-exporter/';
 }

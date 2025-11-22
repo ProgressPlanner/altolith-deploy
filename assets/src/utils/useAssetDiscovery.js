@@ -45,7 +45,12 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 	}
 
 	// Try CORS proxy method first, then fallback to direct API calls
-	let result = await checkWithMethod( normalizedSlug, type, 'cors-proxy', config );
+	let result = await checkWithMethod(
+		normalizedSlug,
+		type,
+		'cors-proxy',
+		config
+	);
 
 	// If CORS proxy method returned null (unable to check), try direct API fallback
 	if ( result === null ) {

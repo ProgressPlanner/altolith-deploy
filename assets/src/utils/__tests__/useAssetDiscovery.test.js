@@ -277,7 +277,9 @@ describe( 'useAssetDiscovery', () => {
 				} );
 
 			// Mock fetch to fail on wporg check
-			global.fetch.mockRejectedValueOnce( new Error( 'Network failure' ) );
+			global.fetch.mockRejectedValueOnce(
+				new Error( 'Network failure' )
+			);
 
 			const { result } = renderHook( () => useAssetDiscovery() );
 

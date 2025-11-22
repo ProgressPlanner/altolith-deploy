@@ -98,17 +98,7 @@ class MenuManager
 			return;
 		}
 
-		// Output meta tags for REST API configuration (React fetches from meta tags).
-		\add_action('admin_head', [ $this, 'outputMetaTags' ]);
-	}
-
-	/**
-	 * Output meta tags for REST API configuration.
-	 */
-	public function outputMetaTags(): void
-	{
-		$plugin = \Aether\SiteExporter\Plugin::getInstance();
-		$plugin->outputMetaTags();
+		// REST API configuration is now added via inline scripts in individual page classes.
 	}
 
 	/**
