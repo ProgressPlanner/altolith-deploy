@@ -962,28 +962,7 @@ addFilter('aether.publish.step.createBlueprintBundle.files', 'my-plugin', (files
 
 ---
 
-#### `aether.deployment.url`
-
-**Type**: Filter
-**Location**: `assets/src/publish/hooks/usePublishController.js`
-
-Filters the final deployment URL before displaying to user.
-
-**Parameters**:
-- `url` (string): Deployment URL
-- `result` (Object): Complete deployment result
-- `provider` (Object): Provider instance
-
-**Example**:
-```javascript
-addFilter('aether.deployment.url', 'my-plugin', (url, result, provider) => {
-    // Add tracking parameters to deployment URL
-    if (url) {
-        return `${url}?utm_source=aether&utm_medium=deploy`;
-    }
-    return url;
-});
-```
+**Note**: The `aether.deployment.url` hook has been deprecated. Use `aether.provider.deployment_url` instead to filter provider deployment URLs.
 
 ---
 
