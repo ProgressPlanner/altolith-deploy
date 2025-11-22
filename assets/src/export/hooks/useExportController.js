@@ -133,9 +133,33 @@ export function useExportController( exportState ) {
 			debug( 'Steps initialized, starting export workflow' );
 
 			// Fetch settings to get storage provider ID before starting
-			const settingsResponse = await apiFetch( {
-				path: '/aether/site-exporter/settings',
-			} );
+			let settingsResponse;
+			try {
+				settingsResponse = await apiFetch( {
+					path: '/aether/site-exporter/settings',
+				} );
+			} catch ( apiError ) {
+				debugError( 'Failed to fetch settings:', apiError );
+				throw new Error(
+					`Unable to load plugin settings: ${
+						apiError.message || 'Unknown error'
+					}`
+				);
+			}
+
+			// Validate response structure
+			if ( ! settingsResponse || typeof settingsResponse !== 'object' ) {
+				throw new Error(
+					'Invalid settings response format. Please refresh the page and try again.'
+				);
+			}
+
+			if ( settingsResponse.success === false ) {
+				throw new Error(
+					settingsResponse.message ||
+						'Failed to retrieve settings. Please check your permissions.'
+				);
+			}
 
 			// Use pure function to extract configuration
 			const exportConfig = prepareExportConfiguration( settingsResponse );

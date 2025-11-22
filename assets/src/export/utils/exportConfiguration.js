@@ -6,6 +6,7 @@
  *
  */
 
+import { v4 as uuidv4 } from 'uuid';
 import { debugError } from '@aether/utils/debug';
 
 /**
@@ -137,9 +138,8 @@ export function buildWorkflowContext( config, dependencies ) {
 	];
 
 	// Generate unique job ID for this export workflow
-	const jobId = `export-job-${ Date.now() }-${ Math.random()
-		.toString( 36 )
-		.substr( 2, 9 ) }`;
+	// Use UUID v4 to guarantee uniqueness across concurrent exports
+	const jobId = `export-job-${ uuidv4() }`;
 
 	return {
 		// New per-provider queue architecture fields

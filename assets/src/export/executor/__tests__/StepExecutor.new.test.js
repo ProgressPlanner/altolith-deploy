@@ -457,8 +457,8 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 
 			// Should be called once per provider
 			expect( onStepStart ).toHaveBeenCalledTimes( 2 );
-			expect( onStepStart ).toHaveBeenCalledWith( 'provider-1', 'step1' );
-			expect( onStepStart ).toHaveBeenCalledWith( 'provider-2', 'step1' );
+			expect( onStepStart ).toHaveBeenCalledWith( 'step1', 'provider-1' );
+			expect( onStepStart ).toHaveBeenCalledWith( 'step1', 'provider-2' );
 		} );
 
 		it( 'should call onStepComplete after each step completes', async () => {
@@ -484,9 +484,9 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 			await executeSteps( steps, context, { onStepComplete } );
 
 			expect( onStepComplete ).toHaveBeenCalledWith(
-				'provider-1',
 				'step1',
-				{ success: true, data: 'result' }
+				{ success: true, data: 'result' },
+				'provider-1'
 			);
 		} );
 
@@ -548,8 +548,8 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 
 			// Should be called for provider that waits
 			expect( onStepWaiting ).toHaveBeenCalledWith(
-				'provider-2',
-				'globalStep'
+				'globalStep',
+				'provider-2'
 			);
 		} );
 
@@ -577,9 +577,9 @@ describe( 'StepExecutor - Per-Provider Queue Architecture', () => {
 			// Provider should fail but not throw (allow other providers to continue)
 			expect( result[ 'provider-1' ].success ).toBe( false );
 			expect( onError ).toHaveBeenCalledWith(
-				'provider-1',
 				'step1',
-				error
+				error,
+				'provider-1'
 			);
 		} );
 	} );

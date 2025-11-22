@@ -150,11 +150,10 @@ class ProviderQueueExecutor {
 	async executeProviderQueue( providerId ) {
 		debug( `[StepExecutor] Starting queue for provider: ${ providerId }` );
 
-		// Create provider-specific context
-		const providerContext = {
-			...this.baseContext,
-			providerId,
-		};
+		// Create provider-specific context with deep clone to prevent shared references
+		// Critical: Shallow spread would share nested objects across all providers
+		const providerContext = this._deepCloneContext( this.baseContext );
+		providerContext.providerId = providerId;
 
 		// Execute steps sequentially for this provider
 		for ( const step of this.steps ) {
@@ -167,7 +166,7 @@ class ProviderQueueExecutor {
 						`[StepExecutor] Provider ${ providerId } step ${ step.id } failed:`,
 						error
 					);
-					this.callbacks.onError( providerId, step.id, error );
+					this.callbacks.onError( step.id, error, providerId );
 
 					return {
 						providerId,
@@ -229,7 +228,7 @@ class ProviderQueueExecutor {
 			Object.assign( providerContext, cachedResult );
 
 			// Notify callback
-			this.callbacks.onStepCached( providerId, step.id, cachedResult );
+			this.callbacks.onStepCached( step.id, providerId, cachedResult );
 
 			return;
 		}
@@ -243,7 +242,7 @@ class ProviderQueueExecutor {
 				`[StepExecutor] Provider ${ providerId } waiting for ${ step.id }`
 			);
 
-			this.callbacks.onStepWaiting( providerId, step.id );
+			this.callbacks.onStepWaiting( step.id, providerId );
 
 			const result = await this.globalCache.waitForStep( step.id );
 
@@ -251,7 +250,7 @@ class ProviderQueueExecutor {
 			Object.assign( providerContext, result );
 
 			// Notify that we used cached result
-			this.callbacks.onStepCached( providerId, step.id, result );
+			this.callbacks.onStepCached( step.id, providerId, result );
 
 			return;
 		}
@@ -261,7 +260,7 @@ class ProviderQueueExecutor {
 			`[StepExecutor] Provider ${ providerId } executing global step ${ step.id }`
 		);
 
-		this.callbacks.onStepStart( providerId, step.id );
+		this.callbacks.onStepStart( step.id, providerId );
 
 		try {
 			const result = await step.handler( providerContext );
@@ -272,7 +271,7 @@ class ProviderQueueExecutor {
 			// Merge result into context
 			Object.assign( providerContext, result );
 
-			this.callbacks.onStepComplete( providerId, step.id, result );
+			this.callbacks.onStepComplete( step.id, result, providerId );
 		} catch ( error ) {
 			// Store error in cache so other providers know it failed
 			await this.globalCache.setStepError( step.id, error );
@@ -294,13 +293,89 @@ class ProviderQueueExecutor {
 			`[StepExecutor] Provider ${ providerId } executing step ${ step.id }`
 		);
 
-		this.callbacks.onStepStart( providerId, step.id );
+		this.callbacks.onStepStart( step.id, providerId );
 
 		const result = await step.handler( providerContext );
 
 		// Merge result into context for subsequent steps
 		Object.assign( providerContext, result );
 
-		this.callbacks.onStepComplete( providerId, step.id, result );
+		this.callbacks.onStepComplete( step.id, result, providerId );
+	}
+
+	/**
+	 * Deep clone context object to prevent shared references between providers.
+	 *
+	 * Strategy:
+	 * - Known shared objects (api, callbacks, assetManager) preserved by reference
+	 * - Arrays and plain objects deep cloned
+	 * - Functions preserved by reference
+	 * - Primitives copied by value
+	 *
+	 * @private
+	 * @param {Object} context - Context object to clone
+	 * @return {Object} Deep cloned context
+	 */
+	_deepCloneContext( context ) {
+		const cloned = {};
+
+		// Keys that should always be shared by reference (not cloned)
+		const sharedKeys = new Set( [
+			'api',
+			'assetManager',
+			'processStaticSiteUrls',
+			'generateBlueprintJson',
+			'updateStaticSiteProgressContext',
+			'setStatusMessage',
+			'setStepProgress',
+			'setOverallProgressValue',
+			'removeMessage',
+		] );
+
+		for ( const key in context ) {
+			if ( ! context.hasOwnProperty( key ) ) {
+				continue;
+			}
+
+			const value = context[ key ];
+
+			// Preserve shared objects and functions by reference
+			if ( sharedKeys.has( key ) || typeof value === 'function' ) {
+				cloned[ key ] = value;
+				continue;
+			}
+
+			// Preserve null and undefined as-is
+			if ( value === null || value === undefined ) {
+				cloned[ key ] = value;
+				continue;
+			}
+
+			// Deep clone objects and arrays
+			if ( typeof value === 'object' ) {
+				try {
+					// Use structuredClone if available (modern browsers)
+					if ( typeof structuredClone === 'function' ) {
+						cloned[ key ] = structuredClone( value );
+					} else {
+						// Fallback: JSON serialization
+						cloned[ key ] = JSON.parse( JSON.stringify( value ) );
+					}
+				} catch ( error ) {
+					// If cloning fails (e.g., circular references), use reference
+					// This is safe for objects that are meant to be shared
+					debug(
+						`[StepExecutor] Cannot clone context.${ key }, using reference (this is normal for complex objects)`
+					);
+					cloned[ key ] = value;
+				}
+				continue;
+			}
+
+			// Primitives (string, number, boolean) - copy by value
+			cloned[ key ] = value;
+		}
+
+		return cloned;
 	}
 }

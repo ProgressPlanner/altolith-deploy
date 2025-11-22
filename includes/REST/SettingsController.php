@@ -213,8 +213,16 @@ class SettingsController
 				try {
 					$existingProviders = $this->decryptProviderSettings($existingProviders);
 				} catch (\Exception $e) {
-					// If decryption fails, use empty array (shouldn't happen, but be safe)
-					$existingProviders = [];
+					// CRITICAL: Return error instead of silently losing all provider data
+					// If decryption fails, we must not proceed with merge as it would delete
+					// all existing providers when merging with empty array
+					$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
+					return new WP_Error(
+						'decryption_failed',
+						/* translators: %s: Error message */
+						\sprintf(\__('Failed to decrypt existing provider settings: %s. Please check your WordPress authentication keys or contact support.', 'aether-site-exporter'), $sanitizedMessage),
+						['status' => 500]
+					);
 				}
 			}
 
@@ -338,10 +346,10 @@ class SettingsController
 	}
 
 	/**
-	 * Deep merge provider configs, preserving existing fields.
+	 * Deep merge provider configs, preserving existing fields recursively.
 	 *
-	 * Merges provider configs field-by-field instead of replacing entire configs.
-	 * This ensures that updating one field doesn't lose other fields.
+	 * Merges provider configs recursively instead of replacing entire configs.
+	 * This ensures that updating nested fields doesn't lose other nested fields.
 	 *
 	 * @param array<string, mixed> $existing Existing provider configs.
 	 * @param array<string, mixed> $incoming Incoming provider configs to merge.
@@ -367,25 +375,59 @@ class SettingsController
 				continue;
 			}
 
-			// Merge configs field-by-field
-			// Start with existing config to preserve fields not in incoming config
-			$mergedConfig = $existingConfig;
-			foreach ($incomingConfig as $key => $value) {
-				// For all fields (including arrays), replace with incoming value
-				// The frontend sends complete form values, so incoming value is the source of truth
-				// This ensures checkbox-group fields (like deployment_types) are replaced, not merged
+			// Recursively merge configs to preserve nested structures
+			$merged[$providerId] = $this->recursiveMerge($existingConfig, $incomingConfig);
+		}
 
-				// Special handling for deployment_types to ensure it's always an array
-				if ($key === 'deployment_types') {
-					if (!\is_array($value)) {
-						$value = [];
-					}
-				}
+		return $merged;
+	}
 
-				$mergedConfig[$key] = $value;
+	/**
+	 * Recursively merge two arrays, preserving nested structures.
+	 *
+	 * For most fields, incoming values replace existing ones.
+	 * For nested arrays (objects), merge recursively.
+	 * Special handling for known array fields that should be replaced, not merged.
+	 *
+	 * @param array<string, mixed> $existing Existing array.
+	 * @param array<string, mixed> $incoming Incoming array.
+	 * @param int                   $depth    Current recursion depth (prevents infinite recursion).
+	 * @return array<string, mixed> Merged array.
+	 */
+	private function recursiveMerge(array $existing, array $incoming, int $depth = 0): array
+	{
+		// Prevent infinite recursion
+		if ($depth > 10) {
+			return $incoming;
+		}
+
+		$merged = $existing;
+
+		foreach ($incoming as $key => $value) {
+			// Special handling for deployment_types - replace, don't merge
+			if ($key === 'deployment_types') {
+				$merged[$key] = \is_array($value) ? $value : [];
+				continue;
 			}
 
-			$merged[$providerId] = $mergedConfig;
+			// If value is array and existing value is also array, merge recursively
+			// But only for associative arrays (objects), not indexed arrays (lists)
+			if (\is_array($value) && isset($merged[$key]) && \is_array($merged[$key])) {
+				// Check if both are associative arrays (not lists)
+				$isValueAssoc = \array_keys($value) !== \range(0, \count($value) - 1);
+				$isExistingAssoc = \array_keys($merged[$key]) !== \range(0, \count($merged[$key]) - 1);
+
+				if ($isValueAssoc && $isExistingAssoc) {
+					// Both are associative arrays - merge recursively
+					$merged[$key] = $this->recursiveMerge($merged[$key], $value, $depth + 1);
+				} else {
+					// At least one is an indexed array (list) - replace
+					$merged[$key] = $value;
+				}
+			} else {
+				// Non-array or non-matching types - replace
+				$merged[$key] = $value;
+			}
 		}
 
 		return $merged;

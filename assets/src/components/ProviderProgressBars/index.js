@@ -127,21 +127,25 @@ function extractProviderMessages( messageHistory, providerIds ) {
 
 	// Scan messages and find latest for each provider
 	// Messages are prepended (newest first), so we want the first match
+	// Optimized: O(n) instead of O(n*m)
 	messageHistory.forEach( ( msg ) => {
 		if ( ! msg.key ) {
 			return;
 		}
 
-		// Check if this message belongs to a provider
-		providerIds.forEach( ( providerId ) => {
-			// Message keys are like: uploadStaticFiles-{providerId}
-			if (
-				msg.key.includes( providerId ) &&
-				! providerMessages[ providerId ]
-			) {
-				providerMessages[ providerId ] = msg;
+		// Check each provider ID to see if it's in the message key
+		for ( const providerId of providerIds ) {
+			if ( providerMessages[ providerId ] ) {
+				// Already found latest message for this provider
+				continue;
 			}
-		} );
+
+			// Message keys are like: uploadStaticFiles-{providerId}
+			if ( msg.key.includes( providerId ) ) {
+				providerMessages[ providerId ] = msg;
+				break; // Found provider for this message, move to next message
+			}
+		}
 	} );
 
 	return providerMessages;
@@ -171,7 +175,33 @@ function calculateProviderProgress( providerId, steps, providerMessage ) {
 	}
 
 	// Determine current step from message key
-	const currentStepId = providerMessage?.key?.split( '-' )[ 0 ];
+	// Key format: {stepId}-{providerId}
+	// providerId may contain hyphens (e.g., local-filesystem:uuid-with-hyphens)
+	// We need to extract stepId by removing the known provider ID from the end
+	const messageKey = providerMessage?.key;
+	if ( ! messageKey ) {
+		return 0;
+	}
+
+	// Extract stepId by removing known provider ID from message key
+	// More robust: check if key ends with providerId, then extract prefix
+	let currentStepId = null;
+	if ( messageKey.endsWith( providerId ) ) {
+		// Message key format: "{stepId}-{providerId}"
+		// Remove provider ID and the separator hyphen
+		const prefixLength = messageKey.length - providerId.length - 1;
+		if ( prefixLength > 0 ) {
+			currentStepId = messageKey.substring( 0, prefixLength );
+		}
+	} else if ( messageKey.includes( providerId ) ) {
+		// Fallback: providerId appears but not at end (malformed key)
+		// Try to extract using indexOf, but this is less reliable
+		const providerIndex = messageKey.indexOf( providerId );
+		if ( providerIndex > 0 ) {
+			currentStepId = messageKey.substring( 0, providerIndex - 1 );
+		}
+	}
+
 	if ( ! currentStepId ) {
 		return 0;
 	}

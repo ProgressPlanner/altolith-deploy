@@ -46,7 +46,7 @@ module.exports = {
 		],
 	},
 	transformIgnorePatterns: [
-		'node_modules/(?!(p-retry|retry|is-network-error|parse5)/)',
+		'node_modules/(?!(p-retry|retry|is-network-error|parse5|uuid)/)',
 	],
 	globals: {
 		wpApiSettings: {

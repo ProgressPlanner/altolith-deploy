@@ -64,6 +64,54 @@ class MockIDBObjectStore {
 		}, 0 );
 		return request;
 	}
+
+	openCursor() {
+		const request = new MockIDBRequest();
+		setTimeout( () => {
+			const entries = Array.from( this.data.entries() );
+			let index = 0;
+
+			// If no entries, return null cursor
+			if ( entries.length === 0 ) {
+				if ( request.onsuccess ) {
+					request.onsuccess( { target: { result: null } } );
+				}
+				return;
+			}
+
+			const cursor = {
+				value: entries[ 0 ][ 1 ],
+				continue: () => {
+					index++;
+					setTimeout( () => {
+						if ( index < entries.length ) {
+							cursor.value = entries[ index ][ 1 ];
+							if ( request.onsuccess ) {
+								request.onsuccess( {
+									target: { result: cursor },
+								} );
+							}
+						} else if ( request.onsuccess ) {
+							// No more entries
+							request.onsuccess( {
+								target: { result: null },
+							} );
+						}
+					}, 0 );
+				},
+				delete: () => {
+					if ( index < entries.length ) {
+						this.data.delete( entries[ index ][ 0 ] );
+					}
+				},
+			};
+
+			if ( request.onsuccess ) {
+				request.onsuccess( { target: { result: cursor } } );
+			}
+		}, 0 );
+		return request;
+	}
 }
 
 class MockIDBRequest {
@@ -346,22 +394,40 @@ describe( 'GlobalStepCache', () => {
 			await cache.initialize( 'job-123' );
 		} );
 
-		it( 'should clear all cached data', async () => {
+		it( 'should only clear data from different jobs or old data', async () => {
+			// Add entry from same job (should NOT be cleared)
 			mockDB.data.set( 'step1', {
 				stepId: 'step1',
 				jobId: 'job-123',
 				status: 'completed',
 				result: {},
+				timestamp: Date.now(),
 			} );
+
+			// Add entry from different job (should be cleared)
 			mockDB.data.set( 'step2', {
 				stepId: 'step2',
+				jobId: 'different-job',
+				status: 'completed',
+				result: {},
+				timestamp: Date.now(),
+			} );
+
+			// Add old entry (should be cleared)
+			const TWO_HOURS_AGO = Date.now() - 2 * 60 * 60 * 1000;
+			mockDB.data.set( 'step3', {
+				stepId: 'step3',
 				jobId: 'job-123',
 				status: 'completed',
 				result: {},
+				timestamp: TWO_HOURS_AGO,
 			} );
 
 			await cache.clearCache();
-			expect( mockDB.data.size ).toBe( 0 );
+
+			// Only step1 (same job, recent) should remain
+			expect( mockDB.data.size ).toBe( 1 );
+			expect( mockDB.data.has( 'step1' ) ).toBe( true );
 		} );
 	} );
 

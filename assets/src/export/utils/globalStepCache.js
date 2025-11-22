@@ -38,6 +38,15 @@ export class GlobalStepCache {
 	 */
 	_openDatabase() {
 		return new Promise( ( resolve, reject ) => {
+			if ( ! window.indexedDB ) {
+				reject(
+					new Error(
+						'IndexedDB not available - global cache requires IndexedDB support'
+					)
+				);
+				return;
+			}
+
 			const request = window.indexedDB.open( DB_NAME, DB_VERSION );
 
 			request.onerror = () => reject( request.error );
@@ -193,18 +202,58 @@ export class GlobalStepCache {
 	}
 
 	/**
-	 * Clear all cached data
+	 * Clear cached data for old jobs and stale locks
+	 *
+	 * Clears entries older than 1 hour, from different jobs, or with stale locks.
+	 * This prevents interference between concurrent exports and handles crashed providers.
+	 *
+	 * Stale lock detection: Locks held for more than 10 minutes are considered stale
+	 * (indicating the provider crashed or hung). These are cleared to prevent
+	 * indefinite waiting by other providers.
 	 *
 	 * @return {Promise<void>}
 	 */
 	async clearCache() {
+		const ONE_HOUR = 60 * 60 * 1000;
+		const STALE_LOCK_THRESHOLD = 10 * 60 * 1000; // 10 minutes
+		const cutoffTime = Date.now() - ONE_HOUR;
+		const staleLockTime = Date.now() - STALE_LOCK_THRESHOLD;
+
 		return new Promise( ( resolve, reject ) => {
 			const transaction = this.db.transaction( STORE_NAME, 'readwrite' );
 			const store = transaction.objectStore( STORE_NAME );
-			const request = store.clear();
+			const request = store.openCursor();
 
 			request.onerror = () => reject( request.error );
-			request.onsuccess = () => resolve();
+
+			request.onsuccess = ( event ) => {
+				const cursor = event.target.result;
+				if ( cursor ) {
+					const entry = cursor.value;
+
+					// Delete if:
+					// 1. Old (> 1 hour)
+					// 2. From different job
+					// 3. Stale lock (running status but > 10 minutes old)
+					const isOld =
+						entry.timestamp && entry.timestamp < cutoffTime;
+					const isDifferentJob =
+						entry.jobId && entry.jobId !== this.jobId;
+					const isStaleLock =
+						entry.status === 'running' &&
+						entry.timestamp &&
+						entry.timestamp < staleLockTime;
+
+					if ( isOld || isDifferentJob || isStaleLock ) {
+						cursor.delete();
+					}
+
+					cursor.continue();
+				} else {
+					// Done iterating
+					resolve();
+				}
+			};
 		} );
 	}
 
