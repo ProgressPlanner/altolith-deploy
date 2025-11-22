@@ -130,7 +130,10 @@ export default function ProviderSettings( {
 				processProviders( allProviders );
 			} catch ( error ) {
 				// eslint-disable-next-line no-console
-				console.error( 'ProviderSettings: Failed to load providers:', error );
+				console.error(
+					'ProviderSettings: Failed to load providers:',
+					error
+				);
 			}
 		};
 

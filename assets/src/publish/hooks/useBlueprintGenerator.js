@@ -66,7 +66,7 @@ export function useBlueprintGenerator() {
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
 			 *
-			 * addFilter('aether.blueprint.assets', 'my-plugin', (assets) => {
+			 * addFilter('aether.publish.step.generateBlueprint.assets', 'my-plugin', (assets) => {
 			 *     // Exclude specific plugins
 			 *     assets.plugins = assets.plugins.filter(slug => slug !== 'unwanted-plugin');
 			 *
@@ -77,7 +77,7 @@ export function useBlueprintGenerator() {
 			 * });
 			 */
 			const filteredAssets = applyFilters(
-				'aether.blueprint.assets',
+				'aether.publish.step.generateBlueprint.assets',
 				{ plugins: wporgPlugins, themes: wporgThemes },
 				assetsResponse
 			);
@@ -167,7 +167,7 @@ export function useBlueprintGenerator() {
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
 			 *
-			 * addFilter('aether.blueprint.generated', 'my-plugin', (blueprint) => {
+			 * addFilter('aether.publish.step.generateBlueprint.generated', 'my-plugin', (blueprint) => {
 			 *     // Add custom metadata
 			 *     blueprint.description = 'My custom WordPress site';
 			 *
@@ -175,7 +175,7 @@ export function useBlueprintGenerator() {
 			 * });
 			 */
 			blueprint = applyFilters(
-				'aether.blueprint.generated',
+				'aether.publish.step.generateBlueprint.generated',
 				blueprint,
 				wporgPlugins,
 				wporgThemes

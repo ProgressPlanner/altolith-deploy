@@ -158,7 +158,7 @@ export function buildBlueprintSteps( config ) {
 	 * @example
 	 * import { addFilter } from '@wordpress/hooks';
 	 *
-	 * addFilter('aether.blueprint.steps', 'my-plugin', (steps, config) => {
+	 * addFilter('aether.publish.step.generateBlueprint.steps', 'my-plugin', (steps, config) => {
 	 *     // Add custom step at the end
 	 *     steps.push({
 	 *         step: 'runPHP',
@@ -167,7 +167,11 @@ export function buildBlueprintSteps( config ) {
 	 *     return steps;
 	 * });
 	 */
-	return applyFilters( 'aether.blueprint.steps', steps, config );
+	return applyFilters(
+		'aether.publish.step.generateBlueprint.steps',
+		steps,
+		config
+	);
 }
 
 /**
@@ -201,7 +205,7 @@ export function buildBlueprintJson( steps ) {
 	 * @example
 	 * import { addFilter } from '@wordpress/hooks';
 	 *
-	 * addFilter('aether.blueprint.json', 'my-plugin', (blueprint, steps) => {
+	 * addFilter('aether.publish.step.generateBlueprint.json', 'my-plugin', (blueprint, steps) => {
 	 *     // Customize landing page
 	 *     blueprint.landingPage = '/wp-admin/';
 	 *
@@ -217,5 +221,9 @@ export function buildBlueprintJson( steps ) {
 	 *     return blueprint;
 	 * });
 	 */
-	return applyFilters( 'aether.blueprint.json', blueprint, steps );
+	return applyFilters(
+		'aether.publish.step.generateBlueprint.json',
+		blueprint,
+		steps
+	);
 }

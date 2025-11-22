@@ -1038,7 +1038,7 @@ addFilter('aether.file.upload.context', 'my-plugin', (fileContext, providerId) =
 
 ---
 
-#### `aether.upload.urls`
+#### `aether.publish.step.uploadStaticSiteFiles.urls`
 
 **Type**: Filter
 **Location**: `assets/src/publish/steps/uploadStaticFiles/index.js`
@@ -1056,7 +1056,7 @@ Filters the URLs array before static site upload processing begins.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.upload.urls', 'my-plugin', (urls, providers, context) => {
+addFilter('aether.publish.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls, providers, context) => {
     // Add custom URL
     return [...urls, { url: '/custom-page/', type: 'page' }];
 });
@@ -1064,7 +1064,7 @@ addFilter('aether.upload.urls', 'my-plugin', (urls, providers, context) => {
 
 ---
 
-#### `aether.upload.result`
+#### `aether.publish.step.uploadStaticSiteFiles.result`
 
 **Type**: Filter
 **Location**: `assets/src/publish/steps/uploadStaticFiles/index.js`
@@ -1082,7 +1082,7 @@ Filters the final upload result before it's returned from the upload step.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.upload.result', 'my-plugin', (result, providers, context) => {
+addFilter('aether.publish.step.uploadStaticSiteFiles.result', 'my-plugin', (result, providers, context) => {
     return {
         ...result,
         customMetadata: 'added by plugin'
@@ -1336,10 +1336,10 @@ addFilter('aether.storage.service.create', 'my-plugin', (service, staticPath, co
 
 ### Manifest System
 
-#### `aether.manifest.fetch`
+#### `aether.publish.step.uploadStaticSiteFiles.manifest.fetch`
 
 **Type**: Filter
-**Location**: `assets/src/publish/hooks/useStaticSiteGenerator.js`
+**Location**: `assets/src/publish/utils/uploadPhase.js`
 
 Filters manifest fetching. Allows providing a custom manifest or modifying the fetch behavior.
 
@@ -1354,7 +1354,7 @@ Filters manifest fetching. Allows providing a custom manifest or modifying the f
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.manifest.fetch', 'my-plugin', (manifest, storageService, providerId) => {
+addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.fetch', 'my-plugin', (manifest, storageService, providerId) => {
     // Return custom manifest or null to use default fetching
     if (providerId === 'my-provider') {
         return { custom: 'manifest' };
@@ -1365,10 +1365,10 @@ addFilter('aether.manifest.fetch', 'my-plugin', (manifest, storageService, provi
 
 ---
 
-#### `aether.manifest.update`
+#### `aether.publish.step.uploadStaticSiteFiles.manifest.update`
 
 **Type**: Filter
-**Location**: `assets/src/publish/hooks/useStaticSiteGenerator.js`
+**Location**: `assets/src/publish/utils/uploadPhase.js`, `assets/src/publish/hooks/useStaticSiteGenerator.js`
 
 Filters manifest updates after a file is uploaded.
 
@@ -1383,7 +1383,7 @@ Filters manifest updates after a file is uploaded.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.manifest.update', 'my-plugin', (manifest, storageKey, providerId) => {
+addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.update', 'my-plugin', (manifest, storageKey, providerId) => {
     // Add custom metadata to manifest entry
     if (manifest[storageKey]) {
         manifest[storageKey].customMetadata = 'value';
@@ -1394,10 +1394,10 @@ addFilter('aether.manifest.update', 'my-plugin', (manifest, storageKey, provider
 
 ---
 
-#### `aether.manifest.cleanup`
+#### `aether.publish.step.uploadStaticSiteFiles.manifest.cleanup`
 
 **Type**: Filter
-**Location**: `assets/src/publish/hooks/useStaticSiteGenerator.js`
+**Location**: `assets/src/publish/utils/uploadPhase.js`
 
 Filters manifest cleanup before final manifest upload. Allows keeping additional entries or modifying cleanup behavior.
 
@@ -1412,7 +1412,7 @@ Filters manifest cleanup before final manifest upload. Allows keeping additional
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.manifest.cleanup', 'my-plugin', (manifest, currentFileKeys, providerId) => {
+addFilter('aether.publish.step.uploadStaticSiteFiles.manifest.cleanup', 'my-plugin', (manifest, currentFileKeys, providerId) => {
     // Keep additional entries
     return { ...manifest, 'custom-file.html': { size: 100, hash: 'abc' } };
 });
@@ -1422,7 +1422,7 @@ addFilter('aether.manifest.cleanup', 'my-plugin', (manifest, currentFileKeys, pr
 
 ### Blueprint Generation
 
-#### `aether.blueprint.steps`
+#### `aether.publish.step.generateBlueprint.steps`
 
 **Type**: Filter
 **Location**: `assets/src/publish/utils/blueprintStepBuilders.js`
@@ -1435,7 +1435,7 @@ Filters blueprint steps array before final JSON generation.
 
 **Example**:
 ```javascript
-addFilter('aether.blueprint.steps', 'my-plugin', (steps, config) => {
+addFilter('aether.publish.step.generateBlueprint.steps', 'my-plugin', (steps, config) => {
     // Add custom step at the end
     steps.push({
         step: 'runPHP',
@@ -1447,7 +1447,7 @@ addFilter('aether.blueprint.steps', 'my-plugin', (steps, config) => {
 
 ---
 
-#### `aether.blueprint.json`
+#### `aether.publish.step.generateBlueprint.json`
 
 **Type**: Filter
 **Location**: `assets/src/publish/utils/blueprintStepBuilders.js`
@@ -1460,7 +1460,7 @@ Filters complete blueprint JSON object.
 
 **Example**:
 ```javascript
-addFilter('aether.blueprint.json', 'my-plugin', (blueprint, steps) => {
+addFilter('aether.publish.step.generateBlueprint.json', 'my-plugin', (blueprint, steps) => {
     // Customize landing page
     blueprint.landingPage = '/wp-admin/';
 
@@ -1479,7 +1479,7 @@ addFilter('aether.blueprint.json', 'my-plugin', (blueprint, steps) => {
 
 ---
 
-#### `aether.blueprint.assets`
+#### `aether.publish.step.generateBlueprint.assets`
 
 **Type**: Filter
 **Location**: `assets/src/publish/hooks/useBlueprintGenerator.js`
@@ -1494,7 +1494,7 @@ Filters discovered WordPress.org assets before blueprint generation.
 
 **Example**:
 ```javascript
-addFilter('aether.blueprint.assets', 'my-plugin', (assets) => {
+addFilter('aether.publish.step.generateBlueprint.assets', 'my-plugin', (assets) => {
     // Exclude specific plugins
     assets.plugins = assets.plugins.filter(slug => slug !== 'unwanted-plugin');
 
@@ -1507,7 +1507,7 @@ addFilter('aether.blueprint.assets', 'my-plugin', (assets) => {
 
 ---
 
-#### `aether.blueprint.generated`
+#### `aether.publish.step.generateBlueprint.generated`
 
 **Type**: Filter
 **Location**: `assets/src/publish/hooks/useBlueprintGenerator.js`
@@ -1521,7 +1521,7 @@ Filters final generated blueprint before deployment.
 
 **Example**:
 ```javascript
-addFilter('aether.blueprint.generated', 'my-plugin', (blueprint) => {
+addFilter('aether.publish.step.generateBlueprint.generated', 'my-plugin', (blueprint) => {
     // Add custom metadata
     blueprint.description = 'My custom WordPress site';
     return blueprint;
@@ -2139,7 +2139,7 @@ add_action('admin_enqueue_scripts', function() {
 import { addFilter } from '@wordpress/hooks';
 
 // Exclude specific plugins from blueprint
-addFilter('aether.blueprint.assets', 'my-customizations', (assets) => {
+addFilter('aether.publish.step.generateBlueprint.assets', 'my-customizations', (assets) => {
     assets.plugins = assets.plugins.filter(slug => {
         return !['jetpack', 'akismet'].includes(slug);
     });
@@ -2147,7 +2147,7 @@ addFilter('aether.blueprint.assets', 'my-customizations', (assets) => {
 });
 
 // Customize blueprint settings
-addFilter('aether.blueprint.json', 'my-customizations', (blueprint) => {
+addFilter('aether.publish.step.generateBlueprint.json', 'my-customizations', (blueprint) => {
     // Use different PHP version
     blueprint.preferredVersions.php = '8.2';
 

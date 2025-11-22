@@ -175,7 +175,7 @@ export async function uploadFile( fileContext ) {
 				if ( htmlText ) {
 					// Apply HTML filter hook (for consistency with Path 1)
 					const filteredHtml = applyFilters(
-						'aether.static.html.process',
+						'aether.publish.step.uploadStaticSiteFiles.html.process',
 						htmlText,
 						filePath,
 						metadata.siteUrl,

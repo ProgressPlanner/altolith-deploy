@@ -87,7 +87,7 @@ addFilter('aether.static.html.raw', 'my-plugin', (html, url, siteUrl) => {
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.static.html.process', 'my-plugin',
+addFilter('aether.publish.step.uploadStaticSiteFiles.html.process', 'my-plugin',
     (html, url, siteUrl, staticSiteUrl, providerId) => {
         // Runs once per provider per page
         if (providerId === 'my-provider') {
@@ -298,7 +298,7 @@ static/
 // Cache expensive operations outside the filter
 const compiledTemplate = compileTemplate();
 
-addFilter('aether.static.html.process', 'my-plugin', (html) => {
+addFilter('aether.publish.step.uploadStaticSiteFiles.html.process', 'my-plugin', (html) => {
     // Fast operation using pre-compiled template
     return compiledTemplate.apply(html);
 });
@@ -368,13 +368,13 @@ await uploadManifest(storageService, manifest, providerId);
 | Filter | Phase | Runs | Purpose |
 |--------|-------|------|---------|
 | `aether.static.html.raw` | Pre-scan | Once per page | Modify raw HTML before caching |
-| `aether.static.html.process` | Upload | Per provider per page | Modify HTML before URL rewriting |
+| `aether.publish.step.uploadStaticSiteFiles.html.process` | Upload | Per provider per page | Modify HTML before URL rewriting |
 | `aether.provider.deployment_url` | Upload init | Once per provider | Override deployment URL |
 | `aether.storage.service.config` | Storage init | Once per provider | Customize storage config |
 | `aether.storage.service.create` | Storage init | Once per provider | Override StorageService |
-| `aether.manifest.fetch` | Upload | Once per provider | Provide custom manifest |
-| `aether.manifest.update` | Upload | Per file | Modify manifest after update |
-| `aether.manifest.cleanup` | Upload end | Once per provider | Customize manifest cleanup |
+| `aether.publish.step.uploadStaticSiteFiles.manifest.fetch` | Upload | Once per provider | Provide custom manifest |
+| `aether.publish.step.uploadStaticSiteFiles.manifest.update` | Upload | Per file | Modify manifest after update |
+| `aether.publish.step.uploadStaticSiteFiles.manifest.cleanup` | Upload end | Once per provider | Customize manifest cleanup |
 | `aether.provider.upload` | Blueprint | Once per provider | Custom blueprint upload |
 
 ---

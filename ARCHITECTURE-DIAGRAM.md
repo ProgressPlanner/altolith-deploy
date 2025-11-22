@@ -423,7 +423,7 @@ Upload Phase (Phase 2)
 │   │   │
 │   │   ├─► Load raw HTML from cache
 │   │   │
-│   │   ├─► Apply filter: aether.static.html.process
+│   │   ├─► Apply filter: aether.publish.step.uploadStaticSiteFiles.html.process
 │   │   │   └─► Modify HTML (once per provider per page)
 │   │   │
 │   │   ├─► processHtml() - URL rewriting
@@ -439,7 +439,7 @@ Upload Phase (Phase 2)
     │   │
     │   ├─► Load raw HTML from cache (same as Provider A)
     │   │
-    │   ├─► Apply filter: aether.static.html.process
+    │   ├─► Apply filter: aether.publish.step.uploadStaticSiteFiles.html.process
     │   │   └─► Modify HTML (different provider context!)
     │   │
     │   ├─► processHtml() - URL rewriting

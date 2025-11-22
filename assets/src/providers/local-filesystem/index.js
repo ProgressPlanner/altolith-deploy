@@ -18,8 +18,17 @@ import ProviderRegistry from '../registry/ProviderRegistry';
 // Create provider instance for hook registration
 const provider = new LocalFilesystemProvider();
 
+// eslint-disable-next-line no-console
+console.log(
+	'LocalFilesystemProvider: Registering provider...',
+	provider.getId()
+);
+
 // Register provider in JavaScript registry
 ProviderRegistry.register( provider.getId(), provider );
+
+// eslint-disable-next-line no-console
+console.log( 'LocalFilesystemProvider: Provider registered successfully' );
 
 // Also trigger the hook for any listeners
 doAction( 'aether.providers.register', provider );

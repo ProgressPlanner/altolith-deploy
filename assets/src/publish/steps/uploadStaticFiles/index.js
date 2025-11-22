@@ -84,12 +84,17 @@ async function handler( context ) {
 	);
 
 	// Filter URLs before processing
-	const filteredUrls = applyFilters( 'aether.upload.urls', urls, providers, {
-		siteUrl,
-		blueprintData,
-		staticSiteUrl,
+	const filteredUrls = applyFilters(
+		'aether.publish.step.uploadStaticSiteFiles.urls',
+		urls,
 		providers,
-	} );
+		{
+			siteUrl,
+			blueprintData,
+			staticSiteUrl,
+			providers,
+		}
+	);
 
 	// Create shared cache instance for all providers
 	// This ensures URLs and HTML are fetched only once, then shared across providers
@@ -285,7 +290,7 @@ async function handler( context ) {
 	}
 
 	return applyFilters(
-		'aether.upload.result',
+		'aether.publish.step.uploadStaticSiteFiles.result',
 		{
 			providers,
 			results: providerResults,

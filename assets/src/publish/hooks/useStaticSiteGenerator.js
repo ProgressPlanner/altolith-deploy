@@ -117,7 +117,7 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			// Fire upload start action
 			doAction(
-				'aether.static.upload.before',
+				'aether.publish.step.uploadStaticSiteFiles.upload.before',
 				cachedUrls,
 				totalFilesToUpload,
 				staticSiteProviderId
@@ -183,7 +183,7 @@ export function useStaticSiteGenerator( onProgress ) {
 						);
 
 						manifest = applyFilters(
-							'aether.manifest.update',
+							'aether.publish.step.uploadStaticSiteFiles.manifest.update',
 							manifest,
 							htmlResult.htmlKey,
 							staticSiteProviderId
@@ -274,7 +274,7 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			// Fire completion action
 			doAction(
-				'aether.static.upload.after',
+				'aether.publish.step.uploadStaticSiteFiles.upload.after',
 				{
 					filesUploaded,
 					filesSkipped,

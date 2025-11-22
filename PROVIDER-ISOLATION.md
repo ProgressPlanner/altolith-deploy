@@ -79,7 +79,7 @@ const { processedHtml: rawHtml, assetUrls } = cached;
 
 // Apply provider-specific URL rewriting
 let processedHtml = applyFilters(
-    'aether.static.html.process',
+    'aether.publish.step.uploadStaticSiteFiles.html.process',
     rawHtml,
     url,
     siteUrl,
@@ -101,7 +101,7 @@ processedHtml = processHtml(
 - Allows modification of raw HTML before caching
 - Runs once per page (not per provider)
 
-**Existing Filter:** `aether.static.html.process`
+**Existing Filter:** `aether.publish.step.uploadStaticSiteFiles.html.process`
 - Moved to upload phase
 - Now receives provider-specific deployment URL
 - Runs once per provider per page
@@ -353,14 +353,14 @@ addFilter('aether.static.html.raw', 'my-plugin', (html, url, siteUrl) => {
 });
 ```
 
-### Modified Filter: `aether.static.html.process`
+### Modified Filter: `aether.publish.step.uploadStaticSiteFiles.html.process`
 
 **Phase:** Upload (Phase 2)
 **Purpose:** Modify HTML before URL rewriting (per provider)
 **Runs:** Once per provider per page
 
 ```javascript
-addFilter('aether.static.html.process', 'my-plugin', (html, url, siteUrl, staticSiteUrl, providerId) => {
+addFilter('aether.publish.step.uploadStaticSiteFiles.html.process', 'my-plugin', (html, url, siteUrl, staticSiteUrl, providerId) => {
     // Modify HTML with provider-specific logic
     if (providerId === 'cloudflare-r2') {
         return html + '<!-- Deployed via Cloudflare R2 -->';

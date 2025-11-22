@@ -42,7 +42,7 @@ After analyzing 48 test files, several critical issues were identified where tes
 ```javascript
 // Test mock (line 31-45)
 applyFilters: jest.fn( ( hook, value, ...args ) => {
-    if ( hook === 'aether.blueprint.steps' ) {
+    if ( hook === 'aether.publish.step.generateBlueprint.steps' ) {
         const steps = [ ...value ];
         // Mock automatically adds Aether steps
         steps.splice( importIndex + 1, 0, buildAetherInstallStep() );
