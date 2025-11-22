@@ -129,12 +129,27 @@ export function buildWorkflowContext( config, dependencies ) {
 		setStepProgress,
 	} = dependencies;
 
+	// Combine all provider IDs for new per-provider queue architecture
+	const providerIds = [
+		...( staticSiteProviders || [] ),
+		...( blueprintBundleProviders || [] ),
+		...( edgeFunctionProviders || [] ),
+	];
+
+	// Generate unique job ID for this export workflow
+	const jobId = `export-job-${ Date.now() }-${ Math.random().toString( 36 ).substr( 2, 9 ) }`;
+
 	return {
+		// New per-provider queue architecture fields
+		providerIds,
+		jobId,
+
 		// API and state
 		api,
 		siteUrl,
 
 		// Provider arrays by deployment type (from PHP registry via REST API)
+		// Kept for backward compatibility during transition
 		staticSiteProviders,
 		blueprintBundleProviders,
 		edgeFunctionProviders,
