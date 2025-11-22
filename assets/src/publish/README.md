@@ -48,7 +48,6 @@ Steps register via `@wordpress/hooks` and can be extended by third-party plugins
 publish/
 ├── components/          # React components for publish UI
 │   ├── PublishProgressModal.js  # Main publish modal with progress
-│   ├── PublishPage.js           # Full-page publish interface
 │   └── ...
 ├── hooks/               # Custom hooks for publish logic
 │   ├── usePublishController.js  # Main orchestration using step system

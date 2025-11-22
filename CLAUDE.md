@@ -296,7 +296,6 @@ Key principles:
 **Entry Points:**
 - `admin-settings` → Settings page UI (`assets/src/admin-settings/`)
 - `admin-common` → Global variables/shared code (`assets/src/admin-common/`)
-- `export` → Main publish page (`assets/src/publish/`)
 
 **Key Patterns:**
 
