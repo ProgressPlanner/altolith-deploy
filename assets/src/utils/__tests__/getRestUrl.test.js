@@ -34,7 +34,8 @@ describe( 'getRestUrl', () => {
 
 		const url = getRestUrl();
 
-		expect( url ).toBe( '/wp-json/aether/site-exporter/' );
+		// Returns base URL without namespace - paths include full namespace
+		expect( url ).toBe( '/wp-json/' );
 	} );
 
 	test( 'returns default URL when window.aetherData.restUrl is missing', () => {
@@ -42,7 +43,8 @@ describe( 'getRestUrl', () => {
 
 		const url = getRestUrl();
 
-		expect( url ).toBe( '/wp-json/aether/site-exporter/' );
+		// Returns base URL without namespace - paths include full namespace
+		expect( url ).toBe( '/wp-json/' );
 	} );
 
 	test( 'returns default URL when window is undefined', () => {
@@ -50,7 +52,8 @@ describe( 'getRestUrl', () => {
 
 		const url = getRestUrl();
 
-		expect( url ).toBe( '/wp-json/aether/site-exporter/' );
+		// Returns base URL without namespace - paths include full namespace
+		expect( url ).toBe( '/wp-json/' );
 	} );
 
 	test( 'handles different custom URLs', () => {

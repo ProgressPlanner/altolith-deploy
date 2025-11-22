@@ -17,6 +17,9 @@ import { createAssetTracker } from '@aether/export/utils/assetTracker';
 import {
 	fetchProviderConfig,
 	createStorageService,
+	createFailureTracker,
+	buildUploadResult,
+	buildStorageConfig,
 } from '@aether/export/utils/staticSiteConfig';
 import { executePreScan } from '@aether/export/utils/preScanPhase';
 import {
@@ -105,6 +108,60 @@ describe( 'useStaticSiteGenerator', () => {
 			static_files_path: 'static/',
 		} );
 		createStorageService.mockResolvedValue( mockStorageService );
+
+		// Mock createFailureTracker to return a failure tracking object
+		createFailureTracker.mockReturnValue( {
+			urlsFailed: 0,
+			urlsSucceeded: 0,
+			assetsFailed: 0,
+			failedUrls: [],
+		} );
+
+		// Mock buildStorageConfig to return a config object
+		buildStorageConfig.mockReturnValue( {
+			siteUrl: 'https://example.com',
+			staticSiteUrl: 'https://static.example.com',
+			providerId: 'test-provider',
+		} );
+
+		// Mock buildUploadResult to return a result object
+		buildUploadResult.mockImplementation(
+			(
+				failures,
+				assetTracker,
+				filesUploaded,
+				filesSkipped,
+				totalFilesToUpload,
+				uploadedFiles,
+				totalUrls
+			) => ( {
+				success: true,
+				filesUploaded,
+				filesSkipped,
+				failures,
+				assetsUploaded: assetTracker.getCount(),
+				totalFilesToUpload,
+				uploadedFiles,
+				totalUrls,
+			} )
+		);
+
+		// Default mock for executePreScan
+		executePreScan.mockResolvedValue( {
+			cache: mockCache,
+			totalFilesToUpload: 0,
+			failures: { urlsFailed: 0, failedUrls: [] },
+		} );
+
+		// Default mocks for upload phase
+		prepareManifest.mockResolvedValue( {} );
+		processAssets.mockResolvedValue( {
+			filesUploaded: 0,
+			filesSkipped: 0,
+			uploadedFiles: [],
+		} );
+		uploadHtmlFile.mockResolvedValue( true );
+		finalizeManifest.mockResolvedValue( undefined );
 	} );
 
 	describe( 'initialization', () => {

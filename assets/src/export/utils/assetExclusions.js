@@ -56,6 +56,7 @@ export const WEBPACK_MODULE_IDS = [
 export const EXCLUDED_URL_PATTERNS = [
 	'/wp-json/', // WordPress REST API endpoints
 	'/xmlrpc.php', // WordPress XML-RPC endpoint
+	'/wp-comments-post.php', // WordPress comment submission endpoint (405 Method Not Allowed)
 	'imagedelivery.net', // External CDN (imagedelivery.net)
 ];
 

@@ -1,15 +1,13 @@
 /**
  * Tests for ConfigContext
+ *
+ * ConfigContext provides config from window.aetherData (synchronous, no API calls).
  */
 
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { createElement } from '@wordpress/element';
-import { ConfigProvider } from '../ConfigContext';
-import { useConfigContext } from '@aether/hooks/useConfigContext';
-import apiFetch from '@aether/utils/api';
-
-// Mock the API module
-jest.mock( '@aether/utils/api' );
+import { ConfigProvider, ConfigContext } from '../ConfigContext';
+import { useContext } from '@wordpress/element';
 
 /**
  * Wrapper component for testing context
@@ -20,356 +18,157 @@ const wrapper = ( { children } ) =>
 	createElement( ConfigProvider, {}, children );
 
 describe( 'ConfigContext', () => {
+	let originalAetherData;
+
 	beforeEach( () => {
-		jest.clearAllMocks();
-		jest.useFakeTimers();
+		// Save original window.aetherData
+		originalAetherData = global.window.aetherData;
 	} );
 
 	afterEach( () => {
-		jest.runOnlyPendingTimers();
-		jest.useRealTimers();
+		// Restore original window.aetherData
+		if ( originalAetherData ) {
+			global.window.aetherData = originalAetherData;
+		} else {
+			delete global.window.aetherData;
+		}
 	} );
 
 	describe( 'Initialization', () => {
-		it( 'should initialize with loading state', () => {
-			apiFetch.mockResolvedValue( {
-				success: true,
-				publicUrl: '',
-				adminUrl: '',
-			} );
+		it( 'should read config from window.aetherData', () => {
+			global.window.aetherData = {
+				publicUrl: 'https://example.com',
+				adminUrl: 'https://example.com/wp-admin',
+				pluginUrl: 'https://example.com/wp-content/plugins/aether',
+				restUrl: '/wp-json/',
+			};
 
-			const { result } = renderHook( () => useConfigContext(), {
+			const { result } = renderHook( () => useContext( ConfigContext ), {
 				wrapper,
-			} );
-
-			expect( result.current.loading ).toBe( true );
-			expect( result.current.config ).toEqual( {} );
-			expect( result.current.error ).toBe( null );
-		} );
-
-		it( 'should fetch config on mount', async () => {
-			apiFetch.mockResolvedValue( {
-				success: true,
-				publicUrl: 'https://public.example.com',
-				adminUrl: 'https://admin.example.com',
-			} );
-
-			const { result } = renderHook( () => useConfigContext(), {
-				wrapper,
-			} );
-
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
 			} );
 
 			expect( result.current.config ).toEqual( {
-				publicUrl: 'https://public.example.com',
-				adminUrl: 'https://admin.example.com',
-			} );
-			expect( result.current.error ).toBe( null );
-			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/site-exporter/config',
+				publicUrl: 'https://example.com',
+				adminUrl: 'https://example.com/wp-admin',
+				pluginUrl:
+					'https://example.com/wp-content/plugins/aether',
+				restUrl: '/wp-json/',
 			} );
 		} );
 
-		it( 'should handle fetch errors', async () => {
-			const errorMessage = 'Failed to fetch config';
-			apiFetch.mockRejectedValue( new Error( errorMessage ) );
+		it( 'should return empty strings when window.aetherData is missing', () => {
+			delete global.window.aetherData;
 
-			const { result } = renderHook( () => useConfigContext(), {
+			const { result } = renderHook( () => useContext( ConfigContext ), {
 				wrapper,
 			} );
 
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
+			expect( result.current.config ).toEqual( {
+				publicUrl: '',
+				adminUrl: '',
+				pluginUrl: '',
+				restUrl: '',
+			} );
+		} );
+
+		it( 'should handle partial window.aetherData', () => {
+			global.window.aetherData = {
+				publicUrl: 'https://example.com',
+				// Missing other properties
+			};
+
+			const { result } = renderHook( () => useContext( ConfigContext ), {
+				wrapper,
 			} );
 
-			expect( result.current.error ).toBe( errorMessage );
-			expect( result.current.config ).toEqual( {} );
+			expect( result.current.config ).toEqual( {
+				publicUrl: 'https://example.com',
+				adminUrl: '',
+				pluginUrl: '',
+				restUrl: '',
+			} );
 		} );
 	} );
 
-	describe( 'Cache Behavior', () => {
-		it( 'should cache config for 5 minutes', async () => {
-			const mockConfig = {
-				success: true,
-				publicUrl: '',
-				adminUrl: '',
+	describe( 'Config Properties', () => {
+		it( 'should provide all expected config properties', () => {
+			global.window.aetherData = {
+				publicUrl: 'https://example.com',
+				adminUrl: 'https://example.com/wp-admin',
+				pluginUrl: 'https://example.com/wp-content/plugins/aether',
+				restUrl: '/wp-json/',
 			};
-			apiFetch.mockResolvedValue( mockConfig );
 
-			const { result } = renderHook( () => useConfigContext(), {
+			const { result } = renderHook( () => useContext( ConfigContext ), {
 				wrapper,
 			} );
 
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
+			const config = result.current.config;
 
-			expect( apiFetch ).toHaveBeenCalledTimes( 1 );
-
-			// Trigger a refresh (should use cache and not make another call)
-			// Note: The internal fetchConfig checks cache, but refetch bypasses cache
-			// So this test verifies that repeated renders don't cause extra fetches
-			const firstCallCount = apiFetch.mock.calls.length;
-
-			// Just verify we're not making additional calls on renders
-			expect( firstCallCount ).toBe( 1 );
+			expect( config ).toHaveProperty( 'publicUrl' );
+			expect( config ).toHaveProperty( 'adminUrl' );
+			expect( config ).toHaveProperty( 'pluginUrl' );
+			expect( config ).toHaveProperty( 'restUrl' );
 		} );
 
-		it( 'should bypass cache when refetch is called', async () => {
-			const mockConfig = {
-				success: true,
+		it( 'should handle empty string values in window.aetherData', () => {
+			global.window.aetherData = {
 				publicUrl: '',
 				adminUrl: '',
+				pluginUrl: '',
+				restUrl: '',
 			};
-			apiFetch.mockResolvedValue( mockConfig );
 
-			const { result } = renderHook( () => useConfigContext(), {
+			const { result } = renderHook( () => useContext( ConfigContext ), {
 				wrapper,
 			} );
 
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
-
-			expect( apiFetch ).toHaveBeenCalledTimes( 1 );
-
-			// Force refresh
-			await act( async () => {
-				await result.current.refetch();
-			} );
-
-			// Should make another API call
-			expect( apiFetch ).toHaveBeenCalledTimes( 2 );
-		} );
-
-		it( 'should invalidate cache after 5 minutes', async () => {
-			const mockConfig = {
-				success: true,
+			expect( result.current.config ).toEqual( {
 				publicUrl: '',
 				adminUrl: '',
-			};
-			apiFetch.mockResolvedValue( mockConfig );
-
-			const { result } = renderHook( () => useConfigContext(), {
-				wrapper,
+				pluginUrl: '',
+				restUrl: '',
 			} );
-
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
-
-			expect( apiFetch ).toHaveBeenCalledTimes( 1 );
-
-			// Fast-forward time by 6 minutes
-			act( () => {
-				jest.advanceTimersByTime( 6 * 60 * 1000 );
-			} );
-
-			// Trigger a refresh (cache should be invalid, but refetch always forces)
-			await act( async () => {
-				await result.current.refetch();
-			} );
-
-			// Should make another API call
-			expect( apiFetch ).toHaveBeenCalledTimes( 2 );
 		} );
 	} );
 
-	describe( 'Fetch Deduplication', () => {
-		it( 'should deduplicate concurrent fetch requests', async () => {
-			const mockConfig = {
-				success: true,
+	describe( 'Edge Cases', () => {
+		it( 'should handle undefined window', () => {
+			const originalWindow = global.window;
+			global.window = undefined;
+
+			const { result } = renderHook( () => useContext( ConfigContext ), {
+				wrapper,
+			} );
+
+			expect( result.current.config ).toEqual( {
 				publicUrl: '',
 				adminUrl: '',
+				pluginUrl: '',
+				restUrl: '',
+			} );
+
+			global.window = originalWindow;
+		} );
+
+		it( 'should handle window.aetherData with extra properties', () => {
+			global.window.aetherData = {
+				publicUrl: 'https://example.com',
+				adminUrl: 'https://example.com/wp-admin',
+				pluginUrl: 'https://example.com/wp-content/plugins/aether',
+				restUrl: '/wp-json/',
+				extraProperty: 'should be ignored',
 			};
-			apiFetch.mockResolvedValue( mockConfig );
 
-			const { result } = renderHook( () => useConfigContext(), {
+			const { result } = renderHook( () => useContext( ConfigContext ), {
 				wrapper,
 			} );
 
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
-
-			// Clear previous calls
-			apiFetch.mockClear();
-
-			// Make multiple concurrent refetch requests
-			await act( async () => {
-				const promises = [
-					result.current.refetch(),
-					result.current.refetch(),
-					result.current.refetch(),
-				];
-				await Promise.all( promises );
-			} );
-
-			// Deduplication logic prevents concurrent fetches
-			// The fetch will only happen once even with multiple refetch calls
-			expect( apiFetch ).toHaveBeenCalledTimes( 1 );
-		} );
-	} );
-
-	describe( 'Optimistic Updates', () => {
-		it( 'should update config optimistically', async () => {
-			const initialConfig = {
-				success: true,
-				publicUrl: '',
-				adminUrl: '',
-			};
-			apiFetch.mockResolvedValue( initialConfig );
-
-			const { result } = renderHook( () => useConfigContext(), {
-				wrapper,
-			} );
-
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
-
-			const newConfig = { foo: 'bar' };
-
-			act( () => {
-				result.current.updateConfig( newConfig );
-			} );
-
-			// Config should be updated immediately with merge
-			expect( result.current.config.foo ).toBe( 'bar' );
-		} );
-	} );
-
-	describe( 'Cache Invalidation', () => {
-		it( 'should invalidate cache manually', async () => {
-			const mockConfig = {
-				success: true,
-				publicUrl: '',
-				adminUrl: '',
-			};
-			apiFetch.mockResolvedValue( mockConfig );
-
-			const { result } = renderHook( () => useConfigContext(), {
-				wrapper,
-			} );
-
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
-
-			expect( apiFetch ).toHaveBeenCalledTimes( 1 );
-
-			// Invalidate cache
-			act( () => {
-				result.current.invalidateCache();
-			} );
-
-			// Next refetch should make a new API call
-			await act( async () => {
-				await result.current.refetch();
-			} );
-
-			expect( apiFetch ).toHaveBeenCalledTimes( 2 );
-		} );
-	} );
-
-	describe( 'Error Handling', () => {
-		it( 'should handle API errors gracefully', async () => {
-			apiFetch.mockRejectedValue( new Error( 'Network error' ) );
-
-			const { result } = renderHook( () => useConfigContext(), {
-				wrapper,
-			} );
-
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
-
-			expect( result.current.error ).toBe( 'Network error' );
-			expect( result.current.config ).toEqual( {} );
-		} );
-
-		it( 'should handle unsuccessful API responses', async () => {
-			apiFetch.mockResolvedValue( {
-				success: false,
-				error: 'Invalid request',
-			} );
-
-			const { result } = renderHook( () => useConfigContext(), {
-				wrapper,
-			} );
-
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
-
-			expect( result.current.error ).toBe(
-				'Config fetch failed: response.success is false'
+			// Should only have the expected properties
+			expect( Object.keys( result.current.config ) ).toHaveLength( 4 );
+			expect( result.current.config ).not.toHaveProperty(
+				'extraProperty'
 			);
-		} );
-
-		it( 'should clear error on successful fetch', async () => {
-			// First call fails
-			apiFetch.mockRejectedValueOnce( new Error( 'Network error' ) );
-
-			const { result } = renderHook( () => useConfigContext(), {
-				wrapper,
-			} );
-
-			await waitFor( () => {
-				expect( result.current.error ).toBe( 'Network error' );
-			} );
-
-			// Second call succeeds
-			const mockConfig = {
-				success: true,
-				publicUrl: '',
-				adminUrl: '',
-			};
-			apiFetch.mockResolvedValue( mockConfig );
-
-			await act( async () => {
-				await result.current.refetch();
-			} );
-
-			await waitFor( () => {
-				expect( result.current.error ).toBe( null );
-			} );
-		} );
-	} );
-
-	describe( 'Refetch Method', () => {
-		it( 'should provide refetch method that forces fetch', async () => {
-			const initialConfig = {
-				success: true,
-				publicUrl: '',
-				adminUrl: '',
-			};
-			apiFetch.mockResolvedValue( initialConfig );
-
-			const { result } = renderHook( () => useConfigContext(), {
-				wrapper,
-			} );
-
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
-
-			const updatedConfig = {
-				success: true,
-				publicUrl: '',
-				adminUrl: '',
-			};
-			apiFetch.mockResolvedValue( updatedConfig );
-
-			await act( async () => {
-				await result.current.refetch();
-			} );
-
-			await waitFor( () => {
-				expect( result.current.loading ).toBe( false );
-			} );
 		} );
 	} );
 } );

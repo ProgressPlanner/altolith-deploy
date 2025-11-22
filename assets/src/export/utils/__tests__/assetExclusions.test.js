@@ -70,6 +70,14 @@ describe( 'assetExclusions', () => {
 				);
 			} );
 
+			test( 'should exclude wp-comments-post.php', () => {
+				expect(
+					isExcludedUrl(
+						'http://example.com/wp-comments-post.php'
+					)
+				).toBe( true );
+			} );
+
 			test( 'should exclude wp-admin PHP files', () => {
 				expect(
 					isExcludedUrl( 'http://example.com/wp-admin/admin.php' )

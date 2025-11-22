@@ -514,13 +514,13 @@ describe( 'fileUploadManager', () => {
 		let mockSetStatusMessage;
 
 		beforeEach( () => {
+			jest.clearAllMocks();
+
 			mockStorageService = {
 				upload: jest.fn(),
 			};
 
 			mockSetStatusMessage = jest.fn();
-
-			jest.clearAllMocks();
 		} );
 
 		/**
@@ -532,7 +532,8 @@ describe( 'fileUploadManager', () => {
 		it( 'should retry failed uploads', async () => {
 			let attemptCount = 0;
 
-			// Mock retry logic: fail first 2 times, succeed on 3rd
+			// Reset and mock retry logic: fail first 2 times, succeed on 3rd
+			errorHandler.executeWithRetry.mockReset();
 			errorHandler.executeWithRetry.mockImplementation(
 				async ( fn, options ) => {
 					attemptCount++;

@@ -28,28 +28,38 @@ jest.mock( '@aether/utils/storage', () => ( {
 	},
 } ) );
 
+// Create mock methods that will be shared across all instances
+let mockLoad;
+let mockSave;
+let mockMarkAsChanged;
+let mockUpdateFromServer;
+let mockSyncWithServer;
+
 jest.mock( '@aether/services/AssetManagerService', () => {
 	const actual = jest.requireActual( '@aether/services/AssetManagerService' );
 	return {
 		...actual,
 		AssetManagerService: jest.fn().mockImplementation( () => ( {
-			load: jest.fn(),
-			save: jest.fn(),
-			markAsChanged: jest.fn(),
-			updateFromServer: jest.fn(),
-			syncWithServer: jest.fn(),
+			// Return the shared mock methods
+			load: mockLoad,
+			save: mockSave,
+			markAsChanged: mockMarkAsChanged,
+			updateFromServer: mockUpdateFromServer,
+			syncWithServer: mockSyncWithServer,
 		} ) ),
 	};
 } );
 
 describe( 'useAssetManager', () => {
-	let mockService;
-
 	beforeEach( () => {
 		jest.clearAllMocks();
 
-		// Get the mocked service instance
-		mockService = new AssetManagerService();
+		// Create fresh mock functions for each test
+		mockLoad = jest.fn().mockReturnValue( {} );
+		mockSave = jest.fn();
+		mockMarkAsChanged = jest.fn();
+		mockUpdateFromServer = jest.fn();
+		mockSyncWithServer = jest.fn();
 	} );
 
 	describe( 'initialization and persistence', () => {
@@ -62,16 +72,16 @@ describe( 'useAssetManager', () => {
 				},
 			};
 
-			mockService.load.mockReturnValue( initialAssets );
+			mockLoad.mockReturnValue( initialAssets );
 
 			const { result } = renderHook( () => useAssetManager() );
 
-			expect( mockService.load ).toHaveBeenCalled();
+			expect( mockLoad ).toHaveBeenCalled();
 			expect( result.current.assets ).toEqual( initialAssets );
 		} );
 
 		it( 'should handle empty storage on initial load', () => {
-			mockService.load.mockReturnValue( {} );
+			mockLoad.mockReturnValue( {} );
 
 			const { result } = renderHook( () => useAssetManager() );
 
@@ -79,8 +89,8 @@ describe( 'useAssetManager', () => {
 		} );
 
 		it( 'should save assets to storage when they change', () => {
-			mockService.load.mockReturnValue( {} );
-			mockService.markAsChanged.mockReturnValue( {
+			mockLoad.mockReturnValue( {} );
+			mockMarkAsChanged.mockReturnValue( {
 				'plugin-1': {
 					type: 'plugin',
 					slug: 'plugin-1',
@@ -95,11 +105,11 @@ describe( 'useAssetManager', () => {
 			} );
 
 			// Should call save with updated assets
-			expect( mockService.save ).toHaveBeenCalled();
+			expect( mockSave ).toHaveBeenCalled();
 		} );
 
 		it( 'should create service instance only once', () => {
-			mockService.load.mockReturnValue( {} );
+			mockLoad.mockReturnValue( {} );
 
 			const { rerender } = renderHook( () => useAssetManager() );
 
@@ -117,8 +127,8 @@ describe( 'useAssetManager', () => {
 
 	describe( 'markAsChanged', () => {
 		it( 'should mark asset as changed', () => {
-			mockService.load.mockReturnValue( {} );
-			mockService.markAsChanged.mockReturnValue( {
+			mockLoad.mockReturnValue( {} );
+			mockMarkAsChanged.mockReturnValue( {
 				'plugin-1': {
 					type: 'plugin',
 					slug: 'plugin-1',
@@ -132,7 +142,7 @@ describe( 'useAssetManager', () => {
 				result.current.markAsChanged( 'plugin', 'plugin-1' );
 			} );
 
-			expect( mockService.markAsChanged ).toHaveBeenCalledWith(
+			expect( mockMarkAsChanged ).toHaveBeenCalledWith(
 				{},
 				'plugin',
 				'plugin-1'
@@ -148,7 +158,7 @@ describe( 'useAssetManager', () => {
 		} );
 
 		it( 'should preserve callback reference across renders', () => {
-			mockService.load.mockReturnValue( {} );
+			mockLoad.mockReturnValue( {} );
 
 			const { result, rerender } = renderHook( () => useAssetManager() );
 
@@ -160,9 +170,9 @@ describe( 'useAssetManager', () => {
 		} );
 
 		it( 'should handle marking multiple assets', () => {
-			mockService.load.mockReturnValue( {} );
+			mockLoad.mockReturnValue( {} );
 
-			mockService.markAsChanged
+			mockMarkAsChanged
 				.mockReturnValueOnce( {
 					'plugin-1': {
 						type: 'plugin',
@@ -218,8 +228,8 @@ describe( 'useAssetManager', () => {
 				},
 			};
 
-			mockService.load.mockReturnValue( initialAssets );
-			mockService.updateFromServer.mockReturnValue( {
+			mockLoad.mockReturnValue( initialAssets );
+			mockUpdateFromServer.mockReturnValue( {
 				'plugin-1': {
 					type: 'plugin',
 					slug: 'plugin-1',
@@ -239,15 +249,15 @@ describe( 'useAssetManager', () => {
 				result.current.updateFromServer( serverData );
 			} );
 
-			expect( mockService.updateFromServer ).toHaveBeenCalledWith(
+			expect( mockUpdateFromServer ).toHaveBeenCalledWith(
 				initialAssets,
 				serverData
 			);
 		} );
 
 		it( 'should handle updating nonexistent asset', () => {
-			mockService.load.mockReturnValue( {} );
-			mockService.updateFromServer.mockReturnValue( {
+			mockLoad.mockReturnValue( {} );
+			mockUpdateFromServer.mockReturnValue( {
 				'new-plugin': {
 					type: 'plugin',
 					slug: 'new-plugin',
@@ -280,8 +290,8 @@ describe( 'useAssetManager', () => {
 				},
 			};
 
-			mockService.load.mockReturnValue( initialAssets );
-			mockService.syncWithServer.mockReturnValue( {
+			mockLoad.mockReturnValue( initialAssets );
+			mockSyncWithServer.mockReturnValue( {
 				'plugin-1': {
 					type: 'plugin',
 					slug: 'plugin-1',
@@ -307,21 +317,21 @@ describe( 'useAssetManager', () => {
 				result.current.syncWithServer( serverAssets );
 			} );
 
-			expect( mockService.syncWithServer ).toHaveBeenCalledWith(
+			expect( mockSyncWithServer ).toHaveBeenCalledWith(
 				initialAssets,
 				serverAssets
 			);
 		} );
 
 		it( 'should handle empty server assets array', () => {
-			mockService.load.mockReturnValue( {
+			mockLoad.mockReturnValue( {
 				'plugin-1': {
 					type: 'plugin',
 					slug: 'plugin-1',
 					needsUpload: true,
 				},
 			} );
-			mockService.syncWithServer.mockReturnValue( {
+			mockSyncWithServer.mockReturnValue( {
 				'plugin-1': {
 					type: 'plugin',
 					slug: 'plugin-1',
@@ -335,7 +345,7 @@ describe( 'useAssetManager', () => {
 				result.current.syncWithServer( [] );
 			} );
 
-			expect( mockService.syncWithServer ).toHaveBeenCalledWith(
+			expect( mockSyncWithServer ).toHaveBeenCalledWith(
 				expect.any( Object ),
 				[]
 			);
@@ -350,8 +360,8 @@ describe( 'useAssetManager', () => {
 				},
 			};
 
-			mockService.load.mockReturnValue( assetsWithLocalChanges );
-			mockService.syncWithServer.mockReturnValue( {
+			mockLoad.mockReturnValue( assetsWithLocalChanges );
+			mockSyncWithServer.mockReturnValue( {
 				'plugin-1': {
 					type: 'plugin',
 					slug: 'plugin-1',
@@ -395,7 +405,7 @@ describe( 'useAssetManager', () => {
 				},
 			};
 
-			mockService.load.mockReturnValue( assetsWithChanges );
+			mockLoad.mockReturnValue( assetsWithChanges );
 
 			const { result } = renderHook( () => useAssetManager() );
 
@@ -405,7 +415,7 @@ describe( 'useAssetManager', () => {
 		} );
 
 		it( 'should return empty array when no assets need upload', () => {
-			mockService.load.mockReturnValue( {
+			mockLoad.mockReturnValue( {
 				'plugin-1': {
 					type: 'plugin',
 					slug: 'plugin-1',
@@ -421,7 +431,7 @@ describe( 'useAssetManager', () => {
 		} );
 
 		it( 'should return empty array when assets is empty', () => {
-			mockService.load.mockReturnValue( {} );
+			mockLoad.mockReturnValue( {} );
 
 			const { result } = renderHook( () => useAssetManager() );
 
@@ -431,8 +441,8 @@ describe( 'useAssetManager', () => {
 		} );
 
 		it( 'should update when assets change', () => {
-			mockService.load.mockReturnValue( {} );
-			mockService.markAsChanged.mockReturnValue( {
+			mockLoad.mockReturnValue( {} );
+			mockMarkAsChanged.mockReturnValue( {
 				'plugin-1': {
 					type: 'plugin',
 					slug: 'plugin-1',
@@ -472,7 +482,7 @@ describe( 'useAssetManager', () => {
 				},
 			};
 
-			mockService.load.mockReturnValue( assetsWithFlags );
+			mockLoad.mockReturnValue( assetsWithFlags );
 
 			const { result } = renderHook( () => useAssetManager() );
 
@@ -487,7 +497,7 @@ describe( 'useAssetManager', () => {
 		} );
 
 		it( 'should handle empty assets', () => {
-			mockService.load.mockReturnValue( {} );
+			mockLoad.mockReturnValue( {} );
 
 			const { result } = renderHook( () => useAssetManager() );
 
@@ -499,7 +509,7 @@ describe( 'useAssetManager', () => {
 		} );
 
 		it( 'should preserve callback reference', () => {
-			mockService.load.mockReturnValue( {} );
+			mockLoad.mockReturnValue( {} );
 
 			const { result, rerender } = renderHook( () => useAssetManager() );
 
@@ -513,7 +523,7 @@ describe( 'useAssetManager', () => {
 
 	describe( 'edge cases', () => {
 		it( 'should handle corrupted storage data', () => {
-			mockService.load.mockReturnValue( null );
+			mockLoad.mockReturnValue( null );
 
 			const { result } = renderHook( () => useAssetManager() );
 
@@ -522,8 +532,8 @@ describe( 'useAssetManager', () => {
 		} );
 
 		it( 'should handle service errors gracefully', () => {
-			mockService.load.mockReturnValue( {} );
-			mockService.markAsChanged.mockImplementation( () => {
+			mockLoad.mockReturnValue( {} );
+			mockMarkAsChanged.mockImplementation( () => {
 				throw new Error( 'Service error' );
 			} );
 
@@ -538,10 +548,10 @@ describe( 'useAssetManager', () => {
 		} );
 
 		it( 'should handle rapid state updates', () => {
-			mockService.load.mockReturnValue( {} );
+			mockLoad.mockReturnValue( {} );
 
 			let counter = 0;
-			mockService.markAsChanged.mockImplementation(
+			mockMarkAsChanged.mockImplementation(
 				( prev, type, slug ) => {
 					counter++;
 					return {
@@ -571,7 +581,7 @@ describe( 'useAssetManager', () => {
 
 	describe( 'callback stability', () => {
 		it( 'should maintain all callback references across renders', () => {
-			mockService.load.mockReturnValue( {} );
+			mockLoad.mockReturnValue( {} );
 
 			const { result, rerender } = renderHook( () => useAssetManager() );
 

@@ -386,7 +386,15 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should return null for null provider ID', async () => {
-			ProviderRegistry.getAll.mockReturnValue( [] );
+			// Mock providers being available (testing null ID, not empty provider list)
+			const mockProviders = [
+				{
+					getId: () => 'test-provider',
+					getName: () => 'Test Provider',
+					getSupportedDeploymentTypes: () => [ 'static' ],
+				},
+			];
+			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
 			const { result } = renderHook(
 				() => useContext( ProviderContext ),
@@ -404,7 +412,15 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should return null for undefined provider ID', async () => {
-			ProviderRegistry.getAll.mockReturnValue( [] );
+			// Mock providers being available (testing undefined ID, not empty provider list)
+			const mockProviders = [
+				{
+					getId: () => 'test-provider',
+					getName: () => 'Test Provider',
+					getSupportedDeploymentTypes: () => [ 'static' ],
+				},
+			];
+			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
 			const { result } = renderHook(
 				() => useContext( ProviderContext ),
@@ -422,7 +438,15 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should return null for empty string provider ID', async () => {
-			ProviderRegistry.getAll.mockReturnValue( [] );
+			// Mock providers being available (testing empty string ID, not empty provider list)
+			const mockProviders = [
+				{
+					getId: () => 'test-provider',
+					getName: () => 'Test Provider',
+					getSupportedDeploymentTypes: () => [ 'static' ],
+				},
+			];
+			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
 			const { result } = renderHook(
 				() => useContext( ProviderContext ),

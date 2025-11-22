@@ -126,18 +126,11 @@ describe( 'useAssetDiscovery', () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
 
-			// Mock apiFetch for config and assets endpoints
-			// Note: apiFetch is called for:
-			// 1. Config endpoint
-			// 2. Assets endpoint
-			apiFetch
-				.mockResolvedValueOnce( {
-					// Config response
-					wporgCheckMethod: 'cors-proxy',
-				} )
-				.mockResolvedValueOnce( {
-					// Assets response
-					success: true,
+			// Mock apiFetch for assets endpoint only
+			// Note: getConfig() reads from window.aetherData, doesn't call API
+			apiFetch.mockResolvedValueOnce( {
+				// Assets response
+				success: true,
 					plugins: [
 						{
 							slug: 'akismet-test-2/akismet-test-2',
@@ -257,13 +250,9 @@ describe( 'useAssetDiscovery', () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
 
-			// Mock apiFetch to return config and assets
-			apiFetch
-				.mockResolvedValueOnce( {
-					wporgCheckMethod: 'cors-proxy',
-				} )
-				.mockResolvedValueOnce( {
-					success: true,
+			// Mock apiFetch for assets only (getConfig reads from window.aetherData)
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
 					plugins: [
 						{
 							slug: 'custom-plugin-test-3',
@@ -299,15 +288,13 @@ describe( 'useAssetDiscovery', () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
 
-			// Mock apiFetch for config and assets endpoints
-			apiFetch
-				.mockResolvedValueOnce( {
-					// Config response
-					wporgCheckMethod: 'cors-proxy',
-				} )
-				.mockResolvedValueOnce( {
-					// Assets response
-					success: true,
+			// Set document title for siteName
+			document.title = 'Test Site';
+
+			// Mock apiFetch for assets only (getConfig reads from window.aetherData)
+			apiFetch.mockResolvedValueOnce( {
+				// Assets response
+				success: true,
 					plugins: [
 						{
 							slug: 'akismet-test-4/akismet-test-4',
@@ -378,12 +365,12 @@ describe( 'useAssetDiscovery', () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
 
-			apiFetch
-				.mockResolvedValueOnce( {
-					wporgCheckMethod: 'cors-proxy',
-				} )
-				.mockResolvedValueOnce( {
-					success: true,
+			// Set document title for siteName
+			document.title = 'Test Site';
+
+			// Mock apiFetch for assets only (getConfig reads from window.aetherData)
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
 					plugins: [
 						{
 							slug: 'aether/aether',
@@ -438,21 +425,21 @@ describe( 'useAssetDiscovery', () => {
 			// Clear any previous mocks
 			apiFetch.mockClear();
 
-			apiFetch
-				.mockResolvedValueOnce( {
-					wporgCheckMethod: 'cors-proxy',
-				} )
-				.mockResolvedValueOnce( {
-					success: true,
+			// Set document title for siteName
+			document.title = 'Test Site';
+
+			// Mock apiFetch for assets only (getConfig reads from window.aetherData)
+			apiFetch.mockResolvedValueOnce( {
+				success: true,
 					plugins: [
 						{
-							slug: 'active-plugin-test-6',
+							slug: 'active-plugin-test-6/active-plugin-test-6',
 							name: 'Active Plugin',
 							version: '1.0',
 							is_active: true,
 						},
 						{
-							slug: 'inactive-plugin-test-6',
+							slug: 'inactive-plugin-test-6/inactive-plugin-test-6',
 							name: 'Inactive Plugin',
 							version: '1.0',
 							is_active: false,

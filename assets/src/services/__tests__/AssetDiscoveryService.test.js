@@ -386,30 +386,46 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 	} );
 
 	describe( 'getConfig', () => {
-		test( 'should fetch and return config', async () => {
-			mockApiFetch.mockResolvedValue( {
-				wporgCheckMethod: 'php',
-				corsProxyUrl: 'https://proxy.example.com',
-			} );
+		let originalAetherData;
+
+		beforeEach( () => {
+			originalAetherData = global.window.aetherData;
+		} );
+
+		afterEach( () => {
+			if ( originalAetherData ) {
+				global.window.aetherData = originalAetherData;
+			} else {
+				delete global.window.aetherData;
+			}
+		} );
+
+		test( 'should read config from window.aetherData', async () => {
+			global.window.aetherData = {
+				publicUrl: 'https://example.com',
+				adminUrl: 'https://example.com/wp-admin',
+			};
 
 			const result = await service.getConfig();
 
-			expect( mockApiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/site-exporter/config',
-				method: 'GET',
-			} );
+			// Should NOT call API - reads from window.aetherData
+			expect( mockApiFetch ).not.toHaveBeenCalled();
 			expect( result ).toEqual( {
-				wporgCheckMethod: 'php',
-				corsProxyUrl: 'https://proxy.example.com',
+				publicUrl: 'https://example.com',
+				adminUrl: 'https://example.com/wp-admin',
 			} );
 		} );
 
-		test( 'should return empty object on error', async () => {
-			mockApiFetch.mockRejectedValue( new Error( 'Network error' ) );
+		test( 'should return default values when window.aetherData is missing', async () => {
+			delete global.window.aetherData;
 
 			const result = await service.getConfig();
 
-			expect( result ).toEqual( {} );
+			// Fallback returns empty strings for URLs
+			expect( result ).toEqual( {
+				publicUrl: '',
+				adminUrl: '',
+			} );
 		} );
 	} );
 
@@ -464,12 +480,7 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 
 	describe( 'discoverCustomAssets', () => {
 		test( 'should discover custom assets', async () => {
-			// Mock config
-			mockApiFetch.mockResolvedValueOnce( {
-				wporgCheckMethod: 'php',
-			} );
-
-			// Mock installed assets
+			// Mock installed assets (getConfig no longer calls API)
 			mockApiFetch.mockResolvedValueOnce( {
 				success: true,
 				plugins: [
@@ -520,7 +531,7 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 		} );
 
 		test( 'should filter out WordPress.org assets', async () => {
-			mockApiFetch.mockResolvedValueOnce( {} );
+			// Mock installed assets (getConfig no longer calls API)
 			mockApiFetch.mockResolvedValueOnce( {
 				success: true,
 				plugins: [
@@ -579,7 +590,7 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 				mockWporgCache,
 				() => 'Test Site'
 			);
-			mockApiFetch.mockResolvedValueOnce( {} );
+			// Mock installed assets (getConfig no longer calls API)
 			mockApiFetch.mockResolvedValueOnce( {
 				success: true,
 				plugins: [
@@ -628,7 +639,7 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 				() => 'Test Site'
 			);
 
-			mockApiFetch.mockResolvedValueOnce( {} );
+			// Mock installed assets (getConfig no longer calls API)
 			mockApiFetch.mockResolvedValueOnce( {
 				success: true,
 				plugins: [
@@ -672,7 +683,7 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 				() => 'Fallback Title'
 			);
 
-			mockApiFetch.mockResolvedValueOnce( {} );
+			// Mock installed assets (getConfig no longer calls API)
 			mockApiFetch.mockResolvedValueOnce( {
 				success: true,
 				plugins: [],
@@ -692,7 +703,7 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 				() => 'Test Site'
 			);
 
-			mockApiFetch.mockResolvedValueOnce( {} );
+			// Mock installed assets (getConfig no longer calls API)
 			mockApiFetch.mockResolvedValueOnce( {
 				success: true,
 				plugins: [

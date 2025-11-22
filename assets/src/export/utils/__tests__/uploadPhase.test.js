@@ -42,16 +42,16 @@ jest.mock( '@aether/utils/debug', () => ( {
 	debugWarn: jest.fn(),
 } ) );
 
-jest.mock( './htmlProcessor', () => ( {
+jest.mock( '../htmlProcessor', () => ( {
 	processHtml: jest.fn(),
 	getStaticFilePath: jest.fn(),
 } ) );
 
-jest.mock( './assetExtractor', () => ( {
+jest.mock( '../assetExtractor', () => ( {
 	getAssetLocalPath: jest.fn(),
 } ) );
 
-jest.mock( './fileUploadManager', () => ( {
+jest.mock( '../fileUploadManager', () => ( {
 	uploadFilesWithProgress: jest.fn(),
 } ) );
 
@@ -138,6 +138,17 @@ describe( 'uploadPhase', () => {
 			mockSetStatusMessage = jest.fn();
 
 			global.fetch = jest.fn();
+
+			// Mock uploadFilesWithProgress to return expected structure
+			const { uploadFilesWithProgress } =
+				require( '../fileUploadManager' );
+			uploadFilesWithProgress.mockResolvedValue( {
+				success: true,
+				uploaded: 0,
+				failed: 0,
+				skipped: 0,
+				results: [],
+			} );
 		} );
 
 		it( 'should return early if all assets already processed', async () => {
@@ -179,7 +190,7 @@ describe( 'uploadPhase', () => {
 		} );
 
 		it( 'should handle fetch failures gracefully', async () => {
-			const { getAssetLocalPath } = require( './assetExtractor' );
+			const { getAssetLocalPath } = require( '../assetExtractor' );
 			getAssetLocalPath.mockReturnValue( 'assets/test.jpg' );
 
 			global.fetch.mockRejectedValue( new Error( 'Network error' ) );

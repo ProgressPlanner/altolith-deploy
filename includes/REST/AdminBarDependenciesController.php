@@ -242,3 +242,4 @@ class AdminBarDependenciesController
 		return \array_values($allStyles);
 	}
 }
+
