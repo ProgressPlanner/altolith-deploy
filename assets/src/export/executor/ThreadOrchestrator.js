@@ -211,6 +211,11 @@ export async function executeThreadedWorkflow(
 	// Default: 5 concurrent providers (configurable via options)
 	const maxConcurrency = options.maxConcurrency || 5;
 
+	// Create step label lookup map for performance (avoid repeated array searches)
+	const stepLabelMap = new Map(
+		threadSteps.map( ( step ) => [ step.id, step.label ] )
+	);
+
 	const executeProviderThread = async ( providerInstance ) => {
 			// Build thread-specific context
 			const threadCallbacks = {
@@ -243,9 +248,8 @@ export async function executeThreadedWorkflow(
 				setStepProgress: ( stepId, progress ) => {
 					// Update per-provider progress tracking
 					if ( initialContext.setProviderProgress ) {
-						// Get step label from threadSteps
-						const step = threadSteps.find( ( s ) => s.id === stepId );
-						const stepLabel = step ? step.label : stepId;
+						// Get step label from cached map (O(1) lookup)
+						const stepLabel = stepLabelMap.get( stepId ) || stepId;
 
 						initialContext.setProviderProgress( providerInstance.id, {
 							stepId,
