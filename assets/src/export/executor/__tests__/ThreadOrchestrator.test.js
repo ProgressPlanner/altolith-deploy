@@ -110,8 +110,9 @@ describe( 'ThreadOrchestrator', () => {
 			);
 
 			expect( threadContext.siteUrl ).toBe( 'https://example.com' );
-			expect( threadContext.api ).toBe( globalContext.api );
-			expect( threadContext.discoveredAssets ).toBe(
+			// Note: Deep clone means these are NOT the same references
+			expect( threadContext.api ).not.toBe( globalContext.api );
+			expect( threadContext.discoveredAssets ).not.toBe(
 				globalContext.discoveredAssets
 			);
 			expect( threadContext.currentProviderInstance ).toBe(
@@ -120,6 +121,46 @@ describe( 'ThreadOrchestrator', () => {
 			expect( threadContext.providerInstanceConfig ).toEqual( {
 				apiKey: 'test',
 			} );
+		} );
+
+		it( 'should deep clone global context for thread isolation', () => {
+			const globalContext = {
+				config: { nested: { value: 'original' } },
+				items: [ 1, 2, 3 ],
+			};
+
+			const providerInstance = {
+				id: 'provider1',
+				label: 'Provider 1',
+				config: {},
+			};
+
+			const threadContext = buildThreadContext(
+				globalContext,
+				providerInstance
+			);
+
+			// Mutate thread context
+			threadContext.config.nested.value = 'modified';
+			threadContext.items.push( 4 );
+
+			// Global context should NOT be affected (deep clone)
+			expect( globalContext.config.nested.value ).toBe( 'original' );
+			expect( globalContext.items ).toEqual( [ 1, 2, 3 ] );
+		} );
+
+		it( 'should throw error for invalid provider instance', () => {
+			const globalContext = { siteUrl: 'https://example.com' };
+
+			// Missing id
+			expect( () =>
+				buildThreadContext( globalContext, { label: 'Provider 1' } )
+			).toThrow( 'Invalid provider instance: missing id' );
+
+			// Null instance
+			expect( () =>
+				buildThreadContext( globalContext, null )
+			).toThrow( 'Invalid provider instance: missing id' );
 		} );
 
 		it( 'should override callbacks with thread-specific ones', () => {
@@ -327,7 +368,7 @@ describe( 'ThreadOrchestrator', () => {
 			expect( result.failureCount ).toBe( 1 );
 		} );
 
-		it( 'should handle zero providers', async () => {
+		it( 'should handle zero providers with only global steps', async () => {
 			const globalStep = {
 				id: 'globalStep',
 				handler: jest.fn().mockResolvedValue( { data: 'test' } ),
@@ -348,6 +389,96 @@ describe( 'ThreadOrchestrator', () => {
 			expect( result.threadResults ).toHaveLength( 0 );
 			// Global state comes from step handler
 			expect( result.globalState ).toHaveProperty( 'data' );
+		} );
+
+		it( 'should throw error when thread steps exist but no providers', async () => {
+			const threadStep = {
+				id: 'threadStep',
+				label: 'Thread Step',
+				handler: jest.fn(),
+				requires: {
+					currentProviderInstance: { from: 'thread' },
+				},
+			};
+
+			const steps = [ threadStep ];
+			const context = {};
+			const providers = [];
+
+			await expect(
+				executeThreadedWorkflow( steps, context, providers )
+			).rejects.toThrow(
+				/No provider instances configured, but thread steps require execution/
+			);
+		} );
+
+		it( 'should return partial success info when some providers fail', async () => {
+			const threadStep = {
+				id: 'threadStep',
+				label: 'Thread Step',
+				handler: jest
+					.fn()
+					.mockResolvedValueOnce( { result: 'success' } )
+					.mockRejectedValueOnce( new Error( 'Failed' ) )
+					.mockResolvedValueOnce( { result: 'success' } ),
+				requires: {
+					currentProviderInstance: { from: 'thread' },
+				},
+			};
+
+			const steps = [ threadStep ];
+			const context = { setProviderProgress: jest.fn() };
+			const providers = [
+				{ id: 'provider1', label: 'P1', config: {} },
+				{ id: 'provider2', label: 'P2', config: {} },
+				{ id: 'provider3', label: 'P3', config: {} },
+			];
+
+			const result = await executeThreadedWorkflow(
+				steps,
+				context,
+				providers
+			);
+
+			expect( result.success ).toBe( true );
+			expect( result.partialSuccess ).toBe( true );
+			expect( result.allSucceeded ).toBe( false );
+			expect( result.successCount ).toBe( 2 );
+			expect( result.failureCount ).toBe( 1 );
+			expect( result.failedProviders ).toHaveLength( 1 );
+			expect( result.failedProviders[ 0 ].providerId ).toBe(
+				'provider2'
+			);
+		} );
+
+		it( 'should return allSucceeded when all providers succeed', async () => {
+			const threadStep = {
+				id: 'threadStep',
+				label: 'Thread Step',
+				handler: jest.fn().mockResolvedValue( { result: 'success' } ),
+				requires: {
+					currentProviderInstance: { from: 'thread' },
+				},
+			};
+
+			const steps = [ threadStep ];
+			const context = { setProviderProgress: jest.fn() };
+			const providers = [
+				{ id: 'provider1', label: 'P1', config: {} },
+				{ id: 'provider2', label: 'P2', config: {} },
+			];
+
+			const result = await executeThreadedWorkflow(
+				steps,
+				context,
+				providers
+			);
+
+			expect( result.success ).toBe( true );
+			expect( result.partialSuccess ).toBe( false );
+			expect( result.allSucceeded ).toBe( true );
+			expect( result.successCount ).toBe( 2 );
+			expect( result.failureCount ).toBe( 0 );
 		} );
 
 		it( 'should call setProviderProgress for thread steps', async () => {

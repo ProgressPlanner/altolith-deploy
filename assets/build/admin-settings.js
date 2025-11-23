@@ -10506,6 +10506,74 @@ function getExecutionPlan(steps) {
 
 
 /**
+ * Execute async functions with concurrency limit
+ *
+ * Limits number of concurrent executions to prevent resource exhaustion.
+ *
+ * @param {Array}    items       - Array of items to process
+ * @param {Function} fn          - Async function to call for each item
+ * @param {number}   concurrency - Max concurrent executions (default: 5)
+ * @return {Promise<Array>} Results array in original order
+ */
+async function limitConcurrency(items, fn, concurrency = 5) {
+  const results = [];
+  const executing = [];
+  for (const [index, item] of items.entries()) {
+    const promise = Promise.resolve().then(() => fn(item, index));
+    results[index] = promise;
+    if (concurrency <= items.length) {
+      const e = promise.then(() => executing.splice(executing.indexOf(e), 1));
+      executing.push(e);
+      if (executing.length >= concurrency) {
+        await Promise.race(executing);
+      }
+    }
+  }
+  return Promise.all(results);
+}
+
+/**
+ * Deep clone global context to ensure thread isolation
+ *
+ * Creates a deep copy of global context so threads cannot mutate shared data.
+ * Special handling for Maps, Arrays, and nested objects.
+ *
+ * @param {Object} context - Global context to clone
+ * @return {Object} Deep cloned context
+ */
+function deepCloneContext(context) {
+  const cloned = {};
+  for (const [key, value] of Object.entries(context)) {
+    // Skip functions (callbacks are handled separately)
+    if (typeof value === 'function') {
+      continue;
+    }
+
+    // Handle Map objects
+    if (value instanceof Map) {
+      cloned[key] = new Map(value);
+      continue;
+    }
+
+    // Handle Arrays
+    if (Array.isArray(value)) {
+      cloned[key] = [...value];
+      continue;
+    }
+
+    // Handle plain objects (deep clone)
+    if (value && typeof value === 'object' && value.constructor === Object) {
+      cloned[key] = JSON.parse(JSON.stringify(value));
+      continue;
+    }
+
+    // Primitive values
+    cloned[key] = value;
+  }
+  return cloned;
+}
+
+/**
  * Categorize steps into global and per-thread
  *
  * @param {Array} steps - All registered steps
@@ -10530,9 +10598,8 @@ function categorizeSteps(steps) {
 /**
  * Build thread context from global context and provider instance
  *
- * Creates an isolated thread context by merging:
- * - Global context (read-only, shared across threads)
- * - Thread-specific properties (currentProviderInstance, etc.)
+ * Creates an isolated thread context by deep cloning global context
+ * and adding thread-specific properties.
  *
  * @param {Object} globalContext    - Global execution context
  * @param {Object} providerInstance - Provider instance object
@@ -10540,13 +10607,21 @@ function categorizeSteps(steps) {
  * @return {Object} Thread context
  */
 function buildThreadContext(globalContext, providerInstance, callbacks = {}) {
-  // Thread context extends global context with thread-specific properties
+  // Validate provider instance
+  if (!providerInstance || !providerInstance.id) {
+    throw new Error('Invalid provider instance: missing id');
+  }
+
+  // Deep clone global context to ensure thread isolation
+  // Prevents threads from mutating shared data
+  const clonedContext = deepCloneContext(globalContext);
+
+  // Add thread-specific properties
   return {
-    ...globalContext,
-    // All global data is read-only in threads
+    ...clonedContext,
     currentProviderInstance: providerInstance,
     providerInstanceConfig: providerInstance.config || {},
-    // Thread-specific callbacks override global ones
+    // Thread-specific callbacks (functions not cloned)
     setStatusMessage: callbacks.setStatusMessage || globalContext.setStatusMessage,
     setStepProgress: callbacks.setStepProgress || globalContext.setStepProgress
   };
@@ -10584,17 +10659,33 @@ async function executeThreadedWorkflow(steps, initialContext, providerInstances 
     ...globalState
   };
 
-  // If no provider instances, just return global results
+  // Handle case where no provider instances but thread steps exist
   if (providerInstances.length === 0) {
+    // If there are thread steps, this is an error condition
+    // Thread steps need providers to execute
+    if (threadSteps.length > 0) {
+      const threadStepIds = threadSteps.map(s => s.id).join(', ');
+      throw new Error(`No provider instances configured, but thread steps require execution: ${threadStepIds}. ` + `Please configure at least one provider instance or disable these steps.`);
+    }
+
+    // No thread steps and no providers - workflow completes successfully
     return {
       success: true,
       globalState,
-      threadResults: []
+      threadResults: [],
+      successCount: 0,
+      failureCount: 0
     };
   }
 
-  // Execute per-thread steps in parallel for each provider instance
-  const threadPromises = providerInstances.map(async providerInstance => {
+  // Execute per-thread steps for each provider instance
+  // Use concurrency limiting to prevent resource exhaustion
+  // Default: 5 concurrent providers (configurable via options)
+  const maxConcurrency = options.maxConcurrency || 5;
+
+  // Create step label lookup map for performance (avoid repeated array searches)
+  const stepLabelMap = new Map(threadSteps.map(step => [step.id, step.label]));
+  const executeProviderThread = async providerInstance => {
     // Build thread-specific context
     const threadCallbacks = {
       setStatusMessage: (message, type, key, progress, metadata) => {
@@ -10613,9 +10704,8 @@ async function executeThreadedWorkflow(steps, initialContext, providerInstances 
       setStepProgress: (stepId, progress) => {
         // Update per-provider progress tracking
         if (initialContext.setProviderProgress) {
-          // Get step label from threadSteps
-          const step = threadSteps.find(s => s.id === stepId);
-          const stepLabel = step ? step.label : stepId;
+          // Get step label from cached map (O(1) lookup)
+          const stepLabel = stepLabelMap.get(stepId) || stepId;
           initialContext.setProviderProgress(providerInstance.id, {
             stepId,
             stepLabel,
@@ -10665,23 +10755,40 @@ async function executeThreadedWorkflow(steps, initialContext, providerInstances 
         error: error.message || 'Unknown error'
       };
     }
-  });
+  };
 
-  // Wait for all threads to complete
-  const threadResults = await Promise.all(threadPromises);
+  // Execute provider threads with concurrency limiting
+  const threadResults = await limitConcurrency(providerInstances, executeProviderThread, maxConcurrency);
 
   // Check if any threads succeeded
   const successfulThreads = threadResults.filter(r => r.success);
   const failedThreads = threadResults.filter(r => !r.success);
 
-  // Workflow succeeds if at least one thread succeeded
-  const overallSuccess = successfulThreads.length > 0;
+  // Determine overall success:
+  // - All succeeded: complete success
+  // - Some succeeded: partial success (workflow continues but with warnings)
+  // - None succeeded: failure
+  const allSucceeded = successfulThreads.length === threadResults.length;
+  const someSucceeded = successfulThreads.length > 0;
+  const noneSucceeded = successfulThreads.length === 0;
+
+  // Collect failed provider details for error reporting
+  const failedProviders = failedThreads.map(r => ({
+    providerId: r.providerInstance,
+    error: r.error
+  }));
   return {
-    success: overallSuccess,
+    success: someSucceeded,
+    // Succeeds if at least one provider worked
+    partialSuccess: someSucceeded && !allSucceeded,
+    // True if some failed
+    allSucceeded,
+    // True only if all providers succeeded
     globalState,
     threadResults,
     successCount: successfulThreads.length,
-    failureCount: failedThreads.length
+    failureCount: failedThreads.length,
+    failedProviders // Array of {providerId, error} for failed providers
   };
 }
 /* harmony default export */ const ThreadOrchestrator = ({
@@ -11794,13 +11901,16 @@ function getRegisteredSteps() {
 /**
  * Get steps filtered by which providers are enabled
  *
- * @param {Object} context - Execution context with provider arrays
- * @return {Array<Object>} Filtered steps based on enabled providers
+ * Uses provider INSTANCE arrays (not ID arrays) to ensure validation.
+ * This prevents steps from executing when all provider instances are disabled/invalid.
+ *
+ * @param {Object} context - Execution context with provider instance arrays
+ * @return {Array<Object>} Filtered steps based on enabled provider instances
  */
 function getActiveSteps(context) {
   const {
-    staticSiteProviders = [],
-    blueprintBundleProviders = []
+    staticSiteProviderInstances = [],
+    blueprintBundleProviderInstances = []
   } = context;
   const steps = getRegisteredSteps();
 
@@ -11811,14 +11921,14 @@ function getActiveSteps(context) {
       return !step.shouldSkip(context);
     }
 
-    // Skip blueprint-related steps if no blueprint bundle providers
+    // Skip blueprint-related steps if no blueprint bundle provider INSTANCES
     if (step.id === 'discoverBlueprintBundleAssets' || step.id === 'createWpContentArchive' || step.id === 'createBlueprintBundle' || step.id === 'uploadBlueprintBundle') {
-      return blueprintBundleProviders.length > 0;
+      return blueprintBundleProviderInstances.length > 0;
     }
 
-    // Skip static site steps if no static site providers
+    // Skip static site steps if no static site provider INSTANCES
     if (step.id === 'preScanStaticSite' || step.id === 'uploadStaticFiles') {
-      return staticSiteProviders.length > 0;
+      return staticSiteProviderInstances.length > 0;
     }
     return true;
   });
@@ -11888,25 +11998,72 @@ function getEnabledInstancesForDeploymentType(providerConfigs, deploymentType) {
 }
 
 /**
+ * Validate a provider instance configuration
+ *
+ * Checks that the instance has required properties and valid configuration.
+ *
+ * @param {string} instanceId - Instance ID
+ * @param {Object} config     - Instance configuration
+ * @return {boolean} True if instance is valid
+ */
+function isValidProviderInstance(instanceId, config) {
+  // Must have non-empty ID
+  if (!instanceId || typeof instanceId !== 'string') {
+    (0,admin_settings_debug/* debugError */.AO)('Provider instance has invalid ID:', instanceId);
+    return false;
+  }
+
+  // Must have config object
+  if (!config || typeof config !== 'object') {
+    (0,admin_settings_debug/* debugError */.AO)(`Provider instance ${instanceId} has invalid config`);
+    return false;
+  }
+
+  // Must have provider_type
+  if (!config.provider_type) {
+    (0,admin_settings_debug/* debugError */.AO)(`Provider instance ${instanceId} missing provider_type`);
+    return false;
+  }
+
+  // Must not be explicitly disabled
+  if (config.enabled === false) {
+    // This is normal - not an error, just filtered out
+    return false;
+  }
+
+  // Must have deployment_types array
+  if (!config.deployment_types || !Array.isArray(config.deployment_types)) {
+    (0,admin_settings_debug/* debugError */.AO)(`Provider instance ${instanceId} has invalid deployment_types`);
+    return false;
+  }
+  return true;
+}
+
+/**
  * Build provider instance objects from configurations
  *
  * Creates array of provider instances with full config for threading.
  * Each instance has id, label, and complete configuration.
+ * Validates each instance to ensure it's properly configured.
  *
  * @param {Object} providerConfigs - All provider configurations
  * @param {string} deploymentType  - Deployment type to filter by
- * @return {Array<Object>} Provider instance objects with { id, label, config }
+ * @return {Array<Object>} Valid provider instance objects with { id, label, config }
  */
 function buildProviderInstances(providerConfigs, deploymentType) {
   const instanceIds = getEnabledInstancesForDeploymentType(providerConfigs, deploymentType);
-  return instanceIds.map(instanceId => {
+  return instanceIds
+  // Map to instance objects
+  .map(instanceId => {
     const config = providerConfigs[instanceId] || {};
     return {
       id: instanceId,
       label: config.label || instanceId,
       config
     };
-  });
+  })
+  // Validate and filter out invalid instances
+  .filter(instance => isValidProviderInstance(instance.id, instance.config));
 }
 
 /**
