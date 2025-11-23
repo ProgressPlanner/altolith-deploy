@@ -87,6 +87,26 @@ export class LocalFilesystemProvider extends AbstractProvider {
 	}
 
 	/**
+	 * Get maximum simultaneous uploads for local filesystem.
+	 *
+	 * Local filesystem has no rate limits, so return Infinity for unlimited parallel uploads.
+	 *
+	 * @return {number} Maximum number of simultaneous uploads (Infinity = no limit)
+	 */
+	getMaxSimultaneousUploads() {
+		// Check instance config first (user can still override to limit parallelism)
+		if (
+			this.config &&
+			typeof this.config.maxSimultaneousUploads === 'number'
+		) {
+			return this.config.maxSimultaneousUploads;
+		}
+
+		// Local filesystem can handle unlimited parallel uploads
+		return Infinity;
+	}
+
+	/**
 	 * Get provider-specific configuration fields.
 	 *
 	 * LocalFilesystem provider has minimal configuration since it uses local storage.

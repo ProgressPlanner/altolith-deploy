@@ -9,6 +9,7 @@
 
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { addAction, applyFilters } from '@wordpress/hooks';
+import { processBatch } from '@aether/export/utils/batchProcessor';
 
 /**
  * Upload static files step handler
@@ -102,81 +103,87 @@ async function handler( context ) {
 	let totalUrlsFailed = 0;
 	const allFailedUrls = [];
 
-	// Process each provider
+	// Process each provider with controlled parallelism
 	// Each provider will use the shared cache to get raw HTML and process it independently
-	for ( const providerId of providers ) {
-		try {
-			setStatusMessage(
-				sprintf(
-					/* translators: %s: Provider ID */
-					__( 'Processing static site for provider: %s', 'aether' ),
-					providerId
-				),
-				'progress',
-				`uploadStaticFiles-${ providerId }`
-			);
+	// Note: processStaticSiteUrls handles individual file uploads internally
+	const providerResultsArray = await processBatch(
+		providers,
+		async ( providerId ) => {
+			try {
+				setStatusMessage(
+					sprintf(
+						/* translators: %s: Provider ID */
+						__( 'Processing static site for provider: %s', 'aether' ),
+						providerId
+					),
+					'progress',
+					`uploadStaticFiles-${ providerId }`
+				);
 
-			// Process URLs for this provider
-			// Pass shared HTML data so it uses stored HTML instead of fetching again
-			const result = await processStaticSiteUrls(
-				filteredUrls,
-				staticSiteUrl,
-				providerId,
-				siteUrl,
-				setStatusMessage,
-				blueprintData,
-				null, // removeMessage
-				sharedHtmlData // Pass shared HTML data from preScanStaticSite
-			);
+				// Process URLs for this provider
+				// Pass shared HTML data so it uses stored HTML instead of fetching again
+				const result = await processStaticSiteUrls(
+					filteredUrls,
+					staticSiteUrl,
+					providerId,
+					siteUrl,
+					setStatusMessage,
+					blueprintData,
+					null, // removeMessage
+					sharedHtmlData // Pass shared HTML data from preScanStaticSite
+				);
 
-			// Aggregate results
-			providerResults[ providerId ] = {
-				success: result.success,
-				urlsProcessed: result.urlsProcessed || 0,
-				urlsSucceeded: result.urlsSucceeded || 0,
-				urlsFailed: result.urlsFailed || 0,
-				filesUploaded: result.filesUploaded || 0,
-				filesSkipped: result.filesSkipped || 0,
-				assetsUploaded: result.assetsUploaded || 0,
-				assetsFailed: result.assetsFailed || 0,
-				failedUrls: result.failedUrls || [],
-				uploadedFiles: result.uploadedFiles || [],
-			};
-
-			totalFilesUploaded += result.filesUploaded || 0;
-			totalFilesSkipped += result.filesSkipped || 0;
-			totalUrlsProcessed += result.urlsProcessed || 0;
-			totalUrlsSucceeded += result.urlsSucceeded || 0;
-			totalUrlsFailed += result.urlsFailed || 0;
-			if ( result.failedUrls ) {
-				allFailedUrls.push( ...result.failedUrls );
+				// Return result for this provider
+				return {
+					providerId,
+					success: result.success,
+					urlsProcessed: result.urlsProcessed || 0,
+					urlsSucceeded: result.urlsSucceeded || 0,
+					urlsFailed: result.urlsFailed || 0,
+					filesUploaded: result.filesUploaded || 0,
+					filesSkipped: result.filesSkipped || 0,
+					assetsUploaded: result.assetsUploaded || 0,
+					assetsFailed: result.assetsFailed || 0,
+					failedUrls: result.failedUrls || [],
+					uploadedFiles: result.uploadedFiles || [],
+				};
+			} catch ( error ) {
+				return {
+					providerId,
+					success: false,
+					error: error.message || __( 'Unknown error', 'aether' ),
+					urlsProcessed: 0,
+					urlsSucceeded: 0,
+					urlsFailed: filteredUrls.length,
+					filesUploaded: 0,
+					filesSkipped: 0,
+					assetsUploaded: 0,
+					assetsFailed: 0,
+					failedUrls: filteredUrls.map( ( url ) => ( {
+						url: typeof url === 'string' ? url : url.url || url,
+						reason: error.message || 'Unknown error',
+					} ) ),
+					uploadedFiles: [],
+				};
 			}
-		} catch ( error ) {
-			providerResults[ providerId ] = {
-				success: false,
-				error: error.message || __( 'Unknown error', 'aether' ),
-				urlsProcessed: 0,
-				urlsSucceeded: 0,
-				urlsFailed: filteredUrls.length,
-				filesUploaded: 0,
-				filesSkipped: 0,
-				assetsUploaded: 0,
-				assetsFailed: 0,
-				failedUrls: filteredUrls.map( ( url ) => ( {
-					url: typeof url === 'string' ? url : url.url || url,
-					reason: error.message || 'Unknown error',
-				} ) ),
-				uploadedFiles: [],
-			};
-			totalUrlsFailed += filteredUrls.length;
-			allFailedUrls.push(
-				...filteredUrls.map( ( url ) => ( {
-					url: typeof url === 'string' ? url : url.url || url,
-					reason: error.message || 'Unknown error',
-				} ) )
-			);
+		},
+		10 // Default batch size: 10 providers at a time
+	);
+
+	// Aggregate results into providerResults object and totals
+	providerResultsArray.forEach( ( result ) => {
+		const { providerId, ...resultData } = result;
+		providerResults[ providerId ] = resultData;
+
+		totalFilesUploaded += resultData.filesUploaded || 0;
+		totalFilesSkipped += resultData.filesSkipped || 0;
+		totalUrlsProcessed += resultData.urlsProcessed || 0;
+		totalUrlsSucceeded += resultData.urlsSucceeded || 0;
+		totalUrlsFailed += resultData.urlsFailed || 0;
+		if ( resultData.failedUrls ) {
+			allFailedUrls.push( ...resultData.failedUrls );
 		}
-	}
+	} );
 
 	// Calculate totals
 	// A provider is successful if it uploaded at least one file

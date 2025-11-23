@@ -227,6 +227,37 @@ export class AbstractProvider {
 	}
 
 	/**
+	 * Get maximum simultaneous uploads for this provider.
+	 *
+	 * Returns the default number of files that can be uploaded in parallel.
+	 * Can be overridden by:
+	 * 1. Instance configuration (this.config.maxSimultaneousUploads)
+	 * 2. Subclass implementation (override this method)
+	 * 3. Global default (10)
+	 *
+	 * Subclasses can override to set provider-specific defaults.
+	 * For example:
+	 * - Local filesystem: Infinity (no limit)
+	 * - Cloud providers with rate limits: 5-10
+	 * - Slow/constrained servers: 2-3
+	 *
+	 * @return {number} Maximum number of simultaneous uploads
+	 */
+	getMaxSimultaneousUploads() {
+		// Check instance config first
+		if (
+			this.config &&
+			typeof this.config.maxSimultaneousUploads === 'number'
+		) {
+			return this.config.maxSimultaneousUploads;
+		}
+
+		// Default: 10 simultaneous uploads
+		// Subclasses can override this method to provide different defaults
+		return 10;
+	}
+
+	/**
 	 * Get the provider configuration.
 	 *
 	 * Returns the current configuration array for this provider.
