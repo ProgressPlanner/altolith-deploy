@@ -151,12 +151,25 @@ export async function executeThreadedWorkflow(
 		...globalState,
 	};
 
-	// If no provider instances, just return global results
+	// Handle case where no provider instances but thread steps exist
 	if ( providerInstances.length === 0 ) {
+		// If there are thread steps, this is an error condition
+		// Thread steps need providers to execute
+		if ( threadSteps.length > 0 ) {
+			const threadStepIds = threadSteps.map( ( s ) => s.id ).join( ', ' );
+			throw new Error(
+				`No provider instances configured, but thread steps require execution: ${ threadStepIds }. ` +
+					`Please configure at least one provider instance or disable these steps.`
+			);
+		}
+
+		// No thread steps and no providers - workflow completes successfully
 		return {
 			success: true,
 			globalState,
 			threadResults: [],
+			successCount: 0,
+			failureCount: 0,
 		};
 	}
 
