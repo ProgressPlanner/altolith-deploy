@@ -143,6 +143,9 @@ export function buildWorkflowContext( config, dependencies ) {
 		staticSiteProviders,
 		blueprintBundleProviders,
 		edgeFunctionProviders,
+		staticSiteProviderInstances,
+		blueprintBundleProviderInstances,
+		edgeFunctionProviderInstances,
 	} = config;
 
 	const {
@@ -153,6 +156,7 @@ export function buildWorkflowContext( config, dependencies ) {
 		assetManager,
 		setStatusMessage,
 		setStepProgress,
+		setProviderProgress,
 	} = dependencies;
 
 	return {
@@ -165,7 +169,12 @@ export function buildWorkflowContext( config, dependencies ) {
 		blueprintBundleProviders,
 		edgeFunctionProviders,
 
-		// Provider instance references (for future parallel execution)
+		// Provider instance arrays for threading (with full config objects)
+		staticSiteProviderInstances,
+		blueprintBundleProviderInstances,
+		edgeFunctionProviderInstances,
+
+		// Provider instance references (for thread context)
 		providerInstances: config.providerInstances || [],
 		currentProviderInstance: config.currentProviderInstance || null,
 
@@ -178,6 +187,7 @@ export function buildWorkflowContext( config, dependencies ) {
 		// State setters
 		setStatusMessage,
 		setStepProgress,
+		setProviderProgress,
 
 		// Discovered assets (populated during workflow)
 		discoveredAssets: null,

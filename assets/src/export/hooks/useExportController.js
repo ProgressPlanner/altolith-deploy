@@ -18,6 +18,7 @@ import { getActiveSteps, getRegisteredSteps } from '@aether/export/steps';
 import {
 	prepareExportConfiguration,
 	determineProvidersByDeploymentType,
+	buildProviderInstances,
 	buildWorkflowContext,
 } from '@aether/export/utils/exportConfiguration';
 import ConfigStorage from '@aether/providers/utils/configStorage';
@@ -32,6 +33,7 @@ export function useExportController( exportState ) {
 		setStatusMessage,
 		setOverallProgressValue,
 		setStepProgress,
+		setProviderProgress,
 		removeMessage,
 		setProviders,
 	} = exportState;
@@ -191,6 +193,26 @@ export function useExportController( exportState ) {
 				edgeFunctions: edgeFunctionProviders,
 			} );
 
+			// Build provider instance objects for threading
+			const staticSiteProviderInstances = buildProviderInstances(
+				exportConfig.providerConfigs,
+				DEPLOYMENT_TYPES.STATIC_SITE
+			);
+			const blueprintBundleProviderInstances = buildProviderInstances(
+				exportConfig.providerConfigs,
+				DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE
+			);
+			const edgeFunctionProviderInstances = buildProviderInstances(
+				exportConfig.providerConfigs,
+				DEPLOYMENT_TYPES.EDGE_FUNCTIONS
+			);
+
+			debug( '[Workflow] Provider instances for threading:', {
+				staticSite: staticSiteProviderInstances,
+				blueprintBundle: blueprintBundleProviderInstances,
+				edgeFunctions: edgeFunctionProviderInstances,
+			} );
+
 			// Store provider arrays in global state for UI access
 			setProviders( staticSiteProviders, blueprintBundleProviders );
 
@@ -201,6 +223,9 @@ export function useExportController( exportState ) {
 					staticSiteProviders,
 					blueprintBundleProviders,
 					edgeFunctionProviders,
+					staticSiteProviderInstances,
+					blueprintBundleProviderInstances,
+					edgeFunctionProviderInstances,
 				},
 				{
 					api,
@@ -210,6 +235,7 @@ export function useExportController( exportState ) {
 					assetManager,
 					setStatusMessage,
 					setStepProgress,
+					setProviderProgress,
 				}
 			);
 
@@ -271,6 +297,7 @@ export function useExportController( exportState ) {
 		generateBlueprintJson,
 		setStatusMessage,
 		setStepProgress,
+		setProviderProgress,
 		removeMessage,
 		setOverallProgressValue,
 		setProviders,
