@@ -28,7 +28,6 @@ describe( 'ExportContext', () => {
 
 			expect( result.current ).toHaveProperty( 'steps' );
 			expect( result.current ).toHaveProperty( 'isExporting' );
-			expect( result.current ).toHaveProperty( 'jobId' );
 			expect( result.current ).toHaveProperty( 'finalStatus' );
 			expect( result.current ).toHaveProperty( 'error' );
 			expect( result.current ).toHaveProperty( 'currentStatusMessage' );
@@ -45,7 +44,6 @@ describe( 'ExportContext', () => {
 			expect( result.current ).toHaveProperty( 'markAllComplete' );
 			expect( result.current ).toHaveProperty( 'showError' );
 			expect( result.current ).toHaveProperty( 'setIsExporting' );
-			expect( result.current ).toHaveProperty( 'setJobId' );
 			expect( result.current ).toHaveProperty( 'setStatusMessage' );
 			expect( result.current ).toHaveProperty(
 				'setOverallProgressValue'
@@ -64,7 +62,6 @@ describe( 'ExportContext', () => {
 
 			expect( result.current.steps ).toEqual( [] );
 			expect( result.current.isExporting ).toBe( false );
-			expect( result.current.jobId ).toBeNull();
 			expect( result.current.finalStatus ).toBeNull();
 			expect( result.current.error ).toBeNull();
 			expect( result.current.currentStatusMessage ).toBeNull();
@@ -1277,7 +1274,6 @@ describe( 'ExportContext', () => {
 					{ id: 'step1', label: 'Step 1' },
 				] );
 				result.current.setIsExporting( true );
-				result.current.setJobId( 'test-job-123' );
 				result.current.setStatusMessage( 'Processing', 'info' );
 				result.current.setOverallProgressValue( 50 );
 				result.current.setProviders( [ 'provider1' ], [ 'provider2' ] );
@@ -1290,7 +1286,6 @@ describe( 'ExportContext', () => {
 
 			expect( result.current.steps ).toEqual( [] );
 			expect( result.current.isExporting ).toBe( false );
-			expect( result.current.jobId ).toBeNull();
 			expect( result.current.finalStatus ).toBeNull();
 			expect( result.current.error ).toBeNull();
 			expect( result.current.currentStatusMessage ).toBeNull();
@@ -1361,20 +1356,6 @@ describe( 'ExportContext', () => {
 			} );
 
 			expect( result.current.isExporting ).toBe( false );
-		} );
-	} );
-
-	describe( 'setJobId', () => {
-		it( 'should set job ID', () => {
-			const { result } = renderHook( () => useContext( ExportContext ), {
-				wrapper: ExportProvider,
-			} );
-
-			act( () => {
-				result.current.setJobId( 'job-123' );
-			} );
-
-			expect( result.current.jobId ).toBe( 'job-123' );
 		} );
 	} );
 } );

@@ -96,12 +96,7 @@ describe( 'useStaticSiteGenerator', () => {
 			delete: jest.fn(),
 		};
 
-		mockCache = {
-			get: jest.fn(),
-			set: jest.fn(),
-			getAllUrls: jest.fn().mockResolvedValue( [] ),
-			clear: jest.fn(),
-		};
+		mockCache = new Map();
 
 		createAssetTracker.mockReturnValue( mockAssetTracker );
 		fetchProviderConfig.mockResolvedValue( {
@@ -148,7 +143,7 @@ describe( 'useStaticSiteGenerator', () => {
 
 		// Default mock for executePreScan
 		executePreScan.mockResolvedValue( {
-			cache: mockCache,
+			htmlData: mockCache,
 			totalFilesToUpload: 0,
 			failures: { urlsFailed: 0, failedUrls: [] },
 		} );
@@ -175,7 +170,7 @@ describe( 'useStaticSiteGenerator', () => {
 
 		it( 'should fetch provider configuration', async () => {
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -203,7 +198,7 @@ describe( 'useStaticSiteGenerator', () => {
 
 		it( 'should create storage service with correct config', async () => {
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -236,7 +231,7 @@ describe( 'useStaticSiteGenerator', () => {
 
 		it( 'should create asset tracker', async () => {
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -271,7 +266,7 @@ describe( 'useStaticSiteGenerator', () => {
 			];
 
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 10,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -302,13 +297,13 @@ describe( 'useStaticSiteGenerator', () => {
 					static_files_path: 'static/',
 				} ),
 				setStatusMessage: mockSetStatusMessage,
-				cache: mockCache,
+				htmlData: mockCache,
 			} );
 		} );
 
 		it( 'should handle pre-scan failures', async () => {
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 5,
 				failures: {
 					urlsFailed: 2,
@@ -383,7 +378,7 @@ describe( 'useStaticSiteGenerator', () => {
 	describe( 'manifest management', () => {
 		it( 'should prepare manifest before upload', async () => {
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -415,7 +410,7 @@ describe( 'useStaticSiteGenerator', () => {
 
 		it( 'should finalize manifest after upload', async () => {
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -462,7 +457,7 @@ describe( 'useStaticSiteGenerator', () => {
 			} ) );
 
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 100,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -507,14 +502,15 @@ describe( 'useStaticSiteGenerator', () => {
 		it( 'should upload HTML files from cache', async () => {
 			const urls = [ 'https://example.com/page1' ];
 
-			mockCache.getAllUrls.mockResolvedValue( urls );
-			mockCache.get.mockResolvedValue( {
+			// Populate the Map directly
+			const htmlDataMap = new Map();
+			htmlDataMap.set( urls[ 0 ], {
 				rawHtml: '<html><body>Test</body></html>',
 				assetUrls: [],
 			} );
 
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: htmlDataMap,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -569,7 +565,7 @@ describe( 'useStaticSiteGenerator', () => {
 			mockCache.get.mockResolvedValue( null ); // Cache miss
 
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -606,7 +602,7 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -644,7 +640,7 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -702,7 +698,7 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 3,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -762,7 +758,7 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -809,7 +805,7 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -854,7 +850,7 @@ describe( 'useStaticSiteGenerator', () => {
 	describe( 'WordPress hooks integration', () => {
 		it( 'should fire upload start action', async () => {
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -887,7 +883,7 @@ describe( 'useStaticSiteGenerator', () => {
 
 		it( 'should fire upload completion action', async () => {
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -924,7 +920,7 @@ describe( 'useStaticSiteGenerator', () => {
 	describe( 'edge cases', () => {
 		it( 'should handle empty URL list', async () => {
 			executePreScan.mockResolvedValue( {
-				cache: mockCache,
+				htmlData: mockCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
