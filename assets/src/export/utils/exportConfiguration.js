@@ -75,6 +75,32 @@ export function getEnabledInstancesForDeploymentType(
 }
 
 /**
+ * Build provider instance objects from configurations
+ *
+ * Creates array of provider instances with full config for threading.
+ * Each instance has id, label, and complete configuration.
+ *
+ * @param {Object} providerConfigs - All provider configurations
+ * @param {string} deploymentType  - Deployment type to filter by
+ * @return {Array<Object>} Provider instance objects with { id, label, config }
+ */
+export function buildProviderInstances( providerConfigs, deploymentType ) {
+	const instanceIds = getEnabledInstancesForDeploymentType(
+		providerConfigs,
+		deploymentType
+	);
+
+	return instanceIds.map( ( instanceId ) => {
+		const config = providerConfigs[ instanceId ] || {};
+		return {
+			id: instanceId,
+			label: config.label || instanceId,
+			config,
+		};
+	} );
+}
+
+/**
  * Determine providers for all deployment types
  *
  * Pure function that takes provider configs and returns
