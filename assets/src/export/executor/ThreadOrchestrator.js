@@ -12,6 +12,49 @@ import { isThreadStep } from './DataValidator';
 import { executeSteps } from './StepExecutor';
 
 /**
+ * Deep clone global context to ensure thread isolation
+ *
+ * Creates a deep copy of global context so threads cannot mutate shared data.
+ * Special handling for Maps, Arrays, and nested objects.
+ *
+ * @param {Object} context - Global context to clone
+ * @return {Object} Deep cloned context
+ */
+function deepCloneContext( context ) {
+	const cloned = {};
+
+	for ( const [ key, value ] of Object.entries( context ) ) {
+		// Skip functions (callbacks are handled separately)
+		if ( typeof value === 'function' ) {
+			continue;
+		}
+
+		// Handle Map objects
+		if ( value instanceof Map ) {
+			cloned[ key ] = new Map( value );
+			continue;
+		}
+
+		// Handle Arrays
+		if ( Array.isArray( value ) ) {
+			cloned[ key ] = [ ...value ];
+			continue;
+		}
+
+		// Handle plain objects (deep clone)
+		if ( value && typeof value === 'object' && value.constructor === Object ) {
+			cloned[ key ] = JSON.parse( JSON.stringify( value ) );
+			continue;
+		}
+
+		// Primitive values
+		cloned[ key ] = value;
+	}
+
+	return cloned;
+}
+
+/**
  * Categorize steps into global and per-thread
  *
  * @param {Array} steps - All registered steps
@@ -35,9 +78,8 @@ export function categorizeSteps( steps ) {
 /**
  * Build thread context from global context and provider instance
  *
- * Creates an isolated thread context by merging:
- * - Global context (read-only, shared across threads)
- * - Thread-specific properties (currentProviderInstance, etc.)
+ * Creates an isolated thread context by deep cloning global context
+ * and adding thread-specific properties.
  *
  * @param {Object} globalContext    - Global execution context
  * @param {Object} providerInstance - Provider instance object
@@ -49,12 +91,21 @@ export function buildThreadContext(
 	providerInstance,
 	callbacks = {}
 ) {
-	// Thread context extends global context with thread-specific properties
+	// Validate provider instance
+	if ( ! providerInstance || ! providerInstance.id ) {
+		throw new Error( 'Invalid provider instance: missing id' );
+	}
+
+	// Deep clone global context to ensure thread isolation
+	// Prevents threads from mutating shared data
+	const clonedContext = deepCloneContext( globalContext );
+
+	// Add thread-specific properties
 	return {
-		...globalContext, // All global data is read-only in threads
+		...clonedContext,
 		currentProviderInstance: providerInstance,
 		providerInstanceConfig: providerInstance.config || {},
-		// Thread-specific callbacks override global ones
+		// Thread-specific callbacks (functions not cloned)
 		setStatusMessage:
 			callbacks.setStatusMessage || globalContext.setStatusMessage,
 		setStepProgress:
