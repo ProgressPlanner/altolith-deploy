@@ -50,6 +50,20 @@ export function useStaticSiteGenerator( onProgress ) {
 			removeMessage = null,
 			cache = null
 		) => {
+			// Validate provider ID is provided
+			// CRITICAL: In multi-instance threading, each thread MUST use its own provider ID
+			if ( ! staticSiteProviderId ) {
+				throw new Error(
+					'Static site provider ID is required. ' +
+						'This function must be called with a specific provider instance ID.'
+				);
+			}
+
+			debug( 'Processing static site for provider:', {
+				providerId: staticSiteProviderId,
+				urlCount: urls?.length || 0,
+			} );
+
 			// Create asset tracker to prevent duplicate uploads
 			const assetTracker = createAssetTracker();
 

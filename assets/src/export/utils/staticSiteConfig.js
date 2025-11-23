@@ -95,27 +95,26 @@ export async function fetchProviderConfig( staticSiteProviderId ) {
 	let providerConfig = {};
 
 	try {
-		// Dynamic import to avoid circular dependencies
-		const providerDiscovery = await import(
-			'../../providers/utils/providerDiscovery'
-		);
-		const discoveredProviderId =
-			await providerDiscovery.getProviderForDeploymentType(
-				'static_site'
+		// CRITICAL: Always use the exact provider ID passed in
+		// Do NOT do provider discovery - this breaks multi-instance threading
+		// where each thread needs its OWN provider instance config
+		if ( ! staticSiteProviderId ) {
+			throw new Error(
+				'Provider ID is required for fetchProviderConfig. ' +
+					'Provider discovery should not be used in threaded contexts.'
 			);
-
-		const providerIdToUse = staticSiteProviderId || discoveredProviderId;
-
-		if ( providerIdToUse ) {
-			// Use ConfigStorage to load provider config (handles caching and REST API)
-			const { ConfigStorage } = await import(
-				'../../providers/utils/configStorage'
-			);
-			const storage = new ConfigStorage( providerIdToUse );
-			providerConfig = await storage.load();
 		}
+
+		// Use ConfigStorage to load provider config (handles caching and REST API)
+		const { ConfigStorage } = await import(
+			'../../providers/utils/configStorage'
+		);
+		const storage = new ConfigStorage( staticSiteProviderId );
+		providerConfig = await storage.load();
 	} catch ( error ) {
 		debug( 'Failed to load provider configuration:', error );
+		// Re-throw to make failures visible instead of silently using wrong config
+		throw error;
 	}
 
 	return providerConfig;
