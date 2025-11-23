@@ -4,21 +4,22 @@
  * Creates wp-content.zip containing custom plugins, themes, and uploads.
  * Used for blueprint bundle generation.
  *
+ * @since 1.0.0
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { applyFilters } from '@wordpress/hooks';
+import { addAction, applyFilters } from '@wordpress/hooks';
 import { formatFileSize } from '@aether/utils/helpers';
 
 /**
- * Create wp-content archive step handler.
+ * Create wp-content archive step handler
  *
- * @param {Object}   context                  Execution context.
- * @param {Object}   context.api              ExportAPI instance.
- * @param {Object}   context.assetManager     Asset manager instance.
- * @param {Array}    context.discoveredAssets Discovered assets from discoverBlueprintBundleAssets step.
- * @param {Function} context.setStatusMessage Status message updater.
- * @return {Promise<Object>} Step result with archive info.
+ * @param {Object} context - Execution context
+ * @param {Object} context.api - ExportAPI instance
+ * @param {Object} context.assetManager - Asset manager instance
+ * @param {Array} context.discoveredAssets - Discovered assets from discoverBlueprintBundleAssets step
+ * @param {Function} context.setStatusMessage - Status message updater
+ * @returns {Promise<Object>} Step result with archive info
  */
 async function handler( context ) {
 	const {
@@ -29,7 +30,7 @@ async function handler( context ) {
 	} = context;
 
 	setStatusMessage(
-		__( 'Creating wp-content archive…', 'aether-site-exporter' ),
+		__( 'Creating wp-content archive…', 'aether' ),
 		'progress',
 		'createWpContentArchive'
 	);
@@ -50,10 +51,7 @@ async function handler( context ) {
 	if ( ! archiveResponse.success ) {
 		throw new Error(
 			archiveResponse.message ||
-				__(
-					'Failed to create wp-content archive',
-					'aether-site-exporter'
-				)
+				__( 'Failed to create wp-content archive', 'aether' )
 		);
 	}
 
@@ -72,7 +70,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %s: File size */
-			__( 'Created wp-content archive (%s)', 'aether-site-exporter' ),
+			__( 'Created wp-content archive (%s)', 'aether' ),
 			sizeFormatted
 		),
 		'success',
@@ -88,17 +86,48 @@ async function handler( context ) {
 }
 
 /**
- * Create WP Content Archive step definition.
+ * Step definition
  */
-export const createWpContentArchiveStep = {
+const stepDefinition = {
 	id: 'createWpContentArchive',
-	label: __( 'Create WP Content Archive', 'aether-site-exporter' ),
-	description: __(
-		'Package custom plugins, themes, and uploads',
-		'aether-site-exporter'
-	),
+	label: __( 'Create WP Content Archive', 'aether' ),
+	description: __( 'Package custom plugins, themes, and uploads', 'aether' ),
 	supportsProgress: true,
 	dependencies: [ 'discoverBlueprintBundleAssets' ],
-	provides: [ 'zipPath', 'zipUrl', 'zipSize' ],
+	requires: {
+		api: {
+			from: 'initial',
+			required: true,
+		},
+		discoveredAssets: {
+			from: 'discoverBlueprintBundleAssets',
+			required: true,
+		},
+		setStatusMessage: {
+			from: 'initial',
+			required: true,
+		},
+		assetManager: {
+			from: 'initial',
+			required: false,
+		},
+	},
+	provides: {
+		zipPath: 'string',
+		zipUrl: 'string',
+		zipSize: 'number',
+	},
 	handler,
 };
+
+/**
+ * Register step via WordPress hooks
+ */
+addAction(
+	'aether.export.register_steps',
+	'aether/step-createWpContentArchive',
+	( registry ) => {
+		registry.register( stepDefinition );
+	},
+	10
+);
