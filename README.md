@@ -149,21 +149,32 @@ aether-site-exporter/
 
 ## 🔧 REST API
 
-The plugin provides REST API endpoints for export management:
+The plugin provides REST API endpoints (namespace: `aether/site-exporter`):
 
-### Export Endpoints
+### Settings
 
-- `GET /wp-json/aether/site-exporter/exports` - List all exports
-- `POST /wp-json/aether/site-exporter/exports` - Create new export
-- `GET /wp-json/aether/site-exporter/exports/{id}` - Get export details
-- `DELETE /wp-json/aether/site-exporter/exports/{id}` - Delete export
-- `GET /wp-json/aether/site-exporter/exports/{id}/download` - Download export
+- `GET /wp-json/aether/site-exporter/settings` - Get plugin settings
+- `POST /wp-json/aether/site-exporter/settings` - Update settings
 
-### Export Steps
+### Export Operations
 
-- `POST /wp-json/aether/site-exporter/exports/{id}/discover-urls` - Discover site URLs
-- `POST /wp-json/aether/site-exporter/exports/{id}/generate-blueprint` - Generate blueprint
-- `POST /wp-json/aether/site-exporter/exports/{id}/create-archive` - Create ZIP archive
+- `POST /wp-json/aether/site-exporter/export/createArchive` - Create WordPress archive
+- `POST /wp-json/aether/site-exporter/export/initArchive` - Initialize archive
+- `POST /wp-json/aether/site-exporter/export/finalizeArchive` - Finalize archive
+- `POST /wp-json/aether/site-exporter/export/generateBlueprintBundle` - Generate blueprint bundle
+- `GET /wp-json/aether/site-exporter/export/steps/getHtmlContent` - Get HTML content for URL
+
+### Provider Configuration
+
+- `GET/POST/DELETE /wp-json/aether/site-exporter/providers/{providerId}/config` - Manage provider config
+- `POST /wp-json/aether/site-exporter/providers/{providerId}/test` - Test provider connection
+
+### URL Discovery & Assets
+
+- `POST /wp-json/aether/site-exporter/url-discovery/discover` - Discover site URLs
+- `GET /wp-json/aether/site-exporter/assets/manifest` - Get assets manifest
+
+**Note**: The workflow is stateless and managed by React. All state is stored client-side in IndexedDB, not on the server.
 
 ## 🧪 Testing
 
@@ -183,29 +194,6 @@ npm run test:js:coverage
 
 # Watch mode
 npm run test:js:watch
-```
-
-## 📝 WP-CLI Commands
-
-The plugin includes WP-CLI commands for command-line export management:
-
-### Export Management
-
-```bash
-# Create new export
-wp aether-exporter export create
-
-# List exports
-wp aether-exporter export list
-
-# Delete old exports (older than 30 days)
-wp aether-exporter cleanup --days=30
-
-# Delete failed exports
-wp aether-exporter cleanup-failed
-
-# View statistics
-wp aether-exporter stats
 ```
 
 ## 🔍 Troubleshooting

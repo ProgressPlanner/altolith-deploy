@@ -326,7 +326,7 @@ const manifest = await fetchManifest(storageService, providerId);
 
 ```javascript
 class StorageService {
-    constructor(staticPath, jobId = '', config = {})
+    constructor(staticPath, config = {})
 
     // Automatically prefixes all keys with provider_id
     async upload(key, file, metadata = {})

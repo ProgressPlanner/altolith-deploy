@@ -2036,39 +2036,6 @@ addFilter('aether.export.step.generateBlueprint.json', 'my-customizations', (blu
 
 ---
 
-### Monitoring Deployments
-
-```php
-<?php
-
-// Track deployment metrics
-add_action('aether_export_job_created', function($job_id, $config) {
-    update_option("deployment_count", (int) get_option("deployment_count", 0) + 1);
-    update_option("last_deployment", time());
-}, 10, 2);
-
-// Send notifications on status changes
-add_action('aether_export_job_status_changed', function($job_id, $new_status, $old_status) {
-    if ($new_status === 'completed') {
-        // Send success notification via webhook
-        wp_remote_post('https://api.slack.com/webhooks/...', [
-            'body' => json_encode([
-                'text' => "✅ Deployment {$job_id} completed successfully"
-            ])
-        ]);
-    } elseif ($new_status === 'failed') {
-        // Send failure notification
-        wp_remote_post('https://api.slack.com/webhooks/...', [
-            'body' => json_encode([
-                'text' => "❌ Deployment {$job_id} failed"
-            ])
-        ]);
-    }
-}, 10, 3);
-```
-
----
-
 ### Custom Asset Handling
 
 ```javascript
@@ -2134,25 +2101,3 @@ For questions about using these hooks:
 
 ---
 
-## Deprecated Hooks (Removed)
-
-The following hooks have been removed as the job tracking system has been eliminated:
-
-**PHP Hooks:**
-- `aether_export_job_data` - Filter initial job data
-- `aether_export_job_before_create` - Action before job creation
-- `aether_export_job_created` - Action after job creation
-- `aether_export_job_status_update` - Filter status updates
-- `aether_export_job_status_updated` - Action after status update
-- `aether_export_job_before_complete` - Action before completion
-- `aether_export_job_complete_status` - Filter completion status
-- `aether_export_job_completed` - Action after completion  
-- `aether_export_job_failed` - Action on failure
-- `aether_export_job_deleted` - Action on deletion
-- `aether_export_jobs_list` - Filter jobs list
-- `aether_export_step_before` - Action before step execution
-- `aether_export_step_result` - Filter step result
-- `aether_export_step_after` - Action after step execution
-- `aether_export_step_error` - Action on step error
-
-The workflow is now stateless and entirely React-managed without server-side job tracking.

@@ -335,27 +335,29 @@ Key principles:
 
 ### REST API Endpoints
 
-**Export Management:**
-- `GET /aether/v1/exports` - List all exports
-- `POST /aether/v1/exports` - Create new export
-- `GET /aether/v1/exports/{id}` - Get export details
-- `DELETE /aether/v1/exports/{id}` - Delete export
+**Settings:**
+- `GET /aether/site-exporter/settings` - Get plugin settings
+- `POST /aether/site-exporter/settings` - Update settings
 
-**Publish Workflow:**
-- `POST /aether/v1/publish/jobs` - Create publish job
-- `GET /aether/v1/publish/jobs/{id}` - Get job status
-- `POST /aether/v1/publish/jobs/{id}/steps/{step}` - Execute step
-
-**Configuration:**
-- `GET /aether/v1/settings` - Get plugin settings
-- `PUT /aether/v1/settings` - Update settings
-- `GET /aether/v1/config` - Get provider config
-- `POST /aether/v1/providers/{id}/config` - Save provider config
+**Export Operations:**
+- `POST /aether/site-exporter/export/createArchive` - Create WordPress archive
+- `POST /aether/site-exporter/export/initArchive` - Initialize archive
+- `POST /aether/site-exporter/export/finalizeArchive` - Finalize archive
+- `POST /aether/site-exporter/export/generateBlueprintBundle` - Generate blueprint
+- `GET /aether/site-exporter/export/steps/getHtmlContent` - Get HTML for URL
 
 **Provider Management:**
-- `GET /aether/v1/providers` - List available providers
-- `POST /aether/v1/provider-config/{instanceId}` - Save provider instance config
-- `GET /aether/v1/provider-config/{instanceId}` - Get provider instance config
+- `GET/POST/DELETE /aether/site-exporter/providers/{providerId}/config` - Manage provider config
+- `POST /aether/site-exporter/providers/{providerId}/test` - Test provider
+
+**URL Discovery & Assets:**
+- `POST /aether/site-exporter/url-discovery/discover` - Discover site URLs
+- `GET /aether/site-exporter/assets/manifest` - Get assets manifest
+
+**Local Storage:**
+- `POST /aether/site-exporter/local-storage/upload` - Upload file
+- `DELETE /aether/site-exporter/local-storage/delete` - Delete file
+- `GET /aether/site-exporter/local-storage/download` - Download file
 
 ### State Management
 
@@ -509,8 +511,9 @@ export const STEP_MY_STEP = 'my_step';
 **3. Create Step Function (Prefer JavaScript)**
 ```javascript
 // assets/src/export/steps/myStep.js
-export async function myStep(jobId, config) {
+export async function myStep(config) {
     // Implementation in JavaScript (preferred)
+    // Workflow is stateless - no jobId needed
     // Returns standard response format
 }
 ```
