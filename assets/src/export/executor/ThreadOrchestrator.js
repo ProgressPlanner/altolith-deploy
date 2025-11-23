@@ -12,6 +12,39 @@ import { isThreadStep } from './DataValidator';
 import { executeSteps } from './StepExecutor';
 
 /**
+ * Execute async functions with concurrency limit
+ *
+ * Limits number of concurrent executions to prevent resource exhaustion.
+ *
+ * @param {Array}    items       - Array of items to process
+ * @param {Function} fn          - Async function to call for each item
+ * @param {number}   concurrency - Max concurrent executions (default: 5)
+ * @return {Promise<Array>} Results array in original order
+ */
+async function limitConcurrency( items, fn, concurrency = 5 ) {
+	const results = [];
+	const executing = [];
+
+	for ( const [ index, item ] of items.entries() ) {
+		const promise = Promise.resolve().then( () => fn( item, index ) );
+		results[ index ] = promise;
+
+		if ( concurrency <= items.length ) {
+			const e = promise.then( () =>
+				executing.splice( executing.indexOf( e ), 1 )
+			);
+			executing.push( e );
+
+			if ( executing.length >= concurrency ) {
+				await Promise.race( executing );
+			}
+		}
+	}
+
+	return Promise.all( results );
+}
+
+/**
  * Deep clone global context to ensure thread isolation
  *
  * Creates a deep copy of global context so threads cannot mutate shared data.
@@ -173,9 +206,12 @@ export async function executeThreadedWorkflow(
 		};
 	}
 
-	// Execute per-thread steps in parallel for each provider instance
-	const threadPromises = providerInstances.map(
-		async ( providerInstance ) => {
+	// Execute per-thread steps for each provider instance
+	// Use concurrency limiting to prevent resource exhaustion
+	// Default: 5 concurrent providers (configurable via options)
+	const maxConcurrency = options.maxConcurrency || 5;
+
+	const executeProviderThread = async ( providerInstance ) => {
 			// Build thread-specific context
 			const threadCallbacks = {
 				setStatusMessage: (
@@ -271,11 +307,14 @@ export async function executeThreadedWorkflow(
 					error: error.message || 'Unknown error',
 				};
 			}
-		}
-	);
+		};
 
-	// Wait for all threads to complete
-	const threadResults = await Promise.all( threadPromises );
+	// Execute provider threads with concurrency limiting
+	const threadResults = await limitConcurrency(
+		providerInstances,
+		executeProviderThread,
+		maxConcurrency
+	);
 
 	// Check if any threads succeeded
 	const successfulThreads = threadResults.filter( ( r ) => r.success );
