@@ -818,12 +818,13 @@ describe( 'ThreadOrchestrator', () => {
 					executionOrder.push( providerId );
 
 					// Simulate async work with varying durations
-					const delay =
-						providerId === 'provider1'
-							? 100
-							: providerId === 'provider2'
-								? 50
-								: 25;
+					let delay = 25; // default
+					if ( providerId === 'provider1' ) {
+						delay = 100;
+					} else if ( providerId === 'provider2' ) {
+						delay = 50;
+					}
+
 					await new Promise( ( resolve ) =>
 						setTimeout( resolve, delay )
 					);
