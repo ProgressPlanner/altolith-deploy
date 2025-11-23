@@ -85,17 +85,17 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			const totalUrls = urls.length;
 
-			// PHASE 1: Pre-scan all URLs (use shared cache if provided)
+			// PHASE 1: Pre-scan all URLs (use shared HTML data if provided)
 			const preScanResult = await executePreScan( {
 				urls,
 				siteUrl,
 				providerId: staticSiteProviderId,
 				providerConfig,
 				setStatusMessage,
-				cache,
+				htmlData: cache,
 			} );
 
-			const { cache: sharedCache, totalFilesToUpload } = preScanResult;
+			const { htmlData: sharedHtmlData, totalFilesToUpload } = preScanResult;
 
 			// Merge pre-scan failures
 			failures.urlsFailed += preScanResult.failures.urlsFailed;
@@ -111,27 +111,27 @@ export function useStaticSiteGenerator( onProgress ) {
 			let filesUploaded = 0;
 			let filesSkipped = 0;
 
-			// Get cached URLs
-			const cachedUrls = await sharedCache.getAllUrls();
+			// Get URLs from HTML data storage
+			const fetchedUrls = Array.from( sharedHtmlData.keys() );
 
 			// Fire upload start action
 			doAction(
 				'aether.export.step.uploadStaticSiteFiles.upload.before',
-				cachedUrls,
+				fetchedUrls,
 				totalFilesToUpload,
 				staticSiteProviderId
 			);
 
 			// Process each URL
-			for ( const url of cachedUrls ) {
-				const cached = await sharedCache.get( url );
-				if ( ! cached ) {
+			for ( const url of fetchedUrls ) {
+				const htmlDataEntry = sharedHtmlData.get( url );
+				if ( ! htmlDataEntry ) {
 					debugWarn(
-						`[Aether] Cache miss for URL: ${ url } - skipping`
+						`[Aether] No HTML data for URL: ${ url } - skipping`
 					);
 					continue;
 				}
-				const { rawHtml, assetUrls } = cached;
+				const { rawHtml, assetUrls } = htmlDataEntry;
 
 				try {
 					// Update progress message
