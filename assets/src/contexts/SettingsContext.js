@@ -13,7 +13,7 @@ import {
 	useCallback,
 	useMemo,
 } from '@wordpress/element';
-import apiFetch, { invalidateCache as invalidateAPICache } from '../utils/api';
+import apiFetch from '../utils/api';
 import { debugError } from '../utils/debug';
 
 /**
@@ -83,7 +83,7 @@ export function SettingsProvider( { children } ) {
 	 * Invalidate cache and refetch settings
 	 */
 	const invalidateCache = useCallback( () => {
-		invalidateAPICache( '/aether/site-exporter/settings' );
+		// Simply refetch settings (no cache invalidation needed)
 		fetchSettings();
 	}, [ fetchSettings ] );
 
