@@ -1,56 +1,54 @@
 /**
  * Step Registry
  *
- * Flat step definitions with explicit dependencies for the export workflow.
- * Steps are executed in parallel when their dependencies are satisfied.
+ * Steps register themselves dynamically via WordPress hooks.
+ * This file triggers step registration and provides helper functions.
  *
+ * @since 1.0.0
  */
 
-import { applyFilters } from '@wordpress/hooks';
-import { discoverBlueprintBundleAssetsStep } from './discoverBlueprintBundleAssets';
-import { getStaticSiteUrlsStep } from './getStaticSiteUrls';
-import { preScanStaticSiteStep } from './preScanStaticSite';
-import { createWpContentArchiveStep } from './createWpContentArchive';
-import { createBlueprintBundleStep } from './createBlueprintBundle';
-import { uploadBlueprintBundleStep } from './uploadBlueprintBundle';
-import { uploadStaticFilesStep } from './uploadStaticFiles';
+import { doAction } from '@wordpress/hooks';
+import StepRegistry from '../registry/StepRegistry';
+
+// Import step files to ensure they register themselves
+import './discoverBlueprintBundleAssets';
+import './getStaticSiteUrls';
+import './preScanStaticSite';
+import './createWpContentArchive';
+import './createBlueprintBundle';
+import './uploadBlueprintBundle';
+import './uploadStaticFiles';
 
 /**
- * Get all registered steps.
+ * Get all registered steps
  *
- * Steps are filtered through hooks to allow extension.
+ * Triggers step registration via hooks and returns collected steps.
  *
- * @return {Array<Object>} Array of step definitions.
+ * @returns {Array<Object>} Array of step definitions
  */
 export function getRegisteredSteps() {
-	const steps = [
-		discoverBlueprintBundleAssetsStep,
-		getStaticSiteUrlsStep,
-		preScanStaticSiteStep,
-		createWpContentArchiveStep,
-		createBlueprintBundleStep,
-		uploadBlueprintBundleStep,
-		uploadStaticFilesStep,
-	];
+	const registry = StepRegistry.getInstance();
 
-	/**
-	 * Filter registered steps.
-	 *
-	 * Allows plugins to add, remove, or modify steps.
-	 *
-	 * @param {Array<Object>} steps Array of step definitions.
-	 */
-	return applyFilters( 'aether.export.steps', steps );
+	// Clear previous registrations (for re-initialization)
+	registry.clear();
+
+	// Trigger registration hook - steps self-register
+	doAction( 'aether.export.register_steps', registry );
+
+	return registry.getSteps();
 }
 
 /**
- * Get steps filtered by which providers are enabled.
+ * Get steps filtered by which providers are enabled
  *
- * @param {Object} context Execution context with provider arrays.
- * @return {Array<Object>} Filtered steps based on enabled providers.
+ * @param {Object} context - Execution context with provider arrays
+ * @returns {Array<Object>} Filtered steps based on enabled providers
  */
 export function getActiveSteps( context ) {
-	const { staticSiteProviders = [], blueprintBundleProviders = [] } = context;
+	const {
+		staticSiteProviders = [],
+		blueprintBundleProviders = [],
+	} = context;
 
 	const steps = getRegisteredSteps();
 
