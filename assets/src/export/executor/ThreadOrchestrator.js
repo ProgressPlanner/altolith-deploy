@@ -143,14 +143,18 @@ export async function executeThreadedWorkflow(
 					}
 				},
 				setStepProgress: ( stepId, progress ) => {
-					// Prefix step ID with provider instance for unique tracking
-					const threadStepId = `${ providerInstance.id }:${ stepId }`;
+					// Update per-provider progress tracking
+					if ( initialContext.setProviderProgress ) {
+						// Get step label from threadSteps
+						const step = threadSteps.find( ( s ) => s.id === stepId );
+						const stepLabel = step ? step.label : stepId;
 
-					if ( initialContext.setStepProgress ) {
-						initialContext.setStepProgress(
-							threadStepId,
-							progress
-						);
+						initialContext.setProviderProgress( providerInstance.id, {
+							stepId,
+							stepLabel,
+							progress,
+							status: 'active',
+						} );
 					}
 				},
 			};
@@ -169,6 +173,16 @@ export async function executeThreadedWorkflow(
 					options
 				);
 
+				// Mark provider as complete
+				if ( initialContext.setProviderProgress ) {
+					initialContext.setProviderProgress( providerInstance.id, {
+						stepId: null,
+						stepLabel: 'Complete',
+						progress: 100,
+						status: 'complete',
+					} );
+				}
+
 				return {
 					success: true,
 					providerInstance: providerInstance.id,
@@ -176,6 +190,17 @@ export async function executeThreadedWorkflow(
 					error: null,
 				};
 			} catch ( error ) {
+				// Mark provider as error
+				if ( initialContext.setProviderProgress ) {
+					initialContext.setProviderProgress( providerInstance.id, {
+						stepId: null,
+						stepLabel: 'Error',
+						progress: 0,
+						status: 'error',
+						error: error.message || 'Unknown error',
+					} );
+				}
+
 				return {
 					success: false,
 					providerInstance: providerInstance.id,
