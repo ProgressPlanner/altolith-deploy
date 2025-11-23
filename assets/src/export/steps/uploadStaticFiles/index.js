@@ -9,21 +9,20 @@
 
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { addAction, applyFilters } from '@wordpress/hooks';
-import { debug } from '@aether/utils/debug';
 
 /**
  * Upload static files step handler
  *
- * @param {Object} context - Execution context
- * @param {Array} context.staticSiteProviders - Providers for static site
- * @param {Array} context.urls - URLs from preScanStaticSite (includes assets)
- * @param {string} context.staticSiteUrl - Static site URL
- * @param {Map} context.sharedHtmlData - Pre-fetched HTML data from preScanStaticSite
- * @param {Object} context.blueprintData - Blueprint data
- * @param {string} context.siteUrl - WordPress site URL
+ * @param {Object}   context                       - Execution context
+ * @param {Array}    context.staticSiteProviders   - Providers for static site
+ * @param {Array}    context.urls                  - URLs from preScanStaticSite (includes assets)
+ * @param {string}   context.staticSiteUrl         - Static site URL
+ * @param {Map}      context.sharedHtmlData        - Pre-fetched HTML data from preScanStaticSite
+ * @param {Object}   context.blueprintData         - Blueprint data
+ * @param {string}   context.siteUrl               - WordPress site URL
  * @param {Function} context.processStaticSiteUrls - Static site generator function
- * @param {Function} context.setStatusMessage - Status message updater
- * @returns {Promise<Object>} Step result with uploaded files
+ * @param {Function} context.setStatusMessage      - Status message updater
+ * @return {Promise<Object>} Step result with uploaded files
  */
 async function handler( context ) {
 	const {
@@ -39,7 +38,10 @@ async function handler( context ) {
 
 	if ( ! urls || ! Array.isArray( urls ) ) {
 		throw new Error(
-			__( 'URLs not found. Please run getStaticSiteUrls first.', 'aether' )
+			__(
+				'URLs not found. Please run getStaticSiteUrls first.',
+				'aether'
+			)
 		);
 	}
 
@@ -53,10 +55,7 @@ async function handler( context ) {
 
 	if ( providers.length === 0 ) {
 		setStatusMessage(
-			__(
-				'No providers enabled for static site deployment',
-				'aether'
-			),
+			__( 'No providers enabled for static site deployment', 'aether' ),
 			'warning',
 			'uploadStaticFiles'
 		);

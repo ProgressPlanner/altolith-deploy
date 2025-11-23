@@ -94,8 +94,8 @@ describe( 'providerLoader', () => {
 	 * Create a mock appendChild that simulates script loading without actually loading the script.
 	 * This prevents the browser from trying to load non-existent URLs.
 	 *
-	 * @param {Object} options - Mock options
-	 * @param {boolean} options.shouldSucceed - Whether the script should succeed or fail
+	 * @param {Object}      options                - Mock options
+	 * @param {boolean}     options.shouldSucceed  - Whether the script should succeed or fail
 	 * @param {string|null} options.failProviderId - Provider ID that should fail (for partial failure tests)
 	 */
 	function mockAppendChild( {
@@ -158,7 +158,8 @@ describe( 'providerLoader', () => {
 				setTimeout( () => {
 					// Check if this provider should fail
 					const isFailProvider =
-						failProviderId && element.src.includes( failProviderId );
+						failProviderId &&
+						element.src.includes( failProviderId );
 					const shouldFail = ! shouldSucceed || isFailProvider;
 
 					if ( shouldFail && element.onerror ) {
@@ -236,9 +237,7 @@ describe( 'providerLoader', () => {
 	describe( 'isProviderLoaded', () => {
 		it( 'should return false for unloaded provider', () => {
 			// Use unique provider ID to avoid state leakage from previous tests
-			expect( isProviderLoaded( 'never-loaded-provider' ) ).toBe(
-				false
-			);
+			expect( isProviderLoaded( 'never-loaded-provider' ) ).toBe( false );
 		} );
 
 		it( 'should return true for loaded provider', async () => {
@@ -319,48 +318,44 @@ describe( 'providerLoader', () => {
 			expect( result ).toBe( false );
 		} );
 
-		it(
-			'should retry on failure with exponential backoff',
-			async () => {
-				let attemptCount = 0;
+		it( 'should retry on failure with exponential backoff', async () => {
+			let attemptCount = 0;
 
-				// Mock failed script load that counts attempts
-				document.getElementById = jest.fn( ( id ) => null );
-				document.querySelector = jest.fn( ( selector ) => null );
-				document.querySelectorAll = jest.fn( ( selector ) => {
-					if ( selector === 'script[src]' ) {
-						return appendedElements.filter(
-							( el ) => el.tagName === 'SCRIPT' && el.src
-						);
-					}
-					return [];
-				} );
+			// Mock failed script load that counts attempts
+			document.getElementById = jest.fn( ( id ) => null );
+			document.querySelector = jest.fn( ( selector ) => null );
+			document.querySelectorAll = jest.fn( ( selector ) => {
+				if ( selector === 'script[src]' ) {
+					return appendedElements.filter(
+						( el ) => el.tagName === 'SCRIPT' && el.src
+					);
+				}
+				return [];
+			} );
 
-				document.head.appendChild = jest.fn( ( element ) => {
-					if ( element.tagName === 'SCRIPT' && element.onerror ) {
-						appendedElements.push( element );
-						setTimeout( () => {
-							attemptCount++;
-							if ( element.onerror ) {
-								element.onerror( new Error( 'Mock error' ) );
-							}
-						}, 0 );
-					}
-					return element;
-				} );
+			document.head.appendChild = jest.fn( ( element ) => {
+				if ( element.tagName === 'SCRIPT' && element.onerror ) {
+					appendedElements.push( element );
+					setTimeout( () => {
+						attemptCount++;
+						if ( element.onerror ) {
+							element.onerror( new Error( 'Mock error' ) );
+						}
+					}, 0 );
+				}
+				return element;
+			} );
 
-				const loadPromise = loadProvider( 'test-provider-retry', {
-					throwOnError: false,
-					maxAttempts: 3,
-				} );
+			const loadPromise = loadProvider( 'test-provider-retry', {
+				throwOnError: false,
+				maxAttempts: 3,
+			} );
 
-				await loadPromise;
+			await loadPromise;
 
-				// Should have attempted 3 times
-				expect( attemptCount ).toBe( 3 );
-			},
-			15000
-		); // Increase timeout since retry backoff takes time (2s + 4s + 8s = 14s)
+			// Should have attempted 3 times
+			expect( attemptCount ).toBe( 3 );
+		}, 15000 ); // Increase timeout since retry backoff takes time (2s + 4s + 8s = 14s)
 
 		it( 'should handle missing script URL gracefully', async () => {
 			// No script URL available (no baseUrl, no existing scripts)

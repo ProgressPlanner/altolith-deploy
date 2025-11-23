@@ -402,6 +402,9 @@ describe( 'exportConfiguration', () => {
 				blueprintBundleProviders: [ 'local-filesystem:123' ],
 				edgeFunctionProviders: [],
 
+				// Provider instance references (for future parallel execution)
+				providerInstances: [],
+				currentProviderInstance: null,
 				// Hooks and utilities
 				processStaticSiteUrls: mockProcessUrls,
 				generateBlueprintJson: mockGenerateBlueprint,

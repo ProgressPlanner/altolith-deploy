@@ -13,10 +13,10 @@ import { addAction } from '@wordpress/hooks';
 /**
  * Discover blueprint bundle assets step handler
  *
- * @param {Object} context - Execution context
- * @param {Object} context.api - PublishAPI instance
+ * @param {Object}   context                  - Execution context
+ * @param {Object}   context.api              - PublishAPI instance
  * @param {Function} context.setStatusMessage - Status message updater
- * @returns {Promise<Object>} Step result with discovered assets
+ * @return {Promise<Object>} Step result with discovered assets
  */
 async function handler( context ) {
 	const { api, setStatusMessage } = context;

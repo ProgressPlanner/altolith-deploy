@@ -14,12 +14,12 @@ import { formatFileSize } from '@aether/utils/helpers';
 /**
  * Create wp-content archive step handler
  *
- * @param {Object} context - Execution context
- * @param {Object} context.api - ExportAPI instance
- * @param {Object} context.assetManager - Asset manager instance
- * @param {Array} context.discoveredAssets - Discovered assets from discoverBlueprintBundleAssets step
+ * @param {Object}   context                  - Execution context
+ * @param {Object}   context.api              - ExportAPI instance
+ * @param {Object}   context.assetManager     - Asset manager instance
+ * @param {Array}    context.discoveredAssets - Discovered assets from discoverBlueprintBundleAssets step
  * @param {Function} context.setStatusMessage - Status message updater
- * @returns {Promise<Object>} Step result with archive info
+ * @return {Promise<Object>} Step result with archive info
  */
 async function handler( context ) {
 	const {

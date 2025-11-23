@@ -131,35 +131,35 @@ describe( 'useAssetDiscovery', () => {
 			apiFetch.mockResolvedValueOnce( {
 				// Assets response
 				success: true,
-					plugins: [
-						{
-							slug: 'akismet-test-2/akismet-test-2',
-							name: 'Akismet',
-							version: '5.0',
-							is_active: true,
-						},
-						{
-							slug: 'custom-plugin-test-2/custom-plugin-test-2',
-							name: 'Custom Plugin',
-							version: '1.0',
-							is_active: true,
-						},
-					],
-					themes: [
-						{
-							slug: 'twentytwentyfour-test-2',
-							name: 'Twenty Twenty-Four',
-							version: '1.0',
-							is_active: true,
-						},
-						{
-							slug: 'custom-theme-test-2',
-							name: 'Custom Theme',
-							version: '1.0',
-							is_active: false,
-						},
-					],
-				} );
+				plugins: [
+					{
+						slug: 'akismet-test-2/akismet-test-2',
+						name: 'Akismet',
+						version: '5.0',
+						is_active: true,
+					},
+					{
+						slug: 'custom-plugin-test-2/custom-plugin-test-2',
+						name: 'Custom Plugin',
+						version: '1.0',
+						is_active: true,
+					},
+				],
+				themes: [
+					{
+						slug: 'twentytwentyfour-test-2',
+						name: 'Twenty Twenty-Four',
+						version: '1.0',
+						is_active: true,
+					},
+					{
+						slug: 'custom-theme-test-2',
+						name: 'Custom Theme',
+						version: '1.0',
+						is_active: false,
+					},
+				],
+			} );
 
 			// Mock WordPress.org checks via fetch (cors-proxy method)
 			// Checks are done for active plugins/themes only, in order
@@ -253,16 +253,16 @@ describe( 'useAssetDiscovery', () => {
 			// Mock apiFetch for assets only (getConfig reads from window.aetherData)
 			apiFetch.mockResolvedValueOnce( {
 				success: true,
-					plugins: [
-						{
-							slug: 'custom-plugin-test-3',
-							name: 'Custom Plugin',
-							version: '1.0',
-							is_active: true,
-						},
-					],
-					themes: [],
-				} );
+				plugins: [
+					{
+						slug: 'custom-plugin-test-3',
+						name: 'Custom Plugin',
+						version: '1.0',
+						is_active: true,
+					},
+				],
+				themes: [],
+			} );
 
 			// Mock fetch to fail on wporg check
 			global.fetch.mockRejectedValueOnce(
@@ -295,29 +295,29 @@ describe( 'useAssetDiscovery', () => {
 			apiFetch.mockResolvedValueOnce( {
 				// Assets response
 				success: true,
-					plugins: [
-						{
-							slug: 'akismet-test-4/akismet-test-4',
-							name: 'Akismet',
-							version: '5.0',
-							is_active: true,
-						},
-						{
-							slug: 'custom-plugin-test-4/custom-plugin-test-4',
-							name: 'Custom Plugin',
-							version: '1.0',
-							is_active: true,
-						},
-					],
-					themes: [
-						{
-							slug: 'twentytwentyfour-test-4',
-							name: 'Twenty Twenty-Four',
-							version: '1.0',
-							is_active: true,
-						},
-					],
-				} );
+				plugins: [
+					{
+						slug: 'akismet-test-4/akismet-test-4',
+						name: 'Akismet',
+						version: '5.0',
+						is_active: true,
+					},
+					{
+						slug: 'custom-plugin-test-4/custom-plugin-test-4',
+						name: 'Custom Plugin',
+						version: '1.0',
+						is_active: true,
+					},
+				],
+				themes: [
+					{
+						slug: 'twentytwentyfour-test-4',
+						name: 'Twenty Twenty-Four',
+						version: '1.0',
+						is_active: true,
+					},
+				],
+			} );
 
 			// Mock WordPress.org checks via fetch (cors-proxy method)
 			global.fetch
@@ -371,22 +371,22 @@ describe( 'useAssetDiscovery', () => {
 			// Mock apiFetch for assets only (getConfig reads from window.aetherData)
 			apiFetch.mockResolvedValueOnce( {
 				success: true,
-					plugins: [
-						{
-							slug: 'aether/aether',
-							name: 'Aether',
-							version: '1.0',
-							is_active: true,
-						},
-						{
-							slug: 'sqlite-database-integration/sqlite-database-integration',
-							name: 'SQLite',
-							version: '1.0',
-							is_active: true,
-						},
-					],
-					themes: [],
-				} );
+				plugins: [
+					{
+						slug: 'aether/aether',
+						name: 'Aether',
+						version: '1.0',
+						is_active: true,
+					},
+					{
+						slug: 'sqlite-database-integration/sqlite-database-integration',
+						name: 'SQLite',
+						version: '1.0',
+						is_active: true,
+					},
+				],
+				themes: [],
+			} );
 
 			// Mock WordPress.org checks via fetch
 			global.fetch
@@ -431,22 +431,22 @@ describe( 'useAssetDiscovery', () => {
 			// Mock apiFetch for assets only (getConfig reads from window.aetherData)
 			apiFetch.mockResolvedValueOnce( {
 				success: true,
-					plugins: [
-						{
-							slug: 'active-plugin-test-6/active-plugin-test-6',
-							name: 'Active Plugin',
-							version: '1.0',
-							is_active: true,
-						},
-						{
-							slug: 'inactive-plugin-test-6/inactive-plugin-test-6',
-							name: 'Inactive Plugin',
-							version: '1.0',
-							is_active: false,
-						},
-					],
-					themes: [],
-				} );
+				plugins: [
+					{
+						slug: 'active-plugin-test-6/active-plugin-test-6',
+						name: 'Active Plugin',
+						version: '1.0',
+						is_active: true,
+					},
+					{
+						slug: 'inactive-plugin-test-6/inactive-plugin-test-6',
+						name: 'Inactive Plugin',
+						version: '1.0',
+						is_active: false,
+					},
+				],
+				themes: [],
+			} );
 
 			// Mock WordPress.org check via fetch
 			global.fetch.mockResolvedValueOnce( {

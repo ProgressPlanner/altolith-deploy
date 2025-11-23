@@ -50,8 +50,7 @@ describe( 'ConfigContext', () => {
 			expect( result.current.config ).toEqual( {
 				publicUrl: 'https://example.com',
 				adminUrl: 'https://example.com/wp-admin',
-				pluginUrl:
-					'https://example.com/wp-content/plugins/aether',
+				pluginUrl: 'https://example.com/wp-content/plugins/aether',
 				restUrl: '/wp-json/',
 			} );
 		} );

@@ -12,11 +12,11 @@ import { addAction } from '@wordpress/hooks';
 /**
  * Get static site URLs step handler
  *
- * @param {Object} context - Execution context
- * @param {Object} context.api - PublishAPI instance
- * @param {string} context.siteUrl - WordPress site URL
+ * @param {Object}   context                  - Execution context
+ * @param {Object}   context.api              - PublishAPI instance
+ * @param {string}   context.siteUrl          - WordPress site URL
  * @param {Function} context.setStatusMessage - Status message updater
- * @returns {Promise<Object>} Step result with discovered URLs
+ * @return {Promise<Object>} Step result with discovered URLs
  */
 async function handler( context ) {
 	const { api, siteUrl, setStatusMessage } = context;
@@ -44,8 +44,7 @@ async function handler( context ) {
 
 	if ( ! urlResponse.success ) {
 		throw new Error(
-			urlResponse.message ||
-				__( 'Failed to discover URLs', 'aether' )
+			urlResponse.message || __( 'Failed to discover URLs', 'aether' )
 		);
 	}
 

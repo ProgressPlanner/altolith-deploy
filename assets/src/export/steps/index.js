@@ -24,7 +24,7 @@ import './uploadStaticFiles';
  *
  * Triggers step registration via hooks and returns collected steps.
  *
- * @returns {Array<Object>} Array of step definitions
+ * @return {Array<Object>} Array of step definitions
  */
 export function getRegisteredSteps() {
 	const registry = StepRegistry.getInstance();
@@ -42,13 +42,10 @@ export function getRegisteredSteps() {
  * Get steps filtered by which providers are enabled
  *
  * @param {Object} context - Execution context with provider arrays
- * @returns {Array<Object>} Filtered steps based on enabled providers
+ * @return {Array<Object>} Filtered steps based on enabled providers
  */
 export function getActiveSteps( context ) {
-	const {
-		staticSiteProviders = [],
-		blueprintBundleProviders = [],
-	} = context;
+	const { staticSiteProviders = [], blueprintBundleProviders = [] } = context;
 
 	const steps = getRegisteredSteps();
 

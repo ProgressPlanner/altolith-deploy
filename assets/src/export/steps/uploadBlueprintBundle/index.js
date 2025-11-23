@@ -19,13 +19,13 @@ import {
 /**
  * Upload blueprint bundle step handler
  *
- * @param {Object} context - Execution context
- * @param {Array} context.blueprintBundleProviders - Providers for blueprint bundle
- * @param {Object} context.blueprintBundle - Bundle data from createBlueprintBundle
- * @param {string} context.siteUrl - WordPress site URL
- * @param {Function} context.setStatusMessage - Status message updater
- * @param {Function} context.setStepProgress - Step progress updater
- * @returns {Promise<Object>} Step result
+ * @param {Object}   context                          - Execution context
+ * @param {Array}    context.blueprintBundleProviders - Providers for blueprint bundle
+ * @param {Object}   context.blueprintBundle          - Bundle data from createBlueprintBundle
+ * @param {string}   context.siteUrl                  - WordPress site URL
+ * @param {Function} context.setStatusMessage         - Status message updater
+ * @param {Function} context.setStepProgress          - Step progress updater
+ * @return {Promise<Object>} Step result
  */
 async function handler( context ) {
 	const {
@@ -159,10 +159,7 @@ async function handler( context ) {
 
 	if ( successCount === 0 ) {
 		throw new Error(
-			__(
-				'Failed to upload blueprint bundle to any provider',
-				'aether'
-			)
+			__( 'Failed to upload blueprint bundle to any provider', 'aether' )
 		);
 	}
 

@@ -15,7 +15,7 @@ import { __ } from '@wordpress/i18n';
  *
  * Checks that all required data exists in context before step execution.
  *
- * @param {Object} step - Step definition
+ * @param {Object} step    - Step definition
  * @param {Object} context - Execution context
  * @throws {Error} If required data is missing
  */
@@ -40,9 +40,9 @@ export function validate( step, context ) {
 
 	if ( missing.length > 0 ) {
 		throw new Error(
-			`Step "${ step.id }" is missing required data:\n${ missingDetails.join(
-				'\n'
-			) }`
+			`Step "${
+				step.id
+			}" is missing required data:\n${ missingDetails.join( '\n' ) }`
 		);
 	}
 }
@@ -52,7 +52,7 @@ export function validate( step, context ) {
  *
  * Checks that step handler returned all declared provides.
  *
- * @param {Object} step - Step definition
+ * @param {Object} step   - Step definition
  * @param {Object} result - Step handler result
  * @throws {Error} If provided data is missing
  */
@@ -71,9 +71,9 @@ export function validateOutput( step, result ) {
 
 	if ( missing.length > 0 ) {
 		throw new Error(
-			`Step "${ step.id }" did not provide declared outputs: ${ missing.join(
-				', '
-			) }`
+			`Step "${
+				step.id
+			}" did not provide declared outputs: ${ missing.join( ', ' ) }`
 		);
 	}
 }
@@ -84,7 +84,7 @@ export function validateOutput( step, result ) {
  * Returns a human-readable summary of what data a step requires.
  *
  * @param {Object} step - Step definition
- * @returns {string} Requirements summary
+ * @return {string} Requirements summary
  */
 export function getRequirementsSummary( step ) {
 	if ( ! step.requires ) {
@@ -108,7 +108,7 @@ export function getRequirementsSummary( step ) {
  * Returns a human-readable summary of what data a step provides.
  *
  * @param {Object} step - Step definition
- * @returns {string} Provides summary
+ * @return {string} Provides summary
  */
 export function getProvidesSummary( step ) {
 	if ( ! step.provides ) {

@@ -13,14 +13,14 @@ import { formatFileSize } from '@aether/utils/helpers';
 /**
  * Create blueprint bundle step handler
  *
- * @param {Object} context - Execution context
- * @param {Object} context.api - ExportAPI instance
+ * @param {Object}   context                       - Execution context
+ * @param {Object}   context.api                   - ExportAPI instance
  * @param {Function} context.generateBlueprintJson - Blueprint JSON generator function
- * @param {string} context.zipPath - Path to wp-content.zip from createWpContentArchive
- * @param {string} context.zipUrl - URL to wp-content.zip
- * @param {Array} context.discoveredAssets - Discovered assets
- * @param {Function} context.setStatusMessage - Status message updater
- * @returns {Promise<Object>} Step result with blueprint bundle info
+ * @param {string}   context.zipPath               - Path to wp-content.zip from createWpContentArchive
+ * @param {string}   context.zipUrl                - URL to wp-content.zip
+ * @param {Array}    context.discoveredAssets      - Discovered assets
+ * @param {Function} context.setStatusMessage      - Status message updater
+ * @return {Promise<Object>} Step result with blueprint bundle info
  */
 async function handler( context ) {
 	const {

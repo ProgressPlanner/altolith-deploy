@@ -530,63 +530,63 @@ describe( 'fileUploadManager', () => {
 		 * Reason: Transient network errors should be retried
 		 */
 		it( 'should retry failed uploads', async () => {
-		let uploadCallCount = 0;
+			let uploadCallCount = 0;
 
-		// Mock storageService.upload to fail twice, then succeed
-		mockStorageService.upload.mockImplementation( async () => {
-			uploadCallCount++;
-			if ( uploadCallCount < 3 ) {
-				throw new Error( 'Network error' );
-			}
-			return {
-				success: true,
-				url: 'https://example.com/file.jpg',
-			};
-		} );
+			// Mock storageService.upload to fail twice, then succeed
+			mockStorageService.upload.mockImplementation( async () => {
+				uploadCallCount++;
+				if ( uploadCallCount < 3 ) {
+					throw new Error( 'Network error' );
+				}
+				return {
+					success: true,
+					url: 'https://example.com/file.jpg',
+				};
+			} );
 
-		// Mock executeWithRetry to actually implement retry logic
-		errorHandler.executeWithRetry.mockReset();
-		errorHandler.executeWithRetry.mockImplementation(
-			async ( fn, options ) => {
-				const maxRetries = 3;
-				let lastError;
+			// Mock executeWithRetry to actually implement retry logic
+			errorHandler.executeWithRetry.mockReset();
+			errorHandler.executeWithRetry.mockImplementation(
+				async ( fn, options ) => {
+					const maxRetries = 3;
+					let lastError;
 
-				for ( let attempt = 1; attempt <= maxRetries; attempt++ ) {
-					try {
-						return await fn();
-					} catch ( error ) {
-						lastError = error;
-						if ( attempt < maxRetries && options?.onRetry ) {
-							options.onRetry( error, attempt );
+					for ( let attempt = 1; attempt <= maxRetries; attempt++ ) {
+						try {
+							return await fn();
+						} catch ( error ) {
+							lastError = error;
+							if ( attempt < maxRetries && options?.onRetry ) {
+								options.onRetry( error, attempt );
+							}
 						}
 					}
+
+					throw lastError;
 				}
+			);
 
-				throw lastError;
-			}
-		);
+			const files = [
+				{
+					key: 'test.jpg',
+					blob: new Blob( [ 'test' ] ),
+					contentType: 'image/jpeg',
+					displayName: 'test.jpg',
+				},
+			];
 
-		const files = [
-			{
-				key: 'test.jpg',
-				blob: new Blob( [ 'test' ] ),
-				contentType: 'image/jpeg',
-				displayName: 'test.jpg',
-			},
-		];
+			const result = await uploadFilesWithProgress( {
+				files,
+				storageService: mockStorageService,
+				setStatusMessage: mockSetStatusMessage,
+			} );
 
-		const result = await uploadFilesWithProgress( {
-			files,
-			storageService: mockStorageService,
-			setStatusMessage: mockSetStatusMessage,
+			expect( result.uploaded ).toBe( 1 );
+			expect( result.failed ).toBe( 0 );
+			expect( uploadCallCount ).toBe( 3 ); // Verify it retried
 		} );
 
-		expect( result.uploaded ).toBe( 1 );
-		expect( result.failed ).toBe( 0 );
-		expect( uploadCallCount ).toBe( 3 ); // Verify it retried
-	} );
-
-	it( 'should fail after max retries', async () => {
+		it( 'should fail after max retries', async () => {
 			errorHandler.executeWithRetry.mockRejectedValue(
 				new Error( 'Persistent error' )
 			);

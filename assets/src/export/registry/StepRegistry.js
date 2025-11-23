@@ -37,7 +37,7 @@ class StepRegistry {
 	/**
 	 * Get singleton instance
 	 *
-	 * @returns {StepRegistry} Singleton instance
+	 * @return {StepRegistry} Singleton instance
 	 */
 	static getInstance() {
 		if ( ! instance ) {
@@ -51,17 +51,17 @@ class StepRegistry {
 	 *
 	 * Validates step structure and adds to registry.
 	 *
-	 * @param {Object} step - Step definition
-	 * @param {string} step.id - Unique step identifier
-	 * @param {string} step.label - Display label (i18n)
-	 * @param {string} [step.description] - Step description (i18n)
-	 * @param {boolean} [step.supportsProgress=false] - Whether step reports progress
-	 * @param {Array<string>} [step.dependencies=[]] - IDs of steps this depends on
-	 * @param {Object} step.requires - Data requirements (explicit dependencies)
-	 * @param {Object} step.provides - Data this step provides
-	 * @param {Function} step.handler - Async handler function
-	 * @param {Function} [step.skip] - Optional skip function
-	 * @param {Function} [step.shouldSkip] - Optional skip function (alternative)
+	 * @param {Object}        step                          - Step definition
+	 * @param {string}        step.id                       - Unique step identifier
+	 * @param {string}        step.label                    - Display label (i18n)
+	 * @param {string}        [step.description]            - Step description (i18n)
+	 * @param {boolean}       [step.supportsProgress=false] - Whether step reports progress
+	 * @param {Array<string>} [step.dependencies=[]]        - IDs of steps this depends on
+	 * @param {Object}        step.requires                 - Data requirements (explicit dependencies)
+	 * @param {Object}        step.provides                 - Data this step provides
+	 * @param {Function}      step.handler                  - Async handler function
+	 * @param {Function}      [step.skip]                   - Optional skip function
+	 * @param {Function}      [step.shouldSkip]             - Optional skip function (alternative)
 	 * @throws {Error} If step is invalid
 	 */
 	register( step ) {
@@ -128,7 +128,7 @@ class StepRegistry {
 	/**
 	 * Get all registered steps
 	 *
-	 * @returns {Array<Object>} Registered steps
+	 * @return {Array<Object>} Registered steps
 	 */
 	getSteps() {
 		return this.steps;
@@ -147,7 +147,7 @@ class StepRegistry {
 	 * Get step by ID
 	 *
 	 * @param {string} stepId - Step identifier
-	 * @returns {Object|null} Step definition or null if not found
+	 * @return {Object|null} Step definition or null if not found
 	 */
 	getStepById( stepId ) {
 		return this.steps.find( ( step ) => step.id === stepId ) || null;
@@ -157,7 +157,7 @@ class StepRegistry {
 	 * Check if step is registered
 	 *
 	 * @param {string} stepId - Step identifier
-	 * @returns {boolean} True if step is registered
+	 * @return {boolean} True if step is registered
 	 */
 	hasStep( stepId ) {
 		return this.steps.some( ( step ) => step.id === stepId );

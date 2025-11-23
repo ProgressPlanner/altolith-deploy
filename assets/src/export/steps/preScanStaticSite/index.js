@@ -14,19 +14,22 @@ import { debug, debugWarn } from '@aether/utils/debug';
 /**
  * Pre-scan static site step handler
  *
- * @param {Object} context - Execution context
- * @param {Array} context.urls - URLs from getStaticSiteUrls
- * @param {string} context.siteUrl - WordPress site URL
+ * @param {Object}   context                  - Execution context
+ * @param {Array}    context.urls             - URLs from getStaticSiteUrls
+ * @param {string}   context.siteUrl          - WordPress site URL
  * @param {Function} context.setStatusMessage - Status message updater
- * @param {Function} context.setStepProgress - Step progress updater
- * @returns {Promise<Object>} Step result with expanded URL list including assets
+ * @param {Function} context.setStepProgress  - Step progress updater
+ * @return {Promise<Object>} Step result with expanded URL list including assets
  */
 async function handler( context ) {
 	const { urls, siteUrl, setStatusMessage, setStepProgress } = context;
 
 	if ( ! urls || ! Array.isArray( urls ) ) {
 		throw new Error(
-			__( 'URLs not found. Please run getStaticSiteUrls first.', 'aether' )
+			__(
+				'URLs not found. Please run getStaticSiteUrls first.',
+				'aether'
+			)
 		);
 	}
 
@@ -125,7 +128,10 @@ async function handler( context ) {
 const stepDefinition = {
 	id: 'preScanStaticSite',
 	label: __( 'Scan for Assets', 'aether' ),
-	description: __( 'Discover CSS, JS, and image assets from pages', 'aether' ),
+	description: __(
+		'Discover CSS, JS, and image assets from pages',
+		'aether'
+	),
 	supportsProgress: true,
 	dependencies: [ 'getStaticSiteUrls' ],
 	requires: {

@@ -106,7 +106,7 @@ export class StorageService {
 			metadata: {
 				staticPath: this.staticPath,
 				originalKey: key,
-				
+
 				cacheControl: metadata.cacheControl || '',
 				onProgress: metadata.onProgress || null,
 			},
@@ -139,9 +139,7 @@ export class StorageService {
 	 */
 	async delete( key ) {
 		const prefixedKey = this._prefixKey( key );
-		return deleteFile( this.staticPath, prefixedKey, {
-			
-		} );
+		return deleteFile( this.staticPath, prefixedKey, {} );
 	}
 
 	/**
@@ -215,9 +213,7 @@ export class StorageService {
 	 * @return {Promise<Object>} Result with success and optional error.
 	 */
 	async batchDelete( keys ) {
-		return batchDeleteFromAdapter( this.staticPath, keys, {
-			
-		} );
+		return batchDeleteFromAdapter( this.staticPath, keys, {} );
 	}
 
 	/**

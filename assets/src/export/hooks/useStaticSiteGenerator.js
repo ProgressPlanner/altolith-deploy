@@ -95,7 +95,8 @@ export function useStaticSiteGenerator( onProgress ) {
 				htmlData: cache,
 			} );
 
-			const { htmlData: sharedHtmlData, totalFilesToUpload } = preScanResult;
+			const { htmlData: sharedHtmlData, totalFilesToUpload } =
+				preScanResult;
 
 			// Merge pre-scan failures
 			failures.urlsFailed += preScanResult.failures.urlsFailed;

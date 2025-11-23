@@ -680,7 +680,60 @@ addAction('aether.admin.provider.settings.saved', 'my-plugin', (providerId) => {
 
 ### Workflow & Deployment
 
-#### `aether.publish.workflow.before`
+#### `aether.export.register_steps`
+
+**Type**: Action
+**Location**: `assets/src/export/steps/index.js`
+
+Fires when the workflow is collecting step registrations. Steps should hook into this action to register themselves with the StepRegistry.
+
+**Parameters**:
+- `registry` (StepRegistry): The step registry instance
+
+**Example**:
+```javascript
+import { addAction } from '@wordpress/hooks';
+
+addAction('aether.export.register_steps', 'my-plugin/my-step', (registry) => {
+    registry.register({
+        id: 'myCustomStep',
+        label: 'My Custom Step',
+        description: 'Does something custom',
+        supportsProgress: true,
+        dependencies: ['someOtherStep'],
+        requires: {
+            someData: { from: 'someOtherStep', required: true },
+            api: { from: 'initial', required: true },
+        },
+        provides: {
+            myStepResult: 'object',
+        },
+        handler: async (context) => {
+            // Step implementation
+            return { myStepResult: { success: true } };
+        },
+    });
+}, 10);
+```
+
+**Step Definition Properties**:
+- `id` (string, required): Unique step identifier
+- `label` (string, required): Human-readable step label
+- `description` (string, optional): Step description
+- `supportsProgress` (boolean, optional): Whether step supports progress tracking
+- `dependencies` (Array<string>, optional): IDs of steps that must run before this step
+- `requires` (Object, required): Data dependencies - declares what data this step needs
+  - Each key is the data field name
+  - Each value is an object with `from` (step ID or 'initial') and `required` (boolean)
+- `provides` (Object, required): Data outputs - declares what data this step produces
+  - Each key is the data field name
+  - Each value is the data type (string, e.g., 'object', 'array', 'string')
+- `handler` (Function, required): Async function that executes the step
+- `skip` (Function, optional): Function that returns boolean indicating if step should be skipped
+
+---
+
+#### `aether.export.workflow.before`
 
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
@@ -690,19 +743,23 @@ Fires before the publish workflow execution begins.
 **Parameters**:
 - `executionContext` (Object): Full execution context
 - `steps` (Array): Array of step definitions
+- `providerInstance` (Object|null): Current provider instance (null in current implementation, for future use)
 
 **Example**:
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.workflow.before', 'my-plugin', (executionContext, steps) => {
+addAction('aether.export.workflow.before', 'my-plugin', (executionContext, steps, providerInstance) => {
     console.log('Starting publish workflow with', steps.length, 'steps');
+    if (providerInstance) {
+        console.log('Running for provider:', providerInstance);
+    }
 });
 ```
 
 ---
 
-#### `aether.publish.workflow.after`
+#### `aether.export.workflow.after`
 
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
@@ -712,19 +769,23 @@ Fires after the publish workflow completes successfully.
 **Parameters**:
 - `state` (Object): Final workflow state
 - `executionContext` (Object): Execution context
+- `providerInstance` (Object|null): Current provider instance (null in current implementation, for future use)
 
 **Example**:
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.workflow.after', 'my-plugin', (state, executionContext) => {
+addAction('aether.export.workflow.after', 'my-plugin', (state, executionContext, providerInstance) => {
     console.log('Workflow completed successfully');
+    if (providerInstance) {
+        console.log('Completed for provider:', providerInstance);
+    }
 });
 ```
 
 ---
 
-#### `aether.publish.workflow.error`
+#### `aether.export.workflow.error`
 
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
@@ -734,40 +795,48 @@ Fires when the publish workflow encounters an error.
 **Parameters**:
 - `error` (Error): Error object
 - `executionContext` (Object): Execution context
+- `providerInstance` (Object|null): Current provider instance (null in current implementation, for future use)
 
 **Example**:
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.workflow.error', 'my-plugin', (error, executionContext) => {
+addAction('aether.export.workflow.error', 'my-plugin', (error, executionContext, providerInstance) => {
     console.error('Workflow error:', error.message);
+    if (providerInstance) {
+        console.error('Failed for provider:', providerInstance);
+    }
 });
 ```
 
 ---
 
-#### `aether.publish.step.{stepId}.before`
+#### `aether.export.step.{stepId}.before`
 
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
 
-Fires before a specific workflow step executes. Replace `{stepId}` with the actual step ID (e.g., `createWpContentArchive`, `uploadStaticSiteFiles`).
+Fires before a specific workflow step executes. Replace `{stepId}` with the actual step ID (e.g., `createWpContentArchive`, `uploadStaticFiles`).
 
 **Parameters**:
 - `executionContext` (Object): Execution context
+- `providerInstance` (Object|null): Current provider instance (null in current implementation, for future use)
 
 **Example**:
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.step.generateBlueprint.before', 'my-plugin', (executionContext) => {
-    console.log('Starting createWpContentArchive step');
+addAction('aether.export.step.createBlueprintBundle.before', 'my-plugin', (executionContext, providerInstance) => {
+    console.log('Starting createBlueprintBundle step');
+    if (providerInstance) {
+        console.log('For provider:', providerInstance);
+    }
 });
 ```
 
 ---
 
-#### `aether.publish.step.{stepId}.after`
+#### `aether.export.step.{stepId}.after`
 
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
@@ -777,19 +846,20 @@ Fires after a specific workflow step completes successfully.
 **Parameters**:
 - `result` (Object): Step result
 - `executionContext` (Object): Execution context
+- `providerInstance` (Object|null): Current provider instance (null in current implementation, for future use)
 
 **Example**:
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.step.generateBlueprint.after', 'my-plugin', (result, executionContext) => {
-    console.log('Completed createWpContentArchive step');
+addAction('aether.export.step.createBlueprintBundle.after', 'my-plugin', (result, executionContext, providerInstance) => {
+    console.log('Completed createBlueprintBundle step');
 });
 ```
 
 ---
 
-#### `aether.publish.step.{stepId}.error`
+#### `aether.export.step.{stepId}.error`
 
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
@@ -799,19 +869,20 @@ Fires when a specific workflow step fails.
 **Parameters**:
 - `error` (Error): Enhanced error object with category, severity, stepId, etc.
 - `executionContext` (Object): Execution context
+- `providerInstance` (Object|null): Current provider instance (null in current implementation, for future use)
 
 **Example**:
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.step.generateBlueprint.error', 'my-plugin', (error, executionContext) => {
+addAction('aether.export.step.createBlueprintBundle.error', 'my-plugin', (error, executionContext, providerInstance) => {
     console.error('Step failed:', error.formattedMessage);
 });
 ```
 
 ---
 
-#### `aether.publish.step.{stepId}.skip`
+#### `aether.export.step.{stepId}.skip`
 
 **Type**: Filter
 **Location**: `assets/src/export/executor/StepExecutor.js`
@@ -821,6 +892,7 @@ Determines whether a specific workflow step should be skipped.
 **Parameters**:
 - `shouldSkip` (boolean): Whether step should be skipped
 - `executionContext` (Object): Execution context
+- `providerInstance` (Object|null): Current provider instance (null in current implementation, for future use)
 
 **Returns**: Boolean indicating if step should be skipped
 
@@ -828,7 +900,7 @@ Determines whether a specific workflow step should be skipped.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.step.generateBlueprint.skip', 'my-plugin', (shouldSkip, executionContext) => {
+addFilter('aether.export.step.createBlueprintBundle.skip', 'my-plugin', (shouldSkip, executionContext, providerInstance) => {
     // Skip if blueprint already exists
     if (executionContext.state.blueprintData) {
         return true;
@@ -839,7 +911,7 @@ addFilter('aether.export.step.generateBlueprint.skip', 'my-plugin', (shouldSkip,
 
 ---
 
-#### `aether.publish.step.{stepId}.skipped`
+#### `aether.export.step.{stepId}.skipped`
 
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
@@ -848,19 +920,20 @@ Fires when a specific workflow step is skipped.
 
 **Parameters**:
 - `executionContext` (Object): Execution context
+- `providerInstance` (Object|null): Current provider instance (null in current implementation, for future use)
 
 **Example**:
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.step.generateBlueprint.skipped', 'my-plugin', (executionContext) => {
-    console.log('createWpContentArchive step was skipped');
+addAction('aether.export.step.createBlueprintBundle.skipped', 'my-plugin', (executionContext, providerInstance) => {
+    console.log('createBlueprintBundle step was skipped');
 });
 ```
 
 ---
 
-#### `aether.publish.step.{stepId}.retry`
+#### `aether.export.step.{stepId}.retry`
 
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
@@ -872,19 +945,20 @@ Fires when a specific workflow step retries after an error.
 - `attempt` (number): Retry attempt number
 - `delay` (number): Delay in milliseconds before retry
 - `executionContext` (Object): Execution context
+- `providerInstance` (Object|null): Current provider instance (null in current implementation, for future use)
 
 **Example**:
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.step.generateBlueprint.retry', 'my-plugin', (error, attempt, delay, executionContext) => {
+addAction('aether.export.step.createBlueprintBundle.retry', 'my-plugin', (error, attempt, delay, executionContext, providerInstance) => {
     console.log(`Retrying step (attempt ${attempt}) after ${delay}ms`);
 });
 ```
 
 ---
 
-#### `aether.publish.step.{stepId}.result`
+#### `aether.export.step.{stepId}.result`
 
 **Type**: Filter
 **Location**: `assets/src/export/executor/StepExecutor.js`
@@ -894,6 +968,7 @@ Filters the result of a specific workflow step before it's merged into the workf
 **Parameters**:
 - `result` (Object): Step result
 - `executionContext` (Object): Execution context
+- `providerInstance` (Object|null): Current provider instance (null in current implementation, for future use)
 
 **Returns**: Modified result object
 
@@ -901,7 +976,7 @@ Filters the result of a specific workflow step before it's merged into the workf
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.step.generateBlueprint.result', 'my-plugin', (result, executionContext) => {
+addFilter('aether.export.step.createBlueprintBundle.result', 'my-plugin', (result, executionContext, providerInstance) => {
     return {
         ...result,
         customMetadata: 'added by plugin'
@@ -2072,6 +2147,76 @@ addFilter('aether.url.rewrite', 'my-customizations', (rewrittenUrl, url) => {
 
 ---
 
+## Step Registration and Data Dependencies
+
+### How Steps Work
+
+The plugin uses a hook-based step registration system where each step:
+1. Registers itself via the `aether.export.register_steps` action
+2. Declares explicit data dependencies (`requires`)
+3. Declares what data it produces (`provides`)
+4. Implements a handler function that receives all required data via context
+
+### Data Dependency System
+
+Steps declare their data requirements and outputs using `requires` and `provides` objects:
+
+```javascript
+{
+    requires: {
+        // Data from another step
+        urls: { from: 'getStaticSiteUrls', required: true },
+
+        // Data from workflow initialization (initial context)
+        api: { from: 'initial', required: true },
+
+        // Optional data
+        blueprintData: { from: 'createBlueprintBundle', required: false },
+    },
+    provides: {
+        // This step produces these data fields
+        staticUploadResults: 'object',
+    }
+}
+```
+
+**Key Benefits:**
+- **Explicit Dependencies**: Clear declaration of what data each step needs
+- **Automatic Validation**: DataValidator ensures required data exists before execution
+- **Output Validation**: Ensures steps return the data they promised
+- **No Data Shadowing**: Explicit `from` declarations prevent accidental overwrites
+- **Better Error Messages**: Missing data errors show exactly which step should have provided it
+
+### Available Steps
+
+The following steps are registered by default:
+
+1. **discoverBlueprintBundleAssets**: Discovers custom plugins/themes
+   - Provides: `discoveredAssets` (array)
+
+2. **getStaticSiteUrls**: Discovers all URLs for static site
+   - Provides: `urls` (array), `staticSiteUrl` (string), `urlsCount` (number)
+
+3. **preScanStaticSite**: Fetches HTML and extracts assets
+   - Requires: `urls` from getStaticSiteUrls
+   - Provides: `urls` (array, expanded with assets), `htmlCount` (number), `assetCount` (number), `sharedHtmlData` (Map)
+
+4. **createWpContentArchive**: Creates wp-content.zip
+   - Requires: `discoveredAssets`, `api`, `setStatusMessage`, `assetManager`
+   - Provides: `zipPath`, `zipUrl`, `zipSize`
+
+5. **createBlueprintBundle**: Generates blueprint-bundle.zip
+   - Requires: `zipPath`, `zipUrl`, `discoveredAssets`, `api`, `generateBlueprintJson`, `setStatusMessage`
+   - Provides: `blueprintData` (object), `blueprintBundle` (object)
+
+6. **uploadBlueprintBundle**: Uploads blueprint bundle to providers
+   - Requires: `blueprintBundle`, `blueprintBundleProviders`, `siteUrl`, `setStatusMessage`
+   - Provides: `bundleUploadResults` (object)
+
+7. **uploadStaticFiles**: Generates and uploads static HTML/CSS/JS
+   - Requires: `urls`, `sharedHtmlData`, `staticSiteUrl`, `staticSiteProviders`, `processStaticSiteUrls`, `siteUrl`, `setStatusMessage`
+   - Provides: `staticUploadResults` (object)
+
 ## Best Practices
 
 1. **Always return the filtered value**: Filters must return the value (potentially modified)
@@ -2080,6 +2225,8 @@ addFilter('aether.url.rewrite', 'my-customizations', (rewrittenUrl, url) => {
 4. **Namespace your hook callbacks**: Use unique names to avoid conflicts
 5. **Test error conditions**: Ensure your hooks handle errors gracefully
 6. **Document your hooks**: If creating a provider plugin, document which hooks you use
+7. **Declare explicit dependencies**: When registering custom steps, use `requires` and `provides` to declare data flow
+8. **Return promised data**: Ensure your step handler returns all fields declared in `provides`
 
 ---
 
