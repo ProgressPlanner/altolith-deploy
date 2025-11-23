@@ -15,6 +15,7 @@ import { executeSteps } from './StepExecutor';
  * Execute async functions with concurrency limit
  *
  * Limits number of concurrent executions to prevent resource exhaustion.
+ * Uses a sliding window approach to maintain max concurrent executions.
  *
  * @param {Array}    items       - Array of items to process
  * @param {Function} fn          - Async function to call for each item
@@ -22,26 +23,35 @@ import { executeSteps } from './StepExecutor';
  * @return {Promise<Array>} Results array in original order
  */
 async function limitConcurrency( items, fn, concurrency = 5 ) {
-	const results = [];
+	const results = new Array( items.length );
 	const executing = [];
 
-	for ( const [ index, item ] of items.entries() ) {
-		const promise = Promise.resolve().then( () => fn( item, index ) );
-		results[ index ] = promise;
-
-		if ( concurrency <= items.length ) {
-			const e = promise.then( () =>
-				executing.splice( executing.indexOf( e ), 1 )
-			);
-			executing.push( e );
-
-			if ( executing.length >= concurrency ) {
-				await Promise.race( executing );
+	for ( let index = 0; index < items.length; index++ ) {
+		// Create promise for this item
+		const promise = fn( items[ index ], index ).then( ( result ) => {
+			// Store result in correct position
+			results[ index ] = result;
+			// Remove this promise from executing array
+			const execIndex = executing.indexOf( promise );
+			if ( execIndex !== -1 ) {
+				executing.splice( execIndex, 1 );
 			}
+			return result;
+		} );
+
+		// Add to executing array
+		executing.push( promise );
+
+		// If we've hit concurrency limit, wait for one to complete
+		if ( executing.length >= concurrency ) {
+			await Promise.race( executing );
 		}
 	}
 
-	return Promise.all( results );
+	// Wait for all remaining promises to complete
+	await Promise.all( executing );
+
+	return results;
 }
 
 /**
