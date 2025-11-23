@@ -351,12 +351,6 @@ class ExportJobController
 			return $status;
 		}
 
-		// Add database upload result to response for Playground debugging.
-		$dbResult = \get_transient('aether_site_exporter_db_upload_result');
-		if ($dbResult && isset($dbResult['success'], $dbResult['message'])) {
-			$status['debugDbUpload'] = $dbResult;
-		}
-
 		// Return status with value wrapper for consistency.
 		return \rest_ensure_response([
 			'success' => true,
