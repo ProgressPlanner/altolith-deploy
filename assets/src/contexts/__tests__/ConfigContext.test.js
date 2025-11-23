@@ -5,9 +5,8 @@
  */
 
 import { renderHook } from '@testing-library/react';
-import { createElement } from '@wordpress/element';
+import { createElement, useContext } from '@wordpress/element';
 import { ConfigProvider, ConfigContext } from '../ConfigContext';
-import { useContext } from '@wordpress/element';
 
 /**
  * Wrapper component for testing context

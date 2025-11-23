@@ -124,6 +124,7 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
  * @param {Object} options    Optional options (unused, kept for API consistency).
  * @return {Promise<Object>} Delete result.
  */
+// eslint-disable-next-line no-unused-vars
 export async function deleteFile( staticPath, key, options = {} ) {
 	debug( 'filesystemAdapter.deleteFile:', { staticPath, key } );
 
@@ -214,6 +215,7 @@ export async function batchCopy( staticPath, operations ) {
  * @param {Object} options    Optional options (unused, kept for API consistency).
  * @return {Promise<Object>} Batch delete result.
  */
+// eslint-disable-next-line no-unused-vars
 export async function batchDelete( staticPath, keys, options = {} ) {
 	debug( 'filesystemAdapter.batchDelete:', {
 		staticPath,
@@ -251,6 +253,7 @@ export async function batchDelete( staticPath, keys, options = {} ) {
  * @param {Object} options    Optional options (unused, kept for API consistency).
  * @return {Promise<Blob|null>} File blob or null if not found.
  */
+// eslint-disable-next-line no-unused-vars
 export async function downloadFile( staticPath, key, options = {} ) {
 	debug( 'filesystemAdapter.downloadFile:', { staticPath, key } );
 
