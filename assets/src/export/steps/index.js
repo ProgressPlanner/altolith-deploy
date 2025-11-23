@@ -41,11 +41,17 @@ export function getRegisteredSteps() {
 /**
  * Get steps filtered by which providers are enabled
  *
- * @param {Object} context - Execution context with provider arrays
- * @return {Array<Object>} Filtered steps based on enabled providers
+ * Uses provider INSTANCE arrays (not ID arrays) to ensure validation.
+ * This prevents steps from executing when all provider instances are disabled/invalid.
+ *
+ * @param {Object} context - Execution context with provider instance arrays
+ * @return {Array<Object>} Filtered steps based on enabled provider instances
  */
 export function getActiveSteps( context ) {
-	const { staticSiteProviders = [], blueprintBundleProviders = [] } = context;
+	const {
+		staticSiteProviderInstances = [],
+		blueprintBundleProviderInstances = [],
+	} = context;
 
 	const steps = getRegisteredSteps();
 
@@ -56,22 +62,22 @@ export function getActiveSteps( context ) {
 			return ! step.shouldSkip( context );
 		}
 
-		// Skip blueprint-related steps if no blueprint bundle providers
+		// Skip blueprint-related steps if no blueprint bundle provider INSTANCES
 		if (
 			step.id === 'discoverBlueprintBundleAssets' ||
 			step.id === 'createWpContentArchive' ||
 			step.id === 'createBlueprintBundle' ||
 			step.id === 'uploadBlueprintBundle'
 		) {
-			return blueprintBundleProviders.length > 0;
+			return blueprintBundleProviderInstances.length > 0;
 		}
 
-		// Skip static site steps if no static site providers
+		// Skip static site steps if no static site provider INSTANCES
 		if (
 			step.id === 'preScanStaticSite' ||
 			step.id === 'uploadStaticFiles'
 		) {
-			return staticSiteProviders.length > 0;
+			return staticSiteProviderInstances.length > 0;
 		}
 
 		return true;
