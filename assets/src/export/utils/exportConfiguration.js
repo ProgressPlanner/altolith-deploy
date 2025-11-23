@@ -75,14 +75,65 @@ export function getEnabledInstancesForDeploymentType(
 }
 
 /**
+ * Validate a provider instance configuration
+ *
+ * Checks that the instance has required properties and valid configuration.
+ *
+ * @param {string} instanceId - Instance ID
+ * @param {Object} config     - Instance configuration
+ * @return {boolean} True if instance is valid
+ */
+function isValidProviderInstance( instanceId, config ) {
+	// Must have non-empty ID
+	if ( ! instanceId || typeof instanceId !== 'string' ) {
+		debugError( 'Provider instance has invalid ID:', instanceId );
+		return false;
+	}
+
+	// Must have config object
+	if ( ! config || typeof config !== 'object' ) {
+		debugError( `Provider instance ${ instanceId } has invalid config` );
+		return false;
+	}
+
+	// Must have provider_type
+	if ( ! config.provider_type ) {
+		debugError(
+			`Provider instance ${ instanceId } missing provider_type`
+		);
+		return false;
+	}
+
+	// Must not be explicitly disabled
+	if ( config.enabled === false ) {
+		// This is normal - not an error, just filtered out
+		return false;
+	}
+
+	// Must have deployment_types array
+	if (
+		! config.deployment_types ||
+		! Array.isArray( config.deployment_types )
+	) {
+		debugError(
+			`Provider instance ${ instanceId } has invalid deployment_types`
+		);
+		return false;
+	}
+
+	return true;
+}
+
+/**
  * Build provider instance objects from configurations
  *
  * Creates array of provider instances with full config for threading.
  * Each instance has id, label, and complete configuration.
+ * Validates each instance to ensure it's properly configured.
  *
  * @param {Object} providerConfigs - All provider configurations
  * @param {string} deploymentType  - Deployment type to filter by
- * @return {Array<Object>} Provider instance objects with { id, label, config }
+ * @return {Array<Object>} Valid provider instance objects with { id, label, config }
  */
 export function buildProviderInstances( providerConfigs, deploymentType ) {
 	const instanceIds = getEnabledInstancesForDeploymentType(
@@ -90,14 +141,22 @@ export function buildProviderInstances( providerConfigs, deploymentType ) {
 		deploymentType
 	);
 
-	return instanceIds.map( ( instanceId ) => {
-		const config = providerConfigs[ instanceId ] || {};
-		return {
-			id: instanceId,
-			label: config.label || instanceId,
-			config,
-		};
-	} );
+	return (
+		instanceIds
+			// Map to instance objects
+			.map( ( instanceId ) => {
+				const config = providerConfigs[ instanceId ] || {};
+				return {
+					id: instanceId,
+					label: config.label || instanceId,
+					config,
+				};
+			} )
+			// Validate and filter out invalid instances
+			.filter( ( instance ) =>
+				isValidProviderInstance( instance.id, instance.config )
+			)
+	);
 }
 
 /**
