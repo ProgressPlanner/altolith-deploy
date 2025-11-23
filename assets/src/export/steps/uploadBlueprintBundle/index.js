@@ -6,7 +6,7 @@
  * @since 1.0.0
  */
 
-import { __, sprintf, _n } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { addAction } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
 import { formatFileSize } from '@aether/utils/helpers';
@@ -15,13 +15,15 @@ import {
 	FILE_TYPES,
 	uploadFile,
 } from '@aether/export/utils/unifiedFileUpload';
-import { processBatch } from '@aether/export/utils/batchProcessor';
 
 /**
  * Upload blueprint bundle step handler
  *
+ * Processes a single provider instance (thread context).
+ * Called once per provider by ThreadOrchestrator.
+ *
  * @param {Object}   context                          - Execution context
- * @param {Array}    context.blueprintBundleProviders - Providers for blueprint bundle
+ * @param {Object}   context.currentProviderInstance  - Current provider instance from thread
  * @param {Object}   context.blueprintBundle          - Bundle data from createBlueprintBundle
  * @param {string}   context.siteUrl                  - WordPress site URL
  * @param {Function} context.setStatusMessage         - Status message updater
@@ -30,156 +32,91 @@ import { processBatch } from '@aether/export/utils/batchProcessor';
  */
 async function handler( context ) {
 	const {
-		blueprintBundleProviders = [],
+		currentProviderInstance,
 		blueprintBundle,
 		siteUrl,
 		setStatusMessage,
 		setStepProgress,
 	} = context;
 
-	const providers = blueprintBundleProviders;
-
-	if ( providers.length === 0 ) {
-		setStatusMessage(
-			__( 'No providers enabled for blueprint bundle', 'aether' ),
-			'warning',
-			'uploadBlueprintBundle'
+	if ( ! currentProviderInstance ) {
+		throw new Error(
+			__( 'Provider instance not found in thread context', 'aether' )
 		);
-		return { skipped: true, reason: 'no_providers' };
 	}
+
+	const providerId = currentProviderInstance.id;
+	const providerLabel =
+		currentProviderInstance.label || currentProviderInstance.id;
 
 	const bundleSize = blueprintBundle?.bundleSize || 0;
 	const bundleSizeFormatted = formatFileSize( bundleSize );
 
 	setStatusMessage(
 		sprintf(
-			/* translators: %1$s: File size, %2$d: Number of providers */
-			_n(
-				'Uploading blueprint bundle (%1$s) to %2$d provider…',
-				'Uploading blueprint bundle (%1$s) to %2$d providers…',
-				providers.length,
-				'aether'
-			),
-			bundleSizeFormatted,
-			providers.length
+			/* translators: %1$s: Provider label, %2$s: File size */
+			__( 'Uploading blueprint bundle (%2$s) to %1$s…', 'aether' ),
+			providerLabel,
+			bundleSizeFormatted
 		),
 		'progress',
 		'uploadBlueprintBundle'
 	);
 
-	// Upload to providers with controlled parallelism
-	// Note: For blueprint bundles, we upload one file to multiple providers
-	// The batch size controls how many providers we upload to simultaneously
-	const uploadResults = await processBatch(
-		providers,
-		async ( providerIdItem ) => {
-			try {
-				// Fetch provider config to get export_path and maxSimultaneousUploads
-				let exportPath = 'blueprint-bundle/bundle.zip';
-				try {
-					const providerResponse = await apiFetch( {
-						path: `/aether/site-exporter/providers/${ providerIdItem }/config`,
-					} );
-					if ( providerResponse.success && providerResponse.config ) {
-						const providerConfig = providerResponse.config || {};
-						if ( providerConfig.export_path ) {
-							exportPath = providerConfig.export_path;
-						}
-					}
-				} catch {
-					// Use default path on error
-				}
-
-				// Create unified file context for blueprint bundle
-				const fileContext = createFileContext( {
-					fileType: FILE_TYPES.BLUEPRINT_BUNDLE,
-					filePath: blueprintBundle.bundlePath,
-					fileContent: null,
-					contentType: 'application/zip',
-					storageKey: exportPath,
-					providerId: providerIdItem,
-					metadata: {
-						...context,
-						siteUrl,
-						exportPath,
-					},
-				} );
-
-				// Upload file using unified upload system
-				// This fires aether.file.upload action which providers hook into
-				await uploadFile( fileContext );
-
-				return {
-					status: 'fulfilled',
-					value: {
-						providerId: providerIdItem,
-						success: true,
-						exportPath,
-					},
-				};
-			} catch ( error ) {
-				return {
-					status: 'rejected',
-					reason: error,
-					providerId: providerIdItem,
-					error: error?.message || __( 'Unknown error', 'aether' ),
-				};
-			}
-		},
-		10, // Default batch size: 10 providers at a time
-		( batchInfo ) => {
-			// Update progress after each batch
-			if ( setStepProgress ) {
-				const progress = Math.round(
-					( batchInfo.itemsProcessed / batchInfo.totalItems ) * 100
-				);
-				setStepProgress( 'uploadBlueprintBundle', progress );
+	// Fetch provider config to get export_path
+	let exportPath = 'blueprint-bundle/bundle.zip';
+	try {
+		const providerResponse = await apiFetch( {
+			path: `/aether/site-exporter/providers/${ providerId }/config`,
+		} );
+		if ( providerResponse.success && providerResponse.config ) {
+			const providerConfig = providerResponse.config || {};
+			if ( providerConfig.export_path ) {
+				exportPath = providerConfig.export_path;
 			}
 		}
+	} catch {
+		// Use default path on error
+	}
+
+	// Create unified file context for blueprint bundle
+	const fileContext = createFileContext( {
+		fileType: FILE_TYPES.BLUEPRINT_BUNDLE,
+		filePath: blueprintBundle.bundlePath,
+		fileContent: null,
+		contentType: 'application/zip',
+		storageKey: exportPath,
+		providerId,
+		metadata: {
+			...context,
+			siteUrl,
+			exportPath,
+		},
+	} );
+
+	// Upload file using unified upload system
+	// This fires aether.file.upload action which providers hook into
+	await uploadFile( fileContext );
+
+	// Report success
+	setStatusMessage(
+		sprintf(
+			/* translators: %1$s: Provider label, %2$s: File size */
+			__( 'Uploaded blueprint bundle (%2$s) to %1$s', 'aether' ),
+			providerLabel,
+			bundleSizeFormatted
+		),
+		'success',
+		'uploadBlueprintBundle'
 	);
-
-	// Count successes and failures
-	const successCount = uploadResults.filter(
-		( r ) => r.status === 'fulfilled'
-	).length;
-	const failureCount = uploadResults.filter(
-		( r ) => r.status === 'rejected'
-	).length;
-
-	// Report results
-	if ( successCount > 0 ) {
-		setStatusMessage(
-			sprintf(
-				/* translators: %1$s: File size, %2$d: Success count, %3$d: Total providers */
-				_n(
-					'Uploaded blueprint bundle (%1$s) to %2$d/%3$d provider',
-					'Uploaded blueprint bundle (%1$s) to %2$d/%3$d providers',
-					providers.length,
-					'aether'
-				),
-				bundleSizeFormatted,
-				successCount,
-				providers.length
-			),
-			failureCount > 0 ? 'warning' : 'success',
-			'uploadBlueprintBundle'
-		);
-	}
-
-	if ( successCount === 0 ) {
-		throw new Error(
-			__( 'Failed to upload blueprint bundle to any provider', 'aether' )
-		);
-	}
 
 	return {
 		bundleUploadResults: {
-			providers,
-			results: uploadResults.map( ( r ) =>
-				r.status === 'fulfilled' ? r.value : r.reason
-			),
-			successCount,
-			failureCount,
+			providerId,
+			providerLabel,
+			success: true,
+			exportPath,
+			bundleSize,
 		},
 	};
 }
@@ -196,10 +133,6 @@ const stepDefinition = {
 	requires: {
 		currentProviderInstance: {
 			from: 'thread',
-			required: true,
-		},
-		blueprintBundleProviders: {
-			from: 'initial',
 			required: true,
 		},
 		blueprintBundle: {
