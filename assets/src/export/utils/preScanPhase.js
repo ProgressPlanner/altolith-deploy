@@ -9,7 +9,56 @@ import { __, sprintf } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from './assetExtractor';
 import { debug, debugWarn } from '@aether/utils/debug';
-import StaticSiteCache from '@aether/utils/staticSiteCache';
+
+/**
+ * Simple in-memory cache for HTML and assets.
+ * Limited to 500 URLs to prevent memory exhaustion.
+ */
+class InMemoryCache {
+	constructor() {
+		this.cache = new Map();
+		this.maxEntries = 500;
+	}
+
+	async get( url ) {
+		return this.cache.get( url ) || null;
+	}
+
+	async set( url, html, assetUrls ) {
+		if ( this.cache.size >= this.maxEntries && ! this.cache.has( url ) ) {
+			debugWarn(
+				`[Aether] Cache limit reached (${ this.maxEntries } URLs). Cannot cache additional URLs.`
+			);
+			return;
+		}
+		this.cache.set( url, { rawHtml: html, assetUrls } );
+	}
+
+	async getStats() {
+		return {
+			sessionCached: this.cache.size,
+		};
+	}
+
+	async getHealth() {
+		return {
+			usingFallback: false, // This is the only implementation
+			recommendations:
+				this.cache.size >= this.maxEntries * 0.9
+					? [
+							`Cache is at ${ Math.round(
+								( this.cache.size / this.maxEntries ) * 100
+							) }% capacity. Consider reducing URL count.`,
+					  ]
+					: [],
+		};
+	}
+
+	async cleanup() {
+		// No cleanup needed for in-memory cache
+		return 0;
+	}
+}
 
 /**
  * Execute the pre-scan phase.
@@ -55,7 +104,7 @@ export async function executePreScan( {
 	}
 
 	// Use provided cache or create new one
-	const sharedCache = cache || new StaticSiteCache();
+	const sharedCache = cache || new InMemoryCache();
 	const allUniqueAssets = new Set();
 
 	// Log cache health (only if we created a new cache)
