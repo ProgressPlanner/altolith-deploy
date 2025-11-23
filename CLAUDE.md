@@ -317,7 +317,6 @@ Key principles:
    - HTML parsing with `parse5` library (pure JavaScript)
    - URL rewriting for static sites
    - Asset tracking and deduplication
-   - 500-URL cache limit prevents browser memory exhaustion
 
 4. **Provider Integration**
    - Providers dynamically loaded via `window.aether.providerScriptsBaseUrl`
@@ -366,10 +365,9 @@ Key principles:
 - Provider instance configs stored in settings array under `providers` key
 
 **JavaScript:**
-- Configuration cached in IndexedDB (key: `aether_site_exporter_config`)
-- Provider manifests cached in IndexedDB
 - Job progress tracked in React state + IndexedDB
 - Reactive updates via React contexts and hooks
+- **Caching:** Only `wporgCache` remains (WordPress.org plugin/theme existence checks, 7-day TTL)
 
 ## Important Implementation Details
 
