@@ -4,23 +4,25 @@
  * Discovers custom plugins and themes that are not from WordPress.org.
  * These assets need to be included in the blueprint bundle.
  *
+ * @since 1.0.0
  */
 
 import { __, sprintf, _n } from '@wordpress/i18n';
+import { addAction } from '@wordpress/hooks';
 
 /**
- * Discover blueprint bundle assets step handler.
+ * Discover blueprint bundle assets step handler
  *
- * @param {Object}   context                  Execution context.
- * @param {Object}   context.api              PublishAPI instance.
- * @param {Function} context.setStatusMessage Status message updater.
- * @return {Promise<Object>} Step result with discovered assets.
+ * @param {Object} context - Execution context
+ * @param {Object} context.api - PublishAPI instance
+ * @param {Function} context.setStatusMessage - Status message updater
+ * @returns {Promise<Object>} Step result with discovered assets
  */
 async function handler( context ) {
 	const { api, setStatusMessage } = context;
 
 	setStatusMessage(
-		__( 'Discovering plugins and themes…', 'aether-site-exporter' ),
+		__( 'Discovering plugins and themes…', 'aether' ),
 		'progress',
 		'discoverBlueprintBundleAssets'
 	);
@@ -31,7 +33,7 @@ async function handler( context ) {
 	if ( ! discoveryResponse.success ) {
 		throw new Error(
 			discoveryResponse.message ||
-				__( 'Failed to discover assets', 'aether-site-exporter' )
+				__( 'Failed to discover assets', 'aether' )
 		);
 	}
 
@@ -42,10 +44,7 @@ async function handler( context ) {
 	// Build success message
 	let message;
 	if ( assets.length === 0 ) {
-		message = __(
-			'Discovered 0 active custom plugins/themes',
-			'aether-site-exporter'
-		);
+		message = __( 'Discovered 0 active custom plugins/themes', 'aether' );
 	} else {
 		const parts = [];
 		if ( plugins.length > 0 ) {
@@ -53,10 +52,7 @@ async function handler( context ) {
 				plugins.length === 1
 					? sprintf(
 							/* translators: %s: Plugin slug */
-							__(
-								'1 active custom plugin (%s)',
-								'aether-site-exporter'
-							),
+							__( '1 active custom plugin (%s)', 'aether' ),
 							plugins[ 0 ].slug
 					  )
 					: sprintf(
@@ -65,7 +61,7 @@ async function handler( context ) {
 								'%1$d active custom plugin (%2$s)',
 								'%1$d active custom plugins (%2$s)',
 								plugins.length,
-								'aether-site-exporter'
+								'aether'
 							),
 							plugins.length,
 							plugins.map( ( p ) => p.slug ).join( ', ' )
@@ -77,10 +73,7 @@ async function handler( context ) {
 				themes.length === 1
 					? sprintf(
 							/* translators: %s: Theme slug */
-							__(
-								'1 active custom theme (%s)',
-								'aether-site-exporter'
-							),
+							__( '1 active custom theme (%s)', 'aether' ),
 							themes[ 0 ].slug
 					  )
 					: sprintf(
@@ -89,7 +82,7 @@ async function handler( context ) {
 								'%1$d active custom theme (%2$s)',
 								'%1$d active custom themes (%2$s)',
 								themes.length,
-								'aether-site-exporter'
+								'aether'
 							),
 							themes.length,
 							themes.map( ( t ) => t.slug ).join( ', ' )
@@ -100,9 +93,9 @@ async function handler( context ) {
 			/* translators: %s: Discovered assets description */
 			__(
 				'Discovered %s. These will be included in the blueprint bundle.',
-				'aether-site-exporter'
+				'aether'
 			),
-			parts.join( __( ' and ', 'aether-site-exporter' ) )
+			parts.join( __( ' and ', 'aether' ) )
 		);
 	}
 
@@ -115,17 +108,41 @@ async function handler( context ) {
 }
 
 /**
- * Discover Blueprint Bundle Assets step definition.
+ * Step definition
  */
-export const discoverBlueprintBundleAssetsStep = {
+const stepDefinition = {
 	id: 'discoverBlueprintBundleAssets',
-	label: __( 'Discover Assets', 'aether-site-exporter' ),
+	label: __( 'Discover Assets', 'aether' ),
 	description: __(
 		'Find custom plugins and themes for blueprint bundle',
-		'aether-site-exporter'
+		'aether'
 	),
 	supportsProgress: false,
 	dependencies: [],
-	provides: [ 'discoveredAssets' ],
+	requires: {
+		api: {
+			from: 'initial',
+			required: true,
+		},
+		setStatusMessage: {
+			from: 'initial',
+			required: true,
+		},
+	},
+	provides: {
+		discoveredAssets: 'array',
+	},
 	handler,
 };
+
+/**
+ * Register step via WordPress hooks
+ */
+addAction(
+	'aether.export.register_steps',
+	'aether/step-discoverBlueprintBundleAssets',
+	( registry ) => {
+		registry.register( stepDefinition );
+	},
+	10
+);
