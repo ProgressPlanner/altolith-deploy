@@ -153,8 +153,14 @@ const stepDefinition = {
 		},
 	},
 	provides: {
-		blueprintData: 'object',
-		blueprintBundle: 'object',
+		blueprintData: {
+			type: 'object',
+			scope: 'global',
+		},
+		blueprintBundle: {
+			type: 'object',
+			scope: 'global',
+		},
 	},
 	handler,
 };

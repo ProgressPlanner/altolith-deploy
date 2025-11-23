@@ -94,9 +94,18 @@ const stepDefinition = {
 		},
 	},
 	provides: {
-		urls: 'array',
-		staticSiteUrl: 'string',
-		urlsCount: 'number',
+		urls: {
+			type: 'array',
+			scope: 'global',
+		},
+		staticSiteUrl: {
+			type: 'string',
+			scope: 'global',
+		},
+		urlsCount: {
+			type: 'number',
+			scope: 'global',
+		},
 	},
 	handler,
 };

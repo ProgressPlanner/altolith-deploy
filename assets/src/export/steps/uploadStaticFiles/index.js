@@ -29,12 +29,14 @@ async function handler( context ) {
 		urls,
 		staticSiteUrl,
 		sharedHtmlData,
-		blueprintData,
 		siteUrl,
 		staticSiteProviders = [],
 		processStaticSiteUrls,
 		setStatusMessage,
 	} = context;
+
+	// blueprintData is optional and may be passed via context if available
+	const blueprintData = context.blueprintData || null;
 
 	if ( ! urls || ! Array.isArray( urls ) ) {
 		throw new Error(
@@ -256,6 +258,10 @@ const stepDefinition = {
 	supportsProgress: true,
 	dependencies: [ 'preScanStaticSite' ],
 	requires: {
+		currentProviderInstance: {
+			from: 'thread',
+			required: true,
+		},
 		urls: {
 			from: 'preScanStaticSite',
 			required: true,
@@ -267,10 +273,6 @@ const stepDefinition = {
 		sharedHtmlData: {
 			from: 'preScanStaticSite',
 			required: true,
-		},
-		blueprintData: {
-			from: 'createBlueprintBundle',
-			required: false,
 		},
 		siteUrl: {
 			from: 'initial',
@@ -290,7 +292,10 @@ const stepDefinition = {
 		},
 	},
 	provides: {
-		staticUploadResults: 'object',
+		staticUploadResults: {
+			type: 'object',
+			scope: 'thread',
+		},
 	},
 	handler,
 };

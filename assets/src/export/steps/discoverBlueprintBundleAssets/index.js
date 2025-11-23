@@ -130,7 +130,10 @@ const stepDefinition = {
 		},
 	},
 	provides: {
-		discoveredAssets: 'array',
+		discoveredAssets: {
+			type: 'array',
+			scope: 'global',
+		},
 	},
 	handler,
 };

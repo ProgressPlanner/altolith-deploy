@@ -113,9 +113,18 @@ const stepDefinition = {
 		},
 	},
 	provides: {
-		zipPath: 'string',
-		zipUrl: 'string',
-		zipSize: 'number',
+		zipPath: {
+			type: 'string',
+			scope: 'global',
+		},
+		zipUrl: {
+			type: 'string',
+			scope: 'global',
+		},
+		zipSize: {
+			type: 'number',
+			scope: 'global',
+		},
 	},
 	handler,
 };

@@ -185,6 +185,10 @@ const stepDefinition = {
 	supportsProgress: true,
 	dependencies: [ 'createBlueprintBundle' ],
 	requires: {
+		currentProviderInstance: {
+			from: 'thread',
+			required: true,
+		},
 		blueprintBundleProviders: {
 			from: 'initial',
 			required: true,
@@ -207,7 +211,10 @@ const stepDefinition = {
 		},
 	},
 	provides: {
-		bundleUploadResults: 'object',
+		bundleUploadResults: {
+			type: 'object',
+			scope: 'thread',
+		},
 	},
 	handler,
 };

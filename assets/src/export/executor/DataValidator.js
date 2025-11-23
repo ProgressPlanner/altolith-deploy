@@ -116,7 +116,15 @@ export function getProvidesSummary( step ) {
 	}
 
 	const provides = Object.entries( step.provides ).map(
-		( [ key, type ] ) => `  - ${ key } (type: ${ type })`
+		( [ key, definition ] ) => {
+			// Support both old format (string) and new format (object with type and scope)
+			if ( typeof definition === 'string' ) {
+				return `  - ${ key } (type: ${ definition })`;
+			}
+			const type = definition.type || 'unknown';
+			const scope = definition.scope || 'thread';
+			return `  - ${ key } (type: ${ type }, scope: ${ scope })`;
+		}
 	);
 
 	return provides.join( '\n' );

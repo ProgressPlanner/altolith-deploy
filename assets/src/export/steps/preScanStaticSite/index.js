@@ -153,10 +153,22 @@ const stepDefinition = {
 		},
 	},
 	provides: {
-		urls: 'array',
-		htmlCount: 'number',
-		assetCount: 'number',
-		sharedHtmlData: 'Map',
+		urls: {
+			type: 'array',
+			scope: 'global',
+		},
+		htmlCount: {
+			type: 'number',
+			scope: 'global',
+		},
+		assetCount: {
+			type: 'number',
+			scope: 'global',
+		},
+		sharedHtmlData: {
+			type: 'Map',
+			scope: 'global',
+		},
 	},
 	handler,
 };
