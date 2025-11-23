@@ -311,10 +311,7 @@ describe( 'StorageService', () => {
 		} );
 
 		test( 'should return relative path as fallback if no baseUrl', () => {
-			const emptyService = new StorageService(
-				mockStaticPath,
-				{}
-			);
+			const emptyService = new StorageService( mockStaticPath, {} );
 			const mockKey = 'test-file.txt';
 
 			const url = emptyService.getUrl( mockKey );
