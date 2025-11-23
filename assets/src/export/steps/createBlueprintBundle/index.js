@@ -3,23 +3,24 @@
  *
  * Generates blueprint-bundle.zip containing blueprint.json and wp-content.zip.
  *
+ * @since 1.0.0
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { applyFilters } from '@wordpress/hooks';
+import { addAction, applyFilters } from '@wordpress/hooks';
 import { formatFileSize } from '@aether/utils/helpers';
 
 /**
- * Create blueprint bundle step handler.
+ * Create blueprint bundle step handler
  *
- * @param {Object}   context                       Execution context.
- * @param {Object}   context.api                   ExportAPI instance.
- * @param {Function} context.generateBlueprintJson Blueprint JSON generator function.
- * @param {string}   context.zipPath               Path to wp-content.zip from createWpContentArchive.
- * @param {string}   context.zipUrl                URL to wp-content.zip.
- * @param {Array}    context.discoveredAssets      Discovered assets.
- * @param {Function} context.setStatusMessage      Status message updater.
- * @return {Promise<Object>} Step result with blueprint bundle info.
+ * @param {Object} context - Execution context
+ * @param {Object} context.api - ExportAPI instance
+ * @param {Function} context.generateBlueprintJson - Blueprint JSON generator function
+ * @param {string} context.zipPath - Path to wp-content.zip from createWpContentArchive
+ * @param {string} context.zipUrl - URL to wp-content.zip
+ * @param {Array} context.discoveredAssets - Discovered assets
+ * @param {Function} context.setStatusMessage - Status message updater
+ * @returns {Promise<Object>} Step result with blueprint bundle info
  */
 async function handler( context ) {
 	const {
@@ -32,7 +33,7 @@ async function handler( context ) {
 	} = context;
 
 	setStatusMessage(
-		__( 'Creating blueprint bundle…', 'aether-site-exporter' ),
+		__( 'Creating blueprint bundle…', 'aether' ),
 		'progress',
 		'createBlueprintBundle'
 	);
@@ -41,7 +42,7 @@ async function handler( context ) {
 		throw new Error(
 			__(
 				'Site archive not found. Please run createWpContentArchive first.',
-				'aether-site-exporter'
+				'aether'
 			)
 		);
 	}
@@ -66,7 +67,7 @@ async function handler( context ) {
 		if ( ! blueprintResponse.success ) {
 			throw new Error(
 				blueprintResponse.message ||
-					__( 'Failed to generate blueprint', 'aether-site-exporter' )
+					__( 'Failed to generate blueprint', 'aether' )
 			);
 		}
 		blueprintData = blueprintResponse.blueprint;
@@ -88,10 +89,7 @@ async function handler( context ) {
 	if ( ! bundleResponse.success ) {
 		throw new Error(
 			bundleResponse.message ||
-				__(
-					'Failed to create blueprint bundle',
-					'aether-site-exporter'
-				)
+				__( 'Failed to create blueprint bundle', 'aether' )
 		);
 	}
 
@@ -101,7 +99,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %s: File size */
-			__( 'Created blueprint bundle (%s)', 'aether-site-exporter' ),
+			__( 'Created blueprint bundle (%s)', 'aether' ),
 			sizeFormatted
 		),
 		'success',
@@ -120,14 +118,55 @@ async function handler( context ) {
 }
 
 /**
- * Create Blueprint Bundle step definition.
+ * Step definition
  */
-export const createBlueprintBundleStep = {
+const stepDefinition = {
 	id: 'createBlueprintBundle',
-	label: __( 'Create Blueprint Bundle', 'aether-site-exporter' ),
-	description: __( 'Create blueprint-bundle.zip', 'aether-site-exporter' ),
+	label: __( 'Create Blueprint Bundle', 'aether' ),
+	description: __( 'Create blueprint-bundle.zip', 'aether' ),
 	supportsProgress: false,
 	dependencies: [ 'createWpContentArchive' ],
-	provides: [ 'blueprintData', 'blueprintBundle' ],
+	requires: {
+		api: {
+			from: 'initial',
+			required: true,
+		},
+		generateBlueprintJson: {
+			from: 'initial',
+			required: true,
+		},
+		zipPath: {
+			from: 'createWpContentArchive',
+			required: true,
+		},
+		zipUrl: {
+			from: 'createWpContentArchive',
+			required: true,
+		},
+		discoveredAssets: {
+			from: 'discoverBlueprintBundleAssets',
+			required: true,
+		},
+		setStatusMessage: {
+			from: 'initial',
+			required: true,
+		},
+	},
+	provides: {
+		blueprintData: 'object',
+		blueprintBundle: 'object',
+	},
 	handler,
 };
+
+/**
+ * Register step via WordPress hooks
+ */
+addAction(
+	'aether.export.register_steps',
+	'aether/step-createBlueprintBundle',
+	( registry ) => {
+		registry.register( stepDefinition );
+	},
+	10
+);
