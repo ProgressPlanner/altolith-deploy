@@ -240,7 +240,7 @@ export function useStaticSiteGenerator( onProgress ) {
 				}
 			}
 
-			// Note: Cache cleanup is handled at the workflow level (uploadStaticFiles step)
+			// Note: HTML data cleanup is handled at the workflow level (uploadStaticFiles step)
 			// to ensure it happens once for all providers, not per provider
 
 			// Finalize manifest

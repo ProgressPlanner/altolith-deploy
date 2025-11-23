@@ -30,8 +30,6 @@ describe( 'preScanPhase', () => {
 	// - initializePreScan()
 	// - processUrlBatch()
 	// - handleFailedUrls()
-	// - cleanupCache()
 	// - Asset extraction accuracy
-	// - Cache size limits (500 URL cache)
 	// - Error handling for network failures
 } );

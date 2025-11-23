@@ -15,7 +15,6 @@ describe( 'preScanStaticSite', () => {
 	// - Step execution with job validation
 	// - HTML fetching from URLs
 	// - Asset extraction from HTML
-	// - Cache management (500 URL limit)
 	// - Error handling for failed URLs
 	// - Progress tracking
 	// - Status updates
