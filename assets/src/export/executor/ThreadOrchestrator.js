@@ -86,14 +86,12 @@ export async function executeThreadedWorkflow(
 	// Execute global steps first (run once, shared across all threads)
 	let globalState = {};
 	if ( globalSteps.length > 0 ) {
-		const globalResult = await executeSteps(
+		// executeSteps returns the execution state directly
+		globalState = await executeSteps(
 			globalSteps,
 			initialContext,
 			options
 		);
-
-		// Extract global state from result
-		globalState = globalResult.state || {};
 	}
 
 	// Build global context (initial + global step results)
@@ -167,7 +165,8 @@ export async function executeThreadedWorkflow(
 
 			// Execute thread steps for this provider instance
 			try {
-				const threadResult = await executeSteps(
+				// executeSteps returns the execution state directly
+				const threadState = await executeSteps(
 					threadSteps,
 					threadContext,
 					options
@@ -186,7 +185,7 @@ export async function executeThreadedWorkflow(
 				return {
 					success: true,
 					providerInstance: providerInstance.id,
-					state: threadResult.state || {},
+					state: threadState || {},
 					error: null,
 				};
 			} catch ( error ) {
