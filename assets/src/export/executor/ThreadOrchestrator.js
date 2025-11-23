@@ -55,8 +55,10 @@ export function buildThreadContext(
 		currentProviderInstance: providerInstance,
 		providerInstanceConfig: providerInstance.config || {},
 		// Thread-specific callbacks override global ones
-		setStatusMessage: callbacks.setStatusMessage || globalContext.setStatusMessage,
-		setStepProgress: callbacks.setStepProgress || globalContext.setStepProgress,
+		setStatusMessage:
+			callbacks.setStatusMessage || globalContext.setStatusMessage,
+		setStepProgress:
+			callbacks.setStepProgress || globalContext.setStepProgress,
 	};
 }
 
@@ -114,12 +116,19 @@ export async function executeThreadedWorkflow(
 		async ( providerInstance ) => {
 			// Build thread-specific context
 			const threadCallbacks = {
-				setStatusMessage: ( message, type, key, progress, metadata ) => {
+				setStatusMessage: (
+					message,
+					type,
+					key,
+					progress,
+					metadata
+				) => {
 					// Add provider instance info to metadata
 					const threadMetadata = {
 						...metadata,
 						providerInstance: providerInstance.id,
-						providerLabel: providerInstance.label || providerInstance.id,
+						providerLabel:
+							providerInstance.label || providerInstance.id,
 					};
 
 					// Call original callback with thread info
@@ -138,7 +147,10 @@ export async function executeThreadedWorkflow(
 					const threadStepId = `${ providerInstance.id }:${ stepId }`;
 
 					if ( initialContext.setStepProgress ) {
-						initialContext.setStepProgress( threadStepId, progress );
+						initialContext.setStepProgress(
+							threadStepId,
+							progress
+						);
 					}
 				},
 			};

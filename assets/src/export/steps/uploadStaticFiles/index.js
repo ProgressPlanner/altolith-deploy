@@ -113,7 +113,10 @@ async function handler( context ) {
 				setStatusMessage(
 					sprintf(
 						/* translators: %s: Provider ID */
-						__( 'Processing static site for provider: %s', 'aether' ),
+						__(
+							'Processing static site for provider: %s',
+							'aether'
+						),
 						providerId
 					),
 					'progress',

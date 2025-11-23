@@ -58,12 +58,12 @@ export async function processBatch(
  *
  * Gets batch size from provider config, with fallbacks to provider defaults and global default.
  *
- * @param {Array}    items             Items to process
- * @param {Function} processFn         Async function to process each item
- * @param {Object}   options           Options object
- * @param {Object}   options.providerConfig Provider instance configuration
+ * @param {Array}    items                   Items to process
+ * @param {Function} processFn               Async function to process each item
+ * @param {Object}   options                 Options object
+ * @param {Object}   options.providerConfig  Provider instance configuration
  * @param {number}   options.providerDefault Default batch size for this provider type
- * @param {number}   options.globalDefault Global default batch size (default: 10)
+ * @param {number}   options.globalDefault   Global default batch size (default: 10)
  * @param {Function} options.onBatchComplete Optional callback after each batch
  * @return {Promise<Array>} Array of results in same order as items
  */
