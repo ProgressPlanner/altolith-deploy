@@ -22,12 +22,12 @@ import {
  * Processes a single provider instance (thread context).
  * Called once per provider by ThreadOrchestrator.
  *
- * @param {Object}   context                          - Execution context
- * @param {Object}   context.currentProviderInstance  - Current provider instance from thread
- * @param {Object}   context.blueprintBundle          - Bundle data from createBlueprintBundle
- * @param {string}   context.siteUrl                  - WordPress site URL
- * @param {Function} context.setStatusMessage         - Status message updater
- * @param {Function} context.setStepProgress          - Step progress updater
+ * @param {Object}   context                         - Execution context
+ * @param {Object}   context.currentProviderInstance - Current provider instance from thread
+ * @param {Object}   context.blueprintBundle         - Bundle data from createBlueprintBundle
+ * @param {string}   context.siteUrl                 - WordPress site URL
+ * @param {Function} context.setStatusMessage        - Status message updater
+ * @param {Function} context.setStepProgress         - Step progress updater
  * @return {Promise<Object>} Step result
  */
 async function handler( context ) {
@@ -36,7 +36,6 @@ async function handler( context ) {
 		blueprintBundle,
 		siteUrl,
 		setStatusMessage,
-		setStepProgress,
 	} = context;
 
 	if ( ! currentProviderInstance ) {

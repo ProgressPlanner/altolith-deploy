@@ -149,6 +149,131 @@ describe( 'ThreadOrchestrator', () => {
 			expect( globalContext.items ).toEqual( [ 1, 2, 3 ] );
 		} );
 
+		it( 'should deeply clone Maps with object values', () => {
+			const globalContext = {
+				dataMap: new Map( [
+					[ 'key1', { value: 'original' } ],
+					[ 'key2', { nested: { value: 42 } } ],
+				] ),
+			};
+
+			const providerInstance = {
+				id: 'provider1',
+				label: 'Provider 1',
+				config: {},
+			};
+
+			const threadContext = buildThreadContext(
+				globalContext,
+				providerInstance
+			);
+
+			// Mutate cloned Map's object values
+			threadContext.dataMap.get( 'key1' ).value = 'modified';
+			threadContext.dataMap.get( 'key2' ).nested.value = 99;
+
+			// Original should NOT be affected
+			expect( globalContext.dataMap.get( 'key1' ).value ).toBe(
+				'original'
+			);
+			expect( globalContext.dataMap.get( 'key2' ).nested.value ).toBe(
+				42
+			);
+		} );
+
+		it( 'should deeply clone Arrays with object elements', () => {
+			const globalContext = {
+				items: [
+					{ id: 1, config: { enabled: true } },
+					{ id: 2, nested: [ { value: 'original' } ] },
+				],
+			};
+
+			const providerInstance = {
+				id: 'provider1',
+				label: 'Provider 1',
+				config: {},
+			};
+
+			const threadContext = buildThreadContext(
+				globalContext,
+				providerInstance
+			);
+
+			// Mutate cloned array's objects
+			threadContext.items[ 0 ].config.enabled = false;
+			threadContext.items[ 1 ].nested[ 0 ].value = 'modified';
+
+			// Original should NOT be affected
+			expect( globalContext.items[ 0 ].config.enabled ).toBe( true );
+			expect( globalContext.items[ 1 ].nested[ 0 ].value ).toBe(
+				'original'
+			);
+		} );
+
+		it( 'should handle circular references without crashing', () => {
+			const globalContext = {
+				data: { value: 'test' },
+			};
+			// Create circular reference
+			globalContext.data.self = globalContext.data;
+
+			const providerInstance = {
+				id: 'provider1',
+				label: 'Provider 1',
+				config: {},
+			};
+
+			// Should not throw error
+			expect( () =>
+				buildThreadContext( globalContext, providerInstance )
+			).not.toThrow();
+
+			const threadContext = buildThreadContext(
+				globalContext,
+				providerInstance
+			);
+
+			// Should have circular reference in clone
+			expect( threadContext.data.self ).toBe( threadContext.data );
+			// But not reference original
+			expect( threadContext.data ).not.toBe( globalContext.data );
+		} );
+
+		it( 'should clone Date and RegExp objects correctly', () => {
+			const testDate = new Date( '2025-01-01' );
+			const testRegex = /test-pattern/gi;
+
+			const globalContext = {
+				timestamp: testDate,
+				pattern: testRegex,
+			};
+
+			const providerInstance = {
+				id: 'provider1',
+				label: 'Provider 1',
+				config: {},
+			};
+
+			const threadContext = buildThreadContext(
+				globalContext,
+				providerInstance
+			);
+
+			// Should be different instances
+			expect( threadContext.timestamp ).not.toBe(
+				globalContext.timestamp
+			);
+			expect( threadContext.pattern ).not.toBe( globalContext.pattern );
+
+			// But with same values
+			expect( threadContext.timestamp.getTime() ).toBe(
+				testDate.getTime()
+			);
+			expect( threadContext.pattern.source ).toBe( testRegex.source );
+			expect( threadContext.pattern.flags ).toBe( testRegex.flags );
+		} );
+
 		it( 'should throw error for invalid provider instance', () => {
 			const globalContext = { siteUrl: 'https://example.com' };
 
@@ -158,9 +283,9 @@ describe( 'ThreadOrchestrator', () => {
 			).toThrow( 'Invalid provider instance: missing id' );
 
 			// Null instance
-			expect( () =>
-				buildThreadContext( globalContext, null )
-			).toThrow( 'Invalid provider instance: missing id' );
+			expect( () => buildThreadContext( globalContext, null ) ).toThrow(
+				'Invalid provider instance: missing id'
+			);
 		} );
 
 		it( 'should override callbacks with thread-specific ones', () => {
@@ -225,11 +350,7 @@ describe( 'ThreadOrchestrator', () => {
 			const steps = [ globalStep ];
 			const context = { siteUrl: 'https://example.com' };
 
-			const result = await executeThreadedWorkflow(
-				steps,
-				context,
-				[]
-			);
+			const result = await executeThreadedWorkflow( steps, context, [] );
 
 			expect( result.success ).toBe( true );
 			expect( globalStep.handler ).toHaveBeenCalledTimes( 1 );
@@ -297,7 +418,10 @@ describe( 'ThreadOrchestrator', () => {
 			};
 
 			const steps = [ globalStep, threadStep ];
-			const context = { siteUrl: 'https://example.com', setProviderProgress: jest.fn() };
+			const context = {
+				siteUrl: 'https://example.com',
+				setProviderProgress: jest.fn(),
+			};
 			const providers = [ { id: 'provider1', label: 'P1', config: {} } ];
 
 			await executeThreadedWorkflow( steps, context, providers );
@@ -334,7 +458,9 @@ describe( 'ThreadOrchestrator', () => {
 			expect( result.threadResults[ 0 ].success ).toBe( false );
 			// Error message is present (may be wrapped by error handler/translation)
 			expect( result.threadResults[ 0 ].error ).toBeDefined();
-			expect( result.threadResults[ 0 ].error.length ).toBeGreaterThan( 0 );
+			expect( result.threadResults[ 0 ].error.length ).toBeGreaterThan(
+				0
+			);
 		} );
 
 		it( 'should succeed if at least one thread succeeds', async () => {

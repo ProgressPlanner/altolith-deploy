@@ -98,9 +98,7 @@ function isValidProviderInstance( instanceId, config ) {
 
 	// Must have provider_type
 	if ( ! config.provider_type ) {
-		debugError(
-			`Provider instance ${ instanceId } missing provider_type`
-		);
+		debugError( `Provider instance ${ instanceId } missing provider_type` );
 		return false;
 	}
 

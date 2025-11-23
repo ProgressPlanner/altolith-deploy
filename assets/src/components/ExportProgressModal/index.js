@@ -371,12 +371,14 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 					</div>
 				) }
 
-				{ ! finalStatus && ! error && allProviderInstances.length > 1 && (
-					<ProviderProgressList
-						providerProgress={ providerProgress }
-						providerInstances={ allProviderInstances }
-					/>
-				) }
+				{ ! finalStatus &&
+					! error &&
+					allProviderInstances.length > 1 && (
+						<ProviderProgressList
+							providerProgress={ providerProgress }
+							providerInstances={ allProviderInstances }
+						/>
+					) }
 
 				<UploadStatistics
 					messageHistory={ messageHistory }

@@ -14,9 +14,9 @@ import './style.scss';
 /**
  * Provider Progress List Component
  *
- * @param {Object} props                    - Component props
- * @param {Object} props.providerProgress   - Provider progress object { [providerId]: { stepId, stepLabel, progress, status, error } }
- * @param {Array}  props.providerInstances  - Array of provider instances { id, label, config }
+ * @param {Object} props                   - Component props
+ * @param {Object} props.providerProgress  - Provider progress object { [providerId]: { stepId, stepLabel, progress, status, error } }
+ * @param {Array}  props.providerInstances - Array of provider instances { id, label, config }
  * @return {JSX.Element|null} Provider progress list component
  */
 export function ProviderProgressList( {
@@ -36,9 +36,7 @@ export function ProviderProgressList( {
 	return (
 		<div className="provider-progress-list">
 			<div className="provider-progress-list__header">
-				<h4>
-					{ __( 'Provider Progress', 'aether' ) }
-				</h4>
+				<h4>{ __( 'Provider Progress', 'aether' ) }</h4>
 				<span className="provider-progress-list__count">
 					{ providerInstances.length } { __( 'providers', 'aether' ) }
 				</span>

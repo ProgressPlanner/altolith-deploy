@@ -14,13 +14,13 @@ import './style.scss';
 /**
  * Provider Progress Bar Component
  *
- * @param {Object} props                   - Component props
- * @param {string} props.providerId        - Provider instance ID
- * @param {string} props.providerLabel     - Provider display label
- * @param {string} props.stepLabel         - Current step label
- * @param {number} props.progress          - Progress percentage (0-100)
- * @param {string} props.status            - Status: 'active', 'complete', 'error'
- * @param {string} props.error             - Error message (if status is 'error')
+ * @param {Object} props               - Component props
+ * @param {string} props.providerId    - Provider instance ID
+ * @param {string} props.providerLabel - Provider display label
+ * @param {string} props.stepLabel     - Current step label
+ * @param {number} props.progress      - Progress percentage (0-100)
+ * @param {string} props.status        - Status: 'active', 'complete', 'error'
+ * @param {string} props.error         - Error message (if status is 'error')
  * @return {JSX.Element} Provider progress bar component
  */
 export function ProviderProgressBar( {
@@ -78,15 +78,11 @@ export function ProviderProgressBar( {
 			</div>
 
 			{ stepLabel && status === 'active' && (
-				<div className="provider-progress-bar__step">
-					{ stepLabel }
-				</div>
+				<div className="provider-progress-bar__step">{ stepLabel }</div>
 			) }
 
 			{ error && status === 'error' && (
-				<div className="provider-progress-bar__error">
-					{ error }
-				</div>
+				<div className="provider-progress-bar__error">{ error }</div>
 			) }
 
 			{ status === 'complete' && (

@@ -61,7 +61,7 @@ async function limitConcurrency( items, fn, concurrency = 5 ) {
  * Handles Maps, Arrays, and nested objects recursively.
  * Tracks visited objects to handle circular references.
  *
- * @param {Object} context - Global context to clone
+ * @param {Object}  context - Global context to clone
  * @param {WeakMap} visited - Internal: tracks cloned objects to handle circular refs
  * @return {Object} Deep cloned context
  */
@@ -154,7 +154,7 @@ function deepCloneContext( context, visited = new WeakMap() ) {
 /**
  * Deep clone a single value (used by Map/Array cloning)
  *
- * @param {*} value - Value to clone
+ * @param {*}       value   - Value to clone
  * @param {WeakMap} visited - Tracks cloned objects
  * @return {*} Cloned value
  */
@@ -331,101 +331,95 @@ export async function executeThreadedWorkflow(
 	);
 
 	const executeProviderThread = async ( providerInstance ) => {
-			// Build thread-specific context
-			const threadCallbacks = {
-				setStatusMessage: (
-					message,
-					type,
-					key,
-					progress,
-					metadata
-				) => {
-					// Add provider instance info to metadata
-					const threadMetadata = {
-						...metadata,
-						providerInstance: providerInstance.id,
-						providerLabel:
-							providerInstance.label || providerInstance.id,
-					};
+		// Build thread-specific context
+		const threadCallbacks = {
+			setStatusMessage: ( message, type, key, progress, metadata ) => {
+				// Add provider instance info to metadata
+				const threadMetadata = {
+					...metadata,
+					providerInstance: providerInstance.id,
+					providerLabel:
+						providerInstance.label || providerInstance.id,
+				};
 
-					// Call original callback with thread info
-					if ( initialContext.setStatusMessage ) {
-						initialContext.setStatusMessage(
-							message,
-							type,
-							key,
-							progress,
-							threadMetadata
-						);
-					}
-				},
-				setStepProgress: ( stepId, progress ) => {
-					// Update per-provider progress tracking
-					if ( initialContext.setProviderProgress ) {
-						// Get step label from cached map (O(1) lookup)
-						const stepLabel = stepLabelMap.get( stepId ) || stepId;
+				// Call original callback with thread info
+				if ( initialContext.setStatusMessage ) {
+					initialContext.setStatusMessage(
+						message,
+						type,
+						key,
+						progress,
+						threadMetadata
+					);
+				}
+			},
+			setStepProgress: ( stepId, progress ) => {
+				// Update per-provider progress tracking
+				if ( initialContext.setProviderProgress ) {
+					// Get step label from cached map (O(1) lookup)
+					const stepLabel = stepLabelMap.get( stepId ) || stepId;
 
-						initialContext.setProviderProgress( providerInstance.id, {
-							stepId,
-							stepLabel,
-							progress,
-							status: 'active',
-						} );
-					}
-				},
-			};
+					initialContext.setProviderProgress( providerInstance.id, {
+						stepId,
+						stepLabel,
+						progress,
+						status: 'active',
+					} );
+				}
+			},
+		};
 
-			const threadContext = buildThreadContext(
-				globalContext,
-				providerInstance,
-				threadCallbacks
+		const threadContext = buildThreadContext(
+			globalContext,
+			providerInstance,
+			threadCallbacks
+		);
+
+		// Execute thread steps for this provider instance
+		try {
+			// executeSteps returns the execution state directly
+			const threadState = await executeSteps(
+				threadSteps,
+				threadContext,
+				options
 			);
 
-			// Execute thread steps for this provider instance
-			try {
-				// executeSteps returns the execution state directly
-				const threadState = await executeSteps(
-					threadSteps,
-					threadContext,
-					options
-				);
-
-				// Mark provider as complete
-				if ( initialContext.setProviderProgress ) {
-					initialContext.setProviderProgress( providerInstance.id, {
-						stepId: null,
-						stepLabel: 'Complete',
-						progress: 100,
-						status: 'complete',
-					} );
-				}
-
-				return {
-					success: true,
-					providerInstance: providerInstance.id,
-					state: threadState || {},
-					error: null,
-				};
-			} catch ( error ) {
-				// Mark provider as error
-				if ( initialContext.setProviderProgress ) {
-					initialContext.setProviderProgress( providerInstance.id, {
-						stepId: null,
-						stepLabel: 'Error',
-						progress: 0,
-						status: 'error',
-						error: error.message || 'Unknown error',
-					} );
-				}
-
-				return {
-					success: false,
-					providerInstance: providerInstance.id,
-					state: {},
-					error: error.message || 'Unknown error',
-				};
+			// Mark provider as complete
+			if ( initialContext.setProviderProgress ) {
+				initialContext.setProviderProgress( providerInstance.id, {
+					stepId: null,
+					stepLabel: 'Complete',
+					progress: 100,
+					status: 'complete',
+				} );
 			}
-		};
+
+			return {
+				success: true,
+				providerInstance: providerInstance.id,
+				state: threadState || {},
+				error: null,
+			};
+		} catch ( error ) {
+			// Mark provider as error
+			if ( initialContext.setProviderProgress ) {
+				initialContext.setProviderProgress( providerInstance.id, {
+					stepId: null,
+					stepLabel: 'Error',
+					progress: 0,
+					status: 'error',
+					error: error.message || 'Unknown error',
+				} );
+			}
+
+			return {
+				success: false,
+				providerInstance: providerInstance.id,
+				state: {},
+				error: error.message || 'Unknown error',
+			};
+		}
+	};
 
 	// Execute provider threads with concurrency limiting
 	const threadResults = await limitConcurrency(
@@ -444,7 +438,6 @@ export async function executeThreadedWorkflow(
 	// - None succeeded: failure
 	const allSucceeded = successfulThreads.length === threadResults.length;
 	const someSucceeded = successfulThreads.length > 0;
-	const noneSucceeded = successfulThreads.length === 0;
 
 	// Collect failed provider details for error reporting
 	const failedProviders = failedThreads.map( ( r ) => ( {

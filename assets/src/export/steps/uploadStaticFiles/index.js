@@ -16,15 +16,15 @@ import { addAction, applyFilters } from '@wordpress/hooks';
  * Processes a single provider instance (thread context).
  * Called once per provider by ThreadOrchestrator.
  *
- * @param {Object}   context                          - Execution context
- * @param {Object}   context.currentProviderInstance  - Current provider instance from thread
- * @param {Array}    context.urls                     - URLs from preScanStaticSite (includes assets)
- * @param {string}   context.staticSiteUrl            - Static site URL
- * @param {Map}      context.sharedHtmlData           - Pre-fetched HTML data from preScanStaticSite
- * @param {Object}   context.blueprintData            - Blueprint data
- * @param {string}   context.siteUrl                  - WordPress site URL
- * @param {Function} context.processStaticSiteUrls    - Static site generator function
- * @param {Function} context.setStatusMessage         - Status message updater
+ * @param {Object}   context                         - Execution context
+ * @param {Object}   context.currentProviderInstance - Current provider instance from thread
+ * @param {Array}    context.urls                    - URLs from preScanStaticSite (includes assets)
+ * @param {string}   context.staticSiteUrl           - Static site URL
+ * @param {Map}      context.sharedHtmlData          - Pre-fetched HTML data from preScanStaticSite
+ * @param {Object}   context.blueprintData           - Blueprint data
+ * @param {string}   context.siteUrl                 - WordPress site URL
+ * @param {Function} context.processStaticSiteUrls   - Static site generator function
+ * @param {Function} context.setStatusMessage        - Status message updater
  * @return {Promise<Object>} Step result with uploaded files
  */
 async function handler( context ) {
@@ -119,8 +119,7 @@ async function handler( context ) {
 		);
 	} else {
 		const errorMessage =
-			result.error ||
-			__( 'No files uploaded', 'aether' );
+			result.error || __( 'No files uploaded', 'aether' );
 		throw new Error(
 			sprintf(
 				/* translators: %1$s: Provider label, %2$s: Error message */
