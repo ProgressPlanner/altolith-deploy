@@ -139,6 +139,10 @@ export function buildWorkflowContext( config, dependencies ) {
 		blueprintBundleProviders,
 		edgeFunctionProviders,
 
+		// Provider instance references (for future parallel execution)
+		providerInstances: config.providerInstances || [],
+		currentProviderInstance: config.currentProviderInstance || null,
+
 		// Hooks and utilities
 		processStaticSiteUrls,
 		generateBlueprintJson,
