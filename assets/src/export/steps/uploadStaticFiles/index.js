@@ -8,6 +8,7 @@
 
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
+import StaticSiteCache from '@aether/utils/staticSiteCache';
 import { executePreScan } from '@aether/export/utils/preScanPhase';
 import { fetchProviderConfig } from '@aether/export/utils/staticSiteConfig';
 import { debug, debugWarn } from '@aether/utils/debug';
