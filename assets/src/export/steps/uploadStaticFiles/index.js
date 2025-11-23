@@ -8,7 +8,6 @@
 
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
-import StaticSiteCache from '@aether/utils/staticSiteCache';
 import { executePreScan } from '@aether/export/utils/preScanPhase';
 import { fetchProviderConfig } from '@aether/export/utils/staticSiteConfig';
 import { debug, debugWarn } from '@aether/utils/debug';
@@ -95,11 +94,11 @@ async function handler( context ) {
 		}
 	);
 
-	// Create shared cache instance for all providers
+	// Create shared data storage for HTML across providers
 	// This ensures URLs and HTML are fetched only once, then shared across providers
-	const sharedCache = new StaticSiteCache();
+	const sharedHtmlData = new Map();
 
-	// Pre-scan once: Fetch all URLs and cache raw HTML before processing providers
+	// Pre-scan once: Fetch all URLs and store HTML before processing providers
 	// This prevents duplicate network requests when multiple providers are enabled
 	let preScanResult = null;
 	try {
@@ -109,7 +108,7 @@ async function handler( context ) {
 		const providerConfig = await fetchProviderConfig( firstProviderId );
 
 		setStatusMessage(
-			__( 'Pre-scanning URLs and caching HTML…', 'aether-site-exporter' ),
+			__( 'Pre-scanning URLs…', 'aether-site-exporter' ),
 			'progress',
 			'uploadStaticFiles-prescan'
 		);
@@ -120,15 +119,15 @@ async function handler( context ) {
 			providerId: firstProviderId,
 			providerConfig,
 			setStatusMessage,
-			cache: sharedCache, // Use shared cache
+			htmlData: sharedHtmlData, // Use shared data storage
 		} );
 
 		debug(
-			`[Aether] Pre-scan complete: ${ preScanResult.cacheStats.sessionCached } URLs cached, ${ preScanResult.allUniqueAssets.size } unique assets`
+			`[Aether] Pre-scan complete: ${ preScanResult.urlsSuccessful } URLs fetched, ${ preScanResult.allUniqueAssets.size } unique assets`
 		);
 	} catch ( error ) {
 		debugWarn( '[Aether] Pre-scan failed:', error );
-		// Continue with empty cache - processStaticSiteUrls will handle it
+		// Continue with empty data - processStaticSiteUrls will handle it
 	}
 
 	// Process URLs for each provider using useStaticSiteGenerator
@@ -162,7 +161,7 @@ async function handler( context ) {
 				);
 
 				// Process URLs for this provider
-				// Pass shared cache so it uses cached raw HTML instead of fetching again
+				// Pass shared HTML data so it uses stored HTML instead of fetching again
 				const result = await processStaticSiteUrls(
 					filteredUrls,
 					staticSiteUrl,
@@ -171,7 +170,7 @@ async function handler( context ) {
 					setStatusMessage,
 					blueprintData,
 					null, // removeMessage
-					sharedCache // Pass shared cache
+					sharedHtmlData // Pass shared HTML data
 				);
 
 				// Aggregate results
@@ -225,17 +224,9 @@ async function handler( context ) {
 			}
 		}
 	} finally {
-		// Clean up cache when export finishes (success or failure)
-		try {
-			const cacheCleanedCount = await sharedCache.clearSession();
-			if ( cacheCleanedCount > 0 ) {
-				debug(
-					`[Aether] Cleared ${ cacheCleanedCount } cache entries from session`
-				);
-			}
-		} catch ( cleanupError ) {
-			debugWarn( '[Aether] Failed to cleanup cache:', cleanupError );
-		}
+		// Clean up HTML data when export finishes (success or failure)
+		sharedHtmlData.clear();
+		debug( '[Aether] Cleared HTML data from memory' );
 	}
 
 	// Calculate totals
