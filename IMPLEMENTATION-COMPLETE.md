@@ -17,7 +17,7 @@ The per-provider queue architecture has been fully implemented, tested, and docu
 1. **GlobalStepCache** (`assets/src/export/utils/globalStepCache.js`)
    - IndexedDB-backed cache with atomic locking
    - Prevents race conditions in parallel execution
-   - Job isolation via unique jobId
+   - Step isolation via atomic locking
    - Automatic cleanup of old job data
    - 19/19 tests passing
 
@@ -78,7 +78,7 @@ The per-provider queue architecture has been fully implemented, tested, and docu
 **Total:** 15 commits (13 for this feature)
 
 1. `9f11dfd` - Core implementation (GlobalStepCache + StepExecutor)
-2. `671bc14` - Context building (providerIds + jobId)
+2. `671bc14` - Context building (providerIds)
 3. `5cdad93` - uploadBlueprintBundle refactor
 4. `20a1bd6` - uploadStaticFiles refactor
 5. `ed490f8` - preScanStaticSite shared cache

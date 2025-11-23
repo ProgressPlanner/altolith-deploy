@@ -118,7 +118,6 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 	const {
 		steps,
 		isExporting,
-		jobId,
 		finalStatus,
 		error,
 		reset,
@@ -129,9 +128,9 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 	} = exportState;
 
 	// Combine all provider IDs for per-provider progress display
+	// Use Set to deduplicate providers configured for multiple deployment types
 	const allProviderIds = [
-		...staticSiteProviders,
-		...blueprintBundleProviders,
+		...new Set( [ ...staticSiteProviders, ...blueprintBundleProviders ] ),
 	];
 
 	// Ref for activity log auto-scroll
@@ -164,8 +163,8 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 	// Start export when modal opens
 	useEffect( () => {
 		if ( isOpen && ! isExporting ) {
-			// Only start if we haven't started yet (no steps initialized and no job ID)
-			if ( steps.length === 0 && ! jobId ) {
+			// Only start if we haven't started yet (no steps initialized)
+			if ( steps.length === 0 ) {
 				startExport();
 			}
 		}

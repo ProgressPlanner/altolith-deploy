@@ -35,9 +35,6 @@ doAction( 'aether.providers.register', provider );
 // Track upload results per provider instance
 const uploadResults = {};
 
-// Track processed files per provider to avoid duplicate processing
-const processedFiles = new Map();
-
 /**
  * Handle unified file upload for a provider instance.
  *
@@ -59,15 +56,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 	if ( ! providerId || ! providerId.startsWith( 'local-filesystem' ) ) {
 		return;
 	}
-
-	// Create a unique key for this file+provider combination
-	const fileKey = `${ providerId }:${ filePath || storageKey }`;
-
-	// Skip if already processed
-	if ( processedFiles.has( fileKey ) ) {
-		return;
-	}
-	processedFiles.set( fileKey, true );
 
 	// Initialize results tracking for this provider if needed
 	if ( ! uploadResults[ providerId ] ) {
@@ -263,7 +251,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 			fileBlob,
 			{
 				contentType: contentType || 'text/html',
-				jobId: '',
 			}
 		);
 
@@ -323,7 +310,17 @@ addAction(
 		}
 
 		// Start upload and add promise to context
-		const uploadPromise = handleUnifiedFileUpload( fileContext );
+		// Add error handler to prevent unhandled promise rejections
+		const uploadPromise = handleUnifiedFileUpload( fileContext ).catch(
+			( error ) => {
+				debugWarn( 'Provider upload failed:', error?.message || error );
+				// Set error result on fileContext
+				fileContext.result = {
+					success: false,
+					error: error?.message || 'Upload failed',
+				};
+			}
+		);
 		fileContext._uploadPromises.push( uploadPromise );
 	},
 	10

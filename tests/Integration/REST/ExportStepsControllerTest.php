@@ -100,26 +100,6 @@ class ExportStepsControllerTest extends TestCase {
 		}
 	}
 
-	/**
-	 * Create a test job.
-	 *
-	 * @param string $current_step Current step name.
-	 * @return string Job ID.
-	 */
-	private function create_test_job( string $current_step = 'createBlueprintBundle' ): string {
-		$job_id = 'test_job_' . uniqid();
-
-		// Create job state using state manager
-		$plugin = Plugin::getInstance();
-		$state_manager = $plugin->getJobStateManager();
-
-		$state_manager->createJob( $job_id, 'blueprint_bundle', [
-			'currentStep' => $current_step,
-			'status'      => 'processing',
-		] );
-
-		return $job_id;
-	}
 
 	// ========================================================================
 	// Route Registration Tests
@@ -134,8 +114,6 @@ class ExportStepsControllerTest extends TestCase {
 		$routes = rest_get_server()->get_routes();
 
 		$expected_routes = [
-			'/' . $this->namespace . '/export/steps/createBlueprintBundle',
-			'/' . $this->namespace . '/export/steps/generateStaticSite',
 			'/' . $this->namespace . '/export/steps/getHtmlContent',
 			'/' . $this->namespace . '/export/createArchive',
 			'/' . $this->namespace . '/export/createArchive/init',
@@ -164,8 +142,6 @@ class ExportStepsControllerTest extends TestCase {
 		$this->act_as_guest();
 
 		$endpoints = [
-			'/export/steps/createBlueprintBundle',
-			'/export/steps/generateStaticSite',
 			'/export/steps/getHtmlContent',
 		];
 
@@ -193,7 +169,7 @@ class ExportStepsControllerTest extends TestCase {
 		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
 		wp_set_current_user( $subscriber_id );
 
-		$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/steps/createBlueprintBundle' );
+		$request = new WP_REST_Request( 'GET', '/' . $this->namespace . '/export/steps/getHtmlContent' );
 
 		$response = rest_get_server()->dispatch( $request );
 
@@ -217,7 +193,7 @@ class ExportStepsControllerTest extends TestCase {
 	public function test_executeStep_requires_job_id() {
 		$this->act_as_admin();
 
-		$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/steps/createBlueprintBundle' );
+		$request = new WP_REST_Request( 'GET', '/' . $this->namespace . '/export/steps/getHtmlContent' );
 		// No jobId parameter
 
 		$response = rest_get_server()->dispatch( $request );
@@ -235,7 +211,7 @@ class ExportStepsControllerTest extends TestCase {
 	public function test_executeStep_validates_job_exists() {
 		$this->act_as_admin();
 
-		$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/steps/createBlueprintBundle' );
+		$request = new WP_REST_Request( 'GET', '/' . $this->namespace . '/export/steps/getHtmlContent' );
 		$request->set_param( 'jobId', 'nonexistent_job_id' );
 
 		$response = rest_get_server()->dispatch( $request );
@@ -256,7 +232,7 @@ class ExportStepsControllerTest extends TestCase {
 		$job_id = $this->create_test_job( 'generateStaticSite' );
 
 		// Try to execute createBlueprintBundle step (wrong step)
-		$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/steps/createBlueprintBundle' );
+		$request = new WP_REST_Request( 'GET', '/' . $this->namespace . '/export/steps/getHtmlContent' );
 		$request->set_param( 'jobId', $job_id );
 
 		$response = rest_get_server()->dispatch( $request );
@@ -575,22 +551,6 @@ class ExportStepsControllerTest extends TestCase {
 	 * Purpose: Verify sanitize_key is applied
 	 * Security: MEDIUM - Prevents injection in transient keys
 	 */
-	public function test_job_id_is_sanitized() {
-		$this->act_as_admin();
-
-		$malicious_job_ids = [
-			'job<script>alert(1)</script>',
-			"job\0null",
-			'job../../etc/passwd',
-		];
-
-		foreach ( $malicious_job_ids as $malicious_id ) {
-			$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/steps/createBlueprintBundle' );
-			$request->set_param( 'jobId', $malicious_id );
-
-			$response = rest_get_server()->dispatch( $request );
-
-			// Should sanitize and likely not find job (404/422)
 			$this->assertGreaterThanOrEqual(
 				400,
 				$response->get_status(),

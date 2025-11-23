@@ -43,20 +43,18 @@ jest.mock( '../../../export/utils/unifiedFileUpload', () => ( {
 describe( 'StorageService', () => {
 	let service;
 	const mockStaticPath = 'wp-content/aether-static';
-	const mockJobId = '123456789';
 	const mockConfig = {
 		base_url: 'https://cdn.example.com',
 	};
 
 	beforeEach( () => {
-		service = new StorageService( mockStaticPath, mockJobId, mockConfig );
+		service = new StorageService( mockStaticPath, mockConfig );
 		jest.clearAllMocks();
 	} );
 
 	describe( 'Constructor', () => {
-		test( 'should initialize with static path and job ID', () => {
+		test( 'should initialize with static path', () => {
 			expect( service.staticPath ).toBe( mockStaticPath );
-			expect( service.jobId ).toBe( mockJobId );
 			expect( service.config ).toEqual( mockConfig );
 			expect( service.baseUrl ).toBe( mockConfig.base_url );
 		} );
@@ -65,7 +63,6 @@ describe( 'StorageService', () => {
 			const configWithoutBaseUrl = { public_url: 'https://example.com' };
 			const testService = new StorageService(
 				mockStaticPath,
-				mockJobId,
 				configWithoutBaseUrl
 			);
 			expect( testService.baseUrl ).toBe( 'https://example.com' );
@@ -75,7 +72,6 @@ describe( 'StorageService', () => {
 			const emptyConfig = {};
 			const testService = new StorageService(
 				mockStaticPath,
-				mockJobId,
 				emptyConfig
 			);
 			expect( testService.baseUrl ).toBe( '' );
@@ -88,7 +84,6 @@ describe( 'StorageService', () => {
 			};
 			const testService = new StorageService(
 				mockStaticPath,
-				mockJobId,
 				configWithProviderId
 			);
 			expect( testService.providerId ).toBe( 'cloudflare-r2' );
@@ -112,7 +107,6 @@ describe( 'StorageService', () => {
 			};
 			const testService = new StorageService(
 				mockStaticPath,
-				mockJobId,
 				configWithProviderId
 			);
 			const key = 'static/index.html';
@@ -128,7 +122,6 @@ describe( 'StorageService', () => {
 			};
 			const testService = new StorageService(
 				mockStaticPath,
-				mockJobId,
 				configWithProviderId
 			);
 			const key = 'cloudflare-r2/static/index.html';
@@ -163,7 +156,6 @@ describe( 'StorageService', () => {
 			};
 			const testService = new StorageService(
 				mockStaticPath,
-				mockJobId,
 				configWithProviderId
 			);
 			const mockFile = new Blob( [ 'test content' ], {
@@ -212,10 +204,7 @@ describe( 'StorageService', () => {
 
 			expect( deleteFile ).toHaveBeenCalledWith(
 				mockStaticPath,
-				mockKey,
-				{
-					jobId: mockJobId,
-				}
+				mockKey
 			);
 			expect( result.success ).toBe( true );
 		} );
@@ -323,7 +312,6 @@ describe( 'StorageService', () => {
 		test( 'should return relative path as fallback if no baseUrl', () => {
 			const emptyService = new StorageService(
 				mockStaticPath,
-				mockJobId,
 				{}
 			);
 			const mockKey = 'test-file.txt';
@@ -363,8 +351,7 @@ describe( 'StorageService', () => {
 
 			expect( batchDeleteFromAdapter ).toHaveBeenCalledWith(
 				mockStaticPath,
-				mockKeys,
-				{ jobId: mockJobId }
+				mockKeys
 			);
 			expect( result.success ).toBe( true );
 		} );
@@ -382,8 +369,7 @@ describe( 'StorageService', () => {
 
 			expect( downloadFile ).toHaveBeenCalledWith(
 				mockStaticPath,
-				'file-manifest.json',
-				{ jobId: mockJobId }
+				'file-manifest.json'
 			);
 			expect( result ).toBe( mockBlob );
 		} );

@@ -42,12 +42,18 @@ export {
 /**
  * Create URL rewriter instance.
  *
- * @param {string}                 siteUrl   Site URL.
- * @param {string|null}            staticUrl Static site URL (where it will be deployed).
- * @param {Object<string, string>} urlMap    Optional URL mapping cache.
+ * @param {string}                 siteUrl            Site URL.
+ * @param {string|null}            staticUrl          Static site URL (where it will be deployed).
+ * @param {Object<string, string>} urlMap             Optional URL mapping cache.
+ * @param {string}                 providerStaticPath Provider-specific static files path (e.g., 'static/', 'static2').
  * @return {Object} URL rewriter instance.
  */
-export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
+export function createUrlRewriter(
+	siteUrl,
+	staticUrl = null,
+	urlMap = {},
+	providerStaticPath = 'static/'
+) {
 	// Force HTTPS for site URL to avoid mixed content issues.
 	const normalizedSiteUrl = forceHttps( siteUrl );
 
@@ -210,14 +216,17 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 			staticPath = convertToStaticPath( absoluteUrl );
 		}
 
-		// If using public URL, add /static/ prefix.
-		if (
-			isPublicUrl &&
-			staticPath &&
-			staticPath !== '/' &&
-			! staticPath.startsWith( '/static/' )
-		) {
-			staticPath = '/static' + staticPath;
+		// If using public URL, add provider-specific static path prefix
+		if ( isPublicUrl && staticPath && staticPath !== '/' ) {
+			// Normalize provider static path: ensure it starts with / and remove trailing slash
+			const normalizedProviderPath = providerStaticPath.startsWith( '/' )
+				? providerStaticPath.replace( /\/$/, '' )
+				: '/' + providerStaticPath.replace( /\/$/, '' );
+
+			// Only add prefix if not already present
+			if ( ! staticPath.startsWith( normalizedProviderPath + '/' ) ) {
+				staticPath = normalizedProviderPath + staticPath;
+			}
 		}
 
 		// Apply static URL base if configured.

@@ -1,7 +1,8 @@
 /**
  * Pre-Scan Phase
  *
- * Phase 1 of static site generation: Fetch all URLs, extract assets, count total files.
+ * Phase 1 of static site generation: Fetch all URLs, extract assets, return raw data.
+ * No caching - fetches fresh every time.
  *
  */
 
@@ -9,12 +10,12 @@ import { __, sprintf } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from './assetExtractor';
 import { debug, debugWarn } from '@aether/utils/debug';
-import StaticSiteCache from '@aether/utils/staticSiteCache';
 
 /**
  * Execute the pre-scan phase.
  *
- * Fetches all URLs, extracts assets, and caches raw HTML.
+ * Fetches all URLs, extracts assets, and returns raw HTML data.
+ * No caching - always fetches fresh.
  *
  * @param {Object}   options                  Pre-scan options.
  * @param {Array}    options.urls             URLs to scan.
@@ -22,8 +23,7 @@ import StaticSiteCache from '@aether/utils/staticSiteCache';
  * @param {string}   options.providerId       Provider ID.
  * @param {Object}   options.providerConfig   Provider configuration.
  * @param {Function} options.setStatusMessage Status message updater.
- * @param {Object}   options.cache            Optional shared cache instance.
- * @return {Promise<Object>} Pre-scan results.
+ * @return {Promise<Object>} Pre-scan results with raw HTML data.
  */
 export async function executePreScan( {
 	urls,
@@ -31,7 +31,6 @@ export async function executePreScan( {
 	providerId,
 	providerConfig,
 	setStatusMessage,
-	cache = null,
 } ) {
 	const failures = {
 		urlsFailed: 0,
@@ -54,76 +53,46 @@ export async function executePreScan( {
 		);
 	}
 
-	// Use provided cache or create new one
-	const sharedCache = cache || new StaticSiteCache();
 	const allUniqueAssets = new Set();
-
-	// Log cache health (only if we created a new cache)
-	if ( ! cache ) {
-		const cacheHealth = await sharedCache.getHealth();
-		if ( cacheHealth.usingFallback ) {
-			debugWarn(
-				'[Aether] IndexedDB not available, using in-memory fallback (500 URL limit)'
-			);
-		}
-		if ( cacheHealth.recommendations.length > 0 ) {
-			cacheHealth.recommendations.forEach( ( rec ) =>
-				debugWarn( `[Aether] ${ rec }` )
-			);
-		}
-
-		// Clean up old caches (only for new cache instances)
-		const cleanedCount = await sharedCache.cleanup();
-		if ( cleanedCount > 0 ) {
-			debug( `[Aether] Cleaned up ${ cleanedCount } old cache entries` );
-		}
-	}
+	const urlData = []; // Array of {url, rawHtml, assetUrls}
 
 	// Scan each URL
 	for ( let i = 0; i < urls.length; i++ ) {
 		const url = urls[ i ];
 
 		try {
-			// Check cache before fetching
-			const cached = await sharedCache.get( url );
-			let html;
-			let assetUrls;
+			// Fetch from URL (no cache)
+			const htmlResponse = await fetch( url, {
+				method: 'GET',
+				credentials: 'omit',
+				headers: {
+					'User-Agent': 'Aether Static Site Generator',
+				},
+			} );
 
-			if ( cached ) {
-				// Use cached data
-				html = cached.rawHtml;
-				assetUrls = cached.assetUrls || [];
-				debug( `[Aether] Using cached HTML for: ${ url }` );
-			} else {
-				// Fetch from URL
-				const htmlResponse = await fetch( url, {
-					method: 'GET',
-					credentials: 'omit',
-					headers: {
-						'User-Agent': 'Aether Static Site Generator',
-					},
+			if ( htmlResponse.status !== 200 ) {
+				debugWarn(
+					`[Aether] Skipping URL with non-200 status: ${ url } (HTTP ${ htmlResponse.status })`
+				);
+				failures.urlsFailed++;
+				failures.failedUrls.push( {
+					url,
+					reason: `Failed to fetch HTML: HTTP ${ htmlResponse.status } ${ htmlResponse.statusText }`,
 				} );
-
-				if ( htmlResponse.status !== 200 ) {
-					debugWarn(
-						`[Aether] Skipping URL with non-200 status: ${ url } (HTTP ${ htmlResponse.status })`
-					);
-					failures.urlsFailed++;
-					failures.failedUrls.push( {
-						url,
-						reason: `Failed to fetch HTML: HTTP ${ htmlResponse.status } ${ htmlResponse.statusText }`,
-					} );
-					continue;
-				}
-
-				html = await htmlResponse.text();
-
-				// Extract assets
-				assetUrls = await extractAssetsFromHtml( html, url, siteUrl );
-
-				// Cache raw HTML (before any filters) and assets
-				await sharedCache.set( url, html, assetUrls );
+				continue;
 			}
+
+			const html = await htmlResponse.text();
+
+			// Extract assets
+			const assetUrls = await extractAssetsFromHtml( html, url, siteUrl );
+
+			// Store raw data
+			urlData.push( {
+				url,
+				rawHtml: html,
+				assetUrls,
+			} );
 
 			// Add to unique set
 			for ( const assetUrl of assetUrls ) {
@@ -139,13 +108,12 @@ export async function executePreScan( {
 		}
 	}
 
-	// Get cache stats
-	const cacheStats = await sharedCache.getStats();
-	const totalFilesToUpload = cacheStats.sessionCached + allUniqueAssets.size;
+	const urlsSuccessful = urlData.length;
+	const totalFilesToUpload = urlsSuccessful + allUniqueAssets.size;
 
 	debug( 'Pre-scan complete:', {
 		urlsScanned: urls.length,
-		urlsSuccessful: cacheStats.sessionCached,
+		urlsSuccessful,
 		uniqueAssets: allUniqueAssets.size,
 		totalFilesToUpload,
 	} );
@@ -155,7 +123,7 @@ export async function executePreScan( {
 		'aether.export.step.uploadStaticSiteFiles.pre_scan.after',
 		{
 			urlsScanned: urls.length,
-			urlsSuccessful: cacheStats.sessionCached,
+			urlsSuccessful,
 			uniqueAssets: allUniqueAssets.size,
 			totalFiles: totalFilesToUpload,
 		},
@@ -170,7 +138,7 @@ export async function executePreScan( {
 					'Pre-scan complete: %1$d HTML files, %2$d assets',
 					'aether-site-exporter'
 				),
-				cacheStats.sessionCached,
+				urlsSuccessful,
 				allUniqueAssets.size
 			),
 			'success',
@@ -179,10 +147,9 @@ export async function executePreScan( {
 	}
 
 	return {
-		cache: sharedCache,
+		urlData, // Array of {url, rawHtml, assetUrls}
 		allUniqueAssets,
 		totalFilesToUpload,
 		failures,
-		cacheStats,
 	};
 }

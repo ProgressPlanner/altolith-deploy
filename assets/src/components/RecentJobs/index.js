@@ -68,10 +68,6 @@ const jobHeaderStyle = {
 	borderBottom: `1px solid ${ colors.backgroundLighter }`,
 };
 
-const jobIdStyle = {
-	...createFlexStyle( 'row', spacing.sm ),
-	alignItems: 'center',
-};
 
 const codeStyle = {
 	padding: '0.25rem 0.5rem',
@@ -181,43 +177,25 @@ export default function RecentJobs( { jobs = [], loading = false } ) {
 					className="aether-recent-jobs__list"
 					style={ jobsListStyle }
 				>
-					{ jobs.map( ( job ) => {
-						const jobId = job.jobId || '';
-						const jobStatus = job.status || 'unknown';
-						const timestamp = job.timestamp || 0;
-						const progress = job.progress || 0;
-						const step = job.currentStep || '';
-						const errorMsg = job.error || '';
+				{ jobs.map( ( job, index ) => {
+					const jobStatus = job.status || 'unknown';
+					const timestamp = job.timestamp || 0;
+					const progress = job.progress || 0;
+					const step = job.currentStep || '';
+					const errorMsg = job.error || '';
 
-						const statusDisplay = getStatusDisplay( jobStatus );
+					const statusDisplay = getStatusDisplay( jobStatus );
 
-						return (
+					return (
+						<div
+							key={ index }
+							className={ `aether-recent-jobs__job aether-recent-jobs__job--${ jobStatus }` }
+							style={ jobCardStyle }
+						>
 							<div
-								key={ jobId }
-								className={ `aether-recent-jobs__job aether-recent-jobs__job--${ jobStatus }` }
-								style={ jobCardStyle }
+								className="aether-recent-jobs__job-header"
+								style={ jobHeaderStyle }
 							>
-								<div
-									className="aether-recent-jobs__job-header"
-									style={ jobHeaderStyle }
-								>
-									<div
-										className="aether-recent-jobs__job-id"
-										style={ jobIdStyle }
-									>
-										<strong className="aether-recent-jobs__job-id-label">
-											{ __(
-												'Job ID:',
-												'aether-site-exporter'
-											) }
-										</strong>
-										<code
-											className="aether-recent-jobs__job-id-value"
-											style={ codeStyle }
-										>
-											{ jobId }
-										</code>
-									</div>
 									<div className="aether-recent-jobs__job-status">
 										<StatusBadge
 											type={ statusDisplay.class }

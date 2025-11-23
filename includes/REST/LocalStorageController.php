@@ -363,42 +363,67 @@ class LocalStorageController
 			);
 		}
 
-		// CRITICAL FIX: Check if destination path exists as a directory
-		// move_uploaded_file() fails if destination is a directory instead of a file
+		// LEGACY BUG FIX: Check if EXACT destination file path exists as a directory
+		// Historical bug: paths with trailing slash were uploaded as files instead of directories
+		// Only remove if this specific file path is a directory (not just parent directories existing)
+		// This prevents deleting entire export folders during parallel provider uploads
+		//
+		// Safety check: Only proceed if fullPath is actually a file path (has basename with extension or is index.html)
+		// Don't remove directories that are supposed to be directories (like static/, static2/, wp-content/)
 		if (\file_exists($fullPath) && \is_dir($fullPath)) {
-			// Recursively remove the directory and its contents
-			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf(
-					'Aether: Removing directory at destination path to allow file upload: %s',
-					$fullPath
-				));
-			}
+			$basename = \basename($fullPath);
+			$isDirIndex = $basename === 'index.html';
+			$hasFileExtension = \preg_match('/\.[a-zA-Z0-9]+$/', $basename);
 
-			if (!$this->removeDirectoryRecursively($fullPath)) {
+			// Only remove if this looks like it should be a file, not a directory
+			// e.g., "feed/index.html" is a file, "static2" is a directory
+			if ($isDirIndex || $hasFileExtension) {
+				// This is a legacy blocking directory at a path that should be a file
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
 					\error_log(\sprintf(
-						'Aether: Failed to remove directory at destination path: %s',
+						'Aether: Removing legacy blocking directory at file path: %s',
 						$fullPath
 					));
 				}
+
+				if (!$this->removeDirectoryRecursively($fullPath)) {
+					if (\defined('WP_DEBUG') && WP_DEBUG) {
+						\error_log(\sprintf(
+							'Aether: Failed to remove directory at destination path: %s',
+							$fullPath
+						));
+					}
+					return new WP_Error(
+						'destination_is_directory',
+						/* translators: %s: File path */
+						\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $fullPath),
+						[
+							'status' => 500,
+							'destination' => $fullPath,
+							'source' => $file['tmp_name'] ?? 'unknown',
+						]
+					);
+				}
+
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Successfully removed legacy blocking directory: %s',
+						$fullPath
+					));
+				}
+			} else {
+				// This is a legitimate directory (like static2/), not a legacy blocking file
+				// Don't remove it - just return an error
 				return new WP_Error(
 					'destination_is_directory',
 					/* translators: %s: File path */
-					\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $fullPath),
+					\sprintf(\__('Destination path exists as a directory: %s. This may indicate a configuration error.', 'aether-site-exporter'), $fullPath),
 					[
 						'status' => 500,
 						'destination' => $fullPath,
 						'source' => $file['tmp_name'] ?? 'unknown',
 					]
 				);
-			}
-
-			// Directory removed, continue with file upload
-			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf(
-					'Aether: Successfully removed directory at destination path: %s',
-					$fullPath
-				));
 			}
 		}
 
@@ -855,41 +880,66 @@ class LocalStorageController
 			);
 		}
 
-		// Check if destination path exists as a directory (copy() fails if destination is a directory).
+		// LEGACY BUG FIX: Check if EXACT destination file path exists as a directory
+		// Historical bug: paths with trailing slash were uploaded as files instead of directories
+		// Only remove if this specific file path is a directory (not just parent directories existing)
+		// This prevents deleting entire export folders during parallel provider operations
+		//
+		// Safety check: Only proceed if destinationFullPath is actually a file path (has extension)
+		// Don't remove directories that are supposed to be directories
 		if (\file_exists($destinationFullPath) && \is_dir($destinationFullPath)) {
-			// Recursively remove the directory and its contents
-			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf(
-					'Aether: Removing directory at destination path to allow file copy: %s',
-					$destinationFullPath
-				));
-			}
+			$basename = \basename($destinationFullPath);
+			$hasFileExtension = \preg_match('/\.[a-zA-Z0-9]+$/', $basename);
 
-			if (!$this->removeDirectoryRecursively($destinationFullPath)) {
+			// Only remove if this looks like it should be a file, not a directory
+			// e.g., "bundle.zip" is a file, "blueprint-bundle" is a directory
+			if ($hasFileExtension) {
+				// This is a legacy blocking directory at a path that should be a file
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
 					\error_log(\sprintf(
-						'Aether: Failed to remove directory at destination path: %s',
+						'Aether: Removing legacy blocking directory at file path: %s',
 						$destinationFullPath
 					));
 				}
+
+				if (!$this->removeDirectoryRecursively($destinationFullPath)) {
+					if (\defined('WP_DEBUG') && WP_DEBUG) {
+						\error_log(\sprintf(
+							'Aether: Failed to remove directory at destination path: %s',
+							$destinationFullPath
+						));
+					}
+					return new WP_Error(
+						'destination_is_directory',
+						/* translators: %s: File path */
+						\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $destinationFullPath),
+						[
+							'status' => 500,
+							'destination' => $destinationFullPath,
+							'source' => $sourceFullPath,
+						]
+					);
+				}
+
+				if (\defined('WP_DEBUG') && WP_DEBUG) {
+					\error_log(\sprintf(
+						'Aether: Successfully removed legacy blocking directory: %s',
+						$destinationFullPath
+					));
+				}
+			} else {
+				// This is a legitimate directory (like blueprint-bundle/), not a legacy blocking file
+				// Don't remove it - just return an error
 				return new WP_Error(
 					'destination_is_directory',
 					/* translators: %s: File path */
-					\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $destinationFullPath),
+					\sprintf(\__('Destination path exists as a directory: %s. This may indicate a configuration error.', 'aether-site-exporter'), $destinationFullPath),
 					[
 						'status' => 500,
 						'destination' => $destinationFullPath,
 						'source' => $sourceFullPath,
 					]
 				);
-			}
-
-			// Directory removed, continue with file copy
-			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf(
-					'Aether: Successfully removed directory at destination path: %s',
-					$destinationFullPath
-				));
 			}
 		}
 

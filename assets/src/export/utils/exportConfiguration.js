@@ -6,7 +6,6 @@
  *
  */
 
-import { v4 as uuidv4 } from 'uuid';
 import { debugError } from '@aether/utils/debug';
 
 /**
@@ -131,20 +130,18 @@ export function buildWorkflowContext( config, dependencies ) {
 	} = dependencies;
 
 	// Combine all provider IDs for new per-provider queue architecture
+	// Use Set to deduplicate providers configured for multiple deployment types
 	const providerIds = [
-		...( staticSiteProviders || [] ),
-		...( blueprintBundleProviders || [] ),
-		...( edgeFunctionProviders || [] ),
+		...new Set( [
+			...( staticSiteProviders || [] ),
+			...( blueprintBundleProviders || [] ),
+			...( edgeFunctionProviders || [] ),
+		] ),
 	];
-
-	// Generate unique job ID for this export workflow
-	// Use UUID v4 to guarantee uniqueness across concurrent exports
-	const jobId = `export-job-${ uuidv4() }`;
 
 	return {
 		// New per-provider queue architecture fields
 		providerIds,
-		jobId,
 
 		// API and state
 		api,

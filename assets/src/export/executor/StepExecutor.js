@@ -9,7 +9,6 @@
  */
 
 import { doAction } from '@wordpress/hooks';
-import { globalStepState } from '../utils/globalStepState';
 import { validateDependencies } from './DependencyResolver';
 import { debug, debugError, debugWarn } from '@aether/utils/debug';
 
@@ -19,15 +18,11 @@ import { debug, debugError, debugWarn } from '@aether/utils/debug';
  * Fires WordPress hooks at all lifecycle points for extensibility.
  *
  * @param {Array<Object>} steps   Array of step definitions.
- * @param {Object}        context Initial context with providerIds and jobId.
+ * @param {Object}        context Initial context with providerIds.
  * @return {Promise<Object>} Results per provider.
  */
 export async function executeSteps( steps, context ) {
-	const { providerIds = [], jobId } = context;
-
-	if ( ! jobId ) {
-		throw new Error( 'context.jobId is required' );
-	}
+	const { providerIds = [] } = context;
 
 	if ( providerIds.length === 0 ) {
 		debugWarn(
@@ -43,9 +38,6 @@ export async function executeSteps( steps, context ) {
 			`Invalid step dependencies: ${ errors.join( '; ' ) }`
 		);
 	}
-
-	// Clear global state for new job
-	globalStepState.clear( jobId );
 
 	debug(
 		`[StepExecutor] Starting execution for ${ providerIds.length } providers`
@@ -197,6 +189,8 @@ class ProviderQueueExecutor {
 
 	/**
 	 * Execute global step (runs once, shared across providers).
+	 * NOTE: With caching removed, this now executes independently per provider.
+	 * The step handler itself is responsible for managing any shared state.
 	 *
 	 * @param {Object} step            Step definition.
 	 * @param {Object} providerContext Provider-specific context.
@@ -204,47 +198,6 @@ class ProviderQueueExecutor {
 	 * @return {Promise<void>}
 	 */
 	async executeGlobalStep( step, providerContext, providerId ) {
-		// Check if result already available
-		const cachedResult = globalStepState.get( step.id );
-
-		if ( cachedResult ) {
-			debug(
-				`[StepExecutor] Provider ${ providerId } using cached result for ${ step.id }`
-			);
-
-			// Merge cached result into context
-			Object.assign( providerContext, cachedResult );
-
-			// Fire cached hook
-			doAction( 'aether.step.cached', step.id, providerId, cachedResult );
-
-			return;
-		}
-
-		// Try to acquire lock to execute step
-		const acquired = globalStepState.lock( step.id );
-
-		if ( ! acquired ) {
-			// Another provider is executing this step, wait for it
-			debug(
-				`[StepExecutor] Provider ${ providerId } waiting for ${ step.id }`
-			);
-
-			// Fire waiting hook
-			doAction( 'aether.step.waiting', step.id, providerId );
-
-			const result = await globalStepState.wait( step.id );
-
-			// Merge result into context
-			Object.assign( providerContext, result );
-
-			// Fire cached hook
-			doAction( 'aether.step.cached', step.id, providerId, result );
-
-			return;
-		}
-
-		// We have the lock, execute the step
 		debug(
 			`[StepExecutor] Provider ${ providerId } executing global step ${ step.id }`
 		);
@@ -252,23 +205,13 @@ class ProviderQueueExecutor {
 		// Fire start hook
 		doAction( 'aether.step.start', step.id, providerId );
 
-		try {
-			const result = await step.handler( providerContext );
+		const result = await step.handler( providerContext );
 
-			// Store result in global state
-			globalStepState.set( step.id, result );
+		// Merge result into context
+		Object.assign( providerContext, result );
 
-			// Merge result into context
-			Object.assign( providerContext, result );
-
-			// Fire complete hook
-			doAction( 'aether.step.complete', step.id, providerId, result );
-		} catch ( error ) {
-			// Store error in state so other providers know it failed
-			globalStepState.setError( step.id, error );
-
-			throw error;
-		}
+		// Fire complete hook
+		doAction( 'aether.step.complete', step.id, providerId, result );
 	}
 
 	/**
@@ -323,7 +266,9 @@ class ProviderQueueExecutor {
 			'setStepProgress',
 			'setOverallProgressValue',
 			'removeMessage',
-			'sharedCache', // StaticSiteCache instance from preScanStaticSite step
+			// NOTE: urlData is NOT in sharedKeys - it must be deep cloned per provider
+			// to prevent race conditions when providers run in parallel. If shared by reference,
+			// providers would modify the same array causing data corruption.
 		] );
 
 		for ( const key in context ) {

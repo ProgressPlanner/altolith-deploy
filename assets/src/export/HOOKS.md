@@ -1,6 +1,6 @@
 # uploadStaticSiteFiles Step - Hook Reference
 
-Hooks follow a hierarchical pattern: `aether.export.{jobId}.{phaseId}.{stepId}.{action}`. For the complete hook system documentation, see `WORKFLOW_REFACTOR.md`.
+Hooks follow a hierarchical pattern: `aether.export.{phaseId}.{stepId}.{action}`. For the complete hook system documentation, see `WORKFLOW_REFACTOR.md`.
 
 This document provides a comprehensive reference for all hooks available in the `uploadStaticSiteFiles` step, which generates static HTML/CSS/JS files and uploads them to storage providers.
 

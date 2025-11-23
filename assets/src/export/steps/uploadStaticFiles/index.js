@@ -31,7 +31,7 @@ async function handler( context ) {
 		siteUrl,
 		processStaticSiteUrls,
 		setStatusMessage,
-		sharedCache, // From preScanStaticSite step (global cache)
+		urlData, // From preScanStaticSite step (raw HTML data)
 	} = context;
 
 	if ( ! urls || ! Array.isArray( urls ) ) {
@@ -84,7 +84,7 @@ async function handler( context ) {
 	);
 
 	// Process URLs for this provider
-	// Use shared cache from preScanStaticSite step (cached raw HTML)
+	// Use URL data from preScanStaticSite step (raw HTML, no cache)
 	const result = await processStaticSiteUrls(
 		filteredUrls,
 		staticSiteUrl,
@@ -93,7 +93,7 @@ async function handler( context ) {
 		setStatusMessage,
 		blueprintData,
 		null, // removeMessage
-		sharedCache // Shared cache from global step
+		urlData // Raw URL data from global step
 	);
 
 	// Report success

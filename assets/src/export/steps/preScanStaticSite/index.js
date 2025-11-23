@@ -1,13 +1,11 @@
 /**
  * Pre-Scan Static Site Step
  *
- * Fetches HTML pages, caches them, and extracts assets.
- * Creates shared StaticSiteCache for all providers to use.
+ * Fetches HTML pages and extracts assets. No caching.
  *
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { StaticSiteCache } from '@aether/utils/staticSiteCache';
 import { executePreScan } from '@aether/export/utils/preScanPhase';
 import { debugWarn } from '@aether/utils/debug';
 import apiFetch from '@aether/utils/api';
@@ -20,7 +18,7 @@ import apiFetch from '@aether/utils/api';
  * @param {string}   context.siteUrl          WordPress site URL.
  * @param {Function} context.setStatusMessage Status message updater.
  * @param {Function} context.setStepProgress  Step progress updater.
- * @return {Promise<Object>} Step result with shared cache and URLs.
+ * @return {Promise<Object>} Step result with URL data.
  */
 async function handler( context ) {
 	const { urls, siteUrl, setStatusMessage, setStepProgress, providerIds } =
@@ -36,15 +34,10 @@ async function handler( context ) {
 	}
 
 	setStatusMessage(
-		__( 'Pre-scanning URLs and caching HTML…', 'aether-site-exporter' ),
+		__( 'Pre-scanning URLs and fetching HTML…', 'aether-site-exporter' ),
 		'progress',
 		'preScanStaticSite'
 	);
-
-	// Create shared cache instance for all providers
-	// This ensures URLs and HTML are fetched only once, then shared across providers
-	const sharedCache = new StaticSiteCache();
-	await sharedCache.initialize();
 
 	// Get first provider ID for config (pre-scan doesn't need provider-specific config)
 	const firstProviderId = providerIds && providerIds[ 0 ];
@@ -73,8 +66,7 @@ async function handler( context ) {
 		}
 	}
 
-	// Execute pre-scan: Fetch all URLs and cache raw HTML
-	// This prevents duplicate network requests when multiple providers are enabled
+	// Execute pre-scan: Fetch all URLs and get raw HTML data (no caching)
 	const preScanResult = await executePreScan( {
 		urls,
 		siteUrl,
@@ -82,7 +74,6 @@ async function handler( context ) {
 		providerConfig,
 		setStatusMessage,
 		setStepProgress,
-		cache: sharedCache,
 	} );
 
 	setStatusMessage(
@@ -92,20 +83,20 @@ async function handler( context ) {
 				'Pre-scanned %1$d pages and found %2$d unique assets',
 				'aether-site-exporter'
 			),
-			preScanResult.cacheStats.sessionCached,
+			preScanResult.urlData.length,
 			preScanResult.allUniqueAssets.size
 		),
 		'success',
 		'preScanStaticSite'
 	);
 
-	// Return shared cache and results for provider steps to use
-	// The sharedCache will be available to all uploadStaticFiles step instances
+	// Return URL data and results for provider steps to use
+	// The urlData will be available to all uploadStaticFiles step instances
 	return {
 		success: true,
-		sharedCache, // Pass cache instance to provider steps
+		urlData: preScanResult.urlData, // Array of {url, rawHtml, assetUrls}
 		urls, // Keep original URLs
-		scannedUrls: preScanResult.cacheStats.sessionCached,
+		scannedUrls: preScanResult.urlData.length,
 		assetCount: preScanResult.allUniqueAssets.size,
 	};
 }

@@ -392,17 +392,13 @@ describe( 'exportConfiguration', () => {
 
 			const result = buildWorkflowContext( config, dependencies );
 
-			// New fields: providerIds and jobId are added
+			// New fields: providerIds are added
 			// providerIds combines all provider arrays
 			expect( result.providerIds ).toEqual( [
 				'cloudflare:1',
 				'cloudflare:2',
 				'local-filesystem:123',
 			] );
-			// JobId now uses UUID v4 format (8-4-4-4-12 hex digits)
-			expect( result.jobId ).toMatch(
-				/^export-job-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-			);
 
 			// Check all other expected fields
 			expect( result ).toMatchObject( {

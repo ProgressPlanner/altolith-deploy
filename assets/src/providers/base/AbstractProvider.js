@@ -8,6 +8,8 @@
 
 import { __, sprintf } from '@wordpress/i18n';
 import { applyFilters, doAction } from '@wordpress/hooks';
+import apiFetch from '@wordpress/api-fetch';
+import { debugWarn } from '@aether/utils/debug';
 import { buildDeploymentTypesField } from '../utils/configFieldBuilder';
 import {
 	validateAllFields,
@@ -34,13 +36,6 @@ export class AbstractProvider {
 	 * @type {string|null}
 	 */
 	registeredId = null;
-
-	/**
-	 * Config storage instance.
-	 *
-	 * @type {Object|null}
-	 */
-	configStorage = null;
 
 	/**
 	 * Constructor.
@@ -312,30 +307,44 @@ export class AbstractProvider {
 		// Sanitize configuration
 		const sanitized = await this.sanitizeConfig( config );
 
-		// Save via config storage
-		const storage = await this.getConfigStorage();
-		const result = await storage.save( sanitized );
+		// Save via REST API (no caching)
+		try {
+			const response = await apiFetch( {
+				path: `/aether/site-exporter/providers/${ this.getId() }/config`,
+				method: 'POST',
+				data: { config: sanitized },
+			} );
 
-		if ( result ) {
-			this.config = sanitized;
+			if ( response.success ) {
+				this.config = sanitized;
 
-			/**
-			 * Action fired after provider configuration is saved successfully.
-			 *
-			 * @param {Object} config     Saved configuration.
-			 * @param {string} providerId Provider ID.
-			 *
-			 * @example
-			 * import { addAction } from '@wordpress/hooks';
-			 *
-			 * addAction('aether.provider.config.saved', 'my-plugin', (config, providerId) => {
-			 *     console.log(`Provider ${providerId} configuration saved`);
-			 * });
-			 */
-			doAction( 'aether.provider.config.saved', sanitized, this.getId() );
+				/**
+				 * Action fired after provider configuration is saved successfully.
+				 *
+				 * @param {Object} config     Saved configuration.
+				 * @param {string} providerId Provider ID.
+				 *
+				 * @example
+				 * import { addAction } from '@wordpress/hooks';
+				 *
+				 * addAction('aether.provider.config.saved', 'my-plugin', (config, providerId) => {
+				 *     console.log(`Provider ${providerId} configuration saved`);
+				 * });
+				 */
+				doAction(
+					'aether.provider.config.saved',
+					sanitized,
+					this.getId()
+				);
+				return true;
+			}
+
+			debugWarn( 'Provider config save failed:', response.message );
+			return false;
+		} catch ( error ) {
+			debugWarn( 'Failed to save provider config:', error );
+			return false;
 		}
-
-		return result;
 	}
 
 	/**
@@ -358,28 +367,38 @@ export class AbstractProvider {
 		 */
 		doAction( 'aether.provider.config.before_delete', this.getId() );
 
-		const storage = await this.getConfigStorage();
-		const result = await storage.delete();
+		// Delete via REST API (no caching)
+		try {
+			const response = await apiFetch( {
+				path: `/aether/site-exporter/providers/${ this.getId() }/config`,
+				method: 'DELETE',
+			} );
 
-		if ( result ) {
-			this.config = {};
+			if ( response.success ) {
+				this.config = {};
 
-			/**
-			 * Action fired after provider configuration is deleted.
-			 *
-			 * @param {string} providerId Provider ID.
-			 *
-			 * @example
-			 * import { addAction } from '@wordpress/hooks';
-			 *
-			 * addAction('aether.provider.config.deleted', 'my-plugin', (providerId) => {
-			 *     console.log(`Configuration deleted for ${providerId}`);
-			 * });
-			 */
-			doAction( 'aether.provider.config.deleted', this.getId() );
+				/**
+				 * Action fired after provider configuration is deleted.
+				 *
+				 * @param {string} providerId Provider ID.
+				 *
+				 * @example
+				 * import { addAction } from '@wordpress/hooks';
+				 *
+				 * addAction('aether.provider.config.deleted', 'my-plugin', (providerId) => {
+				 *     console.log(`Configuration deleted for ${providerId}`);
+				 * });
+				 */
+				doAction( 'aether.provider.config.deleted', this.getId() );
+				return true;
+			}
+
+			debugWarn( 'Provider config delete failed:', response.message );
+			return false;
+		} catch ( error ) {
+			debugWarn( 'Failed to delete provider config:', error );
+			return false;
 		}
-
-		return result;
 	}
 
 	/**
@@ -724,31 +743,23 @@ export class AbstractProvider {
 	}
 
 	/**
-	 * Load configuration from storage.
+	 * Load configuration from REST API.
 	 *
 	 * @protected
 	 * @return {Promise<Object>} Configuration object
 	 */
 	async loadConfig() {
-		const storage = await this.getConfigStorage();
-		return storage.load();
-	}
+		try {
+			const response = await apiFetch( {
+				path: `/aether/site-exporter/providers/${ this.getId() }/config`,
+				method: 'GET',
+			} );
 
-	/**
-	 * Get config storage instance.
-	 *
-	 * Lazy-loads the ConfigStorage class.
-	 *
-	 * @protected
-	 * @return {Promise<Object>} Config storage instance
-	 */
-	async getConfigStorage() {
-		if ( ! this.configStorage ) {
-			// Lazy load to avoid circular dependencies
-			const { ConfigStorage } = await import( '../utils/configStorage' );
-			this.configStorage = new ConfigStorage( this.getId() );
+			return response.success ? response.config || {} : {};
+		} catch ( error ) {
+			debugWarn( 'Failed to load provider config:', error );
+			return {};
 		}
-		return this.configStorage;
 	}
 
 	/**

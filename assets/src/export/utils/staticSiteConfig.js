@@ -7,6 +7,7 @@
 
 import { applyFilters } from '@wordpress/hooks';
 import { debug } from '@aether/utils/debug';
+import { getCredentials } from '@aether/utils/credentialManager';
 
 /**
  * Build storage configuration object.
@@ -107,12 +108,8 @@ export async function fetchProviderConfig( staticSiteProviderId ) {
 		const providerIdToUse = staticSiteProviderId || discoveredProviderId;
 
 		if ( providerIdToUse ) {
-			// Use ConfigStorage to load provider config (handles caching and REST API)
-			const { ConfigStorage } = await import(
-				'../../providers/utils/configStorage'
-			);
-			const storage = new ConfigStorage( providerIdToUse );
-			providerConfig = await storage.load();
+			// Fetch provider config directly from REST API (no caching)
+			providerConfig = await getCredentials( providerIdToUse );
 		}
 	} catch ( error ) {
 		debug( 'Failed to load provider configuration:', error );
@@ -159,7 +156,7 @@ export async function createStorageService(
 		const { StorageService } = await import(
 			'../../providers/services/storageService'
 		);
-		storageService = new StorageService( staticPath, '', filteredConfig );
+		storageService = new StorageService( staticPath, filteredConfig );
 	}
 
 	return storageService;

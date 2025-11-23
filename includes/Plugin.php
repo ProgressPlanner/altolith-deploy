@@ -423,7 +423,6 @@ class Plugin
 		$adminBarDependenciesController = new REST\AdminBarDependenciesController();
 
 		// Initialize export controllers.
-		$exportJobController = new REST\Export\ExportJobController($this);
 		$exportStepsController = new REST\Export\ExportStepsController($this);
 
 		// Register routes from each controller.
@@ -436,7 +435,6 @@ class Plugin
 		$adminBarDependenciesController->registerRoutes();
 
 		// Register export routes.
-		$exportJobController->registerRoutes();
 		$exportStepsController->registerRoutes();
 	}
 

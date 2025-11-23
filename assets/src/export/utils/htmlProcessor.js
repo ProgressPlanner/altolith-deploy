@@ -15,9 +15,16 @@ import { createUrlRewriter, stripPlaygroundScope } from './urlRewriter';
  * @param {string}      url           Source URL.
  * @param {string}      siteUrl       Site URL.
  * @param {string|null} staticSiteUrl Static site URL for URL rewriting.
+ * @param               staticPath
  * @return {string} Processed HTML.
  */
-export function processHtml( html, url, siteUrl, staticSiteUrl = null ) {
+export function processHtml(
+	html,
+	url,
+	siteUrl,
+	staticSiteUrl = null,
+	staticPath = 'static/'
+) {
 	// STEP 1: Remove admin bar from HTML (in case source was generated while logged in).
 	// This removes #wpadminbar div, related CSS/JS, and body classes.
 	html = removeAdminBar( html );
@@ -28,7 +35,12 @@ export function processHtml( html, url, siteUrl, staticSiteUrl = null ) {
 
 	// STEP 3: Replace all internal URLs (absolute → relative or custom domain).
 	// This is the main URL rewriting step that makes the static site work.
-	const urlRewriter = createUrlRewriter( siteUrl, staticSiteUrl );
+	const urlRewriter = createUrlRewriter(
+		siteUrl,
+		staticSiteUrl,
+		{},
+		staticPath
+	);
 	html = urlRewriter.rewriteHtml( html, url );
 
 	return html;

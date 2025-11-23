@@ -11,12 +11,10 @@
 namespace Aether\SiteExporter\Services;
 
 use Aether\SiteExporter\Plugin;
-use Aether\SiteExporter\Sync\JobStateManager;
 use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use Aether\SiteExporter\Utilities\SecurityValidator;
 use Aether\SiteExporter\Services\ZipService;
 use Aether\SiteExporter\Services\FileBatchService;
-use Aether\SiteExporter\Services\ProgressTracker;
 
 \defined('ABSPATH') || exit;
 
@@ -47,13 +45,6 @@ class ExportService
 	private FileBatchService $fileBatchService;
 
 	/**
-	 * Progress tracker instance.
-	 *
-	 * @var ProgressTracker
-	 */
-	private ProgressTracker $progressTracker;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param Plugin $plugin Plugin instance.
@@ -63,7 +54,6 @@ class ExportService
 		$this->plugin = $plugin;
 		$this->fileBatchService = new FileBatchService();
 		$this->zipService = new ZipService($this->fileBatchService);
-		$this->progressTracker = new ProgressTracker();
 	}
 
 	/**
@@ -76,13 +66,11 @@ class ExportService
 	 * - Custom themes
 	 * - MU-plugins directory
 	 *
-	 * @param string|null            $jobId          Optional job ID for progress tracking.
-	 * @param JobStateManager|null   $stateManager   Optional state manager for progress updates.
 	 * @param array<string>|null     $customAssetSlugs Optional array of custom plugin/theme slugs to include in zip.
 	 *                                               If provided, only these assets are added. If null, all custom assets are added.
 	 * @return array<string, mixed>|\WP_Error Result array with zipPath and zipSize, or WP_Error on failure.
 	 */
-	public function exportCompleteSite(?string $jobId = null, ?JobStateManager $stateManager = null, ?array $customAssetSlugs = null)
+	public function exportCompleteSite(?array $customAssetSlugs = null)
 	{
 		// Note: WordPress Playground requires SQLite database.
 		// This method assumes SQLite is being used.
@@ -201,13 +189,6 @@ class ExportService
 		// Final location: Use the directory from export_path with wp-content.zip filename.
 		$zipPath = $realExportDir . '/wp-content.zip';
 
-		// Count total files first (for progress tracking).
-		// This is a quick scan that doesn't process files, just counts them.
-		$totalFiles = 0;
-		if ($jobId) {
-			$totalFiles = $this->countTotalFilesForPhases(null);
-		}
-
 		// Initialize zip archive with CREATE and OVERWRITE flags.
 		// CREATE: Create archive if it doesn't exist.
 		// OVERWRITE: Replace existing archive (cleanup from failed previous attempts).
@@ -221,8 +202,8 @@ class ExportService
 			);
 		}
 
-		// Initialize progress tracking.
-		$progressCallback = $this->progressTracker->createProgressCallback($jobId, $stateManager, $totalFiles);
+		// No progress tracking callback.
+		$progressCallback = null;
 
 		// 1. Add database file first (most critical for site restoration).
 		// Database is stored in wp-content/database/ subdirectory in the zip.
@@ -341,9 +322,6 @@ class ExportService
 		if (\is_dir($mupluginsDir)) {
 			$this->zipService->addDirectoryToZip($zip, $mupluginsDir, 'wp-content/mu-plugins', '', null, null, $progressCallback);
 		}
-
-		// Final progress update (100%).
-		$this->progressTracker->markComplete($jobId, $stateManager);
 
 		// Close zip archive to finalize writing.
 		$zip->close();

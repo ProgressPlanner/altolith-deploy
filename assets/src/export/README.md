@@ -183,16 +183,10 @@ apiFetch({
     data: { changedAssets, discoveredAssets },
 });
 
-// Get job status
-apiFetch({
-    path: ENDPOINTS.EXPORT_WORKFLOW.JOB_STATUS(jobId),
-});
-
 // Execute step
 apiFetch({
     path: ENDPOINTS.EXPORT_WORKFLOW.STEP(stepId),
     method: 'POST',
-    data: { jobId },
 });
 ```
 

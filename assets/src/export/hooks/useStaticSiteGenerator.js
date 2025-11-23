@@ -1,9 +1,8 @@
 /**
  * Static Site Generator Hook
  *
- * Processes URLs and uploads static site files using a two-phase approach:
- * 1. PHASE 1 (Pre-scan): Fetch all URLs, extract assets, count total files
- * 2. PHASE 2 (Upload): Upload all files with accurate progress
+ * Processes URLs and uploads static site files.
+ * Receives pre-fetched URL data from preScanStaticSite step (no caching).
  *
  */
 
@@ -24,7 +23,6 @@ import {
 	fetchProviderConfig,
 	createStorageService,
 } from '@aether/export/utils/staticSiteConfig';
-import { executePreScan } from '@aether/export/utils/preScanPhase';
 import {
 	prepareManifest,
 	processAssets,
@@ -48,7 +46,7 @@ export function useStaticSiteGenerator( onProgress ) {
 			setStatusMessage,
 			blueprintData,
 			removeMessage = null,
-			cache = null
+			urlData = null
 		) => {
 			// Create asset tracker to prevent duplicate uploads
 			const assetTracker = createAssetTracker();
@@ -85,23 +83,39 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			const totalUrls = urls.length;
 
-			// PHASE 1: Pre-scan all URLs (use shared cache if provided)
-			const preScanResult = await executePreScan( {
-				urls,
-				siteUrl,
-				providerId: staticSiteProviderId,
-				providerConfig,
-				setStatusMessage,
-				cache,
-			} );
+			// If no urlData provided, we can't continue
+			// (urlData should come from preScanStaticSite step)
+			if (
+				! urlData ||
+				! Array.isArray( urlData ) ||
+				urlData.length === 0
+			) {
+				debugWarn(
+					'[Aether] No URL data provided to useStaticSiteGenerator. Upload skipped.'
+				);
+				return buildUploadResult(
+					failures,
+					assetTracker,
+					0,
+					0,
+					0,
+					uploadedFiles,
+					totalUrls
+				);
+			}
 
-			const { cache: sharedCache, totalFilesToUpload } = preScanResult;
+			// Calculate total files to upload from urlData
+			const allAssets = new Set();
+			for ( const item of urlData ) {
+				if ( item.assetUrls ) {
+					for ( const assetUrl of item.assetUrls ) {
+						allAssets.add( assetUrl );
+					}
+				}
+			}
+			const totalFilesToUpload = urlData.length + allAssets.size;
 
-			// Merge pre-scan failures
-			failures.urlsFailed += preScanResult.failures.urlsFailed;
-			failures.failedUrls.push( ...preScanResult.failures.failedUrls );
-
-			// PHASE 2: Upload all files
+			// Upload all files
 			let manifest = await prepareManifest(
 				storageService,
 				staticSiteProviderId,
@@ -111,27 +125,17 @@ export function useStaticSiteGenerator( onProgress ) {
 			let filesUploaded = 0;
 			let filesSkipped = 0;
 
-			// Get cached URLs
-			const cachedUrls = await sharedCache.getAllUrls();
-
 			// Fire upload start action
 			doAction(
 				'aether.export.step.uploadStaticSiteFiles.upload.before',
-				cachedUrls,
+				urlData.map( ( item ) => item.url ),
 				totalFilesToUpload,
 				staticSiteProviderId
 			);
 
-			// Process each URL
-			for ( const url of cachedUrls ) {
-				const cached = await sharedCache.get( url );
-				if ( ! cached ) {
-					debugWarn(
-						`[Aether] Cache miss for URL: ${ url } - skipping`
-					);
-					continue;
-				}
-				const { rawHtml, assetUrls } = cached;
+			// Process each URL from urlData (no cache lookups)
+			for ( const item of urlData ) {
+				const { url, rawHtml, assetUrls } = item;
 
 				try {
 					// Update progress message
@@ -153,8 +157,8 @@ export function useStaticSiteGenerator( onProgress ) {
 						staticSiteUrl,
 						providerId: staticSiteProviderId,
 						storageService,
-						manifest,
 						setStatusMessage,
+						staticPath,
 					} );
 
 					filesUploaded++;
@@ -239,9 +243,6 @@ export function useStaticSiteGenerator( onProgress ) {
 					failures.failedUrls.push( { url, reason: error.message } );
 				}
 			}
-
-			// Note: Cache cleanup is handled at the workflow level (uploadStaticFiles step)
-			// to ensure it happens once for all providers, not per provider
 
 			// Finalize manifest
 			await finalizeManifest(

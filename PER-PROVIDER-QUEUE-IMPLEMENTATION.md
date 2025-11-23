@@ -31,13 +31,12 @@ IndexedDB-backed cache for coordinating global step execution across providers.
 - Atomic locking via `setStepRunning()`
 - Result caching via `setStepResult()`
 - Waiting mechanism via `waitForStep()`
-- Job isolation (each export has unique `jobId`)
-- Automatic cleanup of old job data
+- Automatic cleanup of old step data
 
 **Usage:**
 ```javascript
 const cache = new GlobalStepCache();
-await cache.initialize(jobId);
+await cache.initialize();
 
 // Try to acquire lock
 const acquired = await cache.setStepRunning(stepId);
@@ -60,7 +59,7 @@ Complete rewrite for per-provider queue architecture.
 - Handles both global steps (cached) and provider-specific steps
 
 **Execution Flow:**
-1. Initialize GlobalStepCache with jobId
+1. Initialize GlobalStepCache
 2. Create provider queues (one per provider instance)
 3. Execute all queues in parallel with `Promise.all()`
 4. For each step in queue:
@@ -147,7 +146,6 @@ Updated `buildWorkflowContext()` to add:
 ```javascript
 {
     providerIds: [...staticSiteProviders, ...blueprintBundleProviders, ...edgeFunctionProviders],
-    jobId: `export-job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     // ... other context fields
 }
 ```
@@ -259,7 +257,7 @@ This is a UI-only change - the core architecture already provides all necessary 
 
 **Integration:** 2030 total tests, 100% passing
 - All existing tests updated for new architecture
-- exportConfiguration tests updated for providerIds and jobId
+- exportConfiguration tests updated for providerIds
 
 ### Manual Testing Checklist
 
@@ -319,7 +317,7 @@ This is a UI-only change - the core architecture already provides all necessary 
 ### Modified Files
 - `assets/src/export/executor/StepExecutor.js` (complete rewrite, 311 lines)
 - `assets/src/export/steps/*/index.js` (7 steps updated)
-- `assets/src/export/utils/exportConfiguration.js` (added providerIds, jobId)
+- `assets/src/export/utils/exportConfiguration.js` (added providerIds)
 - `assets/src/export/hooks/useExportController.js` (new callbacks)
 - `assets/src/export/utils/__tests__/exportConfiguration.test.js` (test updates)
 

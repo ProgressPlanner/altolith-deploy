@@ -18,7 +18,6 @@ import { ExportContext } from '../contexts/ExportContext';
  * @return {Object} Export context value
  * @property {Array}    steps                   - All workflow steps
  * @property {boolean}  isExporting             - Exporting flag
- * @property {string}   jobId                   - Current job ID
  * @property {Object}   finalStatus             - Final status object (null if not complete)
  * @property {string}   error                   - Error message (null if no error)
  * @property {string}   currentStatusMessage    - Current status message
@@ -30,7 +29,6 @@ import { ExportContext } from '../contexts/ExportContext';
  * @property {Function} markAllComplete         - Mark all steps complete
  * @property {Function} showError               - Show error message
  * @property {Function} setIsExporting          - Set exporting flag
- * @property {Function} setJobId                - Set job ID
  * @property {Function} setStatusMessage        - Set status message
  * @property {Function} setOverallProgressValue - Set overall progress
  * @property {Function} addMessage              - Add a message to history

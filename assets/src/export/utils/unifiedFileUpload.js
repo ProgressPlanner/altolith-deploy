@@ -113,9 +113,24 @@ async function doActionAsync( actionName, fileContext ) {
 	doAction( actionName, fileContext );
 
 	// Wait for all registered promises to complete
+	// Use Promise.allSettled instead of Promise.all to prevent cascading failures
+	// If one upload fails, others should still be attempted
 	const promises = fileContext._uploadPromises || [];
 	if ( promises.length > 0 ) {
-		await Promise.all( promises );
+		const results = await Promise.allSettled( promises );
+
+		// Log rejected promises but don't throw - allow successful uploads to complete
+		const rejectedResults = results.filter(
+			( r ) => r.status === 'rejected'
+		);
+		if ( rejectedResults.length > 0 ) {
+			rejectedResults.forEach( ( r ) => {
+				debugWarn(
+					`Upload promise rejected in ${ actionName }:`,
+					r.reason
+				);
+			} );
+		}
 	}
 
 	// Clean up

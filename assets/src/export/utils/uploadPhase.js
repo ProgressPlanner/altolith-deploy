@@ -15,7 +15,6 @@ import { calculateFileHash } from '@aether/utils/fileHash';
 import {
 	fetchManifest,
 	updateManifestEntry,
-	shouldSkipUpload,
 	uploadManifest,
 	cleanupManifest,
 } from '@aether/utils/manifestManager';
@@ -180,37 +179,9 @@ export async function processAssets( {
 			const finalContentType =
 				filteredAssetData.contentType || contentType;
 
-			// Check manifest for skip
-			const existingEntry = currentManifest[ finalAssetKey ];
-			if ( existingEntry && existingEntry.size === assetBlob.size ) {
-				try {
-					const assetHash = await calculateFileHash( assetBlob );
-					if (
-						shouldSkipUpload(
-							currentManifest,
-							finalAssetKey,
-							assetBlob.size,
-							assetHash
-						)
-					) {
-						assetTracker.markUploaded( assetUrl );
-						currentFilesUploaded++;
-						filesSkipped++;
-						uploadedFiles.push( {
-							storageKey: finalAssetKey,
-							relativePath: finalAssetPath,
-							contentType: finalContentType,
-						} );
-						continue;
-					}
-				} catch ( error ) {
-					debugWarn(
-						'Failed to calculate hash for manifest check, will upload:',
-						assetUrl,
-						error
-					);
-				}
-			}
+			// NOTE: Manifest-based skip logic removed after caching removal.
+			// Always upload assets to ensure files exist on disk for all providers.
+			// The manifest is still updated for tracking but not used for skipping uploads.
 
 			assetData.push( {
 				assetUrl,
@@ -252,7 +223,6 @@ export async function processAssets( {
 		keyPrefix: 'upload',
 		skipHashCheck: false,
 		manifest: currentManifest,
-		shouldSkipUpload,
 	} );
 
 	// Process results
@@ -317,8 +287,8 @@ export async function processAssets( {
  * @param {string}   options.staticSiteUrl    Target static site URL.
  * @param {string}   options.providerId       Provider ID.
  * @param {Object}   options.storageService   Storage service instance.
- * @param {Object}   options.manifest         Manifest object.
  * @param {Function} options.setStatusMessage Status message updater.
+ * @param {string}   options.staticPath       Static files path.
  * @return {Promise<Object>} Upload result.
  */
 export async function uploadHtmlFile( {
@@ -328,8 +298,8 @@ export async function uploadHtmlFile( {
 	staticSiteUrl,
 	providerId,
 	storageService,
-	manifest,
 	setStatusMessage,
+	staticPath = 'static/',
 } ) {
 	// Filter HTML before processing
 	let processedHtml = applyFilters(
@@ -342,7 +312,13 @@ export async function uploadHtmlFile( {
 	);
 
 	// Process HTML with URL rewriting
-	processedHtml = processHtml( processedHtml, url, siteUrl, staticSiteUrl );
+	processedHtml = processHtml(
+		processedHtml,
+		url,
+		siteUrl,
+		staticSiteUrl,
+		staticPath
+	);
 
 	const htmlPath = getStaticFilePath( url );
 	const htmlKey = htmlPath;
@@ -350,44 +326,17 @@ export async function uploadHtmlFile( {
 
 	const htmlSize = htmlBlob.size;
 	let htmlHash = null;
-	let shouldSkip = false;
 
-	// Check manifest for skip
-	const existingEntry = manifest[ htmlKey ];
-	if ( existingEntry && existingEntry.size === htmlSize ) {
-		try {
-			htmlHash = await calculateFileHash( htmlBlob );
-			shouldSkip = shouldSkipUpload(
-				manifest,
-				htmlKey,
-				htmlSize,
-				htmlHash
-			);
-		} catch ( error ) {
-			debugWarn( 'Failed to calculate hash, will upload:', error );
-			shouldSkip = false;
-		}
-	}
+	// NOTE: Manifest-based skip logic removed after caching removal.
+	// Always upload HTML files to ensure consistency across all parallel providers.
+	// The manifest is still updated for tracking but not used for skipping uploads.
 
-	if ( shouldSkip ) {
-		return {
-			success: true,
-			skipped: true,
-			htmlPath,
-			htmlKey,
-			htmlHash,
-			htmlSize,
-		};
-	}
-
-	// Calculate hash if not already calculated
-	if ( ! htmlHash ) {
-		try {
-			htmlHash = await calculateFileHash( htmlBlob );
-		} catch ( error ) {
-			debugWarn( 'Failed to calculate hash:', error );
-			htmlHash = null;
-		}
+	// Calculate hash for manifest tracking
+	try {
+		htmlHash = await calculateFileHash( htmlBlob );
+	} catch ( error ) {
+		debugWarn( 'Failed to calculate hash:', error );
+		htmlHash = null;
 	}
 
 	// Upload status

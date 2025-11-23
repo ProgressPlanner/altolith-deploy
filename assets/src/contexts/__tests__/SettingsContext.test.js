@@ -13,14 +13,13 @@
 
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { SettingsProvider, SettingsContext } from '../SettingsContext';
-import apiFetch, { invalidateCache } from '../../utils/api';
+import apiFetch from '../../utils/api';
 import { useContext } from '@wordpress/element';
 
 // Mock dependencies
 jest.mock( '../../utils/api', () => ( {
 	__esModule: true,
 	default: jest.fn(),
-	invalidateCache: jest.fn(),
 } ) );
 
 jest.mock( '../../utils/debug', () => ( {
@@ -267,7 +266,7 @@ describe( 'SettingsContext', () => {
 	} );
 
 	describe( 'invalidateCache', () => {
-		it( 'should invalidate cache and refetch', async () => {
+		it( 'should refetch settings (no cache)', async () => {
 			apiFetch.mockResolvedValue( {
 				success: true,
 				settings: {},
@@ -288,9 +287,7 @@ describe( 'SettingsContext', () => {
 				result.current.invalidateCache();
 			} );
 
-			expect( invalidateCache ).toHaveBeenCalledWith(
-				'/aether/site-exporter/settings'
-			);
+			// Should refetch settings (no cache invalidation since caching removed)
 			expect( apiFetch ).toHaveBeenCalledTimes( 2 ); // Initial + refetch
 		} );
 	} );
