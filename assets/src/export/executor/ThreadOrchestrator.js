@@ -281,15 +281,29 @@ export async function executeThreadedWorkflow(
 	const successfulThreads = threadResults.filter( ( r ) => r.success );
 	const failedThreads = threadResults.filter( ( r ) => ! r.success );
 
-	// Workflow succeeds if at least one thread succeeded
-	const overallSuccess = successfulThreads.length > 0;
+	// Determine overall success:
+	// - All succeeded: complete success
+	// - Some succeeded: partial success (workflow continues but with warnings)
+	// - None succeeded: failure
+	const allSucceeded = successfulThreads.length === threadResults.length;
+	const someSucceeded = successfulThreads.length > 0;
+	const noneSucceeded = successfulThreads.length === 0;
+
+	// Collect failed provider details for error reporting
+	const failedProviders = failedThreads.map( ( r ) => ( {
+		providerId: r.providerInstance,
+		error: r.error,
+	} ) );
 
 	return {
-		success: overallSuccess,
+		success: someSucceeded, // Succeeds if at least one provider worked
+		partialSuccess: someSucceeded && ! allSucceeded, // True if some failed
+		allSucceeded, // True only if all providers succeeded
 		globalState,
 		threadResults,
 		successCount: successfulThreads.length,
 		failureCount: failedThreads.length,
+		failedProviders, // Array of {providerId, error} for failed providers
 	};
 }
 
