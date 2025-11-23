@@ -302,18 +302,6 @@ class ExportController
 			$status['status'] = 'complete';
 			\set_transient($jobId, $status, self::EXPORT_JOB_EXPIRATION);
 
-			// Track export file for persistence monitoring
-			if (isset($status['zipPath'])) {
-				FileManager::trackFile(
-					$status['zipPath'],
-					'export',
-					[
-						'job_id'    => $jobId,
-						'expires'   => \time() + self::EXPORT_JOB_EXPIRATION,
-					]
-				);
-			}
-
 			return \rest_ensure_response(
 				[
 					'success' => true,
@@ -403,21 +391,11 @@ class ExportController
 
 		$zipPath = $status['zipPath'];
 
-		// Verify file exists with persistence check
+		// Verify file exists
 		if (!FileManager::verifyFileExists($zipPath, 'export-download')) {
-			// Check if file was tracked and disappeared
-			$persistence = FileManager::verifyFilePersistence($zipPath);
-
-			$errorMessage = \__('Export file not found. ', 'aether-site-exporter');
-			if ($persistence['tracked'] && !$persistence['persisted']) {
-				$errorMessage .= \__('The file may not have persisted across sessions. Please regenerate the export and download immediately.', 'aether-site-exporter');
-			} else {
-				$errorMessage .= \__('The file may have been cleaned up. Please regenerate the export.', 'aether-site-exporter');
-			}
-
 			return new WP_Error(
 				'file_not_found',
-				$errorMessage,
+				\__('Export file not found. The file may have been cleaned up. Please regenerate the export.', 'aether-site-exporter'),
 				[ 'status' => 404 ]
 			);
 		}
@@ -433,7 +411,6 @@ class ExportController
 		\register_shutdown_function(function () use ($zipPath, $jobId) {
 			// Clean up file and transient regardless of success/failure
 			FileManager::deleteFile($zipPath);
-			FileManager::untrackFile($zipPath);
 			\delete_transient($jobId);
 		});
 

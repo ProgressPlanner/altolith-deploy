@@ -722,17 +722,6 @@ class Plugin
 			return false;
 		}
 
-		// Track file for persistence monitoring.
-		\Aether\SiteExporter\Utilities\FileManager::trackFile(
-			$destinationFullPath,
-			'copy',
-			[
-				'source_path'      => $sourcePath,
-				'destination_path' => $destinationPath,
-				'size'             => \filesize($destinationFullPath),
-			]
-		);
-
 		return true;
 	}
 

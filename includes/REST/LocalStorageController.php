@@ -451,17 +451,6 @@ class LocalStorageController
 					$errorDetails
 				);
 			}
-
-			// Track file for persistence monitoring
-			FileManager::trackFile(
-				$fullPath,
-				'upload',
-				[
-					'key'          => $key,
-					'original_name' => $file['name'] ?? 'unknown',
-					'size'         => $file['size'] ?? 0,
-				]
-			);
 		} else {
 			return new WP_Error(
 				'invalid_file',
@@ -562,9 +551,6 @@ class LocalStorageController
 				[ 'status' => 500 ]
 			);
 		}
-
-		// Untrack file
-		FileManager::untrackFile($fullPath);
 
 		return new WP_REST_Response(
 			[
@@ -906,17 +892,6 @@ class LocalStorageController
 				[ 'status' => 500 ]
 			);
 		}
-
-		// Track file for persistence monitoring
-		FileManager::trackFile(
-			$destinationFullPath,
-			'copy',
-			[
-				'source_path'      => $sourcePath,
-				'destination_path' => $destinationPath,
-				'size'             => \filesize($destinationFullPath),
-			]
-		);
 
 		return new WP_REST_Response(
 			[
