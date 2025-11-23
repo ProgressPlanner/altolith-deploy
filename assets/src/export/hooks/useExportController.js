@@ -13,7 +13,7 @@ import { useBlueprintGenerator } from './useBlueprintGenerator';
 import apiFetch from '@aether/utils/api';
 import { debug, debugError } from '@aether/utils/debug';
 import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
-import { executeSteps } from '@aether/export/executor';
+import { executeThreadedWorkflow } from '@aether/export/executor/ThreadOrchestrator';
 import { getActiveSteps, getRegisteredSteps } from '@aether/export/steps';
 import {
 	prepareExportConfiguration,
@@ -266,8 +266,26 @@ export function useExportController( exportState ) {
 			// Get steps filtered by enabled providers
 			const activeSteps = getActiveSteps( workflowContext );
 
-			// Execute steps using flat executor with dependency resolution
-			await executeSteps( activeSteps, workflowContext, workflowOptions );
+			// Determine provider instances for threading
+			// Use all provider instances across all deployment types
+			const allProviderInstances = [
+				...staticSiteProviderInstances,
+				...blueprintBundleProviderInstances,
+				...edgeFunctionProviderInstances,
+			];
+
+			debug( '[Workflow] Executing with provider instances:', {
+				count: allProviderInstances.length,
+				instances: allProviderInstances.map( ( p ) => p.id ),
+			} );
+
+			// Execute workflow with ThreadOrchestrator (handles 0, 1, or N providers)
+			await executeThreadedWorkflow(
+				activeSteps,
+				workflowContext,
+				allProviderInstances,
+				workflowOptions
+			);
 
 			debug( '[Workflow] All steps completed successfully' );
 
