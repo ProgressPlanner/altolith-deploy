@@ -74,7 +74,7 @@ export function validateScope( step ) {
 
 	const errors = [];
 
-	Object.entries( step.provides ).forEach( ( [ key, definition ] ) => {
+	Object.entries( step.provides ).forEach( ( [ key ] ) => {
 		const scope = getProvideScope( step, key );
 
 		// Thread steps should only provide thread-scoped data

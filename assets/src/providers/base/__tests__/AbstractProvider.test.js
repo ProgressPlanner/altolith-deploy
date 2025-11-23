@@ -408,51 +408,51 @@ describe( 'AbstractProvider', () => {
 
 	describe( 'getMaxSimultaneousUploads()', () => {
 		test( 'returns default 10 when no config set', () => {
-			const provider = new TestProvider();
+			const testProvider = new TestProvider();
 
-			expect( provider.getMaxSimultaneousUploads() ).toBe( 10 );
+			expect( testProvider.getMaxSimultaneousUploads() ).toBe( 10 );
 		} );
 
 		test( 'returns instance config value when set', () => {
-			const provider = new TestProvider( {
+			const testProvider = new TestProvider( {
 				maxSimultaneousUploads: 5,
 			} );
 
-			expect( provider.getMaxSimultaneousUploads() ).toBe( 5 );
+			expect( testProvider.getMaxSimultaneousUploads() ).toBe( 5 );
 		} );
 
 		test( 'returns instance config value of 1 (minimum)', () => {
-			const provider = new TestProvider( {
+			const testProvider = new TestProvider( {
 				maxSimultaneousUploads: 1,
 			} );
 
-			expect( provider.getMaxSimultaneousUploads() ).toBe( 1 );
+			expect( testProvider.getMaxSimultaneousUploads() ).toBe( 1 );
 		} );
 
 		test( 'returns instance config value of Infinity', () => {
-			const provider = new TestProvider( {
+			const testProvider = new TestProvider( {
 				maxSimultaneousUploads: Infinity,
 			} );
 
-			expect( provider.getMaxSimultaneousUploads() ).toBe( Infinity );
+			expect( testProvider.getMaxSimultaneousUploads() ).toBe( Infinity );
 		} );
 
 		test( 'ignores non-numeric instance config values', () => {
-			const provider = new TestProvider( {
+			const testProvider = new TestProvider( {
 				maxSimultaneousUploads: 'invalid',
 			} );
 
 			// Should fall back to default
-			expect( provider.getMaxSimultaneousUploads() ).toBe( 10 );
+			expect( testProvider.getMaxSimultaneousUploads() ).toBe( 10 );
 		} );
 
 		test( 'ignores zero as invalid', () => {
-			const provider = new TestProvider( {
+			const testProvider = new TestProvider( {
 				maxSimultaneousUploads: 0,
 			} );
 
 			// Zero is not a valid limit, should fall back to default
-			expect( provider.getMaxSimultaneousUploads() ).toBe( 10 );
+			expect( testProvider.getMaxSimultaneousUploads() ).toBe( 10 );
 		} );
 
 		test( 'can be overridden in subclass', () => {
@@ -468,8 +468,8 @@ describe( 'AbstractProvider', () => {
 				}
 			}
 
-			const provider = new CustomProvider();
-			expect( provider.getMaxSimultaneousUploads() ).toBe( 3 );
+			const customProvider = new CustomProvider();
+			expect( customProvider.getMaxSimultaneousUploads() ).toBe( 3 );
 
 			const providerWithConfig = new CustomProvider( {
 				maxSimultaneousUploads: 7,
@@ -490,12 +490,12 @@ describe( 'AbstractProvider', () => {
 				}
 			}
 
-			const provider = new CustomProvider( {
+			const customProvider = new CustomProvider( {
 				maxSimultaneousUploads: 2, // User override
 			} );
 
 			// Instance config should win
-			expect( provider.getMaxSimultaneousUploads() ).toBe( 2 );
+			expect( customProvider.getMaxSimultaneousUploads() ).toBe( 2 );
 		} );
 	} );
 } );
