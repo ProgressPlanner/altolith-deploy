@@ -100,27 +100,6 @@ class ExportStepsControllerTest extends TestCase {
 		}
 	}
 
-	/**
-	 * Create a test job.
-	 *
-	 * @param string $current_step Current step name.
-	 * @return string Job ID.
-	 */
-	private function create_test_job( string $current_step = 'createBlueprintBundle' ): string {
-		$job_id = 'test_job_' . uniqid();
-
-		// Create job state using state manager
-		$plugin = Plugin::getInstance();
-		$state_manager = $plugin->getJobStateManager();
-
-		$state_manager->createJob( $job_id, 'blueprint_bundle', [
-			'currentStep' => $current_step,
-			'status'      => 'processing',
-		] );
-
-		return $job_id;
-	}
-
 	// ========================================================================
 	// Route Registration Tests
 	// ========================================================================
@@ -207,75 +186,6 @@ class ExportStepsControllerTest extends TestCase {
 	// ========================================================================
 	// Step Validation Tests
 	// ========================================================================
-
-	/**
-	 * Test executeStep requires job ID.
-	 *
-	 * Purpose: Verify job ID validation
-	 * Edge Case: Missing parameter, null value
-	 */
-	public function test_executeStep_requires_job_id() {
-		$this->act_as_admin();
-
-		$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/steps/createBlueprintBundle' );
-		// No jobId parameter
-
-		$response = rest_get_server()->dispatch( $request );
-
-		$this->assertEquals( 422, $response->get_status() );
-		$this->assertEquals( 'missing_job_id', $response->get_data()['code'] );
-	}
-
-	/**
-	 * Test executeStep validates job exists.
-	 *
-	 * Purpose: Verify job existence check
-	 * Edge Case: Invalid job ID, deleted job
-	 */
-	public function test_executeStep_validates_job_exists() {
-		$this->act_as_admin();
-
-		$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/steps/createBlueprintBundle' );
-		$request->set_param( 'jobId', 'nonexistent_job_id' );
-
-		$response = rest_get_server()->dispatch( $request );
-
-		$this->assertGreaterThanOrEqual( 400, $response->get_status() );
-	}
-
-	/**
-	 * Test executeStep validates current step.
-	 *
-	 * Purpose: Verify step order enforcement
-	 * Security: MEDIUM - Prevents workflow manipulation
-	 */
-	public function test_executeStep_validates_current_step() {
-		$this->act_as_admin();
-
-		// Create job on different step
-		$job_id = $this->create_test_job( 'generateStaticSite' );
-
-		// Try to execute createBlueprintBundle step (wrong step)
-		$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/steps/createBlueprintBundle' );
-		$request->set_param( 'jobId', $job_id );
-
-		$response = rest_get_server()->dispatch( $request );
-
-		$this->assertEquals( 422, $response->get_status(), 'Should reject wrong step' );
-		$this->assertEquals( 'invalid_step', $response->get_data()['code'] );
-	}
-
-	/**
-	 * Test executeStep accepts correct step.
-	 *
-	 * Purpose: Verify step validation allows correct step
-	 */
-	public function test_executeStep_accepts_correct_step() {
-		$this->markTestIncomplete( 'Requires full export environment setup' );
-
-		// This test would create a real export workflow
-		// Skipped for unit test speed
-	}
 
 	// ========================================================================
 	// getHtmlContent() Tests - SECURITY CRITICAL

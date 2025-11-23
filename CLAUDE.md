@@ -361,11 +361,10 @@ Key principles:
 
 **PHP:**
 - Settings stored in `aether_site_exporter_settings` option
-- Job state in transients (expire after 10 minutes)
 - Provider instance configs stored in settings array under `providers` key
 
 **JavaScript:**
-- Job progress tracked in React state + IndexedDB
+- Workflow state tracked in React state + IndexedDB (for resume-after-failure)
 - Reactive updates via React contexts and hooks
 - **Caching:** Only `wporgCache` remains (WordPress.org plugin/theme existence checks, 7-day TTL)
 
@@ -410,10 +409,10 @@ Key principles:
   - `tests/Unit/` - Unit tests for isolated components
   - `tests/Integration/` - Integration tests for REST API and workflows
   - `tests/Helpers/TestCase.php` - Base test case with helper methods
-- **Coverage**: 141 tests, 336 assertions (security, business logic, integration)
+- **Coverage**: Tests cover security, business logic, and integration scenarios
 - **Key Test Suites**:
   - **Security Tests**: PathValidator (path traversal, injection), CredentialEncryption
-  - **Business Logic**: JobStateManager, ProviderRegistry, FileManager, TempDirectoryManager
+  - **Business Logic**: ProviderRegistry, FileManager, TempDirectoryManager
   - **Integration Tests**: ProviderConfigController (REST API with encryption)
 - **Testing Philosophy**:
   - Tests catch bugs in implementation, not written just for coverage

@@ -11,12 +11,10 @@
 namespace Aether\SiteExporter\Services;
 
 use Aether\SiteExporter\Plugin;
-use Aether\SiteExporter\Sync\JobStateManager;
 use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use Aether\SiteExporter\Utilities\SecurityValidator;
 use Aether\SiteExporter\Services\ZipService;
 use Aether\SiteExporter\Services\FileBatchService;
-use Aether\SiteExporter\Services\ProgressTracker;
 
 \defined('ABSPATH') || exit;
 
@@ -47,13 +45,6 @@ class ExportService
 	private FileBatchService $fileBatchService;
 
 	/**
-	 * Progress tracker instance.
-	 *
-	 * @var ProgressTracker
-	 */
-	private ProgressTracker $progressTracker;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param Plugin $plugin Plugin instance.
@@ -63,7 +54,6 @@ class ExportService
 		$this->plugin = $plugin;
 		$this->fileBatchService = new FileBatchService();
 		$this->zipService = new ZipService($this->fileBatchService);
-		$this->progressTracker = new ProgressTracker();
 	}
 
 	/**
@@ -76,13 +66,13 @@ class ExportService
 	 * - Custom themes
 	 * - MU-plugins directory
 	 *
-	 * @param string|null            $jobId          Optional job ID for progress tracking.
-	 * @param JobStateManager|null   $stateManager   Optional state manager for progress updates.
-	 * @param array<string>|null     $customAssetSlugs Optional array of custom plugin/theme slugs to include in zip.
-	 *                                               If provided, only these assets are added. If null, all custom assets are added.
+	 * @param string             $progressId       Progress ID for tracking (not used, kept for compatibility).
+	 * @param mixed              $unused           Unused parameter (formerly stateManager, kept for compatibility).
+	 * @param array<string>|null $customAssetSlugs Optional array of custom plugin/theme slugs to include in zip.
+	 *                                             If provided, only these assets are added. If null, all custom assets are added.
 	 * @return array<string, mixed>|\WP_Error Result array with zipPath and zipSize, or WP_Error on failure.
 	 */
-	public function exportCompleteSite(?string $jobId = null, ?JobStateManager $stateManager = null, ?array $customAssetSlugs = null)
+	public function exportCompleteSite(string $progressId = '', $unused = null, ?array $customAssetSlugs = null)
 	{
 		// Note: WordPress Playground requires SQLite database.
 		// This method assumes SQLite is being used.
@@ -201,13 +191,6 @@ class ExportService
 		// Final location: Use the directory from export_path with wp-content.zip filename.
 		$zipPath = $realExportDir . '/wp-content.zip';
 
-		// Count total files first (for progress tracking).
-		// This is a quick scan that doesn't process files, just counts them.
-		$totalFiles = 0;
-		if ($jobId) {
-			$totalFiles = $this->countTotalFilesForPhases(null);
-		}
-
 		// Initialize zip archive with CREATE and OVERWRITE flags.
 		// CREATE: Create archive if it doesn't exist.
 		// OVERWRITE: Replace existing archive (cleanup from failed previous attempts).
@@ -221,9 +204,6 @@ class ExportService
 			);
 		}
 
-		// Initialize progress tracking.
-		$progressCallback = $this->progressTracker->createProgressCallback($jobId, $stateManager, $totalFiles);
-
 		// 1. Add database file first (most critical for site restoration).
 		// Database is stored in wp-content/database/ subdirectory in the zip.
 		// This maintains WordPress Playground's expected structure.
@@ -231,9 +211,6 @@ class ExportService
 		if (false !== $dbPath && \file_exists($dbPath)) {
 			$dbRelativePath = 'wp-content/database/' . \basename($dbPath);
 			$zip->addFile($dbPath, $dbRelativePath);
-			if ($progressCallback) {
-				$progressCallback();
-			}
 		}
 
 		// 2. Add uploads directory (user media files).
@@ -241,7 +218,7 @@ class ExportService
 		// This prevents duplicate uploads and reduces zip size.
 		$uploadsDir = WP_CONTENT_DIR . '/uploads';
 		if (\is_dir($uploadsDir)) {
-			$this->zipService->addDirectoryToZip($zip, $uploadsDir, 'wp-content/uploads', '', null, null, $progressCallback);
+			$this->zipService->addDirectoryToZip($zip, $uploadsDir, 'wp-content/uploads');
 		}
 
 		// 3. Add custom plugins only (non-wordpress.org plugins).
@@ -275,7 +252,7 @@ class ExportService
 
 				$pluginDir = WP_PLUGIN_DIR . '/' . $slug;
 				if (\is_dir($pluginDir)) {
-					$this->zipService->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $slug, '', null, null, $progressCallback);
+					$this->zipService->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $slug, '', null, null);
 				}
 			}
 		} else {
@@ -289,7 +266,7 @@ class ExportService
 					}
 					$pluginDir = WP_PLUGIN_DIR . '/' . $asset['slug'];
 					if (\is_dir($pluginDir)) {
-						$this->zipService->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $asset['slug'], '', null, null, $progressCallback);
+						$this->zipService->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $asset['slug'], '', null, null);
 					}
 				}
 			}
@@ -319,7 +296,7 @@ class ExportService
 
 				$themeDir = \get_theme_root() . '/' . $slug;
 				if (\is_dir($themeDir)) {
-					$this->zipService->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $slug, '', null, null, $progressCallback);
+					$this->zipService->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $slug, '', null, null);
 				}
 			}
 		} else {
@@ -328,7 +305,7 @@ class ExportService
 				if ('theme' === $asset['type']) {
 					$themeDir = \get_theme_root() . '/' . $asset['slug'];
 					if (\is_dir($themeDir)) {
-						$this->zipService->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $asset['slug'], '', null, null, $progressCallback);
+						$this->zipService->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $asset['slug'], '', null, null);
 					}
 				}
 			}
@@ -339,11 +316,10 @@ class ExportService
 		// No wordpress.org equivalent exists for mu-plugins.
 		$mupluginsDir = WP_CONTENT_DIR . '/mu-plugins';
 		if (\is_dir($mupluginsDir)) {
-			$this->zipService->addDirectoryToZip($zip, $mupluginsDir, 'wp-content/mu-plugins', '', null, null, $progressCallback);
+			$this->zipService->addDirectoryToZip($zip, $mupluginsDir, 'wp-content/mu-plugins', '', null, null);
 		}
 
 		// Final progress update (100%).
-		$this->progressTracker->markComplete($jobId, $stateManager);
 
 		// Close zip archive to finalize writing.
 		$zip->close();
@@ -391,13 +367,12 @@ class ExportService
 	 * @param string                  $relativePath Relative path for recursion.
 	 * @param array<int, string>|null $excludePatterns Exclusion patterns.
 	 * @param array<int, string>|null $offloadedFiles Offloaded file paths.
-	 * @param callable|null           $progressCallback Optional callback for progress updates (receives file count).
 	 * @return void
 	 */
-	public function addDirectoryToZip(\ZipArchive $zip, string $sourceDir, string $zipPath, string $relativePath = '', ?array $excludePatterns = null, ?array $offloadedFiles = null, ?callable $progressCallback = null): void
+	public function addDirectoryToZip(\ZipArchive $zip, string $sourceDir, string $zipPath, string $relativePath = '', ?array $excludePatterns = null, ?array $offloadedFiles = null): void
 	{
 		// Delegate to ZipService for backward compatibility.
-		$this->zipService->addDirectoryToZip($zip, $sourceDir, $zipPath, $relativePath, $excludePatterns, $offloadedFiles, $progressCallback);
+		$this->zipService->addDirectoryToZip($zip, $sourceDir, $zipPath, $relativePath, $excludePatterns, $offloadedFiles);
 	}
 
 	/**
@@ -547,7 +522,6 @@ class ExportService
 
 		$phases = $currentProgress['phases'] ?? [];
 		$phases['database'] = ['status' => 'completed', 'filesProcessed' => $filesAdded];
-		$overallProgress = $this->progressTracker->calculateOverallProgress($filesProcessed, $totalFiles);
 
 		return [
 			'success' => true,
@@ -556,7 +530,6 @@ class ExportService
 				'filesAdded' => $filesAdded,
 			],
 			'progress' => [
-				'overall' => $overallProgress,
 				'phase' => 'database',
 				'subPhase' => 'database',
 				'phaseProgress' => 100,
@@ -668,7 +641,6 @@ class ExportService
 		$phases['uploads'] = $uploadsPhase;
 
 		$phaseProgress = $currentBatchCount > 0 ? (int) \round(($completedBatches / $currentBatchCount) * 100) : 100;
-		$overallProgress = $this->progressTracker->calculateOverallProgress($filesProcessed, $totalFiles);
 
 		return [
 			'success' => true,
@@ -678,7 +650,6 @@ class ExportService
 				'batchIndex' => $batchIndex,
 			],
 			'progress' => [
-				'overall' => $overallProgress,
 				'phase' => 'uploads',
 				'subPhase' => "uploads:batch-{$batchIndex}",
 				'phaseProgress' => $phaseProgress,
@@ -789,7 +760,6 @@ class ExportService
 		$phases['plugins'] = $pluginsPhase;
 
 		$phaseProgress = \count($pluginsPhase['items'] ?? []) > 0 ? (int) \round((\count($completedItems) / \count($pluginsPhase['items'])) * 100) : 100;
-		$overallProgress = $this->progressTracker->calculateOverallProgress($filesProcessed, $totalFiles);
 
 		return [
 			'success' => true,
@@ -799,7 +769,6 @@ class ExportService
 				'pluginSlug' => $pluginSlug,
 			],
 			'progress' => [
-				'overall' => $overallProgress,
 				'phase' => 'plugins',
 				'subPhase' => "plugin:{$pluginSlug}",
 				'phaseProgress' => $phaseProgress,
@@ -910,7 +879,6 @@ class ExportService
 		$phases['themes'] = $themesPhase;
 
 		$phaseProgress = \count($themesPhase['items'] ?? []) > 0 ? (int) \round((\count($completedItems) / \count($themesPhase['items'])) * 100) : 100;
-		$overallProgress = $this->progressTracker->calculateOverallProgress($filesProcessed, $totalFiles);
 
 		return [
 			'success' => true,
@@ -920,7 +888,6 @@ class ExportService
 				'themeSlug' => $themeSlug,
 			],
 			'progress' => [
-				'overall' => $overallProgress,
 				'phase' => 'themes',
 				'subPhase' => "theme:{$themeSlug}",
 				'phaseProgress' => $phaseProgress,
@@ -1023,7 +990,6 @@ class ExportService
 		$phases['mu-plugins'] = $muPluginsPhase;
 
 		$phaseProgress = $currentBatchCount > 0 ? (int) \round(($completedBatches / $currentBatchCount) * 100) : 100;
-		$overallProgress = $this->progressTracker->calculateOverallProgress($filesProcessed, $totalFiles);
 
 		return [
 			'success' => true,
@@ -1033,7 +999,6 @@ class ExportService
 				'batchIndex' => $batchIndex,
 			],
 			'progress' => [
-				'overall' => $overallProgress,
 				'phase' => 'mu-plugins',
 				'subPhase' => "mu-plugins:batch-{$batchIndex}",
 				'phaseProgress' => $phaseProgress,

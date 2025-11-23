@@ -263,7 +263,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 			fileBlob,
 			{
 				contentType: contentType || 'text/html',
-				jobId: '',
 			}
 		);
 

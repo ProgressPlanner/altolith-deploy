@@ -26,7 +26,13 @@ use WP_Error;
 class ExportStepsController
 {
 	use RESTHelpersTrait;
-	use ExportHelpersTrait;
+
+	/**
+	 * Plugin instance.
+	 *
+	 * @var Plugin
+	 */
+	private Plugin $plugin;
 
 	/**
 	 * Constructor.
@@ -35,7 +41,7 @@ class ExportStepsController
 	 */
 	public function __construct(Plugin $plugin)
 	{
-		$this->initExportHelpers($plugin);
+		$this->plugin = $plugin;
 	}
 
 	/**
@@ -45,28 +51,6 @@ class ExportStepsController
 	 */
 	public function registerRoutes(): void
 	{
-		// Create site archive step.
-		\register_rest_route(
-			$this->getNamespace(),
-			'/export/steps/createBlueprintBundle',
-			[
-				'methods'             => 'POST',
-				'callback'            => [ $this, 'executeCreateWpContentArchive' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
-			]
-		);
-
-		// Generate static site step.
-		\register_rest_route(
-			$this->getNamespace(),
-			'/export/steps/generateStaticSite',
-			[
-				'methods'             => 'POST',
-				'callback'            => [ $this, 'executeGenerateStaticSite' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
-			]
-		);
-
 		// Get HTML content endpoint.
 		\register_rest_route(
 			$this->getNamespace(),
@@ -234,200 +218,6 @@ class ExportStepsController
 	}
 
 	/**
-	 * Execute the createWpContentArchive step.
-	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return \WP_REST_Response|\WP_Error
-	 */
-	public function executeCreateWpContentArchive(WP_REST_Request $request)
-	{
-		return $this->executeStep($request, 'createBlueprintBundle', function ($status, $jobId) {
-			// Get export service.
-			$exportService = new ExportService($this->plugin);
-
-			// Export complete site (database + wp-content) with progress tracking.
-			$result = $exportService->exportCompleteSite($jobId, $this->stateManager);
-
-			if (\is_wp_error($result)) {
-				throw new \Exception(\sprintf('Site export failed: %s', $result->get_error_message()));
-			}
-
-			// Update status with export result and transition to next step.
-			$newStatus = \array_merge($status, [
-				'exportResult' => $result,
-			]);
-			$newStatus['currentStep'] = 'uploadStaticSiteFiles';
-			$newStatus['status'] = 'processing';
-
-			return [
-				'status' => $newStatus,
-				'message' => \__('Site archive created successfully', 'aether-site-exporter'),
-			];
-		});
-	}
-
-	/**
-	 * Execute the generateStaticSite step.
-	 *
-	 * This step is handled client-side. The endpoint transitions to the next step
-	 * after the client completes static site generation and file uploads.
-	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return \WP_REST_Response|\WP_Error
-	 */
-	public function executeGenerateStaticSite(WP_REST_Request $request)
-	{
-		return $this->executeStep($request, 'generateStaticSite', function ($status) {
-			// Client handles static site generation.
-			// This endpoint transitions to the next step.
-
-			// Update status to transition to next step (generateBlueprint).
-			$newStatus = \array_merge($status, []);
-			$newStatus['currentStep'] = 'generateBlueprint';
-			$newStatus['status'] = 'processing';
-
-			return [
-				'status' => $newStatus,
-				'message' => \__('Static site generation complete', 'aether-site-exporter'),
-			];
-		});
-	}
-
-	/**
-	 * Execute a step with common validation and error handling.
-	 *
-	 * @param WP_REST_Request $request       Request object.
-	 * @param string          $stepName      Step name to validate.
-	 * @param callable        $stepLogic     Step-specific logic as callable.
-	 * @return \WP_REST_Response|\WP_Error
-	 */
-	private function executeStep(WP_REST_Request $request, string $stepName, callable $stepLogic)
-	{
-		// Try to get jobId from JSON body first, then body params
-		$jsonParams = $request->get_json_params();
-		$bodyParams = $request->get_body_params();
-		$jobId = '';
-
-		if (!empty($jsonParams) && isset($jsonParams['jobId'])) {
-			$jobId = \sanitize_key($jsonParams['jobId']);
-		} elseif (!empty($bodyParams) && isset($bodyParams['jobId'])) {
-			$jobId = \sanitize_key($bodyParams['jobId']);
-		}
-
-		if (empty($jobId)) {
-			return new WP_Error('missing_job_id', \__('Job ID is required', 'aether-site-exporter'), ['status' => 422]);
-		}
-
-		$status = $this->getJobStatusOrError($jobId);
-		if (\is_wp_error($status)) {
-			return $status;
-		}
-
-		// Verify we're on the correct step.
-		if (($status['currentStep'] ?? '') !== $stepName) {
-			return new WP_Error(
-				'invalid_step',
-				/* translators: 1: Expected step name, 2: Current step name */
-				\sprintf(\__('Job is not on %1$s step. Current step: %2$s', 'aether-site-exporter'), $stepName, $status['currentStep'] ?? 'unknown'),
-				['status' => 422]
-			);
-		}
-
-		/**
-		 * Action fired before a export step executes.
-		 *
-		 * @param string $stepName Step identifier.
-		 * @param string $jobId    Job ID.
-		 * @param array  $status   Current job status.
-		 *
-		 * @example
-		 * add_action('aether_export_step_before', function($stepName, $jobId, $status) {
-		 *     error_log("Starting step: {$stepName} for job: {$jobId}");
-		 * }, 10, 3);
-		 */
-		\do_action('aether_export_step_before', $stepName, $jobId, $status);
-
-		try {
-			// Execute step-specific logic.
-			$result = $stepLogic($status, $jobId);
-
-			/**
-			 * Filter step execution result before saving.
-			 *
-			 * Allows modification of step results before they're persisted.
-			 *
-			 * @param array  $result   Step result (contains 'status' and 'message').
-			 * @param string $stepName Step identifier.
-			 * @param string $jobId    Job ID.
-			 *
-			 * @example
-			 * add_filter('aether_export_step_result', function($result, $stepName, $jobId) {
-			 *     if ($stepName === 'createBlueprintBundle') {
-			 *         $result['status']['custom_data'] = 'added by filter';
-			 *     }
-			 *     return $result;
-			 * }, 10, 3);
-			 */
-			$result = \apply_filters('aether_export_step_result', $result, $stepName, $jobId);
-
-			// Update job status.
-			$this->stateManager->updateStatus($jobId, $result['status']);
-
-			/**
-			 * Action fired after a export step completes successfully.
-			 *
-			 * @param string $stepName Step identifier.
-			 * @param string $jobId    Job ID.
-			 * @param array  $result   Step result.
-			 *
-			 * @example
-			 * add_action('aether_export_step_after', function($stepName, $jobId, $result) {
-			 *     if ($stepName === 'createBlueprintBundle') {
-			 *         error_log("Archive created: " . $result['status']['exportResult']['zipPath']);
-			 *     }
-			 * }, 10, 3);
-			 */
-			\do_action('aether_export_step_after', $stepName, $jobId, $result);
-
-			return \rest_ensure_response([
-				'success' => true,
-				'value' => $result['status'],
-				'data' => $result['status'], // Also include data for compatibility
-				'message' => $result['message'],
-			]);
-		} catch (\Exception $e) {
-			// Sanitize exception message to prevent information disclosure
-			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
-
-			/**
-			 * Action fired when a export step fails.
-			 *
-			 * @param string     $stepName Step identifier.
-			 * @param string     $jobId    Job ID.
-			 * @param \Exception $error    Exception object.
-			 * @param string     $message  Sanitized error message.
-			 *
-			 * @example
-			 * add_action('aether_export_step_error', function($stepName, $jobId, $error, $message) {
-			 *     // Log to external monitoring service
-			 *     error_log("Step failed: {$stepName} - {$message}");
-			 * }, 10, 4);
-			 */
-			\do_action('aether_export_step_error', $stepName, $jobId, $e, $sanitizedMessage);
-
-			// Mark job as failed with sanitized message
-			$this->stateManager->markFailed($jobId, $sanitizedMessage, $stepName);
-
-			return new WP_Error(
-				'step_execution_failed',
-				/* translators: %s: Error message */
-				\sprintf(\__('Step execution failed: %s', 'aether-site-exporter'), $sanitizedMessage),
-				['status' => 500]
-			);
-		}
-	}
-
-	/**
 	 * Get HTML content for a specific URL.
 	 *
 	 * Fetches HTML as a logged-out user (visitor view) without processing.
@@ -583,7 +373,6 @@ class ExportStepsController
 		 * }, 10, 2);
 		 */
 		\do_action('aether_archive_before_create', $progressId, $customAssets);
-
 
 		// Create export service.
 		$exportService = new ExportService($this->plugin);

@@ -29,12 +29,10 @@ export class StorageService {
 	 * Constructor.
 	 *
 	 * @param {string} staticPath Path for static files storage.
-	 * @param {string} jobId      Job ID for this export (optional, defaults to empty string).
 	 * @param {Object} config     Optional configuration.
 	 */
-	constructor( staticPath, jobId = '', config = {} ) {
+	constructor( staticPath, config = {} ) {
 		this.staticPath = staticPath;
-		this.jobId = jobId;
 		this.config = config;
 		this.baseUrl = config.public_url || config.base_url || '';
 		this.providerId = config.provider_id || null;
@@ -108,7 +106,7 @@ export class StorageService {
 			metadata: {
 				staticPath: this.staticPath,
 				originalKey: key,
-				jobId: this.jobId,
+				
 				cacheControl: metadata.cacheControl || '',
 				onProgress: metadata.onProgress || null,
 			},
@@ -142,7 +140,7 @@ export class StorageService {
 	async delete( key ) {
 		const prefixedKey = this._prefixKey( key );
 		return deleteFile( this.staticPath, prefixedKey, {
-			jobId: this.jobId,
+			
 		} );
 	}
 
@@ -218,7 +216,7 @@ export class StorageService {
 	 */
 	async batchDelete( keys ) {
 		return batchDeleteFromAdapter( this.staticPath, keys, {
-			jobId: this.jobId,
+			
 		} );
 	}
 
@@ -238,7 +236,7 @@ export class StorageService {
 			const blob = await downloadFileFromAdapter(
 				this.staticPath,
 				prefixedManifestKey,
-				{ jobId: this.jobId }
+				{}
 			);
 			return blob;
 		} catch ( error ) {

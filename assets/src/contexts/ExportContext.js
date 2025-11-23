@@ -22,7 +22,6 @@ import {
 export const ExportContext = createContext( {
 	steps: [],
 	isExporting: false,
-	jobId: null,
 	finalStatus: null,
 	error: null,
 	currentStatusMessage: null,
@@ -36,7 +35,6 @@ export const ExportContext = createContext( {
 	markAllComplete: () => {},
 	showError: () => {},
 	setIsExporting: () => {},
-	setJobId: () => {},
 	setStatusMessage: () => {},
 	setOverallProgressValue: () => {},
 	updateMessage: () => {},
@@ -65,7 +63,6 @@ export function ExportProvider( { children } ) {
 	// Core state
 	const [ steps, setSteps ] = useState( [] );
 	const [ isExporting, setIsExporting ] = useState( false );
-	const [ jobId, setJobId ] = useState( null );
 	const [ finalStatus, setFinalStatus ] = useState( null );
 	const [ error, setError ] = useState( null );
 	const [ currentStatusMessage, setCurrentStatusMessage ] = useState( null );
@@ -469,7 +466,6 @@ export function ExportProvider( { children } ) {
 			setSteps( [] );
 		}
 		setIsExporting( false );
-		setJobId( null );
 		setFinalStatus( null );
 		setError( null );
 		setCurrentStatusMessage( null );
@@ -485,7 +481,6 @@ export function ExportProvider( { children } ) {
 		() => ( {
 			steps,
 			isExporting,
-			jobId,
 			finalStatus,
 			error,
 			currentStatusMessage,
@@ -500,7 +495,6 @@ export function ExportProvider( { children } ) {
 			markAllComplete,
 			showError,
 			setIsExporting,
-			setJobId,
 			setStatusMessage,
 			setOverallProgressValue,
 			addMessage,
@@ -512,7 +506,6 @@ export function ExportProvider( { children } ) {
 		[
 			steps,
 			isExporting,
-			jobId,
 			finalStatus,
 			error,
 			currentStatusMessage,

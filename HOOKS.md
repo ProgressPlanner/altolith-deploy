@@ -1948,137 +1948,6 @@ add_action('aether_export_upload_error', function($error, $file_path, $config, $
 
 ---
 
-#### `aether_export_job_created`
-
-**Type**: Action
-**Location**: `includes/REST/Export/ExportJobController.php`
-
-Fires when a new publish job is created.
-
-**Parameters**:
-- `$job_id` (string): Job identifier
-- `$config` (array): Job configuration
-- `$request` (WP_REST_Request): REST request object
-
-**Example**:
-```php
-add_action('aether_export_job_created', function($job_id, $config, $request) {
-    // Track job creation
-    error_log("Created publish job: {$job_id}");
-
-    // Store custom metadata
-    update_option("aether_job_{$job_id}_created_at", time());
-}, 10, 3);
-```
-
----
-
-#### `aether_export_job_status_changed`
-
-**Type**: Action
-**Location**: `includes/REST/Export/ExportJobController.php`
-
-Fires when publish job status changes.
-
-**Parameters**:
-- `$job_id` (string): Job identifier
-- `$new_status` (string): New status (pending, in_progress, completed, failed)
-- `$old_status` (string): Previous status
-- `$data` (array): Job data
-
-**Example**:
-```php
-add_action('aether_export_job_status_changed', function($job_id, $new_status, $old_status, $data) {
-    // Send notifications
-    if ($new_status === 'completed') {
-        wp_mail(
-            get_option('admin_email'),
-            'Deployment Complete',
-            "Your site has been successfully deployed. Job ID: {$job_id}"
-        );
-    }
-}, 10, 4);
-```
-
----
-
-#### `aether_export_job_completed`
-
-**Type**: Action
-**Location**: `includes/REST/Export/ExportJobController.php`
-
-Fires when publish job completes successfully.
-
-**Parameters**:
-- `$job_id` (string): Job identifier
-- `$result` (array): Job result data
-- `$request` (WP_REST_Request): REST request object
-
-**Example**:
-```php
-add_action('aether_export_job_completed', function($job_id, $result, $request) {
-    // Cleanup temporary files
-    // Trigger post-deployment tasks
-    // Update analytics
-    error_log("Publish job {$job_id} completed successfully");
-}, 10, 3);
-```
-
----
-
-#### `aether_export_job_failed`
-
-**Type**: Action
-**Location**: `includes/REST/Export/ExportJobController.php`
-
-Fires when publish job fails.
-
-**Parameters**:
-- `$job_id` (string): Job identifier
-- `$error` (WP_Error|string): Error information
-- `$request` (WP_REST_Request): REST request object
-
-**Example**:
-```php
-add_action('aether_export_job_failed', function($job_id, $error, $request) {
-    $error_message = is_wp_error($error) ? $error->get_error_message() : $error;
-
-    // Send failure notification
-    wp_mail(
-        get_option('admin_email'),
-        'Deployment Failed',
-        "Deployment failed for job {$job_id}: {$error_message}"
-    );
-}, 10, 3);
-```
-
----
-
-#### `aether_export_job_deleted`
-
-**Type**: Action
-**Location**: `includes/REST/Export/ExportJobController.php`
-
-Fires when publish job is deleted.
-
-**Parameters**:
-- `$job_id` (string): Job identifier
-- `$request` (WP_REST_Request): REST request object
-
-**Example**:
-```php
-add_action('aether_export_job_deleted', function($job_id, $request) {
-    // Cleanup related resources
-    delete_option("aether_job_{$job_id}_created_at");
-
-    // Log deletion
-    error_log("Deleted publish job: {$job_id}");
-}, 10, 2);
-```
-
----
-
-## Usage Examples
 
 ### Creating a Custom Provider
 
@@ -2262,3 +2131,28 @@ For questions about using these hooks:
 - File an issue: https://github.com/your-repo/issues
 - Documentation: https://docs.aether-exporter.com
 
+
+---
+
+## Deprecated Hooks (Removed)
+
+The following hooks have been removed as the job tracking system has been eliminated:
+
+**PHP Hooks:**
+- `aether_export_job_data` - Filter initial job data
+- `aether_export_job_before_create` - Action before job creation
+- `aether_export_job_created` - Action after job creation
+- `aether_export_job_status_update` - Filter status updates
+- `aether_export_job_status_updated` - Action after status update
+- `aether_export_job_before_complete` - Action before completion
+- `aether_export_job_complete_status` - Filter completion status
+- `aether_export_job_completed` - Action after completion  
+- `aether_export_job_failed` - Action on failure
+- `aether_export_job_deleted` - Action on deletion
+- `aether_export_jobs_list` - Filter jobs list
+- `aether_export_step_before` - Action before step execution
+- `aether_export_step_result` - Filter step result
+- `aether_export_step_after` - Action after step execution
+- `aether_export_step_error` - Action on step error
+
+The workflow is now stateless and entirely React-managed without server-side job tracking.

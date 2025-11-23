@@ -415,7 +415,6 @@ class Plugin
 
 		// Initialize REST controllers.
 		$settingsController = new REST\SettingsController();
-		$exportController  = new REST\ExportController($this);
 		$providerConfigController = new REST\ProviderConfigController();
 		$assetsController = new REST\AssetsController();
 		$localStorageController = new REST\LocalStorageController();
@@ -423,12 +422,10 @@ class Plugin
 		$adminBarDependenciesController = new REST\AdminBarDependenciesController();
 
 		// Initialize export controllers.
-		$exportJobController = new REST\Export\ExportJobController($this);
 		$exportStepsController = new REST\Export\ExportStepsController($this);
 
 		// Register routes from each controller.
 		$settingsController->registerRoutes();
-		$exportController->registerRoutes();
 		$providerConfigController->registerRoutes();
 		$assetsController->registerRoutes();
 		$localStorageController->registerRoutes();
@@ -436,7 +433,6 @@ class Plugin
 		$adminBarDependenciesController->registerRoutes();
 
 		// Register export routes.
-		$exportJobController->registerRoutes();
 		$exportStepsController->registerRoutes();
 	}
 

@@ -41,12 +41,6 @@ export const ENDPOINTS = {
 		STEPS: `${ API_BASE_PATH }/export/steps`,
 		STEP: ( stepId ) => `${ API_BASE_PATH }/export/steps/${ stepId }`,
 		CANCEL: `${ API_BASE_PATH }/export/cancel`,
-		RECENT_JOBS: `${ API_BASE_PATH }/export/recent-jobs`,
-		JOB_STATUS: ( jobId ) => `${ API_BASE_PATH }/export/${ jobId }/status`,
-		UPDATE_JOB_STATUS: ( jobId ) =>
-			`${ API_BASE_PATH }/export/${ jobId }/status`,
-		MARK_UPLOADS_COMPLETE: ( jobId ) =>
-			`${ API_BASE_PATH }/export/${ jobId }/mark-uploads-complete`,
 		CREATE_ARCHIVE: `${ API_BASE_PATH }/export/createArchive`,
 		GENERATE_BLUEPRINT_BUNDLE: `${ API_BASE_PATH }/export/generateBlueprintBundle`,
 	},

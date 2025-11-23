@@ -16,7 +16,7 @@ import { createSuccessResponse, createErrorResponse } from './standardResponse';
  * @param {string}    staticPath Base path for static files.
  * @param {string}    key        File path/key relative to static path.
  * @param {File|Blob} file       File to upload.
- * @param {Object}    options    Optional options (contentType, cacheControl, onProgress, jobId).
+ * @param {Object}    options    Optional options (contentType, cacheControl, onProgress).
  * @return {Promise<Object>} Upload result with success and optional url/error.
  */
 export async function uploadFile( staticPath, key, file, options = {} ) {
@@ -36,7 +36,6 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 		formData.append( 'file', file );
 		formData.append( 'key', key );
 		formData.append( 'static_path', staticPath );
-		formData.append( 'job_id', options.jobId || '' );
 
 		if ( options.contentType ) {
 			formData.append( 'content_type', options.contentType );
@@ -122,7 +121,7 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
  *
  * @param {string} staticPath Base path for static files.
  * @param {string} key        File path/key to delete.
- * @param {Object} options    Optional options (jobId).
+ * @param {Object} options    Optional options (unused, kept for API consistency).
  * @return {Promise<Object>} Delete result.
  */
 export async function deleteFile( staticPath, key, options = {} ) {
@@ -135,7 +134,6 @@ export async function deleteFile( staticPath, key, options = {} ) {
 			data: {
 				key,
 				static_path: staticPath,
-				job_id: options.jobId || '',
 			},
 		} );
 
@@ -213,7 +211,7 @@ export async function batchCopy( staticPath, operations ) {
  *
  * @param {string} staticPath Base path for static files.
  * @param {Array}  keys       Array of file paths/keys to delete.
- * @param {Object} options    Optional options (jobId).
+ * @param {Object} options    Optional options (unused, kept for API consistency).
  * @return {Promise<Object>} Batch delete result.
  */
 export async function batchDelete( staticPath, keys, options = {} ) {
@@ -229,7 +227,6 @@ export async function batchDelete( staticPath, keys, options = {} ) {
 			data: {
 				keys,
 				static_path: staticPath,
-				job_id: options.jobId || '',
 			},
 		} );
 
@@ -251,7 +248,7 @@ export async function batchDelete( staticPath, keys, options = {} ) {
  *
  * @param {string} staticPath Base path for static files.
  * @param {string} key        File path/key to download.
- * @param {Object} options    Optional options (jobId).
+ * @param {Object} options    Optional options (unused, kept for API consistency).
  * @return {Promise<Blob|null>} File blob or null if not found.
  */
 export async function downloadFile( staticPath, key, options = {} ) {
@@ -261,9 +258,7 @@ export async function downloadFile( staticPath, key, options = {} ) {
 		const response = await apiFetch( {
 			path: `/aether/site-exporter/local-storage/download?key=${ encodeURIComponent(
 				key
-			) }&static_path=${ encodeURIComponent( staticPath ) }&job_id=${
-				options.jobId || ''
-			}`,
+			) }&static_path=${ encodeURIComponent( staticPath ) }`,
 			method: 'GET',
 			parse: false, // Get raw response
 		} );

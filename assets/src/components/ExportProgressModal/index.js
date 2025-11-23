@@ -117,7 +117,6 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 	const {
 		steps,
 		isExporting,
-		jobId,
 		finalStatus,
 		error,
 		reset,
@@ -157,8 +156,8 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 	// Start export when modal opens
 	useEffect( () => {
 		if ( isOpen && ! isExporting ) {
-			// Only start if we haven't started yet (no steps initialized and no job ID)
-			if ( steps.length === 0 && ! jobId ) {
+			// Only start if we haven't started yet (no steps initialized)
+			if ( steps.length === 0 ) {
 				startExport();
 			}
 		}
