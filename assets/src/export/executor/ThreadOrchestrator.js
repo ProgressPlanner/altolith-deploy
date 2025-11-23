@@ -47,13 +47,25 @@ async function limitConcurrency( items, fn, concurrency = 5 ) {
 /**
  * Deep clone global context to ensure thread isolation
  *
- * Creates a deep copy of global context so threads cannot mutate shared data.
- * Special handling for Maps, Arrays, and nested objects.
+ * Creates a truly deep copy of global context so threads cannot mutate shared data.
+ * Handles Maps, Arrays, and nested objects recursively.
+ * Tracks visited objects to handle circular references.
  *
  * @param {Object} context - Global context to clone
+ * @param {WeakMap} visited - Internal: tracks cloned objects to handle circular refs
  * @return {Object} Deep cloned context
  */
-function deepCloneContext( context ) {
+function deepCloneContext( context, visited = new WeakMap() ) {
+	// Handle primitives and null
+	if ( context === null || typeof context !== 'object' ) {
+		return context;
+	}
+
+	// Check if already cloned (handles circular references)
+	if ( visited.has( context ) ) {
+		return visited.get( context );
+	}
+
 	const cloned = {};
 
 	for ( const [ key, value ] of Object.entries( context ) ) {
@@ -62,29 +74,122 @@ function deepCloneContext( context ) {
 			continue;
 		}
 
-		// Handle Map objects
+		// Handle null
+		if ( value === null ) {
+			cloned[ key ] = null;
+			continue;
+		}
+
+		// Handle Map objects (deep clone entries)
 		if ( value instanceof Map ) {
-			cloned[ key ] = new Map( value );
+			const clonedMap = new Map();
+			visited.set( value, clonedMap );
+
+			for ( const [ mapKey, mapValue ] of value.entries() ) {
+				// Recursively clone map values
+				clonedMap.set(
+					mapKey,
+					typeof mapValue === 'object' && mapValue !== null
+						? deepCloneValue( mapValue, visited )
+						: mapValue
+				);
+			}
+			cloned[ key ] = clonedMap;
 			continue;
 		}
 
-		// Handle Arrays
+		// Handle Arrays (deep clone elements)
 		if ( Array.isArray( value ) ) {
-			cloned[ key ] = [ ...value ];
+			const clonedArray = [];
+			visited.set( value, clonedArray );
+
+			for ( let i = 0; i < value.length; i++ ) {
+				clonedArray[ i ] =
+					typeof value[ i ] === 'object' && value[ i ] !== null
+						? deepCloneValue( value[ i ], visited )
+						: value[ i ];
+			}
+			cloned[ key ] = clonedArray;
 			continue;
 		}
 
-		// Handle plain objects (deep clone)
-		if ( value && typeof value === 'object' && value.constructor === Object ) {
-			cloned[ key ] = JSON.parse( JSON.stringify( value ) );
+		// Handle plain objects (deep clone recursively)
+		if ( typeof value === 'object' && value.constructor === Object ) {
+			cloned[ key ] = deepCloneContext( value, visited );
 			continue;
 		}
 
-		// Primitive values
+		// Handle Date objects
+		if ( value instanceof Date ) {
+			cloned[ key ] = new Date( value.getTime() );
+			continue;
+		}
+
+		// Handle RegExp objects
+		if ( value instanceof RegExp ) {
+			cloned[ key ] = new RegExp( value.source, value.flags );
+			continue;
+		}
+
+		// Primitive values or unhandled types (e.g., DOM nodes)
+		// For unhandled types, we keep the reference (can't clone everything)
 		cloned[ key ] = value;
 	}
 
+	// Mark this object as visited
+	visited.set( context, cloned );
+
 	return cloned;
+}
+
+/**
+ * Deep clone a single value (used by Map/Array cloning)
+ *
+ * @param {*} value - Value to clone
+ * @param {WeakMap} visited - Tracks cloned objects
+ * @return {*} Cloned value
+ */
+function deepCloneValue( value, visited ) {
+	if ( value === null || typeof value !== 'object' ) {
+		return value;
+	}
+
+	if ( visited.has( value ) ) {
+		return visited.get( value );
+	}
+
+	if ( value instanceof Map ) {
+		const clonedMap = new Map();
+		visited.set( value, clonedMap );
+		for ( const [ k, v ] of value.entries() ) {
+			clonedMap.set( k, deepCloneValue( v, visited ) );
+		}
+		return clonedMap;
+	}
+
+	if ( Array.isArray( value ) ) {
+		const clonedArray = [];
+		visited.set( value, clonedArray );
+		for ( let i = 0; i < value.length; i++ ) {
+			clonedArray[ i ] = deepCloneValue( value[ i ], visited );
+		}
+		return clonedArray;
+	}
+
+	if ( value instanceof Date ) {
+		return new Date( value.getTime() );
+	}
+
+	if ( value instanceof RegExp ) {
+		return new RegExp( value.source, value.flags );
+	}
+
+	if ( typeof value === 'object' && value.constructor === Object ) {
+		return deepCloneContext( value, visited );
+	}
+
+	// Unhandled types - return reference
+	return value;
 }
 
 /**
