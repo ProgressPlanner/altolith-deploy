@@ -21,6 +21,7 @@ import {
 	restoreExecutionContext,
 } from '../utils/stateManager';
 import { debug, debugWarn } from '@aether/utils/debug';
+import DataValidator from './DataValidator';
 
 /**
  * Execute a workflow with the given steps.
@@ -92,7 +93,12 @@ export async function executeSteps( steps, context, options = {} ) {
 	};
 
 	// Fire workflow start action
-	doAction( 'aether.export.workflow.before', executionContext, steps );
+	doAction(
+		'aether.export.workflow.before',
+		executionContext,
+		steps,
+		executionContext.currentProviderInstance || null
+	);
 
 	try {
 		for ( const parallelGroup of executionPlan ) {
@@ -105,7 +111,8 @@ export async function executeSteps( steps, context, options = {} ) {
 				const shouldSkip = applyFilters(
 					`aether.export.step.${ stepId }.skip`,
 					step.skip ? step.skip( executionContext ) : false,
-					executionContext
+					executionContext,
+					executionContext.currentProviderInstance || null
 				);
 
 				if ( shouldSkip ) {
@@ -121,7 +128,8 @@ export async function executeSteps( steps, context, options = {} ) {
 				onStepSkipped( stepId );
 				doAction(
 					`aether.export.step.${ stepId }.skipped`,
-					executionContext
+					executionContext,
+					executionContext.currentProviderInstance || null
 				);
 			}
 
@@ -163,7 +171,8 @@ export async function executeSteps( steps, context, options = {} ) {
 		doAction(
 			'aether.export.workflow.after',
 			executionContext.state,
-			executionContext
+			executionContext,
+			executionContext.currentProviderInstance || null
 		);
 
 		// Clear progress tracker and state on successful completion
@@ -172,7 +181,12 @@ export async function executeSteps( steps, context, options = {} ) {
 
 		return executionContext.state;
 	} catch ( error ) {
-		doAction( 'aether.export.workflow.error', error, executionContext );
+		doAction(
+			'aether.export.workflow.error',
+			error,
+			executionContext,
+			executionContext.currentProviderInstance || null
+		);
 		// Don't clear progress on error - allows for resume
 		throw error;
 	}
@@ -192,7 +206,11 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 	const { onStepStart, onStepComplete, onError } = options;
 
 	// Fire before hook
-	doAction( `aether.export.step.${ stepId }.before`, executionContext );
+	doAction(
+		`aether.export.step.${ stepId }.before`,
+		executionContext,
+		executionContext.currentProviderInstance || null
+	);
 
 	onStepStart( stepId, step );
 
@@ -208,6 +226,9 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 			...executionContext.state,
 		};
 
+		// Validate data requirements before execution
+		DataValidator.validate( step, stepContext );
+
 		// Execute handler with retry logic
 		const result = await errorHandler.executeWithRetry(
 			async () => {
@@ -221,17 +242,22 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 						error,
 						attempt,
 						delay,
-						executionContext
+						executionContext,
+						executionContext.currentProviderInstance || null
 					);
 				},
 			}
 		);
 
+		// Validate output matches provides declaration
+		DataValidator.validateOutput( step, result );
+
 		// Apply result filter
 		const filteredResult = applyFilters(
 			`aether.export.step.${ stepId }.result`,
 			result || {},
-			executionContext
+			executionContext,
+			executionContext.currentProviderInstance || null
 		);
 
 		onStepComplete( stepId, filteredResult );
@@ -245,7 +271,8 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 		doAction(
 			`aether.export.step.${ stepId }.after`,
 			filteredResult,
-			executionContext
+			executionContext,
+			executionContext.currentProviderInstance || null
 		);
 
 		return filteredResult;
@@ -272,7 +299,8 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 		doAction(
 			`aether.export.step.${ stepId }.error`,
 			enhancedError,
-			executionContext
+			executionContext,
+			executionContext.currentProviderInstance || null
 		);
 
 		// For critical errors, stop workflow immediately
