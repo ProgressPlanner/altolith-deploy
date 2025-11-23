@@ -28,9 +28,11 @@ export const ExportContext = createContext( {
 	overallProgress: 0,
 	staticSiteProviders: [],
 	blueprintBundleProviders: [],
+	providerProgress: {},
 	initializeSteps: () => {},
 	setStepStatus: () => {},
 	setStepProgress: () => {},
+	setProviderProgress: () => {},
 	updateFromStep: () => {},
 	markAllComplete: () => {},
 	showError: () => {},
@@ -72,6 +74,7 @@ export function ExportProvider( { children } ) {
 	const [ blueprintBundleProviders, setBlueprintBundleProviders ] = useState(
 		[]
 	);
+	const [ providerProgress, setProviderProgressState ] = useState( {} );
 
 	// Track maximum progress to prevent progress from going backwards
 	const maxProgressRef = useRef( 0 );
@@ -159,6 +162,28 @@ export function ExportProvider( { children } ) {
 				return step;
 			} )
 		);
+	}, [] );
+
+	/**
+	 * Set progress for a specific provider instance
+	 *
+	 * Used by ThreadOrchestrator to track per-provider progress.
+	 * Format: { [providerId]: { stepId, stepLabel, progress, status } }
+	 *
+	 * @param {string} providerId Provider instance ID
+	 * @param {Object} progress   Progress data { stepId, stepLabel, progress, status }
+	 */
+	const setProviderProgress = useCallback( ( providerId, progress ) => {
+		setProviderProgressState( ( prev ) => ( {
+			...prev,
+			[ providerId ]: {
+				...progress,
+				progress: Math.max(
+					0,
+					Math.min( 100, Math.round( progress.progress || 0 ) )
+				),
+			},
+		} ) );
 	}, [] );
 
 	/**
@@ -473,6 +498,7 @@ export function ExportProvider( { children } ) {
 		setMessageHistory( [] );
 		setStaticSiteProviders( [] );
 		setBlueprintBundleProviders( [] );
+		setProviderProgressState( {} );
 		maxProgressRef.current = 0;
 	}, [] );
 
@@ -488,9 +514,11 @@ export function ExportProvider( { children } ) {
 			messageHistory,
 			staticSiteProviders,
 			blueprintBundleProviders,
+			providerProgress,
 			initializeSteps,
 			setStepStatus,
 			setStepProgress,
+			setProviderProgress,
 			updateFromStep,
 			markAllComplete,
 			showError,
@@ -513,9 +541,11 @@ export function ExportProvider( { children } ) {
 			messageHistory,
 			staticSiteProviders,
 			blueprintBundleProviders,
+			providerProgress,
 			initializeSteps,
 			setStepStatus,
 			setStepProgress,
+			setProviderProgress,
 			updateFromStep,
 			markAllComplete,
 			showError,
