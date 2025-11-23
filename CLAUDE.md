@@ -267,7 +267,7 @@ Key principles:
 3. **REST API Controllers** (`includes/REST/`)
    - Each controller is a dedicated class (separation of concerns)
    - Publish controllers handle multi-step export workflow
-   - All endpoints prefixed with `/aether/v1/`
+   - All endpoints use namespace `aether/site-exporter`
    - CORS headers automatically added for Playground compatibility
    - **No provider-specific logic in controllers**
 

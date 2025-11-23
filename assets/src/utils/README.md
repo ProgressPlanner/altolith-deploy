@@ -25,7 +25,7 @@ WordPress REST API wrapper with nonce handling.
 import apiFetch from '../utils/api';
 
 const response = await apiFetch({
-    path: '/wp-json/aether/v1/endpoint',
+    path: '/wp-json/aether/site-exporter/settings',
     method: 'POST',
     data: { key: 'value' },
 });

@@ -412,9 +412,9 @@ Configuration is persisted via REST API:
 **Endpoint:** `ProviderConfigController.php`
 
 ```
-GET    /wp-json/aether/v1/providers/{providerId}/config
-POST   /wp-json/aether/v1/providers/{providerId}/config
-DELETE /wp-json/aether/v1/providers/{providerId}/config
+GET    /wp-json/aether/site-exporter/providers/{providerId}/config
+POST   /wp-json/aether/site-exporter/providers/{providerId}/config
+DELETE /wp-json/aether/site-exporter/providers/{providerId}/config
 ```
 
 Server-side encryption for sensitive fields (marked with `secure: true`).

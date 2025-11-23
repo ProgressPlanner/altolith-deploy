@@ -156,7 +156,7 @@ Add a constant when you find yourself:
 ```javascript
 // ❌ Before: Magic values scattered throughout code
 setTimeout(checkStatus, 500);
-fetch('/wp-json/aether/v1/publish');
+fetch('/wp-json/aether/site-exporter/export/createArchive');
 if (providerId === 'local-filesystem') { }
 
 // ✅ After: Using constants

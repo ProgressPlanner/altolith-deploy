@@ -338,7 +338,7 @@ import apiFetch from '../utils/api';
 
 // Nonce automatically included
 await apiFetch({
-    path: '/wp-json/aether/v1/providers/config',
+    path: '/wp-json/aether/site-exporter/providers/{providerId}/config',
     method: 'POST',
     data: config,
 });

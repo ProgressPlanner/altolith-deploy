@@ -170,7 +170,7 @@ export function useCustomHook( param ) {
 
 ```javascript
 // ❌ Don't use magic strings/numbers
-path: '/aether/v1/publish'
+path: '/wp-json/aether/site-exporter/export/createArchive'
 setTimeout( callback, 500 )
 
 // ✅ Use constants
