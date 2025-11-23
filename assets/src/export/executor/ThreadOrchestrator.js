@@ -77,6 +77,8 @@ function deepCloneContext( context, visited = new WeakMap() ) {
 	}
 
 	const cloned = {};
+	// Mark this object as visited BEFORE recursing to handle circular references
+	visited.set( context, cloned );
 
 	for ( const [ key, value ] of Object.entries( context ) ) {
 		// Skip functions (callbacks are handled separately)
@@ -145,9 +147,6 @@ function deepCloneContext( context, visited = new WeakMap() ) {
 		// For unhandled types, we keep the reference (can't clone everything)
 		cloned[ key ] = value;
 	}
-
-	// Mark this object as visited
-	visited.set( context, cloned );
 
 	return cloned;
 }
