@@ -340,13 +340,11 @@ describe( 'useStaticSiteGenerator', () => {
 		} );
 
 		it( 'should use shared cache when provided', async () => {
-			const sharedCache = {
-				get: jest.fn(),
-				getAllUrls: jest.fn().mockResolvedValue( [] ),
-			};
+			// Use a real Map for shared cache
+			const sharedCache = new Map();
 
 			executePreScan.mockResolvedValue( {
-				cache: sharedCache,
+				htmlData: sharedCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -370,7 +368,7 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 
 			expect( executePreScan ).toHaveBeenCalledWith(
-				expect.objectContaining( { cache: sharedCache } )
+				expect.objectContaining( { htmlData: sharedCache } )
 			);
 		} );
 	} );
@@ -448,16 +446,18 @@ describe( 'useStaticSiteGenerator', () => {
 				{ length: 100 },
 				( _, i ) => `https://example.com/page${ i }`
 			);
-			const cachedUrls = urls.slice( 0, 100 );
 
-			mockCache.getAllUrls.mockResolvedValue( cachedUrls );
-			mockCache.get.mockImplementation( ( url ) => ( {
-				rawHtml: '<html></html>',
-				assetUrls: [],
-			} ) );
+			// Populate the Map directly
+			const htmlDataMap = new Map();
+			urls.forEach( ( url ) => {
+				htmlDataMap.set( url, {
+					rawHtml: '<html></html>',
+					assetUrls: [],
+				} );
+			} );
 
 			executePreScan.mockResolvedValue( {
-				htmlData: mockCache,
+				htmlData: htmlDataMap,
 				totalFilesToUpload: 100,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -561,11 +561,12 @@ describe( 'useStaticSiteGenerator', () => {
 		it( 'should skip cache misses gracefully', async () => {
 			const urls = [ 'https://example.com/page1' ];
 
-			mockCache.getAllUrls.mockResolvedValue( urls );
-			mockCache.get.mockResolvedValue( null ); // Cache miss
+			// Populate the Map with a URL but no data (simulating cache miss)
+			const htmlDataMap = new Map();
+			htmlDataMap.set( urls[ 0 ], null );
 
 			executePreScan.mockResolvedValue( {
-				htmlData: mockCache,
+				htmlData: htmlDataMap,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -595,14 +596,15 @@ describe( 'useStaticSiteGenerator', () => {
 		it( 'should handle upload errors gracefully', async () => {
 			const urls = [ 'https://example.com/page1' ];
 
-			mockCache.getAllUrls.mockResolvedValue( urls );
-			mockCache.get.mockResolvedValue( {
+			// Populate the Map directly
+			const htmlDataMap = new Map();
+			htmlDataMap.set( urls[ 0 ], {
 				rawHtml: '<html></html>',
 				assetUrls: [],
 			} );
 
 			executePreScan.mockResolvedValue( {
-				htmlData: mockCache,
+				htmlData: htmlDataMap,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -633,14 +635,15 @@ describe( 'useStaticSiteGenerator', () => {
 		it( 'should track skipped files', async () => {
 			const urls = [ 'https://example.com/page1' ];
 
-			mockCache.getAllUrls.mockResolvedValue( urls );
-			mockCache.get.mockResolvedValue( {
+			// Populate the Map directly
+			const htmlDataMap = new Map();
+			htmlDataMap.set( urls[ 0 ], {
 				rawHtml: '<html></html>',
 				assetUrls: [],
 			} );
 
 			executePreScan.mockResolvedValue( {
-				htmlData: mockCache,
+				htmlData: htmlDataMap,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -691,14 +694,15 @@ describe( 'useStaticSiteGenerator', () => {
 				'https://example.com/script.js',
 			];
 
-			mockCache.getAllUrls.mockResolvedValue( urls );
-			mockCache.get.mockResolvedValue( {
+			// Populate the Map directly
+			const htmlDataMap = new Map();
+			htmlDataMap.set( urls[ 0 ], {
 				rawHtml: '<html></html>',
 				assetUrls,
 			} );
 
 			executePreScan.mockResolvedValue( {
-				htmlData: mockCache,
+				htmlData: htmlDataMap,
 				totalFilesToUpload: 3,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -751,14 +755,15 @@ describe( 'useStaticSiteGenerator', () => {
 		it( 'should call onProgress callback', async () => {
 			const urls = [ 'https://example.com/page1' ];
 
-			mockCache.getAllUrls.mockResolvedValue( urls );
-			mockCache.get.mockResolvedValue( {
+			// Populate the Map directly
+			const htmlDataMap = new Map();
+			htmlDataMap.set( urls[ 0 ], {
 				rawHtml: '<html></html>',
 				assetUrls: [],
 			} );
 
 			executePreScan.mockResolvedValue( {
-				htmlData: mockCache,
+				htmlData: htmlDataMap,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -798,14 +803,15 @@ describe( 'useStaticSiteGenerator', () => {
 		it( 'should update status messages during upload', async () => {
 			const urls = [ 'https://example.com/page1' ];
 
-			mockCache.getAllUrls.mockResolvedValue( urls );
-			mockCache.get.mockResolvedValue( {
+			// Populate the Map directly
+			const htmlDataMap = new Map();
+			htmlDataMap.set( urls[ 0 ], {
 				rawHtml: '<html></html>',
 				assetUrls: [],
 			} );
 
 			executePreScan.mockResolvedValue( {
-				htmlData: mockCache,
+				htmlData: htmlDataMap,
 				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
