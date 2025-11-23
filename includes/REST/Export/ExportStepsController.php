@@ -584,14 +584,11 @@ class ExportStepsController
 		 */
 		\do_action('aether_archive_before_create', $progressId, $customAssets);
 
-		// Initialize progress transient.
-		\set_transient($progressId, ['progress' => 0], 1800); // 30 minutes
 
 		// Create export service.
 		$exportService = new ExportService($this->plugin);
 
-		// Export complete site with progress tracking via transient.
-		// Progress is reported via $progressId transient, NOT job tracking.
+		// Export complete site.
 		// If customAssets provided, only those plugins/themes are included in zip.
 		$result = $exportService->exportCompleteSite($progressId, null, $customAssets);
 
@@ -614,9 +611,6 @@ class ExportStepsController
 		 * }, 10, 2);
 		 */
 		$result = \apply_filters('aether_archive_result', $result, $progressId);
-
-		// Mark progress as complete.
-		\set_transient($progressId, ['progress' => 100, 'complete' => true], 1800);
 
 		/**
 		 * Action fired after site archive is created successfully.
