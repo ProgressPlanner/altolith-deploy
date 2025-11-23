@@ -27,20 +27,25 @@ async function limitConcurrency( items, fn, concurrency = 5 ) {
 	const executing = [];
 
 	for ( let index = 0; index < items.length; index++ ) {
-		// Create promise for this item
-		const promise = fn( items[ index ], index ).then( ( result ) => {
-			// Store result in correct position
-			results[ index ] = result;
-			// Remove this promise from executing array
-			const execIndex = executing.indexOf( promise );
+		// Create promise for this item and wrap it with cleanup
+		const promise = Promise.resolve( fn( items[ index ], index ) ).then(
+			( result ) => {
+				// Store result in correct position
+				results[ index ] = result;
+				return result;
+			}
+		);
+
+		// Create cleanup promise that removes from executing array
+		const cleanup = promise.then( () => {
+			const execIndex = executing.indexOf( cleanup );
 			if ( execIndex !== -1 ) {
 				executing.splice( execIndex, 1 );
 			}
-			return result;
 		} );
 
-		// Add to executing array
-		executing.push( promise );
+		// Add cleanup promise to executing array (not the original promise)
+		executing.push( cleanup );
 
 		// If we've hit concurrency limit, wait for one to complete
 		if ( executing.length >= concurrency ) {
@@ -92,21 +97,41 @@ function deepCloneContext( context, visited = new WeakMap() ) {
 			continue;
 		}
 
-		// Handle Map objects (deep clone entries)
+		// Handle Map objects (deep clone entries, including keys)
 		if ( value instanceof Map ) {
 			const clonedMap = new Map();
 			visited.set( value, clonedMap );
 
 			for ( const [ mapKey, mapValue ] of value.entries() ) {
-				// Recursively clone map values
-				clonedMap.set(
-					mapKey,
+				// Recursively clone both keys and values
+				const clonedKey =
+					typeof mapKey === 'object' && mapKey !== null
+						? deepCloneValue( mapKey, visited )
+						: mapKey;
+				const clonedValue =
 					typeof mapValue === 'object' && mapValue !== null
 						? deepCloneValue( mapValue, visited )
-						: mapValue
-				);
+						: mapValue;
+				clonedMap.set( clonedKey, clonedValue );
 			}
 			cloned[ key ] = clonedMap;
+			continue;
+		}
+
+		// Handle Set objects (deep clone values)
+		if ( value instanceof Set ) {
+			const clonedSet = new Set();
+			visited.set( value, clonedSet );
+
+			for ( const item of value.values() ) {
+				// Recursively clone set items
+				const clonedItem =
+					typeof item === 'object' && item !== null
+						? deepCloneValue( item, visited )
+						: item;
+				clonedSet.add( clonedItem );
+			}
+			cloned[ key ] = clonedSet;
 			continue;
 		}
 
@@ -171,9 +196,31 @@ function deepCloneValue( value, visited ) {
 		const clonedMap = new Map();
 		visited.set( value, clonedMap );
 		for ( const [ k, v ] of value.entries() ) {
-			clonedMap.set( k, deepCloneValue( v, visited ) );
+			// Clone both keys and values
+			const clonedKey =
+				typeof k === 'object' && k !== null
+					? deepCloneValue( k, visited )
+					: k;
+			const clonedValue =
+				typeof v === 'object' && v !== null
+					? deepCloneValue( v, visited )
+					: v;
+			clonedMap.set( clonedKey, clonedValue );
 		}
 		return clonedMap;
+	}
+
+	if ( value instanceof Set ) {
+		const clonedSet = new Set();
+		visited.set( value, clonedSet );
+		for ( const item of value.values() ) {
+			const clonedItem =
+				typeof item === 'object' && item !== null
+					? deepCloneValue( item, visited )
+					: item;
+			clonedSet.add( clonedItem );
+		}
+		return clonedSet;
 	}
 
 	if ( Array.isArray( value ) ) {
@@ -243,6 +290,12 @@ export function buildThreadContext(
 		throw new Error( 'Invalid provider instance: missing id' );
 	}
 
+	// Preserve function references before cloning (functions are skipped during clone)
+	const preservedCallbacks = {
+		setStatusMessage: globalContext.setStatusMessage,
+		setStepProgress: globalContext.setStepProgress,
+	};
+
 	// Deep clone global context to ensure thread isolation
 	// Prevents threads from mutating shared data
 	const clonedContext = deepCloneContext( globalContext );
@@ -253,10 +306,11 @@ export function buildThreadContext(
 		currentProviderInstance: providerInstance,
 		providerInstanceConfig: providerInstance.config || {},
 		// Thread-specific callbacks (functions not cloned)
+		// Use provided callbacks, or fall back to preserved originals
 		setStatusMessage:
-			callbacks.setStatusMessage || globalContext.setStatusMessage,
+			callbacks.setStatusMessage || preservedCallbacks.setStatusMessage,
 		setStepProgress:
-			callbacks.setStepProgress || globalContext.setStepProgress,
+			callbacks.setStepProgress || preservedCallbacks.setStepProgress,
 	};
 }
 
@@ -298,7 +352,7 @@ export async function executeThreadedWorkflow(
 		...globalState,
 	};
 
-	// Handle case where no provider instances but thread steps exist
+	// Handle edge cases with providers and thread steps
 	if ( providerInstances.length === 0 ) {
 		// If there are thread steps, this is an error condition
 		// Thread steps need providers to execute
@@ -311,6 +365,17 @@ export async function executeThreadedWorkflow(
 		}
 
 		// No thread steps and no providers - workflow completes successfully
+		return {
+			success: true,
+			globalState,
+			threadResults: [],
+			successCount: 0,
+			failureCount: 0,
+		};
+	}
+
+	// If there are providers but no thread steps, return early (nothing to do)
+	if ( threadSteps.length === 0 ) {
 		return {
 			success: true,
 			globalState,

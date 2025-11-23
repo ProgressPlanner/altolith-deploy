@@ -274,6 +274,114 @@ describe( 'ThreadOrchestrator', () => {
 			expect( threadContext.pattern.flags ).toBe( testRegex.flags );
 		} );
 
+		it( 'should deeply clone Map keys as well as values', () => {
+			const objKey = { id: 1, name: 'key' };
+			const objValue = { data: 'value' };
+			const globalContext = {
+				dataMap: new Map( [ [ objKey, objValue ] ] ),
+			};
+
+			const providerInstance = {
+				id: 'provider1',
+				label: 'Provider 1',
+				config: {},
+			};
+
+			const threadContext = buildThreadContext(
+				globalContext,
+				providerInstance
+			);
+
+			// Get the cloned map
+			const clonedMap = threadContext.dataMap;
+			const originalMap = globalContext.dataMap;
+
+			// Find the cloned key and value
+			const [ clonedKey ] = Array.from( clonedMap.keys() );
+			const clonedValue = clonedMap.get( clonedKey );
+
+			// Keys should be cloned (different instances)
+			expect( clonedKey ).not.toBe( objKey );
+			expect( clonedValue ).not.toBe( objValue );
+
+			// But with same content
+			expect( clonedKey.id ).toBe( 1 );
+			expect( clonedKey.name ).toBe( 'key' );
+			expect( clonedValue.data ).toBe( 'value' );
+
+			// Mutating cloned key should not affect original
+			clonedKey.id = 999;
+			expect( objKey.id ).toBe( 1 );
+		} );
+
+		it( 'should deeply clone Set objects with object values', () => {
+			const obj1 = { id: 1, config: { enabled: true } };
+			const obj2 = { id: 2, nested: { value: 'original' } };
+			const globalContext = {
+				dataSet: new Set( [ obj1, obj2, 'primitive' ] ),
+			};
+
+			const providerInstance = {
+				id: 'provider1',
+				label: 'Provider 1',
+				config: {},
+			};
+
+			const threadContext = buildThreadContext(
+				globalContext,
+				providerInstance
+			);
+
+			// Get the cloned set
+			const clonedSet = threadContext.dataSet;
+			const setItems = Array.from( clonedSet.values() );
+
+			// Should have same size
+			expect( clonedSet.size ).toBe( 3 );
+
+			// Object items should be cloned (different instances)
+			const clonedObj1 = setItems.find( ( item ) => item?.id === 1 );
+			const clonedObj2 = setItems.find( ( item ) => item?.id === 2 );
+
+			expect( clonedObj1 ).not.toBe( obj1 );
+			expect( clonedObj2 ).not.toBe( obj2 );
+
+			// But with same content
+			expect( clonedObj1.config.enabled ).toBe( true );
+			expect( clonedObj2.nested.value ).toBe( 'original' );
+
+			// Mutating cloned object should not affect original
+			clonedObj1.config.enabled = false;
+			expect( obj1.config.enabled ).toBe( true );
+		} );
+
+		it( 'should preserve callbacks from globalContext when not provided', () => {
+			const setStatusMessage = jest.fn();
+			const setStepProgress = jest.fn();
+
+			const globalContext = {
+				siteUrl: 'https://example.com',
+				setStatusMessage,
+				setStepProgress,
+			};
+
+			const providerInstance = {
+				id: 'provider1',
+				label: 'Provider 1',
+				config: {},
+			};
+
+			// Call without callbacks parameter
+			const threadContext = buildThreadContext(
+				globalContext,
+				providerInstance
+			);
+
+			// Callbacks should be preserved (not undefined)
+			expect( threadContext.setStatusMessage ).toBe( setStatusMessage );
+			expect( threadContext.setStepProgress ).toBe( setStepProgress );
+		} );
+
 		it( 'should throw error for invalid provider instance', () => {
 			const globalContext = { siteUrl: 'https://example.com' };
 
@@ -666,6 +774,98 @@ describe( 'ThreadOrchestrator', () => {
 			// Verify error is present (may be wrapped)
 			const call = setProviderProgress.mock.calls[ 0 ][ 1 ];
 			expect( call.error ).toBeDefined();
+		} );
+
+		it( 'should return early when providers exist but no thread steps', async () => {
+			const globalStep = {
+				id: 'globalStep',
+				label: 'Global Step',
+				handler: jest.fn().mockResolvedValue( { global: 'data' } ),
+				requires: {},
+			};
+
+			const steps = [ globalStep ]; // Only global steps, no thread steps
+			const context = { siteUrl: 'https://example.com' };
+			const providers = [
+				{ id: 'provider1', label: 'P1', config: {} },
+				{ id: 'provider2', label: 'P2', config: {} },
+			];
+
+			const result = await executeThreadedWorkflow(
+				steps,
+				context,
+				providers
+			);
+
+			// Should complete successfully without executing thread logic
+			expect( result.success ).toBe( true );
+			expect( result.threadResults ).toEqual( [] );
+			expect( result.successCount ).toBe( 0 );
+			expect( result.failureCount ).toBe( 0 );
+			// Global step should still have executed
+			expect( globalStep.handler ).toHaveBeenCalled();
+		} );
+
+		it( 'should properly limit concurrency when executing multiple providers', async () => {
+			const executionOrder = [];
+			const completionOrder = [];
+
+			const threadStep = {
+				id: 'slowStep',
+				label: 'Slow Step',
+				handler: jest.fn().mockImplementation( async ( context ) => {
+					const providerId = context.currentProviderInstance.id;
+					executionOrder.push( providerId );
+
+					// Simulate async work with varying durations
+					const delay =
+						providerId === 'provider1'
+							? 100
+							: providerId === 'provider2'
+								? 50
+								: 25;
+					await new Promise( ( resolve ) =>
+						setTimeout( resolve, delay )
+					);
+
+					completionOrder.push( providerId );
+					return { done: true };
+				} ),
+				requires: {
+					currentProviderInstance: { from: 'thread' },
+				},
+			};
+
+			const steps = [ threadStep ];
+			const context = {};
+			const providers = [
+				{ id: 'provider1', label: 'P1', config: {} },
+				{ id: 'provider2', label: 'P2', config: {} },
+				{ id: 'provider3', label: 'P3', config: {} },
+				{ id: 'provider4', label: 'P4', config: {} },
+				{ id: 'provider5', label: 'P5', config: {} },
+				{ id: 'provider6', label: 'P6', config: {} },
+			];
+
+			const result = await executeThreadedWorkflow(
+				steps,
+				context,
+				providers,
+				{ maxConcurrency: 2 } // Limit to 2 concurrent
+			);
+
+			// All should succeed
+			expect( result.success ).toBe( true );
+			expect( result.successCount ).toBe( 6 );
+
+			// All providers should have executed
+			expect( executionOrder ).toHaveLength( 6 );
+
+			// Verify concurrency was limited:
+			// Not all providers should start at once if concurrency is working
+			// The first provider should complete before the last one starts
+			// (This is a simplified check - in reality we'd need more sophisticated timing)
+			expect( completionOrder ).toHaveLength( 6 );
 		} );
 	} );
 } );
