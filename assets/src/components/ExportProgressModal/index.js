@@ -22,6 +22,7 @@ import {
 } from '@aether/utils/styles';
 import ActivityLogMessage from '../ActivityLogMessage';
 import UploadStatistics from '../UploadStatistics';
+import ProviderProgressList from '../ProviderProgressList';
 
 // Styles - extracted to module level for performance
 const modalContentStyle = {
@@ -124,6 +125,7 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 		messageHistory,
 		staticSiteProviders,
 		blueprintBundleProviders,
+		providerProgress,
 	} = exportState;
 
 	// Ref for activity log auto-scroll
@@ -203,6 +205,32 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 		}
 		return Math.min( 100, Math.round( progress ) );
 	}, [ steps, overallProgress ] );
+
+	// Build provider instances array from provider IDs
+	// Combine all providers across deployment types for display
+	const allProviderInstances = useMemo( () => {
+		const instances = [];
+
+		// Add static site providers
+		staticSiteProviders.forEach( ( id ) => {
+			instances.push( {
+				id,
+				label: id, // Label will come from config if available
+			} );
+		} );
+
+		// Add blueprint bundle providers (avoid duplicates)
+		blueprintBundleProviders.forEach( ( id ) => {
+			if ( ! instances.find( ( p ) => p.id === id ) ) {
+				instances.push( {
+					id,
+					label: id,
+				} );
+			}
+		} );
+
+		return instances;
+	}, [ staticSiteProviders, blueprintBundleProviders ] );
 
 	// Sort activity log messages by priority: progress → error → success/info
 	const sortedMessageHistory = useMemo( () => {
@@ -341,6 +369,13 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 							</span>
 						</div>
 					</div>
+				) }
+
+				{ ! finalStatus && ! error && allProviderInstances.length > 1 && (
+					<ProviderProgressList
+						providerProgress={ providerProgress }
+						providerInstances={ allProviderInstances }
+					/>
 				) }
 
 				<UploadStatistics

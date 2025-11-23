@@ -1,0 +1,121 @@
+/**
+ * Provider Progress Bar Styles
+ */
+
+.provider-progress-bar {
+	margin-bottom: 16px;
+	padding: 12px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	background: #fff;
+	transition: all 0.3s ease;
+
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 8px;
+	}
+
+	&__label {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 14px;
+	}
+
+	&__status-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		font-size: 12px;
+		font-weight: bold;
+	}
+
+	&__percentage {
+		font-size: 13px;
+		color: #757575;
+		font-weight: 600;
+	}
+
+	&__step {
+		font-size: 12px;
+		color: #757575;
+		margin-bottom: 8px;
+		font-style: italic;
+	}
+
+	&__error {
+		font-size: 12px;
+		color: #d63638;
+		margin-bottom: 8px;
+		padding: 8px;
+		background: #fcf0f1;
+		border-radius: 2px;
+	}
+
+	&__complete-message {
+		font-size: 12px;
+		color: #00a32a;
+		margin-bottom: 8px;
+		font-weight: 500;
+	}
+
+	&__progress {
+		.components-progress-bar {
+			height: 8px;
+		}
+	}
+
+	// Active state
+	&--active {
+		border-color: #007cba;
+		box-shadow: 0 0 0 1px rgba(0, 124, 186, 0.1);
+
+		.provider-progress-bar__status-icon {
+			animation: pulse 1.5s ease-in-out infinite;
+		}
+	}
+
+	// Complete state
+	&--complete {
+		border-color: #00a32a;
+		background: #f6f7f7;
+
+		.provider-progress-bar__status-icon {
+			background: #00a32a;
+			color: #fff;
+		}
+
+		.components-progress-bar__indicator {
+			background: #00a32a;
+		}
+	}
+
+	// Error state
+	&--error {
+		border-color: #d63638;
+		background: #fcf0f1;
+
+		.provider-progress-bar__status-icon {
+			background: #d63638;
+			color: #fff;
+		}
+
+		.components-progress-bar__indicator {
+			background: #d63638;
+		}
+	}
+}
+
+@keyframes pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}

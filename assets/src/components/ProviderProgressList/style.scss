@@ -1,0 +1,38 @@
+/**
+ * Provider Progress List Styles
+ */
+
+.provider-progress-list {
+	margin: 20px 0;
+
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 16px;
+		padding-bottom: 12px;
+		border-bottom: 2px solid #ddd;
+
+		h4 {
+			margin: 0;
+			font-size: 15px;
+			font-weight: 600;
+			color: #1e1e1e;
+		}
+	}
+
+	&__count {
+		font-size: 13px;
+		color: #757575;
+		font-weight: 500;
+		padding: 4px 8px;
+		background: #f6f7f7;
+		border-radius: 12px;
+	}
+
+	&__items {
+		display: flex;
+		flex-direction: column;
+		gap: 0; // Gap is handled by margin-bottom on individual items
+	}
+}
