@@ -18,12 +18,7 @@ global.wp = {
 			return format.replace( /%s/g, () => args[ i++ ] );
 		},
 	},
-	hooks: {
-		applyFilters: ( name, ...args ) => args[ args.length - 1 ],
-		addFilter: jest.fn(),
-		addAction: jest.fn(),
-		doAction: jest.fn(),
-	},
+	// hooks will use real @wordpress/hooks implementation
 	element: {
 		createElement: React.createElement,
 	},
@@ -66,13 +61,14 @@ global.wp = {
 	apiFetch: jest.fn(),
 };
 
-// Mock @wordpress/hooks
-jest.mock( '@wordpress/hooks', () => ( {
-	applyFilters: ( name, ...args ) => args[ args.length - 1 ],
-	addFilter: jest.fn(),
-	addAction: jest.fn(),
-	doAction: jest.fn(),
-} ) );
+// DON'T mock @wordpress/hooks - use the real implementation
+// This is needed for hook-based step registration to work in tests
+// jest.mock( '@wordpress/hooks', () => ( {
+// 	applyFilters: ( name, ...args ) => args[ args.length - 1 ],
+// 	addFilter: jest.fn(),
+// 	addAction: jest.fn(),
+// 	doAction: jest.fn(),
+// } ) );
 
 // Mock @wordpress/i18n
 jest.mock( '@wordpress/i18n', () => ( {
@@ -260,4 +256,8 @@ beforeEach( () => {
 	if ( global.fetch && global.fetch.mockClear ) {
 		global.fetch.mockClear();
 	}
+
+	// NOTE: We don't clear WordPress hooks between tests
+	// Steps register themselves via addAction during module import,
+	// and clearing would remove those registrations
 } );
