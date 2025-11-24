@@ -451,7 +451,7 @@ class FileManager
 	 * @param string $dir Directory path to check.
 	 * @return bool True if directory is empty or doesn't exist, false otherwise.
 	 */
-	private static function isDirectoryEmpty(string $dir): bool
+	public static function isDirectoryEmpty(string $dir): bool
 	{
 		if (!\is_dir($dir)) {
 			return true;
