@@ -1,34 +1,16514 @@
-(()=>{"use strict";var e={98:(e,t,r)=>{r.d(t,{$Z:()=>l,QM:()=>d,sM:()=>c});var s=r(619),n=r(864),a=r(455),o=r.n(a),i=r(735);const l={BLUEPRINT_BUNDLE:"blueprint-bundle",STATIC_HTML:"static-html",STATIC_ASSET:"static-asset"};function c({fileType:e,filePath:t,fileContent:r=null,contentType:s,storageKey:n,providerId:a,metadata:o={}}){return{fileType:e,filePath:t,fileContent:r,contentType:s,storageKey:n,providerId:a,metadata:o}}async function d(e){const{fileType:t,filePath:r,fileContent:a,contentType:c,providerId:d,metadata:u={}}=e,p=await async function(e){try{const t=await o()({path:`/aether/site-exporter/providers/${e}/config`});if(t.success&&t.config)return t.config}catch(t){(0,i.UT)(`Failed to fetch provider config for ${e}:`,t)}return{}}(d),h=function(e,t){return e===l.BLUEPRINT_BUNDLE?t.export_path||"blueprint-bundle/bundle.zip":(t.static_files_path||"static/").replace(/\/$/,"")}(t,p);let g=a;if((t===l.STATIC_HTML||c&&c.includes("text/html"))&&u.siteUrl)try{const e=await async function(e,t){if(t.staticSiteUrl)return t.staticSiteUrl;try{const t=await o()({path:`/aether/site-exporter/providers/${e}/config`});if(t.success&&t.config&&t.config.public_url)return t.config.public_url}catch(t){(0,i.UT)(`Failed to fetch provider config for ${e}:`,t)}return null}(d,u);if(e){let t;if("string"==typeof a?t=a:a instanceof Blob?t=await a.text():(0,i.UT)("Cannot process HTML: fileContent is not a string or Blob"),t){const a=(0,s.applyFilters)("aether.export.step.uploadStaticSiteFiles.html.process",t,r,u.siteUrl,e,d),o=(0,n.t)(a,r,u.siteUrl,e);g=new Blob([o],{type:"text/html"})}}else(0,i.UT)(`Cannot process HTML for ${d}: staticSiteUrl not available`)}catch(e){(0,i.UT)(`Failed to process HTML for ${r||"unknown"}:`,e)}const f={filePath:r,fileContent:g,destinationPath:h,storageKey:e.storageKey,contentType:c,providerId:d,metadata:u},m=(0,s.applyFilters)("aether.file.upload.context",f,d);return(0,i.Yz)("[UnifiedUpload] Firing aether.file.upload action:",{fileType:t,providerId:d,storageKey:m.storageKey,destinationPath:m.destinationPath,hasFileContent:!!m.fileContent,hasFilePath:!!m.filePath,contentType:c}),await(0,s.doActionAsync)("aether.file.upload",m),(0,i.Yz)("[UnifiedUpload] Upload action completed:",{providerId:d,storageKey:m.storageKey,hasResult:!!m.result,result:m.result}),m.result?{...m.result,fileContext:m}:{success:!0,fileContext:m}}},159:(e,t,r)=>{r.d(t,{StorageService:()=>l});var s=r(186),n=r(735);function a(e=null,t=null){const r={success:!0,data:e};return t&&"object"==typeof e&&null!==e?r.data={...e,message:t}:t&&(r.data={message:t}),r}function o(e,t=null){const r={success:!1,error:"string"==typeof e?e:e?.message||"Unknown error"};return t&&Array.isArray(t)&&t.length>0&&(r.errors=t),r}var i=r(98);class l{constructor(e,t={}){this.staticPath=e,this.config=t,this.baseUrl=t.public_url||t.base_url||"",this.providerId=t.provider_id||null}_prefixKey(e){return this.providerId?this.providerId.startsWith("local-filesystem:")||e.startsWith(this.providerId+"/")?e:`${this.providerId}/${e}`:e}async upload(e,t,r={}){if(!(t instanceof File||t instanceof Blob))return{success:!1,error:"File must be a File or Blob object"};const s=r.contentType||t.type,n=this._prefixKey(e);let a=i.$Z.STATIC_ASSET;"text/html"===s&&(a=i.$Z.STATIC_HTML);const o=(0,i.sM)({fileType:a,filePath:null,fileContent:t,contentType:s,storageKey:n,providerId:this.providerId,metadata:{staticPath:this.staticPath,originalKey:e,cacheControl:r.cacheControl||"",onProgress:r.onProgress||null}});try{return await(0,i.QM)(o),{success:!0,url:this.getUrl(e)}}catch(e){return{success:!1,error:e.message||"Upload failed"}}}async delete(e){const t=this._prefixKey(e);return async function(e,t){(0,n.Yz)("filesystemAdapter.deleteFile:",{staticPath:e,key:t});try{const r=await(0,s.Ay)({path:"/aether/site-exporter/local-storage/delete",method:"DELETE",data:{key:t,static_path:e}});return r.success?a():o(r.error||"Delete failed")}catch(e){return(0,n.Yz)("filesystemAdapter.deleteFile error:",e),o(e.message||"Delete failed")}}(this.staticPath,t)}async copy(){return async function(){return(0,n.Yz)("filesystemAdapter.copyFile: Not implemented (not needed for local storage)"),a()}()}async exists(){return!1}async listObjects(){return async function(){return(0,n.Yz)("filesystemAdapter.listObjects: Not implemented (not needed for static site generation)"),a({objects:[]})}()}getUrl(e){return this.baseUrl?function(e,t,r){return`${t.replace(/\/$/,"")}/${r.replace(/^\//,"")}`}(this.staticPath,this.baseUrl,e):e}async batchCopy(){return async function(){return(0,n.Yz)("filesystemAdapter.batchCopy: Not implemented (not needed for local storage)"),a()}()}async batchDelete(e){return async function(e,t){(0,n.Yz)("filesystemAdapter.batchDelete:",{staticPath:e,count:t.length});try{const r=await(0,s.Ay)({path:"/aether/site-exporter/local-storage/batch-delete",method:"DELETE",data:{keys:t,static_path:e}});return r.success?a():o(r.error||"Batch delete failed")}catch(e){return(0,n.Yz)("filesystemAdapter.batchDelete error:",e),o(e.message||"Batch delete failed")}}(this.staticPath,e)}async downloadManifest(){const e=this.providerId?`file-manifest-${this.providerId}.json`:"file-manifest.json",t=this._prefixKey(e);try{return await async function(e,t){(0,n.Yz)("filesystemAdapter.downloadFile:",{staticPath:e,key:t});try{const r=await(0,s.Ay)({path:`/aether/site-exporter/local-storage/download?key=${encodeURIComponent(t)}&static_path=${encodeURIComponent(e)}`,method:"GET",parse:!1});return r.ok?await r.blob():null}catch(e){return(0,n.Yz)("filesystemAdapter.downloadFile error:",e),null}}(this.staticPath,t)}catch(e){return null}}async uploadManifest(e){const t=this.providerId?`file-manifest-${this.providerId}.json`:"file-manifest.json";return await this.upload(t,e,{contentType:"application/json"})}async testConnection(){return{success:!0,message:"Local filesystem storage is ready."}}}},186:(e,t,r)=>{r.d(t,{Ay:()=>a});var s=r(455),n=r.n(s);!function(){const e="undefined"!=typeof window&&window.aetherData&&window.aetherData.restUrl?window.aetherData.restUrl:"/wp-json/",t="undefined"!=typeof window&&window.aetherData&&window.aetherData.nonce?window.aetherData.nonce:"";n().use(n().createRootURLMiddleware(e)),t&&function(e){n().use(n().createNonceMiddleware(e))}(t)}();const a=n()},455:e=>{e.exports=window.wp.apiFetch},574:(e,t,r)=>{r.d(t,{sF:()=>l,ge:()=>o,Nh:()=>a,Gw:()=>i});var s=r(735),n=r(619);function a(e,t){if(e.startsWith("data:"))return e;try{return new URL(e),e}catch{}if(e.startsWith("//"))return"https:"+e;if(e.startsWith("/"))return new URL(t).origin+e;const r=new URL(t),s=r.pathname.substring(0,r.pathname.lastIndexOf("/")),a=r.origin+s+"/"+e;return(0,n.applyFilters)("aether.url.resolve",a,e,t)}function o(e,t){if(e.startsWith("/")&&!e.startsWith("//"))return!1;let r=!1;if(e.startsWith("http://")||e.startsWith("https://"))try{const s=new URL(e),n=new URL(t);r=s.host!==n.host}catch{r=!0}else if(e.startsWith("//"))try{const s=new URL("https:"+e),n=new URL(t);r=s.host!==n.host}catch{r=!0}else r=!0;return(0,n.applyFilters)("aether.url.is_external",r,e,t)}function i(e){let t=e.replace(/^\/?scope:[a-z0-9.:-]+\//i,"");return t=t.replace(/\/scope:[a-z0-9.:-]+\//gi,"/"),t=t.replace(/^\/?scope:[a-z0-9.:-]+$/i,""),t}function l(e,t=null,r={}){const l=(c=e).startsWith("data:")||c.startsWith("#")||c.startsWith("//")?c:c.startsWith("http://")?"https://"+c.substring(7):c;var c;const d=t&&t.trim()?t.trim():null;let u=d&&!d.includes(".workers.dev");if(u&&d)try{const e=new URL(d);e.pathname&&"/"!==e.pathname&&(u=!1)}catch{}const p={[l]:"/",[l+"/"]:"/",...e!==l?{[e]:"/",[e+"/"]:"/"}:{},...r};function h(t){return function(e,t){if(e.startsWith("/")&&!e.startsWith("//"))try{e=new URL(t).origin+e}catch{}try{const t=new URL(e);t.pathname&&(t.pathname=i(t.pathname),e=t.toString())}catch{const t=e.match(/^https?:\/\/[^\/]+(\/.*)$/);if(t){const r=i(t[1]);e=e.replace(t[1],r)}}const r=e.indexOf("#");return-1!==r&&(e=e.substring(0,r)),e=e.replace(/\/$/,""),(0,n.applyFilters)("aether.url.normalize",e,t)}(t,e)}function g(t,r=""){if(function(t){return o(t,e)}(t))return t;if(function(e){return e.startsWith("#")||e.startsWith("data:")||e.includes("imagedelivery.net")}(t))return t;let s=t;if(!r||t.startsWith("http://")||t.startsWith("https://")||t.startsWith("/")){if(r&&t.startsWith("/"))try{s=new URL(r).origin+t}catch{}}else s=a(t,r);const c=h(s);let g,f=p[c];if(f||(f=function(e){if(e.startsWith("/")&&!e.startsWith("//"))return i(e);let t="/";try{t=new URL(e).pathname||"/"}catch{const r=e.match(/^https?:\/\/[^\/]+(\/.*)$/);r?t=r[1]:e.includes("?")&&(t=e.split("?")[0])}if(t=t.replace(/^\/+|\/+$/g,""),t=i(t),!t)return"/";try{const t=new URL(e);if(t.search){const e=new URLSearchParams(t.search);if(e.has("s")){const t=e.get("s");return`/search/?q=${encodeURIComponent(t)}`}}}catch{}return t="/"+t,/\.[a-z0-9]{2,5}$/i.test(t)||(t=t.replace(/\/$/,"")+"/"),t}(s)),u&&f&&"/"!==f&&!f.startsWith("/static/")&&(f="/static"+f),d)try{const e=new URL(d),t=e.pathname.replace(/\/$/,"");g=e.origin+t+f}catch{g=d.replace(/\/$/,"")+f}else g=f;return(0,n.applyFilters)("aether.url.rewrite",g,t,r,l,d)}return{rewriteHtml:function(t,r){(0,s.Yz)("[URL Rewriter] rewriteHtml called with:"),(0,s.Yz)("  - contextUrl:",r),(0,s.Yz)("  - siteUrl:",e),(0,s.Yz)("  - normalizedStaticUrl:",d),(0,s.Yz)("  - HTML length:",t.length);const{html:a,placeholders:o}=function(e){const t={};let r=0;return{html:e.replace(/<script(?![^>]*type=["']importmap["'])([^>]*)>(.*?)<\/script>/gis,(e,s,n)=>{if(n.trim()){const e=`___SCRIPT_CONTENT_${r}___`;return t[e]=n,r++,`<script${s}>${e}<\/script>`}return e}),placeholders:t}}(t);let i=a;const c=function(e){try{return new URL(e).host}catch{const t=e.match(/^https?:\/\/([^\/]+)/);return t?t[1]:""}}(e);if(c){const e=function(e,t){const r=t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),s=[],n=new RegExp(`http://${r}[^"'\`\\s<>]*`,"gi"),a=new RegExp(`https://${r}[^"'\`\\s<>]*`,"gi"),o=new RegExp(`//${r}[^"'\`\\s<>]*`,"gi");let i;for(;null!==(i=n.exec(e));)s.push({index:i.index,length:i[0].length,match:i[0],type:"http"});for(;null!==(i=a.exec(e));)s.push({index:i.index,length:i[0].length,match:i[0],type:"https"});for(;null!==(i=o.exec(e));)s.push({index:i.index,length:i[0].length,match:i[0],type:"protocol-relative"});return s.sort((e,t)=>e.index-t.index),s}(i,c);i=function(e,t,r,s){let n="",a=0,o=0;for(const i of t){if(i.index<o)continue;if(i.match.includes("imagedelivery.net"))continue;let t=i.match;"protocol-relative"===i.type&&(t="https:"+i.match);const l=r(t,s);l!==t?(n+=e.substring(a,i.index),n+=l,a=i.index+i.length,o=i.index+i.length):o=i.index+i.length}return n+=e.substring(a),n}(i,e,g,r)}if(d)try{i=function(e,t){if(!t||""===t||"/"===t)return e;(0,s.Yz)("[URL Rewriter] Rewriting absolute paths with base:",t);let r=0;const n=e.replace(/(\b(?:href|src|action|data|poster|content)=)(["'`])(\/(?!\/)[^"'`]*)\2/gi,(e,n,a,o)=>{if(r++,o.startsWith(t+"/"))return e;if("/"===o||o.startsWith("/#")||o.startsWith("/data:"))return e;const i=t+o;return(0,s.Yz)(`[URL Rewriter] Rewriting: ${o} -> ${i}`),n+a+i+a});return(0,s.Yz)(`[URL Rewriter] Processed ${r} absolute path attributes`),n}(i,new URL(d).pathname.replace(/\/$/,""))}catch(e){(0,s.AO)("[URL Rewriter] Error in absolute path rewriting:",e)}return i=function(e,t,r){return e.replace(/(<(?:img|source)[^>]+srcset=)(["'`])([^"'`]+)\2/gi,(e,s,n,a)=>s+n+a.split(",").map(e=>{const s=e.trim(),n=s.match(/^([^\s]+)(\s+.+)?$/);if(!n)return s;const a=n[1],o=n[2]||"";return a.includes("imagedelivery.net")?s:t(a,r)+o}).join(", ")+n)}(i,g,r),i=function(e,t,r){return e.replace(/<script[^>]*type=["']importmap["'][^>]*>(.*?)<\/script>/gis,(e,s)=>{try{const n=JSON.parse(s);if(!n||"object"!=typeof n||!n.imports)return e;for(const e in n.imports)n.imports.hasOwnProperty(e)&&(n.imports[e]=t(n.imports[e],r));const a=JSON.stringify(n);return e.replace(s,a)}catch{return e}})}(i,g,r),i=function(e,t){let r=e;for(const e in t)t.hasOwnProperty(e)&&(r=r.replace(e,t[e]));return r}(i,o),(0,n.applyFilters)("aether.url.rewrite_html",i,r,l,d)},rewriteUrl:g,addUrlMapping:(e,t)=>{const r=h(e);p[r]=t},getUrlMapping:()=>({...p})}}},619:e=>{e.exports=window.wp.hooks},662:(e,t,r)=>{r.d(t,{extractAssetsFromHtml:()=>$,h:()=>F});var s=r(574);const n=["jpg","jpeg","png","gif","webp","svg","ico"],a=["css","js","woff","woff2","ttf","eot","otf"],o=["react","is-prop-valid","uncategorized","git-config","react-dom","react-jsx-runtime"],i=["/wp-json/","/xmlrpc.php","/wp-comments-post.php","imagedelivery.net"],l=[/wp-admin\/.*\.php$/];function c(e){return n.includes(e.toLowerCase())}function d(e){return o.includes(e)}var u=r(619);const p=[/<link[^>]+href=(["'])([^"']+)\1[^>]*rel=["']stylesheet["'][^>]*>/gi,/<link[^>]+rel=["']stylesheet["'][^>]*href=(["'])([^"']+)\1[^>]*>/gi],h=/<script[^>]+src=(["'])([^"']+)\1[^>]*>/gi,g=/<style[^>]*>(.*?)<\/style>/gis,f=/<script[^>]*>(.*?)<\/script>/gis,m=/<script[^>]*type=["']importmap["'][^>]*>(.*?)<\/script>/gis,y=/@import\s+(?:url\()?["']?([^"')]+)["']?\)?/gi,w=/url\(["']?([^"')]+)["']?\)/gi,v={es6:/import\s+(?:[^;"']+\s+from\s+)?["']([^"']+)["']/gi,dynamic:/import\s*\(\s*["']([^"']+)["']\s*\)/gi,require:/require\s*\(\s*["']([^"']+)["']\s*\)/gi},x=[/new\s+URL\s*\(\s*["']([^"']+\.(png|jpg|jpeg|gif|webp|svg|woff|woff2|ttf|eot|otf|css|js))["']/gi,/["']([\.\/][^"']*\.(png|jpg|jpeg|gif|webp|svg|woff|woff2|ttf|eot|otf|css|js))["']/gi],b=[/<img[^>]+src=(["'])([^"']+)\1[^>]*>?/gi,/<video[^>]+src=(["'])([^"']+)\1[^>]*>?/gi,/<video[^>]+poster=(["'])([^"']+)\1[^>]*>?/gi,/<audio[^>]+src=(["'])([^"']+)\1[^>]*>?/gi,/<source[^>]+src=(["'])([^"']+)\1[^>]*>?/gi,/<link[^>]+(?:rel=["'](?:preload|prefetch)["'][^>]+)?href=(["'])([^"']+)\1[^>]*>?/gi],S={img:/<img[^>]+srcset=(["'])([^"']+)\1[^>]*>/gi,source:/<source[^>]+srcset=(["'])([^"']+)\1[^>]*>/gi},_=/style\s*=\s*(["'])((?:(?!\1)(?:\\.|[^\\]))*)\1/gi,P={css:"css",js:"js",woff:"font",woff2:"font",ttf:"font",otf:"font",eot:"font"};function U(e){try{const t=new URL(e).pathname,r=t.lastIndexOf(".");if(-1!==r)return t.substring(r+1).toLowerCase()}catch{const t=e.match(/\.([a-z0-9]+)(?:[?#]|$)/i);if(t)return t[1].toLowerCase()}return""}function k(e){const t=U(e);return P[t]||"other"}function C(e){return e.split(",").map(e=>{const t=e.trim().match(/^([^\s]+)/);return t?t[1]:null}).filter(Boolean)}function A(e,t,r="css"){const n=function(e){try{const t=new URL(e).pathname;return(t.split("/").pop()||t).replace(/\.[^.]*$/,"")}catch{const t=e.match(/\/([^\/]+)(?:\.[^.]*)?(?:\?|$)/);return t?t[1]:null}}(e);if(n&&d(n))return!1;const o=U(e);if(function(e){return a.includes(e.toLowerCase())}(o))return!0;if(function(e){if(i.some(t=>{if(t.startsWith("/"))try{return new URL(e).pathname.startsWith(t)}catch{return e.startsWith(t)}return e.includes(t)}))return!0;try{const t=new URL(e).pathname;return l.some(e=>e.test(t))}catch{return l.some(t=>t.test(e))}}(e))return!1;if((0,s.ge)(e,t))return!1;if("html"===r&&c(o))return!0;if(c(o))return!1;let p=!0;return p=(0,u.applyFilters)("aether.assets.should_collect",p,e,t,r,o),p}async function $(e,t,r){const n=new Set,a=new Set;for(const o of p){o.lastIndex=0;const i=e.matchAll(o);for(const e of i){const o=e[2],i=(0,s.Nh)(o,t);A(i,r,"css")&&(n.add(i),await j(i,r,n,a))}}h.lastIndex=0;const o=e.matchAll(h);for(const e of o){const o=e[2],i=(0,s.Nh)(o,t);A(i,r,"js")&&(n.add(i),await T(i,r,n,a))}g.lastIndex=0;const i=e.matchAll(g);for(const e of i)E(e[1],t,r,n);f.lastIndex=0;const l=e.matchAll(f);for(const e of l)await B(e[1],t,r,n,a);m.lastIndex=0;const c=e.matchAll(m);for(const e of c)await I(e[1],t,r,n,a);!function(e,t,r,n){const a=function(e){try{return new URL(e).host}catch{const t=e.match(/^https?:\/\/([^\/]+)/);return t?t[1]:""}}(r);if(a){const o=a.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),i=[new RegExp(`http://${o}[^"'\`\\s<>]*`,"gi"),new RegExp(`https://${o}[^"'\`\\s<>]*`,"gi"),new RegExp(`//${o}[^"'\`\\s<>]*`,"gi")],l=new Set;for(let t=0;t<i.length;t++){const s=i[t];let n;for(;null!==(n=s.exec(e));){const e=n[0];if(!e.includes("imagedelivery.net"))if(2===t)try{const t=new URL(r);l.add(t.protocol+e)}catch{l.add("https:"+e)}else l.add(e)}}for(const e of l){const a=(0,s.Nh)(e,t);A(a,r,"html")&&n.add(a)}}for(const a of b){a.lastIndex=0;const o=e.matchAll(a);for(const e of o){const a=e[2],o=(0,s.Nh)(a,t);A(o,r,"html")&&n.add(o)}}for(const[,a]of Object.entries(S)){a.lastIndex=0;const o=e.matchAll(a);for(const e of o){const a=C(e[2]);for(const e of a){const a=(0,s.Nh)(e,t);A(a,r,"html")&&n.add(a)}}}_.lastIndex=0;const o=e.matchAll(_);for(const e of o){let s=e[2];s=s.replace(/\\(["'])/g,"$1"),E(s,t,r,n,"html")}}(e,t,r,n);let d=Array.from(n);return d=(0,u.applyFilters)("aether.assets.extracted",d,e,t,r),d}async function I(e,t,r,n,a){try{const o=JSON.parse(e);if(!o?.imports)return;for(const e in o.imports)if(o.imports.hasOwnProperty(e)){const i=o.imports[e],l=(0,s.Nh)(i,t);A(l,r,"js")&&(n.add(l),await T(l,r,n,a))}}catch{}}async function j(e,t,r,n){if(!n.has(e)){n.add(e);try{const a=await fetch(e,{method:"GET",credentials:"omit",headers:{"User-Agent":"Aether Static Site Generator"}});if(!a.ok)return;const o=await a.text();y.lastIndex=0;const i=o.matchAll(y);for(const a of i){const o=(0,s.Nh)(a[1],e);A(o,t,"css")&&(r.add(o),await j(o,t,r,n))}w.lastIndex=0;const l=o.matchAll(w);for(const n of l){const a=n[1];if(a.startsWith("data:"))continue;const o=(0,s.Nh)(a,e);A(o,t,"css")&&r.add(o)}}catch{}}}function E(e,t,r,n,a="css"){w.lastIndex=0;const o=e.matchAll(w);for(const e of o){const o=e[1];if(o.startsWith("data:"))continue;const i=(0,s.Nh)(o,t);A(i,r,a)&&n.add(i)}}async function T(e,t,r,n){if(!n.has(e)){n.add(e);try{const a=await fetch(e,{method:"GET",credentials:"omit",headers:{"User-Agent":"Aether Static Site Generator"}});if(!a.ok)return;const o=await a.text();for(const[,a]of Object.entries(v)){a.lastIndex=0;const i=o.matchAll(a);for(const a of i){const o=a[1];if(d(o))continue;const i=(0,s.Nh)(o,e);A(i,t,"js")&&(r.add(i),await T(i,t,r,n))}}await B(o,e,t,r,n)}catch{}}}async function B(e,t,r,n,a){for(const o of x){o.lastIndex=0;const i=e.matchAll(o);for(const e of i){const o=e[1];if(o.startsWith("data:")||o.startsWith("http://")||o.startsWith("https://"))continue;const i=(0,s.Nh)(o,t);if(A(i,r,"js")){n.add(i);const e=k(i);"css"===e?await j(i,r,n,a):"js"===e&&await T(i,r,n,a)}}}}function F(e){let t="";try{t=new URL(e).pathname||""}catch{const r=e.match(/^https?:\/\/[^\/]+(\/.*)$/);r&&(t=r[1])}return t=t.replace(/^\/+/,""),t=(0,s.Gw)(t),t&&""!==t?t:null}},735:(e,t,r)=>{function s(){return"undefined"!=typeof window&&!0===window.aetherDebug}function n(...e){s()&&window.console&&window.console.log&&window.console.log("[Aether]",...e)}function a(...e){s()&&window.console&&window.console.error&&window.console.error("[Aether Error]",...e)}function o(...e){s()&&window.console&&window.console.warn&&window.console.warn("[Aether Warning]",...e)}r.d(t,{AO:()=>a,UT:()=>o,Yz:()=>n});const i={debug:n,error:a,warn:o,info:function(...e){s()&&window.console&&window.console.info&&window.console.info("[Aether Info]",...e)},table:function(e){s()&&window.console&&window.console.table&&window.console.table(e)},time:function(e){s()&&window.console&&window.console.time&&window.console.time(`[Aether] ${e}`)},timeEnd:function(e){s()&&window.console&&window.console.timeEnd&&window.console.timeEnd(`[Aether] ${e}`)},group:function(e){s()&&window.console&&window.console.group&&window.console.group(`[Aether] ${e}`)},groupEnd:function(){s()&&window.console&&window.console.groupEnd&&window.console.groupEnd()},enable:function(){"undefined"!=typeof window&&(window.aetherDebug=!0,n("Debug mode enabled"))},disable:function(){"undefined"!=typeof window&&(window.aetherDebug=!1)},isEnabled:s};"undefined"!=typeof window&&(window.aetherDebug=window.aetherDebug||!1,window.aetherDebugUtil=i)},864:(e,t,r)=>{r.d(t,{W:()=>a,t:()=>n});var s=r(574);function n(e,t,r,n=null){return e=function(e){return e=(e=(e=(e=(e=e.replace(/<link[^>]*rel=["']alternate["'][^>]*href=["'][^"']*\/comments\/feed\/["'][^>]*>/gi,"")).replace(/<link[^>]*href=["'][^"']*\/comments\/feed\/["'][^>]*rel=["']alternate["'][^>]*>/gi,"")).replace(/<link[^>]*rel=["']https:\/\/api\.w\.org\/["'][^>]*>/gi,"")).replace(/<link[^>]*rel=["']EditURI["'][^>]*type=["']application\/rsd\+xml["'][^>]*>/gi,"")).replace(/<link[^>]*type=["']application\/rsd\+xml["'][^>]*rel=["']EditURI["'][^>]*>/gi,"")}(e=function(e){const t=(e,t,r,s,n=!1)=>{const a=s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");let o;if(o=n?`${r}=["']${a}["']`:`${r}=["'][^"']*${a}[^"']*["']`,"link"===t){const r=new RegExp(`<${t}[^>]*${o}[^>]*>`,"gi");return e.replace(r,"")}const i=new RegExp(`<${t}[^>]*${o}[^>]*>.*?</${t}>`,"gis");return e.replace(i,"")};e=t(e,"link","id","admin-bar-css",!0),e=t(e,"script","id","admin-bar-css",!0),e=t(e,"style","id","admin-bar-css",!0),e=t(e,"div","id","admin-bar-css",!0),e=t(e,"link","id","dashicons-css",!0),e=t(e,"script","id","dashicons-css",!0),e=t(e,"style","id","dashicons-css",!0),e=t(e,"div","id","dashicons-css",!0),e=t(e,"link","id","wpadminbar",!0),e=t(e,"script","id","wpadminbar",!0),e=t(e,"style","id","wpadminbar",!0),e=t(e,"div","id","wpadminbar",!0),e=t(e,"link","id","admin-bar-inline-css",!0),e=t(e,"script","id","admin-bar-inline-css",!0),e=t(e,"style","id","admin-bar-inline-css",!0),e=t(e,"div","id","admin-bar-inline-css",!0),e=t(e,"link","id","admin-bar-js",!0),e=t(e,"script","id","admin-bar-js",!0),e=t(e,"style","id","admin-bar-js",!0),e=(e=t(e,"div","id","admin-bar-js",!0)).replace(/<style[^>]*>.*?#wpadminbar.*?<\/style>/gis,"");const r=["logged-in","admin-bar"];for(const t of r){const r=t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),s=new RegExp(`(class=["'][^"']*)\\b${r}\\b([^"']*["'])`,"gi");e=e.replace(s,"$1$2")}return e.includes("no-admin-bar")||(e=e.replace(/(<body[^>]*class=["'][^"']*)(")/i,"$1 no-admin-bar$2")),e.includes("wp-admin-bar-")&&(e=e.replace(/(<body[^>]*>).*?(<div[^>]*class=["'][^"']*wp-site-blocks)/gis,"$1$2")),e}(e)),(0,s.sF)(r,n).rewriteHtml(e,t)}function a(e){let t="/";try{t=new URL(e).pathname||"/"}catch{const r=e.match(/^https?:\/\/[^\/]+(\/.*)$/);r&&(t=r[1])}return t&&"/"!==t?(t=t.replace(/^\/+/,""),t=(0,s.Gw)(t),t=t.replace(/\/+$/,""),t?t+"/index.html":"index.html"):"index.html"}},906:(e,t,r)=>{r.d(t,{ConfigStorage:()=>a});var s=r(186),n=r(619);class a{providerId;constructor(e){if(!e||"string"!=typeof e)throw new Error("ConfigStorage requires a valid provider ID");this.providerId=e}async load(){try{let e=(await(0,s.Ay)({path:`/aether/site-exporter/providers/${this.providerId}/config`,method:"GET"})).config||{};return e=(0,n.applyFilters)("aether.storage.config.load",e,this.providerId),(0,n.doAction)("aether.storage.config.loaded",e,this.providerId),e}catch(e){if("restProviderNotConfigured"===e.code||404===e.status)return{};throw e}}async save(e){e=(0,n.applyFilters)("aether.storage.config.before_save",e,this.providerId);try{return await(0,s.Ay)({path:`/aether/site-exporter/providers/${this.providerId}/config`,method:"POST",data:{config:e}}),(0,n.doAction)("aether.storage.config.saved",e,this.providerId),!0}catch(e){throw e}}async delete(){(0,n.doAction)("aether.storage.config.before_delete",this.providerId);try{return await(0,s.Ay)({path:`/aether/site-exporter/providers/${this.providerId}/config`,method:"DELETE"}),(0,n.doAction)("aether.storage.config.deleted",this.providerId),!0}catch(e){throw e}}}}},t={};function r(s){var n=t[s];if(void 0!==n)return n.exports;var a=t[s]={exports:{}};return e[s](a,a.exports,r),a.exports}r.n=e=>{var t=e&&e.__esModule?()=>e.default:()=>e;return r.d(t,{a:t}),t},r.d=(e,t)=>{for(var s in t)r.o(t,s)&&!r.o(e,s)&&Object.defineProperty(e,s,{enumerable:!0,get:t[s]})},r.o=(e,t)=>Object.prototype.hasOwnProperty.call(e,t),r.p="";const s=window.wp.element,n=window.wp.i18n,a=window.wp.components,o=window.ReactJSXRuntime,i=(0,s.createContext)({steps:[],isExporting:!1,finalStatus:null,error:null,currentStatusMessage:null,overallProgress:0,staticSiteProviders:[],blueprintBundleProviders:[],providerProgress:{},initializeSteps:()=>{},setStepStatus:()=>{},setStepProgress:()=>{},setProviderProgress:()=>{},updateFromStep:()=>{},markAllComplete:()=>{},showError:()=>{},setIsExporting:()=>{},setStatusMessage:()=>{},setOverallProgressValue:()=>{},updateMessage:()=>{},removeMessage:()=>{},setProviders:()=>{},reset:()=>{}});function l({children:e}){const[t,r]=(0,s.useState)([]),[n,a]=(0,s.useState)(!1),[l,c]=(0,s.useState)(null),[d,u]=(0,s.useState)(null),[p,h]=(0,s.useState)(null),[g,f]=(0,s.useState)(0),[m,y]=(0,s.useState)([]),[w,v]=(0,s.useState)([]),[x,b]=(0,s.useState)([]),[S,_]=(0,s.useState)({}),P=(0,s.useRef)(0),U=(0,s.useCallback)((e=[],t=null)=>{const s=e.map(e=>({id:e.id,label:e.label,status:"pending",supportsProgress:e.supportsProgress||!1,progress:0}));let n=-1;t&&(n=s.findIndex(e=>e.id===t),-1!==n&&(s[n].status="active")),r(()=>s),u(null),c(null)},[]),k=(0,s.useCallback)((e,t,s="")=>{r(r=>r.map(r=>r.id===e?{...r,status:t,errorMessage:"error"===t?s:""}:r))},[]),C=(0,s.useCallback)((e,t)=>{r(r=>r.map(r=>r.id===e?{...r,progress:Math.max(0,Math.min(100,Math.round(t)))}:r))},[]),A=(0,s.useCallback)((e,t)=>{_(r=>({...r,[e]:{...t,progress:Math.max(0,Math.min(100,Math.round(t.progress||0)))}}))},[]),$=(0,s.useCallback)(e=>{r(t=>{const r=t.find(t=>t.id===e);if(!r)return t;const s=t.findIndex(e=>e.id===r.id);return-1===s?t:t.map((e,t)=>t<s&&"complete"!==e.status?{...e,status:"complete"}:t===s?{...e,status:"active"}:e)})},[]),I=(0,s.useCallback)((e,t="info",r=null,s=void 0,n=void 0)=>{y(a=>[{id:Date.now()+Math.random(),message:e,type:t,key:r,...void 0!==s&&{progress:s},...void 0!==n&&{metadata:n},timestamp:Date.now()},...a])},[]),j=(0,s.useCallback)((e,t=null,r=null,s=void 0,n=void 0)=>{y(a=>a.map(a=>{if(a.key!==e)return a;const o={...a};return null!==t&&(o.message=t),null!==r&&(o.type=r),null===s?delete o.progress:void 0!==s&&(o.progress=s),void 0!==n&&(o.metadata={...a.metadata||{},...n}),o}))},[]),E=(0,s.useCallback)(e=>{y(t=>t.filter(t=>t.key!==e))},[]),T=(0,s.useCallback)((e={})=>{r(e=>e.map(e=>({...e,status:"complete"}))),c(e),a(!1),I("Site exported successfully!","success")},[I]),B=(0,s.useCallback)((e,t=null)=>{u(e),a(!1),I(e,"error"),t&&k(t,"error",e)},[I,k]),F=(0,s.useCallback)((e,t,r=null,s=void 0,n=void 0)=>{h(e),e&&(r?y(a=>{const o=a.findIndex(e=>e.key===r);return-1!==o?a.map((r,a)=>{if(a!==o)return r;const i={...r,message:e,type:t};return null===s?delete i.progress:void 0!==s&&(i.progress=s),void 0!==n&&(i.metadata={...r.metadata||{},...n}),i}):[{id:Date.now()+Math.random(),message:e,type:t,key:r,...void 0!==s&&{progress:s},...void 0!==n&&{metadata:n},timestamp:Date.now()},...a]}):I(e,t,null,s,n))},[I]),D=(0,s.useCallback)(e=>{const t=Math.max(0,Math.min(100,Math.round(e)));t>P.current&&(P.current=t),f(P.current)},[]),M=(0,s.useCallback)((e=[],t=[])=>{v(e),b(t)},[]),R=(0,s.useCallback)((e=!1)=>{e||r([]),a(!1),c(null),u(null),h(null),f(0),y([]),v([]),b([]),_({}),P.current=0},[]),z=(0,s.useMemo)(()=>({steps:t,isExporting:n,finalStatus:l,error:d,currentStatusMessage:p,overallProgress:g,messageHistory:m,staticSiteProviders:w,blueprintBundleProviders:x,providerProgress:S,initializeSteps:U,setStepStatus:k,setStepProgress:C,setProviderProgress:A,updateFromStep:$,markAllComplete:T,showError:B,setIsExporting:a,setStatusMessage:F,setOverallProgressValue:D,addMessage:I,updateMessage:j,removeMessage:E,setProviders:M,reset:R}),[t,n,l,d,p,g,m,w,x,S,U,k,C,A,$,T,B,F,D,I,j,E,M,R]);return(0,o.jsx)(i.Provider,{value:z,children:e})}var c=r(186);const d=(e,t)=>t.some(t=>e instanceof t);let u,p;const h=new WeakMap,g=new WeakMap,f=new WeakMap;let m={get(e,t,r){if(e instanceof IDBTransaction){if("done"===t)return h.get(e);if("store"===t)return r.objectStoreNames[1]?void 0:r.objectStore(r.objectStoreNames[0])}return v(e[t])},set:(e,t,r)=>(e[t]=r,!0),has:(e,t)=>e instanceof IDBTransaction&&("done"===t||"store"===t)||t in e};function y(e){m=e(m)}function w(e){return"function"==typeof e?(t=e,(p||(p=[IDBCursor.prototype.advance,IDBCursor.prototype.continue,IDBCursor.prototype.continuePrimaryKey])).includes(t)?function(...e){return t.apply(x(this),e),v(this.request)}:function(...e){return v(t.apply(x(this),e))}):(e instanceof IDBTransaction&&function(e){if(h.has(e))return;const t=new Promise((t,r)=>{const s=()=>{e.removeEventListener("complete",n),e.removeEventListener("error",a),e.removeEventListener("abort",a)},n=()=>{t(),s()},a=()=>{r(e.error||new DOMException("AbortError","AbortError")),s()};e.addEventListener("complete",n),e.addEventListener("error",a),e.addEventListener("abort",a)});h.set(e,t)}(e),d(e,u||(u=[IDBDatabase,IDBObjectStore,IDBIndex,IDBCursor,IDBTransaction]))?new Proxy(e,m):e);var t}function v(e){if(e instanceof IDBRequest)return function(e){const t=new Promise((t,r)=>{const s=()=>{e.removeEventListener("success",n),e.removeEventListener("error",a)},n=()=>{t(v(e.result)),s()},a=()=>{r(e.error),s()};e.addEventListener("success",n),e.addEventListener("error",a)});return f.set(t,e),t}(e);if(g.has(e))return g.get(e);const t=w(e);return t!==e&&(g.set(e,t),f.set(t,e)),t}const x=e=>f.get(e);const b=["get","getKey","getAll","getAllKeys","count"],S=["put","add","delete","clear"],_=new Map;function P(e,t){if(!(e instanceof IDBDatabase)||t in e||"string"!=typeof t)return;if(_.get(t))return _.get(t);const r=t.replace(/FromIndex$/,""),s=t!==r,n=S.includes(r);if(!(r in(s?IDBIndex:IDBObjectStore).prototype)||!n&&!b.includes(r))return;const a=async function(e,...t){const a=this.transaction(e,n?"readwrite":"readonly");let o=a.store;return s&&(o=o.index(t.shift())),(await Promise.all([o[r](...t),n&&a.done]))[0]};return _.set(t,a),a}y(e=>({...e,get:(t,r,s)=>P(t,r)||e.get(t,r,s),has:(t,r)=>!!P(t,r)||e.has(t,r)}));const U=["continue","continuePrimaryKey","advance"],k={},C=new WeakMap,A=new WeakMap,$={get(e,t){if(!U.includes(t))return e[t];let r=k[t];return r||(r=k[t]=function(...e){C.set(this,A.get(this)[t](...e))}),r}};async function*I(...e){let t=this;if(t instanceof IDBCursor||(t=await t.openCursor(...e)),!t)return;const r=new Proxy(t,$);for(A.set(r,t),f.set(r,x(t));t;)yield r,t=await(C.get(r)||t.continue()),C.delete(r)}function j(e,t){return t===Symbol.asyncIterator&&d(e,[IDBIndex,IDBObjectStore,IDBCursor])||"iterate"===t&&d(e,[IDBIndex,IDBObjectStore])}y(e=>({...e,get:(t,r,s)=>j(t,r)?I:e.get(t,r,s),has:(t,r)=>j(t,r)||e.has(t,r)}));const E=new Map,T={dbName:"aether-site-exporter",version:1,stores:{cache:{keyPath:"key",indexes:[{name:"timestamp",keyPath:"timestamp",unique:!1},{name:"type",keyPath:"type",unique:!1}]}}};function B(){try{return"undefined"!=typeof indexedDB&&null!==indexedDB&&!0}catch(e){return!1}}const F=class{constructor(e,t=T){this.storeName=e,this.config=t,this.db=null,this.keyPath=t.stores?.[e]?.keyPath||T.stores.cache.keyPath}async ensureDatabase(){return this.db||(this.db=await async function(e=T){const t=`${e.dbName}_v${e.version}`;if(E.has(t))return E.get(t);try{const r=await function(e,t,{blocked:r,upgrade:s,blocking:n,terminated:a}={}){const o=indexedDB.open(e,t),i=v(o);return s&&o.addEventListener("upgradeneeded",e=>{s(v(o.result),e.oldVersion,e.newVersion,v(o.transaction),e)}),r&&o.addEventListener("blocked",e=>r(e.oldVersion,e.newVersion,e)),i.then(e=>{a&&e.addEventListener("close",()=>a()),n&&e.addEventListener("versionchange",e=>n(e.oldVersion,e.newVersion,e))}).catch(()=>{}),i}(e.dbName,e.version,{upgrade(t){Object.entries(e.stores).forEach(([e,r])=>{t.objectStoreNames.contains(e)&&t.deleteObjectStore(e);const s=t.createObjectStore(e,{keyPath:r.keyPath,autoIncrement:r.autoIncrement||!1});r.indexes&&r.indexes.forEach(e=>{s.createIndex(e.name,e.keyPath,{unique:e.unique||!1})})})}});return E.set(t,r),r}catch(e){throw new Error(`Failed to open IndexedDB: ${e.message||"Unknown error"}`)}}(this.config)),this.db}async get(e){try{const t=await this.ensureDatabase();return await t.get(this.storeName,e)||null}catch(t){return console.error(`[IndexedDB] Error getting key "${e}":`,t),null}}async getAll(e=void 0){try{const t=await this.ensureDatabase();return await t.getAll(this.storeName,void 0,e)||[]}catch(e){return console.error("[IndexedDB] Error getting all values:",e),[]}}async getAllKeys(){try{const e=await this.ensureDatabase();return await e.getAllKeys(this.storeName)||[]}catch(e){return console.error("[IndexedDB] Error getting all keys:",e),[]}}async set(e,t,r={}){try{const s=await this.ensureDatabase(),n="object"==typeof t&&null!==t?{...t}:{value:t},a={[this.keyPath]:e,...n,timestamp:Date.now(),...r};return await s.put(this.storeName,a),!0}catch(t){return("QuotaExceededError"===t.name||t.message?.includes("quota"))&&console.warn("[IndexedDB] Storage quota exceeded. Consider cleaning up old data."),console.error(`[IndexedDB] Error setting key "${e}":`,t),!1}}async delete(e){try{const t=await this.ensureDatabase();return await t.delete(this.storeName,e),!0}catch(t){return console.error(`[IndexedDB] Error deleting key "${e}":`,t),!1}}async clear(){try{const e=await this.ensureDatabase();return await e.clear(this.storeName),!0}catch(e){return console.error("[IndexedDB] Error clearing store:",e),!1}}async count(){try{const e=await this.ensureDatabase();return await e.count(this.storeName)||0}catch(e){return console.error("[IndexedDB] Error counting items:",e),0}}async getByIndex(e,t){try{const r=await this.ensureDatabase();return await r.getAllFromIndex(this.storeName,e,t)||[]}catch(t){return console.error(`[IndexedDB] Error getting by index "${e}":`,t),[]}}async deleteOlderThan(e){try{const t=await this.ensureDatabase(),r=Date.now()-e,s=t.transaction(this.storeName,"readwrite"),n=s.objectStore(this.storeName).index("timestamp");let a=0,o=await n.openCursor(IDBKeyRange.upperBound(r));for(;o;)await o.delete(),a++,o=await o.continue();return await s.done,a}catch(e){return console.error("[IndexedDB] Error deleting old items:",e),0}}async getStorageEstimate(){if(navigator.storage&&navigator.storage.estimate)try{const e=await navigator.storage.estimate();return{quota:e.quota,usage:e.usage,percentUsed:e.quota>0?e.usage/e.quota*100:0}}catch(e){console.error("[IndexedDB] Error getting storage estimate:",e)}return{quota:null,usage:null,percentUsed:null}}};var D=r(735);const M={dbName:"aether-wporg-cache",version:1,stores:{wporgChecks:{keyPath:"cacheKey",indexes:[{name:"timestamp",keyPath:"timestamp",unique:!1},{name:"type",keyPath:"type",unique:!1}]}}},R=6048e5;class z{constructor(){this.store=new F("wporgChecks",M),this.memoryCache=new Map,this.cleanupPromise=null}getCacheKey(e,t){return`${t}:${e}`}async get(e,t){const r=this.getCacheKey(e,t);if(this.memoryCache.has(r))return this.memoryCache.get(r);try{const e=await this.store.get(r);if(e&&e.timestamp){if(Date.now()-e.timestamp<R)return this.memoryCache.set(r,e.exists),e.exists;await this.store.delete(r)}}catch(e){console.error(`[WpOrgCache] Error getting cache for ${r}:`,e)}return null}async set(e,t,r){const s=this.getCacheKey(e,t);this.memoryCache.set(s,r);try{return await this.store.set(s,{exists:r},{type:t,slug:e}),!0}catch(e){return console.error(`[WpOrgCache] Error setting cache for ${s}:`,e),!1}}async cleanup(){return this.cleanupPromise||(this.cleanupPromise=(async()=>{try{const e=await this.store.deleteOlderThan(R);return e>0&&(0,D.Yz)(`[WpOrgCache] Cleaned up ${e} expired cache entries`),e}catch(e){return(0,D.AO)("[WpOrgCache] Error during cleanup:",e),0}finally{this.cleanupPromise=null}})()),this.cleanupPromise}async clear(){return this.memoryCache.clear(),this.store.clear()}async getStats(){try{return{totalCached:await this.store.count(),memoryCached:this.memoryCache.size,hitRate:null}}catch(e){return console.error("[WpOrgCache] Error getting stats:",e),{totalCached:0,memoryCached:this.memoryCache.size,hitRate:null}}}async getAllEntries(){try{return await this.store.getAll()}catch(e){return console.error("[WpOrgCache] Error getting all entries:",e),[]}}}let N=null;function L(){return N||(N=new z,N.cleanup().catch(e=>{console.error("[WpOrgCache] Initial cleanup failed:",e)})),N}function O(e){return e.includes("/")?e.split("/")[0]:e}function W(e){return e.filter(e=>e.is_active)}function q(e){return e.find(e=>e.is_active)||null}function H(e,t){return e.filter(e=>e.from_wporg===t)}function Y(e){return{type:e.assetType,slug:e.slug,name:e.name,version:e.version}}function K(e){return O(e.slug)}function V(e,t){return[...e.map(e=>({...e,assetType:"plugin"})),...t.map(e=>({...e,assetType:"theme"}))]}function G(){return"undefined"!=typeof window&&window.wp&&window.wp.siteName?window.wp.siteName:"undefined"!=typeof document&&document.title?document.title:""}class J{constructor(e,t,r,s=null){this.apiFetch=e,this.checkWpOrg=t,this.wporgCache=r,this.getSiteName=s||G}async getInstalledAssets(){try{const e=await this.apiFetch({path:"/aether/site-exporter/assets",method:"GET"});if(!e.success)throw new Error(e.error||"Failed to fetch assets");return{plugins:e.plugins||[],themes:e.themes||[]}}catch(e){return{plugins:[],themes:[]}}}async getConfig(){return"undefined"!=typeof window&&window.aetherData?{publicUrl:window.aetherData.publicUrl||"",adminUrl:window.aetherData.adminUrl||""}:{publicUrl:"",adminUrl:""}}async checkAssetsAgainstWpOrg(e,t){return Promise.all(e.map(async e=>{const r=await this.checkWpOrg(e.slug,e.assetType,t);return{...e,from_wporg:r}}))}async discoverCustomAssets(){const e=await this.getConfig(),{plugins:t,themes:r}=await this.getInstalledAssets(),s=W(t),n=q(r),a=V(s,n?[n]:[]);return H(await this.checkAssetsAgainstWpOrg(a,e),!1).map(Y)}async getBlueprintAssets(){const e=await this.getConfig(),{plugins:t,themes:r}=await this.getInstalledAssets(),s=W(t),n=q(r),a=V(s,n?[n]:[]),o=H(await this.checkAssetsAgainstWpOrg(a,e),!0),i=o.filter(e=>"plugin"===e.assetType).filter(e=>function(e){const t=["aether","sqlite-database-integration"];return e.filter(e=>!t.includes(O(e.slug)))}([e]).length>0).map(K);return{plugins:i,themes:o.filter(e=>"theme"===e.assetType).map(K),siteName:this.getSiteName()}}}async function Z(e,t,r={}){const s="plugin"===t?O(e):e,n=L(),a=await n.get(s,t);if(null!==a)return a;let o=await X(s,t,"cors-proxy",r);return null===o&&((0,D.UT)(`CORS proxy WordPress.org check returned null for ${t} "${e}", trying direct API fallback`),o=await X(s,t,"direct",r)),null===o&&((0,D.UT)(`All WordPress.org check methods failed for ${t} "${e}", treating as custom asset`),o=!1),null!==o&&await n.set(s,t,o),o}async function X(e,t,r,s={}){try{let a;"cors-proxy"===r?(a=s.corsProxyUrl||"https://cfp.s12y.org/check-wporg",a+=`?slug=${encodeURIComponent(e)}&type=${encodeURIComponent(t)}`):a="theme"===t?`https://api.wordpress.org/themes/info/1.2/?action=theme_information&request[slug]=${encodeURIComponent(e)}`:`https://api.wordpress.org/plugins/info/1.0/${encodeURIComponent(e)}.json`;const o=await fetch(a);if(!o.ok)throw new Error(`WordPress.org check returned ${o.status}`);const i=await o.json();let l;if("direct"===r)l=!i.error&&(i.slug||i.name);else{if(!i.success)throw new Error(i.error||(0,n.__)("Unknown error","aether-site-exporter"));l=i.exists}return l}catch(s){return(0,D.UT)(`Failed to check WordPress.org for ${t} "${e}" using ${r} method:`,s),null}}function Q(){const[e,t]=(0,s.useState)(!1),[r,n]=(0,s.useState)(null),a=(0,s.useMemo)(()=>new J(c.Ay,Z,L()),[]);return{discoverCustomAssets:(0,s.useCallback)(async()=>{t(!0),n(null);try{const e=await a.discoverCustomAssets();return t(!1),e}catch(e){throw n(e.message),t(!1),e}},[a]),getBlueprintAssets:(0,s.useCallback)(async()=>{t(!0),n(null);try{const e=await a.getBlueprintAssets();return t(!1),e}catch(e){throw n(e.message),t(!1),e}},[a]),loading:e,error:r}}const ee={get(e,t=null){try{const r=localStorage.getItem(e);if(null===r)return t;try{return JSON.parse(r)}catch(e){return t}}catch(e){return t}},set(e,t){try{const r=JSON.stringify(t);return localStorage.setItem(e,r),!0}catch(e){return!1}},remove(e){try{return localStorage.removeItem(e),!0}catch(e){return!1}},clear(){try{return localStorage.clear(),!0}catch(e){return!1}},has(e){try{return null!==localStorage.getItem(e)}catch(e){return!1}},keys(){try{const e=[];for(let t=0;t<localStorage.length;t++){const r=localStorage.key(t);null!==r&&e.push(r)}return e}catch(e){return[]}}},te="/aether/site-exporter",re={SETTINGS:`${te}/settings`,SETTINGS_GET:`${te}/settings`,SETTINGS_UPDATE:`${te}/settings`,EXPORT_WORKFLOW:{START:`${te}/export`,STATUS:`${te}/export/status`,STEPS:`${te}/export/steps`,STEP:e=>`${te}/export/steps/${e}`,CANCEL:`${te}/export/cancel`,CREATE_ARCHIVE:`${te}/export/createArchive`,GENERATE_BLUEPRINT_BUNDLE:`${te}/export/generateBlueprintBundle`},PROVIDERS:{CONFIG:e=>`${te}/providers/${e}/config`,SAVE_CONFIG:e=>`${te}/providers/${e}/config`,DELETE_CONFIG:e=>`${te}/providers/${e}/config`,TEST:e=>`${te}/providers/${e}/test`,STATUS:e=>`${te}/providers/${e}/status`},BLUEPRINT:{GET:`${te}/blueprint`},EXPORT:{START:`${te}/export/start`,STATUS:`${te}/export/status`,DOWNLOAD:`${te}/export/download`},CONFIG:{UPDATE:`${te}/config`,RESET:`${te}/config/reset`},STATIC_SITE:{URLS:`${te}/static-site/urls`,GENERATE:`${te}/static-site/generate`},ASSETS:{EXTRACT:`${te}/assets/extract`},USAGE:{SUMMARY:`${te}/usage/summary`,DETAILS:`${te}/usage/details`}},se="aether_changed_assets";class ne{constructor(e,t,r){this.apiFetch=e,this.assetDiscovery=t,this.storage=r}async discoverBlueprintBundleAssets(){const e=await this.assetDiscovery.discoverCustomAssets();return{success:!0,assets:e,count:e.length}}markAssetChanged(e,t){const r=this.storage.get(se,[]),s=`${e}:${t}`;return r.includes(s)||(r.push(s),this.storage.set(se,r)),{success:!0,message:`Marked ${e} ${t} as changed`}}async fetchAllPaginatedUrls(e,t=null){const r=[];let s=1,n=!0;for(;n;){const a=await this.apiFetch({path:`${e}?page=${s}`,method:"GET"});if(!a.success)throw new Error(a.message||`Failed to fetch URLs from ${e}`);r.push(...a.urls||[]),n=a.hasMore,s=a.nextPage||s+1,t&&t({page:s-1,urlsCount:r.length,total:a.total,hasMore:n})}return r}async discoverUrls(e=null){try{const t=[],r=["posts","terms","authors","archives"];for(const s of r){e&&e({type:s,status:"fetching"});const r=await this.fetchAllPaginatedUrls(`/aether/site-exporter/urls/${s}`,e?t=>e({type:s,...t}):null);t.push(...r),e&&e({type:s,status:"complete",count:r.length})}return{success:!0,urls:[...new Set(t)],staticSiteUrl:null}}catch(e){return{success:!1,message:e.message||"Failed to discover URLs",urls:[],staticSiteUrl:null}}}async createArchive({assets:e=[],includeUploads:t=!0}={}){try{const r=e.map(e=>e.slug||e),s=await this.apiFetch({path:re.EXPORT_WORKFLOW.CREATE_ARCHIVE,method:"POST",data:{custom_assets:r,include_uploads:t}});if(s.success&&s.data){const e=s.data;return{success:!0,zipPath:e.zipPath||null,zipUrl:e.zipUrl||null,zipSize:e.zipSize||0}}return{success:!1,message:s.message||"Failed to create archive"}}catch(e){return{success:!1,message:e.message||"Failed to create archive"}}}async generateBlueprint(){return{success:!1,message:"Blueprint generation must be done client-side. Please ensure generateBlueprintJson function is available."}}async createBlueprintBundle({blueprint:e,wpContentZipPath:t}={}){try{if(!e)return{success:!1,message:"Blueprint data is required"};if(!t)return{success:!1,message:"Archive path is required"};const r=await this.apiFetch({path:re.EXPORT_WORKFLOW.GENERATE_BLUEPRINT_BUNDLE,method:"POST",data:{blueprintData:e,archiveResult:{zipPath:t}}});if(r.success&&r.data){const e=r.data;return{success:!0,bundlePath:e.bundlePath||null,bundleUrl:e.bundleUrl||null,bundleSize:e.bundleSize||0}}return{success:!1,message:r.message||"Failed to create blueprint bundle"}}catch(e){return{success:!1,message:e.message||"Failed to create blueprint bundle"}}}}const ae="aetherAssets";function oe(e){if(!e||"object"!=typeof e)return{existsOnR2:!1};const{exists_on_r2:t,existsOnR2:r,...s}=e;return{...s,existsOnR2:r||t||!1}}function ie(e){return!e}function le(e,t,r={}){const{preserveNeedsUpload:s=!1}=r;if(!e){const e=oe(t);return{...e,needsUpload:ie(e.existsOnR2)}}if(!t)return e;const n=oe(t),a={...e,...n};return s&&"needsUpload"in e?a.needsUpload=e.needsUpload:"existsOnR2"in a&&(a.needsUpload=ie(a.existsOnR2)),a}class ce{constructor(e){this.storage=e}load(){return this.storage.get(ae,{})}save(e){this.storage.set(ae,e)}markAsChanged(e,t,r){const s={...e},n=s[r];return s[r]=n?{...n,needsUpload:!0}:function(e,t,r,s=!1){const n={type:e,slug:t,needsUpload:ie(s)};return void 0!==r&&(n.name=r),void 0!==s&&(n.existsOnR2=s),n}(t,r),s}updateFromServer(e,t){const r=oe(t),{slug:s}=r,n={...e},a=n[s];return n[s]=le(a,r),n}syncWithServer(e,t){if(!Array.isArray(t))return e;const r={...e};return t.forEach(e=>{const t=oe(e),{slug:s}=t,n=r[s];r[s]=le(n,t,{preserveNeedsUpload:!!n?.needsUpload})}),r}}var de=r(619);function ue(e,t,r,s,n=null){return e||(e={}),e[t]={size:r,hash:s},n&&(e[t].contentType=n),(0,D.Yz)("Updated manifest entry:",{storageKey:t,size:r,hashLength:s.length,contentType:n||"not specified"}),e}function pe(e,t,r,s){if(!e||!e[t])return!1;const n=e[t];return n.size!==r?((0,D.Yz)("File size differs, will upload:",{storageKey:t,existingSize:n.size,newSize:r}),!1):n.hash!==s?((0,D.Yz)("File size matches but hash differs, will upload:",{storageKey:t,size:r}),!1):((0,D.Yz)("File unchanged, skipping upload:",{storageKey:t,size:r,hash:s.substring(0,16)+"..."}),!0)}async function he(e,t){try{(0,D.Yz)("Uploading manifest:",{manifestKey:"file-manifest.json",fileCount:Object.keys(t).length});const r=JSON.stringify(t),s=new Blob([r],{type:"application/json"}),n=await e.uploadManifest(s);return n.success?((0,D.Yz)("Manifest uploaded successfully"),!0):((0,D.UT)("Manifest upload failed:",n.error),!1)}catch(e){return(0,D.UT)("Failed to upload manifest:",e),!1}}async function ge(e){let t={};try{if(!e)throw new Error("Provider ID is required for fetchProviderConfig. Provider discovery should not be used in threaded contexts.");const{ConfigStorage:s}=await Promise.resolve().then(r.bind(r,906)),n=new s(e);t=await n.load()}catch(e){throw(0,D.Yz)("Failed to load provider configuration:",e),e}return t}var fe=r(662),me=r(864);async function ye(e){if(!(e instanceof File||e instanceof Blob))throw new Error("File must be a File or Blob object");try{const t=await e.arrayBuffer(),r=await crypto.subtle.digest("SHA-256",t),s=Array.from(new Uint8Array(r)).map(e=>e.toString(16).padStart(2,"0")).join("");return(0,D.Yz)("calculateFileHash:",{fileSize:e.size,hashLength:s.length}),s}catch(e){throw(0,D.AO)("Failed to calculate file hash:",e),new Error(`Hash calculation failed: ${e.message}`)}}function we(e,t=1){return e&&0!==e?e<1024?`${e} B`:e<1048576?`${(e/1024).toFixed(t)} KB`:e<1073741824?`${(e/1048576).toFixed(t)} MB`:`${(e/1073741824).toFixed(t)} GB`:"0 B"}const ve="network",xe="timeout",be="validation",Se="permission",_e="not_found",Pe="rate_limit",Ue="quota_exceeded",ke="unknown",Ce="critical",Ae={maxRetries:3,initialDelay:1e3,maxDelay:1e4,backoffMultiplier:2,retryableCategories:[ve,xe,Pe]};function $e(e){if(!e)return ke;const t=e.message?.toLowerCase()||"",r=e.code?.toLowerCase()||"",s=e.status||e.statusCode;return t.includes("network")||t.includes("fetch")||t.includes("connection")||"network_error"===r||"econnrefused"===r||"enotfound"===r?ve:t.includes("timeout")||"timeout"===r||408===s?xe:t.includes("rate limit")||t.includes("too many requests")||"rate_limit"===r||429===s?Pe:t.includes("quota")||t.includes("storage")||"quota_exceeded"===r||507===s?Ue:t.includes("permission")||t.includes("unauthorized")||t.includes("forbidden")||"permission_denied"===r||401===s||403===s?Se:t.includes("not found")||"not_found"===r||404===s?_e:t.includes("validation")||t.includes("invalid")||"validation_error"===r||400===s||422===s?be:ke}function Ie(e,t={}){const r=$e(e);return{...Ae,...t}.retryableCategories.includes(r)}function je(e,t={}){const r={...Ae,...t},{initialDelay:s,maxDelay:n,backoffMultiplier:a}=r,o=s*Math.pow(a,e);return Math.min(o,n)}function Ee(e,t={}){const r=$e(e),{stepId:s,operation:a}=t;let o=e.message||(0,n.__)("An unknown error occurred","aether-site-exporter");switch(s&&(o=(0,n.sprintf)(/* translators: 1: Step ID, 2: Error message */ /* translators: 1: Step ID, 2: Error message */
-(0,n.__)('Error in step "%1$s": %2$s',"aether-site-exporter"),s,o)),a&&(o=(0,n.sprintf)(/* translators: 1: Operation name, 2: Error message */ /* translators: 1: Operation name, 2: Error message */
-(0,n.__)("Error during %1$s: %2$s","aether-site-exporter"),a,o)),r){case ve:o+=" "+(0,n.__)("Please check your internet connection and try again.","aether-site-exporter");break;case xe:o+=" "+(0,n.__)("The operation took too long. Please try again.","aether-site-exporter");break;case Pe:o+=" "+(0,n.__)("Too many requests. Please wait a moment and try again.","aether-site-exporter");break;case Ue:o+=" "+(0,n.__)("Storage quota exceeded. Please free up space and try again.","aether-site-exporter");break;case Se:o+=" "+(0,n.__)("Permission denied. Please check your access rights.","aether-site-exporter")}return o}const Te=function(e={}){const t={...Ae,...e};return{executeWithRetry:async(e,r={})=>async function(e,t={}){const r={...Ae,...t},{maxRetries:s,onRetry:n,shouldRetry:a}=r;let o=null;for(let t=0;t<=s;t++)try{return await e()}catch(e){if(o=e,!(t<s&&(a?a(e,t):Ie(e,r))))throw(0,D.AO)("[ErrorHandler] Error not retryable or max retries reached:",e),e;const i=je(t,r);(0,D.UT)(`[ErrorHandler] Retry attempt ${t+1}/${s} after ${i}ms:`,e.message),n&&n(e,t+1,i),await new Promise(e=>setTimeout(e,i))}throw(0,D.AO)(`[ErrorHandler] All retry attempts exhausted after ${s+1} attempts`),o}(e,{...t,...r}),categorize:e=>$e(e),isRetryable:e=>Ie(e,t),formatMessage:(e,t={})=>Ee(e,t)}}();async function Be({assetUrls:e,assetTracker:t,storageService:r,manifest:s,providerId:a,filesUploaded:o,totalFilesToUpload:i,onProgress:l,setStatusMessage:c}){let d=o,u=0;const p=[];let h=s;const g=e.filter(e=>!t.isUploaded(e));if(0===g.length)return{filesUploaded:d,filesSkipped:u,uploadedFiles:p,manifest:h};const f=[];for(const e of g)try{const r=await fetch(e,{method:"GET",credentials:"omit",headers:{"User-Agent":"Aether Static Site Generator"}});if(200!==r.status)continue;const s=await r.blob(),n=r.headers.get("content-type")||"application/octet-stream",o=(0,fe.h)(e);if(null===o){(0,D.UT)(`Skipping invalid asset URL (empty path after scope stripping): ${e}`),t.markFailed(e);continue}const i=o;let l=new Blob([s],{type:n});const c=(0,de.applyFilters)("aether.export.step.uploadStaticSiteFiles.asset.process",{blob:l,path:o,key:i,contentType:n,url:e},a);l=c.blob||l;const g=c.path||o,m=c.key||i,y=c.contentType||n,w=h[m];if(w&&w.size===l.size)try{const r=await ye(l);if(pe(h,m,l.size,r)){t.markUploaded(e),d++,u++,p.push({storageKey:m,relativePath:g,contentType:y});continue}}catch(t){(0,D.UT)("Failed to calculate hash for manifest check, will upload:",e,t)}f.push({assetUrl:e,assetPath:g,assetKey:m,assetBlob:l,contentType:y})}catch(t){(0,D.UT)("Failed to fetch asset:",e,t)}const m=f.map(e=>({key:e.assetKey,blob:e.assetBlob,contentType:e.contentType,displayName:e.assetPath||e.assetKey||"file",metadata:{},assetData:e})),y=await async function({files:e,storageService:t,setStatusMessage:r,concurrency:s=5,onProgress:a=null,keyPrefix:o="upload",skipHashCheck:i=!1,manifest:l=null,shouldSkipUpload:c=null}){if(!e||0===e.length)return{success:!0,uploaded:0,skipped:0,failed:0,results:[]};const d=function(e=5){let t=0;const r=[],s=()=>{if(t>=e||0===r.length)return;const{operation:n,resolve:a,reject:o}=r.shift();t++,Promise.resolve(n()).then(e=>{t--,a(e),s()}).catch(e=>{t--,o(e),s()})};return e=>new Promise((t,n)=>{r.push({operation:e,resolve:t,reject:n}),s()})}(s);let u=0,p=0,h=0,g=0;const f=[],m=e.map(s=>d(async()=>{const{key:d,blob:m,contentType:y,displayName:w,metadata:v={}}=s,x=w||d||"file",b=`${o}-${function(e){return e.replace(/[^a-zA-Z0-9-_]/g,"-")}(d)}`;let S=null,_=!1;try{if((0,de.doAction)("aether.upload.file.before",{key:d,blob:m,contentType:y,displayName:x}),!i&&l){const e=m.size,t=l[d];if(t&&t.size===e)try{S=(0,de.applyFilters)("aether.upload.hash.calculate",null,m,d,l)||await ye(m),_=c?c(l,d,e,S):pe(l,d,e,S)}catch(e){(0,D.UT)("Failed to calculate file hash, will upload:",e),_=!1}}if(_){p++,g++;const t=m.size,s=we(t);return r&&r((0,n.sprintf)(/* translators: %1$s: File name, %2$s: File size */ /* translators: %1$s: File name, %2$s: File size */
-(0,n.__)("Skipped unchanged file %1$s (%2$s)","aether-site-exporter"),x,s),"success",b,void 0,{fileSize:t}),a&&e.length>0&&a(g,e.length,null),void f.push({key:d,success:!0,skipped:!0,url:null,hash:S,size:m.size})}if(!S&&!i)try{S=(0,de.applyFilters)("aether.upload.hash.calculate",null,m,d,l)||await ye(m)}catch(e){(0,D.UT)("Failed to calculate hash:",e),S=null}const s=m.size,o=we(s);r&&r((0,n.sprintf)(/* translators: %1$s: File name, %2$s: File size */ /* translators: %1$s: File name, %2$s: File size */
-(0,n.__)("Uploading %1$s (%2$s)","aether-site-exporter"),x,o),"progress",b,{percent:0,loaded:0,total:s},{fileSize:s});let w={contentType:y,cacheControl:v.cacheControl||"public, max-age=31536000, immutable",onProgress:(e,t,a)=>{r&&r((0,n.sprintf)(/* translators: %1$s: File name, %2$s: File size */ /* translators: %1$s: File name, %2$s: File size */
-(0,n.__)("Uploading %1$s (%2$s)","aether-site-exporter"),x,o),"progress",b,{percent:a,loaded:e,total:t},{fileSize:s})}};w=(0,de.applyFilters)("aether.upload.file.options",w,d,m,y,v);let P=null;try{P=await Te.executeWithRetry(async()=>{const e=await t.upload(d,m,w);if(!e.success){const t=new Error(e.error||"Upload failed");throw t.code=e.code,t.status=e.status,t}return e},{onRetry:(e,t)=>{r&&r((0,n.sprintf)(/* translators: %1$s: File name, %2$s: File size, %3$d: Attempt number, %4$d: Max retries */ /* translators: %1$s: File name, %2$s: File size, %3$d: Attempt number, %4$d: Max retries */
-(0,n.__)("Retrying %1$s (%2$s) - attempt %3$d/%4$d","aether-site-exporter"),x,o,t,3),"info",b,void 0,{fileSize:s})}})}catch(e){P={success:!1,error:Te.formatMessage(e,{operation:`upload ${x}`})}}if(P&&P.success){u++,g++,r&&r((0,n.sprintf)(/* translators: %1$s: File name, %2$s: File size */ /* translators: %1$s: File name, %2$s: File size */
-(0,n.__)("Uploaded %1$s (%2$s)","aether-site-exporter"),x,o),"success",b,null,{fileSize:s}),a&&e.length>0&&a(g,e.length,null);const t={key:d,success:!0,skipped:!1,url:P.url,hash:S,size:s};(0,de.doAction)("aether.upload.file.after",t,x),f.push(t)}else{h++;const e=P?.error||"Upload failed after retries";r&&r((0,n.sprintf)(/* translators: %s: File name */ /* translators: %s: File name */
-(0,n.__)("Failed to upload %s","aether-site-exporter"),x),"error",b,null),f.push({key:d,success:!1,skipped:!1,url:null,error:e})}}catch(e){h++,(0,D.UT)(`Failed to upload file: ${d}`,e),r&&r((0,n.sprintf)(/* translators: %s: File name */ /* translators: %s: File name */
-(0,n.__)("Failed to upload %s","aether-site-exporter"),x),"error",b,null),f.push({key:d,success:!1,skipped:!1,url:null,error:e.message||"Upload failed"})}}));return await Promise.allSettled(m),{success:0===h,uploaded:u,skipped:p,failed:h,results:f}}({files:m,storageService:r,setStatusMessage:c,concurrency:5,onProgress:e=>{l&&l(d+e,i,null)},keyPrefix:"upload",skipHashCheck:!1,manifest:h,shouldSkipUpload:pe});for(const e of y.results){const r=m.find(t=>t.key===e.key);if(!r){(0,D.UT)("Could not find fileData for result key:",e.key);continue}const{assetUrl:s,assetPath:n,assetKey:o,contentType:i}=r.assetData;e.success&&(t.markUploaded(s),d++,e.skipped&&u++,e.hash&&(h=ue(h,o,e.size||r.blob.size,e.hash,i),h=(0,de.applyFilters)("aether.export.step.uploadStaticSiteFiles.manifest.update",h,o,a)),p.push({storageKey:o,relativePath:n,contentType:i}))}return{filesUploaded:d,filesSkipped:u,uploadedFiles:p,manifest:h}}async function Fe({url:e,rawHtml:t,siteUrl:r,staticSiteUrl:s,providerId:a,storageService:o,manifest:i,setStatusMessage:l}){let c=(0,de.applyFilters)("aether.export.step.uploadStaticSiteFiles.html.process",t,e,r,s,a);c=(0,me.t)(c,e,r,s);const d=(0,me.W)(e),u=d,p=new Blob([c],{type:"text/html"}),h=p.size;let g=null,f=!1;const m=i[u];if(m&&m.size===h)try{g=await ye(p),f=pe(i,u,h,g)}catch(e){(0,D.UT)("Failed to calculate hash, will upload:",e),f=!1}if(f)return{success:!0,skipped:!0,htmlPath:d,htmlKey:u,htmlHash:g,htmlSize:h};if(!g)try{g=await ye(p)}catch(e){(0,D.UT)("Failed to calculate hash:",e),g=null}l&&l(`Uploading ${d}`,"progress",`upload-${d}`);const y=await o.upload(u,p,{contentType:"text/html"});if(!y.success)throw new Error((0,n.sprintf)(/* translators: %s: Error message */ /* translators: %s: Error message */
-(0,n.__)("Failed to upload HTML file: %s","aether-site-exporter"),y.error));return l&&l((0,n.sprintf)(/* translators: %s: File path */ /* translators: %s: File path */
-(0,n.__)("Uploaded %s","aether-site-exporter"),d),"success",`upload-${d}`),{success:!0,skipped:!1,htmlPath:d,htmlKey:u,htmlHash:g,htmlSize:h}}function De(e){return(0,s.useCallback)(async(t,s,a,o,i,l,c=null,d=null)=>{if(!a)throw new Error("Static site provider ID is required. This function must be called with a specific provider instance ID.");(0,D.Yz)("Processing static site for provider:",{providerId:a,urlCount:t?.length||0});const u=function(){const e=new Set,t=new Set;function r(e){try{const t=new URL(e);return t.hash="",t.pathname.endsWith("/")&&"/"!==t.pathname&&(t.pathname=t.pathname.slice(0,-1)),t.toString()}catch{return e}}return{isUploaded:function(t){const s=r(t);return e.has(s)},markUploaded:function(t){const s=r(t);e.add(s)},markFailed:function(e){const s=r(e);t.add(s)},isFailed:function(e){const s=r(e);return t.has(s)},getCount:function(){return e.size},getFailedCount:function(){return t.size},clear:function(){e.clear(),t.clear()}}}(),p=[],h={urlsFailed:0,urlsSucceeded:0,assetsFailed:0,failedUrls:[]},g=await ge(a),f=g.static_files_path||"static/",m=function(e,t,r){return{public_url:e,base_url:t||e,provider_id:r}}(o,s,a);(0,D.Yz)("Static site storage configuration:",{staticPath:f,providerId:a});const y=await async function(e,t,s,n){const a=(0,de.applyFilters)("aether.storage.service.config",t,e,s,n);let o=(0,de.applyFilters)("aether.storage.service.create",null,e,a,s);if(!o){const{StorageService:t}=await Promise.resolve().then(r.bind(r,159));o=new t(e,a)}return o}(f,m,a,g),w=t.length;(0,D.Yz)("[Aether] useStaticSiteGenerator starting pre-scan:",{urlCount:w,hasCache:!!d,cacheSize:d?d.size:0,providerId:a});const v=await async function({urls:e,siteUrl:t,providerId:r,providerConfig:s,setStatusMessage:a,htmlData:o=null}){const i={urlsFailed:0,failedUrls:[]};(0,de.doAction)("aether.export.step.uploadStaticSiteFiles.pre_scan.before",e,r,s),a&&a((0,n.__)("Scanning files to upload…","aether-site-exporter"),"progress","scanFiles");const l=o||new Map,c=new Set;let d=0;(0,D.Yz)("[Aether] executePreScan starting:",{totalUrls:e.length,cachedEntries:l.size});for(let r=0;r<e.length;r++){const s=e[r],n=l.get(s);if(n){if(n&&"object"==typeof n&&n.rawHtml&&Array.isArray(n.assetUrls)){(0,D.Yz)(`[Aether] Using cached HTML data for URL: ${s}`),d++;for(const e of n.assetUrls)c.add(e);continue}(0,D.UT)(`[Aether] Cached entry for ${s} has invalid structure, will re-fetch`)}try{const e=await fetch(s,{method:"GET",credentials:"omit",headers:{"User-Agent":"Aether Static Site Generator"}});if(200!==e.status){(0,D.UT)(`[Aether] Skipping URL with non-200 status: ${s} (HTTP ${e.status})`),i.urlsFailed++,i.failedUrls.push({url:s,reason:`Failed to fetch HTML: HTTP ${e.status} ${e.statusText}`});continue}const r=e.headers.get("content-type")||"";if(!r.includes("text/html")){(0,D.Yz)(`[Aether] Skipping non-HTML URL (likely asset): ${s} (content-type: ${r})`);continue}const n=await e.text(),a=await(0,fe.extractAssetsFromHtml)(n,s,t);l.set(s,{rawHtml:n,assetUrls:a}),d++;for(const e of a)c.add(e)}catch(e){(0,D.UT)(`[Aether] Error fetching URL: ${s}`,e.message),i.urlsFailed++,i.failedUrls.push({url:s,reason:e.message})}}const u=d+c.size;return(0,D.Yz)("Pre-scan complete:",{urlsScanned:e.length,urlsSuccessful:d,uniqueAssets:c.size,totalFilesToUpload:u}),(0,de.doAction)("aether.export.step.uploadStaticSiteFiles.pre_scan.after",{urlsScanned:e.length,urlsSuccessful:d,uniqueAssets:c.size,totalFiles:u},r),a&&a((0,n.sprintf)(/* translators: %1$d: Number of HTML files, %2$d: Number of assets */ /* translators: %1$d: Number of HTML files, %2$d: Number of assets */
-(0,n.__)("Pre-scan complete: %1$d HTML files, %2$d assets","aether-site-exporter"),d,c.size),"success","scanFiles"),{htmlData:l,allUniqueAssets:c,totalFilesToUpload:u,failures:i,urlsSuccessful:d}}({urls:t,siteUrl:o,providerId:a,providerConfig:g,setStatusMessage:i,htmlData:d}),{htmlData:x,totalFilesToUpload:b}=v;h.urlsFailed+=v.failures.urlsFailed,h.failedUrls.push(...v.failures.failedUrls);let S=await async function(e,t,r){let s={};try{r&&r((0,n.__)("Fetching file manifest…","aether-site-exporter"),"progress","fetchManifest"),s=(0,de.applyFilters)("aether.export.step.uploadStaticSiteFiles.manifest.fetch",null,e,t),null===s&&(s=await async function(e){try{(0,D.Yz)("Fetching manifest from remote:","file-manifest.json");const t=await e.downloadManifest();if(!t)return(0,D.Yz)("Manifest not found, starting with empty manifest"),{};const r=await t.text(),s=JSON.parse(r);return(0,D.Yz)("Manifest fetched successfully:",{fileCount:Object.keys(s).length}),s||{}}catch(e){return e.message&&e.message.includes("404")?((0,D.Yz)("Manifest not found (404), starting with empty manifest"),{}):((0,D.UT)("Failed to fetch manifest, starting with empty manifest:",e),{})}}(e));const a=Object.keys(s).length;r&&r((0,n.sprintf)(/* translators: %d: Number of manifest entries */ /* translators: %d: Number of manifest entries */
-(0,n.__)("Fetched file manifest (%d entries)","aether-site-exporter"),a),"success","fetchManifest"),(0,D.Yz)(`Manifest loaded with ${a} entries`)}catch(e){(0,D.UT)("Failed to fetch manifest, continuing without hash comparison:",e),s={}}return s}(y,a,i),_=0,P=0;const U=Array.from(x.keys());if(0===U.length)throw(0,D.UT)("[Aether] No URLs found in sharedHtmlData. Cannot upload files."),new Error("No HTML data available for upload. Please ensure preScanStaticSite step completed successfully.");(0,D.Yz)("[Aether] Processing URLs for upload:",{urlCount:U.length,totalFilesToUpload:b}),(0,de.doAction)("aether.export.step.uploadStaticSiteFiles.upload.before",U,b,a);for(const t of U){const n=x.get(t);if(!n){(0,D.UT)(`[Aether] No HTML data for URL: ${t} - skipping`);continue}let l,c;if("object"!=typeof n||null===n){if((0,D.UT)(`[Aether] Invalid data structure for URL: ${t}. Expected object with rawHtml and assetUrls, got:`,typeof n),"string"!=typeof n){(0,D.UT)(`[Aether] Cannot process URL ${t} - unsupported data type: ${typeof n}`);continue}{(0,D.UT)(`[Aether] Legacy string format detected for ${t}. Converting to expected format.`);const{extractAssetsFromHtml:e}=await Promise.resolve().then(r.bind(r,662)),s=await e(n,t,o);x.set(t,{rawHtml:n,assetUrls:s}),l=n,c=s}}else{if(!n.rawHtml||!Array.isArray(n.assetUrls)){(0,D.UT)(`[Aether] Invalid object structure for URL: ${t}. Expected { rawHtml, assetUrls }, got:`,Object.keys(n));continue}({rawHtml:l,assetUrls:c}=n)}try{i&&i(`Uploading files (${_+1}/${b})`,"progress","uploadFilesProgress");const r=await Fe({url:t,rawHtml:l,siteUrl:o,staticSiteUrl:s,providerId:a,storageService:y,manifest:S,setStatusMessage:i});_++,h.urlsSucceeded++,r.skipped&&(P++,i&&i(`Skipped unchanged file ${r.htmlPath}`,"success",`upload-${r.htmlPath}`)),r.htmlHash&&!r.skipped&&(S=ue(S,r.htmlKey,r.htmlSize,r.htmlHash,"text/html"),S=(0,de.applyFilters)("aether.export.step.uploadStaticSiteFiles.manifest.update",S,r.htmlKey,a)),p.push({storageKey:r.htmlKey,relativePath:r.htmlPath,contentType:"text/html"}),e&&e(_,b,null);const n=await Be({assetUrls:c,assetTracker:u,storageService:y,manifest:S,providerId:a,filesUploaded:_,totalFilesToUpload:b,onProgress:e,setStatusMessage:i});if(_=n.filesUploaded,P+=n.filesSkipped,p.push(...n.uploadedFiles),S=n.manifest,_%50==0)try{(0,D.Yz)("Periodic manifest save:",_+" files"),await he(y,S)}catch(e){(0,D.UT)("Periodic manifest save failed:",e)}}catch(e){h.urlsFailed++,h.failedUrls.push({url:t,reason:e.message})}}await async function(e,t,r,s,a){try{a&&a((0,n.__)("Updating file manifest…","aether-site-exporter"),"progress","updateManifest");const o=new Set(r.map(e=>e.storageKey)),i=Object.keys(t).length;let l=function(e,t){if(!e||!t)return e||{};const r={};let s=0;for(const n of Object.keys(e))t.has(n)||n.includes("/wp-content.zip")?r[n]=e[n]:s++;return s>0&&(0,D.Yz)("Manifest cleanup:",{before:Object.keys(e).length,after:Object.keys(r).length,removed:s}),r}(t,o);l=(0,de.applyFilters)("aether.export.step.uploadStaticSiteFiles.manifest.cleanup",l,o,s);const c=Object.keys(l).length,d=i-c;(0,D.Yz)(`Manifest cleanup: ${i} entries → ${c} entries (${d} removed, ${o.size} current files)`),await he(e,l),a&&a((0,n.__)("Updated file manifest","aether-site-exporter"),"success","updateManifest")}catch(e){(0,D.UT)("Failed to upload manifest:",e)}}(y,S,p,a,i);const k=_-P;return(0,D.Yz)("Upload optimization summary:",{totalFiles:_,uploaded:k,skipped:P,skipRate:_>0?`${Math.round(P/_*100)}%`:"0%"}),c&&c("uploadFilesProgress"),(0,de.doAction)("aether.export.step.uploadStaticSiteFiles.upload.after",{filesUploaded:_,filesSkipped:P,urlsSucceeded:h.urlsSucceeded,urlsFailed:h.urlsFailed,assetsUploaded:u.getCount()},a),function(e,t,r,s,n,a,o){return{success:0===e.urlsFailed,urlsProcessed:o,urlsSucceeded:e.urlsSucceeded,urlsFailed:e.urlsFailed,assetsUploaded:t.getCount(),assetsFailed:e.assetsFailed,failedUrls:e.failedUrls,uploadedFiles:a,filesUploaded:r,filesSkipped:s,totalFilesToUpload:n}}(h,u,_,P,b,p,w)},[e])}function Me(){const e=Q();return{generateBlueprint:(0,s.useCallback)(async(t=null,r=null)=>{let s;s="function"==typeof t?t:r,s&&s("Detecting WordPress.org plugins and themes…","progress","detectWporgAssets");const n=await e.getBlueprintAssets();let{plugins:a,themes:o}=n;const i=(0,de.applyFilters)("aether.export.step.createBlueprintBundle.assets",{plugins:a,themes:o},n);a=i.plugins||[],o=i.themes||[],s&&s("Configuring WordPress Playground settings…","progress","configurePlayground");const l=function(e){const{wporgPlugins:t=[],wporgThemes:r=[]}=e,s=[];var n,a;return s.push({step:"importWordPressFiles",wordPressFilesZip:{resource:"bundled",path:"/wp-content.zip"}}),s.push(...(n=t,Array.isArray(n)?n.map(e=>({step:"installPlugin",pluginData:{resource:"wordpress.org/plugins",slug:e},options:{activate:!1}})):[])),s.push(...(a=r,Array.isArray(a)?a.map(e=>({step:"installTheme",themeData:{resource:"wordpress.org/themes",slug:e},options:{activate:!1}})):[])),(0,de.applyFilters)("aether.export.step.createBlueprintBundle.steps",s,e)}({wporgPlugins:a,wporgThemes:o});let c=function(e){const t={$schema:"https://playground.wordpress.net/blueprint-schema.json",landingPage:"/wp-login.php",preferredVersions:{php:"8.4",wp:"latest"},features:{networking:!0},steps:e};return(0,de.applyFilters)("aether.export.step.createBlueprintBundle.json",t,e)}(l);if(s){if(s(`Blueprint generated: ${l.length} total steps`,"success","createBlueprintBundle"),s("Detected WordPress.org plugins and themes","success","detectWporgAssets"),s("Configured WordPress Playground settings","success","configurePlayground"),a.length>0){const e=a.join(", ");s(`Adding ${a.length} WordPress.org plugin${1!==a.length?"s":""} to blueprint`,"success","addPluginsToBlueprint"),s(`Plugins: ${e}`,"success","pluginsList")}if(o.length>0){const e=o.join(", ");s(`Adding ${o.length} WordPress.org theme${1!==o.length?"s":""} to blueprint`,"success","addThemesToBlueprint"),s(`Themes: ${e}`,"success","themesList")}}return c=(0,de.applyFilters)("aether.export.step.createBlueprintBundle.generated",c,a,o),c},[e])}}const Re="static_site",ze="blueprint_bundle",Ne="edge_functions",Le={[Re]:(0,n.__)("Static Site","aether-site-exporter"),[ze]:(0,n.__)("Blueprint Bundle","aether-site-exporter"),[Ne]:(0,n.__)("Edge Functions","aether-site-exporter")};function Oe(e){return!!e.requires&&Object.values(e.requires).some(e=>"thread"===e.from)}(0,n.__)("Deploy static HTML/CSS/JS files for web hosting","aether-site-exporter"),(0,n.__)("Deploy WordPress Playground blueprint bundle (ZIP file)","aether-site-exporter"),(0,n.__)("Deploy serverless functions to edge computing platforms","aether-site-exporter");const We=function(e,t){if(!e.requires)return;const r=[],s=[];if(Object.entries(e.requires).forEach(([e,n])=>{const a=!1!==n.required;!(e in t)&&a&&(r.push(e),s.push(`  - "${e}" (from: ${n.from})`))}),r.length>0)throw new Error(`Step "${e.id}" is missing required data:\n${s.join("\n")}`)},qe=function(e,t){if(!e.provides||!t)return;const r=[];if(Object.keys(e.provides).forEach(e=>{e in t||r.push(e)}),r.length>0)throw new Error(`Step "${e.id}" did not provide declared outputs: ${r.join(", ")}`)};const He={dbName:"aether-export-progress",version:1,stores:{progress:{keyPath:"workflowId"}}};let Ye=null;function Ke(){return B()?(Ye||(Ye=new F("progress",He)),Ye):((0,D.UT)("[ProgressTracker] IndexedDB not available, progress will not persist"),null)}async function Ve(e,t){const r=Ke();if(r)try{await r.set(e,{...t,timestamp:Date.now()})}catch(e){(0,D.UT)("[ProgressTracker] Failed to save progress:",e)}}const Ge={dbName:"aether-export-state",version:1,stores:{workflowState:{keyPath:"stateKey",indexes:[{name:"workflowId",keyPath:"workflowId",unique:!1}]}}};let Je=null;function Ze(){return B()?(Je||(Je=new F("workflowState",Ge)),Je):((0,D.UT)("[StateManager] IndexedDB not available, state will not persist"),null)}function Xe(e,t=null){return t?`${e}::${t}`:e}async function Qe(e,t,r=null){const s={completedSteps:t.completedSteps||[],skippedSteps:t.skippedSteps||[],state:t.state||{},stepResults:{},providers:{staticSiteProviders:t.staticSiteProviders||[],blueprintBundleProviders:t.blueprintBundleProviders||[],edgeFunctionProviders:t.edgeFunctionProviders||[]},siteUrl:t.siteUrl,staticSiteUrl:t.staticSiteUrl,blueprintData:t.blueprintData};if(t.state)for(const[e,r]of Object.entries(t.state))(e.includes("Result")||e.includes("Bundle")||e.includes("Urls"))&&(s.stepResults[e]=r);await e.save(s,r)}async function et(e,t,r={}){const{onStepStart:s=()=>{},onStepComplete:n=()=>{},onStepSkipped:a=()=>{},onError:o=()=>{},allSteps:i=null}=r,l=function(e,t=null){const r=[],s=t||e,n=new Set(e.map(e=>e.id));return s.forEach(e=>{(e.dependencies||[]).forEach(t=>{n.has(t)||r.push(`Step "${e.id}" depends on unknown step "${t}"`)})}),r}(i||e,e);if(l.length>0)throw new Error(`Invalid step dependencies: ${l.join("; ")}`);const c=function(e){const t=new Set(e.map(e=>e.id)),r=new Set(t),s=[];for(;r.size>0;){const t=[...r].filter(t=>(e.find(e=>e.id===t).dependencies||[]).every(e=>!r.has(e)));if(0===t.length&&r.size>0){const e=[...r].join(", ");throw new Error(`Circular dependency detected. Unresolved steps: ${e}`)}s.push(t),t.forEach(e=>r.delete(e))}return s}(e),d=e.map(e=>e.id),u=t.workflowId||`workflow-${Date.now()}`,p=function(e,t,r=null){const s=t.length>0?100/t.length:0;let n={workflowId:e,stepIds:t,stepWeight:s,stepProgress:{},overallProgress:0,completedSteps:[],startedAt:Date.now(),updatedAt:Date.now()};async function a(a,o){if(!t.includes(a))return void(0,D.UT)(`[ProgressTracker] Unknown step ID: ${a}`);const i=Math.min(100,Math.max(0,o));n.stepProgress[a]=i,n.updatedAt=Date.now();let l=0;for(const e of t){const t=n.stepProgress[e]||0;l+=s*t/100}n.overallProgress=Math.min(100,Math.round(l)),await Ve(e,n),r&&r({stepId:a,stepProgress:i,overallProgress:n.overallProgress,progressState:n}),(0,D.Yz)(`[ProgressTracker] Step ${a}: ${i}% | Overall: ${n.overallProgress}%`)}return{updateStepProgress:a,completeStep:async function(t){await a(t,100),n.completedSteps.includes(t)||(n.completedSteps.push(t),await Ve(e,n))},getProgress:function(){return{...n}},load:async function(){const t=await async function(e){const t=Ke();if(!t)return null;try{return await t.get(e)||null}catch(e){return(0,D.UT)("[ProgressTracker] Failed to load progress:",e),null}}(e);return t?(n={...n,...t},n):null},clear:async function(){await async function(e){const t=Ke();if(t)try{await t.delete(e)}catch(e){(0,D.UT)("[ProgressTracker] Failed to delete progress:",e)}}(e),n={workflowId:e,stepIds:t,stepWeight:s,stepProgress:{},overallProgress:0,completedSteps:[],startedAt:Date.now(),updatedAt:Date.now()}}}}(u,d),h=function(e){return{save:async function(t,r=null){await async function(e,t,r=null){const s=Ze();if(!s)return;const n=Xe(e,r),a={stateKey:n,workflowId:e,providerInstance:r||null,state:t,timestamp:Date.now()};try{await s.set(n,a),(0,D.Yz)(`[StateManager] Saved state for ${n}`)}catch(e){(0,D.UT)("[StateManager] Failed to save state:",e)}}(e,t,r)},load:async function(t=null){return await async function(e,t=null){const r=Ze();if(!r)return null;const s=Xe(e,t);try{const e=await r.get(s);return e&&e.state?((0,D.Yz)(`[StateManager] Loaded state for ${s}`),e.state):null}catch(e){return(0,D.UT)("[StateManager] Failed to load state:",e),null}}(e,t)},clear:async function(t=null){await async function(e,t=null){const r=Ze();if(r)try{if(t){const s=Xe(e,t);await r.delete(s)}else{const t=await r.getByIndex("workflowId",e);for(const e of t)await r.delete(e.stateKey)}(0,D.Yz)(`[StateManager] Deleted state for ${e}${t?`::${t}`:""}`)}catch(e){(0,D.UT)("[StateManager] Failed to delete state:",e)}}(e,t)},list:async function(){return await async function(e){const t=Ze();if(!t)return[];try{return(await t.getByIndex("workflowId",e)).map(e=>({stateKey:e.stateKey,providerInstance:e.providerInstance,timestamp:e.timestamp}))}catch(e){return(0,D.UT)("[StateManager] Failed to list states:",e),[]}}(e)}}}(u);let g=null;try{const e=await p.load();e&&(0,D.Yz)("[StepExecutor] Loaded previous progress:",e),g=await async function(e,t,r=null){const s=await e.load(r);if(!s)return t;const n={...t,completedSteps:s.completedSteps||[],skippedSteps:s.skippedSteps||[],state:{...t.state,...s.state,...s.stepResults}};return s.providers&&(n.staticSiteProviders=s.providers.staticSiteProviders||t.staticSiteProviders,n.blueprintBundleProviders=s.providers.blueprintBundleProviders||t.blueprintBundleProviders,n.edgeFunctionProviders=s.providers.edgeFunctionProviders||t.edgeFunctionProviders),s.siteUrl&&(n.siteUrl=s.siteUrl),s.staticSiteUrl&&(n.staticSiteUrl=s.staticSiteUrl),s.blueprintData&&(n.blueprintData=s.blueprintData),n}(h,t),g&&g.completedSteps?.length>0&&(0,D.Yz)(`[StepExecutor] Restored state with ${g.completedSteps.length} completed steps`)}catch(e){(0,D.UT)("[StepExecutor] Failed to restore state:",e)}const f={...g||t,workflowId:u,progressTracker:p,stateManager:h,completedSteps:g?.completedSteps||[],skippedSteps:g?.skippedSteps||[],state:g?.state||{}};(0,de.doAction)("aether.export.workflow.before",f,e,f.currentProviderInstance||null);try{for(const t of c){const r=[],i=[];for(const s of t){const t=e.find(e=>e.id===s);(0,de.applyFilters)(`aether.export.step.${s}.skip`,!!t.skip&&t.skip(f),f,f.currentProviderInstance||null)?i.push(s):r.push(s)}for(const e of i)f.skippedSteps.push(e),a(e),(0,de.doAction)(`aether.export.step.${e}.skipped`,f,f.currentProviderInstance||null);if(0===r.length)continue;const l=await Promise.all(r.map(t=>tt(t,e,f,{onStepStart:s,onStepComplete:n,onError:o})));for(const e of l)e&&Object.assign(f.state,e);f.completedSteps.push(...r);try{await Qe(h,f)}catch(e){(0,D.UT)("[StepExecutor] Failed to save state:",e)}}return(0,de.doAction)("aether.export.workflow.after",f.state,f,f.currentProviderInstance||null),await p.clear(),await h.clear(),f.state}catch(e){throw(0,de.doAction)("aether.export.workflow.error",e,f,f.currentProviderInstance||null),e}}async function tt(e,t,r,s){const n=t.find(t=>t.id===e),{onStepStart:a,onStepComplete:o,onError:i}=s;(0,de.doAction)(`aether.export.step.${e}.before`,r,r.currentProviderInstance||null),a(e,n),r.progressTracker&&await r.progressTracker.updateStepProgress(e,0);try{const t={...r,...r.state};We(n,t);const s=await Te.executeWithRetry(async()=>await n.handler(t),{onRetry:(t,s,n)=>{(0,de.doAction)(`aether.export.step.${e}.retry`,t,s,n,r,r.currentProviderInstance||null)}});qe(n,s);const a=(0,de.applyFilters)(`aether.export.step.${e}.result`,s||{},r,r.currentProviderInstance||null);return o(e,a),r.progressTracker&&await r.progressTracker.completeStep(e),(0,de.doAction)(`aether.export.step.${e}.after`,a,r,r.currentProviderInstance||null),a}catch(t){"undefined"!=typeof window&&window.console&&(console.error(`[Aether] StepExecutor - Step "${e}" failed:`,t),console.error("[Aether] Error details:",{message:t.message,stack:t.stack,stepId:e,providerInstance:r.currentProviderInstance?.id||"N/A"}));const s=Te.categorize(t),a=function(e){return e===Se||e===Ue||e===be?Ce:e===_e?"high":e===ve||e===xe||e===Pe?"medium":"low"}(s),o=Ee(t,{stepId:e,operation:n.label||e}),l={...t,category:s,severity:a,stepId:e,formattedMessage:o,originalMessage:t.message};if(i(e,l),(0,de.doAction)(`aether.export.step.${e}.error`,l,r,r.currentProviderInstance||null),a===Ce)throw new Error(o);throw new Error(o)}}const rt=["sharedHtmlData"];function st(e,t=new WeakMap,r=[]){if(null===e||"object"!=typeof e)return e;if(t.has(e))return t.get(e);const s={};t.set(e,s);for(const[n,a]of Object.entries(e))if(r.includes(n))s[n]=a;else if("function"!=typeof a)if(null!==a){if(a instanceof Map){const e=new Map;t.set(a,e);for(const[s,n]of a.entries()){const a="object"==typeof s&&null!==s?nt(s,t,r):s,o="object"==typeof n&&null!==n?nt(n,t,r):n;e.set(a,o)}s[n]=e;continue}if(a instanceof Set){const e=new Set;t.set(a,e);for(const s of a.values()){const n="object"==typeof s&&null!==s?nt(s,t,r):s;e.add(n)}s[n]=e;continue}if(Array.isArray(a)){const e=[];t.set(a,e);for(let r=0;r<a.length;r++)e[r]="object"==typeof a[r]&&null!==a[r]?nt(a[r],t):a[r];s[n]=e;continue}"object"!=typeof a||a.constructor!==Object?a instanceof Date?s[n]=new Date(a.getTime()):a instanceof RegExp?s[n]=new RegExp(a.source,a.flags):s[n]=a:s[n]=st(a,t,r)}else s[n]=null;return s}function nt(e,t,r=[]){if(null===e||"object"!=typeof e)return e;if(t.has(e))return t.get(e);if(e instanceof Map){const s=new Map;t.set(e,s);for(const[n,a]of e.entries()){const e="object"==typeof n&&null!==n?nt(n,t,r):n,o="object"==typeof a&&null!==a?nt(a,t,r):a;s.set(e,o)}return s}if(e instanceof Set){const s=new Set;t.set(e,s);for(const n of e.values()){const e="object"==typeof n&&null!==n?nt(n,t,r):n;s.add(e)}return s}if(Array.isArray(e)){const s=[];t.set(e,s);for(let n=0;n<e.length;n++)s[n]=nt(e[n],t,r);return s}return e instanceof Date?new Date(e.getTime()):e instanceof RegExp?new RegExp(e.source,e.flags):"object"==typeof e&&e.constructor===Object?st(e,t,r):e}async function at(e,t,r=[],s={}){const{globalSteps:n,threadSteps:a}=function(e){const t=[],r=[];return e.forEach(e=>{Oe(e)?r.push(e):t.push(e)}),{globalSteps:t,threadSteps:r}}(e);"undefined"!=typeof window&&window.console&&console.log("[Aether] ThreadOrchestrator - Step categorization:",{totalSteps:e.length,globalSteps:n.map(e=>e.id),threadSteps:a.map(e=>e.id),providerInstances:r.length});let o={};n.length>0&&(o=await et(n,t,s));const i={...t,...o};if("undefined"!=typeof window&&window.console&&console.log("[Aether] ThreadOrchestrator - After global steps:",{providerInstancesCount:r.length,threadStepsCount:a.length,hasGlobalState:Object.keys(o).length>0}),0===r.length){if(a.length>0){const e=a.map(e=>e.id).join(", ");throw new Error(`No provider instances configured, but thread steps require execution: ${e}. Please configure at least one provider instance or disable these steps.`)}return{success:!0,globalState:o,threadResults:[],successCount:0,failureCount:0}}if(0===a.length)return"undefined"!=typeof window&&window.console&&console.warn("[Aether] ThreadOrchestrator - No thread steps found, but providers exist:",r.map(e=>e.id)),{success:!0,globalState:o,threadResults:[],successCount:0,failureCount:0};const l=s.maxConcurrency||5,c=new Map(a.map(e=>[e.id,e.label]));"undefined"!=typeof window&&window.console&&console.log("[Aether] ThreadOrchestrator - Starting thread execution:",{threadStepsCount:a.length,providerInstancesCount:r.length,maxConcurrency:l});const d=await async function(e,t,r=5){const s=new Array(e.length),n=[];for(let a=0;a<e.length;a++){const o=Promise.resolve(t(e[a],a)).then(e=>(s[a]=e,e)).then(()=>{const e=n.indexOf(o);-1!==e&&n.splice(e,1)});n.push(o),n.length>=r&&await Promise.race(n)}return await Promise.all(n),s}(r,async e=>{"undefined"!=typeof window&&window.console&&console.log("[Aether] ThreadOrchestrator - Executing thread for provider:",e.id);const r=function(e,t,r={}){if(!t||!t.id)throw new Error("Invalid provider instance: missing id");const s={setStatusMessage:e.setStatusMessage,setStepProgress:e.setStepProgress,processStaticSiteUrls:e.processStaticSiteUrls,generateBlueprintJson:e.generateBlueprintJson,updateStaticSiteProgressContext:e.updateStaticSiteProgressContext,assetManager:e.assetManager,api:e.api,removeMessage:e.removeMessage,setOverallProgressValue:e.setOverallProgressValue};return{...st(e,new WeakMap,rt),currentProviderInstance:t,providerInstanceConfig:t.config||{},setStatusMessage:r.setStatusMessage||s.setStatusMessage,setStepProgress:r.setStepProgress||s.setStepProgress,processStaticSiteUrls:s.processStaticSiteUrls,generateBlueprintJson:s.generateBlueprintJson,updateStaticSiteProgressContext:s.updateStaticSiteProgressContext,assetManager:s.assetManager,api:s.api,removeMessage:s.removeMessage,setOverallProgressValue:s.setOverallProgressValue}}(i,e,{setStatusMessage:(r,s,n,a,o)=>{const i={...o,providerInstance:e.id,providerLabel:e.label||e.id};t.setStatusMessage&&t.setStatusMessage(r,s,n,a,i)},setStepProgress:(r,s)=>{if(t.setProviderProgress){const n=c.get(r)||r;t.setProviderProgress(e.id,{stepId:r,stepLabel:n,progress:s,status:"active"})}}});try{"undefined"!=typeof window&&window.console&&console.log("[Aether] ThreadOrchestrator - Executing steps for provider:",e.id,"steps:",a.map(e=>e.id));const o=await et(a,r,{...s,allSteps:[...n,...a]});return t.setProviderProgress&&t.setProviderProgress(e.id,{stepId:null,stepLabel:"Complete",progress:100,status:"complete"}),{success:!0,providerInstance:e.id,state:o||{},error:null}}catch(r){return"undefined"!=typeof window&&window.console&&(console.error("[Aether] ThreadOrchestrator - Thread execution failed for provider:",e.id,r),console.error("[Aether] Error stack:",r.stack)),t.setProviderProgress&&t.setProviderProgress(e.id,{stepId:null,stepLabel:"Error",progress:0,status:"error",error:r.message||"Unknown error"}),{success:!1,providerInstance:e.id,state:{},error:r.message||"Unknown error"}}},l);"undefined"!=typeof window&&window.console&&console.log("[Aether] ThreadOrchestrator - Thread execution completed:",{totalResults:d.length,successful:d.filter(e=>e.success).length,failed:d.filter(e=>!e.success).length});const u=d.filter(e=>e.success),p=d.filter(e=>!e.success),h=u.length===d.length,g=u.length>0,f=p.map(e=>({providerId:e.providerInstance,error:e.error}));return{success:g,partialSuccess:g&&!h,allSucceeded:h,globalState:o,threadResults:d,successCount:u.length,failureCount:p.length,failedProviders:f}}let ot=null;class it{constructor(){if(ot)throw new Error("StepRegistry is a singleton. Use StepRegistry.getInstance()");this.steps=[]}static getInstance(){return ot||(ot=new it),ot}register(e){if(!e||"object"!=typeof e)throw new Error((0,n.__)("Step must be an object","aether-site-exporter"));if(!e.id||"string"!=typeof e.id)throw new Error((0,n.__)("Step must have a valid id (string)","aether-site-exporter"));if(!e.label||"string"!=typeof e.label)throw new Error((0,n.__)("Step must have a valid label (string)","aether-site-exporter"));if(!e.handler||"function"!=typeof e.handler)throw new Error((0,n.__)("Step must have a valid handler (function)","aether-site-exporter"));if(!e.requires||"object"!=typeof e.requires)throw new Error((0,n.__)("Step must have a valid requires object (data dependencies)","aether-site-exporter"));if(!e.provides||"object"!=typeof e.provides)throw new Error((0,n.__)("Step must have a valid provides object (output declaration)","aether-site-exporter"));if(this.steps.find(t=>t.id===e.id))throw new Error(`Step with id "${e.id}" is already registered`);const t={...e,description:e.description||"",supportsProgress:e.supportsProgress??!1,dependencies:e.dependencies||[]};this.steps.push(t)}getSteps(){return this.steps}clear(){this.steps=[]}getStepById(e){return this.steps.find(t=>t.id===e)||null}hasStep(e){return this.steps.some(t=>t.id===e)}}const lt=it,ct={id:"discoverBlueprintBundleAssets",label:(0,n.__)("Discover Assets","aether-site-exporter"),description:(0,n.__)("Find custom plugins and themes for blueprint bundle","aether-site-exporter"),supportsProgress:!1,dependencies:[],requires:{api:{from:"initial",required:!0},setStatusMessage:{from:"initial",required:!0}},provides:{discoveredAssets:{type:"array",scope:"global"}},handler:async function(e){const{api:t,setStatusMessage:r}=e;r((0,n.__)("Discovering plugins and themes…","aether-site-exporter"),"progress","discoverBlueprintBundleAssets");const s=await t.discoverBlueprintBundleAssets();if(!s.success)throw new Error(s.message||(0,n.__)("Failed to discover assets","aether-site-exporter"));const a=s.assets||[],o=a.filter(e=>"plugin"===e.type),i=a.filter(e=>"theme"===e.type);let l;if(0===a.length)l=(0,n.__)("Discovered 0 active custom plugins/themes","aether-site-exporter");else{const e=[];if(o.length>0){const t=1===o.length?(0,n.sprintf)(/* translators: %s: Plugin slug */ /* translators: %s: Plugin slug */
-(0,n.__)("1 active custom plugin (%s)","aether-site-exporter"),o[0].slug):(0,n.sprintf)(/* translators: %1$d: Number of plugins, %2$s: Comma-separated plugin slugs */ /* translators: %1$d: Number of plugins, %2$s: Comma-separated plugin slugs */
-(0,n._n)("%1$d active custom plugin (%2$s)","%1$d active custom plugins (%2$s)",o.length,"aether-site-exporter"),o.length,o.map(e=>e.slug).join(", "));e.push(t)}if(i.length>0){const t=1===i.length?(0,n.sprintf)(/* translators: %s: Theme slug */ /* translators: %s: Theme slug */
-(0,n.__)("1 active custom theme (%s)","aether-site-exporter"),i[0].slug):(0,n.sprintf)(/* translators: %1$d: Number of themes, %2$s: Comma-separated theme slugs */ /* translators: %1$d: Number of themes, %2$s: Comma-separated theme slugs */
-(0,n._n)("%1$d active custom theme (%2$s)","%1$d active custom themes (%2$s)",i.length,"aether-site-exporter"),i.length,i.map(e=>e.slug).join(", "));e.push(t)}l=(0,n.sprintf)(/* translators: %s: Discovered assets description */ /* translators: %s: Discovered assets description */
-(0,n.__)("Discovered %s. These will be included in the blueprint bundle.","aether-site-exporter"),e.join((0,n.__)(" and ","aether-site-exporter")))}return r(l,"success","discoverBlueprintBundleAssets"),{discoveredAssets:a}}};(0,de.addAction)("aether.export.register_steps","aether/step-discoverBlueprintBundleAssets",e=>{e.register(ct)},10);const dt={id:"getStaticSiteUrls",label:(0,n.__)("Discover URLs","aether-site-exporter"),description:(0,n.__)("Find all URLs for static site generation","aether-site-exporter"),supportsProgress:!1,dependencies:[],requires:{api:{from:"initial",required:!0},siteUrl:{from:"initial",required:!0},setStatusMessage:{from:"initial",required:!0}},provides:{urls:{type:"array",scope:"global"},staticSiteUrl:{type:"string",scope:"global"},urlsCount:{type:"number",scope:"global"}},handler:async function(e){const{api:t,siteUrl:r,setStatusMessage:s}=e;s((0,n.__)("Discovering URLs for static site…","aether-site-exporter"),"progress","getStaticSiteUrls");const a=await t.discoverUrls(e=>{"fetching"===e.status&&s((0,n.sprintf)(/* translators: %s: Type being fetched (posts, terms, etc.) */ /* translators: %s: Type being fetched (posts, terms, etc.) */
-(0,n.__)("Fetching %s…","aether-site-exporter"),e.type),"progress","getStaticSiteUrls")});if(!a.success)throw new Error(a.message||(0,n.__)("Failed to discover URLs","aether-site-exporter"));const o=a.urls||[],i=a.staticSiteUrl||r,l=o.length;return s((0,n.sprintf)(/* translators: %d: Number of URLs */ /* translators: %d: Number of URLs */
-(0,n.__)("Discovered %d URLs for static site generation","aether-site-exporter"),l),"success","getStaticSiteUrls"),{urls:o,staticSiteUrl:i,urlsCount:l}}};(0,de.addAction)("aether.export.register_steps","aether/step-getStaticSiteUrls",e=>{e.register(dt)},10);const ut={id:"preScanStaticSite",label:(0,n.__)("Scan for Assets","aether-site-exporter"),description:(0,n.__)("Discover CSS, JS, and image assets from pages","aether-site-exporter"),supportsProgress:!0,dependencies:["getStaticSiteUrls"],requires:{urls:{from:"getStaticSiteUrls",required:!0},siteUrl:{from:"initial",required:!0},setStatusMessage:{from:"initial",required:!0},setStepProgress:{from:"initial",required:!1}},provides:{urls:{type:"array",scope:"global"},htmlCount:{type:"number",scope:"global"},assetCount:{type:"number",scope:"global"},sharedHtmlData:{type:"Map",scope:"global"}},handler:async function(e){const{urls:t,siteUrl:r,setStatusMessage:s,setStepProgress:a}=e;if(!t||!Array.isArray(t))throw new Error((0,n.__)("URLs not found. Please run getStaticSiteUrls first.","aether-site-exporter"));s((0,n.__)("Scanning pages for assets…","aether-site-exporter"),"progress","preScanStaticSite");const o=new Set,i=[],l=t.length,c=new Map;for(let e=0;e<l;e++){const s=t[e];a&&a("preScanStaticSite",Math.round((e+1)/l*100));try{const e=await fetch(s,{method:"GET",credentials:"omit",headers:{"User-Agent":"Aether Static Site Generator"}});if(!e.ok){(0,D.UT)(`[Aether] Skipping URL with non-200 status: ${s} (HTTP ${e.status})`);continue}if(!(e.headers.get("content-type")||"").includes("text/html")){i.push(s);continue}const t=await e.text();i.push(s);const n=await(0,fe.extractAssetsFromHtml)(t,s,r);for(const e of n)o.add(e);c.set(s,{rawHtml:t,assetUrls:n})}catch(e){(0,D.UT)(`[Aether] Error fetching URL: ${s}`,e.message)}}const d=[...i,...o];return(0,D.Yz)("[Aether] Pre-scan complete:",{htmlPages:i.length,assetsDiscovered:o.size,totalUrls:d.length}),s((0,n.sprintf)(/* translators: %1$d: Number of pages, %2$d: Number of assets */ /* translators: %1$d: Number of pages, %2$d: Number of assets */
-(0,n.__)("Found %1$d pages and %2$d assets","aether-site-exporter"),i.length,o.size),"success","preScanStaticSite"),{urls:d,htmlCount:i.length,assetCount:o.size,sharedHtmlData:c}}};(0,de.addAction)("aether.export.register_steps","aether/step-preScanStaticSite",e=>{e.register(ut)},10);const pt={id:"createWpContentArchive",label:(0,n.__)("Create WP Content Archive","aether-site-exporter"),description:(0,n.__)("Package custom plugins, themes, and uploads","aether-site-exporter"),supportsProgress:!0,dependencies:["discoverBlueprintBundleAssets"],requires:{api:{from:"initial",required:!0},discoveredAssets:{from:"discoverBlueprintBundleAssets",required:!0},setStatusMessage:{from:"initial",required:!0},assetManager:{from:"initial",required:!1}},provides:{zipPath:{type:"string",scope:"global"},zipUrl:{type:"string",scope:"global"},zipSize:{type:"number",scope:"global"}},handler:async function(e){const{api:t,assetManager:r,discoveredAssets:s=[],setStatusMessage:a}=e;a((0,n.__)("Creating wp-content archive…","aether-site-exporter"),"progress","createWpContentArchive");const o=(0,de.applyFilters)("aether.export.step.createWpContentArchive.files",s,e),i=await t.createArchive({assets:o,includeUploads:!0});if(!i.success)throw new Error(i.message||(0,n.__)("Failed to create wp-content archive","aether-site-exporter"));const{zipPath:l,zipUrl:c,zipSize:d}=i,u=we(d||0);return r&&l&&"function"==typeof r.setArchivePath&&r.setArchivePath(l),a((0,n.sprintf)(/* translators: %s: File size */ /* translators: %s: File size */
-(0,n.__)("Created wp-content archive (%s)","aether-site-exporter"),u),"success","createWpContentArchive"),{zipPath:l,zipUrl:c,zipSize:d}}};(0,de.addAction)("aether.export.register_steps","aether/step-createWpContentArchive",e=>{e.register(pt)},10);const ht={id:"createBlueprintBundle",label:(0,n.__)("Create Blueprint Bundle","aether-site-exporter"),description:(0,n.__)("Create blueprint-bundle.zip","aether-site-exporter"),supportsProgress:!1,dependencies:["createWpContentArchive"],requires:{api:{from:"initial",required:!0},generateBlueprintJson:{from:"initial",required:!0},zipPath:{from:"createWpContentArchive",required:!0},zipUrl:{from:"createWpContentArchive",required:!0},discoveredAssets:{from:"discoverBlueprintBundleAssets",required:!0},setStatusMessage:{from:"initial",required:!0}},provides:{blueprintData:{type:"object",scope:"global"},blueprintBundle:{type:"object",scope:"global"}},handler:async function(e){const{api:t,generateBlueprintJson:r,zipPath:s,zipUrl:a,discoveredAssets:o=[],setStatusMessage:i}=e;if(i((0,n.__)("Creating blueprint bundle…","aether-site-exporter"),"progress","createBlueprintBundle"),!s)throw new Error((0,n.__)("Site archive not found. Please run createWpContentArchive first.","aether-site-exporter"));let l;if("function"==typeof r)l=await r({assets:o,wpContentZipUrl:a},i);else{const e=await t.generateBlueprint({assets:o,wpContentZipUrl:a});if(!e.success)throw new Error(e.message||(0,n.__)("Failed to generate blueprint","aether-site-exporter"));l=e.blueprint}const c=(0,de.applyFilters)("aether.export.step.createBlueprintBundle.blueprintData",l,e),d=await t.createBlueprintBundle({blueprint:c,wpContentZipPath:s});if(!d.success)throw new Error(d.message||(0,n.__)("Failed to create blueprint bundle","aether-site-exporter"));const{bundlePath:u,bundleUrl:p,bundleSize:h}=d,g=we(h||0);return i((0,n.sprintf)(/* translators: %s: File size */ /* translators: %s: File size */
-(0,n.__)("Created blueprint bundle (%s)","aether-site-exporter"),g),"success","createBlueprintBundle"),{blueprintData:c,blueprintBundle:{bundlePath:u,bundleUrl:p,bundleSize:h}}}};(0,de.addAction)("aether.export.register_steps","aether/step-createBlueprintBundle",e=>{e.register(ht)},10);var gt=r(455),ft=r.n(gt),mt=r(98);const yt={id:"uploadBlueprintBundle",label:(0,n.__)("Upload Blueprint Bundle","aether-site-exporter"),description:(0,n.__)("Upload blueprint-bundle.zip to providers","aether-site-exporter"),supportsProgress:!0,dependencies:["createBlueprintBundle"],requires:{currentProviderInstance:{from:"thread",required:!0},blueprintBundle:{from:"createBlueprintBundle",required:!0},siteUrl:{from:"initial",required:!0},setStatusMessage:{from:"initial",required:!0},setStepProgress:{from:"initial",required:!1}},provides:{bundleUploadResults:{type:"object",scope:"thread"}},handler:async function(e){const{currentProviderInstance:t,blueprintBundle:r,siteUrl:s,setStatusMessage:a}=e;if(!t)throw new Error((0,n.__)("Provider instance not found in thread context","aether-site-exporter"));const o=t.id,i=t.label||t.id,l=r?.bundleSize||0,c=we(l);a((0,n.sprintf)(/* translators: %1$s: Provider label, %2$s: File size */ /* translators: %1$s: Provider label, %2$s: File size */
-(0,n.__)("Uploading blueprint bundle (%2$s) to %1$s…","aether-site-exporter"),i,c),"progress","uploadBlueprintBundle");let d="blueprint-bundle/bundle.zip";try{const e=await ft()({path:`/aether/site-exporter/providers/${o}/config`});if(e.success&&e.config){const t=e.config||{};t.export_path&&(d=t.export_path)}}catch{}const u=(0,mt.sM)({fileType:mt.$Z.BLUEPRINT_BUNDLE,filePath:r.bundlePath,fileContent:null,contentType:"application/zip",storageKey:d,providerId:o,metadata:{...e,siteUrl:s,exportPath:d}});return await(0,mt.QM)(u),a((0,n.sprintf)(/* translators: %1$s: Provider label, %2$s: File size */ /* translators: %1$s: Provider label, %2$s: File size */
-(0,n.__)("Uploaded blueprint bundle (%2$s) to %1$s","aether-site-exporter"),i,c),"success","uploadBlueprintBundle"),{bundleUploadResults:{providerId:o,providerLabel:i,success:!0,exportPath:d,bundleSize:l}}}};(0,de.addAction)("aether.export.register_steps","aether/step-uploadBlueprintBundle",e=>{e.register(yt)},10);const wt={id:"uploadStaticFiles",label:(0,n.__)("Upload Static Files","aether-site-exporter"),description:(0,n.__)("Generate and upload static HTML files","aether-site-exporter"),supportsProgress:!0,dependencies:["preScanStaticSite"],requires:{currentProviderInstance:{from:"thread",required:!0},urls:{from:"preScanStaticSite",required:!0},staticSiteUrl:{from:"getStaticSiteUrls",required:!0},sharedHtmlData:{from:"preScanStaticSite",required:!0},siteUrl:{from:"initial",required:!0},processStaticSiteUrls:{from:"initial",required:!0},setStatusMessage:{from:"initial",required:!0}},provides:{staticUploadResults:{type:"object",scope:"thread"}},handler:async function(e){const{currentProviderInstance:t,urls:r,staticSiteUrl:s,sharedHtmlData:a,siteUrl:o,processStaticSiteUrls:i,setStatusMessage:l}=e,c=e.blueprintData||null;if(!t)throw new Error((0,n.__)("Provider instance not found in thread context","aether-site-exporter"));if(!r||!Array.isArray(r))throw new Error((0,n.__)("URLs not found. Please run getStaticSiteUrls first.","aether-site-exporter"));if(!i)throw new Error((0,n.__)("Static site generator not available","aether-site-exporter"));const d=t.id,u=t.label||t.id;l((0,n.sprintf)(/* translators: %s: Provider label */ /* translators: %s: Provider label */
-(0,n.__)("Processing static site for %s…","aether-site-exporter"),u),"progress","uploadStaticFiles");let p=s;try{const e=await ge(d);e.public_url&&(p=e.public_url)}catch(e){}const h=(0,de.applyFilters)("aether.export.step.uploadStaticSiteFiles.urls",r,[d],{siteUrl:o,blueprintData:c,staticSiteUrl:p,providerId:d}),g=await i(h,p,d,o,l,c,null,a),f=g.filesUploaded||0,m=g.success&&f>0;if(!m){const e=g.error||(0,n.__)("No files uploaded","aether-site-exporter");throw new Error((0,n.sprintf)(/* translators: %1$s: Provider label, %2$s: Error message */ /* translators: %1$s: Provider label, %2$s: Error message */
-(0,n.__)("Failed to upload to %1$s: %2$s","aether-site-exporter"),u,e))}return l((0,n.sprintf)(/* translators: %1$s: Provider label, %2$d: Files uploaded */ /* translators: %1$s: Provider label, %2$d: Files uploaded */
-(0,n.__)("Uploaded %2$d files to %1$s","aether-site-exporter"),u,f),"success","uploadStaticFiles"),(0,de.applyFilters)("aether.export.step.uploadStaticSiteFiles.result",{staticUploadResults:{providerId:d,providerLabel:u,success:m,filesUploaded:g.filesUploaded||0,filesSkipped:g.filesSkipped||0,urlsProcessed:g.urlsProcessed||0,urlsSucceeded:g.urlsSucceeded||0,urlsFailed:g.urlsFailed||0,assetsUploaded:g.assetsUploaded||0,assetsFailed:g.assetsFailed||0,failedUrls:g.failedUrls||[],uploadedFiles:g.uploadedFiles||[]}},d,{siteUrl:o,blueprintData:c,staticSiteUrl:s})}};function vt(){const e=lt.getInstance();return e.clear(),(0,de.doAction)("aether.export.register_steps",e),e.getSteps()}(0,de.addAction)("aether.export.register_steps","aether/step-uploadStaticFiles",e=>{e.register(wt)},10);const xt=new Map,bt=new class{register(e,t){if(!e||"string"!=typeof e)throw new Error("ProviderRegistry.register() requires a valid provider ID string");if(!t||"object"!=typeof t)throw new Error("ProviderRegistry.register() requires a provider instance");if("function"!=typeof t.getId)throw new Error(`Provider ${e} must implement getId() method`);if("function"!=typeof t.getName)throw new Error(`Provider ${e} must implement getName() method`);xt.set(e,t),(0,de.doAction)("aether.providers.registered",e,t)}get(e){return xt.get(e)||null}getAll(){return Array.from(xt.values())}getAllIds(){return Array.from(xt.keys())}getByDeploymentType(e){return this.getAll().filter(t=>(t.getSupportedDeploymentTypes?.()||[]).includes(e))}getDefault(){const e=this.getByDeploymentType("static_site");if(e.length>0)return e[0];const t=this.getAll();return t.length>0?t[0]:null}getForDeploymentType(e){const t=this.getByDeploymentType(e);return t.length>0?t[0]:null}has(e){return xt.has(e)}count(){return xt.size}parseInstanceId(e){if(!e||"string"!=typeof e)return null;const t=e.split(":",2);return 2===t.length&&t[0]&&t[1]?{provider_type:t[0],uuid:t[1]}:null}getProviderForInstance(e){const t=this.parseInstanceId(e);return t?this.get(t.provider_type):null}createInstanceId(e){return`${e}:${"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,e=>{const t=16*Math.random()|0;return("x"===e?t:3&t|8).toString(16)})}`}clear(){xt.clear()}};(0,de.addAction)("aether.providers.register","aether/provider-registry",e=>{if(!e||"object"!=typeof e)return;let t;if("function"==typeof e.getId)t=e.getId();else{if(!e.id)return;t=e.id}bt.register(t,e)});let St=bt;if("undefined"!=typeof window)if(window.aether=window.aether||{},window.aether.ProviderRegistry){const e=window.aether.ProviderRegistry;Array.from(xt.values()).forEach(t=>{const r=t.getId();e.get(r)||e.register(r,t)}),St=e,console.log("ProviderRegistry: Using global registry instance,",e.getAll().length,"providers registered")}else window.aether.ProviderRegistry=bt,console.log("ProviderRegistry: Created global registry instance");const _t=St;function Pt(e,t){try{return e&&"object"==typeof e?Object.entries(e).filter(([,e])=>{if(!e||"object"!=typeof e)return!1;if(!1===e.enabled)return!1;const r=e.provider_type;if(!r)return!1;const s=_t.get(r);return!!s&&(s.getSupportedDeploymentTypes?.()||[]).includes(t)}).map(([e])=>e):[]}catch(e){return(0,D.AO)(`Failed to get instances for deployment type ${t}:`,e),[]}}function Ut(e,t){return Pt(e,t).map(t=>{const r=e[t]||{};return{id:t,label:r.label||t,config:r}}).filter(e=>{return t=e.id,r=e.config,t&&"string"==typeof t?r&&"object"==typeof r?r.provider_type?!1!==r.enabled:((0,D.AO)(`Provider instance ${t} missing provider_type`),!1):((0,D.AO)(`Provider instance ${t} has invalid config`),!1):((0,D.AO)("Provider instance has invalid ID:",t),!1);var t,r})}function kt(e){const{setIsExporting:t,updateFromStep:r,markAllComplete:n,showError:a,initializeSteps:o,setStatusMessage:i,setOverallProgressValue:l,setStepProgress:d,setProviderProgress:u,removeMessage:p,setProviders:h}=e,[g]=(0,s.useState)(""),f=function(){const e=Q(),t=(0,s.useMemo)(()=>new ne(c.Ay,e,ee),[e]);return{discoverBlueprintBundleAssets:(0,s.useCallback)(async()=>await t.discoverBlueprintBundleAssets(),[t]),getAssetStatus:(0,s.useCallback)(async()=>await t.discoverBlueprintBundleAssets(),[t]),markAssetChanged:(0,s.useCallback)((e,r)=>Promise.resolve(t.markAssetChanged(e,r)),[t]),discoverUrls:(0,s.useCallback)(async()=>await t.discoverUrls(),[t]),createArchive:(0,s.useCallback)(async e=>await t.createArchive(e),[t]),generateBlueprint:(0,s.useCallback)(async e=>await t.generateBlueprint(e),[t]),createBlueprintBundle:(0,s.useCallback)(async e=>await t.createBlueprintBundle(e),[t])}}(),m=function(){const[e,t]=(0,s.useState)({}),r=(0,s.useMemo)(()=>new ce(ee),[]);(0,s.useEffect)(()=>{const e=r.load();t(e)},[r]),(0,s.useEffect)(()=>{r.save(e)},[r,e]);const n=(0,s.useCallback)((e,s)=>{t(t=>r.markAsChanged(t,e,s))},[r]),a=(0,s.useCallback)(e=>{t(t=>r.updateFromServer(t,e))},[r]),o=(0,s.useCallback)(e=>{t(t=>r.syncWithServer(t,e))},[r]),i=(0,s.useCallback)(()=>function(e){return e&&"object"==typeof e?Object.values(e).filter(e=>e&&e.needsUpload).map(e=>`${e.type}:${e.slug}`):[]}(e),[e]),l=(0,s.useCallback)(()=>{t(e=>function(e){if(!e||"object"!=typeof e)return{};const t={};return Object.keys(e).forEach(r=>{t[r]={...e[r],needsUpload:!1}}),t}(e))},[]);return{assets:e,markAsChanged:n,updateFromServer:a,syncWithServer:o,getChangedAssets:i,clearUploadFlags:l}}(),{generateBlueprint:y}=Me(),w=(0,s.useRef)({providerIndex:0,totalProviders:1}),v=(0,s.useCallback)((e,t)=>{w.current={providerIndex:e,totalProviders:t}},[]),x=De((e,t)=>{if(t>0&&e>=0){const{providerIndex:r,totalProviders:s}=w.current,n=Math.min(100,Math.max(0,Math.round(e/t*100)));let a=n;s>1&&(a=Math.min(100,Math.round((100*r+n)/s))),d("uploadStaticFiles",a)}});return{startExport:(0,s.useCallback)(async()=>{try{(0,D.Yz)("startExport called"),o(vt(),"discoverBlueprintBundleAssets"),t(!0);const e=await(0,c.Ay)({path:"/aether/site-exporter/settings"}),s=function(e){const t=e?.settings||{},r=t.provider_types||{};return{storageProviderId:r.storage||"",staticSiteProviderId:r.static_site||"",providerConfigs:t.providers||{}}}(e);e.success&&s.storageProviderId&&g(s.storageProviderId);try{const e=await f.getAssetStatus();e.success&&e.assets&&m.syncWithServer(e.assets)}catch(e){(0,D.AO)("Failed to fetch asset status:",e)}r("discoverBlueprintBundleAssets");const a=window.location.origin,w=function(e,t){const r={};return t.forEach(t=>{const s=Pt(e,t);r[t]=s}),r}(s.providerConfigs,[Re,ze,Ne]),b=w[Re],S=w[ze],_=w[Ne];(0,D.Yz)("[Workflow] Providers by deployment type:",{staticSite:b,blueprintBundle:S,edgeFunctions:_});const P=Ut(s.providerConfigs,Re),U=Ut(s.providerConfigs,ze),k=Ut(s.providerConfigs,Ne);(0,D.Yz)("[Workflow] Provider instances for threading:",{staticSite:P,blueprintBundle:U,edgeFunctions:k}),h(b,S);const C=function(e,t){const{siteUrl:r,staticSiteProviders:s,blueprintBundleProviders:n,edgeFunctionProviders:a,staticSiteProviderInstances:o,blueprintBundleProviderInstances:i,edgeFunctionProviderInstances:l}=e,{api:c,processStaticSiteUrls:d,generateBlueprintJson:u,updateStaticSiteProgressContext:p,assetManager:h,setStatusMessage:g,setStepProgress:f,setProviderProgress:m}=t;return{api:c,siteUrl:r,staticSiteProviders:s,blueprintBundleProviders:n,edgeFunctionProviders:a,staticSiteProviderInstances:o,blueprintBundleProviderInstances:i,edgeFunctionProviderInstances:l,providerInstances:e.providerInstances||[],currentProviderInstance:e.currentProviderInstance||null,processStaticSiteUrls:d,generateBlueprintJson:u,updateStaticSiteProgressContext:p,assetManager:h,setStatusMessage:g,setStepProgress:f,setProviderProgress:m,discoveredAssets:null}}({siteUrl:a,staticSiteProviders:b,blueprintBundleProviders:S,edgeFunctionProviders:_,staticSiteProviderInstances:P,blueprintBundleProviderInstances:U,edgeFunctionProviderInstances:k},{api:f,processStaticSiteUrls:x,generateBlueprintJson:y,updateStaticSiteProgressContext:v,assetManager:m,setStatusMessage:i,setStepProgress:d,setProviderProgress:u});C.setOverallProgressValue=l,C.removeMessage=p;const A={onStepStart:e=>{(0,D.Yz)(`[Workflow] Step starting: ${e}`),r(e)},onStepComplete:(e,t)=>{(0,D.Yz)(`[Workflow] Step completed: ${e}`,t)},onStepSkipped:e=>{(0,D.Yz)(`[Workflow] Step skipped: ${e}`)},onError:(e,t)=>{(0,D.AO)(`[Workflow] Step error: ${e}`,t)}},$=function(e){const{staticSiteProviderInstances:t=[],blueprintBundleProviderInstances:r=[]}=e,s=vt();"undefined"!=typeof window&&window.console&&console.log("[Aether] getActiveSteps - Filtering steps:",{totalSteps:s.length,staticSiteProviders:t.length,blueprintBundleProviders:r.length,stepIds:s.map(e=>e.id)});const n=s.filter(s=>"function"==typeof s.shouldSkip?!s.shouldSkip(e):"discoverBlueprintBundleAssets"===s.id||"createWpContentArchive"===s.id||"createBlueprintBundle"===s.id||"uploadBlueprintBundle"===s.id?r.length>0:"preScanStaticSite"!==s.id&&"uploadStaticFiles"!==s.id||t.length>0);return"undefined"!=typeof window&&window.console&&console.log("[Aether] getActiveSteps - Filtered steps:",{filteredCount:n.length,filteredIds:n.map(e=>e.id)}),n}(C),I=[...P,...U,...k];(0,D.Yz)("[Workflow] Executing with provider instances:",{count:I.length,instances:I.map(e=>e.id)}),await at($,C,I,A),(0,D.Yz)("[Workflow] All steps completed successfully"),m.clearUploadFlags(),n({status:"complete"}),t(!1)}catch(e){(0,D.AO)("Publish failed:",e),a(`Failed to start: ${e.message}`),t(!1)}},[t,f,m,a,o,g,r,v,x,y,i,d,u,p,l,h,n])}}const Ct="#2271b1",At="#1d2327",$t="#646970",It="#50575e",jt="#fff",Et="#f6f7f7",Tt="#f0f0f1",Bt="#fcf0f1",Ft="#c3c4c7",Dt="#e0e0e0",Mt="#d63638",Rt="#00a32a",zt="0.25rem",Nt="0.5rem",Lt="0.75rem",Ot="1.25rem",Wt="1.5rem",qt="2rem",Ht="0.25rem",Yt="0.75rem",Kt="0.875rem",Vt="1rem",Gt=600,Jt={borderBottom:`1px solid ${Ft}`,paddingTop:Ot,paddingBottom:Ot,paddingLeft:Ot,paddingRight:Ot,background:Et},Zt={borderLeftColor:Rt,background:"#d5f0dd"},Xt={borderLeftColor:Mt,background:Bt},Qt=(e="row",t=Lt)=>({display:"flex",flexDirection:e,gap:t}),er={noMargin:{margin:0},noMarginTop:{marginTop:0},noMarginBottom:{marginBottom:0}},tr=function({providerId:e,providerLabel:t,stepLabel:r,progress:s,status:i,error:l}){const c=(()=>{switch(i){case"complete":return"✓";case"error":return"✗";default:return null}})(),d={marginBottom:Ot,padding:Lt,border:`1px solid ${Dt}`,borderRadius:Ht,background:jt,transition:"all 0.3s ease"};"active"===i?(d.borderColor="#007cba",d.boxShadow="0 0 0 1px rgba(0, 124, 186, 0.1)"):"complete"===i?(d.borderColor=Rt,d.background=Et):"error"===i&&(d.borderColor=Mt,d.background=Bt);const u={display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:Nt},p={display:"flex",alignItems:"center",gap:Nt,fontSize:Kt},h={display:"inline-flex",alignItems:"center",justifyContent:"center",width:"20px",height:"20px",borderRadius:"50%",fontSize:Yt,fontWeight:700};"active"===i?h.animation="pulse 1.5s ease-in-out infinite":"complete"===i?(h.background=Rt,h.color=jt):"error"===i&&(h.background=Mt,h.color=jt);const g={fontSize:Kt,color:$t,fontWeight:Gt},f={fontSize:Yt,color:$t,marginBottom:Nt,fontStyle:"italic"},m={fontSize:Yt,color:Mt,marginBottom:Nt,padding:Nt,background:Bt,borderRadius:"2px"},y={fontSize:Yt,color:Rt,marginBottom:Nt,fontWeight:500};return(0,o.jsxs)(o.Fragment,{children:[(0,o.jsx)("style",{children:`\n\t\t\t\t\t@keyframes pulse {\n\t\t\t\t\t\t0%, 100% {\n\t\t\t\t\t\t\topacity: 1;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t50% {\n\t\t\t\t\t\t\topacity: 0.5;\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\t.provider-progress-bar__progress .components-progress-bar {\n\t\t\t\t\t\theight: 8px;\n\t\t\t\t\t}\n\t\t\t\t\t.provider-progress-bar__progress .components-progress-bar__indicator {\n\t\t\t\t\t\t${"complete"===i?`background: ${Rt};`:""}\n\t\t\t\t\t\t${"error"===i?`background: ${Mt};`:""}\n\t\t\t\t\t}\n\t\t\t\t`}),(0,o.jsxs)("div",{style:d,"data-provider-id":e,children:[(0,o.jsxs)("div",{style:u,children:[(0,o.jsxs)("div",{style:p,children:[c&&(0,o.jsx)("span",{style:h,children:c}),(0,o.jsx)("strong",{children:t})]}),(0,o.jsxs)("div",{style:g,children:[Math.round(s),"%"]})]}),r&&"active"===i&&(0,o.jsx)("div",{style:f,children:r}),l&&"error"===i&&(0,o.jsx)("div",{style:m,children:l}),"complete"===i&&(0,o.jsx)("div",{style:y,children:(0,n.__)("Complete","aether-site-exporter")}),(0,o.jsx)("div",{style:{position:"relative"},children:(0,o.jsx)(a.ProgressBar,{className:"provider-progress-bar__progress",style:{height:"8px"},value:s})})]})]})},rr=function({providerProgress:e={},providerInstances:t=[]}){if(0===t.length)return null;if(1===t.length)return null;const r={display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:Ot,paddingBottom:Lt,borderBottom:`2px solid ${Dt}`},s={margin:0,fontSize:"15px",fontWeight:Gt,color:At},a={fontSize:Kt,color:$t,fontWeight:500,padding:"4px 8px",background:Et,borderRadius:"12px"};return(0,o.jsxs)("div",{style:{margin:"20px 0"},children:[(0,o.jsxs)("div",{style:r,children:[(0,o.jsx)("h4",{style:s,children:(0,n.__)("Provider Progress","aether-site-exporter")}),(0,o.jsxs)("span",{style:a,children:[t.length," ",(0,n.__)("providers","aether-site-exporter")]})]}),(0,o.jsx)("div",{style:{display:"flex",flexDirection:"column",gap:0},children:t.map(t=>{const r=e[t.id]||{stepId:null,stepLabel:(0,n.__)("Pending","aether-site-exporter"),progress:0,status:"pending"};return(0,o.jsx)(tr,{providerId:t.id,providerLabel:t.label||t.id,stepLabel:r.stepLabel,progress:r.progress,status:r.status,error:r.error},t.id)})})]})},sr={padding:qt,display:"flex",flexDirection:"column",gap:qt},nr={...Xt,padding:Lt,marginBottom:Lt},ar={...Zt,padding:Lt,marginBottom:Lt},or={margin:"0 0 0.5rem"},ir={...Qt("column",Wt)},lr={...Qt("row",Ot),alignItems:"center",width:"100%"},cr={width:"100%",height:"20px",backgroundColor:Dt,borderRadius:Ht,overflow:"hidden",position:"relative"},dr={height:"100%",backgroundColor:Ct,transition:"width 0.3s ease",borderRadius:Ht},ur={fontSize:Kt,fontWeight:Gt,color:At,minWidth:"3rem",textAlign:"right",flexShrink:0},pr={display:"flex",flexDirection:"column",alignItems:"center",gap:Wt,padding:qt,textAlign:"center"},hr={margin:0,fontSize:"1.125rem",color:$t};function gr({isOpen:e,onClose:t,onComplete:r}){const l=function(){const e=(0,s.useContext)(i);if(!e)throw new Error("useExportContext must be used within an ExportProvider");return e}(),{startExport:c}=kt(l),{steps:d,isExporting:u,finalStatus:p,error:h,reset:g,overallProgress:f,staticSiteProviders:m,blueprintBundleProviders:y,providerProgress:w}=l,v=e||p,x=(0,s.useCallback)(()=>{(!u||p||h)&&(g(),t&&t())},[g,t,u,p,h]);(0,s.useEffect)(()=>{v||g()},[v,g]),(0,s.useEffect)(()=>{e&&!u&&0===d.length&&c()},[e]),(0,s.useEffect)(()=>{p&&r&&r(p)},[p,r]);const b=(0,s.useMemo)(()=>{if(f>0)return f;if(0===d.length)return 0;const e=d.filter(e=>"complete"===e.status).length,t=d.find(e=>"active"===e.status);let r=e/d.length*100;return t&&t.supportsProgress&&(r+=t.progress/d.length),Math.min(100,Math.round(r))},[d,f]),S=(0,s.useMemo)(()=>{const e=[];return m.forEach(t=>{e.push({id:t,label:t})}),y.forEach(t=>{e.find(e=>e.id===t)||e.push({id:t,label:t})}),e},[m,y]);return v?(0,o.jsx)(a.Modal,{className:"aether-export-progress-modal",title:h?(0,n.__)("Publish Failed","aether-site-exporter"):p?(0,n.__)("Site Published Successfully!","aether-site-exporter"):(0,n.__)("Exporting Site","aether-site-exporter"),onRequestClose:x,isFullScreen:!1,shouldCloseOnClickOutside:!1,shouldCloseOnEsc:!1,__experimentalHideHeader:!1,children:(0,o.jsxs)("div",{className:"aether-export-progress-modal__content",style:sr,children:[h&&(0,o.jsx)("div",{className:"aether-export-progress-modal__notice aether-export-progress-modal__notice--error",style:nr,children:(0,o.jsx)("p",{className:"aether-export-progress-modal__notice-text",style:er.noMargin,children:h})}),p&&(0,o.jsxs)("div",{className:"aether-export-progress-modal__notice aether-export-progress-modal__notice--success",style:ar,children:[(0,o.jsx)("p",{className:"aether-export-progress-modal__notice-text",style:or,children:(0,n.__)("Your site has been exported successfully!","aether")}),p.deploymentUrl&&(0,o.jsxs)("p",{className:"aether-export-progress-modal__deployment",style:er.noMargin,children:[(0,o.jsx)("strong",{className:"aether-export-progress-modal__deployment-label",children:(0,n.__)("View your published site:","aether")})," ",(0,o.jsx)("a",{className:"aether-export-progress-modal__deployment-link",href:p.deploymentUrl,target:"_blank",rel:"noopener noreferrer",children:p.deploymentUrl})]})]}),!p&&!h&&d.length>0&&(0,o.jsx)("div",{className:"aether-export-progress-modal__progress",style:ir,children:(0,o.jsxs)("div",{className:"aether-export-progress-modal__progress-container",style:lr,children:[(0,o.jsx)("div",{className:"aether-export-progress-modal__progress-bar",style:cr,children:(0,o.jsx)("div",{className:"aether-export-progress-modal__progress-fill",style:{...dr,width:`${b}%`}})}),(0,o.jsxs)("span",{className:"aether-export-progress-modal__progress-percentage",style:ur,children:[b,"%"]})]})}),!p&&!h&&S.length>1&&(0,o.jsx)(rr,{providerProgress:w,providerInstances:S}),0===d.length&&!h&&(0,o.jsxs)("div",{className:"aether-export-progress-modal__loading",style:pr,children:[(0,o.jsx)(a.Spinner,{className:"aether-export-progress-modal__spinner"}),(0,o.jsx)("p",{className:"aether-export-progress-modal__loading-text",style:hr,children:(0,n.__)("Initializing export process…","aether-site-exporter")})]})]})}):null}const fr=window.wp.primitives,mr=(0,o.jsxs)(fr.SVG,{xmlns:"http://www.w3.org/2000/svg",viewBox:"0 0 24 24",children:[(0,o.jsx)(fr.Path,{d:"m19 7.5h-7.628c-.3089-.87389-1.1423-1.5-2.122-1.5-.97966 0-1.81309.62611-2.12197 1.5h-2.12803v1.5h2.12803c.30888.87389 1.14231 1.5 2.12197 1.5.9797 0 1.8131-.62611 2.122-1.5h7.628z"}),(0,o.jsx)(fr.Path,{d:"m19 15h-2.128c-.3089-.8739-1.1423-1.5-2.122-1.5s-1.8131.6261-2.122 1.5h-7.628v1.5h7.628c.3089.8739 1.1423 1.5 2.122 1.5s1.8131-.6261 2.122-1.5h2.128z"})]}),yr=(0,o.jsx)(fr.SVG,{xmlns:"http://www.w3.org/2000/svg",viewBox:"0 0 24 24",children:(0,o.jsx)(fr.Path,{fillRule:"evenodd",clipRule:"evenodd",d:"M12 5.5A2.25 2.25 0 0 0 9.878 7h4.244A2.251 2.251 0 0 0 12 5.5ZM12 4a3.751 3.751 0 0 0-3.675 3H5v1.5h1.27l.818 8.997a2.75 2.75 0 0 0 2.739 2.501h4.347a2.75 2.75 0 0 0 2.738-2.5L17.73 8.5H19V7h-3.325A3.751 3.751 0 0 0 12 4Zm4.224 4.5H7.776l.806 8.861a1.25 1.25 0 0 0 1.245 1.137h4.347a1.25 1.25 0 0 0 1.245-1.137l.805-8.861Z"})});function wr({status:e="info",message:t,isDismissible:r=!0,onDismiss:s=null,className:n=""}){const i=`aether-status-notice aether-status-notice--${e} ${n}`.trim();return(0,o.jsx)(a.Notice,{className:i,status:e,isDismissible:r,onRemove:s,children:t})}function vr({value:e="",onChange:t,label:r,help:i,placeholder:l,...c}){const[d,u]=(0,s.useState)(!1),[p,h]=(0,s.useState)(!1),g={paddingRight:"40px",...d?{}:{WebkitTextSecurity:"disc",textSecurity:"disc"}};return(0,o.jsx)("div",{className:"aether-secret-field",style:{position:"relative"},children:(0,o.jsxs)("div",{className:"aether-secret-field__wrapper",style:{position:"relative"},children:[(0,o.jsx)(a.TextControl,{className:"aether-secret-field__input",label:r,help:i,value:e,onChange:t,type:"text",placeholder:l,style:g,__next40pxDefaultSize:!0,__nextHasNoMarginBottom:!0,autoComplete:"off","data-lpignore":"true","data-1p-ignore":"true","data-form-type":"other",...c}),(0,o.jsx)("button",{type:"button",className:"aether-secret-field__toggle",onClick:()=>u(!d),onMouseEnter:()=>h(!0),onMouseLeave:()=>h(!1),style:{position:"absolute",right:"8px",top:"calc(23px + 50%)",transform:"translateY(-100%)",background:"none",border:"none",cursor:"pointer",padding:"4px 6px",fontSize:"18px",lineHeight:1,display:"flex",alignItems:"center",justifyContent:"center",zIndex:10,opacity:.7,transition:"opacity 0.2s ease",opacity:p?1:.7},"aria-label":d?(0,n.__)("Hide","aether-site-exporter"):(0,n.__)("Show","aether-site-exporter"),title:d?(0,n.__)("Hide","aether-site-exporter"):(0,n.__)("Show","aether-site-exporter"),children:d?(0,o.jsxs)("svg",{className:"aether-secret-field__icon aether-secret-field__icon--visible",xmlns:"http://www.w3.org/2000/svg",viewBox:"0 0 32 32",width:"18",height:"18",style:{display:"block"},children:[(0,o.jsx)("path",{d:"M30.94,15.66A16.69,16.69,0,0,0,16,5,16.69,16.69,0,0,0,1.06,15.66a1,1,0,0,0,0,.68A16.69,16.69,0,0,0,16,27,16.69,16.69,0,0,0,30.94,16.34,1,1,0,0,0,30.94,15.66ZM16,25c-5.3,0-10.9-3.93-12.93-9C5.1,10.93,10.7,7,16,7s10.9,3.93,12.93,9C26.9,21.07,21.3,25,16,25Z"}),(0,o.jsx)("path",{d:"M16,10a6,6,0,1,0,6,6A6,6,0,0,0,16,10Zm0,10a4,4,0,1,1,4-4A4,4,0,0,1,16,20Z"})]}):(0,o.jsxs)("svg",{className:"aether-secret-field__icon aether-secret-field__icon--hidden",xmlns:"http://www.w3.org/2000/svg",viewBox:"0 0 32 32",width:"18",height:"18",style:{display:"block"},children:[(0,o.jsx)("path",{d:"M5.24,22.51l1.43-1.42A14.06,14.06,0,0,1,3.07,16C5.1,10.93,10.7,7,16,7a12.38,12.38,0,0,1,4,.72l1.55-1.56A14.72,14.72,0,0,0,16,5,16.69,16.69,0,0,0,1.06,15.66a1,1,0,0,0,0,.68A16,16,0,0,0,5.24,22.51Z"}),(0,o.jsx)("path",{d:"M12,15.73a4,4,0,0,1,3.7-3.7l1.81-1.82a6,6,0,0,0-7.33,7.33Z"}),(0,o.jsx)("path",{d:"M30.94,15.66A16.4,16.4,0,0,0,25.2,8.22L30,3.41,28.59,2,2,28.59,3.41,30l5.1-5.1A15.29,15.29,0,0,0,16,27,16.69,16.69,0,0,0,30.94,16.34,1,1,0,0,0,30.94,15.66ZM20,16a4,4,0,0,1-6,3.44L19.44,14A4,4,0,0,1,20,16Zm-4,9a13.05,13.05,0,0,1-6-1.58l2.54-2.54a6,6,0,0,0,8.35-8.35l2.87-2.87A14.54,14.54,0,0,1,28.93,16C26.9,21.07,21.3,25,16,25Z"})]})})]})})}function xr({field:e,value:t,onChange:r,errors:s,isHidden:n=!1}){const{id:i,label:l,description:c,type:d="text",required:u=!1,options:p=[],placeholder:h="",sensitive:g=!1}=e,f=s?.[i],m=f||c,y={autoComplete:"off","data-lpignore":"true","data-1p-ignore":"true","data-form-type":"other"},w={display:n?"none":void 0};if(g||"password"===d)return(0,o.jsx)("div",{className:`aether-provider-field aether-provider-field--${d} ${f?"aether-provider-field--error":""}`,style:w,children:(0,o.jsx)(vr,{label:l,help:m,value:t||"",onChange:e=>r(i,e),placeholder:h,required:u})});if("checkbox"===d)return(0,o.jsx)("div",{className:`aether-provider-field aether-provider-field--${d} ${f?"aether-provider-field--error":""}`,style:w,children:(0,o.jsx)(a.CheckboxControl,{label:l,help:m,checked:t||!1,onChange:e=>r(i,e),__nextHasNoMarginBottom:!0})});if("checkbox-group"===d&&p.length>0){let s=[];null!=t?s=t:void 0!==e.defaultValue&&(s=e.defaultValue);const n=Array.isArray(s)?s:[];return(0,o.jsxs)("div",{className:`aether-provider-field aether-provider-field--${d} ${f?"aether-provider-field--error":""}`,style:w,children:[l&&(0,o.jsxs)("div",{className:"aether-provider-field__label components-base-control__label",children:[(0,o.jsx)("strong",{className:"aether-provider-field__label-text",children:l}),u&&(0,o.jsx)("span",{className:"aether-provider-field__label-required components-base-control__label__required",children:"*"})]}),m&&(0,o.jsx)("p",{className:"aether-provider-field__help components-base-control__help",children:m}),f&&(0,o.jsx)("p",{className:"aether-provider-field__error aether-provider-field__error--message components-base-control__help components-base-control__help--error",children:f}),(0,o.jsx)("div",{className:"aether-provider-field__checkbox-group aether-checkbox-group",children:p.map(e=>{const t=e.value,s=e.label||e.value,l=n.includes(t);return(0,o.jsx)(a.CheckboxControl,{className:"aether-provider-field__checkbox-option",label:s,checked:l,onChange:e=>{let s;if(e){if(n.includes(t))return;s=[...n,t]}else s=n.filter(e=>e!==t);r(i,s)},style:{margin:"0.25rem 0"},__nextHasNoMarginBottom:!0},t)})})]})}if("select"===d&&p.length>0){const e=p.map(e=>({label:e.label||e.value,value:e.value}));return(0,o.jsx)("div",{className:`aether-provider-field aether-provider-field--${d} ${f?"aether-provider-field--error":""}`,style:w,children:(0,o.jsx)(a.SelectControl,{label:l,help:m,value:t||"",onChange:e=>r(i,e),options:e,required:u,__next40pxDefaultSize:!0,__nextHasNoMarginBottom:!0})})}return"textarea"===d?(0,o.jsx)("div",{className:`aether-provider-field aether-provider-field--${d} ${f?"aether-provider-field--error":""}`,style:w,children:(0,o.jsx)(a.TextareaControl,{label:l,help:m,value:t||"",onChange:e=>r(i,e),placeholder:h,required:u,...y})}):"url"===d?(0,o.jsx)("div",{className:`aether-provider-field aether-provider-field--${d} ${f?"aether-provider-field--error":""}`,style:w,children:(0,o.jsx)(a.TextControl,{label:l,help:m,value:t||"",onChange:e=>r(i,e),type:"url",placeholder:h,required:u,__next40pxDefaultSize:!0,__nextHasNoMarginBottom:!0,...y})}):"email"===d?(0,o.jsx)("div",{className:`aether-provider-field aether-provider-field--${d} ${f?"aether-provider-field--error":""}`,style:w,children:(0,o.jsx)(a.TextControl,{label:l,help:m,value:t||"",onChange:e=>r(i,e),type:"email",placeholder:h,required:u,__next40pxDefaultSize:!0,__nextHasNoMarginBottom:!0,...y})}):"number"===d?(0,o.jsx)("div",{className:`aether-provider-field aether-provider-field--${d} ${f?"aether-provider-field--error":""}`,style:w,children:(0,o.jsx)(a.TextControl,{label:l,help:m,value:t||"",onChange:e=>r(i,e),type:"number",placeholder:h,required:u,__next40pxDefaultSize:!0,__nextHasNoMarginBottom:!0,...y})}):(0,o.jsx)("div",{className:`aether-provider-field aether-provider-field--${d} ${f?"aether-provider-field--error":""}`,style:w,children:(0,o.jsx)(a.TextControl,{label:l,help:m,value:t||"",onChange:e=>r(i,e),placeholder:h,required:u,__next40pxDefaultSize:!0,__nextHasNoMarginBottom:!0,...y})})}const br={...Qt("column",Lt)},Sr={...Qt("row",Nt),justifyContent:"flex-end",marginTop:Lt,paddingTop:Lt,borderTop:`1px solid ${Ft}`},_r=(0,s.memo)(function({providerId:e,fields:t=[],initialValues:r={},onSubmit:i,onChange:l}){const d=()=>{const e={};t.forEach(t=>{void 0!==t.defaultValue?e[t.id]=t.defaultValue:"checkbox-group"===t.type?e[t.id]=[]:"checkbox"===t.type&&(e[t.id]=!1)});const s={...e};return Object.keys(r).forEach(e=>{const t=r[e];null!=t&&(s[e]=t)}),s},[u,p]=(0,s.useState)(d),[h,g]=(0,s.useState)({}),[f,m]=(0,s.useState)(!1),[y,w]=(0,s.useState)(!1),[v,x]=(0,s.useState)(null),{showSuccess:b,clearSuccess:S}=function(){const e=(0,s.useRef)(null);return(0,s.useEffect)(()=>()=>{e.current&&(clearTimeout(e.current),e.current=null)},[]),{showSuccess:(0,s.useCallback)(t=>{e.current&&(clearTimeout(e.current),e.current=null),e.current=setTimeout(()=>{t&&t(),e.current=null},3e3)},[]),clearSuccess:(0,s.useCallback)(()=>{e.current&&(clearTimeout(e.current),e.current=null)},[])}}(),_=(0,s.useRef)(!1),P=(0,s.useRef)(l);(0,s.useEffect)(()=>{P.current=l},[l]),(0,s.useEffect)(()=>{p(d())},[]);const U=(0,s.useCallback)((e,t)=>{_.current=!0,p(r=>({...r,[e]:t})),P.current&&P.current(e,t),g({}),x(null),S(),w(!1)},[S]);return(0,o.jsxs)("form",{className:"aether-provider-form",onSubmit:async r=>{r.preventDefault(),m(!0),x(null),w(!1);const s={...u};t.forEach(e=>{void 0!==s[e.id]&&null!==s[e.id]||(void 0!==e.defaultValue?s[e.id]=e.defaultValue:"checkbox-group"===e.type?s[e.id]=[]:"checkbox"===e.type&&(s[e.id]=!1)),"checkbox-group"!==e.type||Array.isArray(s[e.id])||(s[e.id]=[])});const a=function(e,t){const r={};return t.forEach(t=>{const s=t.id,n=function(e,t){const{validation:r,label:s,required:n}=t;return!n||null!=e&&""!==e?(e||n)&&r?r.pattern&&!new RegExp(r.pattern).test(e)?r.message||`${s} format is invalid.`:r.minLength&&e.length<r.minLength?`${s} must be at least ${r.minLength} characters.`:r.maxLength&&e.length>r.maxLength?`${s} must be no more than ${r.maxLength} characters.`:null:null:`${s} is required.`}(e[s],t);n&&(r[s]=n)}),{valid:0===Object.keys(r).length,errors:r}}(s,t);if(!a.valid)return g(a.errors),void m(!1);try{if(i)await i(s);else{const t=await(0,c.Ay)({path:"/aether/site-exporter/settings?key=providers"});if(!t.success)throw new Error("Failed to load current settings");const r={...t.value||{},[e]:s},n=await(0,c.Ay)({path:"/aether/site-exporter/settings",method:"POST",data:{key:"providers",value:r}});if(!n.success)throw new Error(n.message||"Failed to save settings")}w(!0),b(()=>w(!1)),_.current=!1}catch(e){x(e.message||(0,n.__)("Failed to save settings","aether-site-exporter"))}finally{m(!1)}},style:br,children:[v&&(0,o.jsx)(wr,{status:"error",message:v,isDismissible:!0,onRemove:()=>x(null),className:"aether-provider-form__notice"}),y&&(0,o.jsx)(wr,{status:"success",message:(0,n.__)("Settings saved successfully!","aether-site-exporter"),isDismissible:!0,onRemove:()=>w(!1),className:"aether-provider-form__notice"}),(()=>{const e=e=>!0===e.hidden,r=t.filter(e=>!e.is_advanced),s=t.filter(e=>!0===e.is_advanced),i=e=>void 0!==e.defaultValue?e.defaultValue:"checkbox-group"===e.type?[]:"checkbox"!==e.type&&"";return(0,o.jsxs)(o.Fragment,{children:[r.map(t=>{const r=e(t);return(0,o.jsx)(xr,{field:t,value:u[t.id],onChange:U,errors:h,isHidden:r},t.id)}),s.length>0&&(0,o.jsx)(a.__experimentalToolsPanel,{className:"aether-provider-form__tools-panel",label:(0,n.__)("Advanced settings","aether-site-exporter"),resetAll:null,children:s.map(r=>{const s=e(r);return(0,o.jsx)(a.__experimentalToolsPanelItem,{className:"aether-provider-form__tools-panel-item",hasValue:()=>(e=>{const t=u[e.id],r=i(e);return null!=t&&(Array.isArray(t)?t.length>0&&JSON.stringify(t)!==JSON.stringify(r):("checkbox"===e.type||""!==t)&&t!==r)})(r),label:r.label||r.name,onDeselect:()=>(e=>{const r=t.find(t=>t.id===e);if(!r)return;const s=i(r);U(e,s)})(r.id),children:(0,o.jsx)(xr,{field:r,value:u[r.id],onChange:U,errors:h,isHidden:s})},r.id)})})]})})(),(0,o.jsx)("div",{className:"aether-provider-form__actions",style:Sr,children:(0,o.jsx)(a.Button,{className:"aether-provider-form__submit-button",type:"submit",variant:"primary",isBusy:f,disabled:f,children:f?(0,n.__)("Saving…","aether-site-exporter"):(0,n.__)("Save Settings","aether-site-exporter")})})]})},(e,t)=>e.providerId===t.providerId&&e.fields.length===t.fields.length&&JSON.stringify(e.initialValues)===JSON.stringify(t.initialValues)),Pr={padding:Lt,borderBottom:`1px solid ${Ft}`,verticalAlign:"middle"},Ur={...Pr,borderRight:`1px solid ${Ft}`},kr={fontSize:Vt,fontWeight:Gt,color:At,cursor:"pointer",padding:`${zt} ${Nt}`,borderRadius:Ht,transition:"background-color 0.2s ease"},Cr={fontSize:Vt,fontWeight:Gt,padding:`${zt} ${Nt}`,border:`2px solid ${Ct}`,borderRadius:Ht,outline:"none",transition:"border-color 0.2s ease",width:"100%"},Ar={fontSize:Yt,fontWeight:500,padding:"4px 8px",borderRadius:Ht,backgroundColor:"#000",color:"#fff",display:"inline-block"},$r={...Qt("row",Nt),alignItems:"center"};function Ir({instance:e,provider:t,onToggle:r,onDelete:i,onRename:l,onSave:c}){const[d,u]=(0,s.useState)(!1),[p,h]=(0,s.useState)(e.config.instance_name||""),[g,f]=(0,s.useState)(!1),[m,y]=(0,s.useState)(e.config),[w,v]=(0,s.useState)(null),x=(0,s.useRef)(null);(0,s.useEffect)(()=>{y(e.config)},[e.config]),(0,s.useEffect)(()=>{d&&x.current&&(x.current.focus(),x.current.select())},[d]);const b=()=>{h(m.instance_name||""),u(!0)},S=async()=>{if(""===p.trim())return h(m.instance_name||""),void u(!1);if(p!==m.instance_name)try{await l(e.instanceId,p.trim()),u(!1)}catch(e){h(m.instance_name||""),u(!1)}else u(!1)},_=t?.settingsFields||[],P=_.reduce((e,t)=>{const r=t.id||t.name;return void 0!==m[r]&&null!==m[r]&&(e[r]=m[r]),e},{}),U=e.config.provider_type||e.instanceId.split(":")[0],k=t?.metadata||{};return(0,o.jsxs)("tr",{children:[(0,o.jsx)("td",{style:Ur,children:(0,o.jsx)(a.ToggleControl,{label:(0,n.__)("Enable this instance","aether-site-exporter"),checked:!1!==m.enabled,onChange:e=>r(e),__nextHasNoMarginBottom:!0})}),(0,o.jsx)("td",{style:Ur,children:d?(0,o.jsx)("input",{ref:x,type:"text",value:p,onChange:e=>h(e.target.value),onBlur:S,onKeyDown:e=>{"Enter"===e.key?S():"Escape"===e.key&&(h(m.instance_name||""),u(!1))},style:Cr}):(0,o.jsx)("div",{style:kr,onClick:b,onKeyDown:e=>{"Enter"!==e.key&&" "!==e.key||b()},role:"button",tabIndex:0,title:(0,n.__)("Click to edit name","aether-site-exporter"),children:m.instance_name||""})}),(0,o.jsx)("td",{style:Ur,children:(0,o.jsx)("span",{style:Ar,children:k.name||t?.id||U})}),(0,o.jsx)("td",{style:Pr,children:(0,o.jsxs)("div",{style:{...Qt("row",Nt),justifyContent:"flex-end"},children:[(0,o.jsxs)("div",{style:$r,children:[(0,o.jsx)(a.Button,{variant:"secondary",icon:mr,onClick:()=>f(!0),children:(0,n.__)("Settings","aether-site-exporter")}),(0,o.jsx)(a.Button,{variant:"secondary",isDestructive:!0,icon:yr,onClick:()=>{confirm((0,n.sprintf)(/* translators: %s: instance name */ /* translators: %s: instance name */
-(0,n.__)('Are you sure you want to delete the instance "%s"? This cannot be undone.',"aether-site-exporter"),m.instance_name))&&i()},children:(0,n.__)("Delete","aether-site-exporter")})]}),g&&(0,o.jsx)(a.Modal,{className:"aether-provider-instance-settings-modal",title:(0,n.sprintf)(/* translators: %s: instance name */ /* translators: %s: instance name */
-(0,n.__)("Settings: %s","aether-site-exporter"),m.instance_name||(0,n.__)("Provider Instance","aether-site-exporter")),onRequestClose:()=>f(!1),size:"medium",children:(0,o.jsxs)("div",{style:{...Qt("column",Ot),paddingTop:Lt},children:[w&&(0,o.jsx)(wr,{status:"error",message:w,isDismissible:!0,onRemove:()=>v(null)}),_.length>0&&(0,o.jsx)(_r,{providerId:t?.id||U,fields:_,initialValues:P,onChange:(e,t)=>{y(r=>({...r,[e]:t}))},onSubmit:async t=>{v(null);const r={...t,enabled:!1!==m.enabled};try{await c(e.instanceId,r),f(!1)}catch(e){throw v(e.message||(0,n.__)("Failed to save settings","aether-site-exporter")),e}}}),(0,o.jsx)("div",{style:{...Qt("row",Nt),justifyContent:"flex-end",marginTop:Lt,paddingTop:Lt,borderTop:`1px solid ${Ft}`},children:(0,o.jsx)(a.Button,{variant:"secondary",onClick:()=>f(!1),children:(0,n.__)("Close","aether-site-exporter")})})]})})]})})]})}const jr={width:"100%",borderCollapse:"collapse",backgroundColor:jt,border:`1px solid ${Ft}`,borderRadius:"0.5rem",overflow:"hidden"},Er={backgroundColor:Tt,borderBottom:`2px solid ${Ft}`},Tr={padding:Lt,textAlign:"left",fontWeight:Gt,fontSize:Kt,color:At},Br={...Tr,borderRight:`1px solid ${Ft}`};function Fr({instances:e,providers:t,onToggle:r,onDelete:s,onRename:a,onSave:i}){return(0,o.jsxs)("table",{className:"aether-provider-instances-table",style:jr,children:[(0,o.jsx)("thead",{style:Er,children:(0,o.jsxs)("tr",{children:[(0,o.jsx)("th",{style:Br,children:(0,n.__)("Enabled","aether-site-exporter")}),(0,o.jsx)("th",{style:Br,children:(0,n.__)("Instance Name","aether-site-exporter")}),(0,o.jsx)("th",{style:Br,children:(0,n.__)("Provider Type","aether-site-exporter")}),(0,o.jsx)("th",{style:{...Tr,textAlign:"right"},children:(0,n.__)("Actions","aether-site-exporter")})]})}),(0,o.jsx)("tbody",{children:e.map(e=>{const n=e.config.provider_type||e.instanceId.split(":")[0],l=t.find(e=>e.id===n);return(0,o.jsx)(Ir,{instance:e,provider:{id:l?.id||n,metadata:{name:l?.name||n,description:l?.description||""},settingsFields:(l?.settings_fields||[]).map(e=>({...e,id:e.id||e.name}))},onToggle:t=>r(e.instanceId,t),onDelete:()=>s(e.instanceId),onRename:(e,t)=>a(e,t),onSave:(e,t)=>i(e,t)},e.instanceId)})})]})}const Dr={randomUUID:"undefined"!=typeof crypto&&crypto.randomUUID&&crypto.randomUUID.bind(crypto)};let Mr;const Rr=new Uint8Array(16),zr=[];for(let e=0;e<256;++e)zr.push((e+256).toString(16).slice(1));function Nr(e,t,r){const s=(e=e||{}).random??e.rng?.()??function(){if(!Mr){if("undefined"==typeof crypto||!crypto.getRandomValues)throw new Error("crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported");Mr=crypto.getRandomValues.bind(crypto)}return Mr(Rr)}();if(s.length<16)throw new Error("Random bytes length must be >= 16");if(s[6]=15&s[6]|64,s[8]=63&s[8]|128,t){if((r=r||0)<0||r+16>t.length)throw new RangeError(`UUID byte range ${r}:${r+15} is out of buffer bounds`);for(let e=0;e<16;++e)t[r+e]=s[e];return t}return function(e,t=0){return(zr[e[t+0]]+zr[e[t+1]]+zr[e[t+2]]+zr[e[t+3]]+"-"+zr[e[t+4]]+zr[e[t+5]]+"-"+zr[e[t+6]]+zr[e[t+7]]+"-"+zr[e[t+8]]+zr[e[t+9]]+"-"+zr[e[t+10]]+zr[e[t+11]]+zr[e[t+12]]+zr[e[t+13]]+zr[e[t+14]]+zr[e[t+15]]).toLowerCase()}(s)}const Lr={display:"flex",gap:Nt,justifyContent:"flex-end",marginTop:Ot};function Or({onCancel:e,onSubmit:t,cancelLabel:r="Cancel",submitLabel:s="Submit",isSubmitting:n=!1,submitDisabled:i=!1,submitVariant:l="primary",children:c=null,className:d=""}){const u=`aether-modal-actions ${d}`.trim();return(0,o.jsxs)("div",{className:u,style:Lr,children:[c,e&&(0,o.jsx)(a.Button,{className:"aether-modal-actions__cancel",variant:"secondary",onClick:e,disabled:n,children:r}),t&&(0,o.jsx)(a.Button,{className:"aether-modal-actions__submit",variant:l,onClick:t,isBusy:n,disabled:i||n,children:s})]})}const Wr={display:"flex",flexDirection:"column",gap:Ot};function qr({isOpen:e,onClose:t,providers:r,deploymentType:i=null,onCreate:l}){const[c,d]=(0,s.useState)(""),[u,p]=(0,s.useState)(""),[h,g]=(0,s.useState)(!1);(0,s.useEffect)(()=>{e||(d(""),p(""))},[e]),(0,s.useEffect)(()=>{e&&1===r.length&&!c?d(r[0].id):e&&r.length>1&&c&&(r.some(e=>e.id===c)||d(""))},[e,r,c]);const f=()=>{d(""),p(""),t()};if(!e)return null;const m=r.find(e=>e.id===c),y=i?(0,n.sprintf)(/* translators: %s: deployment type label */ /* translators: %s: deployment type label */
-(0,n.__)("Add %s Provider","aether-site-exporter"),Le[i]||i):(0,n.__)("Add Provider Instance","aether-site-exporter"),w=r.length>0;return(0,o.jsx)(a.Modal,{className:"aether-add-provider-instance-modal",title:y,onRequestClose:f,size:"medium",children:(0,o.jsxs)("div",{className:"aether-add-provider-instance-modal__form",style:Wr,children:[w&&(0,o.jsx)(a.SelectControl,{className:"aether-add-provider-instance-modal__provider-select",label:(0,n.__)("Provider Type","aether-site-exporter"),value:c,onChange:d,options:[{label:(0,n.__)("Select a provider…","aether-site-exporter"),value:""},...r.map(e=>({label:e.name,value:e.id}))],help:m?m.description:(0,n.__)("Choose which type of provider to create","aether-site-exporter")}),c&&(0,o.jsx)(a.TextControl,{className:"aether-add-provider-instance-modal__instance-name",label:(0,n.__)("Instance Name","aether-site-exporter"),value:u,onChange:p,placeholder:(0,n.sprintf)(/* translators: %s: provider name */ /* translators: %s: provider name */
-(0,n.__)('e.g., "%s Production"',"aether-site-exporter"),m?.name||"My"),help:(0,n.__)("Choose a descriptive name for this instance","aether-site-exporter")}),(0,o.jsx)(Or,{onCancel:f,onSubmit:async()=>{if(!c||!u.trim())return;const e=`${c}:${!Dr.randomUUID||s||r?Nr(r,s,a):Dr.randomUUID()}`;var r,s,a;g(!0);try{await l(e,c,u.trim()),d(""),p(""),t()}catch(e){console.error("Failed to create instance:",e),alert((0,n.__)("Failed to create instance. Please try again.","aether-site-exporter"))}finally{g(!1)}},cancelLabel:(0,n.__)("Cancel","aether-site-exporter"),submitLabel:(0,n.__)("Create Instance","aether-site-exporter"),isSubmitting:h,isSubmitDisabled:!c||!u.trim()||h,className:"aether-add-provider-instance-modal__actions"})]})})}const Hr={display:"flex",flexDirection:"column",alignItems:"center",gap:Lt,padding:Wt,textAlign:"center"},Yr={fontSize:Vt,color:It,margin:0};function Kr({message:e="",className:t="",style:r={}}){const s=`aether-loading-spinner ${t}`.trim();return(0,o.jsxs)("div",{className:s,style:{...Hr,...r},children:[(0,o.jsx)(a.Spinner,{className:"aether-loading-spinner__spinner"}),e&&(0,o.jsx)("p",{className:"aether-loading-spinner__message",style:Yr,children:e})]})}const Vr={...Jt,backgroundColor:jt},Gr={margin:0,fontSize:"1.3em",lineHeight:1.4,color:At,backgroundColor:jt},Jr={margin:"0.5rem 0 0",color:$t,fontSize:Vt};function Zr({title:e,description:t="",className:r="",actions:s=null}){const n=`aether-section-header ${r}`.trim();return(0,o.jsxs)("div",{className:n,style:Vr,children:[(0,o.jsxs)("div",{className:"aether-section-header__content",children:[(0,o.jsx)("h2",{className:"aether-section-header__title",style:Gr,children:e}),t&&(0,o.jsx)("p",{className:"aether-section-header__description",style:Jr,children:t})]}),s&&(0,o.jsx)("div",{className:"aether-section-header__actions",children:s})]})}class Xr{constructor(e){this.apiFetch=e}async fetchAll(){const e=await this.apiFetch({path:"/aether/site-exporter/settings?key=providers"});if(!e.success)throw new Error("Failed to load provider settings");return e.value||{}}async save(e){if(!(await this.apiFetch({path:"/aether/site-exporter/settings",method:"POST",data:{key:"providers",value:e}})).success)throw new Error("Failed to save provider settings");return e}async update(e,t,r={}){const s=await this.fetchAll(),n=function(e,t,r={}){const{preserveEnabled:s=!1}=r,n={...e||{},...t||{}};return s&&e&&"enabled"in e&&(n.enabled=e.enabled),n}(s[e]||{},t,r),a={...s,[e]:n};return await this.save(a)}async updateMultiple(e){const t=function(e,t){return t&&"object"==typeof t?{...e||{},...Object.entries(t).reduce((t,[r,s])=>(t[r]={...e?.[r]||{},...s||{}},t),{})}:e||{}}(await this.fetchAll(),e);return await this.save(t)}async toggleEnabled(e,t,r=null){if(r){const s={...r,[e]:{...r[e],enabled:t}};return await this.save(s)}return await this.update(e,{enabled:t})}async createInstance(e,t,r){const s=await this.apiFetch({path:`/aether/site-exporter/providers/${t}/instances`,method:"POST",data:{instance_id:e,instance_name:r}});if(!s.success)throw new Error("Failed to create provider instance");return s}async renameInstance(e,t){return await this.update(e,{instance_name:t})}async deleteInstance(e){return await this.apiFetch({path:`/aether/site-exporter/providers/${e}/config`,method:"DELETE"}),await this.fetchAll()}}const Qr={padding:Wt,textAlign:"center",color:It,fontSize:"0.875rem",border:`1px dashed ${Ft}`,borderRadius:"8px"};function es({providerConfigs:e={},onConfigsUpdate:t,onNotice:r}){const[i,l]=(0,s.useState)([]),[c,d]=(0,s.useState)(null),[u,p]=(0,s.useState)(e);(0,s.useEffect)(()=>{p(e)},[e]);const h=u,{toggleProviderEnabled:g,createProviderInstance:f,deleteProviderInstance:m,renameProviderInstance:y}=function(){const[e,t]=(0,s.useState)(!1),[r,n]=(0,s.useState)(null),a=(0,s.useMemo)(()=>new Xr(ft()),[]),o=(0,s.useRef)(Promise.resolve()),i=(0,s.useCallback)(async()=>{t(!0),n(null);try{const e=await a.fetchAll();return t(!1),e}catch(e){throw n(e.message),t(!1),e}},[a]);return{loading:e,error:r,fetchProviderSettings:i,updateProviderConfig:(0,s.useCallback)(async(e,r,s={})=>{t(!0),n(null);try{const n=await a.update(e,r,s);return t(!1),n}catch(e){throw n(e.message),t(!1),e}},[a]),updateMultipleProviders:(0,s.useCallback)(async e=>{t(!0),n(null);try{const r=await a.updateMultiple(e);return t(!1),r}catch(e){throw n(e.message),t(!1),e}},[a]),toggleProviderEnabled:(0,s.useCallback)(async(e,r,s=null)=>(o.current=o.current.then(async()=>{t(!0),n(null);try{const n=await a.toggleEnabled(e,r,s);return t(!1),n}catch(e){throw n(e.message),t(!1),e}}),o.current),[a]),createProviderInstance:(0,s.useCallback)(async(e,r,s)=>{t(!0),n(null);try{const n=await a.createInstance(e,r,s);return t(!1),n}catch(e){throw n(e.message),t(!1),e}},[a]),renameProviderInstance:(0,s.useCallback)(async(e,r)=>{t(!0),n(null);try{const s=await a.renameInstance(e,r);return t(!1),s}catch(e){throw n(e.message),t(!1),e}},[a]),deleteProviderInstance:(0,s.useCallback)(async e=>{t(!0),n(null);try{const r=await a.deleteInstance(e);return t(!1),r}catch(e){throw n(e.message),t(!1),e}},[a])}}();(0,s.useEffect)(()=>{const e=e=>{console.log("ProviderSettings: Processing",e.length,"providers");const t=e.map(e=>({id:e.getId(),name:e.getName(),description:e.getDescription?.()||"",type:e.getType?.()||"generic",settings_fields:e.getProviderSpecificConfigFields?.()||[]}));console.log("ProviderSettings: Processed providers:",t.map(e=>e.id)),l(t)};(()=>{console.log("ProviderSettings: Loading providers...");try{const t=_t.getAll();if(console.log("ProviderSettings: Found",t.length,"providers from registry"),0===t.length){console.log("ProviderSettings: No providers yet, waiting...");let t=0;const r=20,s=setInterval(()=>{t++;const n=_t.getAll();console.log("ProviderSettings: Attempt",t,"- Found",n.length,"providers"),(n.length>0||t>=r)&&(clearInterval(s),n.length>0?e(n):(console.warn("ProviderSettings: No providers found after waiting"),l([])))},100);return}e(t)}catch(e){console.error("ProviderSettings: Failed to load providers:",e)}})(),t&&0===Object.keys(h).length&&ft()({path:"/aether/site-exporter/settings?key=providers"}).then(e=>{e.success&&e.value&&t(e.value)}).catch(e=>{console.error("Failed to load provider configurations:",e)})},[t,h]);const w=(0,s.useMemo)(()=>{const e=_t.getAll(),t={};return e.forEach(e=>{(e.getSupportedDeploymentTypes?.()||[]).forEach(r=>{t[r]||(t[r]=[]);const s=i.find(t=>t.id===e.getId());s&&t[r].push(s)})}),t},[i]),v=(0,s.useMemo)(()=>Object.keys(w).filter(e=>w[e].length>0),[w]),x=(0,s.useMemo)(()=>Object.entries(h).map(([e,t])=>{const r=t.provider_type||e.split(":")[0],s=i.find(e=>e.id===r);return s?{instanceId:e,config:t,provider:s}:null}).filter(e=>null!==e),[h,i]),b=(0,s.useCallback)(async(e,r,s)=>{const n={provider_type:r,instance_name:s,enabled:!1},a={...u,[e]:n};p(a);try{await f(e,r,s),t&&t(a)}catch(e){throw console.error("Failed to create instance:",e),p(u),e}},[f,t,u]),S=(0,s.useCallback)(async(e,s)=>{let n;p(t=>(n=t,{...t,[e]:{...t[e],enabled:s}}));try{const r=await g(e,s,n);p(r),t&&t(r)}catch(e){console.error("Failed to toggle instance:",e),p(n),r&&r(`Failed to toggle instance: ${e.message||"Unknown error"}`,"error")}},[g,t,r]),_=(0,s.useCallback)(async e=>{let s;p(t=>{s=t;const{[e]:r,...n}=t;return n});try{const r=await m(e);p(e=>{const s={...e,...r};return t&&t(s),s})}catch(e){console.error("Failed to delete instance:",e),p(s),r&&r(`Failed to delete instance: ${e.message||"Unknown error"}`,"error")}},[m,t,r]),P=(0,s.useCallback)(async(e,r)=>{let s;p(t=>(s=t,{...t,[e]:{...t[e],instance_name:r}}));try{const s=await y(e,r);p(e=>{const r={...e,...s};return t&&t(r),r})}catch(e){throw console.error("Failed to rename instance:",e),p(s),e}},[y,t]),U=(0,s.useCallback)(async(e,s)=>{const n={...u[e]||{},...s},a={...u,[e]:n};p(a);try{const e=await ft()({path:"/aether/site-exporter/settings",method:"POST",data:{key:"providers",value:a}});if(!e.success)throw new Error(e.message||"Failed to save settings");t&&t(a)}catch(e){throw p(u),r&&r(`Failed to save settings: ${e.message||"Unknown error"}`,"error"),e}},[u,t,r]);return 0===i.length?(0,o.jsx)("div",{className:"aether-provider-settings aether-provider-settings--loading",children:(0,o.jsx)(Kr,{})}):(0,o.jsxs)("div",{className:"aether-provider-settings",children:[(0,o.jsx)(Zr,{title:(0,n.__)("Provider Instances","aether-site-exporter"),description:(0,n.__)("Create and manage multiple instances of each provider type. Each instance can have its own configuration and deployment settings.","aether-site-exporter"),className:"aether-provider-settings__header",actions:(0,o.jsx)(a.ButtonGroup,{children:v.map(e=>(0,o.jsx)(a.Button,{className:"aether-provider-settings__add-button",variant:"tertiary",onClick:()=>d(e),children:(0,n.sprintf)(/* translators: %s: deployment type label */ /* translators: %s: deployment type label */
-(0,n.__)("Add %s Provider","aether-site-exporter"),Le[e]||e)},e))})}),x.length>0?(0,o.jsx)(Fr,{instances:x,providers:i,onToggle:S,onDelete:_,onRename:P,onSave:U}):(0,o.jsx)("div",{className:"aether-provider-settings__empty-state",style:Qr,children:(0,n.__)("No provider instances configured. Use the buttons above to create one.","aether-site-exporter")}),(0,o.jsx)(qr,{isOpen:null!==c,onClose:()=>d(null),providers:c?w[c]||[]:i,deploymentType:c,onCreate:b})]})}function ts(){const[e,t]=(0,s.useState)(!1),[r,i]=(0,s.useState)({}),[l,d]=(0,s.useState)([]),u=(0,s.useCallback)((e,t="error")=>{const r=Date.now();d(s=>[...s,{id:r,message:e,status:t,isDismissible:!0}]),setTimeout(()=>{d(e=>e.filter(e=>e.id!==r))},5e3)},[]),p=(0,s.useCallback)(e=>{d(t=>t.filter(t=>t.id!==e))},[]);(0,s.useEffect)(()=>{(async()=>{try{const e=await(0,c.Ay)({path:"/aether/site-exporter/settings?key=providers"});e.success&&e.value&&i(e.value)}catch(e){console.error("Failed to load provider configs:",e)}})()},[]);const h=(0,s.useCallback)(e=>{i(e)},[]),g={display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:Wt,gap:Lt},f={margin:0,fontSize:"1.75rem",fontWeight:Gt,color:At,flex:1},m={...Qt("column",Ot)};return(0,o.jsxs)("div",{className:"aether-admin-settings",style:{padding:"1.25rem",maxWidth:"100%"},children:[(0,o.jsxs)("div",{className:"aether-admin-settings__header",style:g,children:[(0,o.jsx)("h1",{className:"aether-admin-settings__heading",style:f,children:(0,n.__)("Aether Site Exporter Settings","aether-site-exporter")}),(0,o.jsx)(a.Button,{className:"aether-admin-settings__export-button",variant:"primary",onClick:()=>t(!0),children:(0,n.__)("Export Site","aether-site-exporter")})]}),(0,o.jsxs)("div",{className:"aether-admin-settings__sections",style:m,children:[(0,o.jsx)(wr,{status:"info",message:(0,n.__)("Aether Site Exporter allows you to export your WordPress site as a complete package.","aether-site-exporter"),isDismissible:!1,className:"aether-admin-settings__notice"}),l.map(e=>(0,o.jsx)(wr,{status:e.status,message:e.message,isDismissible:e.isDismissible,onRemove:()=>p(e.id),className:"aether-admin-settings__notice"},e.id)),(0,o.jsx)(es,{providerConfigs:r,onConfigsUpdate:h,onNotice:u})]}),(0,o.jsx)(gr,{isOpen:e,onClose:()=>t(!1)})]})}class rs extends s.Component{constructor(e){super(e),this.state={hasError:!1,error:null,errorInfo:null}}static getDerivedStateFromError(e){return{hasError:!0,error:e}}componentDidCatch(e,t){(0,D.AO)("Error caught by ErrorBoundary:",{error:e,errorInfo:t}),this.setState({error:e,errorInfo:t}),this.props.onError&&this.props.onError(e,t)}resetError=()=>{this.setState({hasError:!1,error:null,errorInfo:null}),this.props.onReset&&this.props.onReset()};render(){if(this.state.hasError){if(this.props.fallback)return this.props.fallback({error:this.state.error,errorInfo:this.state.errorInfo,resetError:this.resetError});const e={padding:Ot},t={...Xt,padding:Lt+" "+Ot,margin:Ot+" 0"},r={margin:"0 0 "+Nt,fontSize:"1.25rem",fontWeight:Gt,color:At},s={margin:"0 0 "+Nt,color:At};return(0,o.jsx)("div",{className:"aether-error-boundary",style:e,children:(0,o.jsxs)("div",{className:"aether-error-boundary__notice",style:t,children:[(0,o.jsx)("h2",{className:"aether-error-boundary__heading",style:r,children:(0,n.__)("Something went wrong","aether-site-exporter")}),(0,o.jsx)("p",{className:"aether-error-boundary__message",style:s,children:(0,n.__)("An unexpected error occurred. Please try refreshing the page.","aether")}),this.state.error&&(0,o.jsxs)("details",{className:"aether-error-boundary__details",style:{marginTop:Ot},children:[(0,o.jsx)("summary",{className:"aether-error-boundary__summary",children:(0,n.__)("Error details","aether-site-exporter")}),(0,o.jsxs)("pre",{className:"aether-error-boundary__error-text",style:{marginTop:Ot,padding:Ot,background:Tt,overflow:"auto",fontSize:Kt},children:[this.state.error.toString(),this.state.errorInfo&&this.state.errorInfo.componentStack]})]}),(0,o.jsx)("button",{type:"button",className:"aether-error-boundary__retry-button",onClick:this.resetError,style:{marginTop:Ot,padding:Nt+" "+Ot,background:Ct,color:jt,border:`1px solid ${Ct}`,borderRadius:Ht,cursor:"pointer",fontSize:Kt,fontWeight:400,lineHeight:1.5},children:(0,n.__)("Try again","aether-site-exporter")})]})})}return this.props.children}}const ss=rs;function ns(e){if(window.wp&&window.wp.data&&window.wp.data.dispatch){const t=window.wp.data.dispatch("core/notices");if(t&&"object"==typeof t){const{createErrorNotice:r}=t;if(r&&"function"==typeof r)return void r(e,{id:"aether-global-error",isDismissible:!0})}}console.error(e)}if("undefined"!=typeof window&&window.aetherData&&window.aetherData.pluginUrl){const e=window.aetherData.pluginUrl,t=e.endsWith("/")?e+"assets/build/":e+"/assets/build/";r.p=t}window.addEventListener("unhandledrejection",e=>{(0,D.AO)("Unhandled promise rejection:",{reason:e.reason,promise:e.promise}),e.preventDefault(),ns("An unexpected error occurred. Please try again or refresh the page.")}),window.addEventListener("error",e=>{(0,D.AO)("Uncaught error:",{message:e.message,filename:e.filename,lineno:e.lineno,colno:e.colno,error:e.error}),e.error&&e.error.stack&&(e.preventDefault(),ns("An unexpected error occurred. Please refresh the page."))});const as=()=>{const e=document.getElementById("aether-admin-settings");if(e){console.log("Aether: Initializing admin settings page...");try{(0,s.render)((0,o.jsx)(ss,{children:(0,o.jsx)(l,{children:(0,o.jsx)(ts,{})})}),e),console.log("Aether: Admin settings page rendered successfully")}catch(e){console.error("Aether: Error rendering admin settings page:",e)}}else console.error("Aether: Container element #aether-admin-settings not found")};"loading"===document.readyState?document.addEventListener("DOMContentLoaded",as):as()})();
+/******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
+
+/***/ 98:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   $Z: () => (/* binding */ FILE_TYPES),
+/* harmony export */   QM: () => (/* binding */ uploadFile),
+/* harmony export */   sM: () => (/* binding */ createFileContext)
+/* harmony export */ });
+/* unused harmony export uploadFiles */
+/* harmony import */ var _wordpress_hooks__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(619);
+/* harmony import */ var _wordpress_hooks__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_hooks__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _aether_export_utils_htmlProcessor__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(864);
+/* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(455);
+/* harmony import */ var _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _utils_debug__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(735);
+/**
+ * Unified File Upload System
+ *
+ * Provides a unified action-based system for all file uploads (blueprint bundles,
+ * static HTML, static assets, etc.) to storage providers.
+ *
+ */
+
+
+
+
+
+
+/**
+ * File types supported by the unified upload system.
+ * Internal use only - providers should not know about file types.
+ *
+ * @type {Object<string, string>}
+ */
+const FILE_TYPES = {
+  BLUEPRINT_BUNDLE: 'blueprint-bundle',
+  STATIC_HTML: 'static-html',
+  STATIC_ASSET: 'static-asset'
+};
+
+// Export for use in export steps (not providers)
+
+
+/**
+ * Create file context for unified upload action.
+ *
+ * @param {Object}           options             Options object.
+ * @param {string}           options.fileType    File type (FILE_TYPES.*).
+ * @param {string}           options.filePath    File path (for blueprint bundles) or URL (for static files).
+ * @param {Blob|string|null} options.fileContent File content (Blob, string, or null to fetch).
+ * @param {string}           options.contentType Content type (MIME type).
+ * @param {string}           options.storageKey  Storage key/path for the file.
+ * @param {string}           options.providerId  Provider instance ID.
+ * @param {Object}           options.metadata    Additional metadata (siteUrl, staticSiteUrl, blueprintData, etc.).
+ * @return {Object} File context object.
+ */
+function createFileContext({
+  fileType,
+  filePath,
+  fileContent = null,
+  contentType,
+  storageKey,
+  providerId,
+  metadata = {}
+}) {
+  return {
+    fileType,
+    filePath,
+    fileContent,
+    contentType,
+    storageKey,
+    providerId,
+    metadata
+  };
+}
+
+/**
+ * Get provider's static site URL (public URL).
+ *
+ * Fetches provider config via API if metadata.staticSiteUrl is not available.
+ *
+ * @param {string} providerId Provider instance ID.
+ * @param {Object} metadata   File context metadata.
+ * @return {Promise<string|null>} Provider's static site URL or null if unavailable.
+ */
+async function getProviderStaticSiteUrl(providerId, metadata) {
+  // Use metadata.staticSiteUrl if available
+  if (metadata.staticSiteUrl) {
+    return metadata.staticSiteUrl;
+  }
+
+  // Fetch provider config to get public_url
+  try {
+    const providerResponse = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
+      path: `/aether/site-exporter/providers/${providerId}/config`
+    });
+    if (providerResponse.success && providerResponse.config && providerResponse.config.public_url) {
+      return providerResponse.config.public_url;
+    }
+  } catch (error) {
+    (0,_utils_debug__WEBPACK_IMPORTED_MODULE_3__/* .debugWarn */ .UT)(`Failed to fetch provider config for ${providerId}:`, error);
+  }
+  return null;
+}
+
+/**
+ * Get provider configuration.
+ *
+ * @param {string} providerId Provider instance ID.
+ * @return {Promise<Object>} Provider configuration object.
+ */
+async function getProviderConfig(providerId) {
+  try {
+    const providerResponse = await _wordpress_api_fetch__WEBPACK_IMPORTED_MODULE_2___default()({
+      path: `/aether/site-exporter/providers/${providerId}/config`
+    });
+    if (providerResponse.success && providerResponse.config) {
+      return providerResponse.config;
+    }
+  } catch (error) {
+    (0,_utils_debug__WEBPACK_IMPORTED_MODULE_3__/* .debugWarn */ .UT)(`Failed to fetch provider config for ${providerId}:`, error);
+  }
+  return {};
+}
+
+/**
+ * Determine destination path based on file type and provider config.
+ *
+ * @param {string} fileType File type (FILE_TYPES.*).
+ * @param {Object} config   Provider configuration.
+ * @return {string} Destination path.
+ */
+function determineDestinationPath(fileType, config) {
+  if (fileType === FILE_TYPES.BLUEPRINT_BUNDLE) {
+    return config.export_path || 'blueprint-bundle/bundle.zip';
+  }
+  // For static files (HTML and assets)
+  const staticPath = config.static_files_path || 'static/';
+  return staticPath.replace(/\/$/, '');
+}
+
+/**
+ * Upload a file using the unified action system.
+ *
+ * Fires `aether.file.upload` action which providers hook into to handle the upload.
+ * Providers should set `fileContext.result = { success: true/false, error?: string }`
+ * to communicate the upload result.
+ *
+ * @param {Object} fileContext File context object from createFileContext().
+ * @return {Promise<Object>} Upload result with success status and optional error.
+ */
+async function uploadFile(fileContext) {
+  const {
+    fileType,
+    filePath,
+    fileContent,
+    contentType,
+    providerId,
+    metadata = {}
+  } = fileContext;
+
+  // Fetch provider config to determine destination path
+  const config = await getProviderConfig(providerId);
+  const destinationPath = determineDestinationPath(fileType, config);
+
+  // Process HTML content per-provider-instance before upload
+  // Each provider has a different staticSiteUrl, so HTML needs to be processed separately
+  const isHtml = fileType === FILE_TYPES.STATIC_HTML || contentType && contentType.includes('text/html');
+  let processedContent = fileContent;
+  if (isHtml && metadata.siteUrl) {
+    try {
+      // Get provider's staticSiteUrl
+      const staticSiteUrl = await getProviderStaticSiteUrl(providerId, metadata);
+      if (staticSiteUrl) {
+        // Extract HTML content from fileContent (handle both Blob and string)
+        let htmlText;
+        if (typeof fileContent === 'string') {
+          htmlText = fileContent;
+        } else if (fileContent instanceof Blob) {
+          htmlText = await fileContent.text();
+        } else {
+          (0,_utils_debug__WEBPACK_IMPORTED_MODULE_3__/* .debugWarn */ .UT)('Cannot process HTML: fileContent is not a string or Blob');
+        }
+        if (htmlText) {
+          // Apply HTML filter hook (for consistency with Path 1)
+          const filteredHtml = (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_0__.applyFilters)('aether.export.step.uploadStaticSiteFiles.html.process', htmlText, filePath, metadata.siteUrl, staticSiteUrl, providerId);
+
+          // Process HTML with URL rewriting
+          const processedHtml = (0,_aether_export_utils_htmlProcessor__WEBPACK_IMPORTED_MODULE_1__/* .processHtml */ .t)(filteredHtml, filePath, metadata.siteUrl, staticSiteUrl);
+
+          // Convert processed HTML back to Blob with correct content type
+          processedContent = new Blob([processedHtml], {
+            type: 'text/html'
+          });
+        }
+      } else {
+        (0,_utils_debug__WEBPACK_IMPORTED_MODULE_3__/* .debugWarn */ .UT)(`Cannot process HTML for ${providerId}: staticSiteUrl not available`);
+      }
+    } catch (error) {
+      (0,_utils_debug__WEBPACK_IMPORTED_MODULE_3__/* .debugWarn */ .UT)(`Failed to process HTML for ${filePath || 'unknown'}:`, error);
+      // Continue with original content on error
+    }
+  }
+
+  // Create context for provider - remove fileType, add destinationPath
+  // Providers should not know about file types, only where to upload
+  const providerContext = {
+    filePath,
+    // For blueprint bundles
+    fileContent: processedContent,
+    // For static files (processed HTML/CSS/JS)
+    destinationPath,
+    // Where to upload (determined by abstraction layer)
+    storageKey: fileContext.storageKey,
+    contentType,
+    providerId,
+    metadata
+    // Note: fileType is NOT included - providers don't need to know
+  };
+
+  // Allow filtering of file context before upload
+  const filteredContext = (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_0__.applyFilters)('aether.file.upload.context', providerContext, providerId);
+
+  // Debug logging
+  (0,_utils_debug__WEBPACK_IMPORTED_MODULE_3__/* .debug */ .Yz)('[UnifiedUpload] Firing aether.file.upload action:', {
+    fileType,
+    // Internal use only for logging
+    providerId,
+    storageKey: filteredContext.storageKey,
+    destinationPath: filteredContext.destinationPath,
+    hasFileContent: !!filteredContext.fileContent,
+    hasFilePath: !!filteredContext.filePath,
+    contentType
+  });
+
+  // Fire unified upload action asynchronously
+  // Providers hook into this action to handle the actual upload
+  await (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_0__.doActionAsync)('aether.file.upload', filteredContext);
+
+  // Debug logging after action
+  (0,_utils_debug__WEBPACK_IMPORTED_MODULE_3__/* .debug */ .Yz)('[UnifiedUpload] Upload action completed:', {
+    providerId,
+    storageKey: filteredContext.storageKey,
+    hasResult: !!filteredContext.result,
+    result: filteredContext.result
+  });
+
+  // Check if provider set a result on the context
+  if (filteredContext.result) {
+    return {
+      ...filteredContext.result,
+      fileContext: filteredContext
+    };
+  }
+
+  // Default to success if no result was set (backwards compatibility)
+  return {
+    success: true,
+    fileContext: filteredContext
+  };
+}
+
+/**
+ * Upload multiple files to multiple providers.
+ *
+ * @param {Array<Object>} fileContexts Array of file context objects.
+ * @param {Array<string>} providerIds  Array of provider instance IDs.
+ * @return {Promise<Array<Object>>} Array of upload results.
+ */
+async function uploadFiles(fileContexts, providerIds) {
+  const results = [];
+  for (const fileContext of fileContexts) {
+    for (const providerId of providerIds) {
+      const contextWithProvider = {
+        ...fileContext,
+        providerId
+      };
+      try {
+        const result = await uploadFile(contextWithProvider);
+        results.push({
+          ...result,
+          providerId
+        });
+      } catch (error) {
+        results.push({
+          success: false,
+          error: error.message || 'Upload failed',
+          providerId,
+          fileContext: contextWithProvider
+        });
+      }
+    }
+  }
+  return results;
+}
+
+/***/ }),
+
+/***/ 159:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  StorageService: () => (/* binding */ StorageService)
+});
+
+// EXTERNAL MODULE: ./assets/src/utils/api.js + 1 modules
+var api = __webpack_require__(186);
+// EXTERNAL MODULE: ./assets/src/utils/debug.js
+var utils_debug = __webpack_require__(735);
+;// ./assets/src/utils/standardResponse.js
+/**
+ * Standard Response Format Utility
+ *
+ * Provides standardized response object format for API operations.
+ *
+ * Standard format:
+ * {
+ *   success: boolean,
+ *   data?: any,           // Success data
+ *   error?: string,       // Single error message
+ *   errors?: string[]     // Multiple errors (optional)
+ * }
+ *
+ */
+
+/**
+ * Create a success response.
+ *
+ * @param {*}      data    Success data (can be any type).
+ * @param {string} message Optional success message.
+ * @return {Object} Standardized success response.
+ */
+function standardResponse_createSuccessResponse(data = null, message = null) {
+  const response = {
+    success: true,
+    data
+  };
+
+  // Add message to data if provided
+  if (message && typeof data === 'object' && data !== null) {
+    response.data = {
+      ...data,
+      message
+    };
+  } else if (message) {
+    response.data = {
+      message
+    };
+  }
+  return response;
+}
+
+/**
+ * Create an error response.
+ *
+ * @param {string|Error} error  Error message or Error object.
+ * @param {Array}        errors Optional array of multiple errors.
+ * @return {Object} Standardized error response.
+ */
+function standardResponse_createErrorResponse(error, errors = null) {
+  const errorMessage = typeof error === 'string' ? error : error?.message || 'Unknown error';
+  const response = {
+    success: false,
+    error: errorMessage
+  };
+  if (errors && Array.isArray(errors) && errors.length > 0) {
+    response.errors = errors;
+  }
+  return response;
+}
+;// ./assets/src/utils/filesystemAdapter.js
+/**
+ * Filesystem Adapter
+ *
+ * Adapter for local filesystem storage operations via REST API.
+ * Replaces workerEndpointClient.js for local storage.
+ *
+ */
+
+
+
+
+
+/**
+ * Upload a file to local filesystem via REST API.
+ *
+ * @param {string}    staticPath Base path for static files.
+ * @param {string}    key        File path/key relative to static path.
+ * @param {File|Blob} file       File to upload.
+ * @param {Object}    options    Optional options (contentType, cacheControl, onProgress).
+ * @return {Promise<Object>} Upload result with success and optional url/error.
+ */
+async function uploadFile(staticPath, key, file, options = {}) {
+  try {
+    // Validate key parameter
+    if (!key || key === '') {
+      const error = new Error(`Upload key is empty. File: ${file?.name || 'unknown'}, staticPath: ${staticPath}`);
+      return createErrorResponse(error.message);
+    }
+
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('key', key);
+    formData.append('static_path', staticPath);
+    if (options.contentType) {
+      formData.append('content_type', options.contentType);
+    }
+    let response;
+    try {
+      response = await apiFetch({
+        path: '/aether/site-exporter/local-storage/upload',
+        method: 'POST',
+        body: formData
+      });
+    } catch (apiError) {
+      // WordPress REST API throws errors for WP_Error responses
+      // Extract detailed error information if available
+      const errorMessage = apiError?.message || apiError?.data?.message || apiError?.code || 'Upload failed';
+
+      // Include additional error details if available (destination, source, etc.)
+      const errorDetails = [];
+      if (apiError?.data?.destination) {
+        errorDetails.push(`Destination: ${apiError.data.destination}`);
+      }
+      if (apiError?.data?.source) {
+        errorDetails.push(`Source: ${apiError.data.source}`);
+      }
+      if (apiError?.data?.system_error) {
+        errorDetails.push(`System: ${apiError.data.system_error}`);
+      }
+      const fullErrorMessage = errorDetails.length > 0 ? `${errorMessage} (${errorDetails.join(', ')})` : errorMessage;
+      debug('filesystemAdapter.uploadFile API error:', apiError);
+      return createErrorResponse(fullErrorMessage);
+    }
+    if (!response.success) {
+      // Extract detailed error information from response
+      const errorMessage = response.error || response.message || 'Upload failed';
+      const errorDetails = [];
+      if (response.destination) {
+        errorDetails.push(`Destination: ${response.destination}`);
+      }
+      if (response.source) {
+        errorDetails.push(`Source: ${response.source}`);
+      }
+      if (response.system_error) {
+        errorDetails.push(`System: ${response.system_error}`);
+      }
+      const fullErrorMessage = errorDetails.length > 0 ? `${errorMessage} (${errorDetails.join(', ')})` : errorMessage;
+      return createErrorResponse(fullErrorMessage);
+    }
+
+    // Call progress callback if provided (100% since we don't have chunked upload yet)
+    if (options.onProgress) {
+      options.onProgress(file.size, file.size, 100);
+    }
+    return createSuccessResponse();
+  } catch (error) {
+    debug('filesystemAdapter.uploadFile error:', error);
+    return createErrorResponse(error.message || 'Upload failed');
+  }
+}
+
+/**
+ * Delete a file from local filesystem.
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {string} key        File path/key to delete.
+ * @return {Promise<Object>} Delete result.
+ */
+async function deleteFile(staticPath, key) {
+  (0,utils_debug/* debug */.Yz)('filesystemAdapter.deleteFile:', {
+    staticPath,
+    key
+  });
+  try {
+    const response = await (0,api/* default */.Ay)({
+      path: '/aether/site-exporter/local-storage/delete',
+      method: 'DELETE',
+      data: {
+        key,
+        static_path: staticPath
+      }
+    });
+    if (!response.success) {
+      return standardResponse_createErrorResponse(response.error || 'Delete failed');
+    }
+    return standardResponse_createSuccessResponse();
+  } catch (error) {
+    (0,utils_debug/* debug */.Yz)('filesystemAdapter.deleteFile error:', error);
+    return standardResponse_createErrorResponse(error.message || 'Delete failed');
+  }
+}
+
+/**
+ * Copy a file (not needed for local filesystem - files are uploaded directly).
+ *
+ * @return {Promise<Object>} Copy result.
+ */
+async function copyFile() {
+  // Not implemented for local filesystem
+  // Files are uploaded directly to their final location
+  (0,utils_debug/* debug */.Yz)('filesystemAdapter.copyFile: Not implemented (not needed for local storage)');
+  return standardResponse_createSuccessResponse();
+}
+
+/**
+ * List objects in a directory (not needed for static site generation).
+ *
+ * @return {Promise<Object>} List result.
+ */
+async function listObjects() {
+  // Not implemented - not needed for static site generation
+  // Static site generator doesn't need to list existing files
+  (0,utils_debug/* debug */.Yz)('filesystemAdapter.listObjects: Not implemented (not needed for static site generation)');
+  return standardResponse_createSuccessResponse({
+    objects: []
+  });
+}
+
+/**
+ * Batch copy files (not needed for local filesystem).
+ *
+ * @return {Promise<Object>} Batch copy result.
+ */
+async function batchCopy() {
+  // Not implemented for local filesystem
+  (0,utils_debug/* debug */.Yz)('filesystemAdapter.batchCopy: Not implemented (not needed for local storage)');
+  return standardResponse_createSuccessResponse();
+}
+
+/**
+ * Batch delete files.
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {Array}  keys       Array of file paths/keys to delete.
+ * @return {Promise<Object>} Batch delete result.
+ */
+async function batchDelete(staticPath, keys) {
+  (0,utils_debug/* debug */.Yz)('filesystemAdapter.batchDelete:', {
+    staticPath,
+    count: keys.length
+  });
+  try {
+    const response = await (0,api/* default */.Ay)({
+      path: '/aether/site-exporter/local-storage/batch-delete',
+      method: 'DELETE',
+      data: {
+        keys,
+        static_path: staticPath
+      }
+    });
+    if (!response.success) {
+      return standardResponse_createErrorResponse(response.error || 'Batch delete failed');
+    }
+    return standardResponse_createSuccessResponse();
+  } catch (error) {
+    (0,utils_debug/* debug */.Yz)('filesystemAdapter.batchDelete error:', error);
+    return standardResponse_createErrorResponse(error.message || 'Batch delete failed');
+  }
+}
+
+/**
+ * Download a file (manifest).
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {string} key        File path/key to download.
+ * @return {Promise<Blob|null>} File blob or null if not found.
+ */
+async function downloadFile(staticPath, key) {
+  (0,utils_debug/* debug */.Yz)('filesystemAdapter.downloadFile:', {
+    staticPath,
+    key
+  });
+  try {
+    const response = await (0,api/* default */.Ay)({
+      path: `/aether/site-exporter/local-storage/download?key=${encodeURIComponent(key)}&static_path=${encodeURIComponent(staticPath)}`,
+      method: 'GET',
+      parse: false // Get raw response
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return await response.blob();
+  } catch (error) {
+    (0,utils_debug/* debug */.Yz)('filesystemAdapter.downloadFile error:', error);
+    return null;
+  }
+}
+
+/**
+ * Get public URL for a file.
+ *
+ * @param {string} staticPath Base path for static files.
+ * @param {string} baseUrl    Base URL for static files.
+ * @param {string} key        File path/key.
+ * @return {string} Public URL.
+ */
+function getObjectUrl(staticPath, baseUrl, key) {
+  // For local filesystem, construct URL from baseUrl and key
+  // Remove any trailing slash from baseUrl
+  const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+
+  // Remove leading slash from key if present
+  const cleanKey = key.replace(/^\//, '');
+  return `${cleanBaseUrl}/${cleanKey}`;
+}
+// EXTERNAL MODULE: ./assets/src/export/utils/unifiedFileUpload.js
+var unifiedFileUpload = __webpack_require__(98);
+;// ./assets/src/providers/services/storageService.js
+/**
+ * Storage Service
+ *
+ * Storage service for local filesystem operations.
+ * All operations go through REST API endpoints.
+ *
+ */
+
+
+
+
+/**
+ * Storage Service class.
+ */
+class StorageService {
+  /**
+   * Constructor.
+   *
+   * @param {string} staticPath Path for static files storage.
+   * @param {Object} config     Optional configuration.
+   */
+  constructor(staticPath, config = {}) {
+    this.staticPath = staticPath;
+    this.config = config;
+    this.baseUrl = config.public_url || config.base_url || '';
+    this.providerId = config.provider_id || null;
+  }
+
+  /**
+   * Add provider prefix to a storage key.
+   *
+   * Ensures isolated storage paths for each provider.
+   * Example: 'static/index.html' → 'cloudflare-r2/static/index.html'
+   *
+   * Note: Local filesystem providers don't need prefixing since they use
+   * different base paths (static/, static2/, static3/) for isolation.
+   *
+   * @param {string} key Original storage key.
+   * @return {string} Prefixed storage key.
+   */
+  _prefixKey(key) {
+    if (!this.providerId) {
+      return key;
+    }
+
+    // Skip prefixing for local-filesystem providers
+    // They use different base paths for isolation (e.g., static/, static2/, static3/)
+    if (this.providerId.startsWith('local-filesystem:')) {
+      return key;
+    }
+
+    // Don't double-prefix
+    if (key.startsWith(this.providerId + '/')) {
+      return key;
+    }
+    return `${this.providerId}/${key}`;
+  }
+
+  /**
+   * Upload a file to storage.
+   *
+   * Uses unified upload action system for provider integration.
+   *
+   * @param {string}    key      Object key/path in storage.
+   * @param {File|Blob} file     File to upload.
+   * @param {Object}    metadata Optional metadata (contentType, cacheControl, onProgress).
+   * @return {Promise<Object>} Result array with 'success' and optional 'url', 'error'.
+   */
+  async upload(key, file, metadata = {}) {
+    if (!(file instanceof File || file instanceof Blob)) {
+      return {
+        success: false,
+        error: 'File must be a File or Blob object'
+      };
+    }
+    const contentType = metadata.contentType || file.type;
+    const prefixedKey = this._prefixKey(key);
+
+    // Determine file type based on content type
+    let fileType = unifiedFileUpload/* FILE_TYPES */.$Z.STATIC_ASSET;
+    if (contentType === 'text/html') {
+      fileType = unifiedFileUpload/* FILE_TYPES */.$Z.STATIC_HTML;
+    }
+
+    // Create unified file context
+    const fileContext = (0,unifiedFileUpload/* createFileContext */.sM)({
+      fileType,
+      filePath: null,
+      // Not applicable for storage service uploads
+      fileContent: file,
+      contentType,
+      storageKey: prefixedKey,
+      providerId: this.providerId,
+      metadata: {
+        staticPath: this.staticPath,
+        originalKey: key,
+        cacheControl: metadata.cacheControl || '',
+        onProgress: metadata.onProgress || null
+      }
+    });
+
+    // Upload via unified action system
+    try {
+      await (0,unifiedFileUpload/* uploadFile */.QM)(fileContext);
+
+      // Build public URL
+      const url = this.getUrl(key);
+      return {
+        success: true,
+        url
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message || 'Upload failed'
+      };
+    }
+  }
+
+  /**
+   * Delete a file from storage.
+   *
+   * @param {string} key Object key/path.
+   * @return {Promise<Object>} Result array with 'success' and optional 'error'.
+   */
+  async delete(key) {
+    const prefixedKey = this._prefixKey(key);
+    return deleteFile(this.staticPath, prefixedKey);
+  }
+
+  /**
+   * Copy an object from source to destination within storage.
+   *
+   * @return {Promise<Object>} Result array with 'success' and optional 'error'.
+   */
+  async copy() {
+    return copyFile();
+  }
+
+  /**
+   * Check if a file exists in storage.
+   *
+   * @return {Promise<boolean>} True if exists, false otherwise.
+   */
+  async exists() {
+    // Not implemented for local filesystem - not needed for static site generation
+    return false;
+  }
+
+  /**
+   * List objects in storage.
+   *
+   * @return {Promise<Object>} Result array with 'success', 'objects' array, and optional 'error'.
+   */
+  async listObjects() {
+    return listObjects();
+  }
+
+  /**
+   * Get public URL for an object.
+   *
+   * @param {string} key Object key/path.
+   * @return {string} Public URL.
+   */
+  getUrl(key) {
+    // Use baseUrl if available
+    if (this.baseUrl) {
+      return getObjectUrl(this.staticPath, this.baseUrl, key);
+    }
+    // Return key as fallback (relative path)
+    return key;
+  }
+
+  /**
+   * Batch copy multiple objects in storage.
+   *
+   * @return {Promise<Object>} Result with success, copied count, errors count, and results array.
+   */
+  async batchCopy() {
+    return batchCopy();
+  }
+
+  /**
+   * Batch delete multiple objects from storage.
+   *
+   * @param {Array} keys Array of object keys to delete.
+   * @return {Promise<Object>} Result with success and optional error.
+   */
+  async batchDelete(keys) {
+    return batchDelete(this.staticPath, keys);
+  }
+
+  /**
+   * Download manifest file from storage.
+   *
+   * @return {Promise<Blob|null>} Manifest blob or null if not found.
+   */
+  async downloadManifest() {
+    // Use provider-specific manifest filename to ensure isolation between providers
+    const manifestKey = this.providerId ? `file-manifest-${this.providerId}.json` : 'file-manifest.json';
+    const prefixedManifestKey = this._prefixKey(manifestKey);
+    try {
+      const blob = await downloadFile(this.staticPath, prefixedManifestKey);
+      return blob;
+    } catch (error) {
+      // Return null if file doesn't exist (404) or other error.
+      return null;
+    }
+  }
+
+  /**
+   * Upload manifest file to storage.
+   *
+   * @param {Blob} blob Manifest blob to upload.
+   * @return {Promise<Object>} Result with success and optional error.
+   */
+  async uploadManifest(blob) {
+    // Use provider-specific manifest filename to ensure isolation between providers
+    const manifestKey = this.providerId ? `file-manifest-${this.providerId}.json` : 'file-manifest.json';
+    const result = await this.upload(manifestKey, blob, {
+      contentType: 'application/json'
+    });
+    return result;
+  }
+
+  /**
+   * Test connection to storage service.
+   *
+   * @return {Promise<Object>} Result array with 'success' and optional 'message', 'error'.
+   */
+  async testConnection() {
+    // For local filesystem, always return success
+    return {
+      success: true,
+      message: 'Local filesystem storage is ready.'
+    };
+  }
+}
+
+/***/ }),
+
+/***/ 186:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  Ay: () => (/* binding */ api)
+});
+
+// UNUSED EXPORTS: configureAPI, createAuthHeaders, setAPINonce
+
+// EXTERNAL MODULE: external ["wp","apiFetch"]
+var external_wp_apiFetch_ = __webpack_require__(455);
+var external_wp_apiFetch_default = /*#__PURE__*/__webpack_require__.n(external_wp_apiFetch_);
+;// ./assets/src/utils/getRestUrl.js
+/**
+ * Get REST API URL Utility
+ *
+ * Reads the REST API base URL from window.aetherData or returns a default.
+ * Returns base REST API URL (without namespace) so paths can include full namespace.
+ * This ensures WordPress Playground scoped URLs work correctly.
+ *
+ */
+
+/**
+ * Get REST API base URL from window.aetherData or default.
+ *
+ * @return {string} REST API base URL (without namespace).
+ */
+function getRestUrl() {
+  if (typeof window !== 'undefined' && window.aetherData && window.aetherData.restUrl) {
+    return window.aetherData.restUrl;
+  }
+  return '/wp-json/';
+}
+;// ./assets/src/utils/api.js
+/**
+ * API Fetch Utility
+ *
+ * Wrapper around @wordpress/api-fetch with:
+ * - Nonce handling from window.aetherData
+ * - Auth header utilities for external APIs
+ */
+
+
+
+
+/**
+ * Create authorization headers for external API calls.
+ *
+ * Utility for building consistent Authorization headers.
+ *
+ * @param {string} token API token or key.
+ * @param {string} type  Auth type (default: 'Bearer').
+ * @return {Object} Headers object with Authorization and Content-Type.
+ */
+function createAuthHeaders(token, type = 'Bearer') {
+  return {
+    Authorization: `${type} ${token}`,
+    'Content-Type': 'application/json'
+  };
+}
+
+/**
+ * Get REST API nonce from window.aetherData or default.
+ *
+ * @return {string} REST API nonce.
+ */
+function getNonce() {
+  if (typeof window !== 'undefined' && window.aetherData && window.aetherData.nonce) {
+    return window.aetherData.nonce;
+  }
+  return '';
+}
+
+/**
+ * Set the API nonce for authenticated requests.
+ *
+ * @param {string} nonce WordPress REST API nonce.
+ */
+function setAPINonce(nonce) {
+  external_wp_apiFetch_default().use(external_wp_apiFetch_default().createNonceMiddleware(nonce));
+}
+
+/**
+ * Configure API fetch with base URL and nonce.
+ * Automatically fetches from window.aetherData if not provided.
+ *
+ * @param {string} restUrl Optional REST API base URL (fetches from window.aetherData if not provided).
+ * @param {string} nonce   Optional WordPress REST API nonce (fetches from window.aetherData if not provided).
+ */
+function configureAPI(restUrl, nonce) {
+  const url = restUrl || getRestUrl();
+  const token = nonce || getNonce();
+  external_wp_apiFetch_default().use(external_wp_apiFetch_default().createRootURLMiddleware(url));
+  if (token) {
+    setAPINonce(token);
+  }
+}
+
+// Auto-configure on module load.
+configureAPI();
+/* harmony default export */ const api = ((external_wp_apiFetch_default()));
+
+/***/ }),
+
+/***/ 455:
+/***/ ((module) => {
+
+module.exports = window["wp"]["apiFetch"];
+
+/***/ }),
+
+/***/ 574:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  sF: () => (/* binding */ createUrlRewriter),
+  ge: () => (/* reexport */ isExternal),
+  Nh: () => (/* reexport */ resolveRelative),
+  Gw: () => (/* reexport */ stripPlaygroundScope)
+});
+
+// UNUSED EXPORTS: forceHttps, normalize
+
+// EXTERNAL MODULE: ./assets/src/utils/debug.js
+var debug = __webpack_require__(735);
+// EXTERNAL MODULE: external ["wp","hooks"]
+var external_wp_hooks_ = __webpack_require__(619);
+;// ./assets/src/export/utils/urlUtils.js
+/**
+ * URL Utilities
+ *
+ * Pure functions for URL parsing, resolution, and normalization.
+ *
+ */
+
+
+
+/**
+ * Resolve relative URL against a base URL.
+ *
+ * @param {string} url     Relative or absolute URL.
+ * @param {string} baseUrl Base URL for resolution.
+ * @return {string} Absolute URL.
+ */
+function resolveRelative(url, baseUrl) {
+  // Data URLs should never be resolved - return as-is.
+  if (url.startsWith('data:')) {
+    return url;
+  }
+
+  // Already absolute.
+  try {
+    new URL(url);
+    return url;
+  } catch {
+    // Not a valid absolute URL, continue
+  }
+
+  // Protocol-relative.
+  if (url.startsWith('//')) {
+    return 'https:' + url;
+  }
+
+  // Absolute path.
+  if (url.startsWith('/')) {
+    const base = new URL(baseUrl);
+    return base.origin + url;
+  }
+
+  // Relative to base URL directory.
+  const base = new URL(baseUrl);
+  const baseDir = base.pathname.substring(0, base.pathname.lastIndexOf('/'));
+  const resolvedUrl = base.origin + baseDir + '/' + url;
+  return (0,external_wp_hooks_.applyFilters)('aether.url.resolve', resolvedUrl, url, baseUrl);
+}
+
+/**
+ * Check if URL is external to the site.
+ *
+ * @param {string} url     URL to check.
+ * @param {string} siteUrl Site URL for comparison.
+ * @return {boolean} True if external.
+ */
+function isExternal(url, siteUrl) {
+  // Relative URLs are not external.
+  if (url.startsWith('/') && !url.startsWith('//')) {
+    return false;
+  }
+  let isExternalUrl = false;
+
+  // URLs that start with http:// or https:// - check host.
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    try {
+      const urlObj = new URL(url);
+      const siteObj = new URL(siteUrl);
+      isExternalUrl = urlObj.host !== siteObj.host;
+    } catch {
+      isExternalUrl = true;
+    }
+  }
+  // Protocol-relative URLs - check host.
+  else if (url.startsWith('//')) {
+    try {
+      const urlObj = new URL('https:' + url);
+      const siteObj = new URL(siteUrl);
+      isExternalUrl = urlObj.host !== siteObj.host;
+    } catch {
+      isExternalUrl = true;
+    }
+  }
+  // If it doesn't start with a scheme or /, treat as external to be safe.
+  else {
+    isExternalUrl = true;
+  }
+  return (0,external_wp_hooks_.applyFilters)('aether.url.is_external', isExternalUrl, url, siteUrl);
+}
+
+/**
+ * Force URL to use HTTPS scheme.
+ *
+ * @param {string} url URL to convert.
+ * @return {string} URL with HTTPS scheme.
+ */
+function forceHttps(url) {
+  // Skip data URLs, anchors, and protocol-relative URLs.
+  if (url.startsWith('data:') || url.startsWith('#') || url.startsWith('//')) {
+    return url;
+  }
+
+  // Convert http:// to https://.
+  if (url.startsWith('http://')) {
+    return 'https://' + url.substring(7);
+  }
+  return url;
+}
+
+/**
+ * Strip WordPress Playground scope from path.
+ *
+ * WordPress Playground uses scoped URLs like:
+ * https://playground.wordpress.net/scope:happy-classic-town/
+ *
+ * @param {string} path Path that may contain Playground scope.
+ * @return {string} Path with scope removed.
+ */
+function stripPlaygroundScope(path) {
+  let result = path.replace(/^\/?scope:[a-z0-9.:-]+\//i, '');
+  result = result.replace(/\/scope:[a-z0-9.:-]+\//gi, '/');
+  result = result.replace(/^\/?scope:[a-z0-9.:-]+$/i, '');
+  return result;
+}
+
+/**
+ * Normalize a URL for comparison.
+ *
+ * @param {string} url     URL to normalize.
+ * @param {string} siteUrl Site URL for HTTPS enforcement.
+ * @return {string} Normalized URL.
+ */
+function normalize(url, siteUrl) {
+  // Handle relative URLs.
+  if (url.startsWith('/') && !url.startsWith('//')) {
+    try {
+      const siteObj = new URL(siteUrl);
+      url = siteObj.origin + url;
+    } catch {
+      // If siteUrl is invalid, return as-is
+    }
+  }
+
+  // Strip WordPress Playground scope from URL path.
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.pathname) {
+      urlObj.pathname = stripPlaygroundScope(urlObj.pathname);
+      url = urlObj.toString();
+    }
+  } catch {
+    const pathMatch = url.match(/^https?:\/\/[^\/]+(\/.*)$/);
+    if (pathMatch) {
+      const strippedPath = stripPlaygroundScope(pathMatch[1]);
+      url = url.replace(pathMatch[1], strippedPath);
+    }
+  }
+
+  // Remove URL fragments.
+  const fragmentIndex = url.indexOf('#');
+  if (fragmentIndex !== -1) {
+    url = url.substring(0, fragmentIndex);
+  }
+
+  // Remove trailing slash.
+  url = url.replace(/\/$/, '');
+  return (0,external_wp_hooks_.applyFilters)('aether.url.normalize', url, siteUrl);
+}
+
+/**
+ * Escape special regex characters in a string.
+ *
+ * @param {string} str String to escape.
+ * @return {string} Escaped string.
+ */
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Extract host from a URL.
+ *
+ * @param {string} url URL to extract host from.
+ * @return {string} Host string or empty string if invalid.
+ */
+function extractHost(url) {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.host;
+  } catch {
+    const hostMatch = url.match(/^https?:\/\/([^\/]+)/);
+    return hostMatch ? hostMatch[1] : '';
+  }
+}
+
+/**
+ * Check if URL should be skipped (anchors, data URLs, CF Images).
+ *
+ * @param {string} url URL to check.
+ * @return {boolean} True if should skip.
+ */
+function shouldSkipUrl(url) {
+  return url.startsWith('#') || url.startsWith('data:') || url.includes('imagedelivery.net');
+}
+;// ./assets/src/export/utils/htmlRewriting.js
+/**
+ * HTML Rewriting Utilities
+ *
+ * Helper functions for HTML URL rewriting.
+ *
+ */
+
+
+
+
+/**
+ * Protect inline script content by replacing with placeholders.
+ *
+ * @param {string} html HTML content.
+ * @return {Object} Object with protected HTML and placeholders map.
+ */
+function protectScriptContent(html) {
+  const placeholders = {};
+  let counter = 0;
+  const protectedHtml = html.replace(/<script(?![^>]*type=["']importmap["'])([^>]*)>(.*?)<\/script>/gis, (match, openingAttrs, content) => {
+    if (content.trim()) {
+      const placeholder = `___SCRIPT_CONTENT_${counter}___`;
+      placeholders[placeholder] = content;
+      counter++;
+      return `<script${openingAttrs}>${placeholder}</script>`;
+    }
+    return match;
+  });
+  return {
+    html: protectedHtml,
+    placeholders
+  };
+}
+
+/**
+ * Restore inline script content from placeholders.
+ *
+ * @param {string} html         HTML content with placeholders.
+ * @param {Object} placeholders Placeholders map.
+ * @return {string} HTML with restored script content.
+ */
+function restoreScriptContent(html, placeholders) {
+  let result = html;
+  for (const placeholder in placeholders) {
+    if (placeholders.hasOwnProperty(placeholder)) {
+      result = result.replace(placeholder, placeholders[placeholder]);
+    }
+  }
+  return result;
+}
+
+/**
+ * Collect all site URL matches from HTML.
+ *
+ * @param {string} html     HTML content.
+ * @param {string} siteHost Site host to match.
+ * @return {Array} Array of match objects with index, length, match, and type.
+ */
+function collectSiteUrlMatches(html, siteHost) {
+  const escapedHost = escapeRegex(siteHost);
+  const matches = [];
+  const httpPattern = new RegExp(`http://${escapedHost}[^"'\`\\s<>]*`, 'gi');
+  const httpsPattern = new RegExp(`https://${escapedHost}[^"'\`\\s<>]*`, 'gi');
+  const protocolRelativePattern = new RegExp(`//${escapedHost}[^"'\`\\s<>]*`, 'gi');
+  let match;
+  while ((match = httpPattern.exec(html)) !== null) {
+    matches.push({
+      index: match.index,
+      length: match[0].length,
+      match: match[0],
+      type: 'http'
+    });
+  }
+  while ((match = httpsPattern.exec(html)) !== null) {
+    matches.push({
+      index: match.index,
+      length: match[0].length,
+      match: match[0],
+      type: 'https'
+    });
+  }
+  while ((match = protocolRelativePattern.exec(html)) !== null) {
+    matches.push({
+      index: match.index,
+      length: match[0].length,
+      match: match[0],
+      type: 'protocol-relative'
+    });
+  }
+
+  // Sort by index
+  matches.sort((a, b) => a.index - b.index);
+  return matches;
+}
+
+/**
+ * Replace site URL matches in HTML.
+ *
+ * @param {string}   html       HTML content.
+ * @param {Array}    matches    Match objects from collectSiteUrlMatches.
+ * @param {Function} rewriteUrl Function to rewrite URLs.
+ * @param {string}   contextUrl Context URL for resolution.
+ * @return {string} HTML with replaced URLs.
+ */
+function replaceSiteUrlMatches(html, matches, rewriteUrl, contextUrl) {
+  let result = '';
+  let lastIndex = 0;
+  let lastMatchEnd = 0;
+  for (const matchData of matches) {
+    // Skip overlapping matches
+    if (matchData.index < lastMatchEnd) {
+      continue;
+    }
+
+    // Skip CF Images URLs
+    if (matchData.match.includes('imagedelivery.net')) {
+      continue;
+    }
+    let urlToRewrite = matchData.match;
+    if (matchData.type === 'protocol-relative') {
+      urlToRewrite = 'https:' + matchData.match;
+    }
+    const rewritten = rewriteUrl(urlToRewrite, contextUrl);
+    if (rewritten !== urlToRewrite) {
+      result += html.substring(lastIndex, matchData.index);
+      result += rewritten;
+      lastIndex = matchData.index + matchData.length;
+      lastMatchEnd = matchData.index + matchData.length;
+    } else {
+      lastMatchEnd = matchData.index + matchData.length;
+    }
+  }
+  result += html.substring(lastIndex);
+  return result;
+}
+
+/**
+ * Rewrite absolute paths in HTML attributes.
+ *
+ * @param {string} html     HTML content.
+ * @param {string} basePath Base path to prepend.
+ * @return {string} HTML with rewritten paths.
+ */
+function rewriteAbsolutePaths(html, basePath) {
+  if (!basePath || basePath === '' || basePath === '/') {
+    return html;
+  }
+  (0,debug/* debug */.Yz)('[URL Rewriter] Rewriting absolute paths with base:', basePath);
+  let replaceCount = 0;
+  const result = html.replace(/(\b(?:href|src|action|data|poster|content)=)(["'`])(\/(?!\/)[^"'`]*)\2/gi, (match, attrPart, quote, path) => {
+    replaceCount++;
+
+    // Skip if already includes the base path
+    if (path.startsWith(basePath + '/')) {
+      return match;
+    }
+
+    // Skip anchors and special paths
+    if (path === '/' || path.startsWith('/#') || path.startsWith('/data:')) {
+      return match;
+    }
+    const rewrittenPath = basePath + path;
+    (0,debug/* debug */.Yz)(`[URL Rewriter] Rewriting: ${path} -> ${rewrittenPath}`);
+    return attrPart + quote + rewrittenPath + quote;
+  });
+  (0,debug/* debug */.Yz)(`[URL Rewriter] Processed ${replaceCount} absolute path attributes`);
+  return result;
+}
+
+/**
+ * Rewrite srcset attribute URLs.
+ *
+ * @param {string}   html       HTML content.
+ * @param {Function} rewriteUrl Function to rewrite URLs.
+ * @param {string}   contextUrl Context URL for resolution.
+ * @return {string} HTML with rewritten srcset URLs.
+ */
+function rewriteSrcsetUrls(html, rewriteUrl, contextUrl) {
+  return html.replace(/(<(?:img|source)[^>]+srcset=)(["'`])([^"'`]+)\2/gi, (match, tag, quote, srcsetValue) => {
+    const srcsetParts = srcsetValue.split(',').map(part => {
+      const trimmed = part.trim();
+      const urlMatch = trimmed.match(/^([^\s]+)(\s+.+)?$/);
+      if (!urlMatch) {
+        return trimmed;
+      }
+      const url = urlMatch[1];
+      const descriptor = urlMatch[2] || '';
+      if (url.includes('imagedelivery.net')) {
+        return trimmed;
+      }
+      const rewritten = rewriteUrl(url, contextUrl);
+      return rewritten + descriptor;
+    });
+    return tag + quote + srcsetParts.join(', ') + quote;
+  });
+}
+
+/**
+ * Rewrite import map URLs.
+ *
+ * @param {string}   html       HTML content.
+ * @param {Function} rewriteUrl Function to rewrite URLs.
+ * @param {string}   contextUrl Context URL for resolution.
+ * @return {string} HTML with rewritten import map URLs.
+ */
+function rewriteImportMaps(html, rewriteUrl, contextUrl) {
+  return html.replace(/<script[^>]*type=["']importmap["'][^>]*>(.*?)<\/script>/gis, (match, jsonContent) => {
+    try {
+      const importmap = JSON.parse(jsonContent);
+      if (!importmap || typeof importmap !== 'object' || !importmap.imports) {
+        return match;
+      }
+      for (const moduleName in importmap.imports) {
+        if (importmap.imports.hasOwnProperty(moduleName)) {
+          importmap.imports[moduleName] = rewriteUrl(importmap.imports[moduleName], contextUrl);
+        }
+      }
+      const newJson = JSON.stringify(importmap);
+      return match.replace(jsonContent, newJson);
+    } catch {
+      return match;
+    }
+  });
+}
+;// ./assets/src/export/utils/urlRewriter.js
+/**
+ * URL Rewriter
+ *
+ * Rewrites WordPress URLs to static URLs for the static site.
+ *
+ */
+
+
+
+
+// Import URL utilities
+
+
+// Import HTML rewriting helpers
+
+
+// Re-export URL utilities for backwards compatibility
+
+
+/**
+ * Create URL rewriter instance.
+ *
+ * @param {string}                 siteUrl   Site URL.
+ * @param {string|null}            staticUrl Static site URL (where it will be deployed).
+ * @param {Object<string, string>} urlMap    Optional URL mapping cache.
+ * @return {Object} URL rewriter instance.
+ */
+function createUrlRewriter(siteUrl, staticUrl = null, urlMap = {}) {
+  // Force HTTPS for site URL to avoid mixed content issues.
+  const normalizedSiteUrl = forceHttps(siteUrl);
+
+  // Treat empty string as null.
+  const normalizedStaticUrl = staticUrl && staticUrl.trim() ? staticUrl.trim() : null;
+
+  // Detect if static URL is a public URL vs worker endpoint.
+  let isPublicUrl = normalizedStaticUrl && !normalizedStaticUrl.includes('.workers.dev');
+
+  // If the static URL has a pathname component, don't add /static prefix
+  if (isPublicUrl && normalizedStaticUrl) {
+    try {
+      const urlObj = new URL(normalizedStaticUrl);
+      if (urlObj.pathname && urlObj.pathname !== '/') {
+        isPublicUrl = false;
+      }
+    } catch {
+      // URL parsing failed, leave isPublicUrl as is
+    }
+  }
+
+  // Build initial URL mapping.
+  const mapping = {
+    [normalizedSiteUrl]: '/',
+    [normalizedSiteUrl + '/']: '/',
+    ...(siteUrl !== normalizedSiteUrl ? {
+      [siteUrl]: '/',
+      [siteUrl + '/']: '/'
+    } : {}),
+    ...urlMap
+  };
+
+  /**
+   * Convert WordPress URL to static path.
+   *
+   * @param {string} url URL to convert.
+   * @return {string} Static path.
+   */
+  function convertToStaticPath(url) {
+    // Handle relative URLs.
+    if (url.startsWith('/') && !url.startsWith('//')) {
+      return stripPlaygroundScope(url);
+    }
+
+    // Parse URL.
+    let path = '/';
+    try {
+      const urlObj = new URL(url);
+      path = urlObj.pathname || '/';
+    } catch {
+      const pathMatch = url.match(/^https?:\/\/[^\/]+(\/.*)$/);
+      if (pathMatch) {
+        path = pathMatch[1];
+      } else if (url.includes('?')) {
+        const parts = url.split('?');
+        path = parts[0];
+      }
+    }
+
+    // Remove leading/trailing slashes.
+    path = path.replace(/^\/+|\/+$/g, '');
+
+    // Strip WordPress Playground scope.
+    path = stripPlaygroundScope(path);
+    if (!path) {
+      return '/';
+    }
+
+    // Handle WordPress query parameters.
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.search) {
+        const params = new URLSearchParams(urlObj.search);
+        if (params.has('s')) {
+          const query = params.get('s');
+          return `/search/?q=${encodeURIComponent(query)}`;
+        }
+      }
+    } catch {
+      // URL parsing failed, continue with path
+    }
+
+    // Ensure trailing slash for directory-style URLs.
+    path = '/' + path;
+
+    // Add trailing slash if not a file.
+    if (!/\.[a-z0-9]{2,5}$/i.test(path)) {
+      path = path.replace(/\/$/, '') + '/';
+    }
+    return path;
+  }
+
+  /**
+   * Normalize a URL for comparison.
+   *
+   * @param {string} url URL to normalize.
+   * @return {string} Normalized URL.
+   */
+  function normalizeUrl(url) {
+    return normalize(url, siteUrl);
+  }
+
+  /**
+   * Check if URL is external.
+   *
+   * @param {string} url URL to check.
+   * @return {boolean} True if external.
+   */
+  function isExternalUrl(url) {
+    return isExternal(url, siteUrl);
+  }
+
+  /**
+   * Rewrite a single URL.
+   *
+   * @param {string} url        URL to rewrite.
+   * @param {string} contextUrl Context URL for relative URL resolution.
+   * @return {string} Rewritten URL.
+   */
+  function rewriteUrl(url, contextUrl = '') {
+    // Skip external URLs.
+    if (isExternalUrl(url)) {
+      return url;
+    }
+
+    // Skip special URLs.
+    if (shouldSkipUrl(url)) {
+      return url;
+    }
+
+    // Resolve relative URLs against context.
+    let absoluteUrl = url;
+    if (contextUrl && !url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('/')) {
+      absoluteUrl = resolveRelative(url, contextUrl);
+    } else if (contextUrl && url.startsWith('/')) {
+      try {
+        const contextObj = new URL(contextUrl);
+        absoluteUrl = contextObj.origin + url;
+      } catch {
+        // If context URL parsing fails, use as-is
+      }
+    }
+
+    // Check URL map first.
+    const urlNormalized = normalizeUrl(absoluteUrl);
+    let staticPath = mapping[urlNormalized];
+    if (!staticPath) {
+      staticPath = convertToStaticPath(absoluteUrl);
+    }
+
+    // If using public URL, add /static/ prefix.
+    if (isPublicUrl && staticPath && staticPath !== '/' && !staticPath.startsWith('/static/')) {
+      staticPath = '/static' + staticPath;
+    }
+
+    // Apply static URL base if configured.
+    let rewrittenUrl;
+    if (normalizedStaticUrl) {
+      try {
+        const staticUrlObj = new URL(normalizedStaticUrl);
+        const basePath = staticUrlObj.pathname.replace(/\/$/, '');
+        rewrittenUrl = staticUrlObj.origin + basePath + staticPath;
+      } catch {
+        rewrittenUrl = normalizedStaticUrl.replace(/\/$/, '') + staticPath;
+      }
+    } else {
+      rewrittenUrl = staticPath;
+    }
+    return (0,external_wp_hooks_.applyFilters)('aether.url.rewrite', rewrittenUrl, url, contextUrl, normalizedSiteUrl, normalizedStaticUrl);
+  }
+
+  /**
+   * Rewrite all URLs in HTML content.
+   *
+   * @param {string} html       HTML content.
+   * @param {string} contextUrl Current page URL for relative URL resolution.
+   * @return {string} HTML with rewritten URLs.
+   */
+  function rewriteHtml(html, contextUrl) {
+    (0,debug/* debug */.Yz)('[URL Rewriter] rewriteHtml called with:');
+    (0,debug/* debug */.Yz)('  - contextUrl:', contextUrl);
+    (0,debug/* debug */.Yz)('  - siteUrl:', siteUrl);
+    (0,debug/* debug */.Yz)('  - normalizedStaticUrl:', normalizedStaticUrl);
+    (0,debug/* debug */.Yz)('  - HTML length:', html.length);
+
+    // Protect inline script content
+    const {
+      html: protectedHtml,
+      placeholders
+    } = protectScriptContent(html);
+    let result = protectedHtml;
+
+    // Extract site host and rewrite URLs
+    const siteHost = extractHost(siteUrl);
+    if (siteHost) {
+      const matches = collectSiteUrlMatches(result, siteHost);
+      result = replaceSiteUrlMatches(result, matches, rewriteUrl, contextUrl);
+    }
+
+    // Rewrite absolute paths if static URL has subdirectories
+    if (normalizedStaticUrl) {
+      try {
+        const staticUrlObj = new URL(normalizedStaticUrl);
+        const basePath = staticUrlObj.pathname.replace(/\/$/, '');
+        result = rewriteAbsolutePaths(result, basePath);
+      } catch (error) {
+        (0,debug/* debugError */.AO)('[URL Rewriter] Error in absolute path rewriting:', error);
+      }
+    }
+
+    // Rewrite srcset and import map URLs
+    result = rewriteSrcsetUrls(result, rewriteUrl, contextUrl);
+    result = rewriteImportMaps(result, rewriteUrl, contextUrl);
+
+    // Restore inline script content
+    result = restoreScriptContent(result, placeholders);
+    return (0,external_wp_hooks_.applyFilters)('aether.url.rewrite_html', result, contextUrl, normalizedSiteUrl, normalizedStaticUrl);
+  }
+  return {
+    rewriteHtml,
+    rewriteUrl,
+    addUrlMapping: (originalUrl, staticPath) => {
+      const normalized = normalizeUrl(originalUrl);
+      mapping[normalized] = staticPath;
+    },
+    getUrlMapping: () => ({
+      ...mapping
+    })
+  };
+}
+
+/***/ }),
+
+/***/ 619:
+/***/ ((module) => {
+
+module.exports = window["wp"]["hooks"];
+
+/***/ }),
+
+/***/ 662:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, {
+  extractAssetsFromHtml: () => (/* binding */ extractAssetsFromHtml),
+  h: () => (/* binding */ getAssetLocalPath)
+});
+
+// EXTERNAL MODULE: ./assets/src/export/utils/urlRewriter.js + 2 modules
+var urlRewriter = __webpack_require__(574);
+;// ./assets/src/export/utils/assetExclusions.js
+/**
+ * Asset Exclusions Configuration
+ *
+ * Centralized configuration for assets and URL patterns that should be excluded
+ * from static site generation.
+ *
+ */
+
+/**
+ * Image file extensions that are served from external CDNs.
+ * These are skipped when found in CSS/JS, but collected when referenced in HTML.
+ */
+const SKIP_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'ico'];
+
+/**
+ * Essential file extensions that should always be collected,
+ * even if they are external URLs (e.g., Google Fonts).
+ * These assets are critical for site functionality.
+ */
+const ESSENTIAL_EXTENSIONS = ['css', 'js', 'woff', 'woff2', 'ttf', 'eot', 'otf'];
+
+/**
+ * Webpack module IDs to skip (not real files, just module references).
+ * These are webpack internal module IDs that don't correspond to actual files.
+ */
+const WEBPACK_MODULE_IDS = ['react', 'is-prop-valid', 'uncategorized', 'git-config', 'react-dom', 'react-jsx-runtime'];
+
+/**
+ * URL patterns that should be excluded from asset collection.
+ * Patterns starting with '/' are checked at the start of the URL pathname.
+ * Other patterns are checked anywhere in the URL using includes().
+ */
+const EXCLUDED_URL_PATTERNS = ['/wp-json/',
+// WordPress REST API endpoints
+'/xmlrpc.php',
+// WordPress XML-RPC endpoint
+'/wp-comments-post.php',
+// WordPress comment submission endpoint (405 Method Not Allowed)
+'imagedelivery.net' // External CDN (imagedelivery.net)
+];
+
+/**
+ * Regex patterns for more complex exclusions.
+ * These are checked after simple string patterns.
+ */
+const EXCLUDED_URL_REGEX_PATTERNS = [/wp-admin\/.*\.php$/ // WordPress admin PHP files (wp-admin/*.php and wp-admin/**/*.php)
+];
+
+/**
+ * Check if a URL matches any excluded pattern.
+ *
+ * @param {string} url URL to check.
+ * @return {boolean} True if URL should be excluded.
+ */
+function isExcludedUrl(url) {
+  // Check simple string patterns first.
+  const matchesStringPattern = EXCLUDED_URL_PATTERNS.some(pattern => {
+    // Patterns starting with '/' should match at the start of the pathname.
+    if (pattern.startsWith('/')) {
+      try {
+        const urlObj = new URL(url);
+        return urlObj.pathname.startsWith(pattern);
+      } catch {
+        // If URL parsing fails, check if URL string starts with pattern.
+        return url.startsWith(pattern);
+      }
+    }
+    // Other patterns are checked anywhere in the URL.
+    return url.includes(pattern);
+  });
+  if (matchesStringPattern) {
+    return true;
+  }
+
+  // Check regex patterns for more complex exclusions.
+  // Extract pathname for regex matching to avoid matching query strings or fragments.
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    return EXCLUDED_URL_REGEX_PATTERNS.some(regex => regex.test(pathname));
+  } catch {
+    // If URL parsing fails, test against full URL string.
+    return EXCLUDED_URL_REGEX_PATTERNS.some(regex => regex.test(url));
+  }
+}
+
+/**
+ * Check if a file extension is in the skip list.
+ *
+ * @param {string} extension File extension (without dot).
+ * @return {boolean} True if extension should be skipped.
+ */
+function isSkippedExtension(extension) {
+  return SKIP_EXTENSIONS.includes(extension.toLowerCase());
+}
+
+/**
+ * Check if a file extension is essential (always collected).
+ *
+ * @param {string} extension File extension (without dot).
+ * @return {boolean} True if extension is essential.
+ */
+function isEssentialExtension(extension) {
+  return ESSENTIAL_EXTENSIONS.includes(extension.toLowerCase());
+}
+
+/**
+ * Check if a module ID is a webpack internal reference.
+ *
+ * @param {string} moduleId Module ID to check.
+ * @return {boolean} True if module ID should be skipped.
+ */
+function isWebpackModuleId(moduleId) {
+  return WEBPACK_MODULE_IDS.includes(moduleId);
+}
+// EXTERNAL MODULE: external ["wp","hooks"]
+var external_wp_hooks_ = __webpack_require__(619);
+;// ./assets/src/export/utils/assetPatterns.js
+/**
+ * Asset Patterns
+ *
+ * Regex patterns for asset extraction from HTML, CSS, and JS.
+ *
+ */
+
+/**
+ * Stylesheet link patterns.
+ * Two patterns handle both attribute orders: href-first and rel-first.
+ */
+const STYLESHEET_PATTERNS = [/<link[^>]+href=(["'])([^"']+)\1[^>]*rel=["']stylesheet["'][^>]*>/gi, /<link[^>]+rel=["']stylesheet["'][^>]*href=(["'])([^"']+)\1[^>]*>/gi];
+
+/**
+ * Script src pattern.
+ */
+const SCRIPT_PATTERN = /<script[^>]+src=(["'])([^"']+)\1[^>]*>/gi;
+
+/**
+ * Inline CSS in style tags pattern.
+ */
+const INLINE_CSS_PATTERN = /<style[^>]*>(.*?)<\/style>/gis;
+
+/**
+ * Inline JS in script tags pattern.
+ */
+const INLINE_JS_PATTERN = /<script[^>]*>(.*?)<\/script>/gis;
+
+/**
+ * Import map pattern.
+ */
+const IMPORT_MAP_PATTERN = /<script[^>]*type=["']importmap["'][^>]*>(.*?)<\/script>/gis;
+
+/**
+ * CSS @import pattern.
+ */
+const CSS_IMPORT_PATTERN = /@import\s+(?:url\()?["']?([^"')]+)["']?\)?/gi;
+
+/**
+ * CSS url() pattern.
+ */
+const CSS_URL_PATTERN = /url\(["']?([^"')]+)["']?\)/gi;
+
+/**
+ * JS import patterns.
+ */
+const JS_IMPORT_PATTERNS = {
+  // ES6 import: import ... from 'module'
+  es6: /import\s+(?:[^;"']+\s+from\s+)?["']([^"']+)["']/gi,
+  // Dynamic import: import('module')
+  dynamic: /import\s*\(\s*["']([^"']+)["']\s*\)/gi,
+  // CommonJS require: require('module')
+  require: /require\s*\(\s*["']([^"']+)["']\s*\)/gi
+};
+
+/**
+ * JS asset reference patterns.
+ */
+const JS_ASSET_PATTERNS = [
+// new URL() constructor
+/new\s+URL\s*\(\s*["']([^"']+\.(png|jpg|jpeg|gif|webp|svg|woff|woff2|ttf|eot|otf|css|js))["']/gi,
+// String literals with asset extensions
+/["']([\.\/][^"']*\.(png|jpg|jpeg|gif|webp|svg|woff|woff2|ttf|eot|otf|css|js))["']/gi];
+
+/**
+ * HTML attribute patterns for asset extraction.
+ */
+const HTML_ATTR_PATTERNS = [/<img[^>]+src=(["'])([^"']+)\1[^>]*>?/gi, /<video[^>]+src=(["'])([^"']+)\1[^>]*>?/gi, /<video[^>]+poster=(["'])([^"']+)\1[^>]*>?/gi, /<audio[^>]+src=(["'])([^"']+)\1[^>]*>?/gi, /<source[^>]+src=(["'])([^"']+)\1[^>]*>?/gi, /<link[^>]+(?:rel=["'](?:preload|prefetch)["'][^>]+)?href=(["'])([^"']+)\1[^>]*>?/gi];
+
+/**
+ * Srcset patterns.
+ */
+const SRCSET_PATTERNS = {
+  img: /<img[^>]+srcset=(["'])([^"']+)\1[^>]*>/gi,
+  source: /<source[^>]+srcset=(["'])([^"']+)\1[^>]*>/gi
+};
+
+/**
+ * Inline style attribute pattern.
+ */
+const INLINE_STYLE_PATTERN = /style\s*=\s*(["'])((?:(?!\1)(?:\\.|[^\\]))*)\1/gi;
+
+/**
+ * Asset type map by extension.
+ */
+const ASSET_TYPE_MAP = {
+  css: 'css',
+  js: 'js',
+  woff: 'font',
+  woff2: 'font',
+  ttf: 'font',
+  otf: 'font',
+  eot: 'font'
+};
+
+/**
+ * Get file extension from URL.
+ *
+ * @param {string} url URL to extract extension from.
+ * @return {string} File extension in lowercase, or empty string.
+ */
+function getExtensionFromUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const lastDot = pathname.lastIndexOf('.');
+    if (lastDot !== -1) {
+      return pathname.substring(lastDot + 1).toLowerCase();
+    }
+  } catch {
+    const match = url.match(/\.([a-z0-9]+)(?:[?#]|$)/i);
+    if (match) {
+      return match[1].toLowerCase();
+    }
+  }
+  return '';
+}
+
+/**
+ * Get asset type from URL.
+ *
+ * @param {string} url Asset URL.
+ * @return {string} Asset type ('css', 'js', 'font', or 'other').
+ */
+function getAssetType(url) {
+  const extension = getExtensionFromUrl(url);
+  return ASSET_TYPE_MAP[extension] || 'other';
+}
+
+/**
+ * Parse srcset value into array of URLs.
+ *
+ * @param {string} srcsetValue Srcset attribute value.
+ * @return {Array<string>} Array of URLs (without descriptors).
+ */
+function parseSrcset(srcsetValue) {
+  return srcsetValue.split(',').map(part => {
+    const trimmed = part.trim();
+    const urlMatch = trimmed.match(/^([^\s]+)/);
+    return urlMatch ? urlMatch[1] : null;
+  }).filter(Boolean);
+}
+
+/**
+ * Escape special regex characters in a string.
+ *
+ * @param {string} str String to escape.
+ * @return {string} Escaped string.
+ */
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Extract host from URL.
+ *
+ * @param {string} url URL to extract host from.
+ * @return {string} Host string or empty string.
+ */
+function extractHost(url) {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.host;
+  } catch {
+    const hostMatch = url.match(/^https?:\/\/([^\/]+)/);
+    return hostMatch ? hostMatch[1] : '';
+  }
+}
+;// ./assets/src/export/utils/assetFilters.js
+/**
+ * Asset Filters
+ *
+ * Pure functions for determining which assets to collect.
+ *
+ */
+
+
+
+
+
+
+/**
+ * Extract module ID from URL for webpack checking.
+ *
+ * @param {string} url URL to extract module ID from.
+ * @return {string|null} Module ID or null.
+ */
+function extractModuleId(url) {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    const filename = pathname.split('/').pop() || pathname;
+    return filename.replace(/\.[^.]*$/, '');
+  } catch {
+    const filenameMatch = url.match(/\/([^\/]+)(?:\.[^.]*)?(?:\?|$)/);
+    return filenameMatch ? filenameMatch[1] : null;
+  }
+}
+
+/**
+ * Check if asset should be collected.
+ *
+ * @param {string} url     Asset URL.
+ * @param {string} siteUrl Site URL.
+ * @param {string} source  Source where asset was found ('html', 'css', 'js').
+ * @return {boolean} True if should collect.
+ */
+function shouldCollectAsset(url, siteUrl, source = 'css') {
+  // FILTER 0: Skip webpack module IDs (not real files)
+  const moduleId = extractModuleId(url);
+  if (moduleId && isWebpackModuleId(moduleId)) {
+    return false;
+  }
+
+  // Get file extension
+  const extension = getExtensionFromUrl(url);
+
+  // PRIORITY 1: Always collect essential assets (CSS, JS, fonts) EVEN IF EXTERNAL
+  if (isEssentialExtension(extension)) {
+    return true;
+  }
+
+  // FILTER 1 & 2: Skip excluded URL patterns
+  if (isExcludedUrl(url)) {
+    return false;
+  }
+
+  // FILTER 3: Skip external URLs for non-essential assets
+  if ((0,urlRewriter/* isExternal */.ge)(url, siteUrl)) {
+    return false;
+  }
+
+  // PRIORITY 2: Collect images when referenced in HTML (internal URLs only)
+  if (source === 'html' && isSkippedExtension(extension)) {
+    return true;
+  }
+
+  // FILTER 4: Skip image files when found in CSS/JS
+  if (isSkippedExtension(extension)) {
+    return false;
+  }
+
+  // PRIORITY 3: For other assets, apply filter hook
+  let shouldCollect = true;
+
+  /**
+   * Filter whether an asset should be collected.
+   *
+   * @param {boolean} shouldCollect Whether to collect this asset.
+   * @param {string}  url           Asset URL.
+   * @param {string}  siteUrl       Site URL.
+   * @param {string}  source        Asset source.
+   * @param {string}  extension     File extension.
+   */
+  shouldCollect = (0,external_wp_hooks_.applyFilters)('aether.assets.should_collect', shouldCollect, url, siteUrl, source, extension);
+  return shouldCollect;
+}
+;// ./assets/src/export/utils/assetExtractor.js
+/**
+ * Asset Extractor
+ *
+ * Extracts asset URLs (CSS, JS, fonts, images) from HTML content.
+ *
+ */
+
+
+
+
+
+
+
+/**
+ * Extract asset URLs from HTML content.
+ *
+ * @param {string} html    HTML content.
+ * @param {string} pageUrl Page URL for resolving relative URLs.
+ * @param {string} siteUrl Site URL for internal URL checking.
+ * @return {Promise<Array<string>>} Array of asset URLs.
+ */
+async function extractAssetsFromHtml(html, pageUrl, siteUrl) {
+  const collected = new Set();
+  const processed = new Set();
+
+  // Collect stylesheets
+  for (const pattern of STYLESHEET_PATTERNS) {
+    pattern.lastIndex = 0;
+    const matches = html.matchAll(pattern);
+    for (const match of matches) {
+      const cssUrl = match[2];
+      const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(cssUrl, pageUrl);
+      if (shouldCollectAsset(resolvedUrl, siteUrl, 'css')) {
+        collected.add(resolvedUrl);
+        await collectCssDependencies(resolvedUrl, siteUrl, collected, processed);
+      }
+    }
+  }
+
+  // Collect scripts
+  SCRIPT_PATTERN.lastIndex = 0;
+  const scriptMatches = html.matchAll(SCRIPT_PATTERN);
+  for (const match of scriptMatches) {
+    const jsUrl = match[2];
+    const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(jsUrl, pageUrl);
+    if (shouldCollectAsset(resolvedUrl, siteUrl, 'js')) {
+      collected.add(resolvedUrl);
+      await collectJsDependencies(resolvedUrl, siteUrl, collected, processed);
+    }
+  }
+
+  // Collect from inline CSS
+  INLINE_CSS_PATTERN.lastIndex = 0;
+  const inlineCssMatches = html.matchAll(INLINE_CSS_PATTERN);
+  for (const match of inlineCssMatches) {
+    collectCssInlineDependencies(match[1], pageUrl, siteUrl, collected);
+  }
+
+  // Collect from inline JS
+  INLINE_JS_PATTERN.lastIndex = 0;
+  const inlineJsMatches = html.matchAll(INLINE_JS_PATTERN);
+  for (const match of inlineJsMatches) {
+    await collectJsInlineDependencies(match[1], pageUrl, siteUrl, collected, processed);
+  }
+
+  // Collect from import maps
+  IMPORT_MAP_PATTERN.lastIndex = 0;
+  const importMapMatches = html.matchAll(IMPORT_MAP_PATTERN);
+  for (const match of importMapMatches) {
+    await collectImportmapModules(match[1], pageUrl, siteUrl, collected, processed);
+  }
+
+  // Collect from HTML attributes
+  collectHtmlAttributeAssets(html, pageUrl, siteUrl, collected);
+  let assets = Array.from(collected);
+  assets = (0,external_wp_hooks_.applyFilters)('aether.assets.extracted', assets, html, pageUrl, siteUrl);
+  return assets;
+}
+
+/**
+ * Collect assets from HTML attributes.
+ *
+ * @param {string}      html      HTML content.
+ * @param {string}      pageUrl   Page URL.
+ * @param {string}      siteUrl   Site URL.
+ * @param {Set<string>} collected Collected URLs.
+ */
+function collectHtmlAttributeAssets(html, pageUrl, siteUrl, collected) {
+  const siteHost = extractHost(siteUrl);
+  if (siteHost) {
+    const escapedHost = escapeRegex(siteHost);
+    const patterns = [new RegExp(`http://${escapedHost}[^"'\`\\s<>]*`, 'gi'), new RegExp(`https://${escapedHost}[^"'\`\\s<>]*`, 'gi'), new RegExp(`//${escapedHost}[^"'\`\\s<>]*`, 'gi')];
+    const allMatches = new Set();
+    for (let i = 0; i < patterns.length; i++) {
+      const pattern = patterns[i];
+      let match;
+      while ((match = pattern.exec(html)) !== null) {
+        const url = match[0];
+        if (!url.includes('imagedelivery.net')) {
+          // Protocol-relative URLs (third pattern, index 2)
+          if (i === 2) {
+            try {
+              const siteUrlObj = new URL(siteUrl);
+              allMatches.add(siteUrlObj.protocol + url);
+            } catch {
+              allMatches.add('https:' + url);
+            }
+          } else {
+            allMatches.add(url);
+          }
+        }
+      }
+    }
+    for (const url of allMatches) {
+      const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(url, pageUrl);
+      if (shouldCollectAsset(resolvedUrl, siteUrl, 'html')) {
+        collected.add(resolvedUrl);
+      }
+    }
+  }
+
+  // Collect from attribute patterns
+  for (const pattern of HTML_ATTR_PATTERNS) {
+    pattern.lastIndex = 0;
+    const matches = html.matchAll(pattern);
+    for (const match of matches) {
+      const url = match[2];
+      const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(url, pageUrl);
+      if (shouldCollectAsset(resolvedUrl, siteUrl, 'html')) {
+        collected.add(resolvedUrl);
+      }
+    }
+  }
+
+  // Collect from srcset
+  for (const [, pattern] of Object.entries(SRCSET_PATTERNS)) {
+    pattern.lastIndex = 0;
+    const matches = html.matchAll(pattern);
+    for (const match of matches) {
+      const urls = parseSrcset(match[2]);
+      for (const url of urls) {
+        const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(url, pageUrl);
+        if (shouldCollectAsset(resolvedUrl, siteUrl, 'html')) {
+          collected.add(resolvedUrl);
+        }
+      }
+    }
+  }
+
+  // Collect from inline styles
+  INLINE_STYLE_PATTERN.lastIndex = 0;
+  const inlineStyleMatches = html.matchAll(INLINE_STYLE_PATTERN);
+  for (const match of inlineStyleMatches) {
+    let inlineCss = match[2];
+    inlineCss = inlineCss.replace(/\\(["'])/g, '$1');
+    collectCssInlineDependencies(inlineCss, pageUrl, siteUrl, collected, 'html');
+  }
+}
+
+/**
+ * Collect modules from import map.
+ *
+ * @param {string}      json      Import map JSON.
+ * @param {string}      pageUrl   Page URL.
+ * @param {string}      siteUrl   Site URL.
+ * @param {Set<string>} collected Collected URLs.
+ * @param {Set<string>} processed Processed URLs.
+ */
+async function collectImportmapModules(json, pageUrl, siteUrl, collected, processed) {
+  try {
+    const importmap = JSON.parse(json);
+    if (!importmap?.imports) {
+      return;
+    }
+    for (const moduleName in importmap.imports) {
+      if (importmap.imports.hasOwnProperty(moduleName)) {
+        const moduleUrl = importmap.imports[moduleName];
+        const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(moduleUrl, pageUrl);
+        if (shouldCollectAsset(resolvedUrl, siteUrl, 'js')) {
+          collected.add(resolvedUrl);
+          await collectJsDependencies(resolvedUrl, siteUrl, collected, processed);
+        }
+      }
+    }
+  } catch {
+    // Invalid JSON
+  }
+}
+
+/**
+ * Collect CSS dependencies.
+ *
+ * @param {string}      cssUrl    CSS URL.
+ * @param {string}      siteUrl   Site URL.
+ * @param {Set<string>} collected Collected URLs.
+ * @param {Set<string>} processed Processed URLs.
+ */
+async function collectCssDependencies(cssUrl, siteUrl, collected, processed) {
+  if (processed.has(cssUrl)) {
+    return;
+  }
+  processed.add(cssUrl);
+  try {
+    const response = await fetch(cssUrl, {
+      method: 'GET',
+      credentials: 'omit',
+      headers: {
+        'User-Agent': 'Aether Static Site Generator'
+      }
+    });
+    if (!response.ok) {
+      return;
+    }
+    const cssContent = await response.text();
+
+    // @import statements
+    CSS_IMPORT_PATTERN.lastIndex = 0;
+    const importMatches = cssContent.matchAll(CSS_IMPORT_PATTERN);
+    for (const match of importMatches) {
+      const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(match[1], cssUrl);
+      if (shouldCollectAsset(resolvedUrl, siteUrl, 'css')) {
+        collected.add(resolvedUrl);
+        await collectCssDependencies(resolvedUrl, siteUrl, collected, processed);
+      }
+    }
+
+    // url() references
+    CSS_URL_PATTERN.lastIndex = 0;
+    const urlMatches = cssContent.matchAll(CSS_URL_PATTERN);
+    for (const match of urlMatches) {
+      const assetUrl = match[1];
+      if (assetUrl.startsWith('data:')) {
+        continue;
+      }
+      const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(assetUrl, cssUrl);
+      if (shouldCollectAsset(resolvedUrl, siteUrl, 'css')) {
+        collected.add(resolvedUrl);
+      }
+    }
+  } catch {
+    // Failed to fetch
+  }
+}
+
+/**
+ * Collect CSS inline dependencies.
+ *
+ * @param {string}      cssContent CSS content.
+ * @param {string}      baseUrl    Base URL.
+ * @param {string}      siteUrl    Site URL.
+ * @param {Set<string>} collected  Collected URLs.
+ * @param {string}      source     Source type.
+ */
+function collectCssInlineDependencies(cssContent, baseUrl, siteUrl, collected, source = 'css') {
+  CSS_URL_PATTERN.lastIndex = 0;
+  const urlMatches = cssContent.matchAll(CSS_URL_PATTERN);
+  for (const match of urlMatches) {
+    const assetUrl = match[1];
+    if (assetUrl.startsWith('data:')) {
+      continue;
+    }
+    const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(assetUrl, baseUrl);
+    if (shouldCollectAsset(resolvedUrl, siteUrl, source)) {
+      collected.add(resolvedUrl);
+    }
+  }
+}
+
+/**
+ * Collect JS dependencies.
+ *
+ * @param {string}      jsUrl     JS URL.
+ * @param {string}      siteUrl   Site URL.
+ * @param {Set<string>} collected Collected URLs.
+ * @param {Set<string>} processed Processed URLs.
+ */
+async function collectJsDependencies(jsUrl, siteUrl, collected, processed) {
+  if (processed.has(jsUrl)) {
+    return;
+  }
+  processed.add(jsUrl);
+  try {
+    const response = await fetch(jsUrl, {
+      method: 'GET',
+      credentials: 'omit',
+      headers: {
+        'User-Agent': 'Aether Static Site Generator'
+      }
+    });
+    if (!response.ok) {
+      return;
+    }
+    const jsContent = await response.text();
+
+    // Process all import patterns
+    for (const [, pattern] of Object.entries(JS_IMPORT_PATTERNS)) {
+      pattern.lastIndex = 0;
+      const matches = jsContent.matchAll(pattern);
+      for (const match of matches) {
+        const importUrl = match[1];
+        if (isWebpackModuleId(importUrl)) {
+          continue;
+        }
+        const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(importUrl, jsUrl);
+        if (shouldCollectAsset(resolvedUrl, siteUrl, 'js')) {
+          collected.add(resolvedUrl);
+          await collectJsDependencies(resolvedUrl, siteUrl, collected, processed);
+        }
+      }
+    }
+    await collectJsInlineDependencies(jsContent, jsUrl, siteUrl, collected, processed);
+  } catch {
+    // Failed to fetch
+  }
+}
+
+/**
+ * Collect JS inline dependencies.
+ *
+ * @param {string}      jsContent JS content.
+ * @param {string}      baseUrl   Base URL.
+ * @param {string}      siteUrl   Site URL.
+ * @param {Set<string>} collected Collected URLs.
+ * @param {Set<string>} processed Processed URLs.
+ */
+async function collectJsInlineDependencies(jsContent, baseUrl, siteUrl, collected, processed) {
+  for (const pattern of JS_ASSET_PATTERNS) {
+    pattern.lastIndex = 0;
+    const matches = jsContent.matchAll(pattern);
+    for (const match of matches) {
+      const assetUrl = match[1];
+      if (assetUrl.startsWith('data:') || assetUrl.startsWith('http://') || assetUrl.startsWith('https://')) {
+        continue;
+      }
+      const resolvedUrl = (0,urlRewriter/* resolveRelative */.Nh)(assetUrl, baseUrl);
+      if (shouldCollectAsset(resolvedUrl, siteUrl, 'js')) {
+        collected.add(resolvedUrl);
+        const type = getAssetType(resolvedUrl);
+        if (type === 'css') {
+          await collectCssDependencies(resolvedUrl, siteUrl, collected, processed);
+        } else if (type === 'js') {
+          await collectJsDependencies(resolvedUrl, siteUrl, collected, processed);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Get asset local path.
+ *
+ * @param {string} url Asset URL.
+ * @return {string|null} Local path or null.
+ */
+function getAssetLocalPath(url) {
+  let path = '';
+  try {
+    const urlObj = new URL(url);
+    path = urlObj.pathname || '';
+  } catch {
+    const pathMatch = url.match(/^https?:\/\/[^\/]+(\/.*)$/);
+    if (pathMatch) {
+      path = pathMatch[1];
+    }
+  }
+  path = path.replace(/^\/+/, '');
+  path = (0,urlRewriter/* stripPlaygroundScope */.Gw)(path);
+  if (!path || path === '') {
+    return null;
+  }
+  return path;
+}
+
+/***/ }),
+
+/***/ 735:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   AO: () => (/* binding */ debugError),
+/* harmony export */   UT: () => (/* binding */ debugWarn),
+/* harmony export */   Yz: () => (/* binding */ debug)
+/* harmony export */ });
+/* unused harmony exports debugInfo, debugTable, debugTime, debugTimeEnd, debugGroup, debugGroupEnd, enableDebug, disableDebug */
+/**
+ * Debug Utility
+ *
+ * Centralized logging utility for development debugging.
+ * Can be enabled/disabled via window.aetherDebug flag.
+ *
+ */
+
+/**
+ * Check if debug mode is enabled.
+ *
+ * @return {boolean} True if debug mode is enabled.
+ */
+function isDebugEnabled() {
+  return typeof window !== 'undefined' && window.aetherDebug === true;
+}
+
+/**
+ * Log a message to console (only in debug mode).
+ *
+ * @param {...*} args Arguments to log.
+ */
+function debug(...args) {
+  if (isDebugEnabled() && window.console && window.console.log) {
+    window.console.log('[Aether]', ...args);
+  }
+}
+
+/**
+ * Log an error to console (only in debug mode).
+ *
+ * @param {...*} args Arguments to log.
+ */
+function debugError(...args) {
+  if (isDebugEnabled() && window.console && window.console.error) {
+    window.console.error('[Aether Error]', ...args);
+  }
+}
+
+/**
+ * Log a warning to console (only in debug mode).
+ *
+ * @param {...*} args Arguments to log.
+ */
+function debugWarn(...args) {
+  if (isDebugEnabled() && window.console && window.console.warn) {
+    window.console.warn('[Aether Warning]', ...args);
+  }
+}
+
+/**
+ * Log an info message to console (only in debug mode).
+ *
+ * @param {...*} args Arguments to log.
+ */
+function debugInfo(...args) {
+  if (isDebugEnabled() && window.console && window.console.info) {
+    window.console.info('[Aether Info]', ...args);
+  }
+}
+
+/**
+ * Log a table to console (only in debug mode).
+ *
+ * @param {*} data Data to display as table.
+ */
+function debugTable(data) {
+  if (isDebugEnabled() && window.console && window.console.table) {
+    window.console.table(data);
+  }
+}
+
+/**
+ * Start a performance timer (only in debug mode).
+ *
+ * @param {string} label Timer label.
+ */
+function debugTime(label) {
+  if (isDebugEnabled() && window.console && window.console.time) {
+    window.console.time(`[Aether] ${label}`);
+  }
+}
+
+/**
+ * End a performance timer (only in debug mode).
+ *
+ * @param {string} label Timer label.
+ */
+function debugTimeEnd(label) {
+  if (isDebugEnabled() && window.console && window.console.timeEnd) {
+    window.console.timeEnd(`[Aether] ${label}`);
+  }
+}
+
+/**
+ * Group console messages (only in debug mode).
+ *
+ * @param {string} label Group label.
+ */
+function debugGroup(label) {
+  if (isDebugEnabled() && window.console && window.console.group) {
+    window.console.group(`[Aether] ${label}`);
+  }
+}
+
+/**
+ * End console message group (only in debug mode).
+ */
+function debugGroupEnd() {
+  if (isDebugEnabled() && window.console && window.console.groupEnd) {
+    window.console.groupEnd();
+  }
+}
+
+/**
+ * Enable debug mode.
+ *
+ * Usage: aetherDebug.enable() in browser console.
+ */
+function enableDebug() {
+  if (typeof window !== 'undefined') {
+    window.aetherDebug = true;
+    debug('Debug mode enabled');
+  }
+}
+
+/**
+ * Disable debug mode.
+ *
+ * Usage: aetherDebug.disable() in browser console.
+ */
+function disableDebug() {
+  if (typeof window !== 'undefined') {
+    window.aetherDebug = false;
+  }
+}
+
+// Export as single object for easier importing
+const debugUtil = {
+  debug,
+  error: debugError,
+  warn: debugWarn,
+  info: debugInfo,
+  table: debugTable,
+  time: debugTime,
+  timeEnd: debugTimeEnd,
+  group: debugGroup,
+  groupEnd: debugGroupEnd,
+  enable: enableDebug,
+  disable: disableDebug,
+  isEnabled: isDebugEnabled
+};
+
+// Make available globally for easy browser console access
+if (typeof window !== 'undefined') {
+  window.aetherDebug = window.aetherDebug || false;
+  window.aetherDebugUtil = debugUtil;
+}
+/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((/* unused pure expression or super */ null && (debugUtil)));
+
+/***/ }),
+
+/***/ 864:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   W: () => (/* binding */ getStaticFilePath),
+/* harmony export */   t: () => (/* binding */ processHtml)
+/* harmony export */ });
+/* harmony import */ var _urlRewriter__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(574);
+/**
+ * HTML Processor
+ *
+ * Processes HTML for static site generation.
+ * Ported from PHP HTMLGeneratorService::processHtml() logic.
+ *
+ */
+
+
+
+/**
+ * Process HTML for static site.
+ *
+ * @param {string}      html          HTML content.
+ * @param {string}      url           Source URL.
+ * @param {string}      siteUrl       Site URL.
+ * @param {string|null} staticSiteUrl Static site URL for URL rewriting.
+ * @return {string} Processed HTML.
+ */
+function processHtml(html, url, siteUrl, staticSiteUrl = null) {
+  // STEP 1: Remove admin bar from HTML (in case source was generated while logged in).
+  // This removes #wpadminbar div, related CSS/JS, and body classes.
+  html = removeAdminBar(html);
+
+  // STEP 2: Remove dynamic WordPress links (RSS comments feed, REST API, XML-RPC).
+  // These features don't exist in static exports.
+  html = removeDynamicWpLinks(html);
+
+  // STEP 3: Replace all internal URLs (absolute → relative or custom domain).
+  // This is the main URL rewriting step that makes the static site work.
+  const urlRewriter = (0,_urlRewriter__WEBPACK_IMPORTED_MODULE_0__/* .createUrlRewriter */ .sF)(siteUrl, staticSiteUrl);
+  html = urlRewriter.rewriteHtml(html, url);
+  return html;
+}
+
+/**
+ * Remove admin bar from HTML.
+ *
+ * Strips the WordPress admin bar (#wpadminbar) and related styles/scripts
+ * that may have been rendered if the source page was fetched while logged in.
+ *
+ * @param {string} html HTML content.
+ * @return {string} HTML with admin bar removed.
+ */
+function removeAdminBar(html) {
+  // Helper function to remove HTML elements by attribute matching.
+  // Used to remove admin bar CSS, JS, and HTML by ID or class.
+  const removeElementsByAttr = (htmlContent, element, attribute, valuePattern, exactMatch = false) => {
+    // Escape regex special characters in pattern.
+    const escapedPattern = valuePattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    // Build regex pattern for attribute matching.
+    // exactMatch=true: id="exact-value"
+    // exactMatch=false: id="contains-value-anywhere"
+    let attrPattern;
+    if (exactMatch) {
+      attrPattern = `${attribute}=["']${escapedPattern}["']`;
+    } else {
+      attrPattern = `${attribute}=["'][^"']*${escapedPattern}[^"']*["']`;
+    }
+
+    // Handle self-closing tags (link).
+    // Pattern: <link ... id="admin-bar-css" ... >
+    if (element === 'link') {
+      const pattern = new RegExp(`<${element}[^>]*${attrPattern}[^>]*>`, 'gi');
+      return htmlContent.replace(pattern, '');
+    }
+
+    // Handle tags with content (script, style, div).
+    // Pattern: <script ... id="admin-bar-js" ...>...</script>
+    const pattern = new RegExp(`<${element}[^>]*${attrPattern}[^>]*>.*?<\/${element}>`, 'gis');
+    return htmlContent.replace(pattern, '');
+  };
+
+  // Remove admin bar CSS link.
+  html = removeElementsByAttr(html, 'link', 'id', 'admin-bar-css', true);
+  html = removeElementsByAttr(html, 'script', 'id', 'admin-bar-css', true);
+  html = removeElementsByAttr(html, 'style', 'id', 'admin-bar-css', true);
+  html = removeElementsByAttr(html, 'div', 'id', 'admin-bar-css', true);
+
+  // Remove dashicons CSS link (used by admin bar).
+  html = removeElementsByAttr(html, 'link', 'id', 'dashicons-css', true);
+  html = removeElementsByAttr(html, 'script', 'id', 'dashicons-css', true);
+  html = removeElementsByAttr(html, 'style', 'id', 'dashicons-css', true);
+  html = removeElementsByAttr(html, 'div', 'id', 'dashicons-css', true);
+
+  // Remove admin bar container div.
+  html = removeElementsByAttr(html, 'link', 'id', 'wpadminbar', true);
+  html = removeElementsByAttr(html, 'script', 'id', 'wpadminbar', true);
+  html = removeElementsByAttr(html, 'style', 'id', 'wpadminbar', true);
+  html = removeElementsByAttr(html, 'div', 'id', 'wpadminbar', true);
+
+  // Remove admin bar inline styles.
+  html = removeElementsByAttr(html, 'link', 'id', 'admin-bar-inline-css', true);
+  html = removeElementsByAttr(html, 'script', 'id', 'admin-bar-inline-css', true);
+  html = removeElementsByAttr(html, 'style', 'id', 'admin-bar-inline-css', true);
+  html = removeElementsByAttr(html, 'div', 'id', 'admin-bar-inline-css', true);
+
+  // Remove admin bar scripts.
+  html = removeElementsByAttr(html, 'link', 'id', 'admin-bar-js', true);
+  html = removeElementsByAttr(html, 'script', 'id', 'admin-bar-js', true);
+  html = removeElementsByAttr(html, 'style', 'id', 'admin-bar-js', true);
+  html = removeElementsByAttr(html, 'div', 'id', 'admin-bar-js', true);
+
+  // Remove any remaining admin bar related inline styles.
+  html = html.replace(/<style[^>]*>.*?#wpadminbar.*?<\/style>/gis, '');
+
+  // Remove logged-in and admin-bar classes from body tag.
+  // These classes affect page layout and should be removed for static site.
+  const classesToRemove = ['logged-in', 'admin-bar'];
+  for (const className of classesToRemove) {
+    const escapedClass = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(`(class=["'][^"']*)\\b${escapedClass}\\b([^"']*["'])`, 'gi');
+    html = html.replace(pattern, '$1$2');
+  }
+
+  // Add no-admin-bar class to body (opposite of admin-bar class).
+  // WordPress themes use this class to adjust layout when admin bar is absent.
+  if (!html.includes('no-admin-bar')) {
+    html = html.replace(/(<body[^>]*class=["'][^"']*)(")/i, '$1 no-admin-bar$2');
+  }
+
+  // AGGRESSIVE CLEANUP: Remove everything between <body> and wp-site-blocks div.
+  // This is a last-resort cleanup for any remaining admin bar HTML.
+  // Only runs if admin bar classes are still present in HTML.
+  if (html.includes('wp-admin-bar-')) {
+    html = html.replace(/(<body[^>]*>).*?(<div[^>]*class=["'][^"']*wp-site-blocks)/gis, '$1$2');
+  }
+  return html;
+}
+
+/**
+ * Remove dynamic WordPress links from HTML.
+ *
+ * Removes links to features that don't exist in static exports:
+ * - Comments RSS feed
+ * - REST API discovery
+ * - XML-RPC/RSD
+ *
+ * @param {string} html HTML content.
+ * @return {string} HTML with dynamic links removed.
+ */
+function removeDynamicWpLinks(html) {
+  // Remove comments feed link.
+  // <link rel="alternate" type="application/rss+xml" title="..." href=".../comments/feed/" />.
+  html = html.replace(/<link[^>]*rel=["']alternate["'][^>]*href=["'][^"']*\/comments\/feed\/["'][^>]*>/gi, '');
+
+  // Alternative pattern (href before rel).
+  html = html.replace(/<link[^>]*href=["'][^"']*\/comments\/feed\/["'][^>]*rel=["']alternate["'][^>]*>/gi, '');
+
+  // Remove REST API discovery link.
+  // <link rel="https://api.w.org/" href=".../wp-json/" />.
+  html = html.replace(/<link[^>]*rel=["']https:\/\/api\.w\.org\/["'][^>]*>/gi, '');
+
+  // Remove XML-RPC/RSD discovery link.
+  // <link rel="EditURI" type="application/rsd+xml" title="RSD" href=".../xmlrpc.php" />.
+  html = html.replace(/<link[^>]*rel=["']EditURI["'][^>]*type=["']application\/rsd\+xml["'][^>]*>/gi, '');
+
+  // Alternative pattern (type before rel).
+  html = html.replace(/<link[^>]*type=["']application\/rsd\+xml["'][^>]*rel=["']EditURI["'][^>]*>/gi, '');
+  return html;
+}
+
+/**
+ * Get static file path for a URL.
+ *
+ * @param {string} url URL to convert.
+ * @return {string} File path (relative to static root).
+ */
+function getStaticFilePath(url) {
+  // Extract pathname from URL.
+  let path = '/';
+  try {
+    const urlObj = new URL(url);
+    path = urlObj.pathname || '/';
+  } catch {
+    // Fallback: If URL parsing fails, extract path manually with regex.
+    const pathMatch = url.match(/^https?:\/\/[^\/]+(\/.*)$/);
+    if (pathMatch) {
+      path = pathMatch[1];
+    }
+  }
+
+  // Handle homepage (root URL).
+  if (!path || path === '/') {
+    return 'index.html';
+  }
+
+  // Remove leading slash (normalize path).
+  path = path.replace(/^\/+/, '');
+
+  // Remove WordPress Playground scope prefix.
+  // Playground URLs contain scope like /scope:12345/path → path
+  path = (0,_urlRewriter__WEBPACK_IMPORTED_MODULE_0__/* .stripPlaygroundScope */ .Gw)(path);
+
+  // Remove trailing slash (normalize path).
+  path = path.replace(/\/+$/, '');
+
+  // Check if path is empty after removing scope (homepage case).
+  if (!path) {
+    return 'index.html';
+  }
+
+  // Convert URL path to directory structure with index.html.
+  // Example: /about → about/index.html
+  // This allows static files to be served via directory URLs: example.com/about/
+  return path + '/index.html';
+}
+
+/***/ }),
+
+/***/ 906:
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ConfigStorage: () => (/* binding */ ConfigStorage)
+/* harmony export */ });
+/* harmony import */ var _utils_api__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(186);
+/* harmony import */ var _wordpress_hooks__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(619);
+/* harmony import */ var _wordpress_hooks__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_wordpress_hooks__WEBPACK_IMPORTED_MODULE_1__);
+/**
+ * Provider Configuration Storage
+ *
+ * Handles provider configuration persistence with REST API backend storage.
+ */
+
+
+
+
+/**
+ * Configuration storage class.
+ *
+ * Provides REST API persistence for provider configurations.
+ */
+class ConfigStorage {
+  /**
+   * Provider ID.
+   *
+   * @type {string}
+   */
+  providerId;
+
+  /**
+   * Constructor.
+   *
+   * @param {string} providerId Provider ID.
+   */
+  constructor(providerId) {
+    if (!providerId || typeof providerId !== 'string') {
+      throw new Error('ConfigStorage requires a valid provider ID');
+    }
+    this.providerId = providerId;
+  }
+
+  /**
+   * Load configuration from REST API.
+   *
+   * @return {Promise<Object>} Configuration object
+   */
+  async load() {
+    try {
+      const response = await (0,_utils_api__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Ay)({
+        path: `/aether/site-exporter/providers/${this.providerId}/config`,
+        method: 'GET'
+      });
+      let config = response.config || {};
+
+      /**
+       * Filter provider configuration after loading from storage.
+       *
+       * Allows modification of config loaded from REST API.
+       *
+       * @param {Object} config     Loaded configuration.
+       * @param {string} providerId Provider ID.
+       *
+       * @example
+       * import { addFilter } from '@wordpress/hooks';
+       *
+       * addFilter('aether.storage.config.load', 'my-plugin', (config, providerId) => {
+       *     if (providerId === 'my-provider') {
+       *         config.autoLoaded = Date.now();
+       *     }
+       *     return config;
+       * });
+       */
+      config = (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_1__.applyFilters)('aether.storage.config.load', config, this.providerId);
+
+      /**
+       * Action fired after configuration is loaded from storage.
+       *
+       * @param {Object} config     Loaded configuration.
+       * @param {string} providerId Provider ID.
+       *
+       * @example
+       * import { addAction } from '@wordpress/hooks';
+       *
+       * addAction('aether.storage.config.loaded', 'my-plugin', (config, providerId) => {
+       *     console.log(`Configuration loaded for ${providerId}`);
+       * });
+       */
+      (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_1__.doAction)('aether.storage.config.loaded', config, this.providerId);
+      return config;
+    } catch (error) {
+      // If provider not configured, return empty object
+      if (error.code === 'restProviderNotConfigured' || error.status === 404) {
+        return {};
+      }
+
+      // Re-throw other errors
+      throw error;
+    }
+  }
+
+  /**
+   * Save configuration to REST API.
+   *
+   * @param {Object} config Configuration object to save.
+   * @return {Promise<boolean>} True if saved successfully
+   */
+  async save(config) {
+    /**
+     * Filter configuration before saving to storage.
+     *
+     * Allows modification of config before REST API call.
+     *
+     * @param {Object} config     Configuration to save.
+     * @param {string} providerId Provider ID.
+     *
+     * @example
+     * import { addFilter } from '@wordpress/hooks';
+     *
+     * addFilter('aether.storage.config.before_save', 'my-plugin', (config, providerId) => {
+     *     if (providerId === 'my-provider') {
+     *         config.lastSaved = Date.now();
+     *     }
+     *     return config;
+     * });
+     */
+    config = (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_1__.applyFilters)('aether.storage.config.before_save', config, this.providerId);
+    try {
+      await (0,_utils_api__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Ay)({
+        path: `/aether/site-exporter/providers/${this.providerId}/config`,
+        method: 'POST',
+        data: {
+          config
+        }
+      });
+
+      /**
+       * Action fired after configuration is saved to storage.
+       *
+       * @param {Object} config     Saved configuration.
+       * @param {string} providerId Provider ID.
+       *
+       * @example
+       * import { addAction } from '@wordpress/hooks';
+       *
+       * addAction('aether.storage.config.saved', 'my-plugin', (config, providerId) => {
+       *     console.log(`Configuration saved for ${providerId}`);
+       * });
+       */
+      (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_1__.doAction)('aether.storage.config.saved', config, this.providerId);
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Delete configuration from REST API.
+   *
+   * @return {Promise<boolean>} True if deleted successfully
+   */
+  async delete() {
+    /**
+     * Action fired before configuration is deleted from storage.
+     *
+     * @param {string} providerId Provider ID.
+     *
+     * @example
+     * import { addAction } from '@wordpress/hooks';
+     *
+     * addAction('aether.storage.config.before_delete', 'my-plugin', (providerId) => {
+     *     console.log(`Deleting configuration for ${providerId}`);
+     * });
+     */
+    (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_1__.doAction)('aether.storage.config.before_delete', this.providerId);
+    try {
+      await (0,_utils_api__WEBPACK_IMPORTED_MODULE_0__/* ["default"] */ .Ay)({
+        path: `/aether/site-exporter/providers/${this.providerId}/config`,
+        method: 'DELETE'
+      });
+
+      /**
+       * Action fired after configuration is deleted from storage.
+       *
+       * @param {string} providerId Provider ID.
+       *
+       * @example
+       * import { addAction } from '@wordpress/hooks';
+       *
+       * addAction('aether.storage.config.deleted', 'my-plugin', (providerId) => {
+       *     console.log(`Configuration deleted for ${providerId}`);
+       * });
+       */
+      (0,_wordpress_hooks__WEBPACK_IMPORTED_MODULE_1__.doAction)('aether.storage.config.deleted', this.providerId);
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+}
+/* unused harmony default export */ var __WEBPACK_DEFAULT_EXPORT__ = ((/* unused pure expression or super */ null && (ConfigStorage)));
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/publicPath */
+/******/ 	(() => {
+/******/ 		__webpack_require__.p = "";
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+
+;// external ["wp","element"]
+const external_wp_element_namespaceObject = window["wp"]["element"];
+;// external ["wp","i18n"]
+const external_wp_i18n_namespaceObject = window["wp"]["i18n"];
+;// external ["wp","components"]
+const external_wp_components_namespaceObject = window["wp"]["components"];
+;// external "ReactJSXRuntime"
+const external_ReactJSXRuntime_namespaceObject = window["ReactJSXRuntime"];
+;// ./assets/src/contexts/ExportContext.js
+/**
+ * Export Context
+ *
+ * Centralized export workflow state management using React Context API.
+ * Provides global export state with step tracking, progress management, and status updates.
+ *
+ */
+
+
+
+/**
+ * Export Context
+ *
+ * @type {Object}
+ */
+
+const ExportContext = (0,external_wp_element_namespaceObject.createContext)({
+  steps: [],
+  isExporting: false,
+  finalStatus: null,
+  error: null,
+  currentStatusMessage: null,
+  overallProgress: 0,
+  staticSiteProviders: [],
+  blueprintBundleProviders: [],
+  providerProgress: {},
+  initializeSteps: () => {},
+  setStepStatus: () => {},
+  setStepProgress: () => {},
+  setProviderProgress: () => {},
+  updateFromStep: () => {},
+  markAllComplete: () => {},
+  showError: () => {},
+  setIsExporting: () => {},
+  setStatusMessage: () => {},
+  setOverallProgressValue: () => {},
+  updateMessage: () => {},
+  removeMessage: () => {},
+  setProviders: () => {},
+  reset: () => {}
+});
+
+/**
+ * Export Provider Component
+ *
+ * Wraps the export workflow to provide global state management.
+ * Features:
+ * - Step tracking (pending, active, complete, error)
+ * - Progress management (per-step and overall)
+ * - Status messages
+ * - Error handling
+ * - Progress never goes backwards (monotonic increase)
+ * - Retry support (can restart from earlier steps)
+ *
+ * @param {Object}      props          Component props
+ * @param {JSX.Element} props.children Child components
+ * @return {JSX.Element} Provider component
+ */
+function ExportProvider({
+  children
+}) {
+  // Core state
+  const [steps, setSteps] = (0,external_wp_element_namespaceObject.useState)([]);
+  const [isExporting, setIsExporting] = (0,external_wp_element_namespaceObject.useState)(false);
+  const [finalStatus, setFinalStatus] = (0,external_wp_element_namespaceObject.useState)(null);
+  const [error, setError] = (0,external_wp_element_namespaceObject.useState)(null);
+  const [currentStatusMessage, setCurrentStatusMessage] = (0,external_wp_element_namespaceObject.useState)(null);
+  const [overallProgress, setOverallProgress] = (0,external_wp_element_namespaceObject.useState)(0);
+  const [messageHistory, setMessageHistory] = (0,external_wp_element_namespaceObject.useState)([]);
+  const [staticSiteProviders, setStaticSiteProviders] = (0,external_wp_element_namespaceObject.useState)([]);
+  const [blueprintBundleProviders, setBlueprintBundleProviders] = (0,external_wp_element_namespaceObject.useState)([]);
+  const [providerProgress, setProviderProgressState] = (0,external_wp_element_namespaceObject.useState)({});
+
+  // Track maximum progress to prevent progress from going backwards
+  const maxProgressRef = (0,external_wp_element_namespaceObject.useRef)(0);
+
+  /**
+   * Initialize steps from step definitions
+   *
+   * @param {Array<Object>} stepDefinitions Step definitions with id, label, supportsProgress
+   * @param {string|null}   initialStepId   Optional step ID to activate immediately
+   */
+  const initializeSteps = (0,external_wp_element_namespaceObject.useCallback)((stepDefinitions = [], initialStepId = null) => {
+    const newSteps = stepDefinitions.map(stepDef => ({
+      id: stepDef.id,
+      label: stepDef.label,
+      status: 'pending',
+      supportsProgress: stepDef.supportsProgress || false,
+      progress: 0
+    }));
+
+    // If initialStepId is provided, activate it immediately
+    let initialStepIndex = -1;
+    if (initialStepId) {
+      initialStepIndex = newSteps.findIndex(s => s.id === initialStepId);
+      if (initialStepIndex !== -1) {
+        newSteps[initialStepIndex].status = 'active';
+      }
+    }
+
+    // Use functional update to ensure we're working with the latest state
+    // This prevents race conditions with reset() or other state updates
+    setSteps(() => newSteps);
+    setError(null);
+    setFinalStatus(null);
+  }, []);
+
+  /**
+   * Set status for a specific step
+   *
+   * @param {string} stepId       Step ID
+   * @param {string} status       Status: 'pending', 'active', 'complete', 'error'
+   * @param {string} errorMessage Error message (only used when status is 'error')
+   */
+  const setStepStatus = (0,external_wp_element_namespaceObject.useCallback)((stepId, status, errorMessage = '') => {
+    setSteps(prevSteps => prevSteps.map(step => {
+      if (step.id === stepId) {
+        return {
+          ...step,
+          status,
+          errorMessage: status === 'error' ? errorMessage : ''
+        };
+      }
+      return step;
+    }));
+  }, []);
+
+  /**
+   * Set progress percentage for a specific step
+   *
+   * @param {string} stepId   Step ID
+   * @param {number} progress Progress percentage (0-100)
+   */
+  const setStepProgress = (0,external_wp_element_namespaceObject.useCallback)((stepId, progress) => {
+    setSteps(prevSteps => prevSteps.map(step => {
+      if (step.id === stepId) {
+        return {
+          ...step,
+          progress: Math.max(0, Math.min(100, Math.round(progress)))
+        };
+      }
+      return step;
+    }));
+  }, []);
+
+  /**
+   * Set progress for a specific provider instance
+   *
+   * Used by ThreadOrchestrator to track per-provider progress.
+   * Format: { [providerId]: { stepId, stepLabel, progress, status } }
+   *
+   * @param {string} providerId Provider instance ID
+   * @param {Object} progress   Progress data { stepId, stepLabel, progress, status }
+   */
+  const setProviderProgress = (0,external_wp_element_namespaceObject.useCallback)((providerId, progress) => {
+    setProviderProgressState(prev => ({
+      ...prev,
+      [providerId]: {
+        ...progress,
+        progress: Math.max(0, Math.min(100, Math.round(progress.progress || 0)))
+      }
+    }));
+  }, []);
+
+  /**
+   * Update state to reflect transition to a step
+   *
+   * Handles both forward progression and retry (backward) scenarios.
+   * When moving forward, marks previous steps as complete.
+   * When retrying, resets steps between current and target position.
+   *
+   * @param {string} backendStep Backend step ID to transition to
+   */
+  const updateFromStep = (0,external_wp_element_namespaceObject.useCallback)(backendStep => {
+    // Use setSteps callback to access current steps state without dependency issues
+    setSteps(prevSteps => {
+      // Find step by backend name
+      const step = prevSteps.find(s => s.id === backendStep);
+      if (!step) {
+        return prevSteps; // No change
+      }
+
+      // Get step index
+      const stepIndex = prevSteps.findIndex(s => s.id === step.id);
+      if (stepIndex === -1) {
+        return prevSteps; // No change
+      }
+
+      // Update steps based on progression direction
+      const newSteps = prevSteps.map((s, i) => {
+        // Mark previous steps as complete
+        if (i < stepIndex && s.status !== 'complete') {
+          return {
+            ...s,
+            status: 'complete'
+          };
+        }
+        // Mark target step as active
+        if (i === stepIndex) {
+          return {
+            ...s,
+            status: 'active'
+          };
+        }
+        return s;
+      });
+      return newSteps;
+    });
+  }, [] // No dependencies - uses setSteps callback to access current state
+  );
+
+  /**
+   * Add message to activity log history
+   *
+   * @param {string}      message  Message text (can include HTML)
+   * @param {string}      type     Message type: 'info' | 'success' | 'error' | 'progress'
+   * @param {string|null} key      Optional key to identify message for later updates
+   * @param {*}           progress Optional progress value
+   * @param {Object}      metadata Optional metadata (e.g., provider info, file size)
+   */
+  const addMessage = (0,external_wp_element_namespaceObject.useCallback)((message, type = 'info', key = null, progress = undefined, metadata = undefined) => {
+    setMessageHistory(prev => [{
+      id: Date.now() + Math.random(),
+      message,
+      type,
+      key,
+      ...(progress !== undefined && {
+        progress
+      }),
+      // Only include progress if provided
+      ...(metadata !== undefined && {
+        metadata
+      }),
+      timestamp: Date.now()
+    }, ...prev // Prepend to show newest first
+    ]);
+  }, []);
+
+  /**
+   * Update existing message by key
+   *
+   * Finds a message with the given key and updates its message text, type, and/or progress.
+   * If no message with the key exists, does nothing.
+   *
+   * @param {string}      key        Message key to find
+   * @param {string|null} newMessage New message text (optional, keeps existing if null)
+   * @param {string|null} newType    New message type (optional, keeps existing if null)
+   * @param {Object|null} progress   Progress data { percent, loaded, total } (optional)
+   * @param {Object}      metadata   Optional metadata to merge (e.g., provider info)
+   */
+  const updateMessage = (0,external_wp_element_namespaceObject.useCallback)((key, newMessage = null, newType = null, progress = undefined, metadata = undefined) => {
+    setMessageHistory(prev => prev.map(item => {
+      if (item.key !== key) {
+        return item;
+      }
+      const updated = {
+        ...item
+      };
+      if (newMessage !== null) {
+        updated.message = newMessage;
+      }
+      if (newType !== null) {
+        updated.type = newType;
+      }
+      // If progress is explicitly null, remove it. If undefined, don't update.
+      if (progress === null) {
+        delete updated.progress;
+      } else if (progress !== undefined) {
+        updated.progress = progress;
+      }
+      // Merge metadata - allow updating specific fields
+      if (metadata !== undefined) {
+        updated.metadata = {
+          ...(item.metadata || {}),
+          ...metadata
+        };
+      }
+      return updated;
+    }));
+  }, []);
+
+  /**
+   * Remove message by key
+   *
+   * Removes a message with the given key from history.
+   *
+   * @param {string} key Message key to remove
+   */
+  const removeMessage = (0,external_wp_element_namespaceObject.useCallback)(key => {
+    setMessageHistory(prev => prev.filter(item => item.key !== key));
+  }, []);
+
+  /**
+   * Mark all steps as complete
+   *
+   * Called when export workflow completes successfully.
+   *
+   * @param {Object} status Final status object (includes deployment URL, etc.)
+   */
+  const markAllComplete = (0,external_wp_element_namespaceObject.useCallback)((status = {}) => {
+    setSteps(prevSteps => prevSteps.map(step => ({
+      ...step,
+      status: 'complete'
+    })));
+    setFinalStatus(status);
+    setIsExporting(false);
+    addMessage('Site exported successfully!', 'success');
+  }, [addMessage]);
+
+  /**
+   * Show error message and optionally mark step as failed
+   *
+   * @param {string}      errorMessage Error message to display
+   * @param {string|null} stepId       Step ID to mark as failed (optional)
+   */
+  const showError = (0,external_wp_element_namespaceObject.useCallback)((errorMessage, stepId = null) => {
+    setError(errorMessage);
+    setIsExporting(false);
+    addMessage(errorMessage, 'error');
+    if (stepId) {
+      setStepStatus(stepId, 'error', errorMessage);
+    }
+  }, [addMessage, setStepStatus]);
+
+  /**
+   * Set current status message
+   *
+   * Also adds the message to activity log history.
+   * If a key is provided and a message with that key exists, updates it instead of adding new.
+   *
+   * @param {string}      message  Status message to display
+   * @param {string}      type     Message type: 'info' | 'success' | 'error' | 'progress'
+   * @param {string|null} key      Optional key to identify message for later updates
+   * @param {*}           progress Optional progress value
+   * @param {Object}      metadata Optional metadata (e.g., provider info, file size)
+   */
+  const setStatusMessage = (0,external_wp_element_namespaceObject.useCallback)((message, type, key = null, progress = undefined, metadata = undefined) => {
+    setCurrentStatusMessage(message);
+    if (message) {
+      if (key) {
+        // Check if message with this key already exists
+        setMessageHistory(prev => {
+          const existingIndex = prev.findIndex(item => item.key === key);
+          if (existingIndex !== -1) {
+            // Update existing message
+            return prev.map((item, index) => {
+              if (index !== existingIndex) {
+                return item;
+              }
+              const updated = {
+                ...item,
+                message,
+                type
+              };
+              // If progress is explicitly null, remove it. If undefined, don't update.
+              if (progress === null) {
+                delete updated.progress;
+              } else if (progress !== undefined) {
+                updated.progress = progress;
+              }
+              // Merge metadata - allow updating specific fields
+              if (metadata !== undefined) {
+                updated.metadata = {
+                  ...(item.metadata || {}),
+                  ...metadata
+                };
+              }
+              return updated;
+            });
+          }
+          // Add new message with key
+          return [{
+            id: Date.now() + Math.random(),
+            message,
+            type,
+            key,
+            ...(progress !== undefined && {
+              progress
+            }),
+            ...(metadata !== undefined && {
+              metadata
+            }),
+            timestamp: Date.now()
+          }, ...prev];
+        });
+      } else {
+        // No key, just add message
+        addMessage(message, type, null, progress, metadata);
+      }
+    }
+  }, [addMessage]);
+
+  /**
+   * Set overall progress percentage
+   *
+   * Progress is monotonic - it never decreases.
+   * This prevents progress bar from jumping backwards.
+   *
+   * @param {number} progress Overall progress percentage (0-100)
+   */
+  const setOverallProgressValue = (0,external_wp_element_namespaceObject.useCallback)(progress => {
+    const roundedProgress = Math.max(0, Math.min(100, Math.round(progress)));
+    // Ensure progress never goes backwards
+    if (roundedProgress > maxProgressRef.current) {
+      maxProgressRef.current = roundedProgress;
+    }
+    setOverallProgress(maxProgressRef.current);
+  }, []);
+
+  /**
+   * Set provider arrays
+   *
+   * @param {Array} staticProviders    Array of provider IDs for static site deployment
+   * @param {Array} blueprintProviders Array of provider IDs for blueprint bundle deployment
+   */
+  const setProviders = (0,external_wp_element_namespaceObject.useCallback)((staticProviders = [], blueprintProviders = []) => {
+    setStaticSiteProviders(staticProviders);
+    setBlueprintBundleProviders(blueprintProviders);
+  }, []);
+
+  /**
+   * Reset all export state to initial values
+   *
+   * Called when starting a new export or closing the export modal.
+   *
+   * @param {boolean} keepSteps If true, don't clear steps (useful when immediately reinitializing)
+   */
+  const reset = (0,external_wp_element_namespaceObject.useCallback)((keepSteps = false) => {
+    if (!keepSteps) {
+      setSteps([]);
+    }
+    setIsExporting(false);
+    setFinalStatus(null);
+    setError(null);
+    setCurrentStatusMessage(null);
+    setOverallProgress(0);
+    setMessageHistory([]);
+    setStaticSiteProviders([]);
+    setBlueprintBundleProviders([]);
+    setProviderProgressState({});
+    maxProgressRef.current = 0;
+  }, []);
+
+  // Provide context value
+  const value = (0,external_wp_element_namespaceObject.useMemo)(() => ({
+    steps,
+    isExporting,
+    finalStatus,
+    error,
+    currentStatusMessage,
+    overallProgress,
+    messageHistory,
+    staticSiteProviders,
+    blueprintBundleProviders,
+    providerProgress,
+    initializeSteps,
+    setStepStatus,
+    setStepProgress,
+    setProviderProgress,
+    updateFromStep,
+    markAllComplete,
+    showError,
+    setIsExporting,
+    setStatusMessage,
+    setOverallProgressValue,
+    addMessage,
+    updateMessage,
+    removeMessage,
+    setProviders,
+    reset
+  }), [steps, isExporting, finalStatus, error, currentStatusMessage, overallProgress, messageHistory, staticSiteProviders, blueprintBundleProviders, providerProgress, initializeSteps, setStepStatus, setStepProgress, setProviderProgress, updateFromStep, markAllComplete, showError, setStatusMessage, setOverallProgressValue, addMessage, updateMessage, removeMessage, setProviders, reset]);
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(ExportContext.Provider, {
+    value: value,
+    children: children
+  });
+}
+;// ./assets/src/hooks/useExportContext.js
+/**
+ * useExportContext Hook
+ *
+ * Hook to consume the ExportContext.
+ * Provides access to global export workflow state and operations.
+ *
+ */
+
+
+
+
+/**
+ * Hook to access export context
+ *
+ * Must be used within an ExportProvider.
+ *
+ * @throws {Error} If used outside ExportProvider
+ * @return {Object} Export context value
+ * @property {Array}    steps                   - All workflow steps
+ * @property {boolean}  isExporting             - Exporting flag
+ * @property {Object}   finalStatus             - Final status object (null if not complete)
+ * @property {string}   error                   - Error message (null if no error)
+ * @property {string}   currentStatusMessage    - Current status message
+ * @property {number}   overallProgress         - Overall progress percentage (0-100)
+ * @property {Function} initializeSteps         - Initialize steps from definitions
+ * @property {Function} setStepStatus           - Set status for a specific step
+ * @property {Function} setStepProgress         - Set progress for a specific step
+ * @property {Function} updateFromStep          - Transition to a step
+ * @property {Function} markAllComplete         - Mark all steps complete
+ * @property {Function} showError               - Show error message
+ * @property {Function} setIsExporting          - Set exporting flag
+ * @property {Function} setStatusMessage        - Set status message
+ * @property {Function} setOverallProgressValue - Set overall progress
+ * @property {Function} addMessage              - Add a message to history
+ * @property {Function} updateMessage           - Update existing message by key
+ * @property {Function} removeMessage           - Remove message by key
+ * @property {Function} reset                   - Reset all state
+ *
+ * @example
+ * function ExportButton() {
+ *     const { isExporting, startExport } = useExportContext();
+ *
+ *     return (
+ *         <button onClick={startExport} disabled={isExporting}>
+ *             {isExporting ? 'Exporting...' : 'Export'}
+ *         </button>
+ *     );
+ * }
+ *
+ * @example
+ * // Get steps for display
+ * function ProgressSteps() {
+ *     const { steps } = useExportContext();
+ *
+ *     return (
+ *         <ul>
+ *             {steps.map(step => (
+ *                 <li key={step.id}>
+ *                     {step.label} - {step.status}
+ *                 </li>
+ *             ))}
+ *         </ul>
+ *     );
+ * }
+ *
+ * @example
+ * // Update step progress
+ * function useWorkflowStep() {
+ *     const { setStepProgress, updateFromStep } = useExportContext();
+ *
+ *     const runStep = async (stepId) => {
+ *         updateFromStep(stepId);
+ *         setStepProgress(stepId, 50);
+ *         await doWork();
+ *         setStepProgress(stepId, 100);
+ *     };
+ *
+ *     return { runStep };
+ * }
+ */
+function useExportContext() {
+  const context = (0,external_wp_element_namespaceObject.useContext)(ExportContext);
+  if (!context) {
+    throw new Error('useExportContext must be used within an ExportProvider');
+  }
+  return context;
+}
+/* harmony default export */ const hooks_useExportContext = ((/* unused pure expression or super */ null && (useExportContext)));
+;// ./assets/src/export/hooks/useExportState.js
+/**
+ * Publish State Hook
+ *
+ * Wrapper hook that provides export state from ExportContext.
+ * Delegates to centralized state management.
+ *
+ */
+
+
+
+/**
+ * Get export workflow state
+ *
+ * Returns all export state and operations from context.
+ * Simplified from 202 lines to delegate to ExportContext.
+ *
+ * @return {Object} Publish state and operations
+ */
+function useExportState() {
+  return useExportContext();
+}
+// EXTERNAL MODULE: ./assets/src/utils/api.js + 1 modules
+var utils_api = __webpack_require__(186);
+;// ./node_modules/idb/build/index.js
+const instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
+
+let idbProxyableTypes;
+let cursorAdvanceMethods;
+// This is a function to prevent it throwing up in node environments.
+function getIdbProxyableTypes() {
+    return (idbProxyableTypes ||
+        (idbProxyableTypes = [
+            IDBDatabase,
+            IDBObjectStore,
+            IDBIndex,
+            IDBCursor,
+            IDBTransaction,
+        ]));
+}
+// This is a function to prevent it throwing up in node environments.
+function getCursorAdvanceMethods() {
+    return (cursorAdvanceMethods ||
+        (cursorAdvanceMethods = [
+            IDBCursor.prototype.advance,
+            IDBCursor.prototype.continue,
+            IDBCursor.prototype.continuePrimaryKey,
+        ]));
+}
+const transactionDoneMap = new WeakMap();
+const transformCache = new WeakMap();
+const reverseTransformCache = new WeakMap();
+function promisifyRequest(request) {
+    const promise = new Promise((resolve, reject) => {
+        const unlisten = () => {
+            request.removeEventListener('success', success);
+            request.removeEventListener('error', error);
+        };
+        const success = () => {
+            resolve(wrap(request.result));
+            unlisten();
+        };
+        const error = () => {
+            reject(request.error);
+            unlisten();
+        };
+        request.addEventListener('success', success);
+        request.addEventListener('error', error);
+    });
+    // This mapping exists in reverseTransformCache but doesn't exist in transformCache. This
+    // is because we create many promises from a single IDBRequest.
+    reverseTransformCache.set(promise, request);
+    return promise;
+}
+function cacheDonePromiseForTransaction(tx) {
+    // Early bail if we've already created a done promise for this transaction.
+    if (transactionDoneMap.has(tx))
+        return;
+    const done = new Promise((resolve, reject) => {
+        const unlisten = () => {
+            tx.removeEventListener('complete', complete);
+            tx.removeEventListener('error', error);
+            tx.removeEventListener('abort', error);
+        };
+        const complete = () => {
+            resolve();
+            unlisten();
+        };
+        const error = () => {
+            reject(tx.error || new DOMException('AbortError', 'AbortError'));
+            unlisten();
+        };
+        tx.addEventListener('complete', complete);
+        tx.addEventListener('error', error);
+        tx.addEventListener('abort', error);
+    });
+    // Cache it for later retrieval.
+    transactionDoneMap.set(tx, done);
+}
+let idbProxyTraps = {
+    get(target, prop, receiver) {
+        if (target instanceof IDBTransaction) {
+            // Special handling for transaction.done.
+            if (prop === 'done')
+                return transactionDoneMap.get(target);
+            // Make tx.store return the only store in the transaction, or undefined if there are many.
+            if (prop === 'store') {
+                return receiver.objectStoreNames[1]
+                    ? undefined
+                    : receiver.objectStore(receiver.objectStoreNames[0]);
+            }
+        }
+        // Else transform whatever we get back.
+        return wrap(target[prop]);
+    },
+    set(target, prop, value) {
+        target[prop] = value;
+        return true;
+    },
+    has(target, prop) {
+        if (target instanceof IDBTransaction &&
+            (prop === 'done' || prop === 'store')) {
+            return true;
+        }
+        return prop in target;
+    },
+};
+function replaceTraps(callback) {
+    idbProxyTraps = callback(idbProxyTraps);
+}
+function wrapFunction(func) {
+    // Due to expected object equality (which is enforced by the caching in `wrap`), we
+    // only create one new func per func.
+    // Cursor methods are special, as the behaviour is a little more different to standard IDB. In
+    // IDB, you advance the cursor and wait for a new 'success' on the IDBRequest that gave you the
+    // cursor. It's kinda like a promise that can resolve with many values. That doesn't make sense
+    // with real promises, so each advance methods returns a new promise for the cursor object, or
+    // undefined if the end of the cursor has been reached.
+    if (getCursorAdvanceMethods().includes(func)) {
+        return function (...args) {
+            // Calling the original function with the proxy as 'this' causes ILLEGAL INVOCATION, so we use
+            // the original object.
+            func.apply(unwrap(this), args);
+            return wrap(this.request);
+        };
+    }
+    return function (...args) {
+        // Calling the original function with the proxy as 'this' causes ILLEGAL INVOCATION, so we use
+        // the original object.
+        return wrap(func.apply(unwrap(this), args));
+    };
+}
+function transformCachableValue(value) {
+    if (typeof value === 'function')
+        return wrapFunction(value);
+    // This doesn't return, it just creates a 'done' promise for the transaction,
+    // which is later returned for transaction.done (see idbObjectHandler).
+    if (value instanceof IDBTransaction)
+        cacheDonePromiseForTransaction(value);
+    if (instanceOfAny(value, getIdbProxyableTypes()))
+        return new Proxy(value, idbProxyTraps);
+    // Return the same value back if we're not going to transform it.
+    return value;
+}
+function wrap(value) {
+    // We sometimes generate multiple promises from a single IDBRequest (eg when cursoring), because
+    // IDB is weird and a single IDBRequest can yield many responses, so these can't be cached.
+    if (value instanceof IDBRequest)
+        return promisifyRequest(value);
+    // If we've already transformed this value before, reuse the transformed value.
+    // This is faster, but it also provides object equality.
+    if (transformCache.has(value))
+        return transformCache.get(value);
+    const newValue = transformCachableValue(value);
+    // Not all types are transformed.
+    // These may be primitive types, so they can't be WeakMap keys.
+    if (newValue !== value) {
+        transformCache.set(value, newValue);
+        reverseTransformCache.set(newValue, value);
+    }
+    return newValue;
+}
+const unwrap = (value) => reverseTransformCache.get(value);
+
+/**
+ * Open a database.
+ *
+ * @param name Name of the database.
+ * @param version Schema version.
+ * @param callbacks Additional callbacks.
+ */
+function openDB(name, version, { blocked, upgrade, blocking, terminated } = {}) {
+    const request = indexedDB.open(name, version);
+    const openPromise = wrap(request);
+    if (upgrade) {
+        request.addEventListener('upgradeneeded', (event) => {
+            upgrade(wrap(request.result), event.oldVersion, event.newVersion, wrap(request.transaction), event);
+        });
+    }
+    if (blocked) {
+        request.addEventListener('blocked', (event) => blocked(
+        // Casting due to https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/1405
+        event.oldVersion, event.newVersion, event));
+    }
+    openPromise
+        .then((db) => {
+        if (terminated)
+            db.addEventListener('close', () => terminated());
+        if (blocking) {
+            db.addEventListener('versionchange', (event) => blocking(event.oldVersion, event.newVersion, event));
+        }
+    })
+        .catch(() => { });
+    return openPromise;
+}
+/**
+ * Delete a database.
+ *
+ * @param name Name of the database.
+ */
+function deleteDB(name, { blocked } = {}) {
+    const request = indexedDB.deleteDatabase(name);
+    if (blocked) {
+        request.addEventListener('blocked', (event) => blocked(
+        // Casting due to https://github.com/microsoft/TypeScript-DOM-lib-generator/pull/1405
+        event.oldVersion, event));
+    }
+    return wrap(request).then(() => undefined);
+}
+
+const readMethods = ['get', 'getKey', 'getAll', 'getAllKeys', 'count'];
+const writeMethods = ['put', 'add', 'delete', 'clear'];
+const cachedMethods = new Map();
+function getMethod(target, prop) {
+    if (!(target instanceof IDBDatabase &&
+        !(prop in target) &&
+        typeof prop === 'string')) {
+        return;
+    }
+    if (cachedMethods.get(prop))
+        return cachedMethods.get(prop);
+    const targetFuncName = prop.replace(/FromIndex$/, '');
+    const useIndex = prop !== targetFuncName;
+    const isWrite = writeMethods.includes(targetFuncName);
+    if (
+    // Bail if the target doesn't exist on the target. Eg, getAll isn't in Edge.
+    !(targetFuncName in (useIndex ? IDBIndex : IDBObjectStore).prototype) ||
+        !(isWrite || readMethods.includes(targetFuncName))) {
+        return;
+    }
+    const method = async function (storeName, ...args) {
+        // isWrite ? 'readwrite' : undefined gzipps better, but fails in Edge :(
+        const tx = this.transaction(storeName, isWrite ? 'readwrite' : 'readonly');
+        let target = tx.store;
+        if (useIndex)
+            target = target.index(args.shift());
+        // Must reject if op rejects.
+        // If it's a write operation, must reject if tx.done rejects.
+        // Must reject with op rejection first.
+        // Must resolve with op value.
+        // Must handle both promises (no unhandled rejections)
+        return (await Promise.all([
+            target[targetFuncName](...args),
+            isWrite && tx.done,
+        ]))[0];
+    };
+    cachedMethods.set(prop, method);
+    return method;
+}
+replaceTraps((oldTraps) => ({
+    ...oldTraps,
+    get: (target, prop, receiver) => getMethod(target, prop) || oldTraps.get(target, prop, receiver),
+    has: (target, prop) => !!getMethod(target, prop) || oldTraps.has(target, prop),
+}));
+
+const advanceMethodProps = ['continue', 'continuePrimaryKey', 'advance'];
+const methodMap = {};
+const advanceResults = new WeakMap();
+const ittrProxiedCursorToOriginalProxy = new WeakMap();
+const cursorIteratorTraps = {
+    get(target, prop) {
+        if (!advanceMethodProps.includes(prop))
+            return target[prop];
+        let cachedFunc = methodMap[prop];
+        if (!cachedFunc) {
+            cachedFunc = methodMap[prop] = function (...args) {
+                advanceResults.set(this, ittrProxiedCursorToOriginalProxy.get(this)[prop](...args));
+            };
+        }
+        return cachedFunc;
+    },
+};
+async function* iterate(...args) {
+    // tslint:disable-next-line:no-this-assignment
+    let cursor = this;
+    if (!(cursor instanceof IDBCursor)) {
+        cursor = await cursor.openCursor(...args);
+    }
+    if (!cursor)
+        return;
+    cursor = cursor;
+    const proxiedCursor = new Proxy(cursor, cursorIteratorTraps);
+    ittrProxiedCursorToOriginalProxy.set(proxiedCursor, cursor);
+    // Map this double-proxy back to the original, so other cursor methods work.
+    reverseTransformCache.set(proxiedCursor, unwrap(cursor));
+    while (cursor) {
+        yield proxiedCursor;
+        // If one of the advancing methods was not called, call continue().
+        cursor = await (advanceResults.get(proxiedCursor) || cursor.continue());
+        advanceResults.delete(proxiedCursor);
+    }
+}
+function isIteratorProp(target, prop) {
+    return ((prop === Symbol.asyncIterator &&
+        instanceOfAny(target, [IDBIndex, IDBObjectStore, IDBCursor])) ||
+        (prop === 'iterate' && instanceOfAny(target, [IDBIndex, IDBObjectStore])));
+}
+replaceTraps((oldTraps) => ({
+    ...oldTraps,
+    get(target, prop, receiver) {
+        if (isIteratorProp(target, prop))
+            return iterate;
+        return oldTraps.get(target, prop, receiver);
+    },
+    has(target, prop) {
+        return isIteratorProp(target, prop) || oldTraps.has(target, prop);
+    },
+}));
+
+
+
+;// ./assets/src/utils/indexedDB.js
+/**
+ * IndexedDB Wrapper - Abstract storage interface for browser persistent storage
+ *
+ * Uses the `idb` library (by Jake Archibald) as a foundation, providing a
+ * simple, promise-based API for storing data in IndexedDB.
+ *
+ * Works in all modern browsers including WordPress Playground WASM environment.
+ *
+ * Features:
+ * - Simple key-value storage interface
+ * - Automatic database initialization
+ * - Promise-based async API
+ * - Error handling and quota management
+ * - Support for multiple stores and indexes
+ * - Automatic cleanup of expired data
+ * - Built on battle-tested `idb` library (9.8M weekly downloads)
+ */
+
+/* global indexedDB, IDBKeyRange */
+
+
+
+/**
+ * IndexedDB database instance cache
+ * Stores opened database connections to avoid repeated initialization
+ */
+const dbInstances = new Map();
+
+/**
+ * Default database configuration
+ */
+const DEFAULT_CONFIG = {
+  dbName: 'aether-site-exporter',
+  version: 1,
+  stores: {
+    cache: {
+      keyPath: 'key',
+      indexes: [{
+        name: 'timestamp',
+        keyPath: 'timestamp',
+        unique: false
+      }, {
+        name: 'type',
+        keyPath: 'type',
+        unique: false
+      }]
+    }
+  }
+};
+
+/**
+ * Open IndexedDB database with configuration using idb library
+ *
+ * @param {Object} config         - Database configuration
+ * @param {string} config.dbName  - Database name
+ * @param {number} config.version - Database version
+ * @param {Object} config.stores  - Object stores configuration
+ * @return {Promise<Object>} Database instance
+ */
+async function openDatabase(config = DEFAULT_CONFIG) {
+  const cacheKey = `${config.dbName}_v${config.version}`;
+
+  // Return cached instance if available
+  if (dbInstances.has(cacheKey)) {
+    return dbInstances.get(cacheKey);
+  }
+  try {
+    const db = await openDB(config.dbName, config.version, {
+      upgrade(database) {
+        // Create object stores based on configuration
+        Object.entries(config.stores).forEach(([storeName, storeConfig]) => {
+          // Delete existing store if it exists (for upgrades)
+          if (database.objectStoreNames.contains(storeName)) {
+            database.deleteObjectStore(storeName);
+          }
+
+          // Create new store
+          const store = database.createObjectStore(storeName, {
+            keyPath: storeConfig.keyPath,
+            autoIncrement: storeConfig.autoIncrement || false
+          });
+
+          // Create indexes
+          if (storeConfig.indexes) {
+            storeConfig.indexes.forEach(index => {
+              store.createIndex(index.name, index.keyPath, {
+                unique: index.unique || false
+              });
+            });
+          }
+        });
+      }
+    });
+    dbInstances.set(cacheKey, db);
+    return db;
+  } catch (error) {
+    throw new Error(`Failed to open IndexedDB: ${error.message || 'Unknown error'}`);
+  }
+}
+
+/**
+ * IndexedDB Store - Abstract interface for a single object store
+ *
+ * Provides a simple key-value API on top of idb library
+ */
+class IndexedDBStore {
+  /**
+   * Constructor
+   *
+   * @param {string} storeName - Name of the object store
+   * @param {Object} config    - Database configuration (optional)
+   */
+  constructor(storeName, config = DEFAULT_CONFIG) {
+    this.storeName = storeName;
+    this.config = config;
+    this.db = null;
+    // Get the keyPath for this store from config
+    this.keyPath = config.stores?.[storeName]?.keyPath || DEFAULT_CONFIG.stores.cache.keyPath;
+  }
+
+  /**
+   * Ensure database is initialized
+   *
+   * @return {Promise<Object>} Database instance
+   */
+  async ensureDatabase() {
+    if (!this.db) {
+      this.db = await openDatabase(this.config);
+    }
+    return this.db;
+  }
+
+  /**
+   * Get a value by key
+   *
+   * @param {string|number} key - The key to retrieve
+   * @return {Promise<any|null>} The stored value or null if not found
+   */
+  async get(key) {
+    try {
+      const db = await this.ensureDatabase();
+      const result = await db.get(this.storeName, key);
+      return result || null;
+    } catch (error) {
+      console.error(`[IndexedDB] Error getting key "${key}":`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all values from the store
+   *
+   * @param {number} limit - Maximum number of items to return (optional)
+   * @return {Promise<Array>} Array of all stored values
+   */
+  async getAll(limit = undefined) {
+    try {
+      const db = await this.ensureDatabase();
+      const result = await db.getAll(this.storeName, undefined, limit);
+      return result || [];
+    } catch (error) {
+      console.error('[IndexedDB] Error getting all values:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get all keys from the store
+   *
+   * @return {Promise<Array>} Array of all keys
+   */
+  async getAllKeys() {
+    try {
+      const db = await this.ensureDatabase();
+      const result = await db.getAllKeys(this.storeName);
+      return result || [];
+    } catch (error) {
+      console.error('[IndexedDB] Error getting all keys:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Set a value by key
+   *
+   * @param {string|number} key      - The key to set
+   * @param {any}           value    - The value to store
+   * @param {Object}        metadata - Additional metadata (optional)
+   * @return {Promise<boolean>} True if successful, false otherwise
+   */
+  async set(key, value, metadata = {}) {
+    try {
+      const db = await this.ensureDatabase();
+
+      // For object values, spread properties; for primitives, use value property
+      const valueData = typeof value === 'object' && value !== null ? {
+        ...value
+      } : {
+        value
+      };
+      const data = {
+        [this.keyPath]: key,
+        ...valueData,
+        timestamp: Date.now(),
+        ...metadata
+      };
+      await db.put(this.storeName, data);
+      return true;
+    } catch (error) {
+      // Check for quota exceeded error
+      if (error.name === 'QuotaExceededError' || error.message?.includes('quota')) {
+        console.warn('[IndexedDB] Storage quota exceeded. Consider cleaning up old data.');
+      }
+      console.error(`[IndexedDB] Error setting key "${key}":`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Delete a value by key
+   *
+   * @param {string|number} key - The key to delete
+   * @return {Promise<boolean>} True if successful, false otherwise
+   */
+  async delete(key) {
+    try {
+      const db = await this.ensureDatabase();
+      await db.delete(this.storeName, key);
+      return true;
+    } catch (error) {
+      console.error(`[IndexedDB] Error deleting key "${key}":`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Clear all data from the store
+   *
+   * @return {Promise<boolean>} True if successful, false otherwise
+   */
+  async clear() {
+    try {
+      const db = await this.ensureDatabase();
+      await db.clear(this.storeName);
+      return true;
+    } catch (error) {
+      console.error('[IndexedDB] Error clearing store:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Count number of items in the store
+   *
+   * @return {Promise<number>} Number of items
+   */
+  async count() {
+    try {
+      const db = await this.ensureDatabase();
+      const result = await db.count(this.storeName);
+      return result || 0;
+    } catch (error) {
+      console.error('[IndexedDB] Error counting items:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get values by index
+   *
+   * @param {string} indexName  - Name of the index
+   * @param {any}    indexValue - Value to search for in the index
+   * @return {Promise<Array>} Array of matching values
+   */
+  async getByIndex(indexName, indexValue) {
+    try {
+      const db = await this.ensureDatabase();
+      const result = await db.getAllFromIndex(this.storeName, indexName, indexValue);
+      return result || [];
+    } catch (error) {
+      console.error(`[IndexedDB] Error getting by index "${indexName}":`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Delete items older than specified age
+   *
+   * Uses the timestamp index to efficiently find and delete old items.
+   *
+   * @param {number} maxAgeMs - Maximum age in milliseconds
+   * @return {Promise<number>} Number of items deleted
+   */
+  async deleteOlderThan(maxAgeMs) {
+    try {
+      const db = await this.ensureDatabase();
+      const cutoffTime = Date.now() - maxAgeMs;
+
+      // Use transaction for atomic delete operation
+      const tx = db.transaction(this.storeName, 'readwrite');
+      const store = tx.objectStore(this.storeName);
+      const index = store.index('timestamp');
+      let deletedCount = 0;
+
+      // Get cursor for items with timestamp <= cutoffTime
+      let cursor = await index.openCursor(IDBKeyRange.upperBound(cutoffTime));
+      while (cursor) {
+        await cursor.delete();
+        deletedCount++;
+        cursor = await cursor.continue();
+      }
+      await tx.done;
+      return deletedCount;
+    } catch (error) {
+      console.error('[IndexedDB] Error deleting old items:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get storage estimate (quota and usage)
+   *
+   * @return {Promise<Object>} Storage estimate with quota and usage
+   */
+  async getStorageEstimate() {
+    if (navigator.storage && navigator.storage.estimate) {
+      try {
+        const estimate = await navigator.storage.estimate();
+        return {
+          quota: estimate.quota,
+          usage: estimate.usage,
+          percentUsed: estimate.quota > 0 ? estimate.usage / estimate.quota * 100 : 0
+        };
+      } catch (error) {
+        console.error('[IndexedDB] Error getting storage estimate:', error);
+      }
+    }
+    return {
+      quota: null,
+      usage: null,
+      percentUsed: null
+    };
+  }
+}
+
+/**
+ * Check if IndexedDB is available
+ *
+ * @return {boolean} True if IndexedDB is supported
+ */
+function isIndexedDBAvailable() {
+  try {
+    return typeof indexedDB !== 'undefined' && indexedDB !== null && typeof openDB === 'function';
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Delete entire database
+ *
+ * @param {string} dbName - Database name to delete
+ * @return {Promise<boolean>} True if successful
+ */
+async function deleteDatabase(dbName) {
+  try {
+    // Remove from cache
+    const cacheKeys = Array.from(dbInstances.keys()).filter(key => key.startsWith(dbName));
+    cacheKeys.forEach(key => dbInstances.delete(key));
+
+    // Delete database
+    await new Promise((resolve, reject) => {
+      const request = indexedDB.deleteDatabase(dbName);
+      request.onsuccess = () => resolve(true);
+      request.onerror = () => reject(new Error(`Failed to delete database: ${request.error?.message || 'Unknown error'}`));
+    });
+    return true;
+  } catch (error) {
+    console.error('[IndexedDB] Error deleting database:', error);
+    return false;
+  }
+}
+/* harmony default export */ const utils_indexedDB = (IndexedDBStore);
+// EXTERNAL MODULE: ./assets/src/utils/debug.js
+var admin_settings_debug = __webpack_require__(735);
+;// ./assets/src/utils/wporgCache.js
+/**
+ * WordPress.org API Cache - Persistent cache for WordPress.org existence checks
+ *
+ * Caches WordPress.org plugin/theme existence checks in IndexedDB with 7-day expiration.
+ * Provides 3-15 second performance improvement per export by eliminating redundant API calls.
+ *
+ * Features:
+ * - Persistent storage across browser sessions
+ * - 7-day cache expiration
+ * - In-memory L1 cache for current session
+ * - Automatic cleanup of expired entries
+ * - Works in WordPress Playground WASM environment
+ */
+
+
+
+
+/**
+ * Cache configuration
+ */
+const WPORG_CACHE_CONFIG = {
+  dbName: 'aether-wporg-cache',
+  version: 1,
+  stores: {
+    wporgChecks: {
+      keyPath: 'cacheKey',
+      indexes: [{
+        name: 'timestamp',
+        keyPath: 'timestamp',
+        unique: false
+      }, {
+        name: 'type',
+        keyPath: 'type',
+        unique: false
+      }]
+    }
+  }
+};
+
+/**
+ * Cache expiration time (7 days)
+ * WordPress.org plugins/themes don't change frequently, so 7 days is safe
+ */
+const CACHE_EXPIRATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+/**
+ * WordPress.org Cache Manager
+ *
+ * Provides persistent caching of WordPress.org existence checks
+ */
+class WpOrgCache {
+  /**
+   * Constructor
+   */
+  constructor() {
+    this.store = new utils_indexedDB('wporgChecks', WPORG_CACHE_CONFIG);
+    this.memoryCache = new Map(); // L1 cache for current session
+    this.cleanupPromise = null; // Track cleanup to avoid concurrent runs
+  }
+
+  /**
+   * Generate cache key
+   *
+   * @param {string} slug - Plugin/theme slug
+   * @param {string} type - 'plugin' or 'theme'
+   * @return {string} Cache key
+   */
+  getCacheKey(slug, type) {
+    return `${type}:${slug}`;
+  }
+
+  /**
+   * Get cached existence check result
+   *
+   * Checks memory cache first, then IndexedDB
+   *
+   * @param {string} slug - Plugin/theme slug
+   * @param {string} type - 'plugin' or 'theme'
+   * @return {Promise<boolean|null>} Cached result or null if not found/expired
+   */
+  async get(slug, type) {
+    const cacheKey = this.getCacheKey(slug, type);
+
+    // L1: Check memory cache first (instant)
+    if (this.memoryCache.has(cacheKey)) {
+      return this.memoryCache.get(cacheKey);
+    }
+
+    // L2: Check IndexedDB
+    try {
+      const cached = await this.store.get(cacheKey);
+
+      // Check if cache entry exists and is not expired
+      if (cached && cached.timestamp) {
+        const age = Date.now() - cached.timestamp;
+        if (age < CACHE_EXPIRATION_MS) {
+          // Valid cache hit - store in memory for faster access
+          this.memoryCache.set(cacheKey, cached.exists);
+          return cached.exists;
+        }
+
+        // Cache expired - delete it
+        await this.store.delete(cacheKey);
+      }
+    } catch (error) {
+      console.error(`[WpOrgCache] Error getting cache for ${cacheKey}:`, error);
+    }
+    return null; // Cache miss or error
+  }
+
+  /**
+   * Set cached existence check result
+   *
+   * Stores in both memory and IndexedDB
+   *
+   * @param {string}  slug   - Plugin/theme slug
+   * @param {string}  type   - 'plugin' or 'theme'
+   * @param {boolean} exists - Whether the asset exists on WordPress.org
+   * @return {Promise<boolean>} True if successfully cached
+   */
+  async set(slug, type, exists) {
+    const cacheKey = this.getCacheKey(slug, type);
+
+    // L1: Store in memory
+    this.memoryCache.set(cacheKey, exists);
+
+    // L2: Store in IndexedDB
+    try {
+      await this.store.set(cacheKey, {
+        exists
+      }, {
+        type,
+        slug
+      });
+      return true;
+    } catch (error) {
+      console.error(`[WpOrgCache] Error setting cache for ${cacheKey}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Clean up expired cache entries
+   *
+   * Runs automatically on initialization, removes entries older than 7 days
+   *
+   * @return {Promise<number>} Number of entries cleaned up
+   */
+  async cleanup() {
+    // Prevent concurrent cleanup runs
+    if (this.cleanupPromise) {
+      return this.cleanupPromise;
+    }
+    this.cleanupPromise = (async () => {
+      try {
+        const deleted = await this.store.deleteOlderThan(CACHE_EXPIRATION_MS);
+        if (deleted > 0) {
+          (0,admin_settings_debug/* debug */.Yz)(`[WpOrgCache] Cleaned up ${deleted} expired cache entries`);
+        }
+        return deleted;
+      } catch (error) {
+        (0,admin_settings_debug/* debugError */.AO)('[WpOrgCache] Error during cleanup:', error);
+        return 0;
+      } finally {
+        this.cleanupPromise = null;
+      }
+    })();
+    return this.cleanupPromise;
+  }
+
+  /**
+   * Clear all cached data
+   *
+   * @return {Promise<boolean>} True if successful
+   */
+  async clear() {
+    this.memoryCache.clear();
+    return this.store.clear();
+  }
+
+  /**
+   * Get cache statistics
+   *
+   * @return {Promise<Object>} Cache statistics
+   */
+  async getStats() {
+    try {
+      const totalCount = await this.store.count();
+      const memoryCount = this.memoryCache.size;
+      return {
+        totalCached: totalCount,
+        memoryCached: memoryCount,
+        hitRate: null // Would require tracking hits/misses
+      };
+    } catch (error) {
+      console.error('[WpOrgCache] Error getting stats:', error);
+      return {
+        totalCached: 0,
+        memoryCached: this.memoryCache.size,
+        hitRate: null
+      };
+    }
+  }
+
+  /**
+   * Get all cached entries for debugging
+   *
+   * @return {Promise<Array>} Array of all cached entries
+   */
+  async getAllEntries() {
+    try {
+      return await this.store.getAll();
+    } catch (error) {
+      console.error('[WpOrgCache] Error getting all entries:', error);
+      return [];
+    }
+  }
+}
+
+// Create singleton instance
+let cacheInstance = null;
+
+/**
+ * Get WordPress.org cache instance (singleton)
+ *
+ * @return {WpOrgCache} Cache instance
+ */
+function getWpOrgCache() {
+  if (!cacheInstance) {
+    cacheInstance = new WpOrgCache();
+
+    // Run cleanup on first initialization
+    cacheInstance.cleanup().catch(error => {
+      console.error('[WpOrgCache] Initial cleanup failed:', error);
+    });
+  }
+  return cacheInstance;
+}
+/* harmony default export */ const wporgCache = ((/* unused pure expression or super */ null && (getWpOrgCache)));
+;// ./assets/src/services/AssetDiscoveryService.js
+/**
+ * Asset Discovery Service
+ *
+ * Pure functions and service class for discovering and categorizing WordPress assets.
+ * Extracted from useAssetDiscovery hook for better testability.
+ *
+ */
+
+/**
+ * Normalize plugin slug to directory name only.
+ * WordPress stores plugins as 'akismet/akismet.php' but WordPress.org expects just 'akismet'.
+ *
+ * @param {string} slug - Plugin slug (may include file path)
+ * @return {string} Normalized slug (directory name only)
+ */
+function normalizePluginSlug(slug) {
+  if (slug.includes('/')) {
+    return slug.split('/')[0];
+  }
+  return slug;
+}
+
+/**
+ * Filter assets to only active ones.
+ *
+ * @param {Array<Object>} assets Array of asset objects with is_active property.
+ * @return {Array<Object>} Only active assets.
+ */
+function filterActiveAssets(assets) {
+  return assets.filter(asset => asset.is_active);
+}
+
+/**
+ * Get active theme from themes array.
+ *
+ * @param {Array<Object>} themes Array of theme objects.
+ * @return {Object|null} Active theme or null if none found.
+ */
+function getActiveTheme(themes) {
+  return themes.find(theme => theme.is_active) || null;
+}
+
+/**
+ * Filter assets by WordPress.org status.
+ *
+ * @param {Array<Object>} assets    Array of assets with from_wporg property.
+ * @param {boolean}       fromWpOrg True to get WordPress.org assets, false for custom.
+ * @return {Array<Object>} Filtered assets.
+ */
+function filterByWpOrgStatus(assets, fromWpOrg) {
+  return assets.filter(asset => asset.from_wporg === fromWpOrg);
+}
+
+/**
+ * Filter out built-in Playground plugins.
+ *
+ * @param {Array<Object>} plugins Array of plugin objects.
+ * @return {Array<Object>} Plugins excluding built-in ones.
+ */
+function filterBuiltInPlugins(plugins) {
+  const builtInSlugs = ['aether', 'sqlite-database-integration'];
+  return plugins.filter(plugin => !builtInSlugs.includes(normalizePluginSlug(plugin.slug)));
+}
+
+/**
+ * Transform asset to custom asset format.
+ *
+ * @param {Object} asset Asset object with assetType, slug, name, version.
+ * @return {Object} Custom asset format.
+ */
+function toCustomAssetFormat(asset) {
+  return {
+    type: asset.assetType,
+    slug: asset.slug,
+    name: asset.name,
+    version: asset.version
+  };
+}
+
+/**
+ * Transform asset to blueprint slug format.
+ *
+ * @param {Object} asset Asset object with slug.
+ * @return {string} Normalized slug.
+ */
+function toBlueprintSlugFormat(asset) {
+  return normalizePluginSlug(asset.slug);
+}
+
+/**
+ * Combine plugins and themes with asset type tag.
+ *
+ * @param {Array<Object>} plugins Array of plugin objects.
+ * @param {Array<Object>} themes  Array of theme objects.
+ * @return {Array<Object>} Combined array with assetType property.
+ */
+function combineAssetsWithType(plugins, themes) {
+  return [...plugins.map(p => ({
+    ...p,
+    assetType: 'plugin'
+  })), ...themes.map(t => ({
+    ...t,
+    assetType: 'theme'
+  }))];
+}
+
+/**
+ * Get site name from globals.
+ * Separated as pure function for testability.
+ *
+ * @return {string} Site name from window.wp.siteName or document.title or empty string.
+ */
+function getSiteName() {
+  if (typeof window !== 'undefined' && window.wp && window.wp.siteName) {
+    return window.wp.siteName;
+  }
+  if (typeof document !== 'undefined' && document.title) {
+    return document.title;
+  }
+  return '';
+}
+
+/**
+ * Asset Discovery Service
+ *
+ * Service class for discovering and categorizing WordPress assets.
+ * Uses dependency injection for testability.
+ */
+class AssetDiscoveryService {
+  /**
+   * @param {Function} apiFetch      WordPress apiFetch function.
+   * @param {Function} checkWpOrg    Function to check if asset is from WordPress.org.
+   * @param {Object}   wporgCache    WordPress.org cache instance.
+   * @param {Function} getSiteNameFn Function to get site name (optional, defaults to getSiteName).
+   */
+  constructor(apiFetch, checkWpOrg, wporgCache, getSiteNameFn = null) {
+    this.apiFetch = apiFetch;
+    this.checkWpOrg = checkWpOrg;
+    this.wporgCache = wporgCache;
+    this.getSiteName = getSiteNameFn || getSiteName;
+  }
+
+  /**
+   * Get all installed plugins and themes with metadata from REST API.
+   *
+   * @return {Promise<Object>} Object with plugins and themes arrays.
+   */
+  async getInstalledAssets() {
+    try {
+      const response = await this.apiFetch({
+        path: '/aether/site-exporter/assets',
+        method: 'GET'
+      });
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to fetch assets');
+      }
+      return {
+        plugins: response.plugins || [],
+        themes: response.themes || []
+      };
+    } catch (error) {
+      return {
+        plugins: [],
+        themes: []
+      };
+    }
+  }
+
+  /**
+   * Get plugin configuration from window.aetherData.
+   *
+   * Configuration was previously fetched from REST API endpoint /config,
+   * but that endpoint was removed in favor of reading from window.aetherData
+   * which is injected by PHP.
+   *
+   * @return {Promise<Object>} Configuration object.
+   */
+  async getConfig() {
+    // Read config from window.aetherData (injected by PHP).
+    if (typeof window !== 'undefined' && window.aetherData) {
+      return {
+        publicUrl: window.aetherData.publicUrl || '',
+        adminUrl: window.aetherData.adminUrl || ''
+        // Note: wporgCheckMethod and corsProxyUrl are not needed
+        // because the JS code uses hardcoded defaults ('cors-proxy' with fallback to 'direct')
+      };
+    }
+
+    // Fallback if window.aetherData is not available.
+    return {
+      publicUrl: '',
+      adminUrl: ''
+    };
+  }
+
+  /**
+   * Check all assets against WordPress.org in parallel.
+   *
+   * @param {Array<Object>} items  Array of items with slug and assetType.
+   * @param {Object}        config Configuration object for WordPress.org check.
+   * @return {Promise<Array<Object>>} Assets with from_wporg property added.
+   */
+  async checkAssetsAgainstWpOrg(items, config) {
+    return Promise.all(items.map(async item => {
+      const fromWpOrg = await this.checkWpOrg(item.slug, item.assetType, config);
+      return {
+        ...item,
+        from_wporg: fromWpOrg
+      };
+    }));
+  }
+
+  /**
+   * Discover all custom assets (not from WordPress.org).
+   *
+   * @return {Promise<Array<Object>>} Array of custom assets.
+   */
+  async discoverCustomAssets() {
+    const config = await this.getConfig();
+    const {
+      plugins,
+      themes
+    } = await this.getInstalledAssets();
+    const activePlugins = filterActiveAssets(plugins);
+    const activeTheme = getActiveTheme(themes);
+    const activeThemes = activeTheme ? [activeTheme] : [];
+    const items = combineAssetsWithType(activePlugins, activeThemes);
+    const allAssets = await this.checkAssetsAgainstWpOrg(items, config);
+    const customAssets = filterByWpOrgStatus(allAssets, false);
+    return customAssets.map(toCustomAssetFormat);
+  }
+
+  /**
+   * Get WordPress.org assets for blueprint generation.
+   *
+   * Returns only active plugins/themes from WordPress.org.
+   * Custom assets will be included in wp-content.zip.
+   *
+   * @return {Promise<Object>} Object with plugins and themes arrays.
+   */
+  async getBlueprintAssets() {
+    const config = await this.getConfig();
+    const {
+      plugins,
+      themes
+    } = await this.getInstalledAssets();
+    const activePlugins = filterActiveAssets(plugins);
+    const activeTheme = getActiveTheme(themes);
+    const activeThemes = activeTheme ? [activeTheme] : [];
+    const items = combineAssetsWithType(activePlugins, activeThemes);
+    const allAssets = await this.checkAssetsAgainstWpOrg(items, config);
+    const wporgAssets = filterByWpOrgStatus(allAssets, true);
+    const wporgPlugins = wporgAssets.filter(asset => asset.assetType === 'plugin').filter(plugin => filterBuiltInPlugins([plugin]).length > 0).map(toBlueprintSlugFormat);
+    const wporgThemes = wporgAssets.filter(asset => asset.assetType === 'theme').map(toBlueprintSlugFormat);
+    return {
+      plugins: wporgPlugins,
+      themes: wporgThemes,
+      siteName: this.getSiteName()
+    };
+  }
+}
+;// ./assets/src/utils/useAssetDiscovery.js
+/**
+ * Asset Discovery Hook
+ *
+ * Browser-based implementation for WordPress.org asset detection.
+ * Detects WordPress.org plugins/themes by checking wordpress.org APIs.
+ *
+ */
+
+
+
+
+
+
+
+
+// Re-export normalizePluginSlug
+
+
+/**
+ * Check if a plugin or theme exists on WordPress.org
+ *
+ * Uses browser-based method (default: CORS proxy) to check WordPress.org.
+ * Can be switched to direct API calls via config.
+ *
+ * @param {string} slug   - Plugin or theme slug (will be normalized for plugins)
+ * @param {string} type   - 'plugin' or 'theme'
+ * @param {Object} config - Configuration object with wporgCheckMethod and corsProxyUrl
+ * @return {Promise<boolean>} True if asset exists on WordPress.org
+ */
+async function isFromWordPressOrg(slug, type, config = {}) {
+  // Normalize plugin slugs (remove file path if present)
+  // Example: 'akismet/akismet.php' -> 'akismet'
+  const normalizedSlug = type === 'plugin' ? normalizePluginSlug(slug) : slug;
+
+  // Check persistent cache first (IndexedDB + memory)
+  const cache = getWpOrgCache();
+  const cached = await cache.get(normalizedSlug, type);
+  if (cached !== null) {
+    return cached;
+  }
+
+  // Try CORS proxy method first, then fallback to direct API calls
+  let result = await checkWithMethod(normalizedSlug, type, 'cors-proxy', config);
+
+  // If CORS proxy method returned null (unable to check), try direct API fallback
+  if (result === null) {
+    (0,admin_settings_debug/* debugWarn */.UT)(`CORS proxy WordPress.org check returned null for ${type} "${slug}", trying direct API fallback`);
+    result = await checkWithMethod(normalizedSlug, type, 'direct', config);
+  }
+
+  // If still null after fallback, treat as false
+  if (result === null) {
+    (0,admin_settings_debug/* debugWarn */.UT)(`All WordPress.org check methods failed for ${type} "${slug}", treating as custom asset`);
+    result = false;
+  }
+
+  // Cache the result (only if we got a definitive answer)
+  if (result !== null) {
+    await cache.set(normalizedSlug, type, result);
+  }
+  return result;
+}
+
+/**
+ * Check WordPress.org using specific method
+ *
+ * @param {string} slug   - Normalized plugin/theme slug
+ * @param {string} type   - 'plugin' or 'theme'
+ * @param {string} method - 'cors-proxy' or 'direct'
+ * @param {Object} config - Configuration object
+ * @return {Promise<boolean|null>} True if exists, false if doesn't exist, null if unable to check
+ */
+async function checkWithMethod(slug, type, method, config = {}) {
+  try {
+    let checkUrl;
+    switch (method) {
+      case 'cors-proxy':
+        // Use external CORS proxy (e.g., cfp.s12y.org or custom worker)
+        checkUrl = config.corsProxyUrl || 'https://cfp.s12y.org/check-wporg';
+        checkUrl += `?slug=${encodeURIComponent(slug)}&type=${encodeURIComponent(type)}`;
+        break;
+      case 'direct':
+      default:
+        // Direct WordPress.org API calls (may fail in some browsers due to CORS)
+        if (type === 'theme') {
+          checkUrl = `https://api.wordpress.org/themes/info/1.2/?action=theme_information&request[slug]=${encodeURIComponent(slug)}`;
+        } else {
+          checkUrl = `https://api.wordpress.org/plugins/info/1.0/${encodeURIComponent(slug)}.json`;
+        }
+        break;
+    }
+
+    // Use plain fetch for all methods (browser-based checking)
+    const response = await fetch(checkUrl);
+    if (!response.ok) {
+      throw new Error(`WordPress.org check returned ${response.status}`);
+    }
+    const data = await response.json();
+
+    // Handle different response formats
+    let exists;
+    if (method === 'direct') {
+      // Direct WordPress.org API: check for 'error' field
+      exists = !data.error && (data.slug || data.name);
+    } else {
+      // CORS proxy: standardized response with 'success' and 'exists' fields
+      if (!data.success) {
+        throw new Error(data.error || (0,external_wp_i18n_namespaceObject.__)('Unknown error', 'aether-site-exporter'));
+      }
+      exists = data.exists;
+    }
+
+    // Return the result (could be true, false, or null)
+    // null means "unable to check" and should trigger fallback
+    return exists;
+  } catch (error) {
+    // Network/API error - return null to indicate unable to check
+    (0,admin_settings_debug/* debugWarn */.UT)(`Failed to check WordPress.org for ${type} "${slug}" using ${method} method:`, error);
+    return null;
+  }
+}
+
+/**
+ * Asset Discovery Hook
+ *
+ * Provides methods to discover and categorize installed plugins/themes.
+ * Uses AssetDiscoveryService for business logic.
+ *
+ * @return {Object} Hook methods and state
+ */
+function useAssetDiscovery() {
+  const [loading, setLoading] = (0,external_wp_element_namespaceObject.useState)(false);
+  const [error, setError] = (0,external_wp_element_namespaceObject.useState)(null);
+
+  // Create service instance with dependencies
+  const service = (0,external_wp_element_namespaceObject.useMemo)(() => new AssetDiscoveryService(utils_api/* default */.Ay, isFromWordPressOrg, getWpOrgCache()), []);
+
+  /**
+   * Discover all custom assets (not from WordPress.org)
+   *
+   * @return {Promise<Array<Object>>} Array of custom assets
+   */
+  const discoverCustomAssets = (0,external_wp_element_namespaceObject.useCallback)(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const customAssets = await service.discoverCustomAssets();
+      setLoading(false);
+      return customAssets;
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      throw err;
+    }
+  }, [service]);
+
+  /**
+   * Get WordPress.org assets for blueprint generation
+   *
+   * Returns only active plugins/themes from WordPress.org.
+   * Custom assets will be included in wp-content.zip.
+   *
+   * @return {Promise<Object>} Object with plugins and themes arrays
+   */
+  const getBlueprintAssets = (0,external_wp_element_namespaceObject.useCallback)(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const blueprintAssets = await service.getBlueprintAssets();
+      setLoading(false);
+      return blueprintAssets;
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      throw err;
+    }
+  }, [service]);
+  return {
+    discoverCustomAssets,
+    getBlueprintAssets,
+    loading,
+    error
+  };
+}
+;// ./assets/src/utils/storage.js
+/**
+ * Storage Abstraction Layer
+ *
+ * Provides a testable abstraction over localStorage with:
+ * - Automatic JSON serialization/deserialization
+ * - Error handling for quota exceeded and other errors
+ * - Consistent API that can be easily mocked in tests
+ * - Support for default values
+ *
+ */
+
+/**
+ * Storage abstraction object.
+ *
+ * @type {Object}
+ */
+const storage = {
+  /**
+   * Get a value from storage.
+   *
+   * @param {string} key          Storage key.
+   * @param {*}      defaultValue Optional default value if key doesn't exist or parse fails.
+   * @return {*} Parsed value, default value, or null.
+   */
+  get(key, defaultValue = null) {
+    try {
+      const item = localStorage.getItem(key);
+      if (item === null) {
+        return defaultValue;
+      }
+      try {
+        return JSON.parse(item);
+      } catch (parseError) {
+        // If JSON parsing fails, return default value
+        return defaultValue;
+      }
+    } catch (error) {
+      // Handle localStorage access errors
+      return defaultValue;
+    }
+  },
+  /**
+   * Set a value in storage.
+   *
+   * @param {string} key   Storage key.
+   * @param {*}      value Value to store (will be JSON serialized).
+   * @return {boolean} True on success, false on error.
+   */
+  set(key, value) {
+    try {
+      const serialized = JSON.stringify(value);
+      localStorage.setItem(key, serialized);
+      return true;
+    } catch (error) {
+      // Handle quota exceeded, circular references, or other errors
+      return false;
+    }
+  },
+  /**
+   * Remove a value from storage.
+   *
+   * @param {string} key Storage key.
+   * @return {boolean} True on success, false on error.
+   */
+  remove(key) {
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  },
+  /**
+   * Clear all storage.
+   *
+   * @return {boolean} True on success, false on error.
+   */
+  clear() {
+    try {
+      localStorage.clear();
+      return true;
+    } catch (error) {
+      return false;
+    }
+  },
+  /**
+   * Check if a key exists in storage.
+   *
+   * @param {string} key Storage key.
+   * @return {boolean} True if key exists, false otherwise.
+   */
+  has(key) {
+    try {
+      return localStorage.getItem(key) !== null;
+    } catch (error) {
+      return false;
+    }
+  },
+  /**
+   * Get all keys in storage.
+   *
+   * @return {Array<string>} Array of storage keys.
+   */
+  keys() {
+    try {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key !== null) {
+          keys.push(key);
+        }
+      }
+      return keys;
+    } catch (error) {
+      return [];
+    }
+  }
+};
+;// ./assets/src/constants/api.js
+/**
+ * API Constants
+ *
+ * Centralized API endpoints and configuration for WordPress REST API
+ *
+ */
+
+/**
+ * WordPress REST API namespace for Aether plugin
+ * @constant {string}
+ */
+const API_NAMESPACE = 'aether/site-exporter';
+
+/**
+ * Base path for all Aether REST API endpoints
+ * Note: Does not include /wp-json/ prefix as that's handled by apiFetch root URL middleware
+ * @constant {string}
+ */
+const API_BASE_PATH = `/${API_NAMESPACE}`;
+
+/**
+ * REST API Endpoints
+ *
+ * All WordPress REST API endpoints used throughout the application.
+ * Use these constants instead of hardcoded strings.
+ */
+const ENDPOINTS = {
+  /**
+   * Settings endpoints
+   */
+  SETTINGS: `${API_BASE_PATH}/settings`,
+  SETTINGS_GET: `${API_BASE_PATH}/settings`,
+  SETTINGS_UPDATE: `${API_BASE_PATH}/settings`,
+  /**
+   * Export workflow endpoints (formerly publish)
+   */
+  EXPORT_WORKFLOW: {
+    START: `${API_BASE_PATH}/export`,
+    STATUS: `${API_BASE_PATH}/export/status`,
+    STEPS: `${API_BASE_PATH}/export/steps`,
+    STEP: stepId => `${API_BASE_PATH}/export/steps/${stepId}`,
+    CANCEL: `${API_BASE_PATH}/export/cancel`,
+    CREATE_ARCHIVE: `${API_BASE_PATH}/export/createArchive`,
+    GENERATE_BLUEPRINT_BUNDLE: `${API_BASE_PATH}/export/generateBlueprintBundle`
+  },
+  /**
+   * Provider endpoints
+   */
+  PROVIDERS: {
+    CONFIG: providerId => `${API_BASE_PATH}/providers/${providerId}/config`,
+    SAVE_CONFIG: providerId => `${API_BASE_PATH}/providers/${providerId}/config`,
+    DELETE_CONFIG: providerId => `${API_BASE_PATH}/providers/${providerId}/config`,
+    TEST: providerId => `${API_BASE_PATH}/providers/${providerId}/test`,
+    STATUS: providerId => `${API_BASE_PATH}/providers/${providerId}/status`
+  },
+  /**
+   * Blueprint endpoints
+   * Note: Blueprint generation is now handled client-side via useBlueprintGenerator hook
+   */
+  BLUEPRINT: {
+    GET: `${API_BASE_PATH}/blueprint`
+  },
+  /**
+   * Export endpoints
+   */
+  EXPORT: {
+    START: `${API_BASE_PATH}/export/start`,
+    STATUS: `${API_BASE_PATH}/export/status`,
+    DOWNLOAD: `${API_BASE_PATH}/export/download`
+  },
+  /**
+   * Configuration endpoints
+   */
+  CONFIG: {
+    UPDATE: `${API_BASE_PATH}/config`,
+    RESET: `${API_BASE_PATH}/config/reset`
+  },
+  /**
+   * Static site endpoints
+   */
+  STATIC_SITE: {
+    URLS: `${API_BASE_PATH}/static-site/urls`,
+    GENERATE: `${API_BASE_PATH}/static-site/generate`
+  },
+  /**
+   * Asset management endpoints
+   * Note: Asset discovery now handled by useAssetDiscovery.js hook (browser-based)
+   * These endpoints have been removed as they made HTTP requests that fail in WordPress Playground
+   */
+  ASSETS: {
+    EXTRACT: `${API_BASE_PATH}/assets/extract`
+  },
+  /**
+   * Usage statistics endpoints
+   */
+  USAGE: {
+    SUMMARY: `${API_BASE_PATH}/usage/summary`,
+    DETAILS: `${API_BASE_PATH}/usage/details`
+  }
+};
+
+/**
+ * HTTP Methods
+ * @constant {Object}
+ */
+const HTTP_METHODS = {
+  GET: 'GET',
+  POST: 'POST',
+  PUT: 'PUT',
+  DELETE: 'DELETE',
+  PATCH: 'PATCH'
+};
+
+/**
+ * API Request Headers
+ * @constant {Object}
+ */
+const API_HEADERS = {
+  CONTENT_TYPE_JSON: 'application/json',
+  CONTENT_TYPE_FORM: 'application/x-www-form-urlencoded'
+};
+
+/**
+ * API Response Status Codes
+ * @constant {Object}
+ */
+const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  NO_CONTENT: 204,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  INTERNAL_SERVER_ERROR: 500
+};
+;// ./assets/src/constants/providers.js
+/**
+ * Provider Constants
+ *
+ * Centralized provider IDs, types, and categorizations
+ *
+ */
+
+/**
+ * Provider IDs
+ *
+ * Unique identifiers for all registered providers.
+ * Use these constants instead of hardcoded strings.
+ */
+const PROVIDER_IDS = {
+  /**
+   * Local Filesystem Provider
+   * @constant {string}
+   */
+  LOCAL_FILESYSTEM: 'local-filesystem',
+  /**
+   * None/Disabled Provider
+   * @constant {string}
+   */
+  NONE: 'none'
+};
+
+/**
+ * Provider Types
+ *
+ * Categories of providers by their primary function.
+ * Note: These are provider "types" (getType()), not capabilities.
+ */
+const PROVIDER_TYPES = {
+  /**
+   * Local storage type
+   * @constant {string}
+   */
+  LOCAL_STORAGE: 'local-storage',
+  /**
+   * Cloud storage type
+   * @constant {string}
+   */
+  CLOUD_STORAGE: 'cloud-storage',
+  /**
+   * Git hosting type
+   * @constant {string}
+   */
+  GIT_HOSTING: 'git-hosting',
+  /**
+   * Static site hosting type
+   * @constant {string}
+   */
+  STATIC_HOSTING: 'static-hosting',
+  /**
+   * Edge computing type
+   * @constant {string}
+   */
+  EDGE_COMPUTING: 'edge-computing'
+};
+
+/**
+ * Provider Status Values
+ *
+ * Standard status values for provider connections.
+ */
+const PROVIDER_STATUS = {
+  /**
+   * Provider is not configured
+   * @constant {string}
+   */
+  NOT_CONFIGURED: 'not_configured',
+  /**
+   * Provider is configured but not tested
+   * @constant {string}
+   */
+  CONFIGURED: 'configured',
+  /**
+   * Provider connection test in progress
+   * @constant {string}
+   */
+  TESTING: 'testing',
+  /**
+   * Provider connection test successful
+   * @constant {string}
+   */
+  CONNECTED: 'connected',
+  /**
+   * Provider connection test failed
+   * @constant {string}
+   */
+  ERROR: 'error',
+  /**
+   * Provider is currently deploying
+   * @constant {string}
+   */
+  DEPLOYING: 'deploying',
+  /**
+   * Provider deployed successfully
+   * @constant {string}
+   */
+  DEPLOYED: 'deployed'
+};
+
+/**
+ * Provider Error Codes
+ *
+ * Standard error codes for provider operations.
+ */
+const PROVIDER_ERROR_CODES = {
+  /**
+   * Provider not found in registry
+   * @constant {string}
+   */
+  PROVIDER_NOT_FOUND: 'provider_not_found',
+  /**
+   * Provider not configured
+   * @constant {string}
+   */
+  NOT_CONFIGURED: 'not_configured',
+  /**
+   * Invalid configuration
+   * @constant {string}
+   */
+  INVALID_CONFIG: 'invalid_config',
+  /**
+   * Authentication failed
+   * @constant {string}
+   */
+  AUTH_FAILED: 'auth_failed',
+  /**
+   * Connection failed
+   * @constant {string}
+   */
+  CONNECTION_FAILED: 'connection_failed',
+  /**
+   * Deployment failed
+   * @constant {string}
+   */
+  DEPLOYMENT_FAILED: 'deployment_failed',
+  /**
+   * Upload failed
+   * @constant {string}
+   */
+  UPLOAD_FAILED: 'upload_failed',
+  /**
+   * Deployment type not supported
+   * @constant {string}
+   */
+  DEPLOYMENT_TYPE_NOT_SUPPORTED: 'deployment_type_not_supported'
+};
+;// ./assets/src/constants/capabilities.js
+/**
+ * Provider Capability Constants
+ *
+ * Centralized capability names for provider features
+ *
+ */
+
+/**
+ * Provider Capabilities
+ *
+ * Standard capability identifiers that providers can support.
+ * Use these constants to check what features a provider supports.
+ */
+
+/**
+ * Storage capability - provider can store files
+ * @constant {string}
+ */
+const CAP_STORAGE = 'storage';
+
+/**
+ * Static site hosting capability - provider can host static sites
+ * @constant {string}
+ */
+const CAP_STATIC_SITE = 'static-site';
+
+/**
+ * CDN capability - provider offers CDN distribution
+ * @constant {string}
+ */
+const CAP_CDN = 'cdn';
+
+/**
+ * Analytics capability - provider offers analytics/metrics
+ * @constant {string}
+ */
+const CAP_ANALYTICS = 'analytics';
+
+/**
+ * Custom domain capability - provider supports custom domains
+ * @constant {string}
+ */
+const CAP_CUSTOM_DOMAIN = 'custom-domain';
+
+/**
+ * SSL/TLS capability - provider supports HTTPS
+ * @constant {string}
+ */
+const CAP_SSL = 'ssl';
+
+/**
+ * Caching capability - provider offers caching features
+ * @constant {string}
+ */
+const CAP_CACHE = 'cache';
+
+/**
+ * Image optimization capability - provider can optimize images
+ * @constant {string}
+ */
+const CAP_IMAGE_OPTIMIZATION = 'image-optimization';
+
+/**
+ * Video streaming capability - provider supports video streaming
+ * @constant {string}
+ */
+const CAP_VIDEO_STREAMING = 'video-streaming';
+
+/**
+ * Capability Groups
+ *
+ * Predefined sets of capabilities for common provider types.
+ */
+
+/**
+ * Core capabilities required for basic functionality
+ * @constant {string[]}
+ */
+const CORE_CAPABILITIES = [CAP_STORAGE];
+
+/**
+ * Capabilities for a full-featured static site host
+ * @constant {string[]}
+ */
+const STATIC_SITE_CAPABILITIES = [CAP_STORAGE, CAP_STATIC_SITE, CAP_CDN, CAP_CUSTOM_DOMAIN, CAP_SSL];
+
+/**
+ * Capability Labels
+ *
+ * Human-readable labels for each capability.
+ */
+const CAPABILITY_LABELS = {
+  [CAP_STORAGE]: 'Storage',
+  [CAP_STATIC_SITE]: 'Static Site Hosting',
+  [CAP_CDN]: 'CDN',
+  [CAP_ANALYTICS]: 'Analytics',
+  [CAP_CUSTOM_DOMAIN]: 'Custom Domain',
+  [CAP_SSL]: 'SSL/TLS',
+  [CAP_CACHE]: 'Caching',
+  [CAP_IMAGE_OPTIMIZATION]: 'Image Optimization',
+  [CAP_VIDEO_STREAMING]: 'Video Streaming'
+};
+
+/**
+ * Capability Descriptions
+ *
+ * Detailed descriptions for each capability.
+ */
+const CAPABILITY_DESCRIPTIONS = {
+  [CAP_STORAGE]: 'Store and retrieve files (blueprints, archives, assets)',
+  [CAP_STATIC_SITE]: 'Host static HTML/CSS/JS sites with global distribution',
+  [CAP_CDN]: 'Content delivery network for fast global access',
+  [CAP_ANALYTICS]: 'Track usage, visitors, and performance metrics',
+  [CAP_CUSTOM_DOMAIN]: 'Use your own domain name',
+  [CAP_SSL]: 'Secure connections with HTTPS/TLS',
+  [CAP_CACHE]: 'Cache content for improved performance',
+  [CAP_IMAGE_OPTIMIZATION]: 'Automatic image resizing and optimization',
+  [CAP_VIDEO_STREAMING]: 'Adaptive video streaming with HLS/DASH'
+};
+
+/**
+ * Capability Requirements
+ *
+ * Defines which capabilities are required for specific features.
+ */
+
+/**
+ * Required capabilities for export workflow
+ * @constant {string[]}
+ */
+const EXPORT_REQUIRED_CAPABILITIES = [CAP_STORAGE];
+
+/**
+ * Required capabilities for static site generation
+ * @constant {string[]}
+ */
+const STATIC_SITE_REQUIRED_CAPABILITIES = [CAP_STORAGE, CAP_STATIC_SITE];
+
+/**
+ * Helper Functions
+ */
+
+/**
+ * Get capability label
+ *
+ * @param {string} capability - Capability constant
+ * @return {string} Human-readable label
+ */
+function getCapabilityLabel(capability) {
+  return CAPABILITY_LABELS[capability] || capability;
+}
+
+/**
+ * Get capability description
+ *
+ * @param {string} capability - Capability constant
+ * @return {string} Detailed description
+ */
+function getCapabilityDescription(capability) {
+  return CAPABILITY_DESCRIPTIONS[capability] || '';
+}
+
+/**
+ * Check if capabilities meet requirements
+ *
+ * @param {string[]} providerCapabilities - Capabilities the provider supports
+ * @param {string[]} requiredCapabilities - Capabilities that are required
+ * @return {boolean} True if all required capabilities are supported
+ */
+function hasRequiredCapabilities(providerCapabilities, requiredCapabilities) {
+  return requiredCapabilities.every(cap => providerCapabilities.includes(cap));
+}
+
+/**
+ * Check if provider can handle export workflow
+ *
+ * @param {string[]} providerCapabilities - Capabilities the provider supports
+ * @return {boolean} True if provider can handle export
+ */
+function canExport(providerCapabilities) {
+  return hasRequiredCapabilities(providerCapabilities, EXPORT_REQUIRED_CAPABILITIES);
+}
+
+/**
+ * Check if provider can host static sites
+ *
+ * @param {string[]} providerCapabilities - Capabilities the provider supports
+ * @return {boolean} True if provider can host static sites
+ */
+function canHostStaticSite(providerCapabilities) {
+  return hasRequiredCapabilities(providerCapabilities, STATIC_SITE_REQUIRED_CAPABILITIES);
+}
+
+/**
+ * Get missing capabilities
+ *
+ * @param {string[]} providerCapabilities - Capabilities the provider supports
+ * @param {string[]} requiredCapabilities - Capabilities that are required
+ * @return {string[]} Array of missing capability identifiers
+ */
+function getMissingCapabilities(providerCapabilities, requiredCapabilities) {
+  return requiredCapabilities.filter(cap => !providerCapabilities.includes(cap));
+}
+;// ./assets/src/constants/index.js
+/**
+ * Constants Index
+ *
+ * Central export point for all application constants.
+ * Import from this file for convenience:
+ *
+ * @example
+ * import { ENDPOINTS, PUBLISH_STEPS, CAP_STORAGE } from '../constants';
+ */
+
+// API Constants
+
+
+// Timing Constants
+
+
+// Provider Constants
+
+
+// Capability Constants
+
+;// ./assets/src/services/ExportAPIService.js
+/**
+ * Publish API Service
+ *
+ * Service for export-related API operations.
+ * Extracted from useExportAPI hook for testability.
+ *
+ */
+
+
+const CHANGED_ASSETS_KEY = 'aether_changed_assets';
+
+/**
+ * Publish API Service Class
+ *
+ * Handles export-related API calls and asset tracking.
+ */
+class ExportAPIService {
+  /**
+   * Create service instance
+   *
+   * @param {Function} apiFetch       WordPress apiFetch function (injectable for testing)
+   * @param {Object}   assetDiscovery Asset discovery service
+   * @param {Object}   storage        Storage implementation (injectable for testing)
+   */
+  constructor(apiFetch, assetDiscovery, storage) {
+    this.apiFetch = apiFetch;
+    this.assetDiscovery = assetDiscovery;
+    this.storage = storage;
+  }
+
+  /**
+   * Discover custom assets
+   *
+   * Uses browser-based asset discovery instead of PHP endpoint.
+   * This avoids HTTP requests that fail in WordPress Playground.
+   *
+   * @return {Promise<Object>} Discovery response with assets array
+   */
+  async discoverBlueprintBundleAssets() {
+    const customAssets = await this.assetDiscovery.discoverCustomAssets();
+    return {
+      success: true,
+      assets: customAssets,
+      count: customAssets.length
+    };
+  }
+
+  /**
+   * Mark asset as changed
+   *
+   * Stores changed assets in localStorage.
+   * No server call needed - browser-only tracking.
+   *
+   * @param {string} type Asset type (theme, plugin)
+   * @param {string} slug Asset slug
+   * @return {Object} Success response
+   */
+  markAssetChanged(type, slug) {
+    // Get current changed assets
+    const changedAssets = this.storage.get(CHANGED_ASSETS_KEY, []);
+    const key = `${type}:${slug}`;
+
+    // Add if not already present
+    if (!changedAssets.includes(key)) {
+      changedAssets.push(key);
+      this.storage.set(CHANGED_ASSETS_KEY, changedAssets);
+    }
+    return {
+      success: true,
+      message: `Marked ${type} ${slug} as changed`
+    };
+  }
+
+  /**
+   * Fetch all pages of a paginated URL endpoint.
+   *
+   * @param {string}   endpoint       API endpoint path.
+   * @param {Function} onPageComplete Optional callback after each page.
+   * @return {Promise<Array>} All URLs from all pages.
+   */
+  async fetchAllPaginatedUrls(endpoint, onPageComplete = null) {
+    const allUrls = [];
+    let page = 1;
+    let hasMore = true;
+    while (hasMore) {
+      const response = await this.apiFetch({
+        path: `${endpoint}?page=${page}`,
+        method: 'GET'
+      });
+      if (!response.success) {
+        throw new Error(response.message || `Failed to fetch URLs from ${endpoint}`);
+      }
+      allUrls.push(...(response.urls || []));
+      hasMore = response.hasMore;
+      page = response.nextPage || page + 1;
+      if (onPageComplete) {
+        onPageComplete({
+          page: page - 1,
+          urlsCount: allUrls.length,
+          total: response.total,
+          hasMore
+        });
+      }
+    }
+    return allUrls;
+  }
+
+  /**
+   * Discover URLs for static site generation
+   *
+   * Calls paginated REST API endpoints to discover all URLs that need to be fetched.
+   * Fetches posts, terms, authors, and archives in parallel where possible.
+   *
+   * @param {Function} onProgress Optional callback for progress updates.
+   * @return {Promise<Object>} Response with urls array and staticSiteUrl
+   */
+  async discoverUrls(onProgress = null) {
+    try {
+      const allUrls = [];
+      const types = ['posts', 'terms', 'authors', 'archives'];
+
+      // Fetch each type sequentially to avoid overwhelming the server
+      for (const type of types) {
+        if (onProgress) {
+          onProgress({
+            type,
+            status: 'fetching'
+          });
+        }
+        const urls = await this.fetchAllPaginatedUrls(`/aether/site-exporter/urls/${type}`, onProgress ? progress => onProgress({
+          type,
+          ...progress
+        }) : null);
+        allUrls.push(...urls);
+        if (onProgress) {
+          onProgress({
+            type,
+            status: 'complete',
+            count: urls.length
+          });
+        }
+      }
+
+      // Deduplicate URLs
+      const uniqueUrls = [...new Set(allUrls)];
+      return {
+        success: true,
+        urls: uniqueUrls,
+        staticSiteUrl: null // Will be determined by provider config
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to discover URLs',
+        urls: [],
+        staticSiteUrl: null
+      };
+    }
+  }
+
+  /**
+   * Create site archive
+   *
+   * Creates wp-content.zip containing custom plugins, themes, and uploads.
+   *
+   * @param {Object}  options                Archive creation options.
+   * @param {Array}   options.assets         Array of asset objects to include.
+   * @param {boolean} options.includeUploads Whether to include uploads directory.
+   * @return {Promise<Object>} Response with zipPath, zipUrl, and zipSize
+   */
+  async createArchive({
+    assets = [],
+    includeUploads = true
+  } = {}) {
+    try {
+      // Extract slugs from assets array
+      const customAssets = assets.map(asset => asset.slug || asset);
+      const response = await this.apiFetch({
+        path: ENDPOINTS.EXPORT_WORKFLOW.CREATE_ARCHIVE,
+        method: 'POST',
+        data: {
+          custom_assets: customAssets,
+          include_uploads: includeUploads
+        }
+      });
+      if (response.success && response.data) {
+        // The PHP endpoint returns data in a 'data' property
+        const archiveData = response.data;
+        return {
+          success: true,
+          zipPath: archiveData.zipPath || null,
+          zipUrl: archiveData.zipUrl || null,
+          zipSize: archiveData.zipSize || 0
+        };
+      }
+      return {
+        success: false,
+        message: response.message || 'Failed to create archive'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to create archive'
+      };
+    }
+  }
+
+  /**
+   * Generate blueprint JSON
+   *
+   * This is typically handled client-side via generateBlueprintJson function.
+   * This method is a fallback if the function is not available.
+   *
+   * @return {Promise<Object>} Response with blueprint data
+   */
+  async generateBlueprint() {
+    // This is a fallback method - typically blueprint generation is done client-side
+    // via the generateBlueprintJson function from useBlueprintGenerator hook
+    return {
+      success: false,
+      message: 'Blueprint generation must be done client-side. Please ensure generateBlueprintJson function is available.'
+    };
+  }
+
+  /**
+   * Create blueprint bundle
+   *
+   * Creates blueprint-bundle.zip containing blueprint.json and wp-content.zip.
+   *
+   * @param {Object} options                  Bundle creation options.
+   * @param {Object} options.blueprint        Blueprint JSON data.
+   * @param {string} options.wpContentZipPath Path to wp-content.zip.
+   * @return {Promise<Object>} Response with bundlePath, bundleUrl, and bundleSize
+   */
+  async createBlueprintBundle({
+    blueprint,
+    wpContentZipPath
+  } = {}) {
+    try {
+      if (!blueprint) {
+        return {
+          success: false,
+          message: 'Blueprint data is required'
+        };
+      }
+      if (!wpContentZipPath) {
+        return {
+          success: false,
+          message: 'Archive path is required'
+        };
+      }
+      const response = await this.apiFetch({
+        path: ENDPOINTS.EXPORT_WORKFLOW.GENERATE_BLUEPRINT_BUNDLE,
+        method: 'POST',
+        data: {
+          blueprintData: blueprint,
+          archiveResult: {
+            zipPath: wpContentZipPath
+          }
+        }
+      });
+      if (response.success && response.data) {
+        // The PHP endpoint returns data in a 'data' property
+        const bundleData = response.data;
+        return {
+          success: true,
+          bundlePath: bundleData.bundlePath || null,
+          bundleUrl: bundleData.bundleUrl || null,
+          bundleSize: bundleData.bundleSize || 0
+        };
+      }
+      return {
+        success: false,
+        message: response.message || 'Failed to create blueprint bundle'
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || 'Failed to create blueprint bundle'
+      };
+    }
+  }
+}
+;// ./assets/src/export/hooks/useExportAPI.js
+/**
+ * Publish API Hook
+ *
+ * Handles API calls for export operations.
+ * Uses ExportAPIService for all business logic.
+ *
+ */
+
+
+
+
+
+
+function useExportAPI() {
+  const assetDiscovery = useAssetDiscovery();
+
+  // Create service instance (memoized to prevent recreation)
+  const service = (0,external_wp_element_namespaceObject.useMemo)(() => new ExportAPIService(utils_api/* default */.Ay, assetDiscovery, storage), [assetDiscovery]);
+  const discoverBlueprintBundleAssets = (0,external_wp_element_namespaceObject.useCallback)(async () => {
+    return await service.discoverBlueprintBundleAssets();
+  }, [service]);
+
+  // getAssetStatus is an alias for discoverBlueprintBundleAssets (eliminates duplication)
+  const getAssetStatus = (0,external_wp_element_namespaceObject.useCallback)(async () => {
+    return await service.discoverBlueprintBundleAssets();
+  }, [service]);
+  const markAssetChanged = (0,external_wp_element_namespaceObject.useCallback)((type, slug) => {
+    return Promise.resolve(service.markAssetChanged(type, slug));
+  }, [service]);
+  const discoverUrls = (0,external_wp_element_namespaceObject.useCallback)(async () => {
+    return await service.discoverUrls();
+  }, [service]);
+  const createArchive = (0,external_wp_element_namespaceObject.useCallback)(async options => {
+    return await service.createArchive(options);
+  }, [service]);
+  const generateBlueprint = (0,external_wp_element_namespaceObject.useCallback)(async options => {
+    return await service.generateBlueprint(options);
+  }, [service]);
+  const createBlueprintBundle = (0,external_wp_element_namespaceObject.useCallback)(async options => {
+    return await service.createBlueprintBundle(options);
+  }, [service]);
+  return {
+    discoverBlueprintBundleAssets,
+    getAssetStatus,
+    markAssetChanged,
+    discoverUrls,
+    createArchive,
+    generateBlueprint,
+    createBlueprintBundle
+  };
+}
+;// ./assets/src/services/AssetManagerService.js
+/**
+ * Asset Manager Service
+ *
+ * Service for managing asset state with pure business logic.
+ * Extracted from useAssetManager hook for testability.
+ *
+ */
+
+const STORAGE_KEY = 'aetherAssets';
+
+/**
+ * Normalize asset data from server
+ *
+ * Converts snake_case fields to camelCase and ensures existsOnR2 is present.
+ * Pure function for data transformation.
+ *
+ * @param {Object} assetData Raw asset data from server
+ * @return {Object} Normalized asset data
+ */
+function normalizeAssetData(assetData) {
+  if (!assetData || typeof assetData !== 'object') {
+    return {
+      existsOnR2: false
+    };
+  }
+
+  // eslint-disable-next-line camelcase
+  const {
+    exists_on_r2,
+    existsOnR2,
+    ...rest
+  } = assetData;
+  return {
+    ...rest,
+    // eslint-disable-next-line camelcase
+    existsOnR2: existsOnR2 || exists_on_r2 || false
+  };
+}
+
+/**
+ * Calculate if asset needs upload
+ *
+ * Pure function to determine upload necessity based on R2 existence.
+ *
+ * @param {boolean} existsOnR2 Whether asset exists on R2
+ * @return {boolean} Whether asset needs upload
+ */
+function calculateNeedsUpload(existsOnR2) {
+  return !existsOnR2;
+}
+
+/**
+ * Create new asset object
+ *
+ * Pure function for creating asset with consistent structure.
+ *
+ * @param {string}  type       Asset type (theme, plugin)
+ * @param {string}  slug       Asset slug
+ * @param {string}  name       Asset name (optional)
+ * @param {boolean} existsOnR2 Whether asset exists on R2 (optional)
+ * @return {Object} New asset object
+ */
+function createAsset(type, slug, name = undefined, existsOnR2 = false) {
+  const asset = {
+    type,
+    slug,
+    needsUpload: calculateNeedsUpload(existsOnR2)
+  };
+  if (name !== undefined) {
+    asset.name = name;
+  }
+  if (existsOnR2 !== undefined) {
+    asset.existsOnR2 = existsOnR2;
+  }
+  return asset;
+}
+
+/**
+ * Merge asset data
+ *
+ * Pure function for merging existing asset with updated data.
+ *
+ * @param {Object}  existing                    Existing asset object
+ * @param {Object}  updated                     Updated asset data
+ * @param {Object}  options                     Merge options
+ * @param {boolean} options.preserveNeedsUpload Preserve existing needsUpload flag
+ * @return {Object} Merged asset
+ */
+function mergeAsset(existing, updated, options = {}) {
+  const {
+    preserveNeedsUpload = false
+  } = options;
+
+  // If no existing asset, treat updated as new
+  if (!existing) {
+    const normalized = normalizeAssetData(updated);
+    return {
+      ...normalized,
+      needsUpload: calculateNeedsUpload(normalized.existsOnR2)
+    };
+  }
+
+  // If no update, return existing
+  if (!updated) {
+    return existing;
+  }
+
+  // Normalize updated data
+  const normalized = normalizeAssetData(updated);
+
+  // Merge data
+  const merged = {
+    ...existing,
+    ...normalized
+  };
+
+  // Calculate or preserve needsUpload
+  if (preserveNeedsUpload && 'needsUpload' in existing) {
+    merged.needsUpload = existing.needsUpload;
+  } else if ('existsOnR2' in merged) {
+    merged.needsUpload = calculateNeedsUpload(merged.existsOnR2);
+  }
+  return merged;
+}
+
+/**
+ * Filter assets that need upload
+ *
+ * Pure function to extract changed assets as type:slug strings.
+ *
+ * @param {Object} assets Assets object
+ * @return {Array<string>} Array of "type:slug" strings
+ */
+function filterChangedAssets(assets) {
+  if (!assets || typeof assets !== 'object') {
+    return [];
+  }
+  return Object.values(assets).filter(asset => asset && asset.needsUpload).map(asset => `${asset.type}:${asset.slug}`);
+}
+
+/**
+ * Clear all upload flags
+ *
+ * Pure function to set needsUpload=false for all assets.
+ *
+ * @param {Object} assets Assets object
+ * @return {Object} New assets object with cleared flags
+ */
+function clearAllUploadFlags(assets) {
+  if (!assets || typeof assets !== 'object') {
+    return {};
+  }
+  const cleared = {};
+  Object.keys(assets).forEach(slug => {
+    cleared[slug] = {
+      ...assets[slug],
+      needsUpload: false
+    };
+  });
+  return cleared;
+}
+
+/**
+ * Asset Manager Service Class
+ *
+ * Handles asset state operations with localStorage integration.
+ */
+class AssetManagerService {
+  /**
+   * Create service instance
+   *
+   * @param {Object} storage Storage implementation (injectable for testing)
+   */
+  constructor(storage) {
+    this.storage = storage;
+  }
+
+  /**
+   * Load assets from storage
+   *
+   * @return {Object} Assets object
+   */
+  load() {
+    return this.storage.get(STORAGE_KEY, {});
+  }
+
+  /**
+   * Save assets to storage
+   *
+   * @param {Object} assets Assets to save
+   * @return {void}
+   */
+  save(assets) {
+    this.storage.set(STORAGE_KEY, assets);
+  }
+
+  /**
+   * Mark asset as changed (needs upload)
+   *
+   * @param {Object} currentAssets Current assets state
+   * @param {string} type          Asset type
+   * @param {string} slug          Asset slug
+   * @return {Object} Updated assets state
+   */
+  markAsChanged(currentAssets, type, slug) {
+    const updated = {
+      ...currentAssets
+    };
+    const existingAsset = updated[slug];
+    updated[slug] = existingAsset ? {
+      ...existingAsset,
+      needsUpload: true
+    } : createAsset(type, slug);
+    return updated;
+  }
+
+  /**
+   * Update asset from server data
+   *
+   * @param {Object} currentAssets Current assets state
+   * @param {Object} assetData     Server asset data
+   * @return {Object} Updated assets state
+   */
+  updateFromServer(currentAssets, assetData) {
+    const normalized = normalizeAssetData(assetData);
+    const {
+      slug
+    } = normalized;
+    const updated = {
+      ...currentAssets
+    };
+    const existingAsset = updated[slug];
+    updated[slug] = mergeAsset(existingAsset, normalized);
+    return updated;
+  }
+
+  /**
+   * Sync multiple assets from server
+   *
+   * @param {Object} currentAssets Current assets state
+   * @param {Array}  serverAssets  Array of server asset data
+   * @return {Object} Updated assets state
+   */
+  syncWithServer(currentAssets, serverAssets) {
+    if (!Array.isArray(serverAssets)) {
+      return currentAssets;
+    }
+    const updated = {
+      ...currentAssets
+    };
+    serverAssets.forEach(assetData => {
+      const normalized = normalizeAssetData(assetData);
+      const {
+        slug
+      } = normalized;
+      const existingAsset = updated[slug];
+
+      // Preserve needsUpload if asset was locally marked as changed
+      updated[slug] = mergeAsset(existingAsset, normalized, {
+        preserveNeedsUpload: !!existingAsset?.needsUpload
+      });
+    });
+    return updated;
+  }
+}
+;// ./assets/src/export/hooks/useAssetManager.js
+/**
+ * Asset Manager Hook
+ *
+ * Manages asset state in localStorage.
+ * Uses AssetManagerService for all business logic.
+ *
+ */
+
+
+
+
+function useAssetManager() {
+  const [assets, setAssets] = (0,external_wp_element_namespaceObject.useState)({});
+
+  // Create service instance (memoized to prevent recreation)
+  const service = (0,external_wp_element_namespaceObject.useMemo)(() => new AssetManagerService(storage), []);
+
+  // Load assets from localStorage on mount
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    const data = service.load();
+    setAssets(data);
+  }, [service]);
+
+  // Save assets to localStorage whenever they change
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    service.save(assets);
+  }, [service, assets]);
+  const markAsChanged = (0,external_wp_element_namespaceObject.useCallback)((type, slug) => {
+    setAssets(prev => service.markAsChanged(prev, type, slug));
+  }, [service]);
+  const updateFromServer = (0,external_wp_element_namespaceObject.useCallback)(assetData => {
+    setAssets(prev => service.updateFromServer(prev, assetData));
+  }, [service]);
+  const syncWithServer = (0,external_wp_element_namespaceObject.useCallback)(serverAssets => {
+    setAssets(prev => service.syncWithServer(prev, serverAssets));
+  }, [service]);
+  const getChangedAssets = (0,external_wp_element_namespaceObject.useCallback)(() => {
+    return filterChangedAssets(assets);
+  }, [assets]);
+  const clearUploadFlags = (0,external_wp_element_namespaceObject.useCallback)(() => {
+    setAssets(prev => clearAllUploadFlags(prev));
+  }, []);
+  return {
+    assets,
+    markAsChanged,
+    updateFromServer,
+    syncWithServer,
+    getChangedAssets,
+    clearUploadFlags
+  };
+}
+// EXTERNAL MODULE: external ["wp","hooks"]
+var external_wp_hooks_ = __webpack_require__(619);
+;// ./assets/src/export/utils/assetTracker.js
+/**
+ * Asset Tracker
+ *
+ * Tracks uploaded assets to prevent duplicate uploads.
+ *
+ */
+
+/**
+ * Create an asset tracker instance.
+ *
+ * @return {Object} Asset tracker instance.
+ */
+function createAssetTracker() {
+  // Track uploaded assets by normalized URL.
+  const uploadedAssets = new Set();
+  // Track failed assets by normalized URL.
+  const failedAssets = new Set();
+
+  /**
+   * Check if an asset has already been uploaded.
+   *
+   * @param {string} url Asset URL.
+   * @return {boolean} True if already uploaded.
+   */
+  function isUploaded(url) {
+    // Normalize URL for comparison (remove fragments, trailing slashes).
+    const normalized = normalizeUrl(url);
+    return uploadedAssets.has(normalized);
+  }
+
+  /**
+   * Mark an asset as uploaded.
+   *
+   * @param {string} url Asset URL.
+   */
+  function markUploaded(url) {
+    const normalized = normalizeUrl(url);
+    uploadedAssets.add(normalized);
+  }
+
+  /**
+   * Mark an asset as failed.
+   *
+   * @param {string} url Asset URL.
+   */
+  function markFailed(url) {
+    const normalized = normalizeUrl(url);
+    failedAssets.add(normalized);
+  }
+
+  /**
+   * Check if an asset has failed.
+   *
+   * @param {string} url Asset URL.
+   * @return {boolean} True if failed.
+   */
+  function isFailed(url) {
+    const normalized = normalizeUrl(url);
+    return failedAssets.has(normalized);
+  }
+
+  /**
+   * Get count of uploaded assets.
+   *
+   * @return {number} Number of uploaded assets.
+   */
+  function getCount() {
+    return uploadedAssets.size;
+  }
+
+  /**
+   * Get count of failed assets.
+   *
+   * @return {number} Number of failed assets.
+   */
+  function getFailedCount() {
+    return failedAssets.size;
+  }
+
+  /**
+   * Clear all tracked assets.
+   */
+  function clear() {
+    uploadedAssets.clear();
+    failedAssets.clear();
+  }
+
+  /**
+   * Normalize a URL for comparison.
+   *
+   * @param {string} url URL to normalize.
+   * @return {string} Normalized URL.
+   */
+  function normalizeUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      // Remove fragments.
+      urlObj.hash = '';
+      // Remove trailing slash from path.
+      if (urlObj.pathname.endsWith('/') && urlObj.pathname !== '/') {
+        urlObj.pathname = urlObj.pathname.slice(0, -1);
+      }
+      return urlObj.toString();
+    } catch {
+      // If URL parsing fails, return as-is (will still work for exact matches).
+      return url;
+    }
+  }
+  return {
+    isUploaded,
+    markUploaded,
+    markFailed,
+    isFailed,
+    getCount,
+    getFailedCount,
+    clear
+  };
+}
+;// ./assets/src/utils/manifestManager.js
+/**
+ * Manifest Manager Utility
+ *
+ * Manages the file manifest JSON that tracks file sizes and hashes
+ * for upload optimization. The manifest is stored remotely at
+ * file-manifest.json in each provider's storage location.
+ *
+ */
+
+
+
+/**
+ * Fetch existing manifest from remote storage.
+ *
+ * @param {Object} storageService StorageService instance.
+ * @return {Promise<Object>} Manifest object (empty object if not found).
+ */
+async function fetchManifest(storageService) {
+  const manifestKey = 'file-manifest.json';
+  try {
+    (0,admin_settings_debug/* debug */.Yz)('Fetching manifest from remote:', manifestKey);
+
+    // Try to download manifest from storage.
+    const manifestBlob = await storageService.downloadManifest();
+    if (!manifestBlob) {
+      (0,admin_settings_debug/* debug */.Yz)('Manifest not found, starting with empty manifest');
+      return {};
+    }
+
+    // Parse JSON from blob.
+    const manifestText = await manifestBlob.text();
+    const manifest = JSON.parse(manifestText);
+    (0,admin_settings_debug/* debug */.Yz)('Manifest fetched successfully:', {
+      fileCount: Object.keys(manifest).length
+    });
+    return manifest || {};
+  } catch (error) {
+    // If manifest doesn't exist (404) or other error, start with empty manifest.
+    if (error.message && error.message.includes('404')) {
+      (0,admin_settings_debug/* debug */.Yz)('Manifest not found (404), starting with empty manifest');
+      return {};
+    }
+    (0,admin_settings_debug/* debugWarn */.UT)('Failed to fetch manifest, starting with empty manifest:', error);
+    return {};
+  }
+}
+
+/**
+ * Update manifest entry with size, hash, and optional content-type.
+ *
+ * @param {Object} manifest    Manifest object to update.
+ * @param {string} storageKey  Storage key/path for the file.
+ * @param {number} size        File size in bytes.
+ * @param {string} hash        SHA-256 hash hex string.
+ * @param {string} contentType Optional content-type header value.
+ * @return {Object} Updated manifest object.
+ */
+function updateManifestEntry(manifest, storageKey, size, hash, contentType = null) {
+  if (!manifest) {
+    manifest = {};
+  }
+  manifest[storageKey] = {
+    size,
+    hash
+  };
+
+  // Add content-type if provided
+  if (contentType) {
+    manifest[storageKey].contentType = contentType;
+  }
+  (0,admin_settings_debug/* debug */.Yz)('Updated manifest entry:', {
+    storageKey,
+    size,
+    hashLength: hash.length,
+    contentType: contentType || 'not specified'
+  });
+  return manifest;
+}
+
+/**
+ * Check if file should be skipped based on size and hash comparison.
+ *
+ * Two-stage check: size first, then hash if size matches.
+ * Returns true if both size and hash match existing entry.
+ *
+ * @param {Object} manifest   Manifest object.
+ * @param {string} storageKey Storage key/path for the file.
+ * @param {number} size       File size in bytes.
+ * @param {string} hash       SHA-256 hash hex string.
+ * @return {boolean} True if file should be skipped (size and hash match).
+ */
+function manifestManager_shouldSkipUpload(manifest, storageKey, size, hash) {
+  if (!manifest || !manifest[storageKey]) {
+    // No entry in manifest, don't skip.
+    return false;
+  }
+  const entry = manifest[storageKey];
+
+  // Stage 1: Check size first (fast comparison).
+  if (entry.size !== size) {
+    (0,admin_settings_debug/* debug */.Yz)('File size differs, will upload:', {
+      storageKey,
+      existingSize: entry.size,
+      newSize: size
+    });
+    return false;
+  }
+
+  // Stage 2: Check hash if size matches.
+  if (entry.hash !== hash) {
+    (0,admin_settings_debug/* debug */.Yz)('File size matches but hash differs, will upload:', {
+      storageKey,
+      size
+    });
+    return false;
+  }
+
+  // Both size and hash match - skip upload.
+  (0,admin_settings_debug/* debug */.Yz)('File unchanged, skipping upload:', {
+    storageKey,
+    size,
+    hash: hash.substring(0, 16) + '...'
+  });
+  return true;
+}
+
+/**
+ * Clean up manifest by removing entries not in current upload set.
+ *
+ * This prevents manifest from growing indefinitely as files are added/removed.
+ * Returns a new manifest object containing only entries for files in currentFiles set.
+ *
+ * @param {Object} manifest     Existing manifest object.
+ * @param {Set}    currentFiles Set of storage keys for files in current upload.
+ * @return {Object} Cleaned manifest object.
+ */
+function cleanupManifest(manifest, currentFiles) {
+  if (!manifest || !currentFiles) {
+    return manifest || {};
+  }
+  const cleanedManifest = {};
+  let removedCount = 0;
+
+  // Keep only entries for files that exist in current upload
+  // Also preserve wp-content.zip entries (uploaded in parallel step)
+  for (const storageKey of Object.keys(manifest)) {
+    if (currentFiles.has(storageKey) || storageKey.includes('/wp-content.zip')) {
+      cleanedManifest[storageKey] = manifest[storageKey];
+    } else {
+      removedCount++;
+    }
+  }
+  if (removedCount > 0) {
+    (0,admin_settings_debug/* debug */.Yz)('Manifest cleanup:', {
+      before: Object.keys(manifest).length,
+      after: Object.keys(cleanedManifest).length,
+      removed: removedCount
+    });
+  }
+  return cleanedManifest;
+}
+
+/**
+ * Upload manifest to remote storage.
+ *
+ * @param {Object} storageService StorageService instance.
+ * @param {Object} manifest       Manifest object to upload.
+ * @return {Promise<boolean>} True if upload succeeded.
+ */
+async function uploadManifest(storageService, manifest) {
+  const manifestKey = 'file-manifest.json';
+  try {
+    (0,admin_settings_debug/* debug */.Yz)('Uploading manifest:', {
+      manifestKey,
+      fileCount: Object.keys(manifest).length
+    });
+
+    // Convert manifest to JSON blob (minified for smaller file size).
+    const manifestJson = JSON.stringify(manifest);
+    const manifestBlob = new Blob([manifestJson], {
+      type: 'application/json'
+    });
+
+    // Upload manifest via storage service.
+    const result = await storageService.uploadManifest(manifestBlob);
+    if (result.success) {
+      (0,admin_settings_debug/* debug */.Yz)('Manifest uploaded successfully');
+      return true;
+    }
+    (0,admin_settings_debug/* debugWarn */.UT)('Manifest upload failed:', result.error);
+    return false;
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('Failed to upload manifest:', error);
+    return false;
+  }
+}
+;// ./assets/src/export/utils/staticSiteConfig.js
+/**
+ * Static Site Configuration Utilities
+ *
+ * Pure functions for building static site generator configuration.
+ *
+ */
+
+
+
+
+/**
+ * Build storage configuration object.
+ *
+ * @param {string} siteUrl       WordPress site URL.
+ * @param {string} staticSiteUrl Target static site URL.
+ * @param {string} providerId    Provider ID.
+ * @return {Object} Storage configuration.
+ */
+function buildStorageConfig(siteUrl, staticSiteUrl, providerId) {
+  return {
+    public_url: siteUrl,
+    base_url: staticSiteUrl || siteUrl,
+    provider_id: providerId
+  };
+}
+
+/**
+ * Calculate total files to upload from pre-scan results.
+ *
+ * @param {number} cachedHtmlCount Number of HTML files cached.
+ * @param {number} uniqueAssets    Number of unique assets.
+ * @return {number} Total files to upload.
+ */
+function calculateTotalFiles(cachedHtmlCount, uniqueAssets) {
+  return cachedHtmlCount + uniqueAssets;
+}
+
+/**
+ * Build the final result object from upload phase.
+ *
+ * @param {Object} failures           Failure tracking object.
+ * @param {Object} assetTracker       Asset tracker instance.
+ * @param {number} filesUploaded      Number of files uploaded.
+ * @param {number} filesSkipped       Number of files skipped.
+ * @param {number} totalFilesToUpload Total files to upload.
+ * @param {Array}  uploadedFiles      Array of uploaded file info.
+ * @param {number} totalUrls          Total URLs processed.
+ * @return {Object} Result object.
+ */
+function buildUploadResult(failures, assetTracker, filesUploaded, filesSkipped, totalFilesToUpload, uploadedFiles, totalUrls) {
+  return {
+    success: failures.urlsFailed === 0,
+    urlsProcessed: totalUrls,
+    urlsSucceeded: failures.urlsSucceeded,
+    urlsFailed: failures.urlsFailed,
+    assetsUploaded: assetTracker.getCount(),
+    assetsFailed: failures.assetsFailed,
+    failedUrls: failures.failedUrls,
+    uploadedFiles,
+    filesUploaded,
+    filesSkipped,
+    totalFilesToUpload
+  };
+}
+
+/**
+ * Create initial failure tracking object.
+ *
+ * @return {Object} Failure tracking object.
+ */
+function createFailureTracker() {
+  return {
+    urlsFailed: 0,
+    urlsSucceeded: 0,
+    assetsFailed: 0,
+    failedUrls: []
+  };
+}
+
+/**
+ * Fetch provider configuration from REST API.
+ *
+ * @param {string} staticSiteProviderId Provider ID from parameter.
+ * @return {Promise<Object>} Provider configuration object.
+ */
+async function fetchProviderConfig(staticSiteProviderId) {
+  let providerConfig = {};
+  try {
+    // CRITICAL: Always use the exact provider ID passed in
+    // Do NOT do provider discovery - this breaks multi-instance threading
+    // where each thread needs its OWN provider instance config
+    if (!staticSiteProviderId) {
+      throw new Error('Provider ID is required for fetchProviderConfig. ' + 'Provider discovery should not be used in threaded contexts.');
+    }
+
+    // Use ConfigStorage to load provider config (handles caching and REST API)
+    const {
+      ConfigStorage
+    } = await Promise.resolve(/* import() eager */).then(__webpack_require__.bind(__webpack_require__, 906));
+    const storage = new ConfigStorage(staticSiteProviderId);
+    providerConfig = await storage.load();
+  } catch (error) {
+    (0,admin_settings_debug/* debug */.Yz)('Failed to load provider configuration:', error);
+    // Re-throw to make failures visible instead of silently using wrong config
+    throw error;
+  }
+  return providerConfig;
+}
+
+/**
+ * Create and configure storage service.
+ *
+ * @param {string} staticPath     Static files path.
+ * @param {Object} config         Storage configuration.
+ * @param {string} providerId     Provider ID.
+ * @param {Object} providerConfig Provider configuration.
+ * @return {Promise<Object>} Storage service instance.
+ */
+async function createStorageService(staticPath, config, providerId, providerConfig) {
+  // Filter configuration
+  const filteredConfig = (0,external_wp_hooks_.applyFilters)('aether.storage.service.config', config, staticPath, providerId, providerConfig);
+
+  // Allow filter to override storage service creation
+  let storageService = (0,external_wp_hooks_.applyFilters)('aether.storage.service.create', null, staticPath, filteredConfig, providerId);
+
+  // Create default if not overridden
+  if (!storageService) {
+    const {
+      StorageService
+    } = await Promise.resolve(/* import() eager */).then(__webpack_require__.bind(__webpack_require__, 159));
+    storageService = new StorageService(staticPath, filteredConfig);
+  }
+  return storageService;
+}
+// EXTERNAL MODULE: ./assets/src/export/utils/assetExtractor.js + 3 modules
+var assetExtractor = __webpack_require__(662);
+;// ./assets/src/export/utils/preScanPhase.js
+/**
+ * Pre-Scan Phase
+ *
+ * Phase 1 of static site generation: Fetch all URLs, extract assets, count total files.
+ *
+ */
+
+
+
+
+
+
+/**
+ * Execute the pre-scan phase.
+ *
+ * Fetches all URLs and extracts assets.
+ *
+ * @param {Object}   options                  Pre-scan options.
+ * @param {Array}    options.urls             URLs to scan.
+ * @param {string}   options.siteUrl          WordPress site URL.
+ * @param {string}   options.providerId       Provider ID.
+ * @param {Object}   options.providerConfig   Provider configuration.
+ * @param {Function} options.setStatusMessage Status message updater.
+ * @param {Object}   options.htmlData         Optional HTML data storage.
+ * @return {Promise<Object>} Pre-scan results.
+ */
+async function executePreScan({
+  urls,
+  siteUrl,
+  providerId,
+  providerConfig,
+  setStatusMessage,
+  htmlData = null
+}) {
+  const failures = {
+    urlsFailed: 0,
+    failedUrls: []
+  };
+
+  // Fire pre-scan start action
+  (0,external_wp_hooks_.doAction)('aether.export.step.uploadStaticSiteFiles.pre_scan.before', urls, providerId, providerConfig);
+  if (setStatusMessage) {
+    setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Scanning files to upload…', 'aether-site-exporter'), 'progress', 'scanFiles');
+  }
+
+  // Store HTML data if provided
+  const dataStorage = htmlData || new Map();
+  const allUniqueAssets = new Set();
+  let successfulUrls = 0;
+  (0,admin_settings_debug/* debug */.Yz)('[Aether] executePreScan starting:', {
+    totalUrls: urls.length,
+    cachedEntries: dataStorage.size
+  });
+
+  // Scan each URL
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+
+    // Check if URL is already in cache (from preScanStaticSite step)
+    const cachedEntry = dataStorage.get(url);
+    if (cachedEntry) {
+      // Use cached data - validate structure
+      if (cachedEntry && typeof cachedEntry === 'object' && cachedEntry.rawHtml && Array.isArray(cachedEntry.assetUrls)) {
+        (0,admin_settings_debug/* debug */.Yz)(`[Aether] Using cached HTML data for URL: ${url}`);
+        successfulUrls++;
+
+        // Add cached assets to unique set
+        for (const assetUrl of cachedEntry.assetUrls) {
+          allUniqueAssets.add(assetUrl);
+        }
+        continue;
+      } else {
+        (0,admin_settings_debug/* debugWarn */.UT)(`[Aether] Cached entry for ${url} has invalid structure, will re-fetch`);
+      }
+    }
+
+    // URL not in cache - this might be an asset URL (CSS, JS, image, etc.)
+    // Assets are handled separately in the upload phase, so we can skip them here
+    // Only fetch if it looks like it might be an HTML page
+    // (We'll let the fetch determine if it's actually HTML)
+    try {
+      // Fetch from URL
+      const htmlResponse = await fetch(url, {
+        method: 'GET',
+        credentials: 'omit',
+        headers: {
+          'User-Agent': 'Aether Static Site Generator'
+        }
+      });
+      if (htmlResponse.status !== 200) {
+        (0,admin_settings_debug/* debugWarn */.UT)(`[Aether] Skipping URL with non-200 status: ${url} (HTTP ${htmlResponse.status})`);
+        failures.urlsFailed++;
+        failures.failedUrls.push({
+          url,
+          reason: `Failed to fetch HTML: HTTP ${htmlResponse.status} ${htmlResponse.statusText}`
+        });
+        continue;
+      }
+
+      // Check content-type to ensure it's HTML
+      const contentType = htmlResponse.headers.get('content-type') || '';
+      if (!contentType.includes('text/html')) {
+        // Not HTML - likely an asset (CSS, JS, image, etc.)
+        // Assets are handled separately in upload phase, skip here
+        (0,admin_settings_debug/* debug */.Yz)(`[Aether] Skipping non-HTML URL (likely asset): ${url} (content-type: ${contentType})`);
+        continue;
+      }
+      const html = await htmlResponse.text();
+
+      // Extract assets
+      const assetUrls = await (0,assetExtractor.extractAssetsFromHtml)(html, url, siteUrl);
+
+      // Store HTML and assets in provided data structure
+      dataStorage.set(url, {
+        rawHtml: html,
+        assetUrls
+      });
+      successfulUrls++;
+
+      // Add to unique set
+      for (const assetUrl of assetUrls) {
+        allUniqueAssets.add(assetUrl);
+      }
+    } catch (error) {
+      (0,admin_settings_debug/* debugWarn */.UT)(`[Aether] Error fetching URL: ${url}`, error.message);
+      failures.urlsFailed++;
+      failures.failedUrls.push({
+        url,
+        reason: error.message
+      });
+    }
+  }
+  const totalFilesToUpload = successfulUrls + allUniqueAssets.size;
+  (0,admin_settings_debug/* debug */.Yz)('Pre-scan complete:', {
+    urlsScanned: urls.length,
+    urlsSuccessful: successfulUrls,
+    uniqueAssets: allUniqueAssets.size,
+    totalFilesToUpload
+  });
+
+  // Fire completion action
+  (0,external_wp_hooks_.doAction)('aether.export.step.uploadStaticSiteFiles.pre_scan.after', {
+    urlsScanned: urls.length,
+    urlsSuccessful: successfulUrls,
+    uniqueAssets: allUniqueAssets.size,
+    totalFiles: totalFilesToUpload
+  }, providerId);
+  if (setStatusMessage) {
+    setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$d: Number of HTML files, %2$d: Number of assets */
+    (0,external_wp_i18n_namespaceObject.__)('Pre-scan complete: %1$d HTML files, %2$d assets', 'aether-site-exporter'), successfulUrls, allUniqueAssets.size), 'success', 'scanFiles');
+  }
+  return {
+    htmlData: dataStorage,
+    allUniqueAssets,
+    totalFilesToUpload,
+    failures,
+    urlsSuccessful: successfulUrls
+  };
+}
+// EXTERNAL MODULE: ./assets/src/export/utils/htmlProcessor.js
+var htmlProcessor = __webpack_require__(864);
+;// ./assets/src/utils/concurrencyLimiter.js
+/**
+ * Concurrency Limiter Utility
+ *
+ * Limits the number of concurrent async operations to prevent overwhelming
+ * the browser/server with too many simultaneous requests.
+ *
+ */
+
+/**
+ * Create a concurrency limiter function.
+ *
+ * Returns a function that wraps async operations and ensures only
+ * a limited number run concurrently. Additional operations are queued
+ * and executed as slots become available.
+ *
+ * @param {number} limit Maximum number of concurrent operations (default: 5)
+ * @return {Function} Limiter function that wraps async operations
+ *
+ * @example
+ * const limiter = createConcurrencyLimiter(3);
+ * const results = await Promise.allSettled([
+ *   limiter(() => asyncOperation1()),
+ *   limiter(() => asyncOperation2()),
+ *   limiter(() => asyncOperation3()),
+ *   limiter(() => asyncOperation4()), // Will wait until one of the first 3 completes
+ * ]);
+ */
+function createConcurrencyLimiter(limit = 5) {
+  let running = 0;
+  const queue = [];
+
+  /**
+   * Execute the next queued operation if slots are available.
+   */
+  const processQueue = () => {
+    // If we're at the limit or queue is empty, nothing to do
+    if (running >= limit || queue.length === 0) {
+      return;
+    }
+
+    // Get next operation from queue
+    const {
+      operation,
+      resolve,
+      reject
+    } = queue.shift();
+    running++;
+
+    // Execute the operation
+    Promise.resolve(operation()).then(result => {
+      running--;
+      resolve(result);
+      // Process next item in queue
+      processQueue();
+    }).catch(error => {
+      running--;
+      reject(error);
+      // Process next item in queue
+      processQueue();
+    });
+  };
+
+  /**
+   * Limiter function that wraps async operations.
+   *
+   * @param {Function} operation Async operation to execute
+   * @return {Promise} Promise that resolves when operation completes
+   */
+  return operation => {
+    return new Promise((resolve, reject) => {
+      queue.push({
+        operation,
+        resolve,
+        reject
+      });
+      processQueue();
+    });
+  };
+}
+;// ./assets/src/utils/fileHash.js
+/**
+ * File Hash Utility
+ *
+ * Utility functions for calculating SHA-256 hashes of files and blobs.
+ * Uses Web Crypto API for hardware-accelerated hashing.
+ *
+ */
+
+
+
+/**
+ * Calculate SHA-256 hash for a File or Blob object.
+ *
+ * Converts the file/blob to ArrayBuffer and calculates SHA-256 hash
+ * using Web Crypto API. Works with all Blob types including images
+ * (WebP, PNG, JPG), CSS, JS, HTML, and other binary files.
+ *
+ * @param {File|Blob} file File or Blob object to hash.
+ * @return {Promise<string>} Hex-encoded hash string (64 characters).
+ */
+async function fileHash_calculateFileHash(file) {
+  if (!(file instanceof File || file instanceof Blob)) {
+    throw new Error('File must be a File or Blob object');
+  }
+  try {
+    // Convert Blob/File to ArrayBuffer for hashing.
+    const arrayBuffer = await file.arrayBuffer();
+
+    // Calculate SHA-256 hash using Web Crypto API.
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+
+    // Convert ArrayBuffer to hex string.
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    (0,admin_settings_debug/* debug */.Yz)('calculateFileHash:', {
+      fileSize: file.size,
+      hashLength: hashHex.length
+    });
+    return hashHex;
+  } catch (error) {
+    (0,admin_settings_debug/* debugError */.AO)('Failed to calculate file hash:', error);
+    throw new Error(`Hash calculation failed: ${error.message}`);
+  }
+}
+;// ./assets/src/utils/helpers.js
+/**
+ * General Utility Functions
+ *
+ * Common helper functions used throughout the application.
+ *
+ */
+
+/**
+ * Filter out null and undefined values from an object
+ *
+ * @param {Object} obj Object to filter
+ * @return {Object} New object with null/undefined values removed
+ */
+function filterNullishValues(obj) {
+  if (!obj || typeof obj !== 'object') {
+    return obj;
+  }
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    if (value !== null && value !== undefined) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {});
+}
+
+/**
+ * Safely parse JSON with fallback value
+ *
+ * @param {string}   jsonString JSON string to parse
+ * @param {*}        fallback   Fallback value if parsing fails (default: null)
+ * @param {Function} validator  Optional validator function to verify parsed value
+ * @return {*} Parsed value or fallback
+ */
+function parseJSONSafely(jsonString, fallback = null, validator = null) {
+  if (!jsonString || typeof jsonString !== 'string') {
+    return fallback;
+  }
+  try {
+    const parsed = JSON.parse(jsonString);
+
+    // If validator provided, use it to verify the parsed value
+    if (validator && !validator(parsed)) {
+      return fallback;
+    }
+    return parsed;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Parse JSON array from localStorage safely
+ *
+ * @param {string} jsonString JSON string to parse
+ * @param {Array}  fallback   Fallback array if parsing fails (default: [])
+ * @return {Array} Parsed array or fallback
+ */
+function parseJSONArray(jsonString, fallback = []) {
+  return parseJSONSafely(jsonString, fallback, Array.isArray);
+}
+
+/**
+ * Parse JSON object from localStorage safely
+ *
+ * @param {string} jsonString JSON string to parse
+ * @param {Object} fallback   Fallback object if parsing fails (default: {})
+ * @return {Object} Parsed object or fallback
+ */
+function parseJSONObject(jsonString, fallback = {}) {
+  return parseJSONSafely(jsonString, fallback, val => val && typeof val === 'object' && !Array.isArray(val));
+}
+
+/**
+ * Check if a value is an encrypted credential
+ *
+ * @param {*} value Value to check
+ * @return {boolean} True if value is encrypted credential string
+ */
+function isEncryptedValue(value) {
+  return typeof value === 'string' && value.startsWith('encrypted:');
+}
+
+/**
+ * Deep merge two objects
+ *
+ * @param {Object} target Target object
+ * @param {Object} source Source object
+ * @return {Object} Merged object
+ */
+function deepMerge(target, source) {
+  const output = {
+    ...target
+  };
+  if (!source || typeof source !== 'object') {
+    return output;
+  }
+  Object.keys(source).forEach(key => {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (key in target) {
+        output[key] = deepMerge(target[key], source[key]);
+      } else {
+        output[key] = source[key];
+      }
+    } else {
+      output[key] = source[key];
+    }
+  });
+  return output;
+}
+
+/**
+ * Debounce a function call
+ *
+ * @param {Function} func      Function to debounce
+ * @param {number}   wait      Milliseconds to wait
+ * @param {boolean}  immediate Execute on leading edge instead of trailing
+ * @return {Function} Debounced function
+ */
+function debounce(func, wait, immediate = false) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      timeout = null;
+      if (!immediate) {
+        func(...args);
+      }
+    };
+    const callNow = immediate && !timeout;
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+    if (callNow) {
+      func(...args);
+    }
+  };
+}
+
+/**
+ * Format file size in bytes to human-readable string
+ *
+ * @param {number} bytes    Number of bytes
+ * @param {number} decimals Number of decimal places (default: 1)
+ * @return {string} Formatted file size (e.g., "2.5 MB", "123 KB")
+ */
+function formatFileSize(bytes, decimals = 1) {
+  if (!bytes || bytes === 0) {
+    return '0 B';
+  }
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(decimals)} KB`;
+  }
+  if (bytes < 1024 * 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(decimals)} MB`;
+  }
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(decimals)} GB`;
+}
+;// ./assets/src/export/utils/errorHandler.js
+/**
+ * Error Handler Utility
+ *
+ * Provides error categorization, retry logic, and error recovery strategies
+ * for the export workflow.
+ *
+ */
+
+
+
+
+/**
+ * Error categories for error handling strategies.
+ *
+ * @type {Object<string, string>}
+ */
+const ERROR_CATEGORIES = {
+  NETWORK: 'network',
+  TIMEOUT: 'timeout',
+  VALIDATION: 'validation',
+  PERMISSION: 'permission',
+  NOT_FOUND: 'not_found',
+  RATE_LIMIT: 'rate_limit',
+  QUOTA_EXCEEDED: 'quota_exceeded',
+  UNKNOWN: 'unknown'
+};
+
+/**
+ * Error severity levels.
+ *
+ * @type {Object<string, string>}
+ */
+const ERROR_SEVERITY = {
+  CRITICAL: 'critical',
+  HIGH: 'high',
+  MEDIUM: 'medium',
+  LOW: 'low'
+};
+
+/**
+ * Default retry configuration.
+ *
+ * @type {Object}
+ */
+const DEFAULT_RETRY_CONFIG = {
+  maxRetries: 3,
+  initialDelay: 1000,
+  // 1 second
+  maxDelay: 10000,
+  // 10 seconds
+  backoffMultiplier: 2,
+  retryableCategories: [ERROR_CATEGORIES.NETWORK, ERROR_CATEGORIES.TIMEOUT, ERROR_CATEGORIES.RATE_LIMIT]
+};
+
+/**
+ * Categorize an error based on its properties.
+ *
+ * @param {Error} error Error object to categorize.
+ * @return {string} Error category.
+ */
+function categorizeError(error) {
+  if (!error) {
+    return ERROR_CATEGORIES.UNKNOWN;
+  }
+  const message = error.message?.toLowerCase() || '';
+  const code = error.code?.toLowerCase() || '';
+  const status = error.status || error.statusCode;
+
+  // Network errors
+  if (message.includes('network') || message.includes('fetch') || message.includes('connection') || code === 'network_error' || code === 'econnrefused' || code === 'enotfound') {
+    return ERROR_CATEGORIES.NETWORK;
+  }
+
+  // Timeout errors
+  if (message.includes('timeout') || code === 'timeout' || status === 408) {
+    return ERROR_CATEGORIES.TIMEOUT;
+  }
+
+  // Rate limit errors
+  if (message.includes('rate limit') || message.includes('too many requests') || code === 'rate_limit' || status === 429) {
+    return ERROR_CATEGORIES.RATE_LIMIT;
+  }
+
+  // Quota exceeded errors
+  if (message.includes('quota') || message.includes('storage') || code === 'quota_exceeded' || status === 507) {
+    return ERROR_CATEGORIES.QUOTA_EXCEEDED;
+  }
+
+  // Permission errors
+  if (message.includes('permission') || message.includes('unauthorized') || message.includes('forbidden') || code === 'permission_denied' || status === 401 || status === 403) {
+    return ERROR_CATEGORIES.PERMISSION;
+  }
+
+  // Not found errors
+  if (message.includes('not found') || code === 'not_found' || status === 404) {
+    return ERROR_CATEGORIES.NOT_FOUND;
+  }
+
+  // Validation errors
+  if (message.includes('validation') || message.includes('invalid') || code === 'validation_error' || status === 400 || status === 422) {
+    return ERROR_CATEGORIES.VALIDATION;
+  }
+  return ERROR_CATEGORIES.UNKNOWN;
+}
+
+/**
+ * Determine error severity based on category and context.
+ *
+ * @param {string} category Error category.
+ * @return {string} Error severity level.
+ */
+function determineSeverity(category) {
+  // Critical errors that should stop the workflow
+  if (category === ERROR_CATEGORIES.PERMISSION || category === ERROR_CATEGORIES.QUOTA_EXCEEDED || category === ERROR_CATEGORIES.VALIDATION) {
+    return ERROR_SEVERITY.CRITICAL;
+  }
+
+  // High severity errors that may require user intervention
+  if (category === ERROR_CATEGORIES.NOT_FOUND) {
+    return ERROR_SEVERITY.HIGH;
+  }
+
+  // Medium severity errors that can be retried
+  if (category === ERROR_CATEGORIES.NETWORK || category === ERROR_CATEGORIES.TIMEOUT || category === ERROR_CATEGORIES.RATE_LIMIT) {
+    return ERROR_SEVERITY.MEDIUM;
+  }
+
+  // Low severity for unknown errors (may be recoverable)
+  return ERROR_SEVERITY.LOW;
+}
+
+/**
+ * Check if an error is retryable.
+ *
+ * @param {Error}  error  Error to check.
+ * @param {Object} config Retry configuration.
+ * @return {boolean} True if error is retryable.
+ */
+function isRetryable(error, config = {}) {
+  const category = categorizeError(error);
+  const retryConfig = {
+    ...DEFAULT_RETRY_CONFIG,
+    ...config
+  };
+  return retryConfig.retryableCategories.includes(category);
+}
+
+/**
+ * Calculate delay for retry attempt using exponential backoff.
+ *
+ * @param {number} attemptNumber Current attempt number (0-indexed).
+ * @param {Object} config        Retry configuration.
+ * @return {number} Delay in milliseconds.
+ */
+function calculateRetryDelay(attemptNumber, config = {}) {
+  const retryConfig = {
+    ...DEFAULT_RETRY_CONFIG,
+    ...config
+  };
+  const {
+    initialDelay,
+    maxDelay,
+    backoffMultiplier
+  } = retryConfig;
+  const delay = initialDelay * Math.pow(backoffMultiplier, attemptNumber);
+  return Math.min(delay, maxDelay);
+}
+
+/**
+ * Execute a function with retry logic.
+ *
+ * @param {Function} fn                  Function to execute.
+ * @param {Object}   options             Retry options.
+ * @param {number}   options.maxRetries  Maximum number of retries.
+ * @param {Function} options.onRetry     Callback called before each retry.
+ * @param {Function} options.shouldRetry Function to determine if error is retryable.
+ * @return {Promise<any>} Result of function execution.
+ */
+async function withRetry(fn, options = {}) {
+  const config = {
+    ...DEFAULT_RETRY_CONFIG,
+    ...options
+  };
+  const {
+    maxRetries,
+    onRetry,
+    shouldRetry
+  } = config;
+  let lastError = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+
+      // Check if we should retry
+      const canRetry = attempt < maxRetries && (shouldRetry ? shouldRetry(error, attempt) : isRetryable(error, config));
+      if (!canRetry) {
+        (0,admin_settings_debug/* debugError */.AO)(`[ErrorHandler] Error not retryable or max retries reached:`, error);
+        throw error;
+      }
+
+      // Calculate delay and wait
+      const delay = calculateRetryDelay(attempt, config);
+      (0,admin_settings_debug/* debugWarn */.UT)(`[ErrorHandler] Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms:`, error.message);
+      if (onRetry) {
+        onRetry(error, attempt + 1, delay);
+      }
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+
+  // All retries exhausted
+  (0,admin_settings_debug/* debugError */.AO)(`[ErrorHandler] All retry attempts exhausted after ${maxRetries + 1} attempts`);
+  throw lastError;
+}
+
+/**
+ * Format error message for user display.
+ *
+ * @param {Error}  error   Error object.
+ * @param {Object} context Error context.
+ * @return {string} Formatted error message.
+ */
+function formatErrorMessage(error, context = {}) {
+  const category = categorizeError(error);
+  const {
+    stepId,
+    operation
+  } = context;
+  let message = error.message || (0,external_wp_i18n_namespaceObject.__)('An unknown error occurred', 'aether-site-exporter');
+
+  // Add context information
+  if (stepId) {
+    message = (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: 1: Step ID, 2: Error message */
+    (0,external_wp_i18n_namespaceObject.__)('Error in step "%1$s": %2$s', 'aether-site-exporter'), stepId, message);
+  }
+  if (operation) {
+    message = (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: 1: Operation name, 2: Error message */
+    (0,external_wp_i18n_namespaceObject.__)('Error during %1$s: %2$s', 'aether-site-exporter'), operation, message);
+  }
+
+  // Add category-specific guidance
+  switch (category) {
+    case ERROR_CATEGORIES.NETWORK:
+      message += ' ' + (0,external_wp_i18n_namespaceObject.__)('Please check your internet connection and try again.', 'aether-site-exporter');
+      break;
+    case ERROR_CATEGORIES.TIMEOUT:
+      message += ' ' + (0,external_wp_i18n_namespaceObject.__)('The operation took too long. Please try again.', 'aether-site-exporter');
+      break;
+    case ERROR_CATEGORIES.RATE_LIMIT:
+      message += ' ' + (0,external_wp_i18n_namespaceObject.__)('Too many requests. Please wait a moment and try again.', 'aether-site-exporter');
+      break;
+    case ERROR_CATEGORIES.QUOTA_EXCEEDED:
+      message += ' ' + (0,external_wp_i18n_namespaceObject.__)('Storage quota exceeded. Please free up space and try again.', 'aether-site-exporter');
+      break;
+    case ERROR_CATEGORIES.PERMISSION:
+      message += ' ' + (0,external_wp_i18n_namespaceObject.__)('Permission denied. Please check your access rights.', 'aether-site-exporter');
+      break;
+  }
+  return message;
+}
+
+/**
+ * Create an error handler instance with custom configuration.
+ *
+ * @param {Object} config Error handler configuration.
+ * @return {Object} Error handler instance.
+ */
+function createErrorHandler(config = {}) {
+  const handlerConfig = {
+    ...DEFAULT_RETRY_CONFIG,
+    ...config
+  };
+  return {
+    /**
+     * Execute function with retry logic.
+     *
+     * @param {Function} fn      Function to execute.
+     * @param {Object}   options Additional retry options.
+     * @return {Promise<any>} Result.
+     */
+    async executeWithRetry(fn, options = {}) {
+      return withRetry(fn, {
+        ...handlerConfig,
+        ...options
+      });
+    },
+    /**
+     * Categorize an error.
+     *
+     * @param {Error} error Error to categorize.
+     * @return {string} Error category.
+     */
+    categorize(error) {
+      return categorizeError(error);
+    },
+    /**
+     * Check if error is retryable.
+     *
+     * @param {Error} error Error to check.
+     * @return {boolean} True if retryable.
+     */
+    isRetryable(error) {
+      return isRetryable(error, handlerConfig);
+    },
+    /**
+     * Format error message.
+     *
+     * @param {Error}  error   Error to format.
+     * @param {Object} context Error context.
+     * @return {string} Formatted message.
+     */
+    formatMessage(error, context = {}) {
+      return formatErrorMessage(error, context);
+    }
+  };
+}
+
+/**
+ * Default error handler instance.
+ */
+const errorHandler = createErrorHandler();
+;// ./assets/src/export/utils/fileUploadManager.js
+/**
+ * File Upload Manager Utility
+ *
+ * Provides reusable functions for uploading files with progress tracking,
+ * concurrency limiting, and hash-based deduplication.
+ *
+ * Used by:
+ * - Static site file uploads (useStaticSiteGenerator.js)
+ * - wp-content.zip uploads (useExportController.js)
+ *
+ */
+
+
+
+
+
+
+
+
+
+
+/**
+ * Sanitize a storage key for use in status message keys.
+ *
+ * @param {string} key Storage key.
+ * @return {string} Sanitized key.
+ */
+function sanitizeKeyForStatus(key) {
+  // Replace special characters that might cause issues in status keys
+  return key.replace(/[^a-zA-Z0-9-_]/g, '-');
+}
+
+/**
+ * Upload multiple files with progress tracking and concurrency limiting.
+ *
+ * @typedef {Object} FileUploadDescriptor
+ * @property {string}                 key                           Storage key/path.
+ * @property {Blob}                   blob                          File blob to upload.
+ * @property {string}                 contentType                   MIME type.
+ * @property {string}                 [displayName]                 Display name for progress messages (optional).
+ * @property {Object}                 [metadata]                    Optional metadata object.
+ *
+ * @param    {Object}                 options                       Options object.
+ * @param    {FileUploadDescriptor[]} options.files                 Array of file upload descriptors.
+ * @param    {Object}                 options.storageService        StorageService instance.
+ * @param    {Function}               options.setStatusMessage      Status message callback function.
+ * @param    {number}                 [options.concurrency=5]       Max concurrent uploads (default: 5).
+ * @param    {Function}               [options.onProgress]          Overall progress callback (optional).
+ * @param    {string}                 [options.keyPrefix='upload']  Prefix for status message keys (default: 'upload').
+ * @param    {boolean}                [options.skipHashCheck=false] Boolean to skip hash checking (default: false).
+ * @param    {Object}                 [options.manifest]            Manifest object for hash checking (optional).
+ * @param    {Function}               [options.shouldSkipUpload]    Custom function to determine if file should be skipped (optional).
+ * @return {Promise<Object>} Result with success, uploaded, skipped, failed counts and results array.
+ */
+async function uploadFilesWithProgress({
+  files,
+  storageService,
+  setStatusMessage,
+  concurrency = 5,
+  onProgress = null,
+  keyPrefix = 'upload',
+  skipHashCheck = false,
+  manifest = null,
+  shouldSkipUpload: customShouldSkipUpload = null
+}) {
+  if (!files || files.length === 0) {
+    return {
+      success: true,
+      uploaded: 0,
+      skipped: 0,
+      failed: 0,
+      results: []
+    };
+  }
+  const limiter = createConcurrencyLimiter(concurrency);
+  let filesUploaded = 0;
+  let filesSkipped = 0;
+  let filesFailed = 0;
+  let totalProcessed = 0; // Track total processed (uploaded + skipped) for progress
+  const results = [];
+
+  // Process all files in parallel with concurrency limiting
+  const uploadPromises = files.map(file => limiter(async () => {
+    const {
+      key,
+      blob,
+      contentType,
+      displayName: providedDisplayName,
+      metadata = {}
+    } = file;
+
+    // Ensure displayName is never empty - fallback to key, then to 'file'
+    const displayName = providedDisplayName || key || 'file';
+    const uploadKey = `${keyPrefix}-${sanitizeKeyForStatus(key)}`;
+    let fileHash = null;
+    let shouldSkip = false;
+    try {
+      /**
+       * Action fired before each file upload.
+       *
+       * @param {Object} fileData             File data object.
+       * @param {string} fileData.key         Storage key.
+       * @param {Blob}   fileData.blob        File blob.
+       * @param {string} fileData.contentType Content type.
+       * @param {string} fileData.displayName Display name.
+       *
+       * @example
+       * import { addAction } from '@wordpress/hooks';
+       *
+       * addAction('aether.upload.file.before', 'my-provider', (fileData) => {
+       *   console.log('About to upload:', fileData.key);
+       * });
+       */
+      (0,external_wp_hooks_.doAction)('aether.upload.file.before', {
+        key,
+        blob,
+        contentType,
+        displayName
+      });
+
+      // Hash checking and skip logic (if enabled)
+      if (!skipHashCheck && manifest) {
+        const fileSize = blob.size;
+        const existingEntry = manifest[key];
+        if (existingEntry && existingEntry.size === fileSize) {
+          // Stage 2: Calculate hash if size matches
+          try {
+            /**
+             * Filter hash calculation for files.
+             *
+             * Allows providers to customize hash calculation or provide pre-calculated hash.
+             *
+             * @param {string|null} hash     Calculated hash or null to use default calculation.
+             * @param {Blob}        blob     File blob.
+             * @param {string}      key      Storage key.
+             * @param {Object}      manifest Manifest object.
+             *
+             * @example
+             * import { addFilter } from '@wordpress/hooks';
+             *
+             * addFilter('aether.upload.hash.calculate', 'my-provider', (hash, blob, key, manifest) => {
+             *   // Return pre-calculated hash or null to use default
+             *   if (key.startsWith('custom/')) {
+             *     return 'pre-calculated-hash';
+             *   }
+             *   return hash; // Use default calculation
+             * });
+             */
+            const filteredHash = (0,external_wp_hooks_.applyFilters)('aether.upload.hash.calculate', null, blob, key, manifest);
+            fileHash = filteredHash || (await fileHash_calculateFileHash(blob));
+            shouldSkip = customShouldSkipUpload ? customShouldSkipUpload(manifest, key, fileSize, fileHash) : manifestManager_shouldSkipUpload(manifest, key, fileSize, fileHash);
+          } catch (error) {
+            (0,admin_settings_debug/* debugWarn */.UT)('Failed to calculate file hash, will upload:', error);
+            shouldSkip = false;
+          }
+        }
+      }
+      if (shouldSkip) {
+        // File unchanged - skip upload
+        filesSkipped++;
+        totalProcessed++;
+        const fileSize = blob.size;
+        const sizeStr = formatFileSize(fileSize);
+        if (setStatusMessage) {
+          setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: File name, %2$s: File size */
+          (0,external_wp_i18n_namespaceObject.__)('Skipped unchanged file %1$s (%2$s)', 'aether-site-exporter'), displayName, sizeStr), 'success', uploadKey, undefined, {
+            fileSize
+          });
+        }
+
+        // Report progress (guard against empty array to prevent division by zero)
+        if (onProgress && files.length > 0) {
+          onProgress(totalProcessed, files.length, null);
+        }
+        results.push({
+          key,
+          success: true,
+          skipped: true,
+          url: null,
+          hash: fileHash,
+          // Include hash so skipped files can be added to manifest
+          size: blob.size // Include size for consistency
+        });
+        return;
+      }
+
+      // Calculate hash if not already calculated (for manifest update)
+      if (!fileHash && !skipHashCheck) {
+        try {
+          /**
+           * Filter hash calculation for files (when not already calculated).
+           *
+           * Allows providers to customize hash calculation.
+           *
+           * @param {string|null} hash     Calculated hash or null to use default calculation.
+           * @param {Blob}        blob     File blob.
+           * @param {string}      key      Storage key.
+           * @param {Object}      manifest Manifest object.
+           */
+          const filteredHash = (0,external_wp_hooks_.applyFilters)('aether.upload.hash.calculate', null, blob, key, manifest);
+          fileHash = filteredHash || (await fileHash_calculateFileHash(blob));
+        } catch (error) {
+          (0,admin_settings_debug/* debugWarn */.UT)('Failed to calculate hash:', error);
+          fileHash = null;
+        }
+      }
+      const fileSize = blob.size;
+      const sizeStr = formatFileSize(fileSize);
+
+      // Create status message with unique key for progress tracking
+      if (setStatusMessage) {
+        setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: File name, %2$s: File size */
+        (0,external_wp_i18n_namespaceObject.__)('Uploading %1$s (%2$s)', 'aether-site-exporter'), displayName, sizeStr), 'progress', uploadKey, {
+          percent: 0,
+          loaded: 0,
+          total: fileSize
+        }, {
+          fileSize
+        });
+      }
+
+      // Prepare upload options
+      let uploadOptions = {
+        contentType,
+        cacheControl: metadata.cacheControl || 'public, max-age=31536000, immutable',
+        onProgress: (loaded, total, percent) => {
+          // Update progress in status message
+          if (setStatusMessage) {
+            setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: File name, %2$s: File size */
+            (0,external_wp_i18n_namespaceObject.__)('Uploading %1$s (%2$s)', 'aether-site-exporter'), displayName, sizeStr), 'progress', uploadKey, {
+              percent,
+              loaded,
+              total
+            }, {
+              fileSize
+            });
+          }
+        }
+      };
+
+      /**
+       * Filter upload options before file upload.
+       *
+       * Allows providers to modify upload options (contentType, cacheControl, metadata, etc.).
+       *
+       * @param {Object} uploadOptions Upload options object.
+       * @param {string} key           Storage key.
+       * @param {Blob}   blob          File blob.
+       * @param {string} contentType   Content type.
+       * @param {Object} metadata      File metadata.
+       *
+       * @example
+       * import { addFilter } from '@wordpress/hooks';
+       *
+       * addFilter('aether.upload.file.options', 'my-provider', (options, key, blob, contentType, metadata) => {
+       *   return {
+       *     ...options,
+       *     cacheControl: 'public, max-age=86400',
+       *     customHeader: 'value'
+       *   };
+       * });
+       */
+      uploadOptions = (0,external_wp_hooks_.applyFilters)('aether.upload.file.options', uploadOptions, key, blob, contentType, metadata);
+
+      // Upload file with retry logic using ErrorHandler
+      let uploadResult = null;
+      try {
+        uploadResult = await errorHandler.executeWithRetry(async () => {
+          const result = await storageService.upload(key, blob, uploadOptions);
+
+          // If upload returned failure, throw error for retry logic
+          if (!result.success) {
+            const error = new Error(result.error || 'Upload failed');
+            error.code = result.code;
+            error.status = result.status;
+            throw error;
+          }
+          return result;
+        }, {
+          onRetry: (error, attempt) => {
+            if (setStatusMessage) {
+              setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: File name, %2$s: File size, %3$d: Attempt number, %4$d: Max retries */
+              (0,external_wp_i18n_namespaceObject.__)('Retrying %1$s (%2$s) - attempt %3$d/%4$d', 'aether-site-exporter'), displayName, sizeStr, attempt, 3), 'info', uploadKey, undefined, {
+                fileSize
+              });
+            }
+          }
+        });
+      } catch (error) {
+        // Upload failed after all retries
+        uploadResult = {
+          success: false,
+          error: errorHandler.formatMessage(error, {
+            operation: `upload ${displayName}`
+          })
+        };
+      }
+      if (uploadResult && uploadResult.success) {
+        filesUploaded++;
+        totalProcessed++;
+
+        // Update message to success (remove progress)
+        if (setStatusMessage) {
+          setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: File name, %2$s: File size */
+          (0,external_wp_i18n_namespaceObject.__)('Uploaded %1$s (%2$s)', 'aether-site-exporter'), displayName, sizeStr), 'success', uploadKey, null,
+          // Remove progress
+          {
+            fileSize
+          });
+        }
+
+        // Report progress after upload completes (guard against empty array)
+        if (onProgress && files.length > 0) {
+          onProgress(totalProcessed, files.length, null);
+        }
+        const uploadResultData = {
+          key,
+          success: true,
+          skipped: false,
+          url: uploadResult.url,
+          hash: fileHash,
+          size: fileSize
+        };
+
+        /**
+         * Action fired after each file upload succeeds.
+         *
+         * @param {Object} result      Upload result object.
+         * @param {string} result.key  Storage key.
+         * @param {string} result.url  Uploaded file URL.
+         * @param {string} result.hash File hash.
+         * @param {number} result.size File size.
+         * @param {string} displayName Display name.
+         *
+         * @example
+         * import { addAction } from '@wordpress/hooks';
+         *
+         * addAction('aether.upload.file.after', 'my-provider', (result, displayName) => {
+         *   console.log('File uploaded:', result.key, result.url);
+         * });
+         */
+        (0,external_wp_hooks_.doAction)('aether.upload.file.after', uploadResultData, displayName);
+        results.push(uploadResultData);
+      } else {
+        // Upload failed after all retries
+        filesFailed++;
+        const errorMessage = uploadResult?.error || 'Upload failed after retries';
+        if (setStatusMessage) {
+          setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: File name */
+          (0,external_wp_i18n_namespaceObject.__)('Failed to upload %s', 'aether-site-exporter'), displayName), 'error', uploadKey, null);
+        }
+        results.push({
+          key,
+          success: false,
+          skipped: false,
+          url: null,
+          error: errorMessage
+        });
+      }
+    } catch (error) {
+      // Failed to process file
+      filesFailed++;
+      (0,admin_settings_debug/* debugWarn */.UT)(`Failed to upload file: ${key}`, error);
+      if (setStatusMessage) {
+        setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: File name */
+        (0,external_wp_i18n_namespaceObject.__)('Failed to upload %s', 'aether-site-exporter'), displayName), 'error', uploadKey, null);
+      }
+      results.push({
+        key,
+        success: false,
+        skipped: false,
+        url: null,
+        error: error.message || 'Upload failed'
+      });
+    }
+  }));
+
+  // Wait for all uploads to complete (success or failure)
+  await Promise.allSettled(uploadPromises);
+  return {
+    success: filesFailed === 0,
+    uploaded: filesUploaded,
+    skipped: filesSkipped,
+    failed: filesFailed,
+    results
+  };
+}
+
+/**
+ * Upload a single file with progress tracking.
+ *
+ * @param {Object}   options                  Options object.
+ * @param {string}   options.key              Storage key.
+ * @param {Blob}     options.blob             File blob.
+ * @param {Object}   options.storageService   StorageService instance.
+ * @param {Function} options.setStatusMessage Status message callback.
+ * @param {string}   options.contentType      MIME type.
+ * @param {string}   options.displayName      Display name (optional, defaults to key).
+ * @param {string}   options.statusKey        Unique key for status message (required).
+ * @param {Function} options.onProgress       Progress callback (optional).
+ * @param {boolean}  options.skipHashCheck    Boolean to skip hash checking (default: false).
+ * @param {Object}   options.manifest         Manifest object (optional).
+ * @param {Function} options.shouldSkipUpload Custom function to determine if file should be skipped (optional).
+ * @param {Object}   options.metadata         Optional metadata object.
+ * @return {Promise<Object>} Result with success, url, skipped, error.
+ */
+async function uploadSingleFileWithProgress({
+  key,
+  blob,
+  storageService,
+  setStatusMessage,
+  contentType,
+  displayName: providedDisplayName,
+  statusKey,
+  onProgress = null,
+  skipHashCheck = false,
+  manifest = null,
+  shouldSkipUpload: customShouldSkipUpload = null,
+  metadata = {}
+}) {
+  if (!statusKey) {
+    throw new Error('statusKey is required for uploadSingleFileWithProgress');
+  }
+
+  // Ensure displayName is never empty - fallback to key, then to 'file'
+  const displayName = providedDisplayName || key || 'file';
+  let fileHash = null;
+  let shouldSkip = false;
+  try {
+    // Hash checking and skip logic (if enabled)
+    if (!skipHashCheck && manifest) {
+      const fileSize = blob.size;
+      const existingEntry = manifest[key];
+      if (existingEntry && existingEntry.size === fileSize) {
+        // Stage 2: Calculate hash if size matches
+        try {
+          fileHash = await calculateFileHash(blob);
+          shouldSkip = customShouldSkipUpload ? customShouldSkipUpload(manifest, key, fileSize, fileHash) : shouldSkipUpload(manifest, key, fileSize, fileHash);
+        } catch (error) {
+          debugWarn('Failed to calculate file hash, will upload:', error);
+          shouldSkip = false;
+        }
+      }
+    }
+    if (shouldSkip) {
+      // File unchanged - skip upload
+      if (setStatusMessage) {
+        const fileSizeMB = (blob.size / (1024 * 1024)).toFixed(2);
+        setStatusMessage(sprintf(/* translators: %1$s: File name, %2$s: File size in MB */
+        __('%1$s unchanged (%2$s MB) - skipping upload', 'aether-site-exporter'), displayName, fileSizeMB), 'success', statusKey);
+      }
+      return {
+        success: true,
+        url: null,
+        skipped: true,
+        error: null,
+        hash: fileHash
+      };
+    }
+
+    // Calculate hash if not already calculated (for manifest update)
+    if (!fileHash && !skipHashCheck) {
+      try {
+        fileHash = await calculateFileHash(blob);
+      } catch (error) {
+        debugWarn('Failed to calculate hash:', error);
+        fileHash = null;
+      }
+    }
+    const fileSize = blob.size;
+
+    // Create status message with progress tracking
+    if (setStatusMessage) {
+      setStatusMessage(sprintf(/* translators: %s: File name */
+      __('Uploading %s', 'aether-site-exporter'), displayName), 'progress', statusKey, {
+        percent: 0,
+        loaded: 0,
+        total: fileSize
+      });
+    }
+
+    // Upload file with progress tracking
+    const uploadResult = await storageService.upload(key, blob, {
+      contentType,
+      cacheControl: metadata.cacheControl || 'public, max-age=31536000, immutable',
+      onProgress: (loaded, total, percent) => {
+        // Update progress in status message
+        if (setStatusMessage) {
+          setStatusMessage(sprintf(/* translators: %s: File name */
+          __('Uploading %s', 'aether-site-exporter'), displayName), 'progress', statusKey, {
+            percent,
+            loaded,
+            total
+          });
+        }
+
+        // Call custom progress callback if provided
+        if (onProgress) {
+          onProgress(loaded, total, percent);
+        }
+      }
+    });
+    if (uploadResult.success) {
+      // Update message to success (remove progress)
+      if (setStatusMessage) {
+        setStatusMessage(sprintf(/* translators: %s: File name */
+        __('Uploaded %s', 'aether-site-exporter'), displayName), 'success', statusKey, null // Remove progress
+        );
+      }
+      return {
+        success: true,
+        url: uploadResult.url,
+        skipped: false,
+        error: null,
+        hash: fileHash,
+        size: fileSize
+      };
+    }
+    // Upload failed
+    if (setStatusMessage) {
+      setStatusMessage(sprintf(/* translators: %s: File name */
+      __('Failed to upload %s', 'aether-site-exporter'), displayName), 'error', statusKey, null);
+    }
+    return {
+      success: false,
+      url: null,
+      skipped: false,
+      error: uploadResult.error || __('Upload failed', 'aether-site-exporter'),
+      hash: fileHash
+    };
+  } catch (error) {
+    debugWarn(`Failed to upload file: ${key}`, error);
+    if (setStatusMessage) {
+      setStatusMessage(sprintf(/* translators: %s: File name */
+      __('Failed to upload %s', 'aether-site-exporter'), displayName), 'error', statusKey, null);
+    }
+    return {
+      success: false,
+      url: null,
+      skipped: false,
+      error: error.message || 'Upload failed',
+      hash: fileHash
+    };
+  }
+}
+;// ./assets/src/export/utils/uploadPhase.js
+/**
+ * Upload Phase
+ *
+ * Phase 2 of static site generation: Upload all files with accurate progress tracking.
+ *
+ */
+
+
+
+
+
+
+
+
+
+
+/**
+ * Fetch and prepare manifest for upload phase.
+ *
+ * @param {Object}   storageService   Storage service instance.
+ * @param {string}   providerId       Provider ID.
+ * @param {Function} setStatusMessage Status message updater.
+ * @return {Promise<Object>} Manifest object.
+ */
+async function prepareManifest(storageService, providerId, setStatusMessage) {
+  let manifest = {};
+  try {
+    if (setStatusMessage) {
+      setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Fetching file manifest…', 'aether-site-exporter'), 'progress', 'fetchManifest');
+    }
+    manifest = (0,external_wp_hooks_.applyFilters)('aether.export.step.uploadStaticSiteFiles.manifest.fetch', null, storageService, providerId);
+    if (manifest === null) {
+      manifest = await fetchManifest(storageService);
+    }
+    const manifestEntryCount = Object.keys(manifest).length;
+    if (setStatusMessage) {
+      setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %d: Number of manifest entries */
+      (0,external_wp_i18n_namespaceObject.__)('Fetched file manifest (%d entries)', 'aether-site-exporter'), manifestEntryCount), 'success', 'fetchManifest');
+    }
+    (0,admin_settings_debug/* debug */.Yz)(`Manifest loaded with ${manifestEntryCount} entries`);
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('Failed to fetch manifest, continuing without hash comparison:', error);
+    manifest = {};
+  }
+  return manifest;
+}
+
+/**
+ * Process and upload assets for a given set of asset URLs.
+ *
+ * @param {Object}   options                    Upload options.
+ * @param {Array}    options.assetUrls          Asset URLs to process.
+ * @param {Object}   options.assetTracker       Asset tracker instance.
+ * @param {Object}   options.storageService     Storage service instance.
+ * @param {Object}   options.manifest           Manifest object.
+ * @param {string}   options.providerId         Provider ID.
+ * @param {number}   options.filesUploaded      Current files uploaded count.
+ * @param {number}   options.totalFilesToUpload Total files to upload.
+ * @param {Function} options.onProgress         Progress callback.
+ * @param {Function} options.setStatusMessage   Status message updater.
+ * @return {Promise<Object>} Updated counts and manifest.
+ */
+async function processAssets({
+  assetUrls,
+  assetTracker,
+  storageService,
+  manifest,
+  providerId,
+  filesUploaded,
+  totalFilesToUpload,
+  onProgress,
+  setStatusMessage
+}) {
+  let currentFilesUploaded = filesUploaded;
+  let filesSkipped = 0;
+  const uploadedFiles = [];
+  let currentManifest = manifest;
+
+  // Filter out already processed assets
+  const assetsNotInTracker = assetUrls.filter(assetUrl => !assetTracker.isUploaded(assetUrl));
+  if (assetsNotInTracker.length === 0) {
+    return {
+      filesUploaded: currentFilesUploaded,
+      filesSkipped,
+      uploadedFiles,
+      manifest: currentManifest
+    };
+  }
+
+  // Fetch and prepare asset data
+  const assetData = [];
+  for (const assetUrl of assetsNotInTracker) {
+    try {
+      const assetResponse = await fetch(assetUrl, {
+        method: 'GET',
+        credentials: 'omit',
+        headers: {
+          'User-Agent': 'Aether Static Site Generator'
+        }
+      });
+      if (assetResponse.status !== 200) {
+        continue;
+      }
+      const assetContent = await assetResponse.blob();
+      const contentType = assetResponse.headers.get('content-type') || 'application/octet-stream';
+      const assetPath = (0,assetExtractor/* getAssetLocalPath */.h)(assetUrl);
+      if (assetPath === null) {
+        (0,admin_settings_debug/* debugWarn */.UT)(`Skipping invalid asset URL (empty path after scope stripping): ${assetUrl}`);
+        assetTracker.markFailed(assetUrl);
+        continue;
+      }
+      const assetKey = assetPath;
+      let assetBlob = new Blob([assetContent], {
+        type: contentType
+      });
+
+      // Filter asset before processing
+      const filteredAssetData = (0,external_wp_hooks_.applyFilters)('aether.export.step.uploadStaticSiteFiles.asset.process', {
+        blob: assetBlob,
+        path: assetPath,
+        key: assetKey,
+        contentType,
+        url: assetUrl
+      }, providerId);
+      assetBlob = filteredAssetData.blob || assetBlob;
+      const finalAssetPath = filteredAssetData.path || assetPath;
+      const finalAssetKey = filteredAssetData.key || assetKey;
+      const finalContentType = filteredAssetData.contentType || contentType;
+
+      // Check manifest for skip
+      const existingEntry = currentManifest[finalAssetKey];
+      if (existingEntry && existingEntry.size === assetBlob.size) {
+        try {
+          const assetHash = await fileHash_calculateFileHash(assetBlob);
+          if (manifestManager_shouldSkipUpload(currentManifest, finalAssetKey, assetBlob.size, assetHash)) {
+            assetTracker.markUploaded(assetUrl);
+            currentFilesUploaded++;
+            filesSkipped++;
+            uploadedFiles.push({
+              storageKey: finalAssetKey,
+              relativePath: finalAssetPath,
+              contentType: finalContentType
+            });
+            continue;
+          }
+        } catch (error) {
+          (0,admin_settings_debug/* debugWarn */.UT)('Failed to calculate hash for manifest check, will upload:', assetUrl, error);
+        }
+      }
+      assetData.push({
+        assetUrl,
+        assetPath: finalAssetPath,
+        assetKey: finalAssetKey,
+        assetBlob,
+        contentType: finalContentType
+      });
+    } catch (error) {
+      (0,admin_settings_debug/* debugWarn */.UT)('Failed to fetch asset:', assetUrl, error);
+    }
+  }
+
+  // Prepare files for upload
+  const filesToUpload = assetData.map(data => ({
+    key: data.assetKey,
+    blob: data.assetBlob,
+    contentType: data.contentType,
+    displayName: data.assetPath || data.assetKey || 'file',
+    metadata: {},
+    assetData: data
+  }));
+
+  // Upload in parallel
+  const uploadResult = await uploadFilesWithProgress({
+    files: filesToUpload,
+    storageService,
+    setStatusMessage,
+    concurrency: 5,
+    onProgress: uploaded => {
+      if (onProgress) {
+        onProgress(currentFilesUploaded + uploaded, totalFilesToUpload, null);
+      }
+    },
+    keyPrefix: 'upload',
+    skipHashCheck: false,
+    manifest: currentManifest,
+    shouldSkipUpload: manifestManager_shouldSkipUpload
+  });
+
+  // Process results
+  for (const result of uploadResult.results) {
+    const fileData = filesToUpload.find(f => f.key === result.key);
+    if (!fileData) {
+      (0,admin_settings_debug/* debugWarn */.UT)('Could not find fileData for result key:', result.key);
+      continue;
+    }
+    const {
+      assetUrl,
+      assetPath,
+      assetKey,
+      contentType
+    } = fileData.assetData;
+    if (result.success) {
+      assetTracker.markUploaded(assetUrl);
+      currentFilesUploaded++;
+      if (result.skipped) {
+        filesSkipped++;
+      }
+      if (result.hash) {
+        currentManifest = updateManifestEntry(currentManifest, assetKey, result.size || fileData.blob.size, result.hash, contentType);
+        currentManifest = (0,external_wp_hooks_.applyFilters)('aether.export.step.uploadStaticSiteFiles.manifest.update', currentManifest, assetKey, providerId);
+      }
+      uploadedFiles.push({
+        storageKey: assetKey,
+        relativePath: assetPath,
+        contentType
+      });
+    }
+  }
+  return {
+    filesUploaded: currentFilesUploaded,
+    filesSkipped,
+    uploadedFiles,
+    manifest: currentManifest
+  };
+}
+
+/**
+ * Upload a single HTML file.
+ *
+ * @param {Object}   options                  Upload options.
+ * @param {string}   options.url              Page URL.
+ * @param {string}   options.rawHtml          Raw HTML content.
+ * @param {string}   options.siteUrl          WordPress site URL.
+ * @param {string}   options.staticSiteUrl    Target static site URL.
+ * @param {string}   options.providerId       Provider ID.
+ * @param {Object}   options.storageService   Storage service instance.
+ * @param {Object}   options.manifest         Manifest object.
+ * @param {Function} options.setStatusMessage Status message updater.
+ * @return {Promise<Object>} Upload result.
+ */
+async function uploadHtmlFile({
+  url,
+  rawHtml,
+  siteUrl,
+  staticSiteUrl,
+  providerId,
+  storageService,
+  manifest,
+  setStatusMessage
+}) {
+  // Filter HTML before processing
+  let processedHtml = (0,external_wp_hooks_.applyFilters)('aether.export.step.uploadStaticSiteFiles.html.process', rawHtml, url, siteUrl, staticSiteUrl, providerId);
+
+  // Process HTML with URL rewriting
+  processedHtml = (0,htmlProcessor/* processHtml */.t)(processedHtml, url, siteUrl, staticSiteUrl);
+  const htmlPath = (0,htmlProcessor/* getStaticFilePath */.W)(url);
+  const htmlKey = htmlPath;
+  const htmlBlob = new Blob([processedHtml], {
+    type: 'text/html'
+  });
+  const htmlSize = htmlBlob.size;
+  let htmlHash = null;
+  let shouldSkip = false;
+
+  // Check manifest for skip
+  const existingEntry = manifest[htmlKey];
+  if (existingEntry && existingEntry.size === htmlSize) {
+    try {
+      htmlHash = await fileHash_calculateFileHash(htmlBlob);
+      shouldSkip = manifestManager_shouldSkipUpload(manifest, htmlKey, htmlSize, htmlHash);
+    } catch (error) {
+      (0,admin_settings_debug/* debugWarn */.UT)('Failed to calculate hash, will upload:', error);
+      shouldSkip = false;
+    }
+  }
+  if (shouldSkip) {
+    return {
+      success: true,
+      skipped: true,
+      htmlPath,
+      htmlKey,
+      htmlHash,
+      htmlSize
+    };
+  }
+
+  // Calculate hash if not already calculated
+  if (!htmlHash) {
+    try {
+      htmlHash = await fileHash_calculateFileHash(htmlBlob);
+    } catch (error) {
+      (0,admin_settings_debug/* debugWarn */.UT)('Failed to calculate hash:', error);
+      htmlHash = null;
+    }
+  }
+
+  // Upload status
+  if (setStatusMessage) {
+    setStatusMessage(`Uploading ${htmlPath}`, 'progress', `upload-${htmlPath}`);
+  }
+  const htmlUploadResult = await storageService.upload(htmlKey, htmlBlob, {
+    contentType: 'text/html'
+  });
+  if (!htmlUploadResult.success) {
+    throw new Error((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Error message */
+    (0,external_wp_i18n_namespaceObject.__)('Failed to upload HTML file: %s', 'aether-site-exporter'), htmlUploadResult.error));
+  }
+  if (setStatusMessage) {
+    setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: File path */
+    (0,external_wp_i18n_namespaceObject.__)('Uploaded %s', 'aether-site-exporter'), htmlPath), 'success', `upload-${htmlPath}`);
+  }
+  return {
+    success: true,
+    skipped: false,
+    htmlPath,
+    htmlKey,
+    htmlHash,
+    htmlSize
+  };
+}
+
+/**
+ * Finalize manifest after upload phase.
+ *
+ * @param {Object}   storageService   Storage service instance.
+ * @param {Object}   manifest         Manifest object.
+ * @param {Array}    uploadedFiles    Array of uploaded file info.
+ * @param {string}   providerId       Provider ID.
+ * @param {Function} setStatusMessage Status message updater.
+ * @return {Promise<void>}
+ */
+async function finalizeManifest(storageService, manifest, uploadedFiles, providerId, setStatusMessage) {
+  try {
+    if (setStatusMessage) {
+      setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Updating file manifest…', 'aether-site-exporter'), 'progress', 'updateManifest');
+    }
+    const currentFileKeys = new Set(uploadedFiles.map(file => file.storageKey));
+    const beforeCleanupCount = Object.keys(manifest).length;
+    let cleanedManifest = cleanupManifest(manifest, currentFileKeys);
+    cleanedManifest = (0,external_wp_hooks_.applyFilters)('aether.export.step.uploadStaticSiteFiles.manifest.cleanup', cleanedManifest, currentFileKeys, providerId);
+    const afterCleanupCount = Object.keys(cleanedManifest).length;
+    const removedCount = beforeCleanupCount - afterCleanupCount;
+    (0,admin_settings_debug/* debug */.Yz)(`Manifest cleanup: ${beforeCleanupCount} entries → ${afterCleanupCount} entries (${removedCount} removed, ${currentFileKeys.size} current files)`);
+    await uploadManifest(storageService, cleanedManifest);
+    if (setStatusMessage) {
+      setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Updated file manifest', 'aether-site-exporter'), 'success', 'updateManifest');
+    }
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('Failed to upload manifest:', error);
+  }
+}
+;// ./assets/src/export/hooks/useStaticSiteGenerator.js
+/**
+ * Static Site Generator Hook
+ *
+ * Processes URLs and uploads static site files using a two-phase approach:
+ * 1. PHASE 1 (Pre-scan): Fetch all URLs, extract assets, count total files
+ * 2. PHASE 2 (Upload): Upload all files with accurate progress
+ *
+ */
+
+
+
+
+
+
+
+// Extracted modules
+
+
+
+
+/**
+ * Process URLs and upload static site files.
+ *
+ * @param {Function} onProgress Progress callback (uploadedFiles, totalFiles, message).
+ * @return {Function} Process function.
+ */
+function useStaticSiteGenerator(onProgress) {
+  const processUrls = (0,external_wp_element_namespaceObject.useCallback)(async (urls, staticSiteUrl, staticSiteProviderId, siteUrl, setStatusMessage, blueprintData, removeMessage = null, cache = null) => {
+    // Validate provider ID is provided
+    // CRITICAL: In multi-instance threading, each thread MUST use its own provider ID
+    if (!staticSiteProviderId) {
+      throw new Error('Static site provider ID is required. ' + 'This function must be called with a specific provider instance ID.');
+    }
+    (0,admin_settings_debug/* debug */.Yz)('Processing static site for provider:', {
+      providerId: staticSiteProviderId,
+      urlCount: urls?.length || 0
+    });
+
+    // Create asset tracker to prevent duplicate uploads
+    const assetTracker = createAssetTracker();
+
+    // Track all uploaded files for manifest generation
+    const uploadedFiles = [];
+
+    // Track failures for reporting
+    const failures = createFailureTracker();
+
+    // Get provider configuration
+    const providerConfig = await fetchProviderConfig(staticSiteProviderId);
+    const staticPath = providerConfig.static_files_path || 'static/';
+
+    // Build and create storage service
+    const config = buildStorageConfig(siteUrl, staticSiteUrl, staticSiteProviderId);
+    (0,admin_settings_debug/* debug */.Yz)('Static site storage configuration:', {
+      staticPath,
+      providerId: staticSiteProviderId
+    });
+    const storageService = await createStorageService(staticPath, config, staticSiteProviderId, providerConfig);
+    const totalUrls = urls.length;
+    (0,admin_settings_debug/* debug */.Yz)('[Aether] useStaticSiteGenerator starting pre-scan:', {
+      urlCount: totalUrls,
+      hasCache: !!cache,
+      cacheSize: cache ? cache.size : 0,
+      providerId: staticSiteProviderId
+    });
+
+    // PHASE 1: Pre-scan all URLs (use shared HTML data if provided)
+    const preScanResult = await executePreScan({
+      urls,
+      siteUrl,
+      providerId: staticSiteProviderId,
+      providerConfig,
+      setStatusMessage,
+      htmlData: cache
+    });
+    const {
+      htmlData: sharedHtmlData,
+      totalFilesToUpload
+    } = preScanResult;
+
+    // Merge pre-scan failures
+    failures.urlsFailed += preScanResult.failures.urlsFailed;
+    failures.failedUrls.push(...preScanResult.failures.failedUrls);
+
+    // PHASE 2: Upload all files
+    let manifest = await prepareManifest(storageService, staticSiteProviderId, setStatusMessage);
+    let filesUploaded = 0;
+    let filesSkipped = 0;
+
+    // Get URLs from HTML data storage
+    const fetchedUrls = Array.from(sharedHtmlData.keys());
+
+    // Validate that we have URLs to process
+    if (fetchedUrls.length === 0) {
+      (0,admin_settings_debug/* debugWarn */.UT)('[Aether] No URLs found in sharedHtmlData. Cannot upload files.');
+      throw new Error('No HTML data available for upload. Please ensure preScanStaticSite step completed successfully.');
+    }
+    (0,admin_settings_debug/* debug */.Yz)('[Aether] Processing URLs for upload:', {
+      urlCount: fetchedUrls.length,
+      totalFilesToUpload
+    });
+
+    // Fire upload start action
+    (0,external_wp_hooks_.doAction)('aether.export.step.uploadStaticSiteFiles.upload.before', fetchedUrls, totalFilesToUpload, staticSiteProviderId);
+
+    // Process each URL
+    for (const url of fetchedUrls) {
+      const htmlDataEntry = sharedHtmlData.get(url);
+      if (!htmlDataEntry) {
+        (0,admin_settings_debug/* debugWarn */.UT)(`[Aether] No HTML data for URL: ${url} - skipping`);
+        continue;
+      }
+
+      // Validate data structure - expect { rawHtml, assetUrls } object
+      let rawHtml, assetUrls;
+      if (typeof htmlDataEntry !== 'object' || htmlDataEntry === null) {
+        (0,admin_settings_debug/* debugWarn */.UT)(`[Aether] Invalid data structure for URL: ${url}. Expected object with rawHtml and assetUrls, got:`, typeof htmlDataEntry);
+        // Try to handle legacy string format for backward compatibility
+        if (typeof htmlDataEntry === 'string') {
+          (0,admin_settings_debug/* debugWarn */.UT)(`[Aether] Legacy string format detected for ${url}. Converting to expected format.`);
+          // Extract assets from the HTML string as fallback
+          const {
+            extractAssetsFromHtml
+          } = await Promise.resolve(/* import() eager */).then(__webpack_require__.bind(__webpack_require__, 662));
+          const extractedAssetUrls = await extractAssetsFromHtml(htmlDataEntry, url, siteUrl);
+          // Update the entry with correct format
+          sharedHtmlData.set(url, {
+            rawHtml: htmlDataEntry,
+            assetUrls: extractedAssetUrls
+          });
+          // Use the corrected data
+          rawHtml = htmlDataEntry;
+          assetUrls = extractedAssetUrls;
+        } else {
+          (0,admin_settings_debug/* debugWarn */.UT)(`[Aether] Cannot process URL ${url} - unsupported data type: ${typeof htmlDataEntry}`);
+          continue;
+        }
+      } else {
+        // Normal path: destructure expected object format
+        if (!htmlDataEntry.rawHtml || !Array.isArray(htmlDataEntry.assetUrls)) {
+          (0,admin_settings_debug/* debugWarn */.UT)(`[Aether] Invalid object structure for URL: ${url}. Expected { rawHtml, assetUrls }, got:`, Object.keys(htmlDataEntry));
+          continue;
+        }
+        ({
+          rawHtml,
+          assetUrls
+        } = htmlDataEntry);
+      }
+      try {
+        // Update progress message
+        if (setStatusMessage) {
+          setStatusMessage(`Uploading files (${filesUploaded + 1}/${totalFilesToUpload})`, 'progress', 'uploadFilesProgress');
+        }
+
+        // Upload HTML file
+        const htmlResult = await uploadHtmlFile({
+          url,
+          rawHtml,
+          siteUrl,
+          staticSiteUrl,
+          providerId: staticSiteProviderId,
+          storageService,
+          manifest,
+          setStatusMessage
+        });
+        filesUploaded++;
+        failures.urlsSucceeded++;
+        if (htmlResult.skipped) {
+          filesSkipped++;
+          if (setStatusMessage) {
+            setStatusMessage(`Skipped unchanged file ${htmlResult.htmlPath}`, 'success', `upload-${htmlResult.htmlPath}`);
+          }
+        }
+
+        // Update manifest if hash available
+        if (htmlResult.htmlHash && !htmlResult.skipped) {
+          manifest = updateManifestEntry(manifest, htmlResult.htmlKey, htmlResult.htmlSize, htmlResult.htmlHash, 'text/html');
+          manifest = (0,external_wp_hooks_.applyFilters)('aether.export.step.uploadStaticSiteFiles.manifest.update', manifest, htmlResult.htmlKey, staticSiteProviderId);
+        }
+
+        // Track uploaded file
+        uploadedFiles.push({
+          storageKey: htmlResult.htmlKey,
+          relativePath: htmlResult.htmlPath,
+          contentType: 'text/html'
+        });
+
+        // Report progress
+        if (onProgress) {
+          onProgress(filesUploaded, totalFilesToUpload, null);
+        }
+
+        // Process assets for this page
+        const assetResult = await processAssets({
+          assetUrls,
+          assetTracker,
+          storageService,
+          manifest,
+          providerId: staticSiteProviderId,
+          filesUploaded,
+          totalFilesToUpload,
+          onProgress,
+          setStatusMessage
+        });
+        filesUploaded = assetResult.filesUploaded;
+        filesSkipped += assetResult.filesSkipped;
+        uploadedFiles.push(...assetResult.uploadedFiles);
+        manifest = assetResult.manifest;
+
+        // Periodic manifest save
+        if (filesUploaded % 50 === 0) {
+          try {
+            (0,admin_settings_debug/* debug */.Yz)('Periodic manifest save:', filesUploaded + ' files');
+            await uploadManifest(storageService, manifest);
+          } catch (error) {
+            (0,admin_settings_debug/* debugWarn */.UT)('Periodic manifest save failed:', error);
+          }
+        }
+      } catch (error) {
+        failures.urlsFailed++;
+        failures.failedUrls.push({
+          url,
+          reason: error.message
+        });
+      }
+    }
+
+    // Note: HTML data cleanup is handled at the workflow level (uploadStaticFiles step)
+    // to ensure it happens once for all providers, not per provider
+
+    // Finalize manifest
+    await finalizeManifest(storageService, manifest, uploadedFiles, staticSiteProviderId, setStatusMessage);
+
+    // Log optimization summary
+    const actualUploads = filesUploaded - filesSkipped;
+    (0,admin_settings_debug/* debug */.Yz)('Upload optimization summary:', {
+      totalFiles: filesUploaded,
+      uploaded: actualUploads,
+      skipped: filesSkipped,
+      skipRate: filesUploaded > 0 ? `${Math.round(filesSkipped / filesUploaded * 100)}%` : '0%'
+    });
+
+    // Remove progress message
+    if (removeMessage) {
+      removeMessage('uploadFilesProgress');
+    }
+
+    // Fire completion action
+    (0,external_wp_hooks_.doAction)('aether.export.step.uploadStaticSiteFiles.upload.after', {
+      filesUploaded,
+      filesSkipped,
+      urlsSucceeded: failures.urlsSucceeded,
+      urlsFailed: failures.urlsFailed,
+      assetsUploaded: assetTracker.getCount()
+    }, staticSiteProviderId);
+
+    // Return result
+    return buildUploadResult(failures, assetTracker, filesUploaded, filesSkipped, totalFilesToUpload, uploadedFiles, totalUrls);
+  }, [onProgress]);
+  return processUrls;
+}
+;// ./assets/src/export/utils/blueprintStepBuilders.js
+/**
+ * Blueprint Step Builders
+ *
+ * Utility functions for constructing individual WordPress Playground blueprint steps.
+ * Each function is responsible for creating a single step or group of related steps.
+ *
+ */
+
+
+
+/**
+ * Production zip URL for Aether plugin (matches PHP constant AETHER_PRODUCTION_ZIP_URL).
+ */
+const AETHER_PRODUCTION_ZIP_URL = 'https://r2.s12y.org/aether.zip';
+
+/**
+ * Build the importWordPressFiles step for importing wp-content.zip.
+ *
+ * Uses 'bundled' resource type to reference wp-content.zip inside the blueprint-bundle.zip.
+ *
+ * @return {Object} Blueprint step object.
+ */
+function buildImportFilesStep() {
+  return {
+    step: 'importWordPressFiles',
+    wordPressFilesZip: {
+      resource: 'bundled',
+      path: '/wp-content.zip'
+    }
+  };
+}
+
+/**
+ * Build the installPlugin step for Aether plugin.
+ *
+ * @return {Object} Blueprint step object.
+ */
+function buildAetherInstallStep() {
+  // Add cache-busting to ensure fresh download.
+  const aetherUrl = `${AETHER_PRODUCTION_ZIP_URL}?v=${Date.now()}`;
+  return {
+    step: 'installPlugin',
+    pluginData: {
+      resource: 'url',
+      url: aetherUrl,
+      caption: 'Installing Aether plugin'
+    },
+    options: {
+      activate: false
+    }
+  };
+}
+
+/**
+ * Build the defineWpConfigConsts step to identify Playground environment.
+ *
+ * @return {Object} Blueprint step object.
+ */
+function buildDefineConstsStep() {
+  return {
+    step: 'defineWpConfigConsts',
+    consts: {
+      AETHER_PLAYGROUND_SITE: true
+    }
+  };
+}
+
+/**
+ * Build installPlugin steps for WordPress.org plugins.
+ *
+ * @param {Array<string>} pluginSlugs Array of WordPress.org plugin slugs.
+ * @return {Array<Object>} Array of blueprint step objects.
+ */
+function buildPluginInstallSteps(pluginSlugs) {
+  if (!Array.isArray(pluginSlugs)) {
+    return [];
+  }
+  return pluginSlugs.map(slug => ({
+    step: 'installPlugin',
+    pluginData: {
+      resource: 'wordpress.org/plugins',
+      slug
+    },
+    options: {
+      activate: false
+    }
+  }));
+}
+
+/**
+ * Build installTheme steps for WordPress.org themes.
+ *
+ * @param {Array<string>} themeSlugs Array of WordPress.org theme slugs.
+ * @return {Array<Object>} Array of blueprint step objects.
+ */
+function buildThemeInstallSteps(themeSlugs) {
+  if (!Array.isArray(themeSlugs)) {
+    return [];
+  }
+  return themeSlugs.map(slug => ({
+    step: 'installTheme',
+    themeData: {
+      resource: 'wordpress.org/themes',
+      slug
+    },
+    options: {
+      activate: false
+    }
+  }));
+}
+
+/**
+ * Build the activatePlugin step for Aether plugin.
+ *
+ * @return {Object} Blueprint step object.
+ */
+function buildAetherActivationStep() {
+  return {
+    step: 'activatePlugin',
+    pluginPath: 'aether/aether.php'
+  };
+}
+
+/**
+ * Build complete blueprint steps array.
+ *
+ * @param {Object} config              Configuration object.
+ * @param {Array}  config.wporgPlugins WordPress.org plugin slugs.
+ * @param {Array}  config.wporgThemes  WordPress.org theme slugs.
+ * @return {Array<Object>} Complete array of blueprint steps.
+ */
+function buildBlueprintSteps(config) {
+  const {
+    wporgPlugins = [],
+    wporgThemes = []
+  } = config;
+  const steps = [];
+
+  // Step 1: Import WordPress files (wp-content.zip from bundle).
+  steps.push(buildImportFilesStep());
+
+  // Step 2: Install WordPress.org plugins.
+  steps.push(...buildPluginInstallSteps(wporgPlugins));
+
+  // Step 3: Install WordPress.org themes.
+  steps.push(...buildThemeInstallSteps(wporgThemes));
+
+  /**
+   * Filter blueprint steps array.
+   *
+   * Allows modification of blueprint steps before final JSON generation.
+   *
+   * @param {Array<Object>} steps  Blueprint steps array.
+   * @param {Object}        config Configuration object with wporgPlugins, wporgThemes.
+   *
+   * @example
+   * import { addFilter } from '@wordpress/hooks';
+   *
+   * addFilter('aether.export.step.createBlueprintBundle.steps', 'my-plugin', (steps, config) => {
+   *     // Add custom step at the end
+   *     steps.push({
+   *         step: 'runPHP',
+   *         code: '<?php update_option("my_custom_option", "value"); ?>'
+   *     });
+   *     return steps;
+   * });
+   */
+  return (0,external_wp_hooks_.applyFilters)('aether.export.step.createBlueprintBundle.steps', steps, config);
+}
+
+/**
+ * Build complete blueprint JSON object.
+ *
+ * @param {Array} steps Blueprint steps array.
+ * @return {Object} Complete blueprint JSON.
+ */
+function buildBlueprintJson(steps) {
+  const blueprint = {
+    $schema: 'https://playground.wordpress.net/blueprint-schema.json',
+    landingPage: '/wp-login.php',
+    preferredVersions: {
+      php: '8.4',
+      wp: 'latest'
+    },
+    features: {
+      networking: true
+    },
+    steps
+  };
+
+  /**
+   * Filter complete blueprint JSON object.
+   *
+   * Allows modification of the final blueprint configuration.
+   *
+   * @param {Object} blueprint Complete blueprint JSON object.
+   * @param {Array}  steps     Blueprint steps array.
+   *
+   * @example
+   * import { addFilter } from '@wordpress/hooks';
+   *
+   * addFilter('aether.export.step.createBlueprintBundle.json', 'my-plugin', (blueprint, steps) => {
+   *     // Customize landing page
+   *     blueprint.landingPage = '/wp-admin/';
+   *
+   *     // Change PHP version
+   *     blueprint.preferredVersions.php = '8.3';
+   *
+   *     // Add login credentials
+   *     blueprint.login = {
+   *         username: 'admin',
+   *         password: 'password'
+   *     };
+   *
+   *     return blueprint;
+   * });
+   */
+  return (0,external_wp_hooks_.applyFilters)('aether.export.step.createBlueprintBundle.json', blueprint, steps);
+}
+;// ./assets/src/export/hooks/useBlueprintGenerator.js
+/**
+ * Blueprint Generator Hook
+ *
+ * Generates WordPress Playground blueprint JSON for site deployment.
+ * Fetches WordPress.org plugin/theme slugs and constructs blueprint with bundled resources.
+ *
+ */
+
+
+
+
+
+
+/**
+ * Hook for generating WordPress Playground blueprint JSON.
+ *
+ * @return {Object} Object with generateBlueprint function.
+ */
+function useBlueprintGenerator() {
+  const assetDiscovery = useAssetDiscovery();
+  const generateBlueprint = (0,external_wp_element_namespaceObject.useCallback)(
+  /**
+   * Generate blueprint JSON.
+   *
+   * @param {Object}   [options]                 Optional options object.
+   * @param {Array}    [options.assets]          Discovered assets (currently unused).
+   * @param {string}   [options.wpContentZipUrl] wp-content.zip URL (currently unused).
+   * @param {Function} [setStatusMessage]        Optional status message callback.
+   * @return {Promise<Object>} Blueprint JSON object.
+   */
+  async (options = null, setStatusMessage = null) => {
+    // Handle case where first argument is setStatusMessage (backwards compatibility).
+    let actualSetStatusMessage;
+    if (typeof options === 'function') {
+      actualSetStatusMessage = options;
+    } else {
+      actualSetStatusMessage = setStatusMessage;
+    }
+    // Fetch WordPress.org plugin/theme slugs and site name using browser-based discovery.
+    if (actualSetStatusMessage) {
+      actualSetStatusMessage('Detecting WordPress.org plugins and themes…', 'progress', 'detectWporgAssets');
+    }
+    const assetsResponse = await assetDiscovery.getBlueprintAssets();
+    let {
+      plugins: wporgPlugins,
+      themes: wporgThemes
+    } = assetsResponse;
+
+    /**
+     * Filter discovered WordPress.org assets.
+     *
+     * Allows modification of detected plugins and themes before blueprint generation.
+     *
+     * @param {Object}        assets         Discovered assets object.
+     * @param {Array<string>} assets.plugins WordPress.org plugin slugs.
+     * @param {Array<string>} assets.themes  WordPress.org theme slugs.
+     * @param {Object}        assetsResponse Full asset discovery response.
+     *
+     * @example
+     * import { addFilter } from '@wordpress/hooks';
+     *
+     * addFilter('aether.export.step.createBlueprintBundle.assets', 'my-plugin', (assets) => {
+     *     // Exclude specific plugins
+     *     assets.plugins = assets.plugins.filter(slug => slug !== 'unwanted-plugin');
+     *
+     *     // Add additional plugins
+     *     assets.plugins.push('my-required-plugin');
+     *
+     *     return assets;
+     * });
+     */
+    const filteredAssets = (0,external_wp_hooks_.applyFilters)('aether.export.step.createBlueprintBundle.assets', {
+      plugins: wporgPlugins,
+      themes: wporgThemes
+    }, assetsResponse);
+    wporgPlugins = filteredAssets.plugins || [];
+    wporgThemes = filteredAssets.themes || [];
+
+    // Start configuring Playground settings
+    if (actualSetStatusMessage) {
+      actualSetStatusMessage('Configuring WordPress Playground settings…', 'progress', 'configurePlayground');
+    }
+
+    // Build blueprint steps array with bundled wp-content resources.
+    const steps = buildBlueprintSteps({
+      wporgPlugins,
+      wporgThemes
+    });
+
+    // Construct blueprint JSON.
+    let blueprint = buildBlueprintJson(steps);
+    if (actualSetStatusMessage) {
+      actualSetStatusMessage(`Blueprint generated: ${steps.length} total steps`, 'success', 'createBlueprintBundle');
+      // Update detection message to success
+      actualSetStatusMessage('Detected WordPress.org plugins and themes', 'success', 'detectWporgAssets');
+      // Update configuration message to success
+      actualSetStatusMessage('Configured WordPress Playground settings', 'success', 'configurePlayground');
+      // Update plugin/theme messages to success
+      // Keep original message text, just update type to success
+      if (wporgPlugins.length > 0) {
+        const pluginNames = wporgPlugins.join(', ');
+        actualSetStatusMessage(`Adding ${wporgPlugins.length} WordPress.org plugin${wporgPlugins.length !== 1 ? 's' : ''} to blueprint`, 'success', 'addPluginsToBlueprint');
+        actualSetStatusMessage(`Plugins: ${pluginNames}`, 'success', 'pluginsList');
+      }
+      if (wporgThemes.length > 0) {
+        const themeNames = wporgThemes.join(', ');
+        actualSetStatusMessage(`Adding ${wporgThemes.length} WordPress.org theme${wporgThemes.length !== 1 ? 's' : ''} to blueprint`, 'success', 'addThemesToBlueprint');
+        actualSetStatusMessage(`Themes: ${themeNames}`, 'success', 'themesList');
+      }
+    }
+
+    /**
+     * Filter final generated blueprint.
+     *
+     * Allows final modification of blueprint before it's used for deployment.
+     *
+     * @param {Object}        blueprint    Complete blueprint JSON object.
+     * @param {Array<string>} wporgPlugins WordPress.org plugin slugs.
+     * @param {Array<string>} wporgThemes  WordPress.org theme slugs.
+     *
+     * @example
+     * import { addFilter } from '@wordpress/hooks';
+     *
+     * addFilter('aether.export.step.createBlueprintBundle.generated', 'my-plugin', (blueprint) => {
+     *     // Add custom metadata
+     *     blueprint.description = 'My custom WordPress site';
+     *
+     *     return blueprint;
+     * });
+     */
+    blueprint = (0,external_wp_hooks_.applyFilters)('aether.export.step.createBlueprintBundle.generated', blueprint, wporgPlugins, wporgThemes);
+    return blueprint;
+  }, [assetDiscovery]);
+  return {
+    generateBlueprint
+  };
+}
+;// ./assets/src/constants/deploymentTypes.js
+/**
+ * Deployment type constants and labels
+ *
+ */
+
+
+
+/**
+ * Deployment type identifiers
+ */
+const DEPLOYMENT_TYPES = {
+  STATIC_SITE: 'static_site',
+  BLUEPRINT_BUNDLE: 'blueprint_bundle',
+  EDGE_FUNCTIONS: 'edge_functions'
+};
+
+/**
+ * Human-readable labels for deployment types
+ */
+const DEPLOYMENT_TYPE_LABELS = {
+  [DEPLOYMENT_TYPES.STATIC_SITE]: (0,external_wp_i18n_namespaceObject.__)('Static Site', 'aether-site-exporter'),
+  [DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE]: (0,external_wp_i18n_namespaceObject.__)('Blueprint Bundle', 'aether-site-exporter'),
+  [DEPLOYMENT_TYPES.EDGE_FUNCTIONS]: (0,external_wp_i18n_namespaceObject.__)('Edge Functions', 'aether-site-exporter')
+};
+
+/**
+ * Descriptions for deployment types
+ */
+const DEPLOYMENT_TYPE_DESCRIPTIONS = {
+  [DEPLOYMENT_TYPES.STATIC_SITE]: (0,external_wp_i18n_namespaceObject.__)('Deploy static HTML/CSS/JS files for web hosting', 'aether-site-exporter'),
+  [DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE]: (0,external_wp_i18n_namespaceObject.__)('Deploy WordPress Playground blueprint bundle (ZIP file)', 'aether-site-exporter'),
+  [DEPLOYMENT_TYPES.EDGE_FUNCTIONS]: (0,external_wp_i18n_namespaceObject.__)('Deploy serverless functions to edge computing platforms', 'aether-site-exporter')
+};
+;// ./assets/src/export/executor/DataValidator.js
+/**
+ * Data Validator
+ *
+ * Validates data dependencies between workflow steps.
+ * Ensures all required data exists before step execution
+ * and validates output matches declared provides.
+ *
+ * Supports scope validation for multi-threaded execution:
+ * - Global scope: Data shared across all threads (read-only)
+ * - Thread scope: Data isolated to specific provider instance thread
+ *
+ * @since 1.0.0
+ */
+
+
+
+/**
+ * Determine if a step is a per-thread step
+ *
+ * A step is per-thread if it requires data from 'thread' source.
+ *
+ * @param {Object} step - Step definition
+ * @return {boolean} True if step is per-thread
+ */
+function isThreadStep(step) {
+  if (!step.requires) {
+    return false;
+  }
+  return Object.values(step.requires).some(requirement => requirement.from === 'thread');
+}
+
+/**
+ * Get the scope of provided data
+ *
+ * @param {Object} step - Step definition
+ * @param {string} key  - Data key
+ * @return {string} 'global' or 'thread'
+ */
+function getProvideScope(step, key) {
+  if (!step.provides || !step.provides[key]) {
+    return 'thread'; // Default to thread scope
+  }
+  const definition = step.provides[key];
+
+  // Support both string format (legacy, defaults to thread) and object format
+  if (typeof definition === 'string') {
+    return 'thread';
+  }
+  return definition.scope || 'thread';
+}
+
+/**
+ * Validate scope consistency
+ *
+ * Ensures that:
+ * - Thread steps only provide thread-scoped data
+ * - Global steps only provide global-scoped data
+ * - No scope mismatches
+ *
+ * @param {Object} step - Step definition
+ * @throws {Error} If scope is inconsistent
+ */
+function validateScope(step) {
+  if (!step.provides) {
+    return;
+  }
+  const isThread = isThreadStep(step);
+  const errors = [];
+  Object.entries(step.provides).forEach(([key]) => {
+    const scope = getProvideScope(step, key);
+
+    // Thread steps should only provide thread-scoped data
+    if (isThread && scope === 'global') {
+      errors.push(`"${key}" is declared as global scope but step "${step.id}" is a thread step`);
+    }
+
+    // Global steps should only provide global-scoped data
+    if (!isThread && scope === 'thread') {
+      errors.push(`"${key}" is declared as thread scope but step "${step.id}" is a global step`);
+    }
+  });
+  if (errors.length > 0) {
+    throw new Error(`Step "${step.id}" has scope inconsistencies:\n  - ${errors.join('\n  - ')}`);
+  }
+}
+
+/**
+ * Validate step data requirements
+ *
+ * Checks that all required data exists in context before step execution.
+ *
+ * @param {Object} step    - Step definition
+ * @param {Object} context - Execution context
+ * @throws {Error} If required data is missing
+ */
+function DataValidator_validate(step, context) {
+  if (!step.requires) {
+    return;
+  }
+  const missing = [];
+  const missingDetails = [];
+  Object.entries(step.requires).forEach(([key, requirement]) => {
+    const isRequired = requirement.required !== false;
+    if (!(key in context) && isRequired) {
+      missing.push(key);
+      missingDetails.push(`  - "${key}" (from: ${requirement.from})`);
+    }
+  });
+  if (missing.length > 0) {
+    throw new Error(`Step "${step.id}" is missing required data:\n${missingDetails.join('\n')}`);
+  }
+}
+
+/**
+ * Validate step output
+ *
+ * Checks that step handler returned all declared provides.
+ *
+ * @param {Object} step   - Step definition
+ * @param {Object} result - Step handler result
+ * @throws {Error} If provided data is missing
+ */
+function validateOutput(step, result) {
+  if (!step.provides || !result) {
+    return;
+  }
+  const missing = [];
+  Object.keys(step.provides).forEach(key => {
+    if (!(key in result)) {
+      missing.push(key);
+    }
+  });
+  if (missing.length > 0) {
+    throw new Error(`Step "${step.id}" did not provide declared outputs: ${missing.join(', ')}`);
+  }
+}
+
+/**
+ * Get data requirements summary
+ *
+ * Returns a human-readable summary of what data a step requires.
+ *
+ * @param {Object} step - Step definition
+ * @return {string} Requirements summary
+ */
+function getRequirementsSummary(step) {
+  if (!step.requires) {
+    return (0,external_wp_i18n_namespaceObject.__)('No data requirements', 'aether-site-exporter');
+  }
+  const requirements = Object.entries(step.requires).map(([key, requirement]) => {
+    const required = requirement.required !== false;
+    const requiredLabel = required ? 'required' : 'optional';
+    return `  - ${key} (from: ${requirement.from}, ${requiredLabel})`;
+  });
+  return requirements.join('\n');
+}
+
+/**
+ * Get provides summary
+ *
+ * Returns a human-readable summary of what data a step provides.
+ *
+ * @param {Object} step - Step definition
+ * @return {string} Provides summary
+ */
+function getProvidesSummary(step) {
+  if (!step.provides) {
+    return (0,external_wp_i18n_namespaceObject.__)('No data provided', 'aether-site-exporter');
+  }
+  const provides = Object.entries(step.provides).map(([key, definition]) => {
+    // Support both old format (string) and new format (object with type and scope)
+    if (typeof definition === 'string') {
+      return `  - ${key} (type: ${definition})`;
+    }
+    const type = definition.type || 'unknown';
+    const scope = definition.scope || 'thread';
+    return `  - ${key} (type: ${type}, scope: ${scope})`;
+  });
+  return provides.join('\n');
+}
+/* harmony default export */ const DataValidator = ({
+  validate: DataValidator_validate,
+  validateOutput,
+  validateScope,
+  isThreadStep,
+  getProvideScope,
+  getRequirementsSummary,
+  getProvidesSummary
+});
+;// ./assets/src/export/executor/DependencyResolver.js
+/**
+ * Dependency Resolver
+ *
+ * Resolves step dependencies and builds parallel execution plan.
+ * Uses topological sort to determine execution order.
+ *
+ */
+
+/**
+ * Build a parallel execution plan from steps with dependencies.
+ *
+ * Returns an array of arrays, where each inner array contains step IDs
+ * that can be executed in parallel.
+ *
+ * @param {Array<Object>} steps Array of step definitions with id and dependencies.
+ * @return {Array<Array<string>>} Execution plan with parallel groups.
+ */
+function DependencyResolver_buildParallelPlan(steps) {
+  const stepIds = new Set(steps.map(s => s.id));
+  const remaining = new Set(stepIds);
+  const result = [];
+  while (remaining.size > 0) {
+    // Find all steps whose dependencies are satisfied (not in remaining)
+    const ready = [...remaining].filter(stepId => {
+      const step = steps.find(s => s.id === stepId);
+      const deps = step.dependencies || [];
+      // All dependencies must be completed (not in remaining)
+      return deps.every(depId => !remaining.has(depId));
+    });
+    if (ready.length === 0 && remaining.size > 0) {
+      const unresolved = [...remaining].join(', ');
+      throw new Error(`Circular dependency detected. Unresolved steps: ${unresolved}`);
+    }
+
+    // These steps can run in parallel
+    result.push(ready);
+
+    // Remove from remaining
+    ready.forEach(id => remaining.delete(id));
+  }
+  return result;
+}
+
+/**
+ * Validate step dependencies.
+ *
+ * Checks that all declared dependencies reference existing steps.
+ *
+ * @param {Array<Object>} allSteps     All step definitions (for dependency lookup).
+ * @param {Array<Object>} stepsToCheck Steps to validate (defaults to allSteps).
+ * @return {Array<string>} Array of validation errors (empty if valid).
+ */
+function validateDependencies(allSteps, stepsToCheck = null) {
+  const errors = [];
+  const stepsToValidate = stepsToCheck || allSteps;
+  const stepIds = new Set(allSteps.map(s => s.id));
+  stepsToValidate.forEach(step => {
+    const deps = step.dependencies || [];
+    deps.forEach(depId => {
+      if (!stepIds.has(depId)) {
+        errors.push(`Step "${step.id}" depends on unknown step "${depId}"`);
+      }
+    });
+  });
+  return errors;
+}
+
+/**
+ * Get execution order as a flat array.
+ *
+ * @param {Array<Object>} steps Array of step definitions.
+ * @return {Array<string>} Flat array of step IDs in execution order.
+ */
+function getExecutionOrder(steps) {
+  const plan = DependencyResolver_buildParallelPlan(steps);
+  return plan.flat();
+}
+;// ./assets/src/export/utils/progressTracker.js
+/**
+ * Progress Tracker Utility
+ *
+ * Tracks export workflow progress with equal step weights and IndexedDB persistence.
+ * Each step gets equal weight: 100% / number of steps.
+ *
+ */
+
+
+
+const DB_CONFIG = {
+  dbName: 'aether-export-progress',
+  version: 1,
+  stores: {
+    progress: {
+      keyPath: 'workflowId'
+    }
+  }
+};
+
+// Initialize store instance
+let storeInstance = null;
+
+/**
+ * Get or create IndexedDB store instance.
+ *
+ * @return {IndexedDBStore|null} Store instance or null if unavailable.
+ */
+function getStore() {
+  if (!isIndexedDBAvailable()) {
+    (0,admin_settings_debug/* debugWarn */.UT)('[ProgressTracker] IndexedDB not available, progress will not persist');
+    return null;
+  }
+  if (!storeInstance) {
+    storeInstance = new utils_indexedDB('progress', DB_CONFIG);
+  }
+  return storeInstance;
+}
+
+/**
+ * Save progress to IndexedDB.
+ *
+ * @param {string} workflowId Workflow identifier.
+ * @param {Object} progress   Progress data.
+ * @return {Promise<void>}
+ */
+async function saveProgress(workflowId, progress) {
+  const store = getStore();
+  if (!store) {
+    return; // Silently fail if IndexedDB unavailable
+  }
+  try {
+    await store.set(workflowId, {
+      ...progress,
+      timestamp: Date.now()
+    });
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('[ProgressTracker] Failed to save progress:', error);
+    // Don't throw - progress tracking is non-critical
+  }
+}
+
+/**
+ * Load progress from IndexedDB.
+ *
+ * @param {string} workflowId Workflow identifier.
+ * @return {Promise<Object|null>} Progress data or null if not found.
+ */
+async function loadProgress(workflowId) {
+  const store = getStore();
+  if (!store) {
+    return null;
+  }
+  try {
+    const result = await store.get(workflowId);
+    return result || null;
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('[ProgressTracker] Failed to load progress:', error);
+    return null;
+  }
+}
+
+/**
+ * Delete progress from IndexedDB.
+ *
+ * @param {string} workflowId Workflow identifier.
+ * @return {Promise<void>}
+ */
+async function deleteProgress(workflowId) {
+  const store = getStore();
+  if (!store) {
+    return;
+  }
+  try {
+    await store.delete(workflowId);
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('[ProgressTracker] Failed to delete progress:', error);
+    // Don't throw - cleanup is non-critical
+  }
+}
+
+/**
+ * Create a progress tracker instance.
+ *
+ * @param {string}        workflowId         Unique workflow identifier.
+ * @param {Array<string>} stepIds            Array of step IDs in execution order.
+ * @param {Function}      [onProgressChange] Callback when progress changes.
+ * @return {Object} Progress tracker instance.
+ */
+function createProgressTracker(workflowId, stepIds, onProgressChange = null) {
+  // Calculate equal step weight
+  const stepWeight = stepIds.length > 0 ? 100 / stepIds.length : 0;
+
+  // Initialize progress state
+  let progressState = {
+    workflowId,
+    stepIds,
+    stepWeight,
+    stepProgress: {},
+    overallProgress: 0,
+    completedSteps: [],
+    startedAt: Date.now(),
+    updatedAt: Date.now()
+  };
+
+  /**
+   * Update progress for a specific step.
+   *
+   * @param {string} stepId   Step identifier.
+   * @param {number} progress Step progress (0-100).
+   * @return {Promise<void>}
+   */
+  async function updateStepProgress(stepId, progress) {
+    // Validate step ID
+    if (!stepIds.includes(stepId)) {
+      (0,admin_settings_debug/* debugWarn */.UT)(`[ProgressTracker] Unknown step ID: ${stepId}`);
+      return;
+    }
+
+    // Clamp progress to 0-100
+    const clampedProgress = Math.min(100, Math.max(0, progress));
+
+    // Update step progress
+    progressState.stepProgress[stepId] = clampedProgress;
+    progressState.updatedAt = Date.now();
+
+    // Calculate overall progress
+    // Sum of (stepWeight * stepProgress / 100) for all steps
+    let totalProgress = 0;
+    for (const id of stepIds) {
+      const stepProg = progressState.stepProgress[id] || 0;
+      totalProgress += stepWeight * stepProg / 100;
+    }
+    progressState.overallProgress = Math.min(100, Math.round(totalProgress));
+
+    // Save to IndexedDB
+    await saveProgress(workflowId, progressState);
+
+    // Notify callback
+    if (onProgressChange) {
+      onProgressChange({
+        stepId,
+        stepProgress: clampedProgress,
+        overallProgress: progressState.overallProgress,
+        progressState
+      });
+    }
+    (0,admin_settings_debug/* debug */.Yz)(`[ProgressTracker] Step ${stepId}: ${clampedProgress}% | Overall: ${progressState.overallProgress}%`);
+  }
+
+  /**
+   * Mark a step as completed.
+   *
+   * @param {string} stepId Step identifier.
+   * @return {Promise<void>}
+   */
+  async function completeStep(stepId) {
+    await updateStepProgress(stepId, 100);
+    if (!progressState.completedSteps.includes(stepId)) {
+      progressState.completedSteps.push(stepId);
+      await saveProgress(workflowId, progressState);
+    }
+  }
+
+  /**
+   * Get current progress state.
+   *
+   * @return {Object} Progress state.
+   */
+  function getProgress() {
+    return {
+      ...progressState
+    };
+  }
+
+  /**
+   * Load progress from IndexedDB.
+   *
+   * @return {Promise<Object|null>} Progress state or null.
+   */
+  async function load() {
+    const saved = await loadProgress(workflowId);
+    if (saved) {
+      progressState = {
+        ...progressState,
+        ...saved
+      };
+      return progressState;
+    }
+    return null;
+  }
+
+  /**
+   * Clear progress from IndexedDB.
+   *
+   * @return {Promise<void>}
+   */
+  async function clear() {
+    await deleteProgress(workflowId);
+    progressState = {
+      workflowId,
+      stepIds,
+      stepWeight,
+      stepProgress: {},
+      overallProgress: 0,
+      completedSteps: [],
+      startedAt: Date.now(),
+      updatedAt: Date.now()
+    };
+  }
+  return {
+    updateStepProgress,
+    completeStep,
+    getProgress,
+    load,
+    clear
+  };
+}
+
+/**
+ * Calculate overall progress with equal step weights.
+ *
+ * @param {Array<string>} stepIds      Array of step IDs.
+ * @param {Object}        stepProgress Object mapping step IDs to progress (0-100).
+ * @return {number} Overall progress (0-100).
+ */
+function calculateOverallProgress(stepIds, stepProgress) {
+  if (stepIds.length === 0) {
+    return 0;
+  }
+  const stepWeight = 100 / stepIds.length;
+  let totalProgress = 0;
+  for (const stepId of stepIds) {
+    const progress = stepProgress[stepId] || 0;
+    totalProgress += stepWeight * progress / 100;
+  }
+  return Math.min(100, Math.round(totalProgress));
+}
+;// ./assets/src/export/utils/stateManager.js
+/**
+ * State Manager Utility
+ *
+ * Manages workflow state persistence using IndexedDB.
+ * Uses a single database with provider instance keys for state isolation.
+ * State is automatically saved and can be resumed after failures.
+ *
+ */
+
+
+
+const stateManager_DB_CONFIG = {
+  dbName: 'aether-export-state',
+  version: 1,
+  stores: {
+    workflowState: {
+      keyPath: 'stateKey',
+      indexes: [{
+        name: 'workflowId',
+        keyPath: 'workflowId',
+        unique: false
+      }]
+    }
+  }
+};
+
+// Initialize store instance
+let stateManager_storeInstance = null;
+
+/**
+ * Get or create IndexedDB store instance.
+ *
+ * @return {IndexedDBStore|null} Store instance or null if unavailable.
+ */
+function stateManager_getStore() {
+  if (!isIndexedDBAvailable()) {
+    (0,admin_settings_debug/* debugWarn */.UT)('[StateManager] IndexedDB not available, state will not persist');
+    return null;
+  }
+  if (!stateManager_storeInstance) {
+    stateManager_storeInstance = new utils_indexedDB('workflowState', stateManager_DB_CONFIG);
+  }
+  return stateManager_storeInstance;
+}
+
+/**
+ * Generate a state key from workflow ID and provider instance.
+ *
+ * @param {string} workflowId       Workflow identifier.
+ * @param {string} providerInstance Provider instance ID (optional).
+ * @return {string} State key.
+ */
+function generateStateKey(workflowId, providerInstance = null) {
+  if (providerInstance) {
+    return `${workflowId}::${providerInstance}`;
+  }
+  return workflowId;
+}
+
+/**
+ * Save workflow state to IndexedDB.
+ *
+ * @param {string} workflowId       Workflow identifier.
+ * @param {Object} state            State object to save.
+ * @param {string} providerInstance Provider instance ID (optional).
+ * @return {Promise<void>}
+ */
+async function saveState(workflowId, state, providerInstance = null) {
+  const store = stateManager_getStore();
+  if (!store) {
+    return; // Silently fail if IndexedDB unavailable
+  }
+  const stateKey = generateStateKey(workflowId, providerInstance);
+  const stateData = {
+    stateKey,
+    workflowId,
+    providerInstance: providerInstance || null,
+    state,
+    timestamp: Date.now()
+  };
+  try {
+    await store.set(stateKey, stateData);
+    (0,admin_settings_debug/* debug */.Yz)(`[StateManager] Saved state for ${stateKey}`);
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('[StateManager] Failed to save state:', error);
+    // Don't throw - state persistence is non-critical
+  }
+}
+
+/**
+ * Load workflow state from IndexedDB.
+ *
+ * @param {string} workflowId       Workflow identifier.
+ * @param {string} providerInstance Provider instance ID (optional).
+ * @return {Promise<Object|null>} State object or null if not found.
+ */
+async function loadState(workflowId, providerInstance = null) {
+  const store = stateManager_getStore();
+  if (!store) {
+    return null;
+  }
+  const stateKey = generateStateKey(workflowId, providerInstance);
+  try {
+    const result = await store.get(stateKey);
+    if (result && result.state) {
+      (0,admin_settings_debug/* debug */.Yz)(`[StateManager] Loaded state for ${stateKey}`);
+      return result.state;
+    }
+    return null;
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('[StateManager] Failed to load state:', error);
+    return null;
+  }
+}
+
+/**
+ * Delete workflow state from IndexedDB.
+ *
+ * @param {string} workflowId       Workflow identifier.
+ * @param {string} providerInstance Provider instance ID (optional, null deletes all for workflow).
+ * @return {Promise<void>}
+ */
+async function deleteState(workflowId, providerInstance = null) {
+  const store = stateManager_getStore();
+  if (!store) {
+    return;
+  }
+  try {
+    if (providerInstance) {
+      // Delete specific provider instance state
+      const stateKey = generateStateKey(workflowId, providerInstance);
+      await store.delete(stateKey);
+    } else {
+      // Delete all states for this workflow
+      // Get all states for this workflow using index
+      const allStates = await store.getByIndex('workflowId', workflowId);
+
+      // Delete each state
+      for (const stateItem of allStates) {
+        await store.delete(stateItem.stateKey);
+      }
+    }
+    (0,admin_settings_debug/* debug */.Yz)(`[StateManager] Deleted state for ${workflowId}${providerInstance ? `::${providerInstance}` : ''}`);
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('[StateManager] Failed to delete state:', error);
+    // Don't throw - cleanup is non-critical
+  }
+}
+
+/**
+ * List all workflow states for a workflow ID.
+ *
+ * @param {string} workflowId Workflow identifier.
+ * @return {Promise<Array<Object>>} Array of state objects.
+ */
+async function listStates(workflowId) {
+  const store = stateManager_getStore();
+  if (!store) {
+    return [];
+  }
+  try {
+    const allStates = await store.getByIndex('workflowId', workflowId);
+    return allStates.map(stateItem => ({
+      stateKey: stateItem.stateKey,
+      providerInstance: stateItem.providerInstance,
+      timestamp: stateItem.timestamp
+    }));
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('[StateManager] Failed to list states:', error);
+    return [];
+  }
+}
+
+/**
+ * Create a state manager instance for a workflow.
+ *
+ * @param {string} workflowId Workflow identifier.
+ * @return {Object} State manager instance.
+ */
+function createStateManager(workflowId) {
+  /**
+   * Save workflow state.
+   *
+   * @param {Object} state            State object to save.
+   * @param {string} providerInstance Provider instance ID (optional).
+   * @return {Promise<void>}
+   */
+  async function save(state, providerInstance = null) {
+    await saveState(workflowId, state, providerInstance);
+  }
+
+  /**
+   * Load workflow state.
+   *
+   * @param {string} providerInstance Provider instance ID (optional).
+   * @return {Promise<Object|null>} State object or null.
+   */
+  async function load(providerInstance = null) {
+    return await loadState(workflowId, providerInstance);
+  }
+
+  /**
+   * Delete workflow state.
+   *
+   * @param {string} providerInstance Provider instance ID (optional, null deletes all).
+   * @return {Promise<void>}
+   */
+  async function clear(providerInstance = null) {
+    await deleteState(workflowId, providerInstance);
+  }
+
+  /**
+   * List all states for this workflow.
+   *
+   * @return {Promise<Array<Object>>} Array of state metadata.
+   */
+  async function list() {
+    return await listStates(workflowId);
+  }
+  return {
+    save,
+    load,
+    clear,
+    list
+  };
+}
+
+/**
+ * Save execution context state.
+ *
+ * This is a helper function that saves the relevant parts of the execution context.
+ *
+ * @param {Object} stateManager     State manager instance.
+ * @param {Object} executionContext Execution context to save.
+ * @param {string} providerInstance Provider instance ID (optional).
+ * @return {Promise<void>}
+ */
+async function saveExecutionContext(stateManager, executionContext, providerInstance = null) {
+  // Extract relevant state (exclude functions and non-serializable data)
+  const stateToSave = {
+    completedSteps: executionContext.completedSteps || [],
+    skippedSteps: executionContext.skippedSteps || [],
+    state: executionContext.state || {},
+    // Save step results
+    stepResults: {},
+    // Save provider-specific data
+    providers: {
+      staticSiteProviders: executionContext.staticSiteProviders || [],
+      blueprintBundleProviders: executionContext.blueprintBundleProviders || [],
+      edgeFunctionProviders: executionContext.edgeFunctionProviders || []
+    },
+    // Save configuration
+    siteUrl: executionContext.siteUrl,
+    staticSiteUrl: executionContext.staticSiteUrl,
+    blueprintData: executionContext.blueprintData
+  };
+
+  // Extract step results from state
+  if (executionContext.state) {
+    for (const [key, value] of Object.entries(executionContext.state)) {
+      if (key.includes('Result') || key.includes('Bundle') || key.includes('Urls')) {
+        stateToSave.stepResults[key] = value;
+      }
+    }
+  }
+  await stateManager.save(stateToSave, providerInstance);
+}
+
+/**
+ * Restore execution context from saved state.
+ *
+ * @param {Object} stateManager     State manager instance.
+ * @param {Object} baseContext      Base context to merge with.
+ * @param {string} providerInstance Provider instance ID (optional).
+ * @return {Promise<Object>} Restored execution context.
+ */
+async function restoreExecutionContext(stateManager, baseContext, providerInstance = null) {
+  const savedState = await stateManager.load(providerInstance);
+  if (!savedState) {
+    return baseContext;
+  }
+
+  // Merge saved state into base context
+  const restoredContext = {
+    ...baseContext,
+    completedSteps: savedState.completedSteps || [],
+    skippedSteps: savedState.skippedSteps || [],
+    state: {
+      ...baseContext.state,
+      ...savedState.state,
+      ...savedState.stepResults
+    }
+  };
+
+  // Restore provider arrays if available
+  if (savedState.providers) {
+    restoredContext.staticSiteProviders = savedState.providers.staticSiteProviders || baseContext.staticSiteProviders;
+    restoredContext.blueprintBundleProviders = savedState.providers.blueprintBundleProviders || baseContext.blueprintBundleProviders;
+    restoredContext.edgeFunctionProviders = savedState.providers.edgeFunctionProviders || baseContext.edgeFunctionProviders;
+  }
+
+  // Restore configuration
+  if (savedState.siteUrl) {
+    restoredContext.siteUrl = savedState.siteUrl;
+  }
+  if (savedState.staticSiteUrl) {
+    restoredContext.staticSiteUrl = savedState.staticSiteUrl;
+  }
+  if (savedState.blueprintData) {
+    restoredContext.blueprintData = savedState.blueprintData;
+  }
+  return restoredContext;
+}
+;// ./assets/src/export/executor/StepExecutor.js
+/**
+ * Step Executor
+ *
+ * Executes export workflow steps with automatic dependency resolution
+ * and parallel execution support.
+ *
+ */
+
+
+
+
+
+
+
+
+
+/**
+ * Execute a workflow with the given steps.
+ *
+ * @param {Array<Object>} steps              Array of step definitions to execute.
+ * @param {Object}        context            Initial context with dependencies and state.
+ * @param {Object}        options            Execution options.
+ * @param {Array<Object>} [options.allSteps] Optional: All steps (for dependency validation when executing subset).
+ * @return {Promise<Object>} Final execution state.
+ */
+async function executeSteps(steps, context, options = {}) {
+  const {
+    onStepStart = () => {},
+    onStepComplete = () => {},
+    onStepSkipped = () => {},
+    onError = () => {},
+    allSteps = null // Optional: All steps for dependency validation
+  } = options;
+
+  // Validate dependencies
+  // Use allSteps if provided (for thread steps that depend on global steps),
+  // otherwise use the steps array itself
+  const stepsForValidation = allSteps || steps;
+  const errors = validateDependencies(stepsForValidation, steps);
+  if (errors.length > 0) {
+    throw new Error(`Invalid step dependencies: ${errors.join('; ')}`);
+  }
+
+  // Build execution plan with parallel groups
+  const executionPlan = DependencyResolver_buildParallelPlan(steps);
+
+  // Get all step IDs in execution order
+  const stepIds = steps.map(step => step.id);
+
+  // Create workflow ID
+  const workflowId = context.workflowId || `workflow-${Date.now()}`;
+
+  // Create progress tracker with equal step weights
+  const progressTracker = createProgressTracker(workflowId, stepIds);
+
+  // Create state manager
+  const stateManager = createStateManager(workflowId);
+
+  // Try to restore previous state (for resume capability)
+  let restoredState = null;
+  try {
+    const savedProgress = await progressTracker.load();
+    if (savedProgress) {
+      (0,admin_settings_debug/* debug */.Yz)('[StepExecutor] Loaded previous progress:', savedProgress);
+    }
+
+    // Try to restore execution context
+    restoredState = await restoreExecutionContext(stateManager, context);
+    if (restoredState && restoredState.completedSteps?.length > 0) {
+      (0,admin_settings_debug/* debug */.Yz)(`[StepExecutor] Restored state with ${restoredState.completedSteps.length} completed steps`);
+    }
+  } catch (error) {
+    (0,admin_settings_debug/* debugWarn */.UT)('[StepExecutor] Failed to restore state:', error);
+  }
+
+  // Create execution context (use restored state if available)
+  const executionContext = {
+    ...(restoredState || context),
+    workflowId,
+    progressTracker,
+    stateManager,
+    completedSteps: restoredState?.completedSteps || [],
+    skippedSteps: restoredState?.skippedSteps || [],
+    state: restoredState?.state || {}
+  };
+
+  // Fire workflow start action
+  (0,external_wp_hooks_.doAction)('aether.export.workflow.before', executionContext, steps, executionContext.currentProviderInstance || null);
+  try {
+    for (const parallelGroup of executionPlan) {
+      // Determine which steps to run vs skip
+      const stepsToRun = [];
+      const stepsToSkip = [];
+      for (const stepId of parallelGroup) {
+        const step = steps.find(s => s.id === stepId);
+        const shouldSkip = (0,external_wp_hooks_.applyFilters)(`aether.export.step.${stepId}.skip`, step.skip ? step.skip(executionContext) : false, executionContext, executionContext.currentProviderInstance || null);
+        if (shouldSkip) {
+          stepsToSkip.push(stepId);
+        } else {
+          stepsToRun.push(stepId);
+        }
+      }
+
+      // Mark skipped steps
+      for (const stepId of stepsToSkip) {
+        executionContext.skippedSteps.push(stepId);
+        onStepSkipped(stepId);
+        (0,external_wp_hooks_.doAction)(`aether.export.step.${stepId}.skipped`, executionContext, executionContext.currentProviderInstance || null);
+      }
+      if (stepsToRun.length === 0) {
+        continue;
+      }
+
+      // Execute steps in parallel
+      const results = await Promise.all(stepsToRun.map(stepId => executeStep(stepId, steps, executionContext, {
+        onStepStart,
+        onStepComplete,
+        onError
+      })));
+
+      // Merge results into state
+      for (const result of results) {
+        if (result) {
+          Object.assign(executionContext.state, result);
+        }
+      }
+
+      // Mark as completed
+      executionContext.completedSteps.push(...stepsToRun);
+
+      // Save state after each parallel group completes
+      try {
+        await saveExecutionContext(stateManager, executionContext);
+      } catch (error) {
+        (0,admin_settings_debug/* debugWarn */.UT)('[StepExecutor] Failed to save state:', error);
+        // Don't throw - state saving is non-critical
+      }
+    }
+
+    // Fire workflow complete action
+    (0,external_wp_hooks_.doAction)('aether.export.workflow.after', executionContext.state, executionContext, executionContext.currentProviderInstance || null);
+
+    // Clear progress tracker and state on successful completion
+    await progressTracker.clear();
+    await stateManager.clear();
+    return executionContext.state;
+  } catch (error) {
+    (0,external_wp_hooks_.doAction)('aether.export.workflow.error', error, executionContext, executionContext.currentProviderInstance || null);
+    // Don't clear progress on error - allows for resume
+    throw error;
+  }
+}
+
+/**
+ * Execute a single step.
+ *
+ * @param {string}        stepId           Step ID to execute.
+ * @param {Array<Object>} allSteps         All step definitions.
+ * @param {Object}        executionContext Current execution context.
+ * @param {Object}        options          Execution options.
+ * @return {Promise<Object>} Step result data.
+ */
+async function executeStep(stepId, allSteps, executionContext, options) {
+  const step = allSteps.find(s => s.id === stepId);
+  const {
+    onStepStart,
+    onStepComplete,
+    onError
+  } = options;
+
+  // Fire before hook
+  (0,external_wp_hooks_.doAction)(`aether.export.step.${stepId}.before`, executionContext, executionContext.currentProviderInstance || null);
+  onStepStart(stepId, step);
+
+  // Initialize step progress to 0
+  if (executionContext.progressTracker) {
+    await executionContext.progressTracker.updateStepProgress(stepId, 0);
+  }
+  try {
+    // Build context for this step (merge state into context)
+    const stepContext = {
+      ...executionContext,
+      ...executionContext.state
+    };
+
+    // Validate data requirements before execution
+    DataValidator.validate(step, stepContext);
+
+    // Execute handler with retry logic
+    const result = await errorHandler.executeWithRetry(async () => {
+      return await step.handler(stepContext);
+    }, {
+      onRetry: (error, attempt, delay) => {
+        // Fire retry action
+        (0,external_wp_hooks_.doAction)(`aether.export.step.${stepId}.retry`, error, attempt, delay, executionContext, executionContext.currentProviderInstance || null);
+      }
+    });
+
+    // Validate output matches provides declaration
+    DataValidator.validateOutput(step, result);
+
+    // Apply result filter
+    const filteredResult = (0,external_wp_hooks_.applyFilters)(`aether.export.step.${stepId}.result`, result || {}, executionContext, executionContext.currentProviderInstance || null);
+    onStepComplete(stepId, filteredResult);
+
+    // Mark step as completed in progress tracker
+    if (executionContext.progressTracker) {
+      await executionContext.progressTracker.completeStep(stepId);
+    }
+
+    // Fire after hook
+    (0,external_wp_hooks_.doAction)(`aether.export.step.${stepId}.after`, filteredResult, executionContext, executionContext.currentProviderInstance || null);
+    return filteredResult;
+  } catch (error) {
+    // Log error for debugging
+    if (typeof window !== 'undefined' && window.console) {
+      // eslint-disable-next-line no-console
+      console.error(`[Aether] StepExecutor - Step "${stepId}" failed:`, error);
+      // eslint-disable-next-line no-console
+      console.error('[Aether] Error details:', {
+        message: error.message,
+        stack: error.stack,
+        stepId,
+        providerInstance: executionContext.currentProviderInstance?.id || 'N/A'
+      });
+    }
+
+    // Categorize and format error
+    const category = errorHandler.categorize(error);
+    const severity = determineSeverity(category, {
+      stepId
+    });
+    const formattedMessage = formatErrorMessage(error, {
+      stepId,
+      operation: step.label || stepId
+    });
+
+    // Create enhanced error object
+    const enhancedError = {
+      ...error,
+      category,
+      severity,
+      stepId,
+      formattedMessage,
+      originalMessage: error.message
+    };
+    onError(stepId, enhancedError);
+    (0,external_wp_hooks_.doAction)(`aether.export.step.${stepId}.error`, enhancedError, executionContext, executionContext.currentProviderInstance || null);
+
+    // For critical errors, stop workflow immediately
+    if (severity === ERROR_SEVERITY.CRITICAL) {
+      throw new Error(formattedMessage);
+    }
+
+    // For other errors, wrap with step context
+    throw new Error(formattedMessage);
+  }
+}
+
+/**
+ * Get the parallel execution plan for steps.
+ *
+ * @param {Array<Object>} steps Array of step definitions.
+ * @return {Array<Array<string>>} Execution plan with parallel groups.
+ */
+function getExecutionPlan(steps) {
+  return buildParallelPlan(steps);
+}
+;// ./assets/src/export/executor/ThreadOrchestrator.js
+/**
+ * Thread Orchestrator
+ *
+ * Orchestrates multi-threaded workflow execution where each provider instance
+ * runs in its own isolated thread. Categorizes steps into global (run once)
+ * and per-thread (run per provider instance), then executes them in parallel.
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+/**
+ * Keys in context that should be shared by reference (read-only across threads).
+ * These are not cloned to allow threads to read the same data.
+ */
+const SHARED_READONLY_KEYS = ['sharedHtmlData'];
+
+/**
+ * Execute async functions with concurrency limit
+ *
+ * Limits number of concurrent executions to prevent resource exhaustion.
+ * Uses a sliding window approach to maintain max concurrent executions.
+ *
+ * @param {Array}    items       - Array of items to process
+ * @param {Function} fn          - Async function to call for each item
+ * @param {number}   concurrency - Max concurrent executions (default: 5)
+ * @return {Promise<Array>} Results array in original order
+ */
+async function limitConcurrency(items, fn, concurrency = 5) {
+  const results = new Array(items.length);
+  const executing = [];
+  for (let index = 0; index < items.length; index++) {
+    // Create promise for this item and wrap it with cleanup
+    const promise = Promise.resolve(fn(items[index], index)).then(result => {
+      // Store result in correct position
+      results[index] = result;
+      return result;
+    });
+
+    // Create cleanup promise that removes from executing array
+    const cleanup = promise.then(() => {
+      const execIndex = executing.indexOf(cleanup);
+      if (execIndex !== -1) {
+        executing.splice(execIndex, 1);
+      }
+    });
+
+    // Add cleanup promise to executing array (not the original promise)
+    executing.push(cleanup);
+
+    // If we've hit concurrency limit, wait for one to complete
+    if (executing.length >= concurrency) {
+      await Promise.race(executing);
+    }
+  }
+
+  // Wait for all remaining promises to complete
+  await Promise.all(executing);
+  return results;
+}
+
+/**
+ * Deep clone global context to ensure thread isolation
+ *
+ * Creates a truly deep copy of global context so threads cannot mutate shared data.
+ * Handles Maps, Arrays, and nested objects recursively.
+ * Tracks visited objects to handle circular references.
+ * Skips cloning keys specified in sharedKeys (passed by reference for read-only access).
+ *
+ * @param {Object}  context    Global context to clone
+ * @param {WeakMap} visited    Internal: tracks cloned objects to handle circular refs
+ * @param {Array}   sharedKeys Keys to skip cloning (passed by reference)
+ * @return {Object} Deep cloned context
+ */
+function deepCloneContext(context, visited = new WeakMap(), sharedKeys = []) {
+  // Handle primitives and null
+  if (context === null || typeof context !== 'object') {
+    return context;
+  }
+
+  // Check if already cloned (handles circular references)
+  if (visited.has(context)) {
+    return visited.get(context);
+  }
+  const cloned = {};
+  // Mark this object as visited BEFORE recursing to handle circular references
+  visited.set(context, cloned);
+  for (const [key, value] of Object.entries(context)) {
+    // Skip shared read-only keys - pass by reference
+    if (sharedKeys.includes(key)) {
+      cloned[key] = value;
+      continue;
+    }
+
+    // Skip functions (callbacks are handled separately)
+    if (typeof value === 'function') {
+      continue;
+    }
+
+    // Handle null
+    if (value === null) {
+      cloned[key] = null;
+      continue;
+    }
+
+    // Handle Map objects (deep clone entries, including keys)
+    if (value instanceof Map) {
+      const clonedMap = new Map();
+      visited.set(value, clonedMap);
+      for (const [mapKey, mapValue] of value.entries()) {
+        // Recursively clone both keys and values
+        const clonedKey = typeof mapKey === 'object' && mapKey !== null ? deepCloneValue(mapKey, visited, sharedKeys) : mapKey;
+        const clonedValue = typeof mapValue === 'object' && mapValue !== null ? deepCloneValue(mapValue, visited, sharedKeys) : mapValue;
+        clonedMap.set(clonedKey, clonedValue);
+      }
+      cloned[key] = clonedMap;
+      continue;
+    }
+
+    // Handle Set objects (deep clone values)
+    if (value instanceof Set) {
+      const clonedSet = new Set();
+      visited.set(value, clonedSet);
+      for (const item of value.values()) {
+        // Recursively clone set items
+        const clonedItem = typeof item === 'object' && item !== null ? deepCloneValue(item, visited, sharedKeys) : item;
+        clonedSet.add(clonedItem);
+      }
+      cloned[key] = clonedSet;
+      continue;
+    }
+
+    // Handle Arrays (deep clone elements)
+    if (Array.isArray(value)) {
+      const clonedArray = [];
+      visited.set(value, clonedArray);
+      for (let i = 0; i < value.length; i++) {
+        clonedArray[i] = typeof value[i] === 'object' && value[i] !== null ? deepCloneValue(value[i], visited) : value[i];
+      }
+      cloned[key] = clonedArray;
+      continue;
+    }
+
+    // Handle plain objects (deep clone recursively)
+    if (typeof value === 'object' && value.constructor === Object) {
+      cloned[key] = deepCloneContext(value, visited, sharedKeys);
+      continue;
+    }
+
+    // Handle Date objects
+    if (value instanceof Date) {
+      cloned[key] = new Date(value.getTime());
+      continue;
+    }
+
+    // Handle RegExp objects
+    if (value instanceof RegExp) {
+      cloned[key] = new RegExp(value.source, value.flags);
+      continue;
+    }
+
+    // Primitive values or unhandled types (e.g., DOM nodes)
+    // For unhandled types, we keep the reference (can't clone everything)
+    cloned[key] = value;
+  }
+  return cloned;
+}
+
+/**
+ * Deep clone a single value (used by Map/Array cloning)
+ *
+ * @param {*}       value      Value to clone
+ * @param {WeakMap} visited    Tracks cloned objects
+ * @param {Array}   sharedKeys Keys to skip cloning (passed by reference)
+ * @return {*} Cloned value
+ */
+function deepCloneValue(value, visited, sharedKeys = []) {
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  if (visited.has(value)) {
+    return visited.get(value);
+  }
+  if (value instanceof Map) {
+    const clonedMap = new Map();
+    visited.set(value, clonedMap);
+    for (const [k, v] of value.entries()) {
+      // Clone both keys and values
+      const clonedKey = typeof k === 'object' && k !== null ? deepCloneValue(k, visited, sharedKeys) : k;
+      const clonedValue = typeof v === 'object' && v !== null ? deepCloneValue(v, visited, sharedKeys) : v;
+      clonedMap.set(clonedKey, clonedValue);
+    }
+    return clonedMap;
+  }
+  if (value instanceof Set) {
+    const clonedSet = new Set();
+    visited.set(value, clonedSet);
+    for (const item of value.values()) {
+      const clonedItem = typeof item === 'object' && item !== null ? deepCloneValue(item, visited, sharedKeys) : item;
+      clonedSet.add(clonedItem);
+    }
+    return clonedSet;
+  }
+  if (Array.isArray(value)) {
+    const clonedArray = [];
+    visited.set(value, clonedArray);
+    for (let i = 0; i < value.length; i++) {
+      clonedArray[i] = deepCloneValue(value[i], visited, sharedKeys);
+    }
+    return clonedArray;
+  }
+  if (value instanceof Date) {
+    return new Date(value.getTime());
+  }
+  if (value instanceof RegExp) {
+    return new RegExp(value.source, value.flags);
+  }
+  if (typeof value === 'object' && value.constructor === Object) {
+    return deepCloneContext(value, visited, sharedKeys);
+  }
+
+  // Unhandled types - return reference
+  return value;
+}
+
+/**
+ * Categorize steps into global and per-thread
+ *
+ * @param {Array} steps - All registered steps
+ * @return {Object} { globalSteps: Array, threadSteps: Array }
+ */
+function categorizeSteps(steps) {
+  const globalSteps = [];
+  const threadSteps = [];
+  steps.forEach(step => {
+    if (isThreadStep(step)) {
+      threadSteps.push(step);
+    } else {
+      globalSteps.push(step);
+    }
+  });
+  return {
+    globalSteps,
+    threadSteps
+  };
+}
+
+/**
+ * Build thread context from global context and provider instance
+ *
+ * Creates an isolated thread context by deep cloning global context
+ * and adding thread-specific properties.
+ *
+ * @param {Object} globalContext    - Global execution context
+ * @param {Object} providerInstance - Provider instance object
+ * @param {Object} callbacks        - Thread-specific callbacks
+ * @return {Object} Thread context
+ */
+function buildThreadContext(globalContext, providerInstance, callbacks = {}) {
+  // Validate provider instance
+  if (!providerInstance || !providerInstance.id) {
+    throw new Error('Invalid provider instance: missing id');
+  }
+
+  // Preserve function references before cloning (functions are skipped during clone)
+  // These functions need to be preserved in thread context
+  const preservedFunctions = {
+    setStatusMessage: globalContext.setStatusMessage,
+    setStepProgress: globalContext.setStepProgress,
+    processStaticSiteUrls: globalContext.processStaticSiteUrls,
+    generateBlueprintJson: globalContext.generateBlueprintJson,
+    updateStaticSiteProgressContext: globalContext.updateStaticSiteProgressContext,
+    assetManager: globalContext.assetManager,
+    api: globalContext.api,
+    removeMessage: globalContext.removeMessage,
+    setOverallProgressValue: globalContext.setOverallProgressValue
+  };
+
+  // Deep clone global context to ensure thread isolation
+  // Prevents threads from mutating shared data
+  // Pass shared read-only keys by reference (not cloned)
+  const clonedContext = deepCloneContext(globalContext, new WeakMap(), SHARED_READONLY_KEYS);
+
+  // Add thread-specific properties
+  return {
+    ...clonedContext,
+    currentProviderInstance: providerInstance,
+    providerInstanceConfig: providerInstance.config || {},
+    // Preserve function references (functions not cloned, need to be restored)
+    setStatusMessage: callbacks.setStatusMessage || preservedFunctions.setStatusMessage,
+    setStepProgress: callbacks.setStepProgress || preservedFunctions.setStepProgress,
+    processStaticSiteUrls: preservedFunctions.processStaticSiteUrls,
+    generateBlueprintJson: preservedFunctions.generateBlueprintJson,
+    updateStaticSiteProgressContext: preservedFunctions.updateStaticSiteProgressContext,
+    assetManager: preservedFunctions.assetManager,
+    api: preservedFunctions.api,
+    removeMessage: preservedFunctions.removeMessage,
+    setOverallProgressValue: preservedFunctions.setOverallProgressValue
+  };
+}
+
+/**
+ * Execute workflow in multi-threaded mode
+ *
+ * Executes global steps first (once), then executes per-thread steps
+ * in parallel for each provider instance.
+ *
+ * @param {Array}  steps             - All registered steps
+ * @param {Object} initialContext    - Initial execution context
+ * @param {Array}  providerInstances - Provider instances to execute in parallel
+ * @param {Object} options           - Execution options
+ * @return {Promise<Object>} Execution results
+ */
+async function executeThreadedWorkflow(steps, initialContext, providerInstances = [], options = {}) {
+  // Categorize steps
+  const {
+    globalSteps,
+    threadSteps
+  } = categorizeSteps(steps);
+
+  // Debug logging
+  if (typeof window !== 'undefined' && window.console) {
+    // eslint-disable-next-line no-console
+    console.log('[Aether] ThreadOrchestrator - Step categorization:', {
+      totalSteps: steps.length,
+      globalSteps: globalSteps.map(s => s.id),
+      threadSteps: threadSteps.map(s => s.id),
+      providerInstances: providerInstances.length
+    });
+  }
+
+  // Execute global steps first (run once, shared across all threads)
+  let globalState = {};
+  if (globalSteps.length > 0) {
+    // executeSteps returns the execution state directly
+    globalState = await executeSteps(globalSteps, initialContext, options);
+  }
+
+  // Build global context (initial + global step results)
+  const globalContext = {
+    ...initialContext,
+    ...globalState
+  };
+  if (typeof window !== 'undefined' && window.console) {
+    // eslint-disable-next-line no-console
+    console.log('[Aether] ThreadOrchestrator - After global steps:', {
+      providerInstancesCount: providerInstances.length,
+      threadStepsCount: threadSteps.length,
+      hasGlobalState: Object.keys(globalState).length > 0
+    });
+  }
+
+  // Handle edge cases with providers and thread steps
+  if (providerInstances.length === 0) {
+    // If there are thread steps, this is an error condition
+    // Thread steps need providers to execute
+    if (threadSteps.length > 0) {
+      const threadStepIds = threadSteps.map(s => s.id).join(', ');
+      throw new Error(`No provider instances configured, but thread steps require execution: ${threadStepIds}. ` + `Please configure at least one provider instance or disable these steps.`);
+    }
+
+    // No thread steps and no providers - workflow completes successfully
+    return {
+      success: true,
+      globalState,
+      threadResults: [],
+      successCount: 0,
+      failureCount: 0
+    };
+  }
+
+  // If there are providers but no thread steps, return early (nothing to do)
+  if (threadSteps.length === 0) {
+    if (typeof window !== 'undefined' && window.console) {
+      // eslint-disable-next-line no-console
+      console.warn('[Aether] ThreadOrchestrator - No thread steps found, but providers exist:', providerInstances.map(p => p.id));
+    }
+    return {
+      success: true,
+      globalState,
+      threadResults: [],
+      successCount: 0,
+      failureCount: 0
+    };
+  }
+
+  // Execute per-thread steps for each provider instance
+  // Use concurrency limiting to prevent resource exhaustion
+  // Default: 5 concurrent providers (configurable via options)
+  const maxConcurrency = options.maxConcurrency || 5;
+
+  // Create step label lookup map for performance (avoid repeated array searches)
+  const stepLabelMap = new Map(threadSteps.map(step => [step.id, step.label]));
+  const executeProviderThread = async providerInstance => {
+    if (typeof window !== 'undefined' && window.console) {
+      // eslint-disable-next-line no-console
+      console.log('[Aether] ThreadOrchestrator - Executing thread for provider:', providerInstance.id);
+    }
+
+    // Build thread-specific context
+    const threadCallbacks = {
+      setStatusMessage: (message, type, key, progress, metadata) => {
+        // Add provider instance info to metadata
+        const threadMetadata = {
+          ...metadata,
+          providerInstance: providerInstance.id,
+          providerLabel: providerInstance.label || providerInstance.id
+        };
+
+        // Call original callback with thread info
+        if (initialContext.setStatusMessage) {
+          initialContext.setStatusMessage(message, type, key, progress, threadMetadata);
+        }
+      },
+      setStepProgress: (stepId, progress) => {
+        // Update per-provider progress tracking
+        if (initialContext.setProviderProgress) {
+          // Get step label from cached map (O(1) lookup)
+          const stepLabel = stepLabelMap.get(stepId) || stepId;
+          initialContext.setProviderProgress(providerInstance.id, {
+            stepId,
+            stepLabel,
+            progress,
+            status: 'active'
+          });
+        }
+      }
+    };
+    const threadContext = buildThreadContext(globalContext, providerInstance, threadCallbacks);
+
+    // Execute thread steps for this provider instance
+    try {
+      if (typeof window !== 'undefined' && window.console) {
+        // eslint-disable-next-line no-console
+        console.log('[Aether] ThreadOrchestrator - Executing steps for provider:', providerInstance.id, 'steps:', threadSteps.map(s => s.id));
+      }
+
+      // executeSteps returns the execution state directly
+      // Pass all steps (global + thread) for dependency validation
+      // since thread steps may depend on global steps
+      const threadState = await executeSteps(threadSteps, threadContext, {
+        ...options,
+        allSteps: [...globalSteps, ...threadSteps]
+      });
+
+      // Mark provider as complete
+      if (initialContext.setProviderProgress) {
+        initialContext.setProviderProgress(providerInstance.id, {
+          stepId: null,
+          stepLabel: 'Complete',
+          progress: 100,
+          status: 'complete'
+        });
+      }
+      return {
+        success: true,
+        providerInstance: providerInstance.id,
+        state: threadState || {},
+        error: null
+      };
+    } catch (error) {
+      // Log the error for debugging
+      if (typeof window !== 'undefined' && window.console) {
+        // eslint-disable-next-line no-console
+        console.error('[Aether] ThreadOrchestrator - Thread execution failed for provider:', providerInstance.id, error);
+        // eslint-disable-next-line no-console
+        console.error('[Aether] Error stack:', error.stack);
+      }
+
+      // Mark provider as error
+      if (initialContext.setProviderProgress) {
+        initialContext.setProviderProgress(providerInstance.id, {
+          stepId: null,
+          stepLabel: 'Error',
+          progress: 0,
+          status: 'error',
+          error: error.message || 'Unknown error'
+        });
+      }
+      return {
+        success: false,
+        providerInstance: providerInstance.id,
+        state: {},
+        error: error.message || 'Unknown error'
+      };
+    }
+  };
+
+  // Execute provider threads with concurrency limiting
+  if (typeof window !== 'undefined' && window.console) {
+    // eslint-disable-next-line no-console
+    console.log('[Aether] ThreadOrchestrator - Starting thread execution:', {
+      threadStepsCount: threadSteps.length,
+      providerInstancesCount: providerInstances.length,
+      maxConcurrency
+    });
+  }
+  const threadResults = await limitConcurrency(providerInstances, executeProviderThread, maxConcurrency);
+  if (typeof window !== 'undefined' && window.console) {
+    // eslint-disable-next-line no-console
+    console.log('[Aether] ThreadOrchestrator - Thread execution completed:', {
+      totalResults: threadResults.length,
+      successful: threadResults.filter(r => r.success).length,
+      failed: threadResults.filter(r => !r.success).length
+    });
+  }
+
+  // Check if any threads succeeded
+  const successfulThreads = threadResults.filter(r => r.success);
+  const failedThreads = threadResults.filter(r => !r.success);
+
+  // Determine overall success:
+  // - All succeeded: complete success
+  // - Some succeeded: partial success (workflow continues but with warnings)
+  // - None succeeded: failure
+  const allSucceeded = successfulThreads.length === threadResults.length;
+  const someSucceeded = successfulThreads.length > 0;
+
+  // Collect failed provider details for error reporting
+  const failedProviders = failedThreads.map(r => ({
+    providerId: r.providerInstance,
+    error: r.error
+  }));
+  return {
+    success: someSucceeded,
+    // Succeeds if at least one provider worked
+    partialSuccess: someSucceeded && !allSucceeded,
+    // True if some failed
+    allSucceeded,
+    // True only if all providers succeeded
+    globalState,
+    threadResults,
+    successCount: successfulThreads.length,
+    failureCount: failedThreads.length,
+    failedProviders // Array of {providerId, error} for failed providers
+  };
+}
+/* harmony default export */ const ThreadOrchestrator = ({
+  categorizeSteps,
+  buildThreadContext,
+  executeThreadedWorkflow
+});
+;// ./assets/src/export/registry/StepRegistry.js
+/**
+ * Step Registry
+ *
+ * Singleton registry for managing export workflow steps.
+ * Steps register themselves dynamically via WordPress hooks.
+ *
+ * @since 1.0.0
+ */
+
+
+
+/**
+ * Singleton instance
+ */
+let instance = null;
+
+/**
+ * Step Registry Class
+ *
+ * Manages registration and retrieval of export workflow steps.
+ */
+class StepRegistry {
+  /**
+   * Constructor
+   *
+   * Private constructor for singleton pattern.
+   */
+  constructor() {
+    if (instance) {
+      throw new Error('StepRegistry is a singleton. Use StepRegistry.getInstance()');
+    }
+    this.steps = [];
+  }
+
+  /**
+   * Get singleton instance
+   *
+   * @return {StepRegistry} Singleton instance
+   */
+  static getInstance() {
+    if (!instance) {
+      instance = new StepRegistry();
+    }
+    return instance;
+  }
+
+  /**
+   * Register a step
+   *
+   * Validates step structure and adds to registry.
+   *
+   * @param {Object}        step                          - Step definition
+   * @param {string}        step.id                       - Unique step identifier
+   * @param {string}        step.label                    - Display label (i18n)
+   * @param {string}        [step.description]            - Step description (i18n)
+   * @param {boolean}       [step.supportsProgress=false] - Whether step reports progress
+   * @param {Array<string>} [step.dependencies=[]]        - IDs of steps this depends on
+   * @param {Object}        step.requires                 - Data requirements (explicit dependencies)
+   * @param {Object}        step.provides                 - Data this step provides
+   * @param {Function}      step.handler                  - Async handler function
+   * @param {Function}      [step.skip]                   - Optional skip function
+   * @param {Function}      [step.shouldSkip]             - Optional skip function (alternative)
+   * @throws {Error} If step is invalid
+   */
+  register(step) {
+    // Validate required properties
+    if (!step || typeof step !== 'object') {
+      throw new Error((0,external_wp_i18n_namespaceObject.__)('Step must be an object', 'aether-site-exporter'));
+    }
+    if (!step.id || typeof step.id !== 'string') {
+      throw new Error((0,external_wp_i18n_namespaceObject.__)('Step must have a valid id (string)', 'aether-site-exporter'));
+    }
+    if (!step.label || typeof step.label !== 'string') {
+      throw new Error((0,external_wp_i18n_namespaceObject.__)('Step must have a valid label (string)', 'aether-site-exporter'));
+    }
+    if (!step.handler || typeof step.handler !== 'function') {
+      throw new Error((0,external_wp_i18n_namespaceObject.__)('Step must have a valid handler (function)', 'aether-site-exporter'));
+    }
+    if (!step.requires || typeof step.requires !== 'object') {
+      throw new Error((0,external_wp_i18n_namespaceObject.__)('Step must have a valid requires object (data dependencies)', 'aether-site-exporter'));
+    }
+    if (!step.provides || typeof step.provides !== 'object') {
+      throw new Error((0,external_wp_i18n_namespaceObject.__)('Step must have a valid provides object (output declaration)', 'aether-site-exporter'));
+    }
+
+    // Check for duplicate step ID
+    if (this.steps.find(s => s.id === step.id)) {
+      throw new Error(`Step with id "${step.id}" is already registered`);
+    }
+
+    // Set defaults for optional properties
+    const normalizedStep = {
+      ...step,
+      description: step.description || '',
+      supportsProgress: step.supportsProgress ?? false,
+      dependencies: step.dependencies || []
+    };
+
+    // Add to registry
+    this.steps.push(normalizedStep);
+  }
+
+  /**
+   * Get all registered steps
+   *
+   * @return {Array<Object>} Registered steps
+   */
+  getSteps() {
+    return this.steps;
+  }
+
+  /**
+   * Clear all registered steps
+   *
+   * Used for re-initialization and testing.
+   */
+  clear() {
+    this.steps = [];
+  }
+
+  /**
+   * Get step by ID
+   *
+   * @param {string} stepId - Step identifier
+   * @return {Object|null} Step definition or null if not found
+   */
+  getStepById(stepId) {
+    return this.steps.find(step => step.id === stepId) || null;
+  }
+
+  /**
+   * Check if step is registered
+   *
+   * @param {string} stepId - Step identifier
+   * @return {boolean} True if step is registered
+   */
+  hasStep(stepId) {
+    return this.steps.some(step => step.id === stepId);
+  }
+}
+/* harmony default export */ const registry_StepRegistry = (StepRegistry);
+;// ./assets/src/export/steps/discoverBlueprintBundleAssets/index.js
+/**
+ * Discover Blueprint Bundle Assets Step
+ *
+ * Discovers custom plugins and themes that are not from WordPress.org.
+ * These assets need to be included in the blueprint bundle.
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+/**
+ * Discover blueprint bundle assets step handler
+ *
+ * @param {Object}   context                  - Execution context
+ * @param {Object}   context.api              - PublishAPI instance
+ * @param {Function} context.setStatusMessage - Status message updater
+ * @return {Promise<Object>} Step result with discovered assets
+ */
+async function handler(context) {
+  const {
+    api,
+    setStatusMessage
+  } = context;
+  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Discovering plugins and themes…', 'aether-site-exporter'), 'progress', 'discoverBlueprintBundleAssets');
+
+  // Call client-side asset discovery
+  const discoveryResponse = await api.discoverBlueprintBundleAssets();
+  if (!discoveryResponse.success) {
+    throw new Error(discoveryResponse.message || (0,external_wp_i18n_namespaceObject.__)('Failed to discover assets', 'aether-site-exporter'));
+  }
+  const assets = discoveryResponse.assets || [];
+  const plugins = assets.filter(a => a.type === 'plugin');
+  const themes = assets.filter(a => a.type === 'theme');
+
+  // Build success message
+  let message;
+  if (assets.length === 0) {
+    message = (0,external_wp_i18n_namespaceObject.__)('Discovered 0 active custom plugins/themes', 'aether-site-exporter');
+  } else {
+    const parts = [];
+    if (plugins.length > 0) {
+      const pluginText = plugins.length === 1 ? (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Plugin slug */
+      (0,external_wp_i18n_namespaceObject.__)('1 active custom plugin (%s)', 'aether-site-exporter'), plugins[0].slug) : (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$d: Number of plugins, %2$s: Comma-separated plugin slugs */
+      (0,external_wp_i18n_namespaceObject._n)('%1$d active custom plugin (%2$s)', '%1$d active custom plugins (%2$s)', plugins.length, 'aether-site-exporter'), plugins.length, plugins.map(p => p.slug).join(', '));
+      parts.push(pluginText);
+    }
+    if (themes.length > 0) {
+      const themeText = themes.length === 1 ? (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Theme slug */
+      (0,external_wp_i18n_namespaceObject.__)('1 active custom theme (%s)', 'aether-site-exporter'), themes[0].slug) : (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$d: Number of themes, %2$s: Comma-separated theme slugs */
+      (0,external_wp_i18n_namespaceObject._n)('%1$d active custom theme (%2$s)', '%1$d active custom themes (%2$s)', themes.length, 'aether-site-exporter'), themes.length, themes.map(t => t.slug).join(', '));
+      parts.push(themeText);
+    }
+    message = (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Discovered assets description */
+    (0,external_wp_i18n_namespaceObject.__)('Discovered %s. These will be included in the blueprint bundle.', 'aether-site-exporter'), parts.join((0,external_wp_i18n_namespaceObject.__)(' and ', 'aether-site-exporter')));
+  }
+  setStatusMessage(message, 'success', 'discoverBlueprintBundleAssets');
+
+  // Return data to merge into execution state
+  return {
+    discoveredAssets: assets
+  };
+}
+
+/**
+ * Step definition
+ */
+const stepDefinition = {
+  id: 'discoverBlueprintBundleAssets',
+  label: (0,external_wp_i18n_namespaceObject.__)('Discover Assets', 'aether-site-exporter'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Find custom plugins and themes for blueprint bundle', 'aether-site-exporter'),
+  supportsProgress: false,
+  dependencies: [],
+  requires: {
+    api: {
+      from: 'initial',
+      required: true
+    },
+    setStatusMessage: {
+      from: 'initial',
+      required: true
+    }
+  },
+  provides: {
+    discoveredAssets: {
+      type: 'array',
+      scope: 'global'
+    }
+  },
+  handler
+};
+
+/**
+ * Register step via WordPress hooks
+ */
+(0,external_wp_hooks_.addAction)('aether.export.register_steps', 'aether/step-discoverBlueprintBundleAssets', registry => {
+  registry.register(stepDefinition);
+}, 10);
+;// ./assets/src/export/steps/getStaticSiteUrls/index.js
+/**
+ * Get Static Site URLs Step
+ *
+ * Discovers all URLs that need to be fetched for static site generation.
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+/**
+ * Get static site URLs step handler
+ *
+ * @param {Object}   context                  - Execution context
+ * @param {Object}   context.api              - PublishAPI instance
+ * @param {string}   context.siteUrl          - WordPress site URL
+ * @param {Function} context.setStatusMessage - Status message updater
+ * @return {Promise<Object>} Step result with discovered URLs
+ */
+async function getStaticSiteUrls_handler(context) {
+  const {
+    api,
+    siteUrl,
+    setStatusMessage
+  } = context;
+  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Discovering URLs for static site…', 'aether-site-exporter'), 'progress', 'getStaticSiteUrls');
+
+  // Discover URLs from API with progress updates
+  const urlResponse = await api.discoverUrls(progress => {
+    if (progress.status === 'fetching') {
+      setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Type being fetched (posts, terms, etc.) */
+      (0,external_wp_i18n_namespaceObject.__)('Fetching %s…', 'aether-site-exporter'), progress.type), 'progress', 'getStaticSiteUrls');
+    }
+  });
+  if (!urlResponse.success) {
+    throw new Error(urlResponse.message || (0,external_wp_i18n_namespaceObject.__)('Failed to discover URLs', 'aether-site-exporter'));
+  }
+  const urls = urlResponse.urls || [];
+  const staticSiteUrl = urlResponse.staticSiteUrl || siteUrl;
+  const urlsCount = urls.length;
+  setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %d: Number of URLs */
+  (0,external_wp_i18n_namespaceObject.__)('Discovered %d URLs for static site generation', 'aether-site-exporter'), urlsCount), 'success', 'getStaticSiteUrls');
+
+  // Return data to merge into execution state
+  return {
+    urls,
+    staticSiteUrl,
+    urlsCount
+  };
+}
+
+/**
+ * Step definition
+ */
+const getStaticSiteUrls_stepDefinition = {
+  id: 'getStaticSiteUrls',
+  label: (0,external_wp_i18n_namespaceObject.__)('Discover URLs', 'aether-site-exporter'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Find all URLs for static site generation', 'aether-site-exporter'),
+  supportsProgress: false,
+  dependencies: [],
+  requires: {
+    api: {
+      from: 'initial',
+      required: true
+    },
+    siteUrl: {
+      from: 'initial',
+      required: true
+    },
+    setStatusMessage: {
+      from: 'initial',
+      required: true
+    }
+  },
+  provides: {
+    urls: {
+      type: 'array',
+      scope: 'global'
+    },
+    staticSiteUrl: {
+      type: 'string',
+      scope: 'global'
+    },
+    urlsCount: {
+      type: 'number',
+      scope: 'global'
+    }
+  },
+  handler: getStaticSiteUrls_handler
+};
+
+/**
+ * Register step via WordPress hooks
+ */
+(0,external_wp_hooks_.addAction)('aether.export.register_steps', 'aether/step-getStaticSiteUrls', registry => {
+  registry.register(getStaticSiteUrls_stepDefinition);
+}, 10);
+;// ./assets/src/export/steps/preScanStaticSite/index.js
+/**
+ * Pre-Scan Static Site Step
+ *
+ * Fetches HTML pages and extracts assets (CSS, JS, images) to add to URL list.
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+
+
+/**
+ * Pre-scan static site step handler
+ *
+ * @param {Object}   context                  - Execution context
+ * @param {Array}    context.urls             - URLs from getStaticSiteUrls
+ * @param {string}   context.siteUrl          - WordPress site URL
+ * @param {Function} context.setStatusMessage - Status message updater
+ * @param {Function} context.setStepProgress  - Step progress updater
+ * @return {Promise<Object>} Step result with expanded URL list including assets
+ */
+async function preScanStaticSite_handler(context) {
+  const {
+    urls,
+    siteUrl,
+    setStatusMessage,
+    setStepProgress
+  } = context;
+  if (!urls || !Array.isArray(urls)) {
+    throw new Error((0,external_wp_i18n_namespaceObject.__)('URLs not found. Please run getStaticSiteUrls first.', 'aether-site-exporter'));
+  }
+  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Scanning pages for assets…', 'aether-site-exporter'), 'progress', 'preScanStaticSite');
+  const allAssets = new Set();
+  const htmlUrls = [];
+  const totalUrls = urls.length;
+  const sharedHtmlData = new Map();
+
+  // Fetch each URL and extract assets
+  for (let i = 0; i < totalUrls; i++) {
+    const url = urls[i];
+
+    // Update progress
+    if (setStepProgress) {
+      const progress = Math.round((i + 1) / totalUrls * 100);
+      setStepProgress('preScanStaticSite', progress);
+    }
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'omit',
+        headers: {
+          'User-Agent': 'Aether Static Site Generator'
+        }
+      });
+      if (!response.ok) {
+        (0,admin_settings_debug/* debugWarn */.UT)(`[Aether] Skipping URL with non-200 status: ${url} (HTTP ${response.status})`);
+        continue;
+      }
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('text/html')) {
+        // Not HTML, skip asset extraction but keep the URL
+        htmlUrls.push(url);
+        continue;
+      }
+      const html = await response.text();
+      htmlUrls.push(url);
+
+      // Extract assets from HTML
+      const assets = await (0,assetExtractor.extractAssetsFromHtml)(html, url, siteUrl);
+      for (const asset of assets) {
+        allAssets.add(asset);
+      }
+
+      // Store HTML and assets in shared cache for later use
+      // Format matches what useStaticSiteGenerator expects: { rawHtml, assetUrls }
+      sharedHtmlData.set(url, {
+        rawHtml: html,
+        assetUrls: assets
+      });
+    } catch (error) {
+      (0,admin_settings_debug/* debugWarn */.UT)(`[Aether] Error fetching URL: ${url}`, error.message);
+    }
+  }
+
+  // Combine HTML URLs with discovered assets
+  const expandedUrls = [...htmlUrls, ...allAssets];
+  (0,admin_settings_debug/* debug */.Yz)('[Aether] Pre-scan complete:', {
+    htmlPages: htmlUrls.length,
+    assetsDiscovered: allAssets.size,
+    totalUrls: expandedUrls.length
+  });
+  setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$d: Number of pages, %2$d: Number of assets */
+  (0,external_wp_i18n_namespaceObject.__)('Found %1$d pages and %2$d assets', 'aether-site-exporter'), htmlUrls.length, allAssets.size), 'success', 'preScanStaticSite');
+
+  // Return expanded URL list and shared HTML cache
+  return {
+    urls: expandedUrls,
+    htmlCount: htmlUrls.length,
+    assetCount: allAssets.size,
+    sharedHtmlData
+  };
+}
+
+/**
+ * Step definition
+ */
+const preScanStaticSite_stepDefinition = {
+  id: 'preScanStaticSite',
+  label: (0,external_wp_i18n_namespaceObject.__)('Scan for Assets', 'aether-site-exporter'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Discover CSS, JS, and image assets from pages', 'aether-site-exporter'),
+  supportsProgress: true,
+  dependencies: ['getStaticSiteUrls'],
+  requires: {
+    urls: {
+      from: 'getStaticSiteUrls',
+      required: true
+    },
+    siteUrl: {
+      from: 'initial',
+      required: true
+    },
+    setStatusMessage: {
+      from: 'initial',
+      required: true
+    },
+    setStepProgress: {
+      from: 'initial',
+      required: false
+    }
+  },
+  provides: {
+    urls: {
+      type: 'array',
+      scope: 'global'
+    },
+    htmlCount: {
+      type: 'number',
+      scope: 'global'
+    },
+    assetCount: {
+      type: 'number',
+      scope: 'global'
+    },
+    sharedHtmlData: {
+      type: 'Map',
+      scope: 'global'
+    }
+  },
+  handler: preScanStaticSite_handler
+};
+
+/**
+ * Register step via WordPress hooks
+ */
+(0,external_wp_hooks_.addAction)('aether.export.register_steps', 'aether/step-preScanStaticSite', registry => {
+  registry.register(preScanStaticSite_stepDefinition);
+}, 10);
+;// ./assets/src/export/steps/createWpContentArchive/index.js
+/**
+ * Create WP Content Archive Step
+ *
+ * Creates wp-content.zip containing custom plugins, themes, and uploads.
+ * Used for blueprint bundle generation.
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+
+/**
+ * Create wp-content archive step handler
+ *
+ * @param {Object}   context                  - Execution context
+ * @param {Object}   context.api              - ExportAPI instance
+ * @param {Object}   context.assetManager     - Asset manager instance
+ * @param {Array}    context.discoveredAssets - Discovered assets from discoverBlueprintBundleAssets step
+ * @param {Function} context.setStatusMessage - Status message updater
+ * @return {Promise<Object>} Step result with archive info
+ */
+async function createWpContentArchive_handler(context) {
+  const {
+    api,
+    assetManager,
+    discoveredAssets = [],
+    setStatusMessage
+  } = context;
+  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Creating wp-content archive…', 'aether-site-exporter'), 'progress', 'createWpContentArchive');
+
+  // Determine which files to include
+  const filesToInclude = (0,external_wp_hooks_.applyFilters)('aether.export.step.createWpContentArchive.files', discoveredAssets, context);
+
+  // Create the archive via API
+  const archiveResponse = await api.createArchive({
+    assets: filesToInclude,
+    includeUploads: true
+  });
+  if (!archiveResponse.success) {
+    throw new Error(archiveResponse.message || (0,external_wp_i18n_namespaceObject.__)('Failed to create wp-content archive', 'aether-site-exporter'));
+  }
+  const {
+    zipPath,
+    zipUrl,
+    zipSize
+  } = archiveResponse;
+  const sizeFormatted = formatFileSize(zipSize || 0);
+
+  // Update asset manager if provided and method exists
+  if (assetManager && zipPath && typeof assetManager.setArchivePath === 'function') {
+    assetManager.setArchivePath(zipPath);
+  }
+  setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: File size */
+  (0,external_wp_i18n_namespaceObject.__)('Created wp-content archive (%s)', 'aether-site-exporter'), sizeFormatted), 'success', 'createWpContentArchive');
+
+  // Return data to merge into execution state
+  return {
+    zipPath,
+    zipUrl,
+    zipSize
+  };
+}
+
+/**
+ * Step definition
+ */
+const createWpContentArchive_stepDefinition = {
+  id: 'createWpContentArchive',
+  label: (0,external_wp_i18n_namespaceObject.__)('Create WP Content Archive', 'aether-site-exporter'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Package custom plugins, themes, and uploads', 'aether-site-exporter'),
+  supportsProgress: true,
+  dependencies: ['discoverBlueprintBundleAssets'],
+  requires: {
+    api: {
+      from: 'initial',
+      required: true
+    },
+    discoveredAssets: {
+      from: 'discoverBlueprintBundleAssets',
+      required: true
+    },
+    setStatusMessage: {
+      from: 'initial',
+      required: true
+    },
+    assetManager: {
+      from: 'initial',
+      required: false
+    }
+  },
+  provides: {
+    zipPath: {
+      type: 'string',
+      scope: 'global'
+    },
+    zipUrl: {
+      type: 'string',
+      scope: 'global'
+    },
+    zipSize: {
+      type: 'number',
+      scope: 'global'
+    }
+  },
+  handler: createWpContentArchive_handler
+};
+
+/**
+ * Register step via WordPress hooks
+ */
+(0,external_wp_hooks_.addAction)('aether.export.register_steps', 'aether/step-createWpContentArchive', registry => {
+  registry.register(createWpContentArchive_stepDefinition);
+}, 10);
+;// ./assets/src/export/steps/createBlueprintBundle/index.js
+/**
+ * Create Blueprint Bundle Step
+ *
+ * Generates blueprint-bundle.zip containing blueprint.json and wp-content.zip.
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+
+/**
+ * Create blueprint bundle step handler
+ *
+ * @param {Object}   context                       - Execution context
+ * @param {Object}   context.api                   - ExportAPI instance
+ * @param {Function} context.generateBlueprintJson - Blueprint JSON generator function
+ * @param {string}   context.zipPath               - Path to wp-content.zip from createWpContentArchive
+ * @param {string}   context.zipUrl                - URL to wp-content.zip
+ * @param {Array}    context.discoveredAssets      - Discovered assets
+ * @param {Function} context.setStatusMessage      - Status message updater
+ * @return {Promise<Object>} Step result with blueprint bundle info
+ */
+async function createBlueprintBundle_handler(context) {
+  const {
+    api,
+    generateBlueprintJson,
+    zipPath,
+    zipUrl,
+    discoveredAssets = [],
+    setStatusMessage
+  } = context;
+  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Creating blueprint bundle…', 'aether-site-exporter'), 'progress', 'createBlueprintBundle');
+  if (!zipPath) {
+    throw new Error((0,external_wp_i18n_namespaceObject.__)('Site archive not found. Please run createWpContentArchive first.', 'aether-site-exporter'));
+  }
+
+  // Generate blueprint.json
+  let blueprintData;
+  if (typeof generateBlueprintJson === 'function') {
+    blueprintData = await generateBlueprintJson({
+      assets: discoveredAssets,
+      wpContentZipUrl: zipUrl
+    }, setStatusMessage);
+  } else {
+    // Fallback: use API to generate blueprint
+    const blueprintResponse = await api.generateBlueprint({
+      assets: discoveredAssets,
+      wpContentZipUrl: zipUrl
+    });
+    if (!blueprintResponse.success) {
+      throw new Error(blueprintResponse.message || (0,external_wp_i18n_namespaceObject.__)('Failed to generate blueprint', 'aether-site-exporter'));
+    }
+    blueprintData = blueprintResponse.blueprint;
+  }
+
+  // Allow filtering of blueprint data (JSON only)
+  const filteredBlueprint = (0,external_wp_hooks_.applyFilters)('aether.export.step.createBlueprintBundle.blueprintData', blueprintData, context);
+
+  // Create the blueprint-bundle.zip via API
+  const bundleResponse = await api.createBlueprintBundle({
+    blueprint: filteredBlueprint,
+    wpContentZipPath: zipPath
+  });
+  if (!bundleResponse.success) {
+    throw new Error(bundleResponse.message || (0,external_wp_i18n_namespaceObject.__)('Failed to create blueprint bundle', 'aether-site-exporter'));
+  }
+  const {
+    bundlePath,
+    bundleUrl,
+    bundleSize
+  } = bundleResponse;
+  const sizeFormatted = formatFileSize(bundleSize || 0);
+  setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: File size */
+  (0,external_wp_i18n_namespaceObject.__)('Created blueprint bundle (%s)', 'aether-site-exporter'), sizeFormatted), 'success', 'createBlueprintBundle');
+
+  // Return data to merge into execution state
+  return {
+    blueprintData: filteredBlueprint,
+    blueprintBundle: {
+      bundlePath,
+      bundleUrl,
+      bundleSize
+    }
+  };
+}
+
+/**
+ * Step definition
+ */
+const createBlueprintBundle_stepDefinition = {
+  id: 'createBlueprintBundle',
+  label: (0,external_wp_i18n_namespaceObject.__)('Create Blueprint Bundle', 'aether-site-exporter'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Create blueprint-bundle.zip', 'aether-site-exporter'),
+  supportsProgress: false,
+  dependencies: ['createWpContentArchive'],
+  requires: {
+    api: {
+      from: 'initial',
+      required: true
+    },
+    generateBlueprintJson: {
+      from: 'initial',
+      required: true
+    },
+    zipPath: {
+      from: 'createWpContentArchive',
+      required: true
+    },
+    zipUrl: {
+      from: 'createWpContentArchive',
+      required: true
+    },
+    discoveredAssets: {
+      from: 'discoverBlueprintBundleAssets',
+      required: true
+    },
+    setStatusMessage: {
+      from: 'initial',
+      required: true
+    }
+  },
+  provides: {
+    blueprintData: {
+      type: 'object',
+      scope: 'global'
+    },
+    blueprintBundle: {
+      type: 'object',
+      scope: 'global'
+    }
+  },
+  handler: createBlueprintBundle_handler
+};
+
+/**
+ * Register step via WordPress hooks
+ */
+(0,external_wp_hooks_.addAction)('aether.export.register_steps', 'aether/step-createBlueprintBundle', registry => {
+  registry.register(createBlueprintBundle_stepDefinition);
+}, 10);
+// EXTERNAL MODULE: external ["wp","apiFetch"]
+var external_wp_apiFetch_ = __webpack_require__(455);
+var external_wp_apiFetch_default = /*#__PURE__*/__webpack_require__.n(external_wp_apiFetch_);
+// EXTERNAL MODULE: ./assets/src/export/utils/unifiedFileUpload.js
+var unifiedFileUpload = __webpack_require__(98);
+;// ./assets/src/export/steps/uploadBlueprintBundle/index.js
+/**
+ * Upload Blueprint Bundle Step
+ *
+ * Uploads blueprint-bundle.zip to configured provider(s).
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+
+
+
+/**
+ * Upload blueprint bundle step handler
+ *
+ * Processes a single provider instance (thread context).
+ * Called once per provider by ThreadOrchestrator.
+ *
+ * @param {Object}   context                         - Execution context
+ * @param {Object}   context.currentProviderInstance - Current provider instance from thread
+ * @param {Object}   context.blueprintBundle         - Bundle data from createBlueprintBundle
+ * @param {string}   context.siteUrl                 - WordPress site URL
+ * @param {Function} context.setStatusMessage        - Status message updater
+ * @param {Function} context.setStepProgress         - Step progress updater
+ * @return {Promise<Object>} Step result
+ */
+async function uploadBlueprintBundle_handler(context) {
+  const {
+    currentProviderInstance,
+    blueprintBundle,
+    siteUrl,
+    setStatusMessage
+  } = context;
+  if (!currentProviderInstance) {
+    throw new Error((0,external_wp_i18n_namespaceObject.__)('Provider instance not found in thread context', 'aether-site-exporter'));
+  }
+  const providerId = currentProviderInstance.id;
+  const providerLabel = currentProviderInstance.label || currentProviderInstance.id;
+  const bundleSize = blueprintBundle?.bundleSize || 0;
+  const bundleSizeFormatted = formatFileSize(bundleSize);
+  setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Provider label, %2$s: File size */
+  (0,external_wp_i18n_namespaceObject.__)('Uploading blueprint bundle (%2$s) to %1$s…', 'aether-site-exporter'), providerLabel, bundleSizeFormatted), 'progress', 'uploadBlueprintBundle');
+
+  // Fetch provider config to get export_path
+  let exportPath = 'blueprint-bundle/bundle.zip';
+  try {
+    const providerResponse = await external_wp_apiFetch_default()({
+      path: `/aether/site-exporter/providers/${providerId}/config`
+    });
+    if (providerResponse.success && providerResponse.config) {
+      const providerConfig = providerResponse.config || {};
+      if (providerConfig.export_path) {
+        exportPath = providerConfig.export_path;
+      }
+    }
+  } catch {
+    // Use default path on error
+  }
+
+  // Create unified file context for blueprint bundle
+  const fileContext = (0,unifiedFileUpload/* createFileContext */.sM)({
+    fileType: unifiedFileUpload/* FILE_TYPES */.$Z.BLUEPRINT_BUNDLE,
+    filePath: blueprintBundle.bundlePath,
+    fileContent: null,
+    contentType: 'application/zip',
+    storageKey: exportPath,
+    providerId,
+    metadata: {
+      ...context,
+      siteUrl,
+      exportPath
+    }
+  });
+
+  // Upload file using unified upload system
+  // This fires aether.file.upload action which providers hook into
+  await (0,unifiedFileUpload/* uploadFile */.QM)(fileContext);
+
+  // Report success
+  setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Provider label, %2$s: File size */
+  (0,external_wp_i18n_namespaceObject.__)('Uploaded blueprint bundle (%2$s) to %1$s', 'aether-site-exporter'), providerLabel, bundleSizeFormatted), 'success', 'uploadBlueprintBundle');
+  return {
+    bundleUploadResults: {
+      providerId,
+      providerLabel,
+      success: true,
+      exportPath,
+      bundleSize
+    }
+  };
+}
+
+/**
+ * Step definition
+ */
+const uploadBlueprintBundle_stepDefinition = {
+  id: 'uploadBlueprintBundle',
+  label: (0,external_wp_i18n_namespaceObject.__)('Upload Blueprint Bundle', 'aether-site-exporter'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Upload blueprint-bundle.zip to providers', 'aether-site-exporter'),
+  supportsProgress: true,
+  dependencies: ['createBlueprintBundle'],
+  requires: {
+    currentProviderInstance: {
+      from: 'thread',
+      required: true
+    },
+    blueprintBundle: {
+      from: 'createBlueprintBundle',
+      required: true
+    },
+    siteUrl: {
+      from: 'initial',
+      required: true
+    },
+    setStatusMessage: {
+      from: 'initial',
+      required: true
+    },
+    setStepProgress: {
+      from: 'initial',
+      required: false
+    }
+  },
+  provides: {
+    bundleUploadResults: {
+      type: 'object',
+      scope: 'thread'
+    }
+  },
+  handler: uploadBlueprintBundle_handler
+};
+
+/**
+ * Register step via WordPress hooks
+ */
+(0,external_wp_hooks_.addAction)('aether.export.register_steps', 'aether/step-uploadBlueprintBundle', registry => {
+  registry.register(uploadBlueprintBundle_stepDefinition);
+}, 10);
+;// ./assets/src/export/steps/uploadStaticFiles/index.js
+/**
+ * Upload Static Files Step
+ *
+ * Generates static HTML/CSS/JS and uploads to storage providers.
+ * Uses useStaticSiteGenerator to process URLs and upload files via unified action system.
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+
+/**
+ * Upload static files step handler
+ *
+ * Processes a single provider instance (thread context).
+ * Called once per provider by ThreadOrchestrator.
+ *
+ * @param {Object}   context                         - Execution context
+ * @param {Object}   context.currentProviderInstance - Current provider instance from thread
+ * @param {Array}    context.urls                    - URLs from preScanStaticSite (includes assets)
+ * @param {string}   context.staticSiteUrl           - Static site URL
+ * @param {Map}      context.sharedHtmlData          - Pre-fetched HTML data from preScanStaticSite
+ * @param {Object}   context.blueprintData           - Blueprint data
+ * @param {string}   context.siteUrl                 - WordPress site URL
+ * @param {Function} context.processStaticSiteUrls   - Static site generator function
+ * @param {Function} context.setStatusMessage        - Status message updater
+ * @return {Promise<Object>} Step result with uploaded files
+ */
+async function uploadStaticFiles_handler(context) {
+  const {
+    currentProviderInstance,
+    urls,
+    staticSiteUrl,
+    sharedHtmlData,
+    siteUrl,
+    processStaticSiteUrls,
+    setStatusMessage
+  } = context;
+
+  // blueprintData is optional and may be passed via context if available
+  const blueprintData = context.blueprintData || null;
+  if (!currentProviderInstance) {
+    throw new Error((0,external_wp_i18n_namespaceObject.__)('Provider instance not found in thread context', 'aether-site-exporter'));
+  }
+  if (!urls || !Array.isArray(urls)) {
+    throw new Error((0,external_wp_i18n_namespaceObject.__)('URLs not found. Please run getStaticSiteUrls first.', 'aether-site-exporter'));
+  }
+  if (!processStaticSiteUrls) {
+    throw new Error((0,external_wp_i18n_namespaceObject.__)('Static site generator not available', 'aether-site-exporter'));
+  }
+  const providerId = currentProviderInstance.id;
+  const providerLabel = currentProviderInstance.label || currentProviderInstance.id;
+  setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Provider label */
+  (0,external_wp_i18n_namespaceObject.__)('Processing static site for %s…', 'aether-site-exporter'), providerLabel), 'progress', 'uploadStaticFiles');
+
+  // Fetch provider config to get provider-specific public_url
+  // This ensures each provider uses its own staticSiteUrl (e.g., http://localhost:10003/static3)
+  // instead of the global one from getStaticSiteUrls
+  let providerSpecificStaticSiteUrl = staticSiteUrl;
+  try {
+    const providerConfig = await fetchProviderConfig(providerId);
+    if (providerConfig.public_url) {
+      providerSpecificStaticSiteUrl = providerConfig.public_url;
+    }
+  } catch (error) {
+    // If fetching provider config fails, fall back to global staticSiteUrl
+    // This should not happen in normal operation, but provides a safety net
+  }
+
+  // Filter URLs before processing
+  const filteredUrls = (0,external_wp_hooks_.applyFilters)('aether.export.step.uploadStaticSiteFiles.urls', urls, [providerId], {
+    siteUrl,
+    blueprintData,
+    staticSiteUrl: providerSpecificStaticSiteUrl,
+    providerId
+  });
+
+  // Process URLs for this provider instance
+  // Pass shared HTML data so it uses stored HTML instead of fetching again
+  // Use provider-specific staticSiteUrl for correct URL rewriting
+  const result = await processStaticSiteUrls(filteredUrls, providerSpecificStaticSiteUrl, providerId, siteUrl, setStatusMessage, blueprintData, null,
+  // removeMessage
+  sharedHtmlData // Pass shared HTML data from preScanStaticSite
+  );
+
+  // Check if upload succeeded
+  const filesUploaded = result.filesUploaded || 0;
+  const success = result.success && filesUploaded > 0;
+  if (success) {
+    setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Provider label, %2$d: Files uploaded */
+    (0,external_wp_i18n_namespaceObject.__)('Uploaded %2$d files to %1$s', 'aether-site-exporter'), providerLabel, filesUploaded), 'success', 'uploadStaticFiles');
+  } else {
+    const errorMessage = result.error || (0,external_wp_i18n_namespaceObject.__)('No files uploaded', 'aether-site-exporter');
+    throw new Error((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Provider label, %2$s: Error message */
+    (0,external_wp_i18n_namespaceObject.__)('Failed to upload to %1$s: %2$s', 'aether-site-exporter'), providerLabel, errorMessage));
+  }
+  return (0,external_wp_hooks_.applyFilters)('aether.export.step.uploadStaticSiteFiles.result', {
+    staticUploadResults: {
+      providerId,
+      providerLabel,
+      success,
+      filesUploaded: result.filesUploaded || 0,
+      filesSkipped: result.filesSkipped || 0,
+      urlsProcessed: result.urlsProcessed || 0,
+      urlsSucceeded: result.urlsSucceeded || 0,
+      urlsFailed: result.urlsFailed || 0,
+      assetsUploaded: result.assetsUploaded || 0,
+      assetsFailed: result.assetsFailed || 0,
+      failedUrls: result.failedUrls || [],
+      uploadedFiles: result.uploadedFiles || []
+    }
+  }, providerId, {
+    siteUrl,
+    blueprintData,
+    staticSiteUrl
+  });
+}
+
+/**
+ * Step definition
+ */
+const uploadStaticFiles_stepDefinition = {
+  id: 'uploadStaticFiles',
+  label: (0,external_wp_i18n_namespaceObject.__)('Upload Static Files', 'aether-site-exporter'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Generate and upload static HTML files', 'aether-site-exporter'),
+  supportsProgress: true,
+  dependencies: ['preScanStaticSite'],
+  requires: {
+    currentProviderInstance: {
+      from: 'thread',
+      required: true
+    },
+    urls: {
+      from: 'preScanStaticSite',
+      required: true
+    },
+    staticSiteUrl: {
+      from: 'getStaticSiteUrls',
+      required: true
+    },
+    sharedHtmlData: {
+      from: 'preScanStaticSite',
+      required: true
+    },
+    siteUrl: {
+      from: 'initial',
+      required: true
+    },
+    processStaticSiteUrls: {
+      from: 'initial',
+      required: true
+    },
+    setStatusMessage: {
+      from: 'initial',
+      required: true
+    }
+  },
+  provides: {
+    staticUploadResults: {
+      type: 'object',
+      scope: 'thread'
+    }
+  },
+  handler: uploadStaticFiles_handler
+};
+
+/**
+ * Register step via WordPress hooks
+ */
+(0,external_wp_hooks_.addAction)('aether.export.register_steps', 'aether/step-uploadStaticFiles', registry => {
+  registry.register(uploadStaticFiles_stepDefinition);
+}, 10);
+;// ./assets/src/export/steps/index.js
+/**
+ * Step Registry
+ *
+ * Steps register themselves dynamically via WordPress hooks.
+ * This file triggers step registration and provides helper functions.
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+// Import step files to ensure they register themselves
+
+
+
+
+
+
+
+
+/**
+ * Get all registered steps
+ *
+ * Triggers step registration via hooks and returns collected steps.
+ *
+ * @return {Array<Object>} Array of step definitions
+ */
+function getRegisteredSteps() {
+  const registry = registry_StepRegistry.getInstance();
+
+  // Clear previous registrations (for re-initialization)
+  registry.clear();
+
+  // Trigger registration hook - steps self-register
+  (0,external_wp_hooks_.doAction)('aether.export.register_steps', registry);
+  return registry.getSteps();
+}
+
+/**
+ * Get steps filtered by which providers are enabled
+ *
+ * Uses provider INSTANCE arrays (not ID arrays) to ensure validation.
+ * This prevents steps from executing when all provider instances are disabled/invalid.
+ *
+ * @param {Object} context - Execution context with provider instance arrays
+ * @return {Array<Object>} Filtered steps based on enabled provider instances
+ */
+function getActiveSteps(context) {
+  const {
+    staticSiteProviderInstances = [],
+    blueprintBundleProviderInstances = []
+  } = context;
+  const steps = getRegisteredSteps();
+
+  // Debug logging
+  if (typeof window !== 'undefined' && window.console) {
+    // eslint-disable-next-line no-console
+    console.log('[Aether] getActiveSteps - Filtering steps:', {
+      totalSteps: steps.length,
+      staticSiteProviders: staticSiteProviderInstances.length,
+      blueprintBundleProviders: blueprintBundleProviderInstances.length,
+      stepIds: steps.map(s => s.id)
+    });
+  }
+
+  // Filter out steps that should be skipped based on provider configuration
+  const filteredSteps = steps.filter(step => {
+    // If step has a static skip function, check it
+    if (typeof step.shouldSkip === 'function') {
+      return !step.shouldSkip(context);
+    }
+
+    // Skip blueprint-related steps if no blueprint bundle provider INSTANCES
+    if (step.id === 'discoverBlueprintBundleAssets' || step.id === 'createWpContentArchive' || step.id === 'createBlueprintBundle' || step.id === 'uploadBlueprintBundle') {
+      return blueprintBundleProviderInstances.length > 0;
+    }
+
+    // Skip static site steps if no static site provider INSTANCES
+    if (step.id === 'preScanStaticSite' || step.id === 'uploadStaticFiles') {
+      return staticSiteProviderInstances.length > 0;
+    }
+    return true;
+  });
+
+  // Debug logging
+  if (typeof window !== 'undefined' && window.console) {
+    // eslint-disable-next-line no-console
+    console.log('[Aether] getActiveSteps - Filtered steps:', {
+      filteredCount: filteredSteps.length,
+      filteredIds: filteredSteps.map(s => s.id)
+    });
+  }
+  return filteredSteps;
+}
+;// ./assets/src/providers/registry/ProviderRegistry.js
+/**
+ * Provider Registry
+ *
+ * JavaScript-based provider registry that collects providers from
+ * aether.providers.register hooks. This replaces the PHP ProviderRegistry.
+ *
+ */
+
+
+
+/**
+ * Internal registry storage.
+ *
+ * @type {Map<string, Object>}
+ */
+const providers = new Map();
+
+/**
+ * Provider Registry
+ *
+ * Singleton registry for managing all JavaScript provider instances.
+ */
+class ProviderRegistry {
+  /**
+   * Register a provider instance.
+   *
+   * @param {string} providerId Provider ID
+   * @param {Object} provider   Provider instance (must have getId, getName, etc.)
+   * @return {void}
+   */
+  register(providerId, provider) {
+    if (!providerId || typeof providerId !== 'string') {
+      throw new Error('ProviderRegistry.register() requires a valid provider ID string');
+    }
+    if (!provider || typeof provider !== 'object') {
+      throw new Error('ProviderRegistry.register() requires a provider instance');
+    }
+
+    // Validate provider has required methods
+    if (typeof provider.getId !== 'function') {
+      throw new Error(`Provider ${providerId} must implement getId() method`);
+    }
+    if (typeof provider.getName !== 'function') {
+      throw new Error(`Provider ${providerId} must implement getName() method`);
+    }
+    providers.set(providerId, provider);
+
+    /**
+     * Action fired after a provider is registered.
+     *
+     * @param {string} providerId Provider ID
+     * @param {Object} provider   Provider instance
+     */
+    (0,external_wp_hooks_.doAction)('aether.providers.registered', providerId, provider);
+  }
+
+  /**
+   * Get a provider by ID.
+   *
+   * @param {string} providerId Provider ID
+   * @return {Object|null} Provider instance or null if not found
+   */
+  get(providerId) {
+    return providers.get(providerId) || null;
+  }
+
+  /**
+   * Get all registered providers.
+   *
+   * @return {Array<Object>} Array of provider instances
+   */
+  getAll() {
+    return Array.from(providers.values());
+  }
+
+  /**
+   * Get all provider IDs.
+   *
+   * @return {Array<string>} Array of provider IDs
+   */
+  getAllIds() {
+    return Array.from(providers.keys());
+  }
+
+  /**
+   * Get providers that support a specific deployment type.
+   *
+   * @param {string} deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
+   * @return {Array<Object>} Array of providers that support the deployment type
+   */
+  getByDeploymentType(deploymentType) {
+    return this.getAll().filter(provider => {
+      const supportedTypes = provider.getSupportedDeploymentTypes?.() || [];
+      return supportedTypes.includes(deploymentType);
+    });
+  }
+
+  /**
+   * Get default provider.
+   *
+   * Returns the first provider that supports static_site deployment,
+   * or the first registered provider if none found.
+   *
+   * @return {Object|null} Default provider or null if none registered
+   */
+  getDefault() {
+    const staticSiteProviders = this.getByDeploymentType('static_site');
+    if (staticSiteProviders.length > 0) {
+      return staticSiteProviders[0];
+    }
+    const allProviders = this.getAll();
+    return allProviders.length > 0 ? allProviders[0] : null;
+  }
+
+  /**
+   * Get provider for a specific deployment type.
+   *
+   * Returns the first provider that supports the deployment type.
+   *
+   * @param {string} deploymentType Deployment type
+   * @return {Object|null} Provider instance or null if not found
+   */
+  getForDeploymentType(deploymentType) {
+    const matchingProviders = this.getByDeploymentType(deploymentType);
+    return matchingProviders.length > 0 ? matchingProviders[0] : null;
+  }
+
+  /**
+   * Check if a provider is registered.
+   *
+   * @param {string} providerId Provider ID
+   * @return {boolean} True if registered
+   */
+  has(providerId) {
+    return providers.has(providerId);
+  }
+
+  /**
+   * Get count of registered providers.
+   *
+   * @return {number} Number of registered providers
+   */
+  count() {
+    return providers.size;
+  }
+
+  /**
+   * Parse instance ID into provider type and UUID.
+   *
+   * Instance IDs have format: {provider_type}:{uuid}
+   * Example: "local-filesystem:a3f2c1b0-4e5d-6789-abcd-ef1234567890"
+   *
+   * @param {string} instanceId Instance ID to parse
+   * @return {{provider_type: string, uuid: string}|null} Parsed components or null if invalid format
+   */
+  parseInstanceId(instanceId) {
+    if (!instanceId || typeof instanceId !== 'string') {
+      return null;
+    }
+    const parts = instanceId.split(':', 2);
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+      return null;
+    }
+    return {
+      provider_type: parts[0],
+      uuid: parts[1]
+    };
+  }
+
+  /**
+   * Get provider class for an instance ID.
+   *
+   * Extracts the provider type from the instance ID and returns the corresponding provider.
+   *
+   * @param {string} instanceId Instance ID (format: {provider_type}:{uuid})
+   * @return {Object|null} Provider instance or null if not found
+   */
+  getProviderForInstance(instanceId) {
+    const parsed = this.parseInstanceId(instanceId);
+    if (!parsed) {
+      return null;
+    }
+    return this.get(parsed.provider_type);
+  }
+
+  /**
+   * Create a new instance ID for a provider type.
+   *
+   * Generates a UUID v4 and combines it with the provider type.
+   *
+   * @param {string} providerType Provider type (e.g., 'local-filesystem')
+   * @return {string} Instance ID (format: {provider_type}:{uuid})
+   */
+  createInstanceId(providerType) {
+    // Generate UUID v4
+    const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      // eslint-disable-next-line no-bitwise
+      const r = Math.random() * 16 | 0;
+      // eslint-disable-next-line no-bitwise
+      const v = c === 'x' ? r : r & 0x3 | 0x8;
+      return v.toString(16);
+    });
+    return `${providerType}:${uuid}`;
+  }
+
+  /**
+   * Clear all registered providers.
+   *
+   * Useful for testing or resetting state.
+   *
+   * @return {void}
+   */
+  clear() {
+    providers.clear();
+  }
+}
+
+// Create singleton instance
+const registry = new ProviderRegistry();
+
+/**
+ * Hook into aether.providers.register to auto-register providers.
+ *
+ * When providers call doAction('aether.providers.register', provider),
+ * this will automatically register them.
+ */
+(0,external_wp_hooks_.addAction)('aether.providers.register', 'aether/provider-registry', provider => {
+  if (!provider || typeof provider !== 'object') {
+    return;
+  }
+
+  // Get provider ID
+  let providerId;
+  if (typeof provider.getId === 'function') {
+    providerId = provider.getId();
+  } else if (provider.id) {
+    providerId = provider.id;
+  } else {
+    return; // Invalid provider
+  }
+
+  // Register the provider
+  registry.register(providerId, provider);
+});
+
+// Make registry globally available so all bundles share the same instance
+// This is necessary because webpack creates separate module instances for each bundle
+let exportedRegistry = registry;
+if (typeof window !== 'undefined') {
+  window.aether = window.aether || {};
+  // Only create global registry if it doesn't exist (first bundle to load)
+  if (!window.aether.ProviderRegistry) {
+    window.aether.ProviderRegistry = registry;
+    // eslint-disable-next-line no-console
+    console.log('ProviderRegistry: Created global registry instance');
+  } else {
+    // If registry already exists, use the global one and sync providers
+    const globalRegistry = window.aether.ProviderRegistry;
+    // Copy any providers from this instance to the global one
+    const localProviders = Array.from(providers.values());
+    localProviders.forEach(provider => {
+      const providerId = provider.getId();
+      if (!globalRegistry.get(providerId)) {
+        globalRegistry.register(providerId, provider);
+      }
+    });
+    // Use the global registry instead
+    exportedRegistry = globalRegistry;
+    // eslint-disable-next-line no-console
+    console.log('ProviderRegistry: Using global registry instance,', globalRegistry.getAll().length, 'providers registered');
+  }
+}
+/* harmony default export */ const registry_ProviderRegistry = (exportedRegistry);
+;// ./assets/src/export/utils/exportConfiguration.js
+/**
+ * Export Configuration Utilities
+ *
+ * Pure functions for preparing export workflow configuration.
+ * These functions are extracted from useExportController for testability.
+ *
+ */
+
+
+
+
+/**
+ * Prepare export configuration from settings response
+ *
+ * Extracts provider IDs and settings from API response.
+ * Pure function - no side effects, easily testable.
+ *
+ * @param {Object} settingsResponse - Response from settings API
+ * @return {Object} Configuration object with provider IDs
+ */
+function prepareExportConfiguration(settingsResponse) {
+  const settings = settingsResponse?.settings || {};
+  const providerTypes = settings.provider_types || {};
+  return {
+    storageProviderId: providerTypes.storage || '',
+    staticSiteProviderId: providerTypes.static_site || '',
+    providerConfigs: settings.providers || {}
+  };
+}
+
+/**
+ * Get enabled provider instances for a specific deployment type
+ *
+ * Filters provider configurations to find enabled instances
+ * that support the specified deployment type based on their provider type.
+ *
+ * @param {Object} providerConfigs - All provider configurations
+ * @param {string} deploymentType  - Deployment type to filter by
+ * @return {Array<string>} Array of enabled instance IDs
+ */
+function getEnabledInstancesForDeploymentType(providerConfigs, deploymentType) {
+  try {
+    if (!providerConfigs || typeof providerConfigs !== 'object') {
+      return [];
+    }
+    return Object.entries(providerConfigs).filter(([, instanceConfig]) => {
+      if (!instanceConfig || typeof instanceConfig !== 'object') {
+        return false;
+      }
+
+      // Check if enabled (default to true if not specified)
+      const isEnabled = instanceConfig.enabled !== false;
+      if (!isEnabled) {
+        return false;
+      }
+
+      // Check if provider type supports this deployment type
+      const providerType = instanceConfig.provider_type;
+      if (!providerType) {
+        return false;
+      }
+
+      // Get provider from registry and check if it supports the deployment type
+      const provider = registry_ProviderRegistry.get(providerType);
+      if (!provider) {
+        return false;
+      }
+      const supportedTypes = provider.getSupportedDeploymentTypes?.() || [];
+      const supportsType = supportedTypes.includes(deploymentType);
+      return supportsType;
+    }).map(([id]) => id);
+  } catch (error) {
+    (0,admin_settings_debug/* debugError */.AO)(`Failed to get instances for deployment type ${deploymentType}:`, error);
+    return [];
+  }
+}
+
+/**
+ * Validate a provider instance configuration
+ *
+ * Checks that the instance has required properties and valid configuration.
+ *
+ * @param {string} instanceId - Instance ID
+ * @param {Object} config     - Instance configuration
+ * @return {boolean} True if instance is valid
+ */
+function isValidProviderInstance(instanceId, config) {
+  // Must have non-empty ID
+  if (!instanceId || typeof instanceId !== 'string') {
+    (0,admin_settings_debug/* debugError */.AO)('Provider instance has invalid ID:', instanceId);
+    return false;
+  }
+
+  // Must have config object
+  if (!config || typeof config !== 'object') {
+    (0,admin_settings_debug/* debugError */.AO)(`Provider instance ${instanceId} has invalid config`);
+    return false;
+  }
+
+  // Must have provider_type
+  if (!config.provider_type) {
+    (0,admin_settings_debug/* debugError */.AO)(`Provider instance ${instanceId} missing provider_type`);
+    return false;
+  }
+
+  // Must not be explicitly disabled
+  if (config.enabled === false) {
+    // This is normal - not an error, just filtered out
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Build provider instance objects from configurations
+ *
+ * Creates array of provider instances with full config for threading.
+ * Each instance has id, label, and complete configuration.
+ * Validates each instance to ensure it's properly configured.
+ *
+ * @param {Object} providerConfigs - All provider configurations
+ * @param {string} deploymentType  - Deployment type to filter by
+ * @return {Array<Object>} Valid provider instance objects with { id, label, config }
+ */
+function buildProviderInstances(providerConfigs, deploymentType) {
+  const instanceIds = getEnabledInstancesForDeploymentType(providerConfigs, deploymentType);
+  return instanceIds
+  // Map to instance objects
+  .map(instanceId => {
+    const config = providerConfigs[instanceId] || {};
+    return {
+      id: instanceId,
+      label: config.label || instanceId,
+      config
+    };
+  })
+  // Validate and filter out invalid instances
+  .filter(instance => isValidProviderInstance(instance.id, instance.config));
+}
+
+/**
+ * Determine providers for all deployment types
+ *
+ * Pure function that takes provider configs and returns
+ * arrays of instance IDs for each deployment type.
+ *
+ * @param {Object}        providerConfigs - All provider configurations
+ * @param {Array<string>} deploymentTypes - Array of deployment type constants
+ * @return {Object} Object with arrays of instance IDs keyed by deployment type
+ */
+function determineProvidersByDeploymentType(providerConfigs, deploymentTypes) {
+  const result = {};
+  deploymentTypes.forEach(deploymentType => {
+    const instances = getEnabledInstancesForDeploymentType(providerConfigs, deploymentType);
+    result[deploymentType] = instances;
+  });
+  return result;
+}
+
+/**
+ * Build workflow context from configuration
+ *
+ * Pure function that assembles the context object
+ * needed for workflow execution.
+ *
+ * @param {Object} config       - Configuration object
+ * @param {Object} dependencies - External dependencies
+ * @return {Object} Workflow context
+ */
+function buildWorkflowContext(config, dependencies) {
+  const {
+    siteUrl,
+    staticSiteProviders,
+    blueprintBundleProviders,
+    edgeFunctionProviders,
+    staticSiteProviderInstances,
+    blueprintBundleProviderInstances,
+    edgeFunctionProviderInstances
+  } = config;
+  const {
+    api,
+    processStaticSiteUrls,
+    generateBlueprintJson,
+    updateStaticSiteProgressContext,
+    assetManager,
+    setStatusMessage,
+    setStepProgress,
+    setProviderProgress
+  } = dependencies;
+  return {
+    // API and state
+    api,
+    siteUrl,
+    // Provider arrays by deployment type (from PHP registry via REST API)
+    staticSiteProviders,
+    blueprintBundleProviders,
+    edgeFunctionProviders,
+    // Provider instance arrays for threading (with full config objects)
+    staticSiteProviderInstances,
+    blueprintBundleProviderInstances,
+    edgeFunctionProviderInstances,
+    // Provider instance references (for thread context)
+    providerInstances: config.providerInstances || [],
+    currentProviderInstance: config.currentProviderInstance || null,
+    // Hooks and utilities
+    processStaticSiteUrls,
+    generateBlueprintJson,
+    updateStaticSiteProgressContext,
+    assetManager,
+    // State setters
+    setStatusMessage,
+    setStepProgress,
+    setProviderProgress,
+    // Discovered assets (populated during workflow)
+    discoveredAssets: null
+  };
+}
+;// ./assets/src/export/hooks/useExportController.js
+/**
+ * Publish Controller Hook
+ *
+ * Orchestrates the export workflow using phase-based execution
+ *
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+function useExportController(exportState) {
+  const {
+    setIsExporting,
+    updateFromStep,
+    markAllComplete,
+    showError,
+    initializeSteps,
+    setStatusMessage,
+    setOverallProgressValue,
+    setStepProgress,
+    setProviderProgress,
+    removeMessage,
+    setProviders
+  } = exportState;
+
+  // State for storage provider ID (set before starting export)
+  // Must be declared before hooks that use it
+  const [setStorageProviderId] = (0,external_wp_element_namespaceObject.useState)('');
+  const api = useExportAPI();
+  const assetManager = useAssetManager();
+
+  // Create blueprint generator hook.
+  const {
+    generateBlueprint: generateBlueprintJson
+  } = useBlueprintGenerator();
+
+  // Provider context for progress tracking across multiple providers
+  // This allows the progress callback to adjust progress based on the current provider index
+  const staticSiteProgressContext = (0,external_wp_element_namespaceObject.useRef)({
+    providerIndex: 0,
+    totalProviders: 1
+  });
+
+  // Function to update static site progress context
+  // This allows the step handler to set the current provider index before processing
+  const updateStaticSiteProgressContext = (0,external_wp_element_namespaceObject.useCallback)((providerIndex, totalProviders) => {
+    staticSiteProgressContext.current = {
+      providerIndex,
+      totalProviders
+    };
+  }, []);
+
+  // Create static site generator with progress callback
+  const processStaticSiteUrls = useStaticSiteGenerator((uploadedFiles, totalFiles) => {
+    if (totalFiles > 0 && uploadedFiles >= 0) {
+      // Get current provider context
+      const {
+        providerIndex,
+        totalProviders
+      } = staticSiteProgressContext.current;
+
+      // Current provider's progress (0-100)
+      const currentProviderProgress = Math.min(100, Math.max(0, Math.round(uploadedFiles / totalFiles * 100)));
+
+      // Calculate step progress accounting for multiple providers
+      // Progress formula: (providerIndex * 100 + currentProviderProgress) / totalProviders
+      let stepProgress = currentProviderProgress;
+      if (totalProviders > 1) {
+        stepProgress = Math.min(100, Math.round((providerIndex * 100 + currentProviderProgress) / totalProviders));
+      }
+
+      // Only update step progress - let the progress tracker handle overall progress
+      // This prevents progress jumps when this step starts
+      setStepProgress('uploadStaticFiles', stepProgress);
+    }
+  });
+  const startExport = (0,external_wp_element_namespaceObject.useCallback)(async () => {
+    try {
+      (0,admin_settings_debug/* debug */.Yz)('startExport called');
+
+      // Initialize steps with 'discoverBlueprintBundleAssets' as the active step
+      // This sets up steps array, active step, and lastStepIndex correctly
+      initializeSteps(getRegisteredSteps(), 'discoverBlueprintBundleAssets');
+      // Set isExporting to true to start the workflow
+      setIsExporting(true);
+
+      // Fetch settings to get storage provider ID before starting
+      const settingsResponse = await (0,utils_api/* default */.Ay)({
+        path: '/aether/site-exporter/settings'
+      });
+
+      // Use pure function to extract configuration
+      const exportConfig = prepareExportConfiguration(settingsResponse);
+
+      // Update storage provider ID state
+      if (settingsResponse.success && exportConfig.storageProviderId) {
+        setStorageProviderId(exportConfig.storageProviderId);
+      }
+
+      // Fetch asset status
+      try {
+        const assetStatusResponse = await api.getAssetStatus();
+        if (assetStatusResponse.success && assetStatusResponse.assets) {
+          assetManager.syncWithServer(assetStatusResponse.assets);
+        }
+      } catch (assetError) {
+        // Asset status fetch is not critical - log and continue
+        (0,admin_settings_debug/* debugError */.AO)('Failed to fetch asset status:', assetError);
+      }
+
+      // Activate the first step immediately to update UI
+      updateFromStep('discoverBlueprintBundleAssets');
+
+      // Get current site URL for static site generation (use pure function)
+      const siteUrl = window.location.origin;
+
+      // Get arrays of instance IDs for each deployment type (use pure function)
+      const providersByType = determineProvidersByDeploymentType(exportConfig.providerConfigs, [DEPLOYMENT_TYPES.STATIC_SITE, DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE, DEPLOYMENT_TYPES.EDGE_FUNCTIONS]);
+      const staticSiteProviders = providersByType[DEPLOYMENT_TYPES.STATIC_SITE];
+      const blueprintBundleProviders = providersByType[DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE];
+      const edgeFunctionProviders = providersByType[DEPLOYMENT_TYPES.EDGE_FUNCTIONS];
+      (0,admin_settings_debug/* debug */.Yz)('[Workflow] Providers by deployment type:', {
+        staticSite: staticSiteProviders,
+        blueprintBundle: blueprintBundleProviders,
+        edgeFunctions: edgeFunctionProviders
+      });
+
+      // Build provider instance objects for threading
+      const staticSiteProviderInstances = buildProviderInstances(exportConfig.providerConfigs, DEPLOYMENT_TYPES.STATIC_SITE);
+      const blueprintBundleProviderInstances = buildProviderInstances(exportConfig.providerConfigs, DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE);
+      const edgeFunctionProviderInstances = buildProviderInstances(exportConfig.providerConfigs, DEPLOYMENT_TYPES.EDGE_FUNCTIONS);
+      (0,admin_settings_debug/* debug */.Yz)('[Workflow] Provider instances for threading:', {
+        staticSite: staticSiteProviderInstances,
+        blueprintBundle: blueprintBundleProviderInstances,
+        edgeFunctions: edgeFunctionProviderInstances
+      });
+
+      // Store provider arrays in global state for UI access
+      setProviders(staticSiteProviders, blueprintBundleProviders);
+
+      // Build context object with all dependencies for step handlers (use pure function)
+      const workflowContext = buildWorkflowContext({
+        siteUrl,
+        staticSiteProviders,
+        blueprintBundleProviders,
+        edgeFunctionProviders,
+        staticSiteProviderInstances,
+        blueprintBundleProviderInstances,
+        edgeFunctionProviderInstances
+      }, {
+        api,
+        processStaticSiteUrls,
+        generateBlueprintJson,
+        updateStaticSiteProgressContext,
+        assetManager,
+        setStatusMessage,
+        setStepProgress,
+        setProviderProgress
+      });
+
+      // Add additional UI callbacks not in pure function (to avoid coupling)
+      workflowContext.setOverallProgressValue = setOverallProgressValue;
+      workflowContext.removeMessage = removeMessage;
+
+      // Execute full workflow - individual steps check provider type
+
+      // Set up workflow lifecycle callbacks for UI updates
+      const workflowOptions = {
+        onStepStart: stepId => {
+          (0,admin_settings_debug/* debug */.Yz)(`[Workflow] Step starting: ${stepId}`);
+          // Update UI with step ID
+          updateFromStep(stepId);
+        },
+        onStepComplete: (stepId, result) => {
+          (0,admin_settings_debug/* debug */.Yz)(`[Workflow] Step completed: ${stepId}`, result);
+        },
+        onStepSkipped: stepId => {
+          (0,admin_settings_debug/* debug */.Yz)(`[Workflow] Step skipped: ${stepId}`);
+        },
+        onError: (stepId, error) => {
+          (0,admin_settings_debug/* debugError */.AO)(`[Workflow] Step error: ${stepId}`, error);
+        }
+      };
+
+      // Get steps filtered by enabled providers
+      const activeSteps = getActiveSteps(workflowContext);
+
+      // Determine provider instances for threading
+      // Use all provider instances across all deployment types
+      const allProviderInstances = [...staticSiteProviderInstances, ...blueprintBundleProviderInstances, ...edgeFunctionProviderInstances];
+      (0,admin_settings_debug/* debug */.Yz)('[Workflow] Executing with provider instances:', {
+        count: allProviderInstances.length,
+        instances: allProviderInstances.map(p => p.id)
+      });
+
+      // Execute workflow with ThreadOrchestrator (handles 0, 1, or N providers)
+      await executeThreadedWorkflow(activeSteps, workflowContext, allProviderInstances, workflowOptions);
+      (0,admin_settings_debug/* debug */.Yz)('[Workflow] All steps completed successfully');
+
+      // Clear asset upload tracking flags (reset state for next export)
+      assetManager.clearUploadFlags();
+
+      // Update UI to show all steps as complete with success message
+      markAllComplete({
+        status: 'complete'
+      });
+
+      // Release exporting lock (allows user to start new export)
+      setIsExporting(false);
+    } catch (error) {
+      (0,admin_settings_debug/* debugError */.AO)('Publish failed:', error);
+      showError(`Failed to start: ${error.message}`);
+      setIsExporting(false);
+    }
+  }, [setIsExporting, api, assetManager, showError, initializeSteps, setStorageProviderId, updateFromStep, updateStaticSiteProgressContext, processStaticSiteUrls, generateBlueprintJson, setStatusMessage, setStepProgress, setProviderProgress, removeMessage, setOverallProgressValue, setProviders, markAllComplete]);
+  return {
+    startExport
+  };
+}
+;// ./assets/src/utils/styles.js
+/**
+ * Shared style utilities and constants
+ *
+ * Centralized styles for inline styling across components.
+ *
+ */
+
+const colors = {
+  primary: '#2271b1',
+  primaryHover: '#135e96',
+  primaryDark: '#0a4168',
+  text: '#1d2327',
+  textMuted: '#646970',
+  textSecondary: '#50575e',
+  white: '#fff',
+  background: '#f6f7f7',
+  backgroundLighter: '#f0f0f1',
+  backgroundError: '#fcf0f1',
+  borderLight: '#c3c4c7',
+  borderLighter: '#e0e0e0',
+  error: '#d63638',
+  success: '#00a32a',
+  warning: '#dba617',
+  info: '#2271b1'
+};
+const spacing = {
+  xs: '0.25rem',
+  sm: '0.5rem',
+  md: '0.75rem',
+  lg: '1.25rem',
+  xl: '1.5rem',
+  '2xl': '2rem'
+};
+const borderRadius = {
+  sm: '0.25rem',
+  md: '0.5rem',
+  lg: '0.75rem',
+  full: '9999px'
+};
+const fontSize = {
+  xs: '0.75rem',
+  sm: '0.875rem',
+  base: '1rem',
+  lg: '1.125rem',
+  xl: '1.25rem',
+  '2xl': '1.5rem'
+};
+const fontWeight = {
+  normal: 400,
+  medium: 500,
+  semibold: 600,
+  bold: 700
+};
+const commonStyles = {
+  section: {
+    background: colors.white,
+    border: `1px solid ${colors.borderLight}`,
+    boxShadow: '0 1px 1px rgba(0, 0, 0, 0.04)',
+    marginBottom: spacing.lg,
+    padding: 0
+  },
+  sectionHeader: {
+    borderBottom: `1px solid ${colors.borderLight}`,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
+    paddingLeft: spacing.lg,
+    paddingRight: spacing.lg,
+    background: colors.background
+  },
+  card: {
+    background: colors.white,
+    border: `1px solid ${colors.borderLight}`,
+    borderRadius: borderRadius.sm,
+    padding: spacing.lg
+  }
+};
+const statusBadgeStyles = {
+  base: {
+    display: 'inline-block',
+    paddingTop: '3px',
+    paddingBottom: '3px',
+    paddingLeft: spacing.sm,
+    paddingRight: spacing.sm,
+    borderRadius: borderRadius.sm,
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  },
+  success: {
+    background: '#d5f0dd',
+    color: '#00833e'
+  },
+  error: {
+    background: '#fcf0f1',
+    color: '#c22c2e'
+  },
+  warning: {
+    background: '#fcf0c7',
+    color: '#826200'
+  },
+  info: {
+    background: '#d7edff',
+    color: '#135e96'
+  }
+};
+const noticeStyles = {
+  base: {
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    paddingLeft: spacing.lg,
+    paddingRight: spacing.lg,
+    marginBottom: spacing.md,
+    borderLeft: '4px solid',
+    background: colors.white
+  },
+  success: {
+    borderLeftColor: colors.success,
+    background: '#d5f0dd'
+  },
+  error: {
+    borderLeftColor: colors.error,
+    background: colors.backgroundError
+  },
+  warning: {
+    borderLeftColor: colors.warning,
+    background: '#fcf0c7'
+  },
+  info: {
+    borderLeftColor: colors.info,
+    background: '#d7edff'
+  }
+};
+
+/**
+ * Create flexbox style object
+ *
+ * @param {string} direction Flex direction ('row' or 'column')
+ * @param {string} gap       Gap spacing
+ * @return {Object} Style object
+ */
+const createFlexStyle = (direction = 'row', gap = spacing.md) => ({
+  display: 'flex',
+  flexDirection: direction,
+  gap
+});
+
+/**
+ * Create grid style object
+ *
+ * @param {string} minColumnWidth Minimum column width
+ * @param {string} gap            Gap spacing
+ * @return {Object} Style object
+ */
+const createGridStyle = (minColumnWidth = '16rem', gap = spacing.md) => ({
+  display: 'grid',
+  gridTemplateColumns: `repeat(auto-fit, minmax(${minColumnWidth}, 1fr))`,
+  gap
+});
+
+/**
+ * Common utility styles
+ */
+const utilityStyles = {
+  noMargin: {
+    margin: 0
+  },
+  noMarginTop: {
+    marginTop: 0
+  },
+  noMarginBottom: {
+    marginBottom: 0
+  }
+};
+;// ./assets/src/components/ProviderProgressBar/index.js
+/**
+ * Provider Progress Bar Component
+ *
+ * Displays progress for a single provider instance.
+ * Shows provider label, current step, and progress percentage.
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+
+/**
+ * Provider Progress Bar Component
+ *
+ * @param {Object} props               - Component props
+ * @param {string} props.providerId    - Provider instance ID
+ * @param {string} props.providerLabel - Provider display label
+ * @param {string} props.stepLabel     - Current step label
+ * @param {number} props.progress      - Progress percentage (0-100)
+ * @param {string} props.status        - Status: 'active', 'complete', 'error'
+ * @param {string} props.error         - Error message (if status is 'error')
+ * @return {JSX.Element} Provider progress bar component
+ */
+
+function ProviderProgressBar({
+  providerId,
+  providerLabel,
+  stepLabel,
+  progress,
+  status,
+  error
+}) {
+  const getStatusIcon = () => {
+    switch (status) {
+      case 'complete':
+        return '✓';
+      case 'error':
+        return '✗';
+      default:
+        return null;
+    }
+  };
+  const statusIcon = getStatusIcon();
+
+  // Base container style
+  const containerStyle = {
+    marginBottom: spacing.lg,
+    padding: spacing.md,
+    border: `1px solid ${colors.borderLighter}`,
+    borderRadius: borderRadius.sm,
+    background: colors.white,
+    transition: 'all 0.3s ease'
+  };
+
+  // Status-specific styles
+  if (status === 'active') {
+    containerStyle.borderColor = '#007cba';
+    containerStyle.boxShadow = '0 0 0 1px rgba(0, 124, 186, 0.1)';
+  } else if (status === 'complete') {
+    containerStyle.borderColor = colors.success;
+    containerStyle.background = colors.background;
+  } else if (status === 'error') {
+    containerStyle.borderColor = colors.error;
+    containerStyle.background = colors.backgroundError;
+  }
+
+  // Header style
+  const headerStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm
+  };
+
+  // Label style
+  const labelStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: spacing.sm,
+    fontSize: fontSize.sm
+  };
+
+  // Status icon style
+  const statusIconStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '20px',
+    height: '20px',
+    borderRadius: '50%',
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold
+  };
+  if (status === 'active') {
+    statusIconStyle.animation = 'pulse 1.5s ease-in-out infinite';
+  } else if (status === 'complete') {
+    statusIconStyle.background = colors.success;
+    statusIconStyle.color = colors.white;
+  } else if (status === 'error') {
+    statusIconStyle.background = colors.error;
+    statusIconStyle.color = colors.white;
+  }
+
+  // Percentage style
+  const percentageStyle = {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    fontWeight: fontWeight.semibold
+  };
+
+  // Step label style
+  const stepStyle = {
+    fontSize: fontSize.xs,
+    color: colors.textMuted,
+    marginBottom: spacing.sm,
+    fontStyle: 'italic'
+  };
+
+  // Error message style
+  const errorStyle = {
+    fontSize: fontSize.xs,
+    color: colors.error,
+    marginBottom: spacing.sm,
+    padding: spacing.sm,
+    background: colors.backgroundError,
+    borderRadius: '2px'
+  };
+
+  // Complete message style
+  const completeMessageStyle = {
+    fontSize: fontSize.xs,
+    color: colors.success,
+    marginBottom: spacing.sm,
+    fontWeight: fontWeight.medium
+  };
+
+  // Progress bar wrapper style
+  const progressBarWrapperStyle = {
+    position: 'relative'
+  };
+
+  // Progress bar style override
+  const progressBarStyle = {
+    height: '8px'
+  };
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)(external_ReactJSXRuntime_namespaceObject.Fragment, {
+    children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("style", {
+      children: `
+					@keyframes pulse {
+						0%, 100% {
+							opacity: 1;
+						}
+						50% {
+							opacity: 0.5;
+						}
+					}
+					.provider-progress-bar__progress .components-progress-bar {
+						height: 8px;
+					}
+					.provider-progress-bar__progress .components-progress-bar__indicator {
+						${status === 'complete' ? `background: ${colors.success};` : ''}
+						${status === 'error' ? `background: ${colors.error};` : ''}
+					}
+				`
+    }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+      style: containerStyle,
+      "data-provider-id": providerId,
+      children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+        style: headerStyle,
+        children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+          style: labelStyle,
+          children: [statusIcon && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("span", {
+            style: statusIconStyle,
+            children: statusIcon
+          }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("strong", {
+            children: providerLabel
+          })]
+        }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+          style: percentageStyle,
+          children: [Math.round(progress), "%"]
+        })]
+      }), stepLabel && status === 'active' && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+        style: stepStyle,
+        children: stepLabel
+      }), error && status === 'error' && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+        style: errorStyle,
+        children: error
+      }), status === 'complete' && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+        style: completeMessageStyle,
+        children: (0,external_wp_i18n_namespaceObject.__)('Complete', 'aether-site-exporter')
+      }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+        style: progressBarWrapperStyle,
+        children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.ProgressBar, {
+          className: "provider-progress-bar__progress",
+          style: progressBarStyle,
+          value: progress
+        })
+      })]
+    })]
+  });
+}
+/* harmony default export */ const components_ProviderProgressBar = (ProviderProgressBar);
+;// ./assets/src/components/ProviderProgressList/index.js
+/**
+ * Provider Progress List Component
+ *
+ * Displays a list of provider progress bars.
+ * Shows progress for each provider instance running in parallel.
+ *
+ * @since 1.0.0
+ */
+
+
+
+
+
+/**
+ * Provider Progress List Component
+ *
+ * @param {Object} props                   - Component props
+ * @param {Object} props.providerProgress  - Provider progress object { [providerId]: { stepId, stepLabel, progress, status, error } }
+ * @param {Array}  props.providerInstances - Array of provider instances { id, label, config }
+ * @return {JSX.Element|null} Provider progress list component
+ */
+
+function ProviderProgressList({
+  providerProgress = {},
+  providerInstances = []
+}) {
+  // If no provider instances, don't render anything
+  if (providerInstances.length === 0) {
+    return null;
+  }
+
+  // If only one provider, don't show the list (show normal progress instead)
+  if (providerInstances.length === 1) {
+    return null;
+  }
+
+  // Container style
+  const containerStyle = {
+    margin: '20px 0'
+  };
+
+  // Header style
+  const headerStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    paddingBottom: spacing.md,
+    borderBottom: `2px solid ${colors.borderLighter}`
+  };
+
+  // Header h4 style
+  const headerTitleStyle = {
+    margin: 0,
+    fontSize: '15px',
+    fontWeight: fontWeight.semibold,
+    color: colors.text
+  };
+
+  // Count badge style
+  const countStyle = {
+    fontSize: fontSize.sm,
+    color: colors.textMuted,
+    fontWeight: fontWeight.medium,
+    padding: '4px 8px',
+    background: colors.background,
+    borderRadius: '12px'
+  };
+
+  // Items container style
+  const itemsStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 0
+  };
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+    style: containerStyle,
+    children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+      style: headerStyle,
+      children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("h4", {
+        style: headerTitleStyle,
+        children: (0,external_wp_i18n_namespaceObject.__)('Provider Progress', 'aether-site-exporter')
+      }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("span", {
+        style: countStyle,
+        children: [providerInstances.length, ' ', (0,external_wp_i18n_namespaceObject.__)('providers', 'aether-site-exporter')]
+      })]
+    }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      style: itemsStyle,
+      children: providerInstances.map(instance => {
+        const progress = providerProgress[instance.id] || {
+          stepId: null,
+          stepLabel: (0,external_wp_i18n_namespaceObject.__)('Pending', 'aether-site-exporter'),
+          progress: 0,
+          status: 'pending'
+        };
+        return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(components_ProviderProgressBar, {
+          providerId: instance.id,
+          providerLabel: instance.label || instance.id,
+          stepLabel: progress.stepLabel,
+          progress: progress.progress,
+          status: progress.status,
+          error: progress.error
+        }, instance.id);
+      })
+    })]
+  });
+}
+/* harmony default export */ const components_ProviderProgressList = (ProviderProgressList);
+;// ./assets/src/components/ExportProgressModal/index.js
+/**
+ * Publish Progress Modal Component
+ *
+ * Shows export progress with progress bar and status messages
+ *
+ */
+
+
+
+
+
+
+
+
+
+// Styles - extracted to module level for performance
+
+const modalContentStyle = {
+  padding: spacing['2xl'],
+  display: 'flex',
+  flexDirection: 'column',
+  gap: spacing['2xl']
+};
+const noticeErrorStyle = {
+  ...noticeStyles.error,
+  padding: spacing.md,
+  marginBottom: spacing.md
+};
+const noticeSuccessStyle = {
+  ...noticeStyles.success,
+  padding: spacing.md,
+  marginBottom: spacing.md
+};
+const noticeParagraphStyle = {
+  margin: '0 0 0.5rem'
+};
+const progressContainerStyle = {
+  ...createFlexStyle('column', spacing.xl)
+};
+const progressBarContainerStyle = {
+  ...createFlexStyle('row', spacing.lg),
+  alignItems: 'center',
+  width: '100%'
+};
+const progressBarStyle = {
+  width: '100%',
+  height: '20px',
+  backgroundColor: colors.borderLighter,
+  borderRadius: borderRadius.sm,
+  overflow: 'hidden',
+  position: 'relative'
+};
+const progressBarFillStyle = {
+  height: '100%',
+  backgroundColor: colors.primary,
+  transition: 'width 0.3s ease',
+  borderRadius: borderRadius.sm
+};
+const progressPercentageStyle = {
+  fontSize: fontSize.sm,
+  fontWeight: fontWeight.semibold,
+  color: colors.text,
+  minWidth: '3rem',
+  textAlign: 'right',
+  flexShrink: 0
+};
+const loadingStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: spacing.xl,
+  padding: spacing['2xl'],
+  textAlign: 'center'
+};
+const loadingParagraphStyle = {
+  margin: 0,
+  fontSize: '1.125rem',
+  color: colors.textMuted
+};
+function ExportProgressModal({
+  isOpen,
+  onClose,
+  onComplete
+}) {
+  const exportState = useExportState();
+  const {
+    startExport
+  } = useExportController(exportState);
+  const {
+    steps,
+    isExporting,
+    finalStatus,
+    error,
+    reset,
+    overallProgress,
+    staticSiteProviders,
+    blueprintBundleProviders,
+    providerProgress
+  } = exportState;
+
+  // Keep modal open if finalStatus is set, even if isOpen becomes false
+  // This allows the auto-close effect to run and show the success message
+  const shouldShowModal = isOpen || finalStatus;
+
+  // Wrapper for onClose that resets state before closing
+  // Only allow closing when job is finished (has finalStatus or error)
+  const handleClose = (0,external_wp_element_namespaceObject.useCallback)(() => {
+    // Prevent closing while job is in progress
+    if (isExporting && !finalStatus && !error) {
+      return;
+    }
+    reset();
+    if (onClose) {
+      onClose();
+    }
+  }, [reset, onClose, isExporting, finalStatus, error]);
+
+  // Reset state when modal closes (only when shouldShowModal becomes false)
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    if (!shouldShowModal) {
+      reset();
+    }
+  }, [shouldShowModal, reset]);
+
+  // Start export when modal opens
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    if (isOpen && !isExporting) {
+      // Only start if we haven't started yet (no steps initialized)
+      if (steps.length === 0) {
+        startExport();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // Only depend on isOpen to avoid re-triggering
+
+  // Handle completion
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    if (finalStatus && onComplete) {
+      // Call onComplete callback to refresh data
+      // Note: Modal no longer auto-closes, user must manually close
+      onComplete(finalStatus);
+    }
+  }, [finalStatus, onComplete]);
+
+  // Calculate overall progress from steps if not explicitly set
+  const displayProgress = (0,external_wp_element_namespaceObject.useMemo)(() => {
+    if (overallProgress > 0) {
+      return overallProgress;
+    }
+    if (steps.length === 0) {
+      return 0;
+    }
+    const completedSteps = steps.filter(step => step.status === 'complete').length;
+    const currentActiveStep = steps.find(step => step.status === 'active');
+    let progress = completedSteps / steps.length * 100;
+    if (currentActiveStep && currentActiveStep.supportsProgress) {
+      progress += currentActiveStep.progress / steps.length;
+    }
+    return Math.min(100, Math.round(progress));
+  }, [steps, overallProgress]);
+
+  // Build provider instances array from provider IDs
+  // Combine all providers across deployment types for display
+  const allProviderInstances = (0,external_wp_element_namespaceObject.useMemo)(() => {
+    const instances = [];
+
+    // Add static site providers
+    staticSiteProviders.forEach(id => {
+      instances.push({
+        id,
+        label: id // Label will come from config if available
+      });
+    });
+
+    // Add blueprint bundle providers (avoid duplicates)
+    blueprintBundleProviders.forEach(id => {
+      if (!instances.find(p => p.id === id)) {
+        instances.push({
+          id,
+          label: id
+        });
+      }
+    });
+    return instances;
+  }, [staticSiteProviders, blueprintBundleProviders]);
+  if (!shouldShowModal) {
+    return null;
+  }
+  const getModalTitle = () => {
+    if (error) {
+      return (0,external_wp_i18n_namespaceObject.__)('Publish Failed', 'aether-site-exporter');
+    }
+    if (finalStatus) {
+      return (0,external_wp_i18n_namespaceObject.__)('Site Published Successfully!', 'aether-site-exporter');
+    }
+    return (0,external_wp_i18n_namespaceObject.__)('Exporting Site', 'aether-site-exporter');
+  };
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Modal, {
+    className: "aether-export-progress-modal",
+    title: getModalTitle(),
+    onRequestClose: handleClose,
+    isFullScreen: false,
+    shouldCloseOnClickOutside: false,
+    shouldCloseOnEsc: false,
+    __experimentalHideHeader: false,
+    children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+      className: "aether-export-progress-modal__content",
+      style: modalContentStyle,
+      children: [error && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+        className: "aether-export-progress-modal__notice aether-export-progress-modal__notice--error",
+        style: noticeErrorStyle,
+        children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("p", {
+          className: "aether-export-progress-modal__notice-text",
+          style: utilityStyles.noMargin,
+          children: error
+        })
+      }), finalStatus && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+        className: "aether-export-progress-modal__notice aether-export-progress-modal__notice--success",
+        style: noticeSuccessStyle,
+        children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("p", {
+          className: "aether-export-progress-modal__notice-text",
+          style: noticeParagraphStyle,
+          children: (0,external_wp_i18n_namespaceObject.__)('Your site has been exported successfully!', 'aether')
+        }), finalStatus.deploymentUrl && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("p", {
+          className: "aether-export-progress-modal__deployment",
+          style: utilityStyles.noMargin,
+          children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("strong", {
+            className: "aether-export-progress-modal__deployment-label",
+            children: (0,external_wp_i18n_namespaceObject.__)('View your published site:', 'aether')
+          }), ' ', /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("a", {
+            className: "aether-export-progress-modal__deployment-link",
+            href: finalStatus.deploymentUrl,
+            target: "_blank",
+            rel: "noopener noreferrer",
+            children: finalStatus.deploymentUrl
+          })]
+        })]
+      }), !finalStatus && !error && steps.length > 0 && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+        className: "aether-export-progress-modal__progress",
+        style: progressContainerStyle,
+        children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+          className: "aether-export-progress-modal__progress-container",
+          style: progressBarContainerStyle,
+          children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+            className: "aether-export-progress-modal__progress-bar",
+            style: progressBarStyle,
+            children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+              className: "aether-export-progress-modal__progress-fill",
+              style: {
+                ...progressBarFillStyle,
+                width: `${displayProgress}%`
+              }
+            })
+          }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("span", {
+            className: "aether-export-progress-modal__progress-percentage",
+            style: progressPercentageStyle,
+            children: [displayProgress, "%"]
+          })]
+        })
+      }), !finalStatus && !error && allProviderInstances.length > 1 && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(components_ProviderProgressList, {
+        providerProgress: providerProgress,
+        providerInstances: allProviderInstances
+      }), steps.length === 0 && !error && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+        className: "aether-export-progress-modal__loading",
+        style: loadingStyle,
+        children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Spinner, {
+          className: "aether-export-progress-modal__spinner"
+        }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("p", {
+          className: "aether-export-progress-modal__loading-text",
+          style: loadingParagraphStyle,
+          children: (0,external_wp_i18n_namespaceObject.__)('Initializing export process…', 'aether-site-exporter')
+        })]
+      })]
+    })
+  });
+}
+;// external ["wp","primitives"]
+const external_wp_primitives_namespaceObject = window["wp"]["primitives"];
+;// ./node_modules/@wordpress/icons/build-module/library/settings.js
+/**
+ * WordPress dependencies
+ */
+
+
+const settings = /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)(external_wp_primitives_namespaceObject.SVG, {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_primitives_namespaceObject.Path, {
+    d: "m19 7.5h-7.628c-.3089-.87389-1.1423-1.5-2.122-1.5-.97966 0-1.81309.62611-2.12197 1.5h-2.12803v1.5h2.12803c.30888.87389 1.14231 1.5 2.12197 1.5.9797 0 1.8131-.62611 2.122-1.5h7.628z"
+  }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_primitives_namespaceObject.Path, {
+    d: "m19 15h-2.128c-.3089-.8739-1.1423-1.5-2.122-1.5s-1.8131.6261-2.122 1.5h-7.628v1.5h7.628c.3089.8739 1.1423 1.5 2.122 1.5s1.8131-.6261 2.122-1.5h2.128z"
+  })]
+});
+/* harmony default export */ const library_settings = (settings);
+
+;// ./node_modules/@wordpress/icons/build-module/library/trash.js
+/**
+ * WordPress dependencies
+ */
+
+
+const trash = /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_primitives_namespaceObject.SVG, {
+  xmlns: "http://www.w3.org/2000/svg",
+  viewBox: "0 0 24 24",
+  children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_primitives_namespaceObject.Path, {
+    fillRule: "evenodd",
+    clipRule: "evenodd",
+    d: "M12 5.5A2.25 2.25 0 0 0 9.878 7h4.244A2.251 2.251 0 0 0 12 5.5ZM12 4a3.751 3.751 0 0 0-3.675 3H5v1.5h1.27l.818 8.997a2.75 2.75 0 0 0 2.739 2.501h4.347a2.75 2.75 0 0 0 2.738-2.5L17.73 8.5H19V7h-3.325A3.751 3.751 0 0 0 12 4Zm4.224 4.5H7.776l.806 8.861a1.25 1.25 0 0 0 1.245 1.137h4.347a1.25 1.25 0 0 0 1.245-1.137l.805-8.861Z"
+  })
+});
+/* harmony default export */ const library_trash = (trash);
+
+;// ./assets/src/components/StatusNotice/index.js
+/**
+ * Status Notice Component
+ *
+ * Reusable notice/alert component for displaying status messages.
+ * Wraps WordPress Notice component with consistent styling.
+ *
+ */
+
+
+
+/**
+ * StatusNotice Component
+ *
+ * @param {Object}   props               Component props
+ * @param {string}   props.status        Notice status (success, error, warning, info)
+ * @param {string}   props.message       Message to display
+ * @param {boolean}  props.isDismissible Whether notice can be dismissed
+ * @param {Function} props.onDismiss     Callback when notice is dismissed
+ * @param {string}   props.className     Optional additional CSS class
+ * @return {JSX.Element} Rendered notice
+ */
+
+function StatusNotice({
+  status = 'info',
+  message,
+  isDismissible = true,
+  onDismiss = null,
+  className = ''
+}) {
+  const noticeClassName = `aether-status-notice aether-status-notice--${status} ${className}`.trim();
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Notice, {
+    className: noticeClassName,
+    status: status,
+    isDismissible: isDismissible,
+    onRemove: onDismiss,
+    children: message
+  });
+}
+;// ./assets/src/utils/validation.js
+/**
+ * Validation Utilities
+ *
+ * Client-side validation utilities for provider configurations.
+ * Can be used with zod schemas once zod is installed.
+ *
+ */
+
+/**
+ * Validate a field value based on validation rules.
+ *
+ * @param {string} value Value to validate.
+ * @param {Object} field Field definition with validation rules.
+ * @return {string|null} Error message if invalid, null if valid.
+ */
+function validateField(value, field) {
+  const {
+    validation,
+    label,
+    required
+  } = field;
+
+  // Check required fields.
+  if (required && (value === null || value === undefined || value === '')) {
+    return `${label} is required.`;
+  }
+
+  // Skip validation if field is empty and not required.
+  if (!value && !required) {
+    return null;
+  }
+  if (!validation) {
+    return null;
+  }
+
+  // Pattern validation.
+  if (validation.pattern) {
+    const regex = new RegExp(validation.pattern);
+    if (!regex.test(value)) {
+      return validation.message || `${label} format is invalid.`;
+    }
+  }
+
+  // Min length validation.
+  if (validation.minLength && value.length < validation.minLength) {
+    return `${label} must be at least ${validation.minLength} characters.`;
+  }
+
+  // Max length validation.
+  if (validation.maxLength && value.length > validation.maxLength) {
+    return `${label} must be no more than ${validation.maxLength} characters.`;
+  }
+  return null;
+}
+
+/**
+ * Validate a provider configuration.
+ *
+ * @param {Object} config Configuration object to validate.
+ * @param {Array}  fields Array of field definitions.
+ * @return {Object} Object with `valid` boolean and `errors` object.
+ */
+function validateConfig(config, fields) {
+  const errors = {};
+  fields.forEach(field => {
+    const fieldId = field.id;
+    const value = config[fieldId];
+    const error = validateField(value, field);
+    if (error) {
+      errors[fieldId] = error;
+    }
+  });
+  return {
+    valid: Object.keys(errors).length === 0,
+    errors
+  };
+}
+;// ./assets/src/components/SecretField/index.js
+/**
+ * Secret Field Component
+ *
+ * Replaces the aether-secret web component with a React component.
+ *
+ */
+
+
+
+
+
+function SecretField({
+  value = '',
+  onChange,
+  label,
+  help,
+  placeholder,
+  ...props
+}) {
+  const [isVisible, setIsVisible] = (0,external_wp_element_namespaceObject.useState)(false);
+  const containerStyle = {
+    position: 'relative'
+  };
+  const inputWrapperStyle = {
+    position: 'relative'
+  };
+  const eyeButtonStyle = {
+    position: 'absolute',
+    right: '8px',
+    top: 'calc(23px + 50%)',
+    transform: 'translateY(-100%)',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: '4px 6px',
+    fontSize: '18px',
+    lineHeight: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    opacity: 0.7,
+    transition: 'opacity 0.2s ease'
+  };
+
+  // Add hover effect via onMouseEnter/onMouseLeave
+  const [isHovered, setIsHovered] = (0,external_wp_element_namespaceObject.useState)(false);
+
+  // Password manager prevention attributes
+  const passwordManagerPreventionAttrs = {
+    autoComplete: 'off',
+    'data-lpignore': 'true',
+    'data-1p-ignore': 'true',
+    'data-form-type': 'other'
+  };
+
+  // CSS for text masking when not visible
+  const inputStyle = {
+    paddingRight: '40px',
+    // Make room for the eye icon
+    ...(!isVisible ? {
+      WebkitTextSecurity: 'disc',
+      textSecurity: 'disc'
+    } : {})
+  };
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+    className: "aether-secret-field",
+    style: containerStyle,
+    children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+      className: "aether-secret-field__wrapper",
+      style: inputWrapperStyle,
+      children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.TextControl, {
+        className: "aether-secret-field__input",
+        label: label,
+        help: help,
+        value: value,
+        onChange: onChange,
+        type: "text",
+        placeholder: placeholder,
+        style: inputStyle,
+        __next40pxDefaultSize: true,
+        __nextHasNoMarginBottom: true,
+        ...passwordManagerPreventionAttrs,
+        ...props
+      }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("button", {
+        type: "button",
+        className: "aether-secret-field__toggle",
+        onClick: () => setIsVisible(!isVisible),
+        onMouseEnter: () => setIsHovered(true),
+        onMouseLeave: () => setIsHovered(false),
+        style: {
+          ...eyeButtonStyle,
+          opacity: isHovered ? 1 : 0.7
+        },
+        "aria-label": isVisible ? (0,external_wp_i18n_namespaceObject.__)('Hide', 'aether-site-exporter') : (0,external_wp_i18n_namespaceObject.__)('Show', 'aether-site-exporter'),
+        title: isVisible ? (0,external_wp_i18n_namespaceObject.__)('Hide', 'aether-site-exporter') : (0,external_wp_i18n_namespaceObject.__)('Show', 'aether-site-exporter'),
+        children: isVisible ? /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("svg", {
+          className: "aether-secret-field__icon aether-secret-field__icon--visible",
+          xmlns: "http://www.w3.org/2000/svg",
+          viewBox: "0 0 32 32",
+          width: "18",
+          height: "18",
+          style: {
+            display: 'block'
+          },
+          children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("path", {
+            d: "M30.94,15.66A16.69,16.69,0,0,0,16,5,16.69,16.69,0,0,0,1.06,15.66a1,1,0,0,0,0,.68A16.69,16.69,0,0,0,16,27,16.69,16.69,0,0,0,30.94,16.34,1,1,0,0,0,30.94,15.66ZM16,25c-5.3,0-10.9-3.93-12.93-9C5.1,10.93,10.7,7,16,7s10.9,3.93,12.93,9C26.9,21.07,21.3,25,16,25Z"
+          }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("path", {
+            d: "M16,10a6,6,0,1,0,6,6A6,6,0,0,0,16,10Zm0,10a4,4,0,1,1,4-4A4,4,0,0,1,16,20Z"
+          })]
+        }) : /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("svg", {
+          className: "aether-secret-field__icon aether-secret-field__icon--hidden",
+          xmlns: "http://www.w3.org/2000/svg",
+          viewBox: "0 0 32 32",
+          width: "18",
+          height: "18",
+          style: {
+            display: 'block'
+          },
+          children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("path", {
+            d: "M5.24,22.51l1.43-1.42A14.06,14.06,0,0,1,3.07,16C5.1,10.93,10.7,7,16,7a12.38,12.38,0,0,1,4,.72l1.55-1.56A14.72,14.72,0,0,0,16,5,16.69,16.69,0,0,0,1.06,15.66a1,1,0,0,0,0,.68A16,16,0,0,0,5.24,22.51Z"
+          }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("path", {
+            d: "M12,15.73a4,4,0,0,1,3.7-3.7l1.81-1.82a6,6,0,0,0-7.33,7.33Z"
+          }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("path", {
+            d: "M30.94,15.66A16.4,16.4,0,0,0,25.2,8.22L30,3.41,28.59,2,2,28.59,3.41,30l5.1-5.1A15.29,15.29,0,0,0,16,27,16.69,16.69,0,0,0,30.94,16.34,1,1,0,0,0,30.94,15.66ZM20,16a4,4,0,0,1-6,3.44L19.44,14A4,4,0,0,1,20,16Zm-4,9a13.05,13.05,0,0,1-6-1.58l2.54-2.54a6,6,0,0,0,8.35-8.35l2.87-2.87A14.54,14.54,0,0,1,28.93,16C26.9,21.07,21.3,25,16,25Z"
+          })]
+        })
+      })]
+    })
+  });
+}
+;// ./assets/src/components/ProviderField/index.js
+/**
+ * Provider Field Component
+ *
+ * Dynamically renders a form field based on provider field definition.
+ *
+ */
+
+
+
+
+/**
+ * Render a provider configuration field.
+ *
+ * @param {Object}   props          Component props.
+ * @param {Object}   props.field    Field definition from provider metadata.
+ * @param {*}        props.value    Current field value.
+ * @param {Function} props.onChange Change handler.
+ * @param {Object}   props.errors   Validation errors object.
+ * @param {boolean}  props.isHidden Whether field should be hidden via CSS.
+ * @return {JSX.Element} Rendered field component.
+ */
+
+function ProviderField({
+  field,
+  value,
+  onChange,
+  errors,
+  isHidden = false
+}) {
+  const {
+    id,
+    label,
+    description,
+    type = 'text',
+    required = false,
+    options = [],
+    placeholder = '',
+    sensitive = false
+  } = field;
+  const error = errors?.[id];
+  const help = error || description;
+
+  // Password manager prevention attributes for all text inputs
+  const passwordManagerPreventionAttrs = {
+    autoComplete: 'off',
+    'data-lpignore': 'true',
+    'data-1p-ignore': 'true',
+    'data-form-type': 'other'
+  };
+
+  // Base style for field wrapper
+  const fieldWrapperStyle = {
+    display: isHidden ? 'none' : undefined
+  };
+
+  // Handle sensitive fields (passwords, API keys, etc.)
+  if (sensitive || type === 'password') {
+    return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: `aether-provider-field aether-provider-field--${type} ${error ? 'aether-provider-field--error' : ''}`,
+      style: fieldWrapperStyle,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(SecretField, {
+        label: label,
+        help: help,
+        value: value || '',
+        onChange: newValue => onChange(id, newValue),
+        placeholder: placeholder,
+        required: required
+      })
+    });
+  }
+
+  // Handle checkbox fields
+  if (type === 'checkbox') {
+    return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: `aether-provider-field aether-provider-field--${type} ${error ? 'aether-provider-field--error' : ''}`,
+      style: fieldWrapperStyle,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.CheckboxControl, {
+        label: label,
+        help: help,
+        checked: value || false,
+        onChange: newValue => onChange(id, newValue),
+        __nextHasNoMarginBottom: true
+      })
+    });
+  }
+
+  // Handle toggle group fields (checkbox group with multiple selection)
+  if (type === 'checkbox-group' && options.length > 0) {
+    // Use defaultValue if value is undefined or null
+    let resolvedValue = [];
+    if (value !== undefined && value !== null) {
+      resolvedValue = value;
+    } else if (field.defaultValue !== undefined) {
+      resolvedValue = field.defaultValue;
+    }
+    const currentValue = Array.isArray(resolvedValue) ? resolvedValue : [];
+    return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+      className: `aether-provider-field aether-provider-field--${type} ${error ? 'aether-provider-field--error' : ''}`,
+      style: fieldWrapperStyle,
+      children: [label && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+        className: "aether-provider-field__label components-base-control__label",
+        children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("strong", {
+          className: "aether-provider-field__label-text",
+          children: label
+        }), required && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("span", {
+          className: "aether-provider-field__label-required components-base-control__label__required",
+          children: "*"
+        })]
+      }), help && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("p", {
+        className: "aether-provider-field__help components-base-control__help",
+        children: help
+      }), error && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("p", {
+        className: "aether-provider-field__error aether-provider-field__error--message components-base-control__help components-base-control__help--error",
+        children: error
+      }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+        className: "aether-provider-field__checkbox-group aether-checkbox-group",
+        children: options.map(option => {
+          const optionValue = option.value;
+          const optionLabel = option.label || option.value;
+          const isSelected = currentValue.includes(optionValue);
+          return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.CheckboxControl, {
+            className: "aether-provider-field__checkbox-option",
+            label: optionLabel,
+            checked: isSelected,
+            onChange: checked => {
+              let newValue;
+              if (checked) {
+                // Add to array if not already present (prevent duplicates)
+                if (!currentValue.includes(optionValue)) {
+                  newValue = [...currentValue, optionValue];
+                } else {
+                  // Already in array, no change needed
+                  return;
+                }
+              } else {
+                // Remove from array
+                newValue = currentValue.filter(v => v !== optionValue);
+              }
+              onChange(id, newValue);
+            },
+            style: {
+              margin: '0.25rem 0'
+            },
+            __nextHasNoMarginBottom: true
+          }, optionValue);
+        })
+      })]
+    });
+  }
+
+  // Handle select fields
+  if (type === 'select' && options.length > 0) {
+    const selectOptions = options.map(opt => ({
+      label: opt.label || opt.value,
+      value: opt.value
+    }));
+    return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: `aether-provider-field aether-provider-field--${type} ${error ? 'aether-provider-field--error' : ''}`,
+      style: fieldWrapperStyle,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.SelectControl, {
+        label: label,
+        help: help,
+        value: value || '',
+        onChange: newValue => onChange(id, newValue),
+        options: selectOptions,
+        required: required,
+        __next40pxDefaultSize: true,
+        __nextHasNoMarginBottom: true
+      })
+    });
+  }
+
+  // Handle textarea fields
+  if (type === 'textarea') {
+    return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: `aether-provider-field aether-provider-field--${type} ${error ? 'aether-provider-field--error' : ''}`,
+      style: fieldWrapperStyle,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.TextareaControl, {
+        label: label,
+        help: help,
+        value: value || '',
+        onChange: newValue => onChange(id, newValue),
+        placeholder: placeholder,
+        required: required,
+        ...passwordManagerPreventionAttrs
+      })
+    });
+  }
+
+  // Handle URL fields
+  if (type === 'url') {
+    return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: `aether-provider-field aether-provider-field--${type} ${error ? 'aether-provider-field--error' : ''}`,
+      style: fieldWrapperStyle,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.TextControl, {
+        label: label,
+        help: help,
+        value: value || '',
+        onChange: newValue => onChange(id, newValue),
+        type: "url",
+        placeholder: placeholder,
+        required: required,
+        __next40pxDefaultSize: true,
+        __nextHasNoMarginBottom: true,
+        ...passwordManagerPreventionAttrs
+      })
+    });
+  }
+
+  // Handle email fields
+  if (type === 'email') {
+    return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: `aether-provider-field aether-provider-field--${type} ${error ? 'aether-provider-field--error' : ''}`,
+      style: fieldWrapperStyle,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.TextControl, {
+        label: label,
+        help: help,
+        value: value || '',
+        onChange: newValue => onChange(id, newValue),
+        type: "email",
+        placeholder: placeholder,
+        required: required,
+        __next40pxDefaultSize: true,
+        __nextHasNoMarginBottom: true,
+        ...passwordManagerPreventionAttrs
+      })
+    });
+  }
+
+  // Handle number fields
+  if (type === 'number') {
+    return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: `aether-provider-field aether-provider-field--${type} ${error ? 'aether-provider-field--error' : ''}`,
+      style: fieldWrapperStyle,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.TextControl, {
+        label: label,
+        help: help,
+        value: value || '',
+        onChange: newValue => onChange(id, newValue),
+        type: "number",
+        placeholder: placeholder,
+        required: required,
+        __next40pxDefaultSize: true,
+        __nextHasNoMarginBottom: true,
+        ...passwordManagerPreventionAttrs
+      })
+    });
+  }
+
+  // Default: text field
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+    className: `aether-provider-field aether-provider-field--${type} ${error ? 'aether-provider-field--error' : ''}`,
+    style: fieldWrapperStyle,
+    children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.TextControl, {
+      label: label,
+      help: help,
+      value: value || '',
+      onChange: newValue => onChange(id, newValue),
+      placeholder: placeholder,
+      required: required,
+      __next40pxDefaultSize: true,
+      __nextHasNoMarginBottom: true,
+      ...passwordManagerPreventionAttrs
+    })
+  });
+}
+;// ./assets/src/utils/constants.js
+/**
+ * Application Constants
+ *
+ * Centralized constants to avoid magic numbers and strings throughout the codebase.
+ *
+ */
+
+/**
+ * Success message display duration (milliseconds).
+ */
+const SUCCESS_MESSAGE_DURATION_MS = 3000;
+
+/**
+ * Short delay for async operations (milliseconds).
+ * Used to allow state updates to propagate before continuing.
+ */
+const SHORT_DELAY_MS = 100;
+
+/**
+ * Maximum progress percentage.
+ */
+const MAX_PROGRESS = 100;
+;// ./assets/src/hooks/useSuccessTimeout.js
+/**
+ * Success Timeout Hook
+ *
+ * Manages success message timeout with automatic cleanup.
+ * Prevents memory leaks and ensures proper cleanup on unmount.
+ *
+ */
+
+
+
+
+/**
+ * Hook for managing success message timeout.
+ *
+ * @return {Object} { showSuccess, clearSuccess }
+ */
+function useSuccessTimeout() {
+  const timeoutRef = (0,external_wp_element_namespaceObject.useRef)(null);
+
+  // Cleanup timeout on unmount
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
+  const showSuccess = (0,external_wp_element_namespaceObject.useCallback)(callback => {
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    // Set new timeout
+    timeoutRef.current = setTimeout(() => {
+      if (callback) {
+        callback();
+      }
+      timeoutRef.current = null;
+    }, SUCCESS_MESSAGE_DURATION_MS);
+  }, []);
+  const clearSuccess = (0,external_wp_element_namespaceObject.useCallback)(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+  return {
+    showSuccess,
+    clearSuccess
+  };
+}
+;// ./assets/src/components/ProviderForm/index.js
+/**
+ * Provider Form Component
+ *
+ * Dynamically renders a form based on provider field definitions.
+ * Can be enhanced with react-hook-form once installed.
+ *
+ */
+
+
+
+
+
+
+
+
+
+
+
+// Styles - extracted to module level for performance
+
+const formStyle = {
+  ...createFlexStyle('column', spacing.md)
+};
+const actionsStyle = {
+  ...createFlexStyle('row', spacing.sm),
+  justifyContent: 'flex-end',
+  marginTop: spacing.md,
+  paddingTop: spacing.md,
+  borderTop: `1px solid ${colors.borderLight}`
+};
+
+/**
+ * Provider Form Component.
+ *
+ * @param {Object}   props               Component props.
+ * @param {string}   props.providerId    Provider ID.
+ * @param {Array}    props.fields        Array of field definitions from provider metadata.
+ * @param {Object}   props.initialValues Initial form values.
+ * @param {Function} props.onSubmit      Optional submit handler.
+ * @param {Function} props.onChange      Optional change handler.
+ * @return {JSX.Element} Rendered form component.
+ */
+function ProviderForm({
+  providerId,
+  fields = [],
+  initialValues = {},
+  onSubmit,
+  onChange
+}) {
+  // Initialize values with field defaults merged with initialValues
+  const initializeValues = () => {
+    const defaults = {};
+    fields.forEach(field => {
+      // Use defaultValue if provided, otherwise use empty defaults based on field type
+      if (field.defaultValue !== undefined) {
+        defaults[field.id] = field.defaultValue;
+      } else if (field.type === 'checkbox-group') {
+        // Ensure checkbox-group fields are always arrays (even if empty)
+        defaults[field.id] = [];
+      } else if (field.type === 'checkbox') {
+        defaults[field.id] = false;
+      }
+    });
+
+    // Merge defaults with initialValues, but treat null/undefined as "not set"
+    // This ensures that null values from backend don't override defaults
+    const merged = {
+      ...defaults
+    };
+    Object.keys(initialValues).forEach(key => {
+      const value = initialValues[key];
+      // Only use initialValues if it's not null or undefined
+      if (value !== null && value !== undefined) {
+        merged[key] = value;
+      }
+    });
+    return merged;
+  };
+  const [values, setValues] = (0,external_wp_element_namespaceObject.useState)(initializeValues);
+  const [errors, setErrors] = (0,external_wp_element_namespaceObject.useState)({});
+  const [saving, setSaving] = (0,external_wp_element_namespaceObject.useState)(false);
+  const [success, setSuccess] = (0,external_wp_element_namespaceObject.useState)(false);
+  const [error, setError] = (0,external_wp_element_namespaceObject.useState)(null);
+  const {
+    showSuccess,
+    clearSuccess
+  } = useSuccessTimeout();
+
+  // Track if we're currently editing (have unsaved changes)
+  const isEditingRef = (0,external_wp_element_namespaceObject.useRef)(false);
+  // Ref to store latest onChange callback to avoid stale closures
+  const onChangeRef = (0,external_wp_element_namespaceObject.useRef)(onChange);
+
+  // Keep onChangeRef in sync with onChange prop
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Only initialize values once on mount, not when initialValues prop changes
+  // This prevents the form from resetting while user is typing
+  // The form is controlled by local state, parent updates come through onChange callback
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    // Only initialize once on mount
+    setValues(initializeValues());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps = run only on mount
+
+  const handleFieldChange = (0,external_wp_element_namespaceObject.useCallback)((fieldId, value) => {
+    // Mark that we're editing (have unsaved changes)
+    isEditingRef.current = true;
+
+    // Update local state
+    setValues(prevValues => ({
+      ...prevValues,
+      [fieldId]: value
+    }));
+
+    // Call onChange callback with ONLY the changed field
+    // This prevents unintended updates to other fields
+    if (onChangeRef.current) {
+      onChangeRef.current(fieldId, value);
+    }
+    setErrors({});
+    setError(null);
+    clearSuccess();
+    setSuccess(false);
+  }, [clearSuccess]);
+  const handleSubmit = async e => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
+
+    // Ensure all fields are included in values (even if not touched)
+    // This prevents fields from being omitted when saving
+    const completeValues = {
+      ...values
+    };
+    fields.forEach(field => {
+      // Handle undefined or null values (null shouldn't happen due to initialization, but be defensive)
+      if (completeValues[field.id] === undefined || completeValues[field.id] === null) {
+        // Use defaultValue if available, otherwise use type-specific defaults
+        if (field.defaultValue !== undefined) {
+          completeValues[field.id] = field.defaultValue;
+        } else if (field.type === 'checkbox-group') {
+          completeValues[field.id] = [];
+        } else if (field.type === 'checkbox') {
+          completeValues[field.id] = false;
+        }
+      }
+
+      // Ensure checkbox-group fields are always arrays (defensive check)
+      if (field.type === 'checkbox-group' && !Array.isArray(completeValues[field.id])) {
+        completeValues[field.id] = [];
+      }
+    });
+
+    // Client-side validation
+    const validation = validateConfig(completeValues, fields);
+    if (!validation.valid) {
+      setErrors(validation.errors);
+      setSaving(false);
+      return;
+    }
+    try {
+      // Call custom onSubmit if provided
+      if (onSubmit) {
+        await onSubmit(completeValues);
+      } else {
+        // Default: save to settings using /aether/site-exporter/settings endpoint
+        // Get current providers settings
+        const settingsResponse = await (0,utils_api/* default */.Ay)({
+          path: '/aether/site-exporter/settings?key=providers'
+        });
+        if (!settingsResponse.success) {
+          throw new Error('Failed to load current settings');
+        }
+
+        // Merge new provider settings with existing providers
+        const currentProviders = settingsResponse.value || {};
+        const updatedProviders = {
+          ...currentProviders,
+          [providerId]: completeValues
+        };
+
+        // Save updated providers object
+        const saveResponse = await (0,utils_api/* default */.Ay)({
+          path: '/aether/site-exporter/settings',
+          method: 'POST',
+          data: {
+            key: 'providers',
+            value: updatedProviders
+          }
+        });
+        if (!saveResponse.success) {
+          throw new Error(saveResponse.message || 'Failed to save settings');
+        }
+      }
+      setSuccess(true);
+      showSuccess(() => setSuccess(false));
+      // Reset editing flag after successful save
+      isEditingRef.current = false;
+    } catch (err) {
+      setError(err.message || (0,external_wp_i18n_namespaceObject.__)('Failed to save settings', 'aether-site-exporter'));
+    } finally {
+      setSaving(false);
+    }
+  };
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("form", {
+    className: "aether-provider-form",
+    onSubmit: handleSubmit,
+    style: formStyle,
+    children: [error && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(StatusNotice, {
+      status: "error",
+      message: error,
+      isDismissible: true,
+      onRemove: () => setError(null),
+      className: "aether-provider-form__notice"
+    }), success && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(StatusNotice, {
+      status: "success",
+      message: (0,external_wp_i18n_namespaceObject.__)('Settings saved successfully!', 'aether-site-exporter'),
+      isDismissible: true,
+      onRemove: () => setSuccess(false),
+      className: "aether-provider-form__notice"
+    }), (() => {
+      // Helper function to determine if field should be hidden
+      const isFieldHidden = field => {
+        if (field.hidden === true) {
+          // Hide fields marked as hidden in provider settings
+          return true;
+        }
+        return false;
+      };
+
+      // Separate fields into regular and advanced
+      const regularFields = fields.filter(field => !field.is_advanced);
+      const advancedFields = fields.filter(field => field.is_advanced === true);
+
+      // Render field component
+      const renderField = field => {
+        const isHidden = isFieldHidden(field);
+        return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(ProviderField, {
+          field: field,
+          value: values[field.id],
+          onChange: handleFieldChange,
+          errors: errors,
+          isHidden: isHidden
+        }, field.id);
+      };
+
+      // Helper function to get default value for a field
+      const getFieldDefault = field => {
+        if (field.defaultValue !== undefined) {
+          return field.defaultValue;
+        }
+        if (field.type === 'checkbox-group') {
+          return [];
+        }
+        if (field.type === 'checkbox') {
+          return false;
+        }
+        return '';
+      };
+
+      // Helper function to check if a field has a value
+      const hasFieldValue = field => {
+        const value = values[field.id];
+        const defaultValue = getFieldDefault(field);
+
+        // If value is undefined or null, it doesn't have a value
+        if (value === undefined || value === null) {
+          return false;
+        }
+
+        // For arrays, check if it's not empty and different from default
+        if (Array.isArray(value)) {
+          return value.length > 0 && JSON.stringify(value) !== JSON.stringify(defaultValue);
+        }
+
+        // For checkboxes, check if value is different from default (true vs false)
+        if (field.type === 'checkbox') {
+          return value !== defaultValue;
+        }
+
+        // For other types, check if value is not empty and different from default
+        return value !== '' && value !== defaultValue;
+      };
+
+      // Helper function to reset a field to its default
+      const resetField = fieldId => {
+        const field = fields.find(f => f.id === fieldId);
+        if (!field) {
+          return;
+        }
+        const defaultValue = getFieldDefault(field);
+        handleFieldChange(fieldId, defaultValue);
+      };
+      return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)(external_ReactJSXRuntime_namespaceObject.Fragment, {
+        children: [regularFields.map(renderField), advancedFields.length > 0 && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.__experimentalToolsPanel, {
+          className: "aether-provider-form__tools-panel",
+          label: (0,external_wp_i18n_namespaceObject.__)('Advanced settings', 'aether-site-exporter'),
+          resetAll: null,
+          children: advancedFields.map(field => {
+            const isHidden = isFieldHidden(field);
+            return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.__experimentalToolsPanelItem, {
+              className: "aether-provider-form__tools-panel-item",
+              hasValue: () => hasFieldValue(field),
+              label: field.label || field.name,
+              onDeselect: () => resetField(field.id),
+              children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(ProviderField, {
+                field: field,
+                value: values[field.id],
+                onChange: handleFieldChange,
+                errors: errors,
+                isHidden: isHidden
+              })
+            }, field.id);
+          })
+        })]
+      });
+    })(), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: "aether-provider-form__actions",
+      style: actionsStyle,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Button, {
+        className: "aether-provider-form__submit-button",
+        type: "submit",
+        variant: "primary",
+        isBusy: saving,
+        disabled: saving,
+        children: saving ? (0,external_wp_i18n_namespaceObject.__)('Saving…', 'aether-site-exporter') : (0,external_wp_i18n_namespaceObject.__)('Save Settings', 'aether-site-exporter')
+      })
+    })]
+  });
+}
+
+// Memoize component to prevent unnecessary re-renders
+// Only re-render if providerId, fields array length, or initialValues change
+/* harmony default export */ const components_ProviderForm = ((0,external_wp_element_namespaceObject.memo)(ProviderForm, (prevProps, nextProps) => {
+  return prevProps.providerId === nextProps.providerId && prevProps.fields.length === nextProps.fields.length && JSON.stringify(prevProps.initialValues) === JSON.stringify(nextProps.initialValues);
+}));
+;// ./assets/src/components/ProviderInstanceItem/index.js
+/**
+ * Provider Instance Item Component
+ *
+ * Displays a single provider instance as a table row.
+ * Handles inline name editing, toggle, and settings modal.
+ *
+ */
+
+
+
+
+
+
+
+
+
+// Styles - extracted to module level for performance
+
+const tableCellStyle = {
+  padding: spacing.md,
+  borderBottom: `1px solid ${colors.borderLight}`,
+  verticalAlign: 'middle'
+};
+const tableCellStyleWithBorder = {
+  ...tableCellStyle,
+  borderRight: `1px solid ${colors.borderLight}`
+};
+const nameStyle = {
+  fontSize: fontSize.base,
+  fontWeight: fontWeight.semibold,
+  color: colors.text,
+  cursor: 'pointer',
+  padding: `${spacing.xs} ${spacing.sm}`,
+  borderRadius: borderRadius.sm,
+  transition: 'background-color 0.2s ease'
+};
+const nameInputStyle = {
+  fontSize: fontSize.base,
+  fontWeight: fontWeight.semibold,
+  padding: `${spacing.xs} ${spacing.sm}`,
+  border: `2px solid ${colors.primary}`,
+  borderRadius: borderRadius.sm,
+  outline: 'none',
+  transition: 'border-color 0.2s ease',
+  width: '100%'
+};
+const providerTypeTagStyle = {
+  fontSize: fontSize.xs,
+  fontWeight: fontWeight.medium,
+  padding: '4px 8px',
+  borderRadius: borderRadius.sm,
+  backgroundColor: '#000',
+  color: '#fff',
+  display: 'inline-block'
+};
+const actionsCellStyle = {
+  ...createFlexStyle('row', spacing.sm),
+  alignItems: 'center'
+};
+
+/**
+ * Provider Instance Item Component
+ *
+ * @param {Object}   props          Component props.
+ * @param {Object}   props.instance Instance data with instanceId and config.
+ * @param {Object}   props.provider Provider metadata.
+ * @param {Function} props.onToggle Callback to toggle enabled state.
+ * @param {Function} props.onDelete Callback to delete instance.
+ * @param {Function} props.onRename Callback to rename instance.
+ * @param {Function} props.onSave   Callback to save config changes.
+ * @return {JSX.Element} Rendered component.
+ */
+function ProviderInstanceItem({
+  instance,
+  provider,
+  onToggle,
+  onDelete,
+  onRename,
+  onSave
+}) {
+  const [isEditing, setIsEditing] = (0,external_wp_element_namespaceObject.useState)(false);
+  const [editedName, setEditedName] = (0,external_wp_element_namespaceObject.useState)(instance.config.instance_name || '');
+  const [isModalOpen, setIsModalOpen] = (0,external_wp_element_namespaceObject.useState)(false);
+  const [instanceConfig, setInstanceConfig] = (0,external_wp_element_namespaceObject.useState)(instance.config);
+  const [saveError, setSaveError] = (0,external_wp_element_namespaceObject.useState)(null);
+  const inputRef = (0,external_wp_element_namespaceObject.useRef)(null);
+
+  // Sync config when instance config changes
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    setInstanceConfig(instance.config);
+  }, [instance.config]);
+
+  // Focus input when editing starts
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+  const handleNameEdit = () => {
+    setEditedName(instanceConfig.instance_name || '');
+    setIsEditing(true);
+  };
+  const handleNameSave = async () => {
+    if (editedName.trim() === '') {
+      setEditedName(instanceConfig.instance_name || '');
+      setIsEditing(false);
+      return;
+    }
+    if (editedName === instanceConfig.instance_name) {
+      setIsEditing(false);
+      return;
+    }
+    try {
+      await onRename(instance.instanceId, editedName.trim());
+      setIsEditing(false);
+    } catch (error) {
+      // Error handling is done in parent
+      setEditedName(instanceConfig.instance_name || '');
+      setIsEditing(false);
+    }
+  };
+  const handleNameCancel = () => {
+    setEditedName(instanceConfig.instance_name || '');
+    setIsEditing(false);
+  };
+  const handleFormChange = (fieldId, value) => {
+    setInstanceConfig(prev => ({
+      ...prev,
+      [fieldId]: value
+    }));
+  };
+  const handleFormSubmit = async values => {
+    setSaveError(null);
+    const currentEnabled = instanceConfig.enabled !== false;
+    const updatedConfig = {
+      ...values,
+      enabled: currentEnabled
+    };
+    try {
+      await onSave(instance.instanceId, updatedConfig);
+      setIsModalOpen(false);
+    } catch (error) {
+      setSaveError(error.message || (0,external_wp_i18n_namespaceObject.__)('Failed to save settings', 'aether-site-exporter'));
+      throw error;
+    }
+  };
+  const handleDelete = () => {
+    // eslint-disable-next-line no-alert
+    const confirmed = confirm((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: instance name */
+    (0,external_wp_i18n_namespaceObject.__)('Are you sure you want to delete the instance "%s"? This cannot be undone.', 'aether-site-exporter'), instanceConfig.instance_name));
+    if (confirmed) {
+      onDelete();
+    }
+  };
+
+  // Get form initial values
+  const settingsFields = provider?.settingsFields || [];
+  const formInitialValues = settingsFields.reduce((acc, field) => {
+    const fieldId = field.id || field.name;
+    if (instanceConfig[fieldId] !== undefined && instanceConfig[fieldId] !== null) {
+      acc[fieldId] = instanceConfig[fieldId];
+    }
+    return acc;
+  }, {});
+  const providerType = instance.config.provider_type || instance.instanceId.split(':')[0];
+  const providerMetadata = provider?.metadata || {};
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("tr", {
+    children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("td", {
+      style: tableCellStyleWithBorder,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.ToggleControl, {
+        label: (0,external_wp_i18n_namespaceObject.__)('Enable this instance', 'aether-site-exporter'),
+        checked: instanceConfig.enabled !== false,
+        onChange: enabled => onToggle(enabled),
+        __nextHasNoMarginBottom: true
+      })
+    }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("td", {
+      style: tableCellStyleWithBorder,
+      children: isEditing ? /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("input", {
+        ref: inputRef,
+        type: "text",
+        value: editedName,
+        onChange: e => setEditedName(e.target.value),
+        onBlur: handleNameSave,
+        onKeyDown: e => {
+          if (e.key === 'Enter') {
+            handleNameSave();
+          } else if (e.key === 'Escape') {
+            handleNameCancel();
+          }
+        },
+        style: nameInputStyle
+      }) : /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+        style: nameStyle,
+        onClick: handleNameEdit,
+        onKeyDown: e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            handleNameEdit();
+          }
+        },
+        role: "button",
+        tabIndex: 0,
+        title: (0,external_wp_i18n_namespaceObject.__)('Click to edit name', 'aether-site-exporter'),
+        children: instanceConfig.instance_name || ''
+      })
+    }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("td", {
+      style: tableCellStyleWithBorder,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("span", {
+        style: providerTypeTagStyle,
+        children: providerMetadata.name || provider?.id || providerType
+      })
+    }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("td", {
+      style: tableCellStyle,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+        style: {
+          ...createFlexStyle('row', spacing.sm),
+          justifyContent: 'flex-end'
+        },
+        children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+          style: actionsCellStyle,
+          children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Button, {
+            variant: "secondary",
+            icon: library_settings,
+            onClick: () => setIsModalOpen(true),
+            children: (0,external_wp_i18n_namespaceObject.__)('Settings', 'aether-site-exporter')
+          }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Button, {
+            variant: "secondary",
+            isDestructive: true,
+            icon: library_trash,
+            onClick: handleDelete,
+            children: (0,external_wp_i18n_namespaceObject.__)('Delete', 'aether-site-exporter')
+          })]
+        }), isModalOpen && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Modal, {
+          className: "aether-provider-instance-settings-modal",
+          title: (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: instance name */
+          (0,external_wp_i18n_namespaceObject.__)('Settings: %s', 'aether-site-exporter'), instanceConfig.instance_name || (0,external_wp_i18n_namespaceObject.__)('Provider Instance', 'aether-site-exporter')),
+          onRequestClose: () => setIsModalOpen(false),
+          size: "medium",
+          children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+            style: {
+              ...createFlexStyle('column', spacing.lg),
+              paddingTop: spacing.md
+            },
+            children: [saveError && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(StatusNotice, {
+              status: "error",
+              message: saveError,
+              isDismissible: true,
+              onRemove: () => setSaveError(null)
+            }), settingsFields.length > 0 && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(components_ProviderForm, {
+              providerId: provider?.id || providerType,
+              fields: settingsFields,
+              initialValues: formInitialValues,
+              onChange: handleFormChange,
+              onSubmit: handleFormSubmit
+            }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+              style: {
+                ...createFlexStyle('row', spacing.sm),
+                justifyContent: 'flex-end',
+                marginTop: spacing.md,
+                paddingTop: spacing.md,
+                borderTop: `1px solid ${colors.borderLight}`
+              },
+              children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Button, {
+                variant: "secondary",
+                onClick: () => setIsModalOpen(false),
+                children: (0,external_wp_i18n_namespaceObject.__)('Close', 'aether-site-exporter')
+              })
+            })]
+          })
+        })]
+      })
+    })]
+  });
+}
+;// ./assets/src/components/ProviderInstancesContainer/index.js
+/**
+ * Provider Instances Container Component
+ *
+ * Displays provider instances in a table format.
+ * Wraps the table structure and header.
+ *
+ */
+
+
+
+
+
+// Styles - extracted to module level for performance
+
+const tableStyle = {
+  width: '100%',
+  borderCollapse: 'collapse',
+  backgroundColor: colors.white,
+  border: `1px solid ${colors.borderLight}`,
+  borderRadius: borderRadius.md,
+  overflow: 'hidden'
+};
+const tableHeaderStyle = {
+  backgroundColor: colors.backgroundLighter,
+  borderBottom: `2px solid ${colors.borderLight}`
+};
+const tableHeaderCellStyle = {
+  padding: spacing.md,
+  textAlign: 'left',
+  fontWeight: fontWeight.semibold,
+  fontSize: fontSize.sm,
+  color: colors.text
+};
+const tableHeaderCellStyleWithBorder = {
+  ...tableHeaderCellStyle,
+  borderRight: `1px solid ${colors.borderLight}`
+};
+
+/**
+ * Provider Instances Container Component
+ *
+ * @param {Object}   props           Component props.
+ * @param {Array}    props.instances Array of instance objects.
+ * @param {Array}    props.providers Array of provider metadata.
+ * @param {Function} props.onToggle  Callback to toggle enabled state.
+ * @param {Function} props.onDelete  Callback to delete instance.
+ * @param {Function} props.onRename  Callback to rename instance.
+ * @param {Function} props.onSave    Callback to save config changes.
+ * @return {JSX.Element} Rendered component.
+ */
+function ProviderInstancesContainer({
+  instances,
+  providers,
+  onToggle,
+  onDelete,
+  onRename,
+  onSave
+}) {
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("table", {
+    className: "aether-provider-instances-table",
+    style: tableStyle,
+    children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("thead", {
+      style: tableHeaderStyle,
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("tr", {
+        children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("th", {
+          style: tableHeaderCellStyleWithBorder,
+          children: (0,external_wp_i18n_namespaceObject.__)('Enabled', 'aether-site-exporter')
+        }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("th", {
+          style: tableHeaderCellStyleWithBorder,
+          children: (0,external_wp_i18n_namespaceObject.__)('Instance Name', 'aether-site-exporter')
+        }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("th", {
+          style: tableHeaderCellStyleWithBorder,
+          children: (0,external_wp_i18n_namespaceObject.__)('Provider Type', 'aether-site-exporter')
+        }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("th", {
+          style: {
+            ...tableHeaderCellStyle,
+            textAlign: 'right'
+          },
+          children: (0,external_wp_i18n_namespaceObject.__)('Actions', 'aether-site-exporter')
+        })]
+      })
+    }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("tbody", {
+      children: instances.map(instance => {
+        const providerType = instance.config.provider_type || instance.instanceId.split(':')[0];
+        const fullProvider = providers.find(p => p.id === providerType);
+        return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(ProviderInstanceItem, {
+          instance: instance,
+          provider: {
+            id: fullProvider?.id || providerType,
+            metadata: {
+              name: fullProvider?.name || providerType,
+              description: fullProvider?.description || ''
+            },
+            settingsFields: (fullProvider?.settings_fields || []).map(field => ({
+              ...field,
+              id: field.id || field.name
+            }))
+          },
+          onToggle: enabled => onToggle(instance.instanceId, enabled),
+          onDelete: () => onDelete(instance.instanceId),
+          onRename: (instanceId, newName) => onRename(instanceId, newName),
+          onSave: (instanceId, updatedConfig) => onSave(instanceId, updatedConfig)
+        }, instance.instanceId);
+      })
+    })]
+  });
+}
+;// ./node_modules/uuid/dist/native.js
+const randomUUID = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
+/* harmony default export */ const dist_native = ({ randomUUID });
+
+;// ./node_modules/uuid/dist/rng.js
+let getRandomValues;
+const rnds8 = new Uint8Array(16);
+function rng() {
+    if (!getRandomValues) {
+        if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
+            throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
+        }
+        getRandomValues = crypto.getRandomValues.bind(crypto);
+    }
+    return getRandomValues(rnds8);
+}
+
+;// ./node_modules/uuid/dist/stringify.js
+
+const byteToHex = [];
+for (let i = 0; i < 256; ++i) {
+    byteToHex.push((i + 0x100).toString(16).slice(1));
+}
+function unsafeStringify(arr, offset = 0) {
+    return (byteToHex[arr[offset + 0]] +
+        byteToHex[arr[offset + 1]] +
+        byteToHex[arr[offset + 2]] +
+        byteToHex[arr[offset + 3]] +
+        '-' +
+        byteToHex[arr[offset + 4]] +
+        byteToHex[arr[offset + 5]] +
+        '-' +
+        byteToHex[arr[offset + 6]] +
+        byteToHex[arr[offset + 7]] +
+        '-' +
+        byteToHex[arr[offset + 8]] +
+        byteToHex[arr[offset + 9]] +
+        '-' +
+        byteToHex[arr[offset + 10]] +
+        byteToHex[arr[offset + 11]] +
+        byteToHex[arr[offset + 12]] +
+        byteToHex[arr[offset + 13]] +
+        byteToHex[arr[offset + 14]] +
+        byteToHex[arr[offset + 15]]).toLowerCase();
+}
+function stringify(arr, offset = 0) {
+    const uuid = unsafeStringify(arr, offset);
+    if (!validate(uuid)) {
+        throw TypeError('Stringified UUID is invalid');
+    }
+    return uuid;
+}
+/* harmony default export */ const dist_stringify = ((/* unused pure expression or super */ null && (stringify)));
+
+;// ./node_modules/uuid/dist/v4.js
+
+
+
+function _v4(options, buf, offset) {
+    options = options || {};
+    const rnds = options.random ?? options.rng?.() ?? rng();
+    if (rnds.length < 16) {
+        throw new Error('Random bytes length must be >= 16');
+    }
+    rnds[6] = (rnds[6] & 0x0f) | 0x40;
+    rnds[8] = (rnds[8] & 0x3f) | 0x80;
+    if (buf) {
+        offset = offset || 0;
+        if (offset < 0 || offset + 16 > buf.length) {
+            throw new RangeError(`UUID byte range ${offset}:${offset + 15} is out of buffer bounds`);
+        }
+        for (let i = 0; i < 16; ++i) {
+            buf[offset + i] = rnds[i];
+        }
+        return buf;
+    }
+    return unsafeStringify(rnds);
+}
+function v4(options, buf, offset) {
+    if (dist_native.randomUUID && !buf && !options) {
+        return dist_native.randomUUID();
+    }
+    return _v4(options, buf, offset);
+}
+/* harmony default export */ const dist_v4 = (v4);
+
+;// ./assets/src/components/ModalActions/index.js
+/**
+ * Modal Actions Component
+ *
+ * Reusable footer actions component for modals.
+ * Provides consistent button layout and spacing.
+ *
+ */
+
+
+
+
+// Styles - extracted to module level for performance
+
+const actionsContainerStyle = {
+  display: 'flex',
+  gap: spacing.sm,
+  justifyContent: 'flex-end',
+  marginTop: spacing.lg
+};
+
+/**
+ * ModalActions Component
+ *
+ * @param {Object}      props                Component props
+ * @param {Function}    props.onCancel       Cancel button handler
+ * @param {Function}    props.onSubmit       Submit button handler
+ * @param {string}      props.cancelLabel    Cancel button label
+ * @param {string}      props.submitLabel    Submit button label
+ * @param {boolean}     props.isSubmitting   Whether submit is in progress
+ * @param {boolean}     props.submitDisabled Whether submit button is disabled
+ * @param {string}      props.submitVariant  Submit button variant (primary, secondary, etc.)
+ * @param {JSX.Element} props.children       Optional additional action buttons
+ * @param {string}      props.className      Optional additional CSS class
+ * @return {JSX.Element} Rendered modal actions
+ */
+function ModalActions({
+  onCancel,
+  onSubmit,
+  cancelLabel = 'Cancel',
+  submitLabel = 'Submit',
+  isSubmitting = false,
+  submitDisabled = false,
+  submitVariant = 'primary',
+  children = null,
+  className = ''
+}) {
+  const containerClassName = `aether-modal-actions ${className}`.trim();
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+    className: containerClassName,
+    style: actionsContainerStyle,
+    children: [children, onCancel && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Button, {
+      className: "aether-modal-actions__cancel",
+      variant: "secondary",
+      onClick: onCancel,
+      disabled: isSubmitting,
+      children: cancelLabel
+    }), onSubmit && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Button, {
+      className: "aether-modal-actions__submit",
+      variant: submitVariant,
+      onClick: onSubmit,
+      isBusy: isSubmitting,
+      disabled: submitDisabled || isSubmitting,
+      children: submitLabel
+    })]
+  });
+}
+;// ./assets/src/components/AddProviderInstanceModal/index.js
+/**
+ * Add Provider Instance Modal Component
+ *
+ * Modal for creating a new provider instance.
+ * Shows provider type selector and instance name input.
+ *
+ */
+
+
+
+
+// eslint-disable-next-line import/no-unresolved
+
+
+
+
+
+// Styles - extracted to module level for performance
+
+const AddProviderInstanceModal_formStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: spacing.lg
+};
+
+/**
+ * Add Provider Instance Modal Component.
+ *
+ * @param {Object}   props                Component props.
+ * @param {boolean}  props.isOpen         Whether modal is open.
+ * @param {Function} props.onClose        Callback to close modal.
+ * @param {Array}    props.providers      Array of available provider types.
+ * @param {string}   props.deploymentType Optional deployment type to filter providers.
+ * @param {Function} props.onCreate       Callback to create instance (instanceId, providerType, instanceName).
+ * @return {JSX.Element|null} Rendered component.
+ */
+function AddProviderInstanceModal({
+  isOpen,
+  onClose,
+  providers,
+  deploymentType = null,
+  onCreate
+}) {
+  const [selectedProviderType, setSelectedProviderType] = (0,external_wp_element_namespaceObject.useState)('');
+  const [instanceName, setInstanceName] = (0,external_wp_element_namespaceObject.useState)('');
+  const [isCreating, setIsCreating] = (0,external_wp_element_namespaceObject.useState)(false);
+
+  // Reset form when modal closes
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    if (!isOpen) {
+      setSelectedProviderType('');
+      setInstanceName('');
+    }
+  }, [isOpen]);
+
+  // Auto-select provider if only one is available for the deployment type
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    if (isOpen && providers.length === 1 && !selectedProviderType) {
+      setSelectedProviderType(providers[0].id);
+    } else if (isOpen && providers.length > 1 && selectedProviderType) {
+      // Reset if providers change and we had a selection
+      const stillAvailable = providers.some(p => p.id === selectedProviderType);
+      if (!stillAvailable) {
+        setSelectedProviderType('');
+      }
+    }
+  }, [isOpen, providers, selectedProviderType]);
+  const handleCreate = async () => {
+    if (!selectedProviderType || !instanceName.trim()) {
+      return;
+    }
+
+    // Generate UUID client-side for instant feedback
+    const instanceId = `${selectedProviderType}:${dist_v4()}`;
+    setIsCreating(true);
+    try {
+      await onCreate(instanceId, selectedProviderType, instanceName.trim());
+      // Reset form and close
+      setSelectedProviderType('');
+      setInstanceName('');
+      onClose();
+    } catch (error) {
+      console.error('Failed to create instance:', error);
+      // eslint-disable-next-line no-alert
+      alert((0,external_wp_i18n_namespaceObject.__)('Failed to create instance. Please try again.', 'aether-site-exporter'));
+    } finally {
+      setIsCreating(false);
+    }
+  };
+  const handleClose = () => {
+    setSelectedProviderType('');
+    setInstanceName('');
+    onClose();
+  };
+  if (!isOpen) {
+    return null;
+  }
+  const selectedProvider = providers.find(p => p.id === selectedProviderType);
+
+  // Generate modal title based on deployment type
+  const modalTitle = deploymentType ? (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: deployment type label */
+  (0,external_wp_i18n_namespaceObject.__)('Add %s Provider', 'aether-site-exporter'), DEPLOYMENT_TYPE_LABELS[deploymentType] || deploymentType) : (0,external_wp_i18n_namespaceObject.__)('Add Provider Instance', 'aether-site-exporter');
+
+  // Always show provider selection if there are any providers
+  const showProviderSelection = providers.length > 0;
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Modal, {
+    className: "aether-add-provider-instance-modal",
+    title: modalTitle,
+    onRequestClose: handleClose,
+    size: "medium",
+    children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+      className: "aether-add-provider-instance-modal__form",
+      style: AddProviderInstanceModal_formStyle,
+      children: [showProviderSelection && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.SelectControl, {
+        className: "aether-add-provider-instance-modal__provider-select",
+        label: (0,external_wp_i18n_namespaceObject.__)('Provider Type', 'aether-site-exporter'),
+        value: selectedProviderType,
+        onChange: setSelectedProviderType,
+        options: [{
+          label: (0,external_wp_i18n_namespaceObject.__)('Select a provider…', 'aether-site-exporter'),
+          value: ''
+        }, ...providers.map(provider => ({
+          label: provider.name,
+          value: provider.id
+        }))],
+        help: selectedProvider ? selectedProvider.description : (0,external_wp_i18n_namespaceObject.__)('Choose which type of provider to create', 'aether-site-exporter')
+      }), selectedProviderType && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.TextControl, {
+        className: "aether-add-provider-instance-modal__instance-name",
+        label: (0,external_wp_i18n_namespaceObject.__)('Instance Name', 'aether-site-exporter'),
+        value: instanceName,
+        onChange: setInstanceName,
+        placeholder: (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: provider name */
+        (0,external_wp_i18n_namespaceObject.__)('e.g., "%s Production"', 'aether-site-exporter'), selectedProvider?.name || 'My'),
+        help: (0,external_wp_i18n_namespaceObject.__)('Choose a descriptive name for this instance', 'aether-site-exporter')
+      }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(ModalActions, {
+        onCancel: handleClose,
+        onSubmit: handleCreate,
+        cancelLabel: (0,external_wp_i18n_namespaceObject.__)('Cancel', 'aether-site-exporter'),
+        submitLabel: (0,external_wp_i18n_namespaceObject.__)('Create Instance', 'aether-site-exporter'),
+        isSubmitting: isCreating,
+        isSubmitDisabled: !selectedProviderType || !instanceName.trim() || isCreating,
+        className: "aether-add-provider-instance-modal__actions"
+      })]
+    })
+  });
+}
+;// ./assets/src/components/LoadingSpinner/index.js
+/**
+ * Loading Spinner Component
+ *
+ * Reusable loading indicator with optional message.
+ * Wraps WordPress Spinner component with consistent styling and layout.
+ *
+ */
+
+
+
+
+// Styles - extracted to module level for performance
+
+const containerStyle = {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: spacing.md,
+  padding: spacing.xl,
+  textAlign: 'center'
+};
+const messageStyle = {
+  fontSize: fontSize.base,
+  color: colors.textSecondary,
+  margin: 0
+};
+
+/**
+ * LoadingSpinner Component
+ *
+ * @param {Object} props           Component props
+ * @param {string} props.message   Optional loading message to display
+ * @param {string} props.className Optional additional CSS class
+ * @param {Object} props.style     Optional inline style overrides
+ * @return {JSX.Element} Rendered loading spinner
+ */
+function LoadingSpinner({
+  message = '',
+  className = '',
+  style = {}
+}) {
+  const containerClassName = `aether-loading-spinner ${className}`.trim();
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+    className: containerClassName,
+    style: {
+      ...containerStyle,
+      ...style
+    },
+    children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Spinner, {
+      className: "aether-loading-spinner__spinner"
+    }), message && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("p", {
+      className: "aether-loading-spinner__message",
+      style: messageStyle,
+      children: message
+    })]
+  });
+}
+;// ./assets/src/components/SectionHeader/index.js
+/**
+ * Section Header Component
+ *
+ * Reusable section header with title and optional description.
+ * Provides consistent styling across admin pages.
+ *
+ */
+
+
+
+// Styles - extracted to module level for performance
+
+const sectionHeaderStyle = {
+  ...commonStyles.sectionHeader,
+  backgroundColor: colors.white
+};
+const headerTitleStyle = {
+  margin: 0,
+  fontSize: '1.3em',
+  lineHeight: 1.4,
+  color: colors.text,
+  backgroundColor: colors.white
+};
+const headerDescriptionStyle = {
+  margin: '0.5rem 0 0',
+  color: colors.textMuted,
+  fontSize: fontSize.base
+};
+
+/**
+ * SectionHeader Component
+ *
+ * @param {Object}      props             Component props
+ * @param {string}      props.title       Section title
+ * @param {string}      props.description Optional section description
+ * @param {string}      props.className   Optional additional CSS class
+ * @param {JSX.Element} props.actions     Optional action buttons/elements to display in header
+ * @return {JSX.Element} Rendered section header
+ */
+function SectionHeader({
+  title,
+  description = '',
+  className = '',
+  actions = null
+}) {
+  const headerClassName = `aether-section-header ${className}`.trim();
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+    className: headerClassName,
+    style: sectionHeaderStyle,
+    children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+      className: "aether-section-header__content",
+      children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("h2", {
+        className: "aether-section-header__title",
+        style: headerTitleStyle,
+        children: title
+      }), description && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("p", {
+        className: "aether-section-header__description",
+        style: headerDescriptionStyle,
+        children: description
+      })]
+    }), actions && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: "aether-section-header__actions",
+      children: actions
+    })]
+  });
+}
+;// ./assets/src/services/ProviderSettingsAPI.js
+/**
+ * Provider Settings API Service
+ *
+ * Service class for managing provider settings via REST API.
+ * Extracted from useProviderSettings hook for testability.
+ *
+ */
+
+/**
+ * Merge provider configurations with preservation options
+ *
+ * Pure function for merging provider configs.
+ *
+ * @param {Object}  currentConfig           Current provider configuration
+ * @param {Object}  updatedConfig           Updated configuration
+ * @param {Object}  options                 Merge options
+ * @param {boolean} options.preserveEnabled Preserve existing enabled state
+ * @return {Object} Merged configuration
+ */
+function mergeProviderConfig(currentConfig, updatedConfig, options = {}) {
+  const {
+    preserveEnabled = false
+  } = options;
+
+  // Start with existing config to preserve all fields, then overlay updates
+  const mergedConfig = {
+    ...(currentConfig || {}),
+    ...(updatedConfig || {})
+  };
+
+  // Preserve enabled state if requested
+  if (preserveEnabled && currentConfig && 'enabled' in currentConfig) {
+    mergedConfig.enabled = currentConfig.enabled;
+  }
+  return mergedConfig;
+}
+
+/**
+ * Merge multiple provider updates
+ *
+ * Pure function for merging multiple provider config updates.
+ *
+ * @param {Object} currentProviders Current provider configurations
+ * @param {Object} updates          Object mapping provider IDs to their updated configs
+ * @return {Object} Updated provider configurations
+ */
+function mergeMultipleProviders(currentProviders, updates) {
+  if (!updates || typeof updates !== 'object') {
+    return currentProviders || {};
+  }
+  return {
+    ...(currentProviders || {}),
+    ...Object.entries(updates).reduce((acc, [providerId, config]) => {
+      acc[providerId] = {
+        ...(currentProviders?.[providerId] || {}),
+        ...(config || {})
+      };
+      return acc;
+    }, {})
+  };
+}
+
+/**
+ * Provider Settings API Service Class
+ *
+ * Handles all provider settings operations via REST API.
+ */
+class ProviderSettingsAPI {
+  /**
+   * Create API service instance
+   *
+   * @param {Function} apiFetch WordPress apiFetch function (injectable for testing)
+   */
+  constructor(apiFetch) {
+    this.apiFetch = apiFetch;
+  }
+
+  /**
+   * Fetch all provider settings
+   *
+   * @return {Promise<Object>} Provider configurations object
+   */
+  async fetchAll() {
+    const response = await this.apiFetch({
+      path: '/aether/site-exporter/settings?key=providers'
+    });
+    if (!response.success) {
+      throw new Error('Failed to load provider settings');
+    }
+    return response.value || {};
+  }
+
+  /**
+   * Save provider settings
+   *
+   * @param {Object} providers Provider configurations to save
+   * @return {Promise<Object>} Saved provider configurations
+   */
+  async save(providers) {
+    const response = await this.apiFetch({
+      path: '/aether/site-exporter/settings',
+      method: 'POST',
+      data: {
+        key: 'providers',
+        value: providers
+      }
+    });
+    if (!response.success) {
+      throw new Error('Failed to save provider settings');
+    }
+    return providers;
+  }
+
+  /**
+   * Update a single provider's configuration
+   *
+   * @param {string} providerId    Provider ID
+   * @param {Object} updatedConfig Updated configuration
+   * @param {Object} options       Merge options
+   * @return {Promise<Object>} Updated provider configurations
+   */
+  async update(providerId, updatedConfig, options = {}) {
+    // Fetch current settings
+    const currentProviders = await this.fetchAll();
+    const currentConfig = currentProviders[providerId] || {};
+
+    // Merge configurations using pure function
+    const mergedConfig = mergeProviderConfig(currentConfig, updatedConfig, options);
+
+    // Build updated providers object
+    const updatedProviders = {
+      ...currentProviders,
+      [providerId]: mergedConfig
+    };
+
+    // Save to API
+    return await this.save(updatedProviders);
+  }
+
+  /**
+   * Update multiple providers at once
+   *
+   * @param {Object} updates Object mapping provider IDs to their updated configs
+   * @return {Promise<Object>} Updated provider configurations
+   */
+  async updateMultiple(updates) {
+    // Fetch current settings
+    const currentProviders = await this.fetchAll();
+
+    // Merge all updates using pure function
+    const updatedProviders = mergeMultipleProviders(currentProviders, updates);
+
+    // Save to API
+    return await this.save(updatedProviders);
+  }
+
+  /**
+   * Toggle provider enabled state
+   *
+   * @param {string}  providerId       Provider ID
+   * @param {boolean} enabled          New enabled state
+   * @param {Object}  currentProviders Optional current provider state from frontend (prevents race conditions)
+   * @return {Promise<Object>} Updated provider configurations
+   */
+  async toggleEnabled(providerId, enabled, currentProviders = null) {
+    if (currentProviders) {
+      // Use provided state instead of fetching (prevents race conditions)
+      const updatedProviders = {
+        ...currentProviders,
+        [providerId]: {
+          ...currentProviders[providerId],
+          enabled
+        }
+      };
+      return await this.save(updatedProviders);
+    }
+    // Fallback to original behavior if no state provided
+    return await this.update(providerId, {
+      enabled
+    });
+  }
+
+  /**
+   * Create a new provider instance
+   *
+   * @param {string} instanceId   Client-generated instance ID (provider_type:uuid)
+   * @param {string} providerType Provider type (e.g., 'local-filesystem')
+   * @param {string} instanceName User-friendly instance name
+   * @return {Promise<Object>} Created instance info
+   */
+  async createInstance(instanceId, providerType, instanceName) {
+    const response = await this.apiFetch({
+      path: `/aether/site-exporter/providers/${providerType}/instances`,
+      method: 'POST',
+      data: {
+        instance_id: instanceId,
+        instance_name: instanceName
+      }
+    });
+    if (!response.success) {
+      throw new Error('Failed to create provider instance');
+    }
+    return response;
+  }
+
+  /**
+   * Rename a provider instance
+   *
+   * @param {string} instanceId   Instance ID
+   * @param {string} instanceName New instance name
+   * @return {Promise<Object>} Updated provider configurations
+   */
+  async renameInstance(instanceId, instanceName) {
+    return await this.update(instanceId, {
+      instance_name: instanceName
+    });
+  }
+
+  /**
+   * Delete a provider instance
+   *
+   * @param {string} instanceId Instance ID
+   * @return {Promise<Object>} Updated provider configurations
+   */
+  async deleteInstance(instanceId) {
+    // Delete via REST API
+    await this.apiFetch({
+      path: `/aether/site-exporter/providers/${instanceId}/config`,
+      method: 'DELETE'
+    });
+
+    // Fetch and return updated settings
+    return await this.fetchAll();
+  }
+}
+;// ./assets/src/hooks/useProviderSettings.js
+/**
+ * Provider Settings Hook
+ *
+ * Centralized hook for fetching and updating provider settings.
+ * Eliminates duplicate code across components that manage provider configurations.
+ *
+ * Uses ProviderSettingsAPI service for all business logic.
+ * Hook provides React state management (loading/error) around service calls.
+ *
+ */
+
+
+
+
+
+/**
+ * Custom hook for managing provider settings
+ *
+ * @return {Object} Settings management functions and state
+ */
+function useProviderSettings() {
+  const [loading, setLoading] = (0,external_wp_element_namespaceObject.useState)(false);
+  const [error, setError] = (0,external_wp_element_namespaceObject.useState)(null);
+
+  // Create service instance with apiFetch (memoized to prevent recreation)
+  const api = (0,external_wp_element_namespaceObject.useMemo)(() => new ProviderSettingsAPI((external_wp_apiFetch_default())), []);
+
+  // Request queue to serialize API calls and prevent race conditions
+  const requestQueue = (0,external_wp_element_namespaceObject.useRef)(Promise.resolve());
+
+  /**
+   * Fetch all provider settings
+   *
+   * @return {Promise<Object>} Provider configurations object
+   */
+  const fetchProviderSettings = (0,external_wp_element_namespaceObject.useCallback)(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const providers = await api.fetchAll();
+      setLoading(false);
+      return providers;
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      throw err;
+    }
+  }, [api]);
+
+  /**
+   * Update a single provider's configuration
+   *
+   * @param {string}  providerId              Provider ID
+   * @param {Object}  updatedConfig           Updated configuration for the provider
+   * @param {Object}  options                 Options
+   * @param {boolean} options.preserveEnabled Preserve existing enabled state (default: false)
+   * @return {Promise<Object>} Updated provider configurations
+   */
+  const updateProviderConfig = (0,external_wp_element_namespaceObject.useCallback)(async (providerId, updatedConfig, options = {}) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedProviders = await api.update(providerId, updatedConfig, options);
+      setLoading(false);
+      return updatedProviders;
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      throw err;
+    }
+  }, [api]);
+
+  /**
+   * Update multiple providers at once
+   *
+   * @param {Object} updates Object mapping provider IDs to their updated configs
+   * @return {Promise<Object>} Updated provider configurations
+   */
+  const updateMultipleProviders = (0,external_wp_element_namespaceObject.useCallback)(async updates => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedProviders = await api.updateMultiple(updates);
+      setLoading(false);
+      return updatedProviders;
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      throw err;
+    }
+  }, [api]);
+
+  /**
+   * Toggle provider enabled state
+   *
+   * @param {string}  providerId       Provider ID (can be instance ID)
+   * @param {boolean} enabled          New enabled state
+   * @param {Object}  currentProviders Optional current provider state from frontend (prevents race conditions)
+   * @return {Promise<Object>} Updated provider configurations
+   */
+  const toggleProviderEnabled = (0,external_wp_element_namespaceObject.useCallback)(async (providerId, enabled, currentProviders = null) => {
+    // Queue the request to prevent concurrent calls
+    requestQueue.current = requestQueue.current.then(async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const updatedProviders = await api.toggleEnabled(providerId, enabled, currentProviders // Pass current state
+        );
+        setLoading(false);
+        return updatedProviders;
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+        throw err;
+      }
+    });
+    return requestQueue.current;
+  }, [api]);
+
+  /**
+   * Create a new provider instance
+   *
+   * @param {string} instanceId   Client-generated instance ID (provider_type:uuid)
+   * @param {string} providerType Provider type (e.g., 'local-filesystem')
+   * @param {string} instanceName User-friendly instance name
+   * @return {Promise<Object>} Created instance info
+   */
+  const createProviderInstance = (0,external_wp_element_namespaceObject.useCallback)(async (instanceId, providerType, instanceName) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.createInstance(instanceId, providerType, instanceName);
+      setLoading(false);
+      return response;
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      throw err;
+    }
+  }, [api]);
+
+  /**
+   * Rename a provider instance
+   *
+   * @param {string} instanceId   Instance ID
+   * @param {string} instanceName New instance name
+   * @return {Promise<Object>} Updated provider configurations
+   */
+  const renameProviderInstance = (0,external_wp_element_namespaceObject.useCallback)(async (instanceId, instanceName) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedProviders = await api.renameInstance(instanceId, instanceName);
+      setLoading(false);
+      return updatedProviders;
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      throw err;
+    }
+  }, [api]);
+
+  /**
+   * Delete a provider instance
+   *
+   * @param {string} instanceId Instance ID
+   * @return {Promise<Object>} Updated provider configurations
+   */
+  const deleteProviderInstance = (0,external_wp_element_namespaceObject.useCallback)(async instanceId => {
+    setLoading(true);
+    setError(null);
+    try {
+      const updatedProviders = await api.deleteInstance(instanceId);
+      setLoading(false);
+      return updatedProviders;
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+      throw err;
+    }
+  }, [api]);
+  return {
+    loading,
+    error,
+    fetchProviderSettings,
+    updateProviderConfig,
+    updateMultipleProviders,
+    toggleProviderEnabled,
+    createProviderInstance,
+    renameProviderInstance,
+    deleteProviderInstance
+  };
+}
+;// ./assets/src/admin-settings/ProviderSettings.js
+/**
+ * Provider Settings Component (Instance-Based)
+ *
+ * Displays provider types with their instances grouped together.
+ * Each provider type section can have multiple named instances.
+ *
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Styles - extracted to module level for performance
+
+const emptyStateStyle = {
+  padding: spacing.xl,
+  textAlign: 'center',
+  color: colors.textSecondary,
+  fontSize: '0.875rem',
+  border: `1px dashed ${colors.borderLight}`,
+  borderRadius: '8px'
+};
+
+/**
+ * Provider Settings Component.
+ *
+ * @param {Object}   props                 Component props.
+ * @param {Object}   props.providerConfigs Provider configurations from parent.
+ * @param {Function} props.onConfigsUpdate Callback to update parent configs.
+ * @param {Function} props.onNotice        Callback to show notices.
+ * @return {JSX.Element} Rendered component.
+ */
+function ProviderSettings({
+  providerConfigs = {},
+  onConfigsUpdate,
+  onNotice
+}) {
+  const [providers, setProviders] = (0,external_wp_element_namespaceObject.useState)([]);
+  const [selectedDeploymentType, setSelectedDeploymentType] = (0,external_wp_element_namespaceObject.useState)(null);
+
+  // Local state for optimistic updates
+  const [localConfigs, setLocalConfigs] = (0,external_wp_element_namespaceObject.useState)(providerConfigs);
+
+  // Sync local state when parent prop changes
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    setLocalConfigs(providerConfigs);
+  }, [providerConfigs]);
+  const configs = localConfigs;
+
+  // Initialize provider settings hook
+  const {
+    toggleProviderEnabled,
+    createProviderInstance,
+    deleteProviderInstance,
+    renameProviderInstance
+  } = useProviderSettings();
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    // Get providers from JavaScript registry
+    const loadProviders = () => {
+      // eslint-disable-next-line no-console
+      console.log('ProviderSettings: Loading providers...');
+      try {
+        // Get provider metadata from JavaScript registry
+        const allProviders = registry_ProviderRegistry.getAll();
+        // eslint-disable-next-line no-console
+        console.log('ProviderSettings: Found', allProviders.length, 'providers from registry');
+
+        // If no providers, wait a bit for them to register
+        if (allProviders.length === 0) {
+          // eslint-disable-next-line no-console
+          console.log('ProviderSettings: No providers yet, waiting...');
+          let attempts = 0;
+          const maxAttempts = 20;
+          const interval = setInterval(() => {
+            attempts++;
+            const foundProviders = registry_ProviderRegistry.getAll();
+            // eslint-disable-next-line no-console
+            console.log('ProviderSettings: Attempt', attempts, '- Found', foundProviders.length, 'providers');
+            if (foundProviders.length > 0 || attempts >= maxAttempts) {
+              clearInterval(interval);
+              if (foundProviders.length > 0) {
+                processProviders(foundProviders);
+              } else {
+                // eslint-disable-next-line no-console
+                console.warn('ProviderSettings: No providers found after waiting');
+                setProviders([]);
+              }
+            }
+          }, 100);
+          return;
+        }
+        processProviders(allProviders);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('ProviderSettings: Failed to load providers:', error);
+      }
+    };
+    const processProviders = allProviders => {
+      // eslint-disable-next-line no-console
+      console.log('ProviderSettings: Processing', allProviders.length, 'providers');
+      const providerMetadata = allProviders.map(provider => ({
+        id: provider.getId(),
+        name: provider.getName(),
+        description: provider.getDescription?.() || '',
+        type: provider.getType?.() || 'generic',
+        settings_fields: provider.getProviderSpecificConfigFields?.() || []
+      }));
+
+      // eslint-disable-next-line no-console
+      console.log('ProviderSettings: Processed providers:', providerMetadata.map(p => p.id));
+      setProviders(providerMetadata);
+    };
+    loadProviders();
+
+    // Configs are now managed by parent component
+    // If parent hasn't loaded them yet, trigger initial load
+    if (onConfigsUpdate && Object.keys(configs).length === 0) {
+      external_wp_apiFetch_default()({
+        path: '/aether/site-exporter/settings?key=providers'
+      }).then(configsResponse => {
+        if (configsResponse.success && configsResponse.value) {
+          onConfigsUpdate(configsResponse.value);
+        }
+      }).catch(error => {
+        console.error('Failed to load provider configurations:', error);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onConfigsUpdate, configs]);
+
+  // Group providers by deployment type
+  const providersByDeploymentType = (0,external_wp_element_namespaceObject.useMemo)(() => {
+    const allProviderInstances = registry_ProviderRegistry.getAll();
+    const grouped = {};
+    allProviderInstances.forEach(provider => {
+      const supportedTypes = provider.getSupportedDeploymentTypes?.() || [];
+      supportedTypes.forEach(deploymentType => {
+        if (!grouped[deploymentType]) {
+          grouped[deploymentType] = [];
+        }
+        // Add provider metadata (matching the structure in providers state)
+        const providerMetadata = providers.find(p => p.id === provider.getId());
+        if (providerMetadata) {
+          grouped[deploymentType].push(providerMetadata);
+        }
+      });
+    });
+    return grouped;
+  }, [providers]);
+
+  // Get unique deployment types that have at least one provider
+  const availableDeploymentTypes = (0,external_wp_element_namespaceObject.useMemo)(() => {
+    return Object.keys(providersByDeploymentType).filter(type => providersByDeploymentType[type].length > 0);
+  }, [providersByDeploymentType]);
+
+  // Create flat list of all instances with provider metadata
+  // Filter out instances whose provider type is not registered (e.g., removed providers)
+  const allInstances = (0,external_wp_element_namespaceObject.useMemo)(() => Object.entries(configs).map(([instanceId, config]) => {
+    const providerType = config.provider_type || instanceId.split(':')[0];
+    const provider = providers.find(p => p.id === providerType);
+
+    // Skip instances whose provider type is not registered
+    if (!provider) {
+      return null;
+    }
+    return {
+      instanceId,
+      config,
+      provider
+    };
+  }).filter(instance => instance !== null), [configs, providers]);
+  const handleCreateInstanceConfirm = (0,external_wp_element_namespaceObject.useCallback)(async (instanceId, providerType, instanceName) => {
+    // Optimistically add the new instance to local state
+    const newInstance = {
+      provider_type: providerType,
+      instance_name: instanceName,
+      enabled: false
+    };
+    const optimisticConfigs = {
+      ...localConfigs,
+      [instanceId]: newInstance
+    };
+    setLocalConfigs(optimisticConfigs);
+    try {
+      // Create instance in backend
+      await createProviderInstance(instanceId, providerType, instanceName);
+
+      // Update parent state (persists the optimistic update)
+      if (onConfigsUpdate) {
+        onConfigsUpdate(optimisticConfigs);
+      }
+    } catch (error) {
+      console.error('Failed to create instance:', error);
+
+      // Rollback optimistic update on error
+      setLocalConfigs(localConfigs);
+
+      // Re-throw to show error in modal
+      throw error;
+    }
+  }, [createProviderInstance, onConfigsUpdate, localConfigs]);
+  const handleToggleInstance = (0,external_wp_element_namespaceObject.useCallback)(async (instanceId, enabled) => {
+    // Store previous state for rollback using functional update
+    let previousConfigs;
+    setLocalConfigs(prevConfigs => {
+      previousConfigs = prevConfigs;
+      // Optimistic update: update local state immediately before API call
+      return {
+        ...prevConfigs,
+        [instanceId]: {
+          ...prevConfigs[instanceId],
+          enabled
+        }
+      };
+    });
+    try {
+      // Pass current state to API to prevent race conditions
+      const updatedProviders = await toggleProviderEnabled(instanceId, enabled, previousConfigs);
+
+      // Update with API response (which should match our optimistic update)
+      setLocalConfigs(updatedProviders);
+
+      // Update parent configs state
+      if (onConfigsUpdate) {
+        onConfigsUpdate(updatedProviders);
+      }
+    } catch (error) {
+      console.error('Failed to toggle instance:', error);
+
+      // Rollback optimistic update on error
+      setLocalConfigs(previousConfigs);
+
+      // Show error notification
+      if (onNotice) {
+        onNotice(`Failed to toggle instance: ${error.message || 'Unknown error'}`, 'error');
+      }
+    }
+  }, [toggleProviderEnabled, onConfigsUpdate, onNotice]);
+  const handleDeleteInstance = (0,external_wp_element_namespaceObject.useCallback)(async instanceId => {
+    // Store previous state for rollback using functional update
+    let previousConfigs;
+    setLocalConfigs(prevConfigs => {
+      previousConfigs = prevConfigs;
+      // Optimistically remove from local state
+      const {
+        [instanceId]: removed,
+        ...remainingConfigs
+      } = prevConfigs;
+      return remainingConfigs;
+    });
+    try {
+      // Delete from backend
+      const updatedProviders = await deleteProviderInstance(instanceId);
+
+      // Merge API response with remaining configs to preserve all instances
+      // This ensures no instances are lost if API response is incomplete
+      setLocalConfigs(prevConfigs => {
+        const mergedConfigs = {
+          ...prevConfigs,
+          ...updatedProviders
+        };
+
+        // Update parent state with merged result
+        if (onConfigsUpdate) {
+          onConfigsUpdate(mergedConfigs);
+        }
+        return mergedConfigs;
+      });
+    } catch (error) {
+      console.error('Failed to delete instance:', error);
+
+      // Rollback optimistic update on error
+      setLocalConfigs(previousConfigs);
+
+      // Show error notification
+      if (onNotice) {
+        onNotice(`Failed to delete instance: ${error.message || 'Unknown error'}`, 'error');
+      }
+    }
+  }, [deleteProviderInstance, onConfigsUpdate, onNotice]);
+  const handleRenameInstance = (0,external_wp_element_namespaceObject.useCallback)(async (instanceId, newName) => {
+    // Store previous state for rollback using functional update
+    let previousConfigs;
+    setLocalConfigs(prevConfigs => {
+      previousConfigs = prevConfigs;
+      // Optimistic update: update local state immediately before API call
+      return {
+        ...prevConfigs,
+        [instanceId]: {
+          ...prevConfigs[instanceId],
+          instance_name: newName
+        }
+      };
+    });
+    try {
+      const updatedProviders = await renameProviderInstance(instanceId, newName);
+
+      // Merge API response with current local state to preserve all instances
+      // This ensures no instances are lost if API response is incomplete
+      setLocalConfigs(prevConfigs => {
+        const mergedConfigs = {
+          ...prevConfigs,
+          ...updatedProviders
+        };
+
+        // Update parent configs state with merged result
+        if (onConfigsUpdate) {
+          onConfigsUpdate(mergedConfigs);
+        }
+        return mergedConfigs;
+      });
+    } catch (error) {
+      console.error('Failed to rename instance:', error);
+
+      // Rollback optimistic update on error
+      setLocalConfigs(previousConfigs);
+
+      // Re-throw to show error in UI
+      throw error;
+    }
+  }, [renameProviderInstance, onConfigsUpdate]);
+  const handleConfigSave = (0,external_wp_element_namespaceObject.useCallback)(async (instanceId, updatedConfig) => {
+    // Merge with existing config to preserve fields not in the form (like 'enabled')
+    const mergedConfig = {
+      ...(localConfigs[instanceId] || {}),
+      ...updatedConfig
+    };
+
+    // Update local state immediately for reactivity (optimistic update)
+    const updatedConfigs = {
+      ...localConfigs,
+      [instanceId]: mergedConfig
+    };
+    setLocalConfigs(updatedConfigs);
+    try {
+      // Save to API
+      const saveResponse = await external_wp_apiFetch_default()({
+        path: '/aether/site-exporter/settings',
+        method: 'POST',
+        data: {
+          key: 'providers',
+          value: updatedConfigs
+        }
+      });
+      if (!saveResponse.success) {
+        throw new Error(saveResponse.message || 'Failed to save settings');
+      }
+
+      // Update parent state after successful save
+      if (onConfigsUpdate) {
+        onConfigsUpdate(updatedConfigs);
+      }
+    } catch (error) {
+      // Rollback optimistic update on error
+      setLocalConfigs(localConfigs);
+
+      // Show error notification
+      if (onNotice) {
+        onNotice(`Failed to save settings: ${error.message || 'Unknown error'}`, 'error');
+      }
+
+      // Re-throw so child component can show error
+      throw error;
+    }
+  }, [localConfigs, onConfigsUpdate, onNotice]);
+  if (providers.length === 0) {
+    return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: "aether-provider-settings aether-provider-settings--loading",
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(LoadingSpinner, {})
+    });
+  }
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+    className: "aether-provider-settings",
+    children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(SectionHeader, {
+      title: (0,external_wp_i18n_namespaceObject.__)('Provider Instances', 'aether-site-exporter'),
+      description: (0,external_wp_i18n_namespaceObject.__)('Create and manage multiple instances of each provider type. Each instance can have its own configuration and deployment settings.', 'aether-site-exporter'),
+      className: "aether-provider-settings__header",
+      actions: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.ButtonGroup, {
+        children: availableDeploymentTypes.map(deploymentType => /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Button, {
+          className: "aether-provider-settings__add-button",
+          variant: "tertiary",
+          onClick: () => setSelectedDeploymentType(deploymentType),
+          children: (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: deployment type label */
+          (0,external_wp_i18n_namespaceObject.__)('Add %s Provider', 'aether-site-exporter'), DEPLOYMENT_TYPE_LABELS[deploymentType] || deploymentType)
+        }, deploymentType))
+      })
+    }), allInstances.length > 0 ? /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(ProviderInstancesContainer, {
+      instances: allInstances,
+      providers: providers,
+      onToggle: handleToggleInstance,
+      onDelete: handleDeleteInstance,
+      onRename: handleRenameInstance,
+      onSave: handleConfigSave
+    }) : /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+      className: "aether-provider-settings__empty-state",
+      style: emptyStateStyle,
+      children: (0,external_wp_i18n_namespaceObject.__)('No provider instances configured. Use the buttons above to create one.', 'aether-site-exporter')
+    }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(AddProviderInstanceModal, {
+      isOpen: selectedDeploymentType !== null,
+      onClose: () => setSelectedDeploymentType(null),
+      providers: selectedDeploymentType ? providersByDeploymentType[selectedDeploymentType] || [] : providers,
+      deploymentType: selectedDeploymentType,
+      onCreate: handleCreateInstanceConfirm
+    })]
+  });
+}
+;// ./assets/src/admin-settings/AdminSettings.js
+/**
+ * Admin Settings Main Component
+ *
+ * Main admin settings page container.
+ *
+ */
+
+
+
+
+
+
+
+
+
+
+function AdminSettings() {
+  const [isExportModalOpen, setIsExportModalOpen] = (0,external_wp_element_namespaceObject.useState)(false);
+  const [providerConfigs, setProviderConfigs] = (0,external_wp_element_namespaceObject.useState)({});
+  const [notices, setNotices] = (0,external_wp_element_namespaceObject.useState)([]);
+
+  // Add notice helper
+  const addNotice = (0,external_wp_element_namespaceObject.useCallback)((message, status = 'error') => {
+    const id = Date.now();
+    setNotices(prev => [...prev, {
+      id,
+      message,
+      status,
+      isDismissible: true
+    }]);
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      setNotices(prev => prev.filter(n => n.id !== id));
+    }, 5000);
+  }, []);
+
+  // Remove notice helper
+  const removeNotice = (0,external_wp_element_namespaceObject.useCallback)(id => {
+    setNotices(prev => prev.filter(n => n.id !== id));
+  }, []);
+
+  // Load provider configs on mount
+  (0,external_wp_element_namespaceObject.useEffect)(() => {
+    const loadConfigs = async () => {
+      try {
+        const configsResponse = await (0,utils_api/* default */.Ay)({
+          path: '/aether/site-exporter/settings?key=providers'
+        });
+        if (configsResponse.success && configsResponse.value) {
+          setProviderConfigs(configsResponse.value);
+        }
+      } catch (err) {
+        console.error('Failed to load provider configs:', err);
+      }
+    };
+    loadConfigs();
+  }, []);
+
+  // Callback to update configs when a provider is toggled or configured
+  const handleConfigsUpdate = (0,external_wp_element_namespaceObject.useCallback)(updatedConfigs => {
+    setProviderConfigs(updatedConfigs);
+  }, []);
+  const containerStyle = {
+    padding: '1.25rem',
+    maxWidth: '100%'
+  };
+  const headerStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xl,
+    gap: spacing.md
+  };
+  const headingStyle = {
+    margin: 0,
+    fontSize: '1.75rem',
+    fontWeight: fontWeight.semibold,
+    color: colors.text,
+    flex: 1
+  };
+  const sectionsStyle = {
+    ...createFlexStyle('column', spacing.lg)
+  };
+  return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+    className: "aether-admin-settings",
+    style: containerStyle,
+    children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+      className: "aether-admin-settings__header",
+      style: headerStyle,
+      children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("h1", {
+        className: "aether-admin-settings__heading",
+        style: headingStyle,
+        children: (0,external_wp_i18n_namespaceObject.__)('Aether Site Exporter Settings', 'aether-site-exporter')
+      }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(external_wp_components_namespaceObject.Button, {
+        className: "aether-admin-settings__export-button",
+        variant: "primary",
+        onClick: () => setIsExportModalOpen(true),
+        children: (0,external_wp_i18n_namespaceObject.__)('Export Site', 'aether-site-exporter')
+      })]
+    }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+      className: "aether-admin-settings__sections",
+      style: sectionsStyle,
+      children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(StatusNotice, {
+        status: "info",
+        message: (0,external_wp_i18n_namespaceObject.__)('Aether Site Exporter allows you to export your WordPress site as a complete package.', 'aether-site-exporter'),
+        isDismissible: false,
+        className: "aether-admin-settings__notice"
+      }), notices.map(notice => /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(StatusNotice, {
+        status: notice.status,
+        message: notice.message,
+        isDismissible: notice.isDismissible,
+        onRemove: () => removeNotice(notice.id),
+        className: "aether-admin-settings__notice"
+      }, notice.id)), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(ProviderSettings, {
+        providerConfigs: providerConfigs,
+        onConfigsUpdate: handleConfigsUpdate,
+        onNotice: addNotice
+      })]
+    }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(ExportProgressModal, {
+      isOpen: isExportModalOpen,
+      onClose: () => setIsExportModalOpen(false)
+    })]
+  });
+}
+;// ./assets/src/components/ErrorBoundary/index.js
+/**
+ * Error Boundary Component
+ *
+ * Catches errors in React component tree and displays a fallback UI
+ * instead of crashing the entire application.
+ *
+ */
+
+
+
+
+
+
+/**
+ * Error Boundary component
+ */
+
+class ErrorBoundary extends external_wp_element_namespaceObject.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null
+    };
+  }
+  static getDerivedStateFromError(error) {
+    // Update state so the next render will show the fallback UI
+    return {
+      hasError: true,
+      error
+    };
+  }
+  componentDidCatch(error, errorInfo) {
+    // Log error details for debugging
+    (0,admin_settings_debug/* debugError */.AO)('Error caught by ErrorBoundary:', {
+      error,
+      errorInfo
+    });
+    this.setState({
+      error,
+      errorInfo
+    });
+
+    // Optionally send to error reporting service
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo);
+    }
+  }
+  resetError = () => {
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null
+    });
+    if (this.props.onReset) {
+      this.props.onReset();
+    }
+  };
+  render() {
+    if (this.state.hasError) {
+      // Custom fallback UI if provided
+      if (this.props.fallback) {
+        return this.props.fallback({
+          error: this.state.error,
+          errorInfo: this.state.errorInfo,
+          resetError: this.resetError
+        });
+      }
+
+      // Default fallback UI
+      const containerStyle = {
+        padding: spacing.lg
+      };
+      const noticeStyle = {
+        ...noticeStyles.error,
+        padding: spacing.md + ' ' + spacing.lg,
+        margin: spacing.lg + ' 0'
+      };
+      const headingStyle = {
+        margin: '0 0 ' + spacing.sm,
+        fontSize: fontSize.xl,
+        fontWeight: fontWeight.semibold,
+        color: colors.text
+      };
+      const paragraphStyle = {
+        margin: '0 0 ' + spacing.sm,
+        color: colors.text
+      };
+      return /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("div", {
+        className: "aether-error-boundary",
+        style: containerStyle,
+        children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("div", {
+          className: "aether-error-boundary__notice",
+          style: noticeStyle,
+          children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("h2", {
+            className: "aether-error-boundary__heading",
+            style: headingStyle,
+            children: (0,external_wp_i18n_namespaceObject.__)('Something went wrong', 'aether-site-exporter')
+          }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("p", {
+            className: "aether-error-boundary__message",
+            style: paragraphStyle,
+            children: (0,external_wp_i18n_namespaceObject.__)('An unexpected error occurred. Please try refreshing the page.', 'aether')
+          }), this.state.error && /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("details", {
+            className: "aether-error-boundary__details",
+            style: {
+              marginTop: spacing.lg
+            },
+            children: [/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("summary", {
+              className: "aether-error-boundary__summary",
+              children: (0,external_wp_i18n_namespaceObject.__)('Error details', 'aether-site-exporter')
+            }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsxs)("pre", {
+              className: "aether-error-boundary__error-text",
+              style: {
+                marginTop: spacing.lg,
+                padding: spacing.lg,
+                background: colors.backgroundLighter,
+                overflow: 'auto',
+                fontSize: fontSize.sm
+              },
+              children: [this.state.error.toString(), this.state.errorInfo && this.state.errorInfo.componentStack]
+            })]
+          }), /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)("button", {
+            type: "button",
+            className: "aether-error-boundary__retry-button",
+            onClick: this.resetError,
+            style: {
+              marginTop: spacing.lg,
+              padding: spacing.sm + ' ' + spacing.lg,
+              background: colors.primary,
+              color: colors.white,
+              border: `1px solid ${colors.primary}`,
+              borderRadius: borderRadius.sm,
+              cursor: 'pointer',
+              fontSize: fontSize.sm,
+              fontWeight: fontWeight.normal,
+              lineHeight: 1.5
+            },
+            children: (0,external_wp_i18n_namespaceObject.__)('Try again', 'aether-site-exporter')
+          })]
+        })
+      });
+    }
+    return this.props.children;
+  }
+}
+/* harmony default export */ const components_ErrorBoundary = (ErrorBoundary);
+;// ./assets/src/utils/errorHandler.js
+/**
+ * Global Error Handler
+ *
+ * Handles unhandled promise rejections and runtime errors globally.
+ *
+ */
+
+
+
+/**
+ * Initialize global error handlers
+ */
+function initializeErrorHandlers() {
+  // Handle unhandled promise rejections
+  window.addEventListener('unhandledrejection', event => {
+    (0,admin_settings_debug/* debugError */.AO)('Unhandled promise rejection:', {
+      reason: event.reason,
+      promise: event.promise
+    });
+
+    // Prevent default browser behavior (console error)
+    event.preventDefault();
+
+    // Show user-friendly error notification
+    showErrorNotification('An unexpected error occurred. Please try again or refresh the page.');
+  });
+
+  // Handle uncaught errors
+  window.addEventListener('error', event => {
+    (0,admin_settings_debug/* debugError */.AO)('Uncaught error:', {
+      message: event.message,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+      error: event.error
+    });
+
+    // Don't prevent default for syntax errors - let them show in console
+    if (event.error && event.error.stack) {
+      event.preventDefault();
+      showErrorNotification('An unexpected error occurred. Please refresh the page.');
+    }
+  });
+}
+
+/**
+ * Show error notification to user
+ *
+ * @param {string} message Error message to display
+ */
+function showErrorNotification(message) {
+  // Use WordPress notices if available
+  if (window.wp && window.wp.data && window.wp.data.dispatch) {
+    // Store dispatch result in a variable first to safely check it
+    const noticesDispatch = window.wp.data.dispatch('core/notices');
+
+    // Check if result is a valid object before destructuring
+    if (noticesDispatch && typeof noticesDispatch === 'object') {
+      const {
+        createErrorNotice
+      } = noticesDispatch;
+      if (createErrorNotice && typeof createErrorNotice === 'function') {
+        createErrorNotice(message, {
+          id: 'aether-global-error',
+          isDismissible: true
+        });
+        return;
+      }
+    }
+  }
+
+  // Fallback to console error
+  console.error(message);
+}
+;// ./assets/src/admin-settings/index.js
+/**
+ * Admin Settings Entry Point
+ *
+ * Loads providers via dynamic imports and renders the AdminSettings component.
+ * Providers are imported directly here rather than via PHP-enqueued scripts
+ * to ensure they register before the component queries the provider registry.
+ *
+ */
+
+// Set webpack publicPath before any imports (for asset loading)
+// Note: Webpack is configured to never create chunks - all code is bundled into single files
+// eslint-disable-next-line camelcase, no-undef
+if (true) {
+  if (typeof window !== 'undefined' && window.aetherData && window.aetherData.pluginUrl) {
+    const pluginUrl = window.aetherData.pluginUrl;
+    // Ensure plugin URL ends with slash
+    const publicPath = pluginUrl.endsWith('/') ? pluginUrl + 'assets/build/' : pluginUrl + '/assets/build/';
+    // eslint-disable-next-line camelcase, no-undef
+    __webpack_require__.p = publicPath;
+  }
+}
+
+
+
+
+
+
+// Initialize global error handlers
+
+initializeErrorHandlers();
+
+// Providers are registered in JavaScript via aether.providers.register hooks.
+// JavaScript providers register implementation hooks (aether.provider.upload, aether.provider.test, etc.).
+
+/**
+ * Initialize admin settings page.
+ *
+ * @return {void}
+ */
+const init = () => {
+  const container = document.getElementById('aether-admin-settings');
+  if (!container) {
+    // eslint-disable-next-line no-console
+    console.error('Aether: Container element #aether-admin-settings not found');
+    return;
+  }
+
+  // eslint-disable-next-line no-console
+  console.log('Aether: Initializing admin settings page...');
+  try {
+    (0,external_wp_element_namespaceObject.render)(/*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(components_ErrorBoundary, {
+      children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(ExportProvider, {
+        children: /*#__PURE__*/(0,external_ReactJSXRuntime_namespaceObject.jsx)(AdminSettings, {})
+      })
+    }), container);
+    // eslint-disable-next-line no-console
+    console.log('Aether: Admin settings page rendered successfully');
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Aether: Error rendering admin settings page:', error);
+  }
+};
+
+// Wait for DOM to be ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+/******/ })()
+;
