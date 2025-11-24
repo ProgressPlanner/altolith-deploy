@@ -44,7 +44,7 @@ async function handler( context ) {
 
 	if ( ! currentProviderInstance ) {
 		throw new Error(
-			__( 'Provider instance not found in thread context', 'aether' )
+			__( 'Provider instance not found in thread context', 'aether-site-exporter' )
 		);
 	}
 
@@ -52,14 +52,14 @@ async function handler( context ) {
 		throw new Error(
 			__(
 				'URLs not found. Please run getStaticSiteUrls first.',
-				'aether'
+				'aether-site-exporter'
 			)
 		);
 	}
 
 	if ( ! processStaticSiteUrls ) {
 		throw new Error(
-			__( 'Static site generator not available', 'aether' )
+			__( 'Static site generator not available', 'aether-site-exporter' )
 		);
 	}
 
@@ -70,7 +70,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %s: Provider label */
-			__( 'Processing static site for %s…', 'aether' ),
+			__( 'Processing static site for %s…', 'aether-site-exporter' ),
 			providerLabel
 		),
 		'progress',
@@ -126,7 +126,7 @@ async function handler( context ) {
 		setStatusMessage(
 			sprintf(
 				/* translators: %1$s: Provider label, %2$d: Files uploaded */
-				__( 'Uploaded %2$d files to %1$s', 'aether' ),
+				__( 'Uploaded %2$d files to %1$s', 'aether-site-exporter' ),
 				providerLabel,
 				filesUploaded
 			),
@@ -135,11 +135,11 @@ async function handler( context ) {
 		);
 	} else {
 		const errorMessage =
-			result.error || __( 'No files uploaded', 'aether' );
+			result.error || __( 'No files uploaded', 'aether-site-exporter' );
 		throw new Error(
 			sprintf(
 				/* translators: %1$s: Provider label, %2$s: Error message */
-				__( 'Failed to upload to %1$s: %2$s', 'aether' ),
+				__( 'Failed to upload to %1$s: %2$s', 'aether-site-exporter' ),
 				providerLabel,
 				errorMessage
 			)
@@ -174,8 +174,8 @@ async function handler( context ) {
  */
 const stepDefinition = {
 	id: 'uploadStaticFiles',
-	label: __( 'Upload Static Files', 'aether' ),
-	description: __( 'Generate and upload static HTML files', 'aether' ),
+	label: __( 'Upload Static Files', 'aether-site-exporter' ),
+	description: __( 'Generate and upload static HTML files', 'aether-site-exporter' ),
 	supportsProgress: true,
 	dependencies: [ 'preScanStaticSite' ],
 	requires: {

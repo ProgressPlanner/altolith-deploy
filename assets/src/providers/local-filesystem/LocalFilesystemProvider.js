@@ -39,7 +39,7 @@ export class LocalFilesystemProvider extends AbstractProvider {
 	 * @return {string} Provider name
 	 */
 	getName() {
-		return __( 'Local Filesystem', 'aether' );
+		return __( 'Local Filesystem', 'aether-site-exporter' );
 	}
 
 	/**
@@ -59,7 +59,7 @@ export class LocalFilesystemProvider extends AbstractProvider {
 	getDescription() {
 		return __(
 			'Store exported sites locally in the WordPress uploads directory. No cloud deployment required.',
-			'aether'
+			'aether-site-exporter'
 		);
 	}
 
@@ -117,58 +117,58 @@ export class LocalFilesystemProvider extends AbstractProvider {
 		return [
 			{
 				id: 'export_path',
-				label: __( 'Blueprint-bundle file path', 'aether' ),
+				label: __( 'Blueprint-bundle file path', 'aether-site-exporter' ),
 				type: 'text',
 				required: true,
 				secure: false,
 				placeholder: 'blueprint-bundle/bundle.zip',
 				help: __(
 					'Full path to the blueprint bundle ZIP file (relative to WordPress root), including filename.',
-					'aether'
+					'aether-site-exporter'
 				),
 				validation: {
 					pattern: /^[a-zA-Z0-9/_.-]+\.zip$/,
 					message: __(
 						'Blueprint bundle path must end with .zip and contain only letters, numbers, slashes, hyphens, underscores, and dots.',
-						'aether'
+						'aether-site-exporter'
 					),
 				},
 			},
 			{
 				id: 'public_url',
-				label: __( 'Public URL', 'aether' ),
+				label: __( 'Public URL', 'aether-site-exporter' ),
 				type: 'text',
 				required: false,
 				secure: false,
 				placeholder: 'https://example.com',
 				help: __(
 					'URL where exported files will be publicly accessible. Used for blueprint generation and URL replacements in exported HTML. Leave empty to use WordPress home URL.',
-					'aether'
+					'aether-site-exporter'
 				),
 				validation: {
 					pattern: /^https?:\/\/.+/,
 					message: __(
 						'Public URL must be a valid HTTP or HTTPS URL',
-						'aether'
+						'aether-site-exporter'
 					),
 				},
 			},
 			{
 				id: 'static_files_path',
-				label: __( 'Static Files Directory', 'aether' ),
+				label: __( 'Static Files Directory', 'aether-site-exporter' ),
 				type: 'text',
 				required: true,
 				secure: false,
 				placeholder: 'static/',
 				help: __(
 					'Directory where static site files will be written (relative to WordPress root). Each export overwrites the previous one.',
-					'aether'
+					'aether-site-exporter'
 				),
 				validation: {
 					pattern: /^[a-zA-Z0-9/_.-]+$/,
 					message: __(
 						'Static files path must contain only letters, numbers, slashes, hyphens, underscores, and dots. Cannot be empty.',
-						'aether'
+						'aether-site-exporter'
 					),
 				},
 			},
@@ -197,7 +197,7 @@ export class LocalFilesystemProvider extends AbstractProvider {
 			) {
 				errors.export_path = __(
 					'Export path must be relative to WordPress root and cannot contain ".."',
-					'aether'
+					'aether-site-exporter'
 				);
 			}
 		}
@@ -269,14 +269,14 @@ export class LocalFilesystemProvider extends AbstractProvider {
 				success: true,
 				message: __(
 					'Local filesystem is ready for exports',
-					'aether'
+					'aether-site-exporter'
 				),
 			};
 		} catch ( error ) {
 			return {
 				success: false,
 				error:
-					error.message || __( 'Connection test failed', 'aether' ),
+					error.message || __( 'Connection test failed', 'aether-site-exporter' ),
 			};
 		}
 	}
@@ -303,14 +303,14 @@ export class LocalFilesystemProvider extends AbstractProvider {
 				success: true,
 				message: __(
 					'Export saved locally. Files are available in the exports directory.',
-					'aether'
+					'aether-site-exporter'
 				),
 				deploymentUrl: '', // No deployment URL for local storage
 			};
 		} catch ( error ) {
 			return {
 				success: false,
-				error: error.message || __( 'Deployment failed', 'aether' ),
+				error: error.message || __( 'Deployment failed', 'aether-site-exporter' ),
 			};
 		}
 	}
@@ -333,8 +333,8 @@ export class LocalFilesystemProvider extends AbstractProvider {
 			configured,
 			healthy: true, // LocalFilesystem is always healthy
 			message: configured
-				? __( 'Local filesystem storage is active', 'aether' )
-				: __( 'Local filesystem storage is available', 'aether' ),
+				? __( 'Local filesystem storage is active', 'aether-site-exporter' )
+				: __( 'Local filesystem storage is available', 'aether-site-exporter' ),
 		};
 	}
 
@@ -386,12 +386,12 @@ export class LocalFilesystemProvider extends AbstractProvider {
 				success: true,
 				url: '', // Local filesystem doesn't have a public URL
 				path: sourcePath,
-				message: __( 'File is available locally', 'aether' ),
+				message: __( 'File is available locally', 'aether-site-exporter' ),
 			};
 		} catch ( error ) {
 			return {
 				success: false,
-				error: error.message || __( 'File upload failed', 'aether' ),
+				error: error.message || __( 'File upload failed', 'aether-site-exporter' ),
 			};
 		}
 	}

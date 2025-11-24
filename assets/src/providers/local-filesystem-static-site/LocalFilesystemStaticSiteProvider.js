@@ -114,7 +114,7 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 		return [
 			{
 				id: 'public_url',
-				label: __( 'Public URL', 'aether' ),
+				label: __( 'Public URL', 'aether-site-exporter' ),
 				type: 'text',
 				required: false,
 				secure: false,
@@ -133,7 +133,7 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 			},
 			{
 				id: 'static_files_path',
-				label: __( 'Static Files Directory', 'aether' ),
+				label: __( 'Static Files Directory', 'aether-site-exporter' ),
 				type: 'text',
 				required: true,
 				secure: false,
@@ -231,7 +231,7 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 			return {
 				success: false,
 				error:
-					error.message || __( 'Connection test failed', 'aether' ),
+					error.message || __( 'Connection test failed', 'aether-site-exporter' ),
 			};
 		}
 	}
@@ -265,7 +265,7 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 		} catch ( error ) {
 			return {
 				success: false,
-				error: error.message || __( 'Deployment failed', 'aether' ),
+				error: error.message || __( 'Deployment failed', 'aether-site-exporter' ),
 			};
 		}
 	}

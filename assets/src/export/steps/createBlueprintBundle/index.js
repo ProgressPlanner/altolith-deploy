@@ -33,7 +33,7 @@ async function handler( context ) {
 	} = context;
 
 	setStatusMessage(
-		__( 'Creating blueprint bundle…', 'aether' ),
+		__( 'Creating blueprint bundle…', 'aether-site-exporter' ),
 		'progress',
 		'createBlueprintBundle'
 	);
@@ -42,7 +42,7 @@ async function handler( context ) {
 		throw new Error(
 			__(
 				'Site archive not found. Please run createWpContentArchive first.',
-				'aether'
+				'aether-site-exporter'
 			)
 		);
 	}
@@ -67,7 +67,7 @@ async function handler( context ) {
 		if ( ! blueprintResponse.success ) {
 			throw new Error(
 				blueprintResponse.message ||
-					__( 'Failed to generate blueprint', 'aether' )
+					__( 'Failed to generate blueprint', 'aether-site-exporter' )
 			);
 		}
 		blueprintData = blueprintResponse.blueprint;
@@ -89,7 +89,7 @@ async function handler( context ) {
 	if ( ! bundleResponse.success ) {
 		throw new Error(
 			bundleResponse.message ||
-				__( 'Failed to create blueprint bundle', 'aether' )
+				__( 'Failed to create blueprint bundle', 'aether-site-exporter' )
 		);
 	}
 
@@ -99,7 +99,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %s: File size */
-			__( 'Created blueprint bundle (%s)', 'aether' ),
+			__( 'Created blueprint bundle (%s)', 'aether-site-exporter' ),
 			sizeFormatted
 		),
 		'success',
@@ -122,8 +122,8 @@ async function handler( context ) {
  */
 const stepDefinition = {
 	id: 'createBlueprintBundle',
-	label: __( 'Create Blueprint Bundle', 'aether' ),
-	description: __( 'Create blueprint-bundle.zip', 'aether' ),
+	label: __( 'Create Blueprint Bundle', 'aether-site-exporter' ),
+	description: __( 'Create blueprint-bundle.zip', 'aether-site-exporter' ),
 	supportsProgress: false,
 	dependencies: [ 'createWpContentArchive' ],
 	requires: {

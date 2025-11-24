@@ -77,10 +77,10 @@ export function ProviderProgressList( {
 		<div style={ containerStyle }>
 			<div style={ headerStyle }>
 				<h4 style={ headerTitleStyle }>
-					{ __( 'Provider Progress', 'aether' ) }
+					{ __( 'Provider Progress', 'aether-site-exporter' ) }
 				</h4>
 				<span style={ countStyle }>
-					{ providerInstances.length } { __( 'providers', 'aether' ) }
+					{ providerInstances.length } { __( 'providers', 'aether-site-exporter' ) }
 				</span>
 			</div>
 
@@ -88,7 +88,7 @@ export function ProviderProgressList( {
 				{ providerInstances.map( ( instance ) => {
 					const progress = providerProgress[ instance.id ] || {
 						stepId: null,
-						stepLabel: __( 'Pending', 'aether' ),
+						stepLabel: __( 'Pending', 'aether-site-exporter' ),
 						progress: 0,
 						status: 'pending',
 					};

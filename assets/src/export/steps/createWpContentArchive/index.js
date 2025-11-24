@@ -30,7 +30,7 @@ async function handler( context ) {
 	} = context;
 
 	setStatusMessage(
-		__( 'Creating wp-content archive…', 'aether' ),
+		__( 'Creating wp-content archive…', 'aether-site-exporter' ),
 		'progress',
 		'createWpContentArchive'
 	);
@@ -51,7 +51,7 @@ async function handler( context ) {
 	if ( ! archiveResponse.success ) {
 		throw new Error(
 			archiveResponse.message ||
-				__( 'Failed to create wp-content archive', 'aether' )
+				__( 'Failed to create wp-content archive', 'aether-site-exporter' )
 		);
 	}
 
@@ -70,7 +70,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %s: File size */
-			__( 'Created wp-content archive (%s)', 'aether' ),
+			__( 'Created wp-content archive (%s)', 'aether-site-exporter' ),
 			sizeFormatted
 		),
 		'success',
@@ -90,8 +90,8 @@ async function handler( context ) {
  */
 const stepDefinition = {
 	id: 'createWpContentArchive',
-	label: __( 'Create WP Content Archive', 'aether' ),
-	description: __( 'Package custom plugins, themes, and uploads', 'aether' ),
+	label: __( 'Create WP Content Archive', 'aether-site-exporter' ),
+	description: __( 'Package custom plugins, themes, and uploads', 'aether-site-exporter' ),
 	supportsProgress: true,
 	dependencies: [ 'discoverBlueprintBundleAssets' ],
 	requires: {

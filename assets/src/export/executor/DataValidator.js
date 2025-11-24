@@ -179,7 +179,7 @@ export function validateOutput( step, result ) {
  */
 export function getRequirementsSummary( step ) {
 	if ( ! step.requires ) {
-		return __( 'No data requirements', 'aether' );
+		return __( 'No data requirements', 'aether-site-exporter' );
 	}
 
 	const requirements = Object.entries( step.requires ).map(
@@ -203,7 +203,7 @@ export function getRequirementsSummary( step ) {
  */
 export function getProvidesSummary( step ) {
 	if ( ! step.provides ) {
-		return __( 'No data provided', 'aether' );
+		return __( 'No data provided', 'aether-site-exporter' );
 	}
 
 	const provides = Object.entries( step.provides ).map(

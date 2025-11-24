@@ -199,7 +199,7 @@ export function ProviderProgressBar( {
 
 				{ status === 'complete' && (
 					<div style={ completeMessageStyle }>
-						{ __( 'Complete', 'aether' ) }
+						{ __( 'Complete', 'aether-site-exporter' ) }
 					</div>
 				) }
 

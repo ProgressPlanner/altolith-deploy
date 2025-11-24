@@ -28,13 +28,13 @@ async function handler( context ) {
 		throw new Error(
 			__(
 				'URLs not found. Please run getStaticSiteUrls first.',
-				'aether'
+				'aether-site-exporter'
 			)
 		);
 	}
 
 	setStatusMessage(
-		__( 'Scanning pages for assets…', 'aether' ),
+		__( 'Scanning pages for assets…', 'aether-site-exporter' ),
 		'progress',
 		'preScanStaticSite'
 	);
@@ -106,7 +106,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %1$d: Number of pages, %2$d: Number of assets */
-			__( 'Found %1$d pages and %2$d assets', 'aether' ),
+			__( 'Found %1$d pages and %2$d assets', 'aether-site-exporter' ),
 			htmlUrls.length,
 			allAssets.size
 		),
@@ -128,10 +128,10 @@ async function handler( context ) {
  */
 const stepDefinition = {
 	id: 'preScanStaticSite',
-	label: __( 'Scan for Assets', 'aether' ),
+	label: __( 'Scan for Assets', 'aether-site-exporter' ),
 	description: __(
 		'Discover CSS, JS, and image assets from pages',
-		'aether'
+		'aether-site-exporter'
 	),
 	supportsProgress: true,
 	dependencies: [ 'getStaticSiteUrls' ],

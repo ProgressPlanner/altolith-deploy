@@ -22,7 +22,7 @@ async function handler( context ) {
 	const { api, setStatusMessage } = context;
 
 	setStatusMessage(
-		__( 'Discovering plugins and themes…', 'aether' ),
+		__( 'Discovering plugins and themes…', 'aether-site-exporter' ),
 		'progress',
 		'discoverBlueprintBundleAssets'
 	);
@@ -33,7 +33,7 @@ async function handler( context ) {
 	if ( ! discoveryResponse.success ) {
 		throw new Error(
 			discoveryResponse.message ||
-				__( 'Failed to discover assets', 'aether' )
+				__( 'Failed to discover assets', 'aether-site-exporter' )
 		);
 	}
 
@@ -44,7 +44,7 @@ async function handler( context ) {
 	// Build success message
 	let message;
 	if ( assets.length === 0 ) {
-		message = __( 'Discovered 0 active custom plugins/themes', 'aether' );
+		message = __( 'Discovered 0 active custom plugins/themes', 'aether-site-exporter' );
 	} else {
 		const parts = [];
 		if ( plugins.length > 0 ) {
@@ -52,7 +52,7 @@ async function handler( context ) {
 				plugins.length === 1
 					? sprintf(
 							/* translators: %s: Plugin slug */
-							__( '1 active custom plugin (%s)', 'aether' ),
+							__( '1 active custom plugin (%s)', 'aether-site-exporter' ),
 							plugins[ 0 ].slug
 					  )
 					: sprintf(
@@ -61,7 +61,7 @@ async function handler( context ) {
 								'%1$d active custom plugin (%2$s)',
 								'%1$d active custom plugins (%2$s)',
 								plugins.length,
-								'aether'
+								'aether-site-exporter'
 							),
 							plugins.length,
 							plugins.map( ( p ) => p.slug ).join( ', ' )
@@ -73,7 +73,7 @@ async function handler( context ) {
 				themes.length === 1
 					? sprintf(
 							/* translators: %s: Theme slug */
-							__( '1 active custom theme (%s)', 'aether' ),
+							__( '1 active custom theme (%s)', 'aether-site-exporter' ),
 							themes[ 0 ].slug
 					  )
 					: sprintf(
@@ -82,7 +82,7 @@ async function handler( context ) {
 								'%1$d active custom theme (%2$s)',
 								'%1$d active custom themes (%2$s)',
 								themes.length,
-								'aether'
+								'aether-site-exporter'
 							),
 							themes.length,
 							themes.map( ( t ) => t.slug ).join( ', ' )
@@ -93,9 +93,9 @@ async function handler( context ) {
 			/* translators: %s: Discovered assets description */
 			__(
 				'Discovered %s. These will be included in the blueprint bundle.',
-				'aether'
+				'aether-site-exporter'
 			),
-			parts.join( __( ' and ', 'aether' ) )
+			parts.join( __( ' and ', 'aether-site-exporter' ) )
 		);
 	}
 
@@ -112,10 +112,10 @@ async function handler( context ) {
  */
 const stepDefinition = {
 	id: 'discoverBlueprintBundleAssets',
-	label: __( 'Discover Assets', 'aether' ),
+	label: __( 'Discover Assets', 'aether-site-exporter' ),
 	description: __(
 		'Find custom plugins and themes for blueprint bundle',
-		'aether'
+		'aether-site-exporter'
 	),
 	supportsProgress: false,
 	dependencies: [],

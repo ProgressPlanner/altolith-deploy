@@ -22,7 +22,7 @@ async function handler( context ) {
 	const { api, siteUrl, setStatusMessage } = context;
 
 	setStatusMessage(
-		__( 'Discovering URLs for static site…', 'aether' ),
+		__( 'Discovering URLs for static site…', 'aether-site-exporter' ),
 		'progress',
 		'getStaticSiteUrls'
 	);
@@ -33,7 +33,7 @@ async function handler( context ) {
 			setStatusMessage(
 				sprintf(
 					/* translators: %s: Type being fetched (posts, terms, etc.) */
-					__( 'Fetching %s…', 'aether' ),
+					__( 'Fetching %s…', 'aether-site-exporter' ),
 					progress.type
 				),
 				'progress',
@@ -44,7 +44,7 @@ async function handler( context ) {
 
 	if ( ! urlResponse.success ) {
 		throw new Error(
-			urlResponse.message || __( 'Failed to discover URLs', 'aether' )
+			urlResponse.message || __( 'Failed to discover URLs', 'aether-site-exporter' )
 		);
 	}
 
@@ -55,7 +55,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %d: Number of URLs */
-			__( 'Discovered %d URLs for static site generation', 'aether' ),
+			__( 'Discovered %d URLs for static site generation', 'aether-site-exporter' ),
 			urlsCount
 		),
 		'success',
@@ -75,8 +75,8 @@ async function handler( context ) {
  */
 const stepDefinition = {
 	id: 'getStaticSiteUrls',
-	label: __( 'Discover URLs', 'aether' ),
-	description: __( 'Find all URLs for static site generation', 'aether' ),
+	label: __( 'Discover URLs', 'aether-site-exporter' ),
+	description: __( 'Find all URLs for static site generation', 'aether-site-exporter' ),
 	supportsProgress: false,
 	dependencies: [],
 	requires: {

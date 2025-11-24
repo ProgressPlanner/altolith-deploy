@@ -39,7 +39,10 @@ export class LocalFilesystemBlueprintBundleProvider extends AbstractProvider {
 	 * @return {string} Provider name
 	 */
 	getName() {
-		return __( 'Local Filesystem (Blueprint Bundle)', 'aether' );
+		return __(
+			'Local Filesystem (Blueprint Bundle)',
+			'aether-site-exporter'
+		);
 	}
 
 	/**
@@ -114,7 +117,7 @@ export class LocalFilesystemBlueprintBundleProvider extends AbstractProvider {
 		return [
 			{
 				id: 'export_path',
-				label: __( 'Blueprint-bundle file path', 'aether' ),
+				label: __( 'Blueprint-bundle file path', 'aether-site-exporter' ),
 				type: 'text',
 				required: true,
 				secure: false,
@@ -217,7 +220,7 @@ export class LocalFilesystemBlueprintBundleProvider extends AbstractProvider {
 			return {
 				success: false,
 				error:
-					error.message || __( 'Connection test failed', 'aether' ),
+					error.message || __( 'Connection test failed', 'aether-site-exporter' ),
 			};
 		}
 	}
@@ -251,7 +254,7 @@ export class LocalFilesystemBlueprintBundleProvider extends AbstractProvider {
 		} catch ( error ) {
 			return {
 				success: false,
-				error: error.message || __( 'Deployment failed', 'aether' ),
+				error: error.message || __( 'Deployment failed', 'aether-site-exporter' ),
 			};
 		}
 	}
