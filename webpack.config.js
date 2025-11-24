@@ -64,11 +64,12 @@ module.exports = {
 	...defaultConfig,
 	entry: {
 		'admin-settings': './assets/src/admin-settings/index.js',
-		'admin-common': './assets/src/admin-common/index.js',
 		'admin-bar-export': './assets/src/admin-bar/index.js',
 		'export-modal': './assets/src/export-modal/index.js',
-		'provider-local-filesystem':
-			'./assets/src/providers/local-filesystem/index.js',
+		'provider-local-filesystem-static-site':
+			'./assets/src/providers/local-filesystem-static-site/index.js',
+		'provider-local-filesystem-blueprint-bundle':
+			'./assets/src/providers/local-filesystem-blueprint-bundle/index.js',
 	},
 	output: {
 		...defaultConfig.output,

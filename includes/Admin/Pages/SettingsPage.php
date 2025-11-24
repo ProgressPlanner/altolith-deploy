@@ -49,9 +49,10 @@ class SettingsPage extends BaseAdminPage
 			'version'      => \time(),
 		];
 
-		// Enqueue local-filesystem provider script separately (must load before admin-settings)
+		// Enqueue local-filesystem provider scripts separately (must load before admin-settings)
 		$plugin = \Aether\SiteExporter\Plugin::getInstance();
-		$plugin->enqueueProviderScript('local-filesystem');
+		$plugin->enqueueProviderScript('local-filesystem-static-site');
+		$plugin->enqueueProviderScript('local-filesystem-blueprint-bundle');
 
 		// Enqueue the main script
 		// Provider scripts from aether-site-exporter-providers are enqueued at priority 5,

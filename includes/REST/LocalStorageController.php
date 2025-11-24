@@ -958,7 +958,7 @@ class LocalStorageController
 		 * For example, local-filesystem provider instances will copy the file to their
 		 * configured export_path, while cloud providers might upload to their storage.
 		 *
-		 * @param string $instanceId      Provider instance ID (e.g., 'local-filesystem:abc-123').
+		 * @param string $instanceId      Provider instance ID (e.g., 'local-filesystem:abc-123' or 'local-filesystem-blueprint-bundle:abc-123').
 		 * @param string $sourcePath      Source path of the generated blueprint bundle (relative to ABSPATH).
 		 * @param string $destinationPath Destination path (instance's export_path, relative to ABSPATH).
 		 * @param array  $context         Additional context data.
@@ -971,7 +971,8 @@ class LocalStorageController
 		$destinationFullPath = \rtrim(ABSPATH, '/') . '/' . \ltrim($destinationPath, '/');
 
 		// Only verify for local-filesystem instances (they should have created the file)
-		if (\strpos($instanceId, 'local-filesystem:') === 0 && !\file_exists($destinationFullPath)) {
+		// This includes both old 'local-filesystem:' and new 'local-filesystem-static-site:' / 'local-filesystem-blueprint-bundle:' providers
+		if (\strpos($instanceId, 'local-filesystem') === 0 && !\file_exists($destinationFullPath)) {
 			// Check if source file exists (might be the issue)
 			// Source paths can be absolute or relative
 			$sourceFullPath = $sourcePath;

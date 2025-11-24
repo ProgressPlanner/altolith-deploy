@@ -123,9 +123,6 @@ class Plugin
 		// Fix PHP 8.1+ deprecation: ensure admin page titles are never null.
 		\add_filter('admin_title', [ $this, 'ensureAdminTitleIsString' ], 1, 2);
 
-		// Enqueue admin-common only on Aether admin pages
-		\add_action('admin_enqueue_scripts', [ $this, 'enqueueAdminCommon' ]);
-
 		// Add filter to add data-provider-id attribute to provider script tags
 		\add_filter('script_loader_tag', [ $this, 'addProviderScriptAttribute' ], 10, 2);
 
@@ -252,85 +249,6 @@ class Plugin
 		return !empty($adminTitle) ? $adminTitle : $title;
 	}
 
-
-	/**
-	 * Enqueue admin common script with global variables.
-	 *
-	 * Ensures global variables are always available for JavaScript.
-	 * Only enqueues on Aether admin pages.
-	 *
-	 * @return void
-	 */
-	public function enqueueAdminCommon(): void
-	{
-		// Only enqueue on Aether admin pages
-		if (! $this->isAetherAdminPage()) {
-			return;
-		}
-
-		// Only enqueue if not already enqueued
-		if (\wp_script_is('aether-admin-common', 'enqueued')) {
-			return;
-		}
-
-		$pluginUrl = AETHER_SITE_EXPORTER_PLUGIN_URL;
-
-		// Load dependencies from asset file
-		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-common.asset.php';
-		$asset = \file_exists($assetFile) ? require $assetFile : [
-			'dependencies' => [],
-			'version' => \time(),
-		];
-
-		\wp_enqueue_script(
-			'aether-admin-common',
-			$pluginUrl . 'assets/build/admin-common.js',
-			$asset['dependencies'],
-			$asset['version'],
-			true
-		);
-
-		// Set global variables
-		\wp_add_inline_script(
-			'aether-admin-common',
-			\sprintf(
-				'window.aether = window.aether || {}; window.aether.providerScriptsBaseUrl = %s; window.aether.pluginUrl = %s;',
-				\wp_json_encode($pluginUrl . 'assets/build/'),
-				\wp_json_encode($pluginUrl)
-			),
-			'before'
-		);
-
-		// Add REST API configuration data (admin-common exports api.js which needs this)
-		$this->addAPIConfigScript('aether-admin-common');
-	}
-
-	/**
-	 * Check if current page is an Aether admin page.
-	 *
-	 * @return bool True if on an Aether admin page, false otherwise.
-	 */
-	private function isAetherAdminPage(): bool
-	{
-		// Must be in admin area
-		if (! \is_admin()) {
-			return false;
-		}
-
-		// Check if we have a page parameter
-		if (! isset($_GET['page'])) { // phpcs:ignore WordPress.Security.NonceVerification
-			return false;
-		}
-
-		$currentPage = \sanitize_text_field(\wp_unslash($_GET['page'])); // phpcs:ignore WordPress.Security.NonceVerification
-
-		// List of known Aether admin page slugs
-		$aetherPages = [
-			'aether',
-		];
-
-		return \in_array($currentPage, $aetherPages, true);
-	}
 
 	/**
 	 * Enqueue provider script separately.
@@ -530,14 +448,14 @@ class Plugin
 		 * This action is fired when a blueprint bundle needs to be uploaded to a provider instance.
 		 * Local-filesystem instances will copy the file to their configured export_path.
 		 *
-		 * @param string $instanceId      Provider instance ID (e.g., 'local-filesystem:abc-123').
+		 * @param string $instanceId      Provider instance ID (e.g., 'local-filesystem:abc-123' or 'local-filesystem-blueprint-bundle:abc-123').
 		 * @param string $sourcePath      Source path of the generated blueprint bundle.
 		 * @param string $destinationPath Destination path (instance's export_path).
 		 * @param array  $context         Additional context data.
 		 */
 		\add_action('aether_blueprint_bundle_upload', function ($instanceId, $sourcePath, $destinationPath, $context = []) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-			// Only handle local-filesystem provider instances.
-			if (!\is_string($instanceId) || \strpos($instanceId, 'local-filesystem:') !== 0) {
+			// Only handle local-filesystem provider instances (including new split providers).
+			if (!\is_string($instanceId) || \strpos($instanceId, 'local-filesystem') !== 0) {
 				return;
 			}
 
