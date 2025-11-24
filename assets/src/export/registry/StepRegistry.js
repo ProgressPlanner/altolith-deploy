@@ -67,24 +67,35 @@ class StepRegistry {
 	register( step ) {
 		// Validate required properties
 		if ( ! step || typeof step !== 'object' ) {
-			throw new Error( __( 'Step must be an object', 'aether-site-exporter' ) );
+			throw new Error(
+				__( 'Step must be an object', 'aether-site-exporter' )
+			);
 		}
 
 		if ( ! step.id || typeof step.id !== 'string' ) {
 			throw new Error(
-				__( 'Step must have a valid id (string)', 'aether-site-exporter' )
+				__(
+					'Step must have a valid id (string)',
+					'aether-site-exporter'
+				)
 			);
 		}
 
 		if ( ! step.label || typeof step.label !== 'string' ) {
 			throw new Error(
-				__( 'Step must have a valid label (string)', 'aether-site-exporter' )
+				__(
+					'Step must have a valid label (string)',
+					'aether-site-exporter'
+				)
 			);
 		}
 
 		if ( ! step.handler || typeof step.handler !== 'function' ) {
 			throw new Error(
-				__( 'Step must have a valid handler (function)', 'aether-site-exporter' )
+				__(
+					'Step must have a valid handler (function)',
+					'aether-site-exporter'
+				)
 			);
 		}
 

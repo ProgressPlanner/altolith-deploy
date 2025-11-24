@@ -40,7 +40,10 @@ async function handler( context ) {
 
 	if ( ! currentProviderInstance ) {
 		throw new Error(
-			__( 'Provider instance not found in thread context', 'aether-site-exporter' )
+			__(
+				'Provider instance not found in thread context',
+				'aether-site-exporter'
+			)
 		);
 	}
 
@@ -54,7 +57,10 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %1$s: Provider label, %2$s: File size */
-			__( 'Uploading blueprint bundle (%2$s) to %1$s…', 'aether-site-exporter' ),
+			__(
+				'Uploading blueprint bundle (%2$s) to %1$s…',
+				'aether-site-exporter'
+			),
 			providerLabel,
 			bundleSizeFormatted
 		),
@@ -101,7 +107,10 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %1$s: Provider label, %2$s: File size */
-			__( 'Uploaded blueprint bundle (%2$s) to %1$s', 'aether-site-exporter' ),
+			__(
+				'Uploaded blueprint bundle (%2$s) to %1$s',
+				'aether-site-exporter'
+			),
 			providerLabel,
 			bundleSizeFormatted
 		),
@@ -126,7 +135,10 @@ async function handler( context ) {
 const stepDefinition = {
 	id: 'uploadBlueprintBundle',
 	label: __( 'Upload Blueprint Bundle', 'aether-site-exporter' ),
-	description: __( 'Upload blueprint-bundle.zip to providers', 'aether-site-exporter' ),
+	description: __(
+		'Upload blueprint-bundle.zip to providers',
+		'aether-site-exporter'
+	),
 	supportsProgress: true,
 	dependencies: [ 'createBlueprintBundle' ],
 	requires: {

@@ -117,7 +117,10 @@ export class LocalFilesystemBlueprintBundleProvider extends AbstractProvider {
 		return [
 			{
 				id: 'export_path',
-				label: __( 'Blueprint-bundle file path', 'aether-site-exporter' ),
+				label: __(
+					'Blueprint-bundle file path',
+					'aether-site-exporter'
+				),
 				type: 'text',
 				required: true,
 				secure: false,
@@ -220,7 +223,8 @@ export class LocalFilesystemBlueprintBundleProvider extends AbstractProvider {
 			return {
 				success: false,
 				error:
-					error.message || __( 'Connection test failed', 'aether-site-exporter' ),
+					error.message ||
+					__( 'Connection test failed', 'aether-site-exporter' ),
 			};
 		}
 	}
@@ -254,7 +258,9 @@ export class LocalFilesystemBlueprintBundleProvider extends AbstractProvider {
 		} catch ( error ) {
 			return {
 				success: false,
-				error: error.message || __( 'Deployment failed', 'aether-site-exporter' ),
+				error:
+					error.message ||
+					__( 'Deployment failed', 'aether-site-exporter' ),
 			};
 		}
 	}

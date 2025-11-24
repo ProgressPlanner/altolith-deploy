@@ -44,7 +44,10 @@ async function handler( context ) {
 	// Build success message
 	let message;
 	if ( assets.length === 0 ) {
-		message = __( 'Discovered 0 active custom plugins/themes', 'aether-site-exporter' );
+		message = __(
+			'Discovered 0 active custom plugins/themes',
+			'aether-site-exporter'
+		);
 	} else {
 		const parts = [];
 		if ( plugins.length > 0 ) {
@@ -52,7 +55,10 @@ async function handler( context ) {
 				plugins.length === 1
 					? sprintf(
 							/* translators: %s: Plugin slug */
-							__( '1 active custom plugin (%s)', 'aether-site-exporter' ),
+							__(
+								'1 active custom plugin (%s)',
+								'aether-site-exporter'
+							),
 							plugins[ 0 ].slug
 					  )
 					: sprintf(
@@ -73,7 +79,10 @@ async function handler( context ) {
 				themes.length === 1
 					? sprintf(
 							/* translators: %s: Theme slug */
-							__( '1 active custom theme (%s)', 'aether-site-exporter' ),
+							__(
+								'1 active custom theme (%s)',
+								'aether-site-exporter'
+							),
 							themes[ 0 ].slug
 					  )
 					: sprintf(

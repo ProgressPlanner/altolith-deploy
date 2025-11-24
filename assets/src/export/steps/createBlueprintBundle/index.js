@@ -89,7 +89,10 @@ async function handler( context ) {
 	if ( ! bundleResponse.success ) {
 		throw new Error(
 			bundleResponse.message ||
-				__( 'Failed to create blueprint bundle', 'aether-site-exporter' )
+				__(
+					'Failed to create blueprint bundle',
+					'aether-site-exporter'
+				)
 		);
 	}
 

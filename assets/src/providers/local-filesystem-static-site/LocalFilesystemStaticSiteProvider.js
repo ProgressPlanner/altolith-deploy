@@ -231,7 +231,8 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 			return {
 				success: false,
 				error:
-					error.message || __( 'Connection test failed', 'aether-site-exporter' ),
+					error.message ||
+					__( 'Connection test failed', 'aether-site-exporter' ),
 			};
 		}
 	}
@@ -265,7 +266,9 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 		} catch ( error ) {
 			return {
 				success: false,
-				error: error.message || __( 'Deployment failed', 'aether-site-exporter' ),
+				error:
+					error.message ||
+					__( 'Deployment failed', 'aether-site-exporter' ),
 			};
 		}
 	}

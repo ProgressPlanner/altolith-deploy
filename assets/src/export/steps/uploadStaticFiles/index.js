@@ -44,7 +44,10 @@ async function handler( context ) {
 
 	if ( ! currentProviderInstance ) {
 		throw new Error(
-			__( 'Provider instance not found in thread context', 'aether-site-exporter' )
+			__(
+				'Provider instance not found in thread context',
+				'aether-site-exporter'
+			)
 		);
 	}
 
@@ -175,7 +178,10 @@ async function handler( context ) {
 const stepDefinition = {
 	id: 'uploadStaticFiles',
 	label: __( 'Upload Static Files', 'aether-site-exporter' ),
-	description: __( 'Generate and upload static HTML files', 'aether-site-exporter' ),
+	description: __(
+		'Generate and upload static HTML files',
+		'aether-site-exporter'
+	),
 	supportsProgress: true,
 	dependencies: [ 'preScanStaticSite' ],
 	requires: {

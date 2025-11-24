@@ -80,7 +80,8 @@ export function ProviderProgressList( {
 					{ __( 'Provider Progress', 'aether-site-exporter' ) }
 				</h4>
 				<span style={ countStyle }>
-					{ providerInstances.length } { __( 'providers', 'aether-site-exporter' ) }
+					{ providerInstances.length }{ ' ' }
+					{ __( 'providers', 'aether-site-exporter' ) }
 				</span>
 			</div>
 

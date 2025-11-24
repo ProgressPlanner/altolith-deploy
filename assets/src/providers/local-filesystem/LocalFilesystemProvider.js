@@ -117,7 +117,10 @@ export class LocalFilesystemProvider extends AbstractProvider {
 		return [
 			{
 				id: 'export_path',
-				label: __( 'Blueprint-bundle file path', 'aether-site-exporter' ),
+				label: __(
+					'Blueprint-bundle file path',
+					'aether-site-exporter'
+				),
 				type: 'text',
 				required: true,
 				secure: false,
@@ -276,7 +279,8 @@ export class LocalFilesystemProvider extends AbstractProvider {
 			return {
 				success: false,
 				error:
-					error.message || __( 'Connection test failed', 'aether-site-exporter' ),
+					error.message ||
+					__( 'Connection test failed', 'aether-site-exporter' ),
 			};
 		}
 	}
@@ -310,7 +314,9 @@ export class LocalFilesystemProvider extends AbstractProvider {
 		} catch ( error ) {
 			return {
 				success: false,
-				error: error.message || __( 'Deployment failed', 'aether-site-exporter' ),
+				error:
+					error.message ||
+					__( 'Deployment failed', 'aether-site-exporter' ),
 			};
 		}
 	}
@@ -333,8 +339,14 @@ export class LocalFilesystemProvider extends AbstractProvider {
 			configured,
 			healthy: true, // LocalFilesystem is always healthy
 			message: configured
-				? __( 'Local filesystem storage is active', 'aether-site-exporter' )
-				: __( 'Local filesystem storage is available', 'aether-site-exporter' ),
+				? __(
+						'Local filesystem storage is active',
+						'aether-site-exporter'
+				  )
+				: __(
+						'Local filesystem storage is available',
+						'aether-site-exporter'
+				  ),
 		};
 	}
 
@@ -386,12 +398,17 @@ export class LocalFilesystemProvider extends AbstractProvider {
 				success: true,
 				url: '', // Local filesystem doesn't have a public URL
 				path: sourcePath,
-				message: __( 'File is available locally', 'aether-site-exporter' ),
+				message: __(
+					'File is available locally',
+					'aether-site-exporter'
+				),
 			};
 		} catch ( error ) {
 			return {
 				success: false,
-				error: error.message || __( 'File upload failed', 'aether-site-exporter' ),
+				error:
+					error.message ||
+					__( 'File upload failed', 'aether-site-exporter' ),
 			};
 		}
 	}
