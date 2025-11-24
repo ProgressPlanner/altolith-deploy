@@ -110,8 +110,9 @@ describe( 'ThreadOrchestrator', () => {
 			);
 
 			expect( threadContext.siteUrl ).toBe( 'https://example.com' );
-			// Note: Deep clone means these are NOT the same references
-			expect( threadContext.api ).not.toBe( globalContext.api );
+			// Note: api is preserved by reference (shared function/object across threads)
+			expect( threadContext.api ).toBe( globalContext.api );
+			// Arrays are deep cloned for thread isolation
 			expect( threadContext.discoveredAssets ).not.toBe(
 				globalContext.discoveredAssets
 			);
