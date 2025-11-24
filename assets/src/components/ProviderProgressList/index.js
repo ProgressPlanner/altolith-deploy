@@ -9,7 +9,13 @@
 
 import { __ } from '@wordpress/i18n';
 import ProviderProgressBar from '../ProviderProgressBar';
-import './style.scss';
+import {
+	colors,
+	spacing,
+	borderRadius,
+	fontSize,
+	fontWeight,
+} from '@aether/utils/styles';
 
 /**
  * Provider Progress List Component
@@ -33,16 +39,58 @@ export function ProviderProgressList( {
 		return null;
 	}
 
+	// Container style
+	const containerStyle = {
+		margin: '20px 0',
+	};
+
+	// Header style
+	const headerStyle = {
+		display: 'flex',
+		justifyContent: 'space-between',
+		alignItems: 'center',
+		marginBottom: spacing.lg,
+		paddingBottom: spacing.md,
+		borderBottom: `2px solid ${ colors.borderLighter }`,
+	};
+
+	// Header h4 style
+	const headerTitleStyle = {
+		margin: 0,
+		fontSize: '15px',
+		fontWeight: fontWeight.semibold,
+		color: colors.text,
+	};
+
+	// Count badge style
+	const countStyle = {
+		fontSize: fontSize.sm,
+		color: colors.textMuted,
+		fontWeight: fontWeight.medium,
+		padding: '4px 8px',
+		background: colors.background,
+		borderRadius: '12px',
+	};
+
+	// Items container style
+	const itemsStyle = {
+		display: 'flex',
+		flexDirection: 'column',
+		gap: 0,
+	};
+
 	return (
-		<div className="provider-progress-list">
-			<div className="provider-progress-list__header">
-				<h4>{ __( 'Provider Progress', 'aether' ) }</h4>
-				<span className="provider-progress-list__count">
+		<div style={ containerStyle }>
+			<div style={ headerStyle }>
+				<h4 style={ headerTitleStyle }>
+					{ __( 'Provider Progress', 'aether' ) }
+				</h4>
+				<span style={ countStyle }>
 					{ providerInstances.length } { __( 'providers', 'aether' ) }
 				</span>
 			</div>
 
-			<div className="provider-progress-list__items">
+			<div style={ itemsStyle }>
 				{ providerInstances.map( ( instance ) => {
 					const progress = providerProgress[ instance.id ] || {
 						stepId: null,

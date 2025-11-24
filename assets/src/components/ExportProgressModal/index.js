@@ -21,7 +21,6 @@ import {
 	utilityStyles,
 } from '@aether/utils/styles';
 import ActivityLogMessage from '../ActivityLogMessage';
-import UploadStatistics from '../UploadStatistics';
 import ProviderProgressList from '../ProviderProgressList';
 
 // Styles - extracted to module level for performance
@@ -379,34 +378,6 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 							providerInstances={ allProviderInstances }
 						/>
 					) }
-
-				<UploadStatistics
-					messageHistory={ messageHistory }
-					staticSiteProviders={ staticSiteProviders }
-					blueprintBundleProviders={ blueprintBundleProviders }
-				/>
-
-				{ messageHistory.length > 0 && (
-					<div
-						className="aether-export-progress-modal__activity-log"
-						style={ activityLogStyle }
-						ref={ activityLogRef }
-					>
-						<ul
-							className="aether-export-progress-modal__activity-list"
-							style={ activityListStyle }
-						>
-							{ sortedMessageHistory.map( ( item ) => (
-								<ActivityLogMessage
-									key={ item.id }
-									message={ item.message }
-									type={ item.type }
-									progress={ item.progress }
-								/>
-							) ) }
-						</ul>
-					</div>
-				) }
 
 				{ steps.length === 0 && ! error && (
 					<div
