@@ -285,6 +285,37 @@ export default function ProviderInstancePanel( {
 				className="aether-provider-instance-panel__header-content"
 				style={ panelHeaderStyle }
 			>
+				{ /* Enabled Toggle */ }
+				<div
+					className="aether-provider-instance-panel__toggle"
+					style={ toggleContainerStyle }
+					onClick={ ( e ) => e.stopPropagation() }
+					onKeyDown={ ( e ) => {
+						if ( e.key === 'Enter' || e.key === ' ' ) {
+							e.stopPropagation();
+						}
+					} }
+					role="presentation"
+				>
+					<ToggleControl
+						className="aether-provider-instance-panel__toggle-control"
+						label={ __(
+							'Enable this instance',
+							'aether-site-exporter'
+						) }
+						checked={ config.enabled !== false }
+						onChange={ ( enabled ) => {
+							// Mark that we're doing a local update
+							isLocalUpdateRef.current = true;
+							// Update local state immediately for reactivity
+							setConfig( ( prev ) => ( { ...prev, enabled } ) );
+							// Then call the parent callback
+							onToggle( enabled );
+						} }
+						__nextHasNoMarginBottom={ true }
+					/>
+				</div>
+
 				{ /* Instance Name */ }
 				{ isEditing ? (
 					<input
@@ -345,37 +376,6 @@ export default function ProviderInstancePanel( {
 				>
 					{ providerMetadata.name || provider?.id || '' }
 				</span>
-
-				{ /* Enabled Toggle */ }
-				<div
-					className="aether-provider-instance-panel__toggle"
-					style={ toggleContainerStyle }
-					onClick={ ( e ) => e.stopPropagation() }
-					onKeyDown={ ( e ) => {
-						if ( e.key === 'Enter' || e.key === ' ' ) {
-							e.stopPropagation();
-						}
-					} }
-					role="presentation"
-				>
-					<ToggleControl
-						className="aether-provider-instance-panel__toggle-control"
-						label={ __(
-							'Enable this instance',
-							'aether-site-exporter'
-						) }
-						checked={ config.enabled !== false }
-						onChange={ ( enabled ) => {
-							// Mark that we're doing a local update
-							isLocalUpdateRef.current = true;
-							// Update local state immediately for reactivity
-							setConfig( ( prev ) => ( { ...prev, enabled } ) );
-							// Then call the parent callback
-							onToggle( enabled );
-						} }
-						__nextHasNoMarginBottom={ true }
-					/>
-				</div>
 			</div>
 		),
 		[
