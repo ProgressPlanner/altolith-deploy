@@ -1,8 +1,7 @@
 /**
- * Validation Utilities
+ * Provider Form Validation Utilities
  *
- * Client-side validation utilities for provider configurations.
- * Can be used with zod schemas once zod is installed.
+ * Client-side validation utilities for provider form fields.
  *
  */
 

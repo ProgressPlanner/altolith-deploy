@@ -92,6 +92,11 @@ describe( 'useStaticSiteGenerator', () => {
 		};
 
 		mockCache = new Map();
+		// Add default HTML data entry to prevent "No HTML data" error
+		mockCache.set( 'https://example.com', {
+			html: '<html></html>',
+			assets: [],
+		} );
 
 		createAssetTracker.mockReturnValue( mockAssetTracker );
 		fetchProviderConfig.mockResolvedValue( {
@@ -136,10 +141,10 @@ describe( 'useStaticSiteGenerator', () => {
 			} )
 		);
 
-		// Default mock for executePreScan
+		// Default mock for executePreScan with HTML data
 		executePreScan.mockResolvedValue( {
 			htmlData: mockCache,
-			totalFilesToUpload: 0,
+			totalFilesToUpload: 1,
 			failures: { urlsFailed: 0, failedUrls: [] },
 		} );
 
@@ -164,12 +169,20 @@ describe( 'useStaticSiteGenerator', () => {
 		} );
 
 		it( 'should fetch provider configuration', async () => {
+			// Set up HTML data with at least one entry
+			const htmlDataWithEntries = new Map();
+			htmlDataWithEntries.set( 'https://example.com', {
+				html: '<html></html>',
+				assets: [],
+			} );
+
 			executePreScan.mockResolvedValue( {
-				htmlData: mockCache,
-				totalFilesToUpload: 0,
+				htmlData: htmlDataWithEntries,
+				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
 			prepareManifest.mockResolvedValue( {} );
+			uploadHtmlFile.mockResolvedValue( {} );
 
 			const { result } = renderHook( () =>
 				useStaticSiteGenerator( mockOnProgress )
@@ -177,7 +190,7 @@ describe( 'useStaticSiteGenerator', () => {
 
 			await act( async () => {
 				await result.current(
-					[],
+					[ 'https://example.com' ],
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
@@ -335,15 +348,20 @@ describe( 'useStaticSiteGenerator', () => {
 		} );
 
 		it( 'should use shared cache when provided', async () => {
-			// Use a real Map for shared cache
+			// Use a real Map for shared cache with data
 			const sharedCache = new Map();
+			sharedCache.set( 'https://example.com', {
+				html: '<html></html>',
+				assets: [],
+			} );
 
 			executePreScan.mockResolvedValue( {
 				htmlData: sharedCache,
-				totalFilesToUpload: 0,
+				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
 			prepareManifest.mockResolvedValue( {} );
+			uploadHtmlFile.mockResolvedValue( {} );
 
 			const { result } = renderHook( () =>
 				useStaticSiteGenerator( mockOnProgress )
@@ -351,7 +369,7 @@ describe( 'useStaticSiteGenerator', () => {
 
 			await act( async () => {
 				await result.current(
-					[],
+					[ 'https://example.com' ],
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
@@ -852,7 +870,7 @@ describe( 'useStaticSiteGenerator', () => {
 		it( 'should fire upload start action', async () => {
 			executePreScan.mockResolvedValue( {
 				htmlData: mockCache,
-				totalFilesToUpload: 0,
+				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
 			prepareManifest.mockResolvedValue( {} );
@@ -863,7 +881,7 @@ describe( 'useStaticSiteGenerator', () => {
 
 			await act( async () => {
 				await result.current(
-					[],
+					[ 'https://example.com' ],
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
@@ -876,8 +894,8 @@ describe( 'useStaticSiteGenerator', () => {
 
 			expect( doAction ).toHaveBeenCalledWith(
 				'aether.export.step.uploadStaticSiteFiles.upload.before',
-				[],
-				0,
+				[ 'https://example.com' ],
+				1,
 				'provider-id'
 			);
 		} );
@@ -885,7 +903,7 @@ describe( 'useStaticSiteGenerator', () => {
 		it( 'should fire upload completion action', async () => {
 			executePreScan.mockResolvedValue( {
 				htmlData: mockCache,
-				totalFilesToUpload: 0,
+				totalFilesToUpload: 1,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
 			prepareManifest.mockResolvedValue( {} );
@@ -896,7 +914,7 @@ describe( 'useStaticSiteGenerator', () => {
 
 			await act( async () => {
 				await result.current(
-					[],
+					[ 'https://example.com' ],
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
@@ -920,8 +938,10 @@ describe( 'useStaticSiteGenerator', () => {
 
 	describe( 'edge cases', () => {
 		it( 'should handle empty URL list', async () => {
+			// Mock executePreScan to return empty HTML data
+			const emptyCache = new Map();
 			executePreScan.mockResolvedValue( {
-				htmlData: mockCache,
+				htmlData: emptyCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
@@ -931,20 +951,20 @@ describe( 'useStaticSiteGenerator', () => {
 				useStaticSiteGenerator( mockOnProgress )
 			);
 
-			const resultData = await act( async () => {
-				return await result.current(
-					[],
-					'https://static.example.com',
-					'provider-id',
-					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
-				);
-			} );
-
-			expect( resultData ).toBeDefined();
+			await expect(
+				act( async () => {
+					await result.current(
+						[],
+						'https://static.example.com',
+						'provider-id',
+						'https://example.com',
+						mockSetStatusMessage,
+						{},
+						null,
+						emptyCache
+					);
+				} )
+			).rejects.toThrow( 'No HTML data available for upload' );
 		} );
 
 		it( 'should handle missing provider config gracefully', async () => {
