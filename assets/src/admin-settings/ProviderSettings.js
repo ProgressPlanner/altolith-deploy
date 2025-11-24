@@ -7,8 +7,8 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
-import { Button } from '@wordpress/components';
+import { __, sprintf } from '@wordpress/i18n';
+import { Button, ButtonGroup } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
 import ProviderInstancesContainer from '@aether/components/ProviderInstancesContainer';
 import AddProviderInstanceModal from '@aether/components/AddProviderInstanceModal';
@@ -17,6 +17,7 @@ import SectionHeader from '@aether/components/SectionHeader';
 import { colors, spacing } from '@aether/utils/styles';
 import { useProviderSettings } from '@aether/hooks/useProviderSettings';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import { DEPLOYMENT_TYPE_LABELS } from '@aether/constants/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const emptyStateStyle = {
@@ -43,7 +44,8 @@ export default function ProviderSettings( {
 	onNotice,
 } ) {
 	const [ providers, setProviders ] = useState( [] );
-	const [ isAddModalOpen, setIsAddModalOpen ] = useState( false );
+	const [ selectedDeploymentType, setSelectedDeploymentType ] =
+		useState( null );
 
 	// Local state for optimistic updates
 	const [ localConfigs, setLocalConfigs ] = useState( providerConfigs );
@@ -173,6 +175,38 @@ export default function ProviderSettings( {
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [ onConfigsUpdate, configs ] );
+
+	// Group providers by deployment type
+	const providersByDeploymentType = useMemo( () => {
+		const allProviderInstances = ProviderRegistry.getAll();
+		const grouped = {};
+
+		allProviderInstances.forEach( ( provider ) => {
+			const supportedTypes =
+				provider.getSupportedDeploymentTypes?.() || [];
+			supportedTypes.forEach( ( deploymentType ) => {
+				if ( ! grouped[ deploymentType ] ) {
+					grouped[ deploymentType ] = [];
+				}
+				// Add provider metadata (matching the structure in providers state)
+				const providerMetadata = providers.find(
+					( p ) => p.id === provider.getId()
+				);
+				if ( providerMetadata ) {
+					grouped[ deploymentType ].push( providerMetadata );
+				}
+			} );
+		} );
+
+		return grouped;
+	}, [ providers ] );
+
+	// Get unique deployment types that have at least one provider
+	const availableDeploymentTypes = useMemo( () => {
+		return Object.keys( providersByDeploymentType ).filter(
+			( type ) => providersByDeploymentType[ type ].length > 0
+		);
+	}, [ providersByDeploymentType ] );
 
 	// Create flat list of all instances with provider metadata
 	// Filter out instances whose provider type is not registered (e.g., removed providers)
@@ -470,16 +504,28 @@ export default function ProviderSettings( {
 				) }
 				className="aether-provider-settings__header"
 				actions={
-					<Button
-						className="aether-provider-settings__add-button"
-						variant="tertiary"
-						onClick={ () => setIsAddModalOpen( true ) }
-					>
-						{ __(
-							'Add Provider Instance',
-							'aether-site-exporter'
-						) }
-					</Button>
+					<ButtonGroup>
+						{ availableDeploymentTypes.map( ( deploymentType ) => (
+							<Button
+								key={ deploymentType }
+								className="aether-provider-settings__add-button"
+								variant="tertiary"
+								onClick={ () =>
+									setSelectedDeploymentType( deploymentType )
+								}
+							>
+								{ sprintf(
+									/* translators: %s: deployment type label */
+									__(
+										'Add %s Provider',
+										'aether-site-exporter'
+									),
+									DEPLOYMENT_TYPE_LABELS[ deploymentType ] ||
+										deploymentType
+								) }
+							</Button>
+						) ) }
+					</ButtonGroup>
 				}
 			/>
 
@@ -499,7 +545,7 @@ export default function ProviderSettings( {
 					style={ emptyStateStyle }
 				>
 					{ __(
-						'No provider instances configured. Click "Add Provider Instance" to create one.',
+						'No provider instances configured. Use the buttons above to create one.',
 						'aether-site-exporter'
 					) }
 				</div>
@@ -507,9 +553,15 @@ export default function ProviderSettings( {
 
 			{ /* Add Instance Modal */ }
 			<AddProviderInstanceModal
-				isOpen={ isAddModalOpen }
-				onClose={ () => setIsAddModalOpen( false ) }
-				providers={ providers }
+				isOpen={ selectedDeploymentType !== null }
+				onClose={ () => setSelectedDeploymentType( null ) }
+				providers={
+					selectedDeploymentType
+						? providersByDeploymentType[ selectedDeploymentType ] ||
+						  []
+						: providers
+				}
+				deploymentType={ selectedDeploymentType }
 				onCreate={ handleCreateInstanceConfirm }
 			/>
 		</div>

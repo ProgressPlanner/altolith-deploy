@@ -6,13 +6,14 @@
  *
  */
 
-import { useState } from '@wordpress/element';
+import { useState, useEffect } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Modal, TextControl, SelectControl } from '@wordpress/components';
 // eslint-disable-next-line import/no-unresolved
 import { v4 as uuidv4 } from 'uuid';
 import ModalActions from '../ModalActions';
 import { spacing } from '@aether/utils/styles';
+import { DEPLOYMENT_TYPE_LABELS } from '@aether/constants/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const formStyle = {
@@ -24,22 +25,47 @@ const formStyle = {
 /**
  * Add Provider Instance Modal Component.
  *
- * @param {Object}   props           Component props.
- * @param {boolean}  props.isOpen    Whether modal is open.
- * @param {Function} props.onClose   Callback to close modal.
- * @param {Array}    props.providers Array of available provider types.
- * @param {Function} props.onCreate  Callback to create instance (instanceId, providerType, instanceName).
+ * @param {Object}   props             Component props.
+ * @param {boolean}  props.isOpen      Whether modal is open.
+ * @param {Function} props.onClose     Callback to close modal.
+ * @param {Array}    props.providers   Array of available provider types.
+ * @param {string}   props.deploymentType Optional deployment type to filter providers.
+ * @param {Function} props.onCreate    Callback to create instance (instanceId, providerType, instanceName).
  * @return {JSX.Element|null} Rendered component.
  */
 export default function AddProviderInstanceModal( {
 	isOpen,
 	onClose,
 	providers,
+	deploymentType = null,
 	onCreate,
 } ) {
 	const [ selectedProviderType, setSelectedProviderType ] = useState( '' );
 	const [ instanceName, setInstanceName ] = useState( '' );
 	const [ isCreating, setIsCreating ] = useState( false );
+
+	// Reset form when modal closes
+	useEffect( () => {
+		if ( ! isOpen ) {
+			setSelectedProviderType( '' );
+			setInstanceName( '' );
+		}
+	}, [ isOpen ] );
+
+	// Auto-select provider if only one is available for the deployment type
+	useEffect( () => {
+		if ( isOpen && providers.length === 1 && ! selectedProviderType ) {
+			setSelectedProviderType( providers[ 0 ].id );
+		} else if ( isOpen && providers.length > 1 && selectedProviderType ) {
+			// Reset if providers change and we had a selection
+			const stillAvailable = providers.some(
+				( p ) => p.id === selectedProviderType
+			);
+			if ( ! stillAvailable ) {
+				setSelectedProviderType( '' );
+			}
+		}
+	}, [ isOpen, providers, selectedProviderType ] );
 
 	const handleCreate = async () => {
 		if ( ! selectedProviderType || ! instanceName.trim() ) {
@@ -88,10 +114,22 @@ export default function AddProviderInstanceModal( {
 		( p ) => p.id === selectedProviderType
 	);
 
+	// Generate modal title based on deployment type
+	const modalTitle = deploymentType
+		? sprintf(
+				/* translators: %s: deployment type label */
+				__( 'Add %s Provider', 'aether-site-exporter' ),
+				DEPLOYMENT_TYPE_LABELS[ deploymentType ] || deploymentType
+		  )
+		: __( 'Add Provider Instance', 'aether-site-exporter' );
+
+	// Always show provider selection if there are any providers
+	const showProviderSelection = providers.length > 0;
+
 	return (
 		<Modal
 			className="aether-add-provider-instance-modal"
-			title={ __( 'Add Provider Instance', 'aether-site-exporter' ) }
+			title={ modalTitle }
 			onRequestClose={ handleClose }
 			size="medium"
 		>
@@ -99,33 +137,35 @@ export default function AddProviderInstanceModal( {
 				className="aether-add-provider-instance-modal__form"
 				style={ formStyle }
 			>
-				<SelectControl
-					className="aether-add-provider-instance-modal__provider-select"
-					label={ __( 'Provider Type', 'aether-site-exporter' ) }
-					value={ selectedProviderType }
-					onChange={ setSelectedProviderType }
-					options={ [
-						{
-							label: __(
-								'Select a provider…',
-								'aether-site-exporter'
-							),
-							value: '',
-						},
-						...providers.map( ( provider ) => ( {
-							label: provider.name,
-							value: provider.id,
-						} ) ),
-					] }
-					help={
-						selectedProvider
-							? selectedProvider.description
-							: __(
-									'Choose which type of provider to create',
+				{ showProviderSelection && (
+					<SelectControl
+						className="aether-add-provider-instance-modal__provider-select"
+						label={ __( 'Provider Type', 'aether-site-exporter' ) }
+						value={ selectedProviderType }
+						onChange={ setSelectedProviderType }
+						options={ [
+							{
+								label: __(
+									'Select a provider…',
 									'aether-site-exporter'
-							  )
-					}
-				/>
+								),
+								value: '',
+							},
+							...providers.map( ( provider ) => ( {
+								label: provider.name,
+								value: provider.id,
+							} ) ),
+						] }
+						help={
+							selectedProvider
+								? selectedProvider.description
+								: __(
+										'Choose which type of provider to create',
+										'aether-site-exporter'
+								  )
+						}
+					/>
+				) }
 
 				{ selectedProviderType && (
 					<TextControl
