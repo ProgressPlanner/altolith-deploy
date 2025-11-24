@@ -15,6 +15,7 @@ use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use Aether\SiteExporter\Utilities\CorsHandler;
 use Aether\SiteExporter\Utilities\CookieManager;
 use Aether\SiteExporter\Utilities\SecurityValidator;
+use Aether\SiteExporter\Utilities\FileManager;
 
 /**
  * Main plugin orchestrator class.

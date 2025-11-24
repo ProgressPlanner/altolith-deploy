@@ -36,6 +36,7 @@ const processedFiles = new Map();
 async function handleUnifiedFileUpload( fileContext ) {
 	const {
 		providerId,
+		fileType,
 		filePath,
 		destinationPath,
 		metadata = {},
@@ -52,6 +53,11 @@ async function handleUnifiedFileUpload( fileContext ) {
 		! providerId ||
 		! providerId.startsWith( 'local-filesystem-blueprint-bundle' )
 	) {
+		return;
+	}
+
+	// Only process blueprint bundle files, not static files
+	if ( fileType !== 'blueprint-bundle' ) {
 		return;
 	}
 
