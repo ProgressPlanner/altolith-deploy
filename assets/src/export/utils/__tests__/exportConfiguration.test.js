@@ -112,17 +112,13 @@ describe( 'exportConfiguration', () => {
 					class MockProvider {
 						static DEPLOYMENT_TYPE = 'static_site';
 					}
-					return {
-						constructor: MockProvider,
-					};
+					return MockProvider;
 				}
 				if ( providerType === 'local-filesystem-blueprint-bundle' ) {
 					class MockProvider {
 						static DEPLOYMENT_TYPE = 'blueprint_bundle';
 					}
-					return {
-						constructor: MockProvider,
-					};
+					return MockProvider;
 				}
 				return null;
 			} );
@@ -153,17 +149,13 @@ describe( 'exportConfiguration', () => {
 					class MockProvider {
 						static DEPLOYMENT_TYPE = 'static_site';
 					}
-					return {
-						constructor: MockProvider,
-					};
+					return MockProvider;
 				}
 				if ( providerType === 'local-filesystem-blueprint-bundle' ) {
 					class MockProvider {
 						static DEPLOYMENT_TYPE = 'blueprint_bundle';
 					}
-					return {
-						constructor: MockProvider,
-					};
+					return MockProvider;
 				}
 				return null;
 			} );
@@ -214,9 +206,7 @@ describe( 'exportConfiguration', () => {
 			class MockProvider {
 				static DEPLOYMENT_TYPE = 'static_site';
 			}
-			mockProviderRegistry.get.mockReturnValue( {
-				constructor: MockProvider,
-			} );
+			mockProviderRegistry.get.mockReturnValue( MockProvider );
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
@@ -259,9 +249,7 @@ describe( 'exportConfiguration', () => {
 			class MockProvider {
 				static DEPLOYMENT_TYPE = 'static_site';
 			}
-			mockProviderRegistry.get.mockReturnValue( {
-				constructor: MockProvider,
-			} );
+			mockProviderRegistry.get.mockReturnValue( MockProvider );
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
@@ -298,17 +286,13 @@ describe( 'exportConfiguration', () => {
 					class MockProvider {
 						static DEPLOYMENT_TYPE = 'static_site';
 					}
-					return {
-						constructor: MockProvider,
-					};
+					return MockProvider;
 				}
 				if ( providerType === 'local-filesystem-blueprint-bundle' ) {
 					class MockProvider {
 						static DEPLOYMENT_TYPE = 'blueprint_bundle';
 					}
-					return {
-						constructor: MockProvider,
-					};
+					return MockProvider;
 				}
 				return null;
 			} );
@@ -354,9 +338,7 @@ describe( 'exportConfiguration', () => {
 			class MockProvider {
 				static DEPLOYMENT_TYPE = 'static_site';
 			}
-			mockProviderRegistry.get.mockReturnValue( {
-				constructor: MockProvider,
-			} );
+			mockProviderRegistry.get.mockReturnValue( MockProvider );
 
 			const deploymentTypes = [ 'static_site', 'blueprint_bundle' ];
 
@@ -383,19 +365,15 @@ describe( 'exportConfiguration', () => {
 
 			mockProviderRegistry.get.mockImplementation( ( providerType ) => {
 				if ( providerType === 'local-filesystem-static-site' ) {
-					return {
-						constructor: class {
-							static DEPLOYMENT_TYPE =
-								DEPLOYMENT_TYPES.STATIC_SITE;
-						},
+					return class {
+						static DEPLOYMENT_TYPE =
+							DEPLOYMENT_TYPES.STATIC_SITE;
 					};
 				}
 				if ( providerType === 'local-filesystem-blueprint-bundle' ) {
-					return {
-						constructor: class {
-							static DEPLOYMENT_TYPE =
-								DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE;
-						},
+					return class {
+						static DEPLOYMENT_TYPE =
+							DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE;
 					};
 				}
 				return null;
