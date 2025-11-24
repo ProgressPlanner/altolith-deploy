@@ -158,7 +158,7 @@ export async function createStorageService(
 		const { StorageService } = await import(
 			'../../providers/services/storageService'
 		);
-		storageService = new StorageService( staticPath, '', filteredConfig );
+		storageService = new StorageService( staticPath, filteredConfig );
 	}
 
 	return storageService;

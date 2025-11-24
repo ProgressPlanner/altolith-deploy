@@ -51,14 +51,16 @@ export function buildParallelPlan( steps ) {
  *
  * Checks that all declared dependencies reference existing steps.
  *
- * @param {Array<Object>} steps Array of step definitions.
+ * @param {Array<Object>} allSteps     All step definitions (for dependency lookup).
+ * @param {Array<Object>} stepsToCheck Steps to validate (defaults to allSteps).
  * @return {Array<string>} Array of validation errors (empty if valid).
  */
-export function validateDependencies( steps ) {
+export function validateDependencies( allSteps, stepsToCheck = null ) {
 	const errors = [];
-	const stepIds = new Set( steps.map( ( s ) => s.id ) );
+	const stepsToValidate = stepsToCheck || allSteps;
+	const stepIds = new Set( allSteps.map( ( s ) => s.id ) );
 
-	steps.forEach( ( step ) => {
+	stepsToValidate.forEach( ( step ) => {
 		const deps = step.dependencies || [];
 		deps.forEach( ( depId ) => {
 			if ( ! stepIds.has( depId ) ) {

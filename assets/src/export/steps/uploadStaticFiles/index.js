@@ -9,6 +9,7 @@
 
 import { __, sprintf } from '@wordpress/i18n';
 import { addAction, applyFilters } from '@wordpress/hooks';
+import { fetchProviderConfig } from '@aether/export/utils/staticSiteConfig';
 
 /**
  * Upload static files step handler
@@ -76,6 +77,20 @@ async function handler( context ) {
 		'uploadStaticFiles'
 	);
 
+	// Fetch provider config to get provider-specific public_url
+	// This ensures each provider uses its own staticSiteUrl (e.g., http://localhost:10003/static3)
+	// instead of the global one from getStaticSiteUrls
+	let providerSpecificStaticSiteUrl = staticSiteUrl;
+	try {
+		const providerConfig = await fetchProviderConfig( providerId );
+		if ( providerConfig.public_url ) {
+			providerSpecificStaticSiteUrl = providerConfig.public_url;
+		}
+	} catch ( error ) {
+		// If fetching provider config fails, fall back to global staticSiteUrl
+		// This should not happen in normal operation, but provides a safety net
+	}
+
 	// Filter URLs before processing
 	const filteredUrls = applyFilters(
 		'aether.export.step.uploadStaticSiteFiles.urls',
@@ -84,16 +99,17 @@ async function handler( context ) {
 		{
 			siteUrl,
 			blueprintData,
-			staticSiteUrl,
+			staticSiteUrl: providerSpecificStaticSiteUrl,
 			providerId,
 		}
 	);
 
 	// Process URLs for this provider instance
 	// Pass shared HTML data so it uses stored HTML instead of fetching again
+	// Use provider-specific staticSiteUrl for correct URL rewriting
 	const result = await processStaticSiteUrls(
 		filteredUrls,
-		staticSiteUrl,
+		providerSpecificStaticSiteUrl,
 		providerId,
 		siteUrl,
 		setStatusMessage,

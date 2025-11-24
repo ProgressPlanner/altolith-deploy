@@ -99,6 +99,13 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			const totalUrls = urls.length;
 
+			debug( '[Aether] useStaticSiteGenerator starting pre-scan:', {
+				urlCount: totalUrls,
+				hasCache: !! cache,
+				cacheSize: cache ? cache.size : 0,
+				providerId: staticSiteProviderId,
+			} );
+
 			// PHASE 1: Pre-scan all URLs (use shared HTML data if provided)
 			const preScanResult = await executePreScan( {
 				urls,
@@ -129,6 +136,21 @@ export function useStaticSiteGenerator( onProgress ) {
 			// Get URLs from HTML data storage
 			const fetchedUrls = Array.from( sharedHtmlData.keys() );
 
+			// Validate that we have URLs to process
+			if ( fetchedUrls.length === 0 ) {
+				debugWarn(
+					'[Aether] No URLs found in sharedHtmlData. Cannot upload files.'
+				);
+				throw new Error(
+					'No HTML data available for upload. Please ensure preScanStaticSite step completed successfully.'
+				);
+			}
+
+			debug( '[Aether] Processing URLs for upload:', {
+				urlCount: fetchedUrls.length,
+				totalFilesToUpload,
+			} );
+
 			// Fire upload start action
 			doAction(
 				'aether.export.step.uploadStaticSiteFiles.upload.before',
@@ -146,7 +168,59 @@ export function useStaticSiteGenerator( onProgress ) {
 					);
 					continue;
 				}
-				const { rawHtml, assetUrls } = htmlDataEntry;
+
+				// Validate data structure - expect { rawHtml, assetUrls } object
+				let rawHtml, assetUrls;
+				if (
+					typeof htmlDataEntry !== 'object' ||
+					htmlDataEntry === null
+				) {
+					debugWarn(
+						`[Aether] Invalid data structure for URL: ${ url }. Expected object with rawHtml and assetUrls, got:`,
+						typeof htmlDataEntry
+					);
+					// Try to handle legacy string format for backward compatibility
+					if ( typeof htmlDataEntry === 'string' ) {
+						debugWarn(
+							`[Aether] Legacy string format detected for ${ url }. Converting to expected format.`
+						);
+						// Extract assets from the HTML string as fallback
+						const { extractAssetsFromHtml } = await import(
+							'@aether/export/utils/assetExtractor'
+						);
+						const extractedAssetUrls = await extractAssetsFromHtml(
+							htmlDataEntry,
+							url,
+							siteUrl
+						);
+						// Update the entry with correct format
+						sharedHtmlData.set( url, {
+							rawHtml: htmlDataEntry,
+							assetUrls: extractedAssetUrls,
+						} );
+						// Use the corrected data
+						rawHtml = htmlDataEntry;
+						assetUrls = extractedAssetUrls;
+					} else {
+						debugWarn(
+							`[Aether] Cannot process URL ${ url } - unsupported data type: ${ typeof htmlDataEntry }`
+						);
+						continue;
+					}
+				} else {
+					// Normal path: destructure expected object format
+					if (
+						! htmlDataEntry.rawHtml ||
+						! Array.isArray( htmlDataEntry.assetUrls )
+					) {
+						debugWarn(
+							`[Aether] Invalid object structure for URL: ${ url }. Expected { rawHtml, assetUrls }, got:`,
+							Object.keys( htmlDataEntry )
+						);
+						continue;
+					}
+					( { rawHtml, assetUrls } = htmlDataEntry );
+				}
 
 				try {
 					// Update progress message

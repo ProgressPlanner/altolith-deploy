@@ -12,6 +12,12 @@ import { isThreadStep } from './DataValidator';
 import { executeSteps } from './StepExecutor';
 
 /**
+ * Keys in context that should be shared by reference (read-only across threads).
+ * These are not cloned to allow threads to read the same data.
+ */
+const SHARED_READONLY_KEYS = [ 'sharedHtmlData' ];
+
+/**
  * Execute async functions with concurrency limit
  *
  * Limits number of concurrent executions to prevent resource exhaustion.
@@ -65,12 +71,14 @@ async function limitConcurrency( items, fn, concurrency = 5 ) {
  * Creates a truly deep copy of global context so threads cannot mutate shared data.
  * Handles Maps, Arrays, and nested objects recursively.
  * Tracks visited objects to handle circular references.
+ * Skips cloning keys specified in sharedKeys (passed by reference for read-only access).
  *
- * @param {Object}  context - Global context to clone
- * @param {WeakMap} visited - Internal: tracks cloned objects to handle circular refs
+ * @param {Object}  context    Global context to clone
+ * @param {WeakMap} visited    Internal: tracks cloned objects to handle circular refs
+ * @param {Array}   sharedKeys Keys to skip cloning (passed by reference)
  * @return {Object} Deep cloned context
  */
-function deepCloneContext( context, visited = new WeakMap() ) {
+function deepCloneContext( context, visited = new WeakMap(), sharedKeys = [] ) {
 	// Handle primitives and null
 	if ( context === null || typeof context !== 'object' ) {
 		return context;
@@ -86,6 +94,12 @@ function deepCloneContext( context, visited = new WeakMap() ) {
 	visited.set( context, cloned );
 
 	for ( const [ key, value ] of Object.entries( context ) ) {
+		// Skip shared read-only keys - pass by reference
+		if ( sharedKeys.includes( key ) ) {
+			cloned[ key ] = value;
+			continue;
+		}
+
 		// Skip functions (callbacks are handled separately)
 		if ( typeof value === 'function' ) {
 			continue;
@@ -106,11 +120,11 @@ function deepCloneContext( context, visited = new WeakMap() ) {
 				// Recursively clone both keys and values
 				const clonedKey =
 					typeof mapKey === 'object' && mapKey !== null
-						? deepCloneValue( mapKey, visited )
+						? deepCloneValue( mapKey, visited, sharedKeys )
 						: mapKey;
 				const clonedValue =
 					typeof mapValue === 'object' && mapValue !== null
-						? deepCloneValue( mapValue, visited )
+						? deepCloneValue( mapValue, visited, sharedKeys )
 						: mapValue;
 				clonedMap.set( clonedKey, clonedValue );
 			}
@@ -127,7 +141,7 @@ function deepCloneContext( context, visited = new WeakMap() ) {
 				// Recursively clone set items
 				const clonedItem =
 					typeof item === 'object' && item !== null
-						? deepCloneValue( item, visited )
+						? deepCloneValue( item, visited, sharedKeys )
 						: item;
 				clonedSet.add( clonedItem );
 			}
@@ -152,7 +166,7 @@ function deepCloneContext( context, visited = new WeakMap() ) {
 
 		// Handle plain objects (deep clone recursively)
 		if ( typeof value === 'object' && value.constructor === Object ) {
-			cloned[ key ] = deepCloneContext( value, visited );
+			cloned[ key ] = deepCloneContext( value, visited, sharedKeys );
 			continue;
 		}
 
@@ -179,11 +193,12 @@ function deepCloneContext( context, visited = new WeakMap() ) {
 /**
  * Deep clone a single value (used by Map/Array cloning)
  *
- * @param {*}       value   - Value to clone
- * @param {WeakMap} visited - Tracks cloned objects
+ * @param {*}       value      Value to clone
+ * @param {WeakMap} visited    Tracks cloned objects
+ * @param {Array}   sharedKeys Keys to skip cloning (passed by reference)
  * @return {*} Cloned value
  */
-function deepCloneValue( value, visited ) {
+function deepCloneValue( value, visited, sharedKeys = [] ) {
 	if ( value === null || typeof value !== 'object' ) {
 		return value;
 	}
@@ -199,11 +214,11 @@ function deepCloneValue( value, visited ) {
 			// Clone both keys and values
 			const clonedKey =
 				typeof k === 'object' && k !== null
-					? deepCloneValue( k, visited )
+					? deepCloneValue( k, visited, sharedKeys )
 					: k;
 			const clonedValue =
 				typeof v === 'object' && v !== null
-					? deepCloneValue( v, visited )
+					? deepCloneValue( v, visited, sharedKeys )
 					: v;
 			clonedMap.set( clonedKey, clonedValue );
 		}
@@ -216,7 +231,7 @@ function deepCloneValue( value, visited ) {
 		for ( const item of value.values() ) {
 			const clonedItem =
 				typeof item === 'object' && item !== null
-					? deepCloneValue( item, visited )
+					? deepCloneValue( item, visited, sharedKeys )
 					: item;
 			clonedSet.add( clonedItem );
 		}
@@ -227,7 +242,11 @@ function deepCloneValue( value, visited ) {
 		const clonedArray = [];
 		visited.set( value, clonedArray );
 		for ( let i = 0; i < value.length; i++ ) {
-			clonedArray[ i ] = deepCloneValue( value[ i ], visited );
+			clonedArray[ i ] = deepCloneValue(
+				value[ i ],
+				visited,
+				sharedKeys
+			);
 		}
 		return clonedArray;
 	}
@@ -241,7 +260,7 @@ function deepCloneValue( value, visited ) {
 	}
 
 	if ( typeof value === 'object' && value.constructor === Object ) {
-		return deepCloneContext( value, visited );
+		return deepCloneContext( value, visited, sharedKeys );
 	}
 
 	// Unhandled types - return reference
@@ -291,26 +310,47 @@ export function buildThreadContext(
 	}
 
 	// Preserve function references before cloning (functions are skipped during clone)
-	const preservedCallbacks = {
+	// These functions need to be preserved in thread context
+	const preservedFunctions = {
 		setStatusMessage: globalContext.setStatusMessage,
 		setStepProgress: globalContext.setStepProgress,
+		processStaticSiteUrls: globalContext.processStaticSiteUrls,
+		generateBlueprintJson: globalContext.generateBlueprintJson,
+		updateStaticSiteProgressContext:
+			globalContext.updateStaticSiteProgressContext,
+		assetManager: globalContext.assetManager,
+		api: globalContext.api,
+		removeMessage: globalContext.removeMessage,
+		setOverallProgressValue: globalContext.setOverallProgressValue,
 	};
 
 	// Deep clone global context to ensure thread isolation
 	// Prevents threads from mutating shared data
-	const clonedContext = deepCloneContext( globalContext );
+	// Pass shared read-only keys by reference (not cloned)
+	const clonedContext = deepCloneContext(
+		globalContext,
+		new WeakMap(),
+		SHARED_READONLY_KEYS
+	);
 
 	// Add thread-specific properties
 	return {
 		...clonedContext,
 		currentProviderInstance: providerInstance,
 		providerInstanceConfig: providerInstance.config || {},
-		// Thread-specific callbacks (functions not cloned)
-		// Use provided callbacks, or fall back to preserved originals
+		// Preserve function references (functions not cloned, need to be restored)
 		setStatusMessage:
-			callbacks.setStatusMessage || preservedCallbacks.setStatusMessage,
+			callbacks.setStatusMessage || preservedFunctions.setStatusMessage,
 		setStepProgress:
-			callbacks.setStepProgress || preservedCallbacks.setStepProgress,
+			callbacks.setStepProgress || preservedFunctions.setStepProgress,
+		processStaticSiteUrls: preservedFunctions.processStaticSiteUrls,
+		generateBlueprintJson: preservedFunctions.generateBlueprintJson,
+		updateStaticSiteProgressContext:
+			preservedFunctions.updateStaticSiteProgressContext,
+		assetManager: preservedFunctions.assetManager,
+		api: preservedFunctions.api,
+		removeMessage: preservedFunctions.removeMessage,
+		setOverallProgressValue: preservedFunctions.setOverallProgressValue,
 	};
 }
 
@@ -335,6 +375,17 @@ export async function executeThreadedWorkflow(
 	// Categorize steps
 	const { globalSteps, threadSteps } = categorizeSteps( steps );
 
+	// Debug logging
+	if ( typeof window !== 'undefined' && window.console ) {
+		// eslint-disable-next-line no-console
+		console.log( '[Aether] ThreadOrchestrator - Step categorization:', {
+			totalSteps: steps.length,
+			globalSteps: globalSteps.map( ( s ) => s.id ),
+			threadSteps: threadSteps.map( ( s ) => s.id ),
+			providerInstances: providerInstances.length,
+		} );
+	}
+
 	// Execute global steps first (run once, shared across all threads)
 	let globalState = {};
 	if ( globalSteps.length > 0 ) {
@@ -351,6 +402,15 @@ export async function executeThreadedWorkflow(
 		...initialContext,
 		...globalState,
 	};
+
+	if ( typeof window !== 'undefined' && window.console ) {
+		// eslint-disable-next-line no-console
+		console.log( '[Aether] ThreadOrchestrator - After global steps:', {
+			providerInstancesCount: providerInstances.length,
+			threadStepsCount: threadSteps.length,
+			hasGlobalState: Object.keys( globalState ).length > 0,
+		} );
+	}
 
 	// Handle edge cases with providers and thread steps
 	if ( providerInstances.length === 0 ) {
@@ -376,6 +436,13 @@ export async function executeThreadedWorkflow(
 
 	// If there are providers but no thread steps, return early (nothing to do)
 	if ( threadSteps.length === 0 ) {
+		if ( typeof window !== 'undefined' && window.console ) {
+			// eslint-disable-next-line no-console
+			console.warn(
+				'[Aether] ThreadOrchestrator - No thread steps found, but providers exist:',
+				providerInstances.map( ( p ) => p.id )
+			);
+		}
 		return {
 			success: true,
 			globalState,
@@ -396,6 +463,14 @@ export async function executeThreadedWorkflow(
 	);
 
 	const executeProviderThread = async ( providerInstance ) => {
+		if ( typeof window !== 'undefined' && window.console ) {
+			// eslint-disable-next-line no-console
+			console.log(
+				'[Aether] ThreadOrchestrator - Executing thread for provider:',
+				providerInstance.id
+			);
+		}
+
 		// Build thread-specific context
 		const threadCallbacks = {
 			setStatusMessage: ( message, type, key, progress, metadata ) => {
@@ -442,11 +517,26 @@ export async function executeThreadedWorkflow(
 
 		// Execute thread steps for this provider instance
 		try {
+			if ( typeof window !== 'undefined' && window.console ) {
+				// eslint-disable-next-line no-console
+				console.log(
+					'[Aether] ThreadOrchestrator - Executing steps for provider:',
+					providerInstance.id,
+					'steps:',
+					threadSteps.map( ( s ) => s.id )
+				);
+			}
+
 			// executeSteps returns the execution state directly
+			// Pass all steps (global + thread) for dependency validation
+			// since thread steps may depend on global steps
 			const threadState = await executeSteps(
 				threadSteps,
 				threadContext,
-				options
+				{
+					...options,
+					allSteps: [ ...globalSteps, ...threadSteps ],
+				}
 			);
 
 			// Mark provider as complete
@@ -466,6 +556,18 @@ export async function executeThreadedWorkflow(
 				error: null,
 			};
 		} catch ( error ) {
+			// Log the error for debugging
+			if ( typeof window !== 'undefined' && window.console ) {
+				// eslint-disable-next-line no-console
+				console.error(
+					'[Aether] ThreadOrchestrator - Thread execution failed for provider:',
+					providerInstance.id,
+					error
+				);
+				// eslint-disable-next-line no-console
+				console.error( '[Aether] Error stack:', error.stack );
+			}
+
 			// Mark provider as error
 			if ( initialContext.setProviderProgress ) {
 				initialContext.setProviderProgress( providerInstance.id, {
@@ -487,11 +589,35 @@ export async function executeThreadedWorkflow(
 	};
 
 	// Execute provider threads with concurrency limiting
+	if ( typeof window !== 'undefined' && window.console ) {
+		// eslint-disable-next-line no-console
+		console.log(
+			'[Aether] ThreadOrchestrator - Starting thread execution:',
+			{
+				threadStepsCount: threadSteps.length,
+				providerInstancesCount: providerInstances.length,
+				maxConcurrency,
+			}
+		);
+	}
+
 	const threadResults = await limitConcurrency(
 		providerInstances,
 		executeProviderThread,
 		maxConcurrency
 	);
+
+	if ( typeof window !== 'undefined' && window.console ) {
+		// eslint-disable-next-line no-console
+		console.log(
+			'[Aether] ThreadOrchestrator - Thread execution completed:',
+			{
+				totalResults: threadResults.length,
+				successful: threadResults.filter( ( r ) => r.success ).length,
+				failed: threadResults.filter( ( r ) => ! r.success ).length,
+			}
+		);
+	}
 
 	// Check if any threads succeeded
 	const successfulThreads = threadResults.filter( ( r ) => r.success );

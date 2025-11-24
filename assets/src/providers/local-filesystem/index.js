@@ -36,6 +36,7 @@ doAction( 'aether.providers.register', provider );
 const uploadResults = {};
 
 // Track processed files per provider to avoid duplicate processing
+// Value can be: true (processed), or a Promise (in progress)
 const processedFiles = new Map();
 
 /**
@@ -55,255 +56,327 @@ async function handleUnifiedFileUpload( fileContext ) {
 		metadata = {},
 	} = fileContext;
 
+	// Debug logging
+	debug( '[LocalFilesystem] handleUnifiedFileUpload called:', {
+		fileType,
+		providerId,
+		storageKey,
+		hasFileContent: !! fileContent,
+		hasFilePath: !! filePath,
+		contentType,
+	} );
+
 	// Only handle requests for local-filesystem providers
 	if ( ! providerId || ! providerId.startsWith( 'local-filesystem' ) ) {
+		debug(
+			'[LocalFilesystem] Skipping - not a local-filesystem provider:',
+			providerId
+		);
 		return;
 	}
 
 	// Create a unique key for this file+provider combination
 	const fileKey = `${ providerId }:${ filePath || storageKey }`;
 
-	// Skip if already processed
-	if ( processedFiles.has( fileKey ) ) {
+	// Check if file is already processed or in progress
+	const existingEntry = processedFiles.get( fileKey );
+	if ( existingEntry === true ) {
+		// Already processed successfully
+		debug(
+			'[LocalFilesystem] Skipping - file already processed:',
+			fileKey
+		);
 		return;
 	}
-	processedFiles.set( fileKey, true );
-
-	// Initialize results tracking for this provider if needed
-	if ( ! uploadResults[ providerId ] ) {
-		uploadResults[ providerId ] = {
-			filesProcessed: 0,
-			filesUploaded: 0,
-			errors: [],
-		};
-	}
-
-	uploadResults[ providerId ].filesProcessed++;
-
-	try {
-		let staticPath = 'static/';
-		let exportPath = 'blueprint-bundle/bundle.zip';
-
-		// Fetch provider config
+	if ( existingEntry instanceof Promise ) {
+		// Already in progress - wait for it to complete
+		debug(
+			'[LocalFilesystem] File already in progress, waiting:',
+			fileKey
+		);
 		try {
-			const providerResponse = await apiFetch( {
-				path: `/aether/site-exporter/providers/${ providerId }/config`,
-			} );
-			if ( providerResponse.success && providerResponse.config ) {
-				const config = providerResponse.config;
-				if ( fileType === FILE_TYPES.BLUEPRINT_BUNDLE ) {
-					// For blueprint bundles, use export_path
-					if ( config.export_path ) {
-						exportPath = config.export_path;
-					}
-				} else {
-					// For static files, use static_files_path
-					staticPath = config.static_files_path || 'static/';
-					staticPath = staticPath.replace( /\/$/, '' );
-				}
+			await existingEntry;
+		} catch ( error ) {
+			// If the other handler failed, we can try again
+			// Remove the failed promise so we can retry
+			if ( processedFiles.get( fileKey ) === existingEntry ) {
+				processedFiles.delete( fileKey );
 			}
-		} catch ( configError ) {
-			debugWarn(
-				`Failed to fetch provider config for ${ providerId }:`,
-				configError
-			);
 		}
-
-		// Handle blueprint bundle upload
-		if ( fileType === FILE_TYPES.BLUEPRINT_BUNDLE ) {
-			// Blueprint bundle is a file path, not content
-			if ( ! filePath ) {
-				throw new Error( 'Blueprint bundle file path is required' );
-			}
-
-			// Trigger PHP action hook for blueprint bundle upload
-			const response = await apiFetch( {
-				path: '/aether/site-exporter/local-storage/trigger-blueprint-bundle-upload',
-				method: 'POST',
-				data: {
-					instance_id: providerId,
-					source_path: filePath,
-					destination_path: exportPath,
-					context: metadata,
-				},
-			} );
-
-			if ( ! response.success ) {
-				fileContext.result = {
-					success: false,
-					error:
-						response.message ||
-						'Failed to trigger blueprint bundle upload',
-				};
-				throw new Error(
-					response.message ||
-						'Failed to trigger blueprint bundle upload'
-				);
-			}
-
-			uploadResults[ providerId ].filesUploaded++;
+		// Check again after waiting
+		if ( processedFiles.get( fileKey ) === true ) {
 			debug(
-				`Uploaded blueprint bundle ${ filePath } to ${ exportPath } for provider ${ providerId }`
+				'[LocalFilesystem] File processed by other handler:',
+				fileKey
 			);
-			// Set result on fileContext for unified upload system
-			fileContext.result = { success: true };
 			return;
 		}
+	}
 
-		// Handle static file uploads (HTML and assets)
-		// Get file content as Blob
-		let fileBlob = null;
-		if ( fileContent ) {
-			if ( typeof fileContent === 'string' ) {
-				fileBlob = new Blob( [ fileContent ], {
-					type: contentType || 'text/html',
-				} );
-			} else if ( fileContent instanceof Blob ) {
-				fileBlob = fileContent;
+	// Mark as in progress by storing a promise
+	// This promise will be resolved/rejected when processing completes
+	const processingPromise = ( async () => {
+		try {
+			// Initialize results tracking for this provider if needed
+			if ( ! uploadResults[ providerId ] ) {
+				uploadResults[ providerId ] = {
+					filesProcessed: 0,
+					filesUploaded: 0,
+					errors: [],
+				};
 			}
-		} else if (
-			filePath &&
-			( filePath.startsWith( 'http://' ) ||
-				filePath.startsWith( 'https://' ) )
-		) {
-			// Fetch from URL if content not provided
+
+			uploadResults[ providerId ].filesProcessed++;
+
 			try {
-				const response = await fetch( filePath, {
-					method: 'GET',
-					credentials: 'omit',
-				} );
-				if ( response.ok ) {
-					fileBlob = await response.blob();
-				} else {
-					throw new Error(
-						`Failed to fetch ${ filePath }: HTTP ${ response.status }`
+				let staticPath = 'static/';
+				let exportPath = 'blueprint-bundle/bundle.zip';
+
+				// Fetch provider config
+				try {
+					const providerResponse = await apiFetch( {
+						path: `/aether/site-exporter/providers/${ providerId }/config`,
+					} );
+					if ( providerResponse.success && providerResponse.config ) {
+						const config = providerResponse.config;
+						if ( fileType === FILE_TYPES.BLUEPRINT_BUNDLE ) {
+							// For blueprint bundles, use export_path
+							if ( config.export_path ) {
+								exportPath = config.export_path;
+							}
+						} else {
+							// For static files, use static_files_path
+							staticPath = config.static_files_path || 'static/';
+							staticPath = staticPath.replace( /\/$/, '' );
+						}
+					}
+				} catch ( configError ) {
+					debugWarn(
+						`Failed to fetch provider config for ${ providerId }:`,
+						configError
 					);
 				}
-			} catch ( fetchError ) {
+
+				// Handle blueprint bundle upload
+				if ( fileType === FILE_TYPES.BLUEPRINT_BUNDLE ) {
+					// Blueprint bundle is a file path, not content
+					if ( ! filePath ) {
+						throw new Error(
+							'Blueprint bundle file path is required'
+						);
+					}
+
+					// Trigger PHP action hook for blueprint bundle upload
+					const response = await apiFetch( {
+						path: '/aether/site-exporter/local-storage/trigger-blueprint-bundle-upload',
+						method: 'POST',
+						data: {
+							instance_id: providerId,
+							source_path: filePath,
+							destination_path: exportPath,
+							context: metadata,
+						},
+					} );
+
+					if ( ! response.success ) {
+						fileContext.result = {
+							success: false,
+							error:
+								response.message ||
+								'Failed to trigger blueprint bundle upload',
+						};
+						throw new Error(
+							response.message ||
+								'Failed to trigger blueprint bundle upload'
+						);
+					}
+
+					uploadResults[ providerId ].filesUploaded++;
+					debug(
+						`Uploaded blueprint bundle ${ filePath } to ${ exportPath } for provider ${ providerId }`
+					);
+					// Set result on fileContext for unified upload system
+					fileContext.result = { success: true };
+					return;
+				}
+
+				// Handle static file uploads (HTML and assets)
+				// Get file content as Blob
+				let fileBlob = null;
+				if ( fileContent ) {
+					if ( typeof fileContent === 'string' ) {
+						fileBlob = new Blob( [ fileContent ], {
+							type: contentType || 'text/html',
+						} );
+					} else if ( fileContent instanceof Blob ) {
+						fileBlob = fileContent;
+					}
+				} else if (
+					filePath &&
+					( filePath.startsWith( 'http://' ) ||
+						filePath.startsWith( 'https://' ) )
+				) {
+					// Fetch from URL if content not provided
+					try {
+						const response = await fetch( filePath, {
+							method: 'GET',
+							credentials: 'omit',
+						} );
+						if ( response.ok ) {
+							fileBlob = await response.blob();
+						} else {
+							throw new Error(
+								`Failed to fetch ${ filePath }: HTTP ${ response.status }`
+							);
+						}
+					} catch ( fetchError ) {
+						uploadResults[ providerId ].errors.push( {
+							url: filePath,
+							error: fetchError.message,
+						} );
+						// Set result on fileContext for unified upload system
+						fileContext.result = {
+							success: false,
+							error: fetchError.message,
+						};
+						return;
+					}
+				} else {
+					throw new Error( 'File content or valid URL is required' );
+				}
+
+				if ( ! fileBlob ) {
+					uploadResults[ providerId ].errors.push( {
+						url: filePath,
+						error: 'Failed to get file content',
+					} );
+					// Set result on fileContext for unified upload system
+					fileContext.result = {
+						success: false,
+						error: 'Failed to get file content',
+					};
+					return;
+				}
+
+				// HTML is already processed by the base layer (unifiedFileUpload.js)
+				// Provider receives pre-processed HTML in fileContent
+
+				// Check if file is HTML for path handling
+				const isHtml =
+					fileType === FILE_TYPES.STATIC_HTML ||
+					( contentType && contentType.includes( 'text/html' ) );
+
+				// Determine storage key
+				let finalStorageKey = storageKey;
+				if ( ! finalStorageKey ) {
+					// Derive from filePath
+					if (
+						filePath.startsWith( 'http://' ) ||
+						filePath.startsWith( 'https://' )
+					) {
+						try {
+							const urlObj = new URL( filePath );
+							finalStorageKey = urlObj.pathname;
+							if ( urlObj.search ) {
+								finalStorageKey = finalStorageKey.replace(
+									urlObj.search,
+									''
+								);
+							}
+						} catch ( urlError ) {
+							debugWarn(
+								`Failed to parse URL ${ filePath }:`,
+								urlError
+							);
+							finalStorageKey = filePath;
+						}
+					} else {
+						finalStorageKey = filePath;
+					}
+				}
+
+				// Remove leading slash and ensure relative path
+				finalStorageKey = finalStorageKey.replace( /^\/+/, '' );
+
+				// Handle directory paths (add index.html)
+				const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(
+					finalStorageKey
+				);
+				if ( finalStorageKey === '' ) {
+					finalStorageKey = 'index.html';
+				} else if ( finalStorageKey.endsWith( '/' ) ) {
+					finalStorageKey =
+						finalStorageKey.replace( /\/+$/, '' ) + '/index.html';
+				} else if ( ! hasFileExtension && isHtml ) {
+					finalStorageKey = finalStorageKey + '/index.html';
+				}
+
+				// Upload file via filesystemAdapter
+				const uploadResult = await uploadFileToStorage(
+					staticPath,
+					finalStorageKey,
+					fileBlob,
+					{
+						contentType: contentType || 'text/html',
+					}
+				);
+
+				if ( uploadResult.success ) {
+					uploadResults[ providerId ].filesUploaded++;
+					debug(
+						`Uploaded ${ finalStorageKey } to ${ staticPath } for provider ${ providerId }`
+					);
+					// Set result on fileContext for unified upload system
+					fileContext.result = { success: true };
+				} else {
+					uploadResults[ providerId ].errors.push( {
+						url: filePath,
+						path: finalStorageKey,
+						error: uploadResult.error || 'Upload failed',
+					} );
+					debugWarn(
+						`Failed to upload ${ finalStorageKey } for provider ${ providerId }:`,
+						uploadResult.error
+					);
+					// Set result on fileContext for unified upload system
+					fileContext.result = {
+						success: false,
+						error: uploadResult.error || 'Upload failed',
+					};
+				}
+			} catch ( error ) {
 				uploadResults[ providerId ].errors.push( {
 					url: filePath,
-					error: fetchError.message,
+					error: error.message || 'Unknown error',
 				} );
+				debugWarn(
+					`Error processing file for provider ${ providerId }:`,
+					error
+				);
 				// Set result on fileContext for unified upload system
 				fileContext.result = {
 					success: false,
-					error: fetchError.message,
+					error: error.message || 'Unknown error',
 				};
-				return;
+				// Re-throw so the promise wrapper can handle it
+				throw error;
 			}
-		} else {
-			throw new Error( 'File content or valid URL is required' );
-		}
-
-		if ( ! fileBlob ) {
-			uploadResults[ providerId ].errors.push( {
-				url: filePath,
-				error: 'Failed to get file content',
-			} );
-			// Set result on fileContext for unified upload system
-			fileContext.result = {
-				success: false,
-				error: 'Failed to get file content',
-			};
-			return;
-		}
-
-		// HTML is already processed by the base layer (unifiedFileUpload.js)
-		// Provider receives pre-processed HTML in fileContent
-
-		// Check if file is HTML for path handling
-		const isHtml =
-			fileType === FILE_TYPES.STATIC_HTML ||
-			( contentType && contentType.includes( 'text/html' ) );
-
-		// Determine storage key
-		let finalStorageKey = storageKey;
-		if ( ! finalStorageKey ) {
-			// Derive from filePath
-			if (
-				filePath.startsWith( 'http://' ) ||
-				filePath.startsWith( 'https://' )
-			) {
-				try {
-					const urlObj = new URL( filePath );
-					finalStorageKey = urlObj.pathname;
-					if ( urlObj.search ) {
-						finalStorageKey = finalStorageKey.replace(
-							urlObj.search,
-							''
-						);
-					}
-				} catch ( urlError ) {
-					debugWarn( `Failed to parse URL ${ filePath }:`, urlError );
-					finalStorageKey = filePath;
-				}
-			} else {
-				finalStorageKey = filePath;
+			// Mark as processed after successful completion
+			processedFiles.set( fileKey, true );
+		} catch ( error ) {
+			// Remove from map on error so it can be retried
+			if ( processedFiles.get( fileKey ) === processingPromise ) {
+				processedFiles.delete( fileKey );
 			}
+			throw error;
 		}
+	} )();
 
-		// Remove leading slash and ensure relative path
-		finalStorageKey = finalStorageKey.replace( /^\/+/, '' );
+	// Store the promise so other handlers can wait for it
+	processedFiles.set( fileKey, processingPromise );
 
-		// Handle directory paths (add index.html)
-		const hasFileExtension = /\.[a-zA-Z0-9]+$/.test( finalStorageKey );
-		if ( finalStorageKey === '' ) {
-			finalStorageKey = 'index.html';
-		} else if ( finalStorageKey.endsWith( '/' ) ) {
-			finalStorageKey =
-				finalStorageKey.replace( /\/+$/, '' ) + '/index.html';
-		} else if ( ! hasFileExtension && isHtml ) {
-			finalStorageKey = finalStorageKey + '/index.html';
-		}
-
-		// Upload file via filesystemAdapter
-		const uploadResult = await uploadFileToStorage(
-			staticPath,
-			finalStorageKey,
-			fileBlob,
-			{
-				contentType: contentType || 'text/html',
-			}
-		);
-
-		if ( uploadResult.success ) {
-			uploadResults[ providerId ].filesUploaded++;
-			debug(
-				`Uploaded ${ finalStorageKey } to ${ staticPath } for provider ${ providerId }`
-			);
-			// Set result on fileContext for unified upload system
-			fileContext.result = { success: true };
-		} else {
-			uploadResults[ providerId ].errors.push( {
-				url: filePath,
-				path: finalStorageKey,
-				error: uploadResult.error || 'Upload failed',
-			} );
-			debugWarn(
-				`Failed to upload ${ finalStorageKey } for provider ${ providerId }:`,
-				uploadResult.error
-			);
-			// Set result on fileContext for unified upload system
-			fileContext.result = {
-				success: false,
-				error: uploadResult.error || 'Upload failed',
-			};
-		}
-	} catch ( error ) {
-		uploadResults[ providerId ].errors.push( {
-			url: filePath,
-			error: error.message || 'Unknown error',
-		} );
-		debugWarn(
-			`Error processing file for provider ${ providerId }:`,
-			error
-		);
-		// Set result on fileContext for unified upload system
-		fileContext.result = {
-			success: false,
-			error: error.message || 'Unknown error',
-		};
-	}
+	// Wait for processing to complete
+	await processingPromise;
 }
 
 /**

@@ -118,22 +118,6 @@ export function useExportController( exportState ) {
 			// Set isExporting to true to start the workflow
 			setIsExporting( true );
 
-			// Invalidate all provider config caches to ensure fresh data during export
-			try {
-				await ConfigStorage.clearAllCaches();
-				debug(
-					'Invalidated all provider config caches for fresh export data'
-				);
-			} catch ( cacheError ) {
-				// Cache invalidation failure is not critical - log and continue
-				debugError(
-					'Failed to invalidate provider config caches:',
-					cacheError
-				);
-			}
-
-			debug( 'Steps initialized, starting export workflow' );
-
 			// Fetch settings to get storage provider ID before starting
 			const settingsResponse = await apiFetch( {
 				path: '/aether/site-exporter/settings',
@@ -160,9 +144,6 @@ export function useExportController( exportState ) {
 				// Asset status fetch is not critical - log and continue
 				debugError( 'Failed to fetch asset status:', assetError );
 			}
-
-			// STATELESS WORKFLOW EXECUTION
-			// No job tracking - React owns all state, PHP provides stateless endpoints
 
 			// Activate the first step immediately to update UI
 			updateFromStep( 'discoverBlueprintBundleAssets' );
@@ -243,7 +224,7 @@ export function useExportController( exportState ) {
 			workflowContext.setOverallProgressValue = setOverallProgressValue;
 			workflowContext.removeMessage = removeMessage;
 
-			// Execute full workflow - individual steps check provider deployment_types
+			// Execute full workflow - individual steps check provider type
 
 			// Set up workflow lifecycle callbacks for UI updates
 			const workflowOptions = {

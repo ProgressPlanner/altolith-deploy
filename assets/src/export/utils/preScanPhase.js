@@ -58,10 +58,44 @@ export async function executePreScan( {
 	const allUniqueAssets = new Set();
 	let successfulUrls = 0;
 
+	debug( '[Aether] executePreScan starting:', {
+		totalUrls: urls.length,
+		cachedEntries: dataStorage.size,
+	} );
+
 	// Scan each URL
 	for ( let i = 0; i < urls.length; i++ ) {
 		const url = urls[ i ];
 
+		// Check if URL is already in cache (from preScanStaticSite step)
+		const cachedEntry = dataStorage.get( url );
+		if ( cachedEntry ) {
+			// Use cached data - validate structure
+			if (
+				cachedEntry &&
+				typeof cachedEntry === 'object' &&
+				cachedEntry.rawHtml &&
+				Array.isArray( cachedEntry.assetUrls )
+			) {
+				debug( `[Aether] Using cached HTML data for URL: ${ url }` );
+				successfulUrls++;
+
+				// Add cached assets to unique set
+				for ( const assetUrl of cachedEntry.assetUrls ) {
+					allUniqueAssets.add( assetUrl );
+				}
+				continue;
+			} else {
+				debugWarn(
+					`[Aether] Cached entry for ${ url } has invalid structure, will re-fetch`
+				);
+			}
+		}
+
+		// URL not in cache - this might be an asset URL (CSS, JS, image, etc.)
+		// Assets are handled separately in the upload phase, so we can skip them here
+		// Only fetch if it looks like it might be an HTML page
+		// (We'll let the fetch determine if it's actually HTML)
 		try {
 			// Fetch from URL
 			const htmlResponse = await fetch( url, {
@@ -81,6 +115,18 @@ export async function executePreScan( {
 					url,
 					reason: `Failed to fetch HTML: HTTP ${ htmlResponse.status } ${ htmlResponse.statusText }`,
 				} );
+				continue;
+			}
+
+			// Check content-type to ensure it's HTML
+			const contentType =
+				htmlResponse.headers.get( 'content-type' ) || '';
+			if ( ! contentType.includes( 'text/html' ) ) {
+				// Not HTML - likely an asset (CSS, JS, image, etc.)
+				// Assets are handled separately in upload phase, skip here
+				debug(
+					`[Aether] Skipping non-HTML URL (likely asset): ${ url } (content-type: ${ contentType })`
+				);
 				continue;
 			}
 

@@ -80,14 +80,15 @@ async function handler( context ) {
 			const html = await response.text();
 			htmlUrls.push( url );
 
-			// Store HTML in shared cache for later use
-			sharedHtmlData.set( url, html );
-
 			// Extract assets from HTML
 			const assets = await extractAssetsFromHtml( html, url, siteUrl );
 			for ( const asset of assets ) {
 				allAssets.add( asset );
 			}
+
+			// Store HTML and assets in shared cache for later use
+			// Format matches what useStaticSiteGenerator expects: { rawHtml, assetUrls }
+			sharedHtmlData.set( url, { rawHtml: html, assetUrls: assets } );
 		} catch ( error ) {
 			debugWarn( `[Aether] Error fetching URL: ${ url }`, error.message );
 		}

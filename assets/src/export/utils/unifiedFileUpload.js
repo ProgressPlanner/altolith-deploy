@@ -6,21 +6,25 @@
  *
  */
 
-import { doAction, applyFilters } from '@wordpress/hooks';
+import { doActionAsync, applyFilters } from '@wordpress/hooks';
 import { processHtml } from '@aether/export/utils/htmlProcessor';
 import apiFetch from '@wordpress/api-fetch';
-import { debugWarn } from '@aether/utils/debug';
+import { debugWarn, debug } from '@aether/utils/debug';
 
 /**
  * File types supported by the unified upload system.
+ * Internal use only - providers should not know about file types.
  *
  * @type {Object<string, string>}
  */
-export const FILE_TYPES = {
+const FILE_TYPES = {
 	BLUEPRINT_BUNDLE: 'blueprint-bundle',
 	STATIC_HTML: 'static-html',
 	STATIC_ASSET: 'static-asset',
 };
+
+// Export for use in export steps (not providers)
+export { FILE_TYPES };
 
 /**
  * Create file context for unified upload action.
@@ -94,32 +98,44 @@ async function getProviderStaticSiteUrl( providerId, metadata ) {
 }
 
 /**
- * Execute action handlers asynchronously.
+ * Get provider configuration.
  *
- * WordPress hooks don't have built-in async action support. We use a promise
- * tracking system where handlers register their promises on the context object.
- *
- * @param {string} actionName  Action name.
- * @param {Object} fileContext File context object (first arg).
- * @return {Promise<void>}
+ * @param {string} providerId Provider instance ID.
+ * @return {Promise<Object>} Provider configuration object.
  */
-async function doActionAsync( actionName, fileContext ) {
-	// Initialize promise array on fileContext
-	if ( ! fileContext._uploadPromises ) {
-		fileContext._uploadPromises = [];
+async function getProviderConfig( providerId ) {
+	try {
+		const providerResponse = await apiFetch( {
+			path: `/aether/site-exporter/providers/${ providerId }/config`,
+		} );
+
+		if ( providerResponse.success && providerResponse.config ) {
+			return providerResponse.config;
+		}
+	} catch ( error ) {
+		debugWarn(
+			`Failed to fetch provider config for ${ providerId }:`,
+			error
+		);
 	}
 
-	// Fire the action - handlers will add their promises to fileContext._uploadPromises
-	doAction( actionName, fileContext );
+	return {};
+}
 
-	// Wait for all registered promises to complete
-	const promises = fileContext._uploadPromises || [];
-	if ( promises.length > 0 ) {
-		await Promise.all( promises );
+/**
+ * Determine destination path based on file type and provider config.
+ *
+ * @param {string} fileType File type (FILE_TYPES.*).
+ * @param {Object} config   Provider configuration.
+ * @return {string} Destination path.
+ */
+function determineDestinationPath( fileType, config ) {
+	if ( fileType === FILE_TYPES.BLUEPRINT_BUNDLE ) {
+		return config.export_path || 'blueprint-bundle/bundle.zip';
 	}
-
-	// Clean up
-	delete fileContext._uploadPromises;
+	// For static files (HTML and assets)
+	const staticPath = config.static_files_path || 'static/';
+	return staticPath.replace( /\/$/, '' );
 }
 
 /**
@@ -141,6 +157,10 @@ export async function uploadFile( fileContext ) {
 		providerId,
 		metadata = {},
 	} = fileContext;
+
+	// Fetch provider config to determine destination path
+	const config = await getProviderConfig( providerId );
+	const destinationPath = determineDestinationPath( fileType, config );
 
 	// Process HTML content per-provider-instance before upload
 	// Each provider has a different staticSiteUrl, so HTML needs to be processed separately
@@ -209,22 +229,48 @@ export async function uploadFile( fileContext ) {
 		}
 	}
 
-	// Create context with processed content
-	const contextWithProcessedContent = {
-		...fileContext,
-		fileContent: processedContent,
+	// Create context for provider - remove fileType, add destinationPath
+	// Providers should not know about file types, only where to upload
+	const providerContext = {
+		filePath, // For blueprint bundles
+		fileContent: processedContent, // For static files (processed HTML/CSS/JS)
+		destinationPath, // Where to upload (determined by abstraction layer)
+		storageKey: fileContext.storageKey,
+		contentType,
+		providerId,
+		metadata,
+		// Note: fileType is NOT included - providers don't need to know
 	};
 
 	// Allow filtering of file context before upload
 	const filteredContext = applyFilters(
 		'aether.file.upload.context',
-		contextWithProcessedContent,
+		providerContext,
 		providerId
 	);
+
+	// Debug logging
+	debug( '[UnifiedUpload] Firing aether.file.upload action:', {
+		fileType, // Internal use only for logging
+		providerId,
+		storageKey: filteredContext.storageKey,
+		destinationPath: filteredContext.destinationPath,
+		hasFileContent: !! filteredContext.fileContent,
+		hasFilePath: !! filteredContext.filePath,
+		contentType,
+	} );
 
 	// Fire unified upload action asynchronously
 	// Providers hook into this action to handle the actual upload
 	await doActionAsync( 'aether.file.upload', filteredContext );
+
+	// Debug logging after action
+	debug( '[UnifiedUpload] Upload action completed:', {
+		providerId,
+		storageKey: filteredContext.storageKey,
+		hasResult: !! filteredContext.result,
+		result: filteredContext.result,
+	} );
 
 	// Check if provider set a result on the context
 	if ( filteredContext.result ) {

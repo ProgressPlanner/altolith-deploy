@@ -26,9 +26,10 @@ import DataValidator from './DataValidator';
 /**
  * Execute a workflow with the given steps.
  *
- * @param {Array<Object>} steps   Array of step definitions to execute.
- * @param {Object}        context Initial context with dependencies and state.
- * @param {Object}        options Execution options.
+ * @param {Array<Object>} steps              Array of step definitions to execute.
+ * @param {Object}        context            Initial context with dependencies and state.
+ * @param {Object}        options            Execution options.
+ * @param {Array<Object>} [options.allSteps] Optional: All steps (for dependency validation when executing subset).
  * @return {Promise<Object>} Final execution state.
  */
 export async function executeSteps( steps, context, options = {} ) {
@@ -37,10 +38,14 @@ export async function executeSteps( steps, context, options = {} ) {
 		onStepComplete = () => {},
 		onStepSkipped = () => {},
 		onError = () => {},
+		allSteps = null, // Optional: All steps for dependency validation
 	} = options;
 
 	// Validate dependencies
-	const errors = validateDependencies( steps );
+	// Use allSteps if provided (for thread steps that depend on global steps),
+	// otherwise use the steps array itself
+	const stepsForValidation = allSteps || steps;
+	const errors = validateDependencies( stepsForValidation, steps );
 	if ( errors.length > 0 ) {
 		throw new Error(
 			`Invalid step dependencies: ${ errors.join( '; ' ) }`
@@ -277,6 +282,23 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 		return filteredResult;
 	} catch ( error ) {
+		// Log error for debugging
+		if ( typeof window !== 'undefined' && window.console ) {
+			// eslint-disable-next-line no-console
+			console.error(
+				`[Aether] StepExecutor - Step "${ stepId }" failed:`,
+				error
+			);
+			// eslint-disable-next-line no-console
+			console.error( '[Aether] Error details:', {
+				message: error.message,
+				stack: error.stack,
+				stepId,
+				providerInstance:
+					executionContext.currentProviderInstance?.id || 'N/A',
+			} );
+		}
+
 		// Categorize and format error
 		const category = errorHandler.categorize( error );
 		const severity = determineSeverity( category, { stepId } );
