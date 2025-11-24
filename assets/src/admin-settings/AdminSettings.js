@@ -11,7 +11,6 @@ import { Button } from '@wordpress/components';
 import ExportProgressModal from '../components/ExportProgressModal';
 import ProviderSettings from './ProviderSettings';
 import StatusNotice from '../components/StatusNotice';
-import HowItWorks from '../components/HowItWorks';
 import { colors, spacing, fontWeight, createFlexStyle } from '../utils/styles';
 import apiFetch from '../utils/api';
 
@@ -142,8 +141,6 @@ export default function AdminSettings() {
 					onConfigsUpdate={ handleConfigsUpdate }
 					onNotice={ addNotice }
 				/>
-
-				<HowItWorks />
 			</div>
 
 			<ExportProgressModal
