@@ -87,13 +87,13 @@ export function ExportProvider( { children } ) {
 	 */
 	const initializeSteps = useCallback(
 		( stepDefinitions = [], initialStepId = null ) => {
-			const newSteps = stepDefinitions.map( ( stepDef ) => ( {
-				id: stepDef.id,
-				label: stepDef.label,
-				status: 'pending',
-				supportsProgress: stepDef.supportsProgress || false,
-				progress: 0,
-			} ) );
+		const newSteps = stepDefinitions.map( ( stepDef ) => ( {
+			id: stepDef.id,
+			label: stepDef.label,
+			status: 'pending',
+			supportsProgress: stepDef.supportsProgress || false,
+			progress: { current: 0, total: 0 },
+		} ) );
 
 			// If initialStepId is provided, activate it immediately
 			let initialStepIndex = -1;
@@ -142,10 +142,10 @@ export function ExportProvider( { children } ) {
 	);
 
 	/**
-	 * Set progress percentage for a specific step
+	 * Set progress for a specific step
 	 *
 	 * @param {string} stepId   Step ID
-	 * @param {number} progress Progress percentage (0-100)
+	 * @param {Object} progress Progress object with `current` and `total` properties
 	 */
 	const setStepProgress = useCallback( ( stepId, progress ) => {
 		setSteps( ( prevSteps ) =>
@@ -153,10 +153,10 @@ export function ExportProvider( { children } ) {
 				if ( step.id === stepId ) {
 					return {
 						...step,
-						progress: Math.max(
-							0,
-							Math.min( 100, Math.round( progress ) )
-						),
+						progress: {
+							current: Math.max( 0, progress.current || 0 ),
+							total: Math.max( 0, progress.total || 0 ),
+						},
 					};
 				}
 				return step;
@@ -173,15 +173,15 @@ export function ExportProvider( { children } ) {
 	 * @param {string} providerId Provider instance ID
 	 * @param {Object} progress   Progress data { stepId, stepLabel, progress, status }
 	 */
-	const setProviderProgress = useCallback( ( providerId, progress ) => {
+	const setProviderProgress = useCallback( ( providerId, progressData ) => {
 		setProviderProgressState( ( prev ) => ( {
 			...prev,
 			[ providerId ]: {
-				...progress,
-				progress: Math.max(
-					0,
-					Math.min( 100, Math.round( progress.progress || 0 ) )
-				),
+				...progressData,
+				progress: {
+					current: Math.max( 0, progressData.progress?.current || 0 ),
+					total: Math.max( 0, progressData.progress?.total || 0 ),
+				},
 			},
 		} ) );
 	}, [] );

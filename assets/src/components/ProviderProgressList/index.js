@@ -15,7 +15,7 @@ import { colors, spacing, fontSize, fontWeight } from '@aether/utils/styles';
  * Provider Progress List Component
  *
  * @param {Object} props                   - Component props
- * @param {Object} props.providerProgress  - Provider progress object { [providerId]: { stepId, stepLabel, progress, status, error } }
+ * @param {Object} props.providerProgress  - Provider progress object { [providerId]: { stepId, stepLabel, progress: { current, total }, status, error } }
  * @param {Array}  props.providerInstances - Array of provider instances { id, label, config }
  * @return {JSX.Element|null} Provider progress list component
  */
@@ -90,7 +90,7 @@ export function ProviderProgressList( {
 					const progress = providerProgress[ instance.id ] || {
 						stepId: null,
 						stepLabel: __( 'Pending', 'aether-site-exporter' ),
-						progress: 0,
+						progress: { current: 0, total: 0 },
 						status: 'pending',
 					};
 

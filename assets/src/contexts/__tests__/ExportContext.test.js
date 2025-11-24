@@ -336,13 +336,13 @@ describe( 'ExportContext', () => {
 			} );
 
 			act( () => {
-				result.current.setStepProgress( 'step1', 50 );
+				result.current.setStepProgress( 'step1', { current: 50, total: 100 } );
 			} );
 
-			expect( result.current.steps[ 0 ].progress ).toBe( 50 );
+			expect( result.current.steps[ 0 ].progress ).toEqual( { current: 50, total: 100 } );
 		} );
 
-		it( 'should clamp progress to 0-100 range', () => {
+		it( 'should clamp progress to non-negative values', () => {
 			const { result } = renderHook( () => useContext( ExportContext ), {
 				wrapper: ExportProvider,
 			} );
@@ -354,19 +354,19 @@ describe( 'ExportContext', () => {
 			} );
 
 			act( () => {
-				result.current.setStepProgress( 'step1', 150 );
+				result.current.setStepProgress( 'step1', { current: 150, total: 100 } );
 			} );
 
-			expect( result.current.steps[ 0 ].progress ).toBe( 100 );
+			expect( result.current.steps[ 0 ].progress ).toEqual( { current: 150, total: 100 } );
 
 			act( () => {
-				result.current.setStepProgress( 'step1', -10 );
+				result.current.setStepProgress( 'step1', { current: -10, total: 100 } );
 			} );
 
-			expect( result.current.steps[ 0 ].progress ).toBe( 0 );
+			expect( result.current.steps[ 0 ].progress ).toEqual( { current: 0, total: 100 } );
 		} );
 
-		it( 'should round progress to integer', () => {
+		it( 'should accept decimal values for current and total', () => {
 			const { result } = renderHook( () => useContext( ExportContext ), {
 				wrapper: ExportProvider,
 			} );
@@ -378,10 +378,10 @@ describe( 'ExportContext', () => {
 			} );
 
 			act( () => {
-				result.current.setStepProgress( 'step1', 45.7 );
+				result.current.setStepProgress( 'step1', { current: 45.7, total: 100 } );
 			} );
 
-			expect( result.current.steps[ 0 ].progress ).toBe( 46 );
+			expect( result.current.steps[ 0 ].progress ).toEqual( { current: 45.7, total: 100 } );
 		} );
 
 		it( 'should not modify other steps', () => {
@@ -397,11 +397,11 @@ describe( 'ExportContext', () => {
 			} );
 
 			act( () => {
-				result.current.setStepProgress( 'step2', 75 );
+				result.current.setStepProgress( 'step2', { current: 75, total: 100 } );
 			} );
 
-			expect( result.current.steps[ 0 ].progress ).toBe( 0 );
-			expect( result.current.steps[ 1 ].progress ).toBe( 75 );
+			expect( result.current.steps[ 0 ].progress ).toEqual( { current: 0, total: 0 } );
+			expect( result.current.steps[ 1 ].progress ).toEqual( { current: 75, total: 100 } );
 		} );
 	} );
 

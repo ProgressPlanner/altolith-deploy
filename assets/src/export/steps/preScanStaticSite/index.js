@@ -49,8 +49,10 @@ async function handler( context ) {
 
 		// Update progress
 		if ( setStepProgress ) {
-			const progress = Math.round( ( ( i + 1 ) / totalUrls ) * 100 );
-			setStepProgress( 'preScanStaticSite', progress );
+			setStepProgress( 'preScanStaticSite', {
+				current: i + 1,
+				total: totalUrls,
+			} );
 		}
 
 		try {

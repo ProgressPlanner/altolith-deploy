@@ -74,31 +74,27 @@ export function useExportController( exportState ) {
 				const { providerIndex, totalProviders } =
 					staticSiteProgressContext.current;
 
-				// Current provider's progress (0-100)
-				const currentProviderProgress = Math.min(
-					100,
-					Math.max(
-						0,
-						Math.round( ( uploadedFiles / totalFiles ) * 100 )
-					)
-				);
-
-				// Calculate step progress accounting for multiple providers
-				// Progress formula: (providerIndex * 100 + currentProviderProgress) / totalProviders
-				let stepProgress = currentProviderProgress;
+				// Calculate raw numbers accounting for multiple providers
+				// For multiple providers, we need to calculate the total across all providers
+				// and the current position across all providers
 				if ( totalProviders > 1 ) {
-					stepProgress = Math.min(
-						100,
-						Math.round(
-							( providerIndex * 100 + currentProviderProgress ) /
-								totalProviders
-						)
-					);
+					// For multiple providers, each provider processes totalFiles
+					// Current position: providerIndex * totalFiles + uploadedFiles
+					// Total: totalProviders * totalFiles
+					const totalAcrossProviders = totalProviders * totalFiles;
+					const currentAcrossProviders =
+						providerIndex * totalFiles + uploadedFiles;
+					setStepProgress( 'uploadStaticFiles', {
+						current: currentAcrossProviders,
+						total: totalAcrossProviders,
+					} );
+				} else {
+					// Single provider - use raw numbers directly
+					setStepProgress( 'uploadStaticFiles', {
+						current: uploadedFiles,
+						total: totalFiles,
+					} );
 				}
-
-				// Only update step progress - let the progress tracker handle overall progress
-				// This prevents progress jumps when this step starts
-				setStepProgress( 'uploadStaticFiles', stepProgress );
 			}
 		}
 	);

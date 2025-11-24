@@ -13,13 +13,13 @@ import { useExportController } from '@aether/export/hooks/useExportController';
 import {
 	colors,
 	spacing,
-	borderRadius,
 	fontSize,
 	fontWeight,
 	noticeStyles,
 	createFlexStyle,
 } from '@aether/utils/styles';
 import ProviderProgressList from '../ProviderProgressList';
+import ProgressBar from '../ProgressBar';
 
 // Styles - extracted to module level for performance
 const modalContentStyle = {
@@ -47,37 +47,6 @@ const noticeParagraphStyle = {
 
 const progressContainerStyle = {
 	...createFlexStyle( 'column', spacing.xl ),
-};
-
-const progressBarContainerStyle = {
-	...createFlexStyle( 'row', spacing.lg ),
-	alignItems: 'center',
-	width: '100%',
-};
-
-const progressBarStyle = {
-	width: '100%',
-	height: '20px',
-	backgroundColor: colors.borderLighter,
-	borderRadius: borderRadius.sm,
-	overflow: 'hidden',
-	position: 'relative',
-};
-
-const progressBarFillStyle = {
-	height: '100%',
-	backgroundColor: colors.primary,
-	transition: 'width 0.3s ease',
-	borderRadius: borderRadius.sm,
-};
-
-const progressPercentageStyle = {
-	fontSize: fontSize.sm,
-	fontWeight: fontWeight.semibold,
-	color: colors.text,
-	minWidth: '3rem',
-	textAlign: 'right',
-	flexShrink: 0,
 };
 
 const loadingStyle = {
@@ -154,26 +123,33 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 		}
 	}, [ finalStatus, onComplete ] );
 
-	// Calculate overall progress from steps if not explicitly set
-	const displayProgress = useMemo( () => {
-		if ( overallProgress > 0 ) {
-			return overallProgress;
-		}
+	// Calculate overall progress from steps using raw numbers
+	const overallProgressData = useMemo( () => {
 		if ( steps.length === 0 ) {
-			return 0;
+			return { current: 0, total: 0 };
 		}
-		const completedSteps = steps.filter(
-			( step ) => step.status === 'complete'
-		).length;
-		const currentActiveStep = steps.find(
-			( step ) => step.status === 'active'
-		);
-		let progress = ( completedSteps / steps.length ) * 100;
-		if ( currentActiveStep && currentActiveStep.supportsProgress ) {
-			progress += currentActiveStep.progress / steps.length;
+
+		// Sum up current and total from all steps that support progress
+		let totalCurrent = 0;
+		let totalTotal = 0;
+
+		steps.forEach( ( step ) => {
+			if ( step.supportsProgress && step.progress ) {
+				totalCurrent += step.progress.current || 0;
+				totalTotal += step.progress.total || 0;
+			}
+		} );
+
+		// If no steps support progress, return zero progress
+		if ( totalTotal === 0 ) {
+			return { current: 0, total: 0 };
 		}
-		return Math.min( 100, Math.round( progress ) );
-	}, [ steps, overallProgress ] );
+
+		return {
+			current: totalCurrent,
+			total: totalTotal,
+		};
+	}, [ steps ] );
 
 	// Build provider instances array from provider IDs
 	// Combine all providers across deployment types for display
@@ -286,29 +262,19 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 						className="aether-export-progress-modal__progress"
 						style={ progressContainerStyle }
 					>
-						<div
-							className="aether-export-progress-modal__progress-container"
-							style={ progressBarContainerStyle }
-						>
-							<div
-								className="aether-export-progress-modal__progress-bar"
-								style={ progressBarStyle }
-							>
-								<div
-									className="aether-export-progress-modal__progress-fill"
-									style={ {
-										...progressBarFillStyle,
-										width: `${ displayProgress }%`,
-									} }
-								/>
-							</div>
-							<span
-								className="aether-export-progress-modal__progress-percentage"
-								style={ progressPercentageStyle }
-							>
-								{ displayProgress }%
-							</span>
-						</div>
+						<ProgressBar
+							progress={ overallProgressData }
+							height={ 20 }
+							description={
+								overallProgressData.total > 0
+									? `${ Math.round(
+											( overallProgressData.current /
+												overallProgressData.total ) *
+												100
+									  ) }%`
+									: undefined
+							}
+						/>
 					</div>
 				) }
 

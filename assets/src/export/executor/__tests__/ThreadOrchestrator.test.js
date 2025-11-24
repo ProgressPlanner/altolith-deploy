@@ -739,7 +739,7 @@ describe( 'ThreadOrchestrator', () => {
 				'provider1',
 				expect.objectContaining( {
 					status: 'complete',
-					progress: 100,
+					progress: { current: 100, total: 100 },
 				} )
 			);
 		} );

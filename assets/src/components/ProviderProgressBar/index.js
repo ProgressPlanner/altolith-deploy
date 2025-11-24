@@ -2,13 +2,13 @@
  * Provider Progress Bar Component
  *
  * Displays progress for a single provider instance.
- * Shows provider label, current step, and progress percentage.
+ * Shows provider label, current step, and progress using raw numbers.
  *
  * @since 1.0.0
  */
 
-import { ProgressBar } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import ProgressBar from '@aether/components/ProgressBar';
 import {
 	colors,
 	spacing,
@@ -24,7 +24,7 @@ import {
  * @param {string} props.providerId    - Provider instance ID
  * @param {string} props.providerLabel - Provider display label
  * @param {string} props.stepLabel     - Current step label
- * @param {number} props.progress      - Progress percentage (0-100)
+ * @param {Object} props.progress      - Progress object with `current` and `total` properties
  * @param {string} props.status        - Status: 'active', 'complete', 'error'
  * @param {string} props.error         - Error message (if status is 'error')
  * @return {JSX.Element} Provider progress bar component
@@ -37,6 +37,11 @@ export function ProviderProgressBar( {
 	status,
 	error,
 } ) {
+	// Calculate percentage for display
+	const percentage =
+		progress.total > 0
+			? Math.round( ( progress.current / progress.total ) * 100 )
+			: 0;
 	const getStatusIcon = () => {
 		switch ( status ) {
 			case 'complete':
@@ -148,11 +153,6 @@ export function ProviderProgressBar( {
 		position: 'relative',
 	};
 
-	// Progress bar style override
-	const progressBarStyle = {
-		height: '8px',
-	};
-
 	return (
 		<>
 			<style>
@@ -164,13 +164,6 @@ export function ProviderProgressBar( {
 						50% {
 							opacity: 0.5;
 						}
-					}
-					.provider-progress-bar__progress .components-progress-bar {
-						height: 8px;
-					}
-					.provider-progress-bar__progress .components-progress-bar__indicator {
-						${ status === 'complete' ? `background: ${ colors.success };` : '' }
-						${ status === 'error' ? `background: ${ colors.error };` : '' }
 					}
 				` }
 			</style>
@@ -185,7 +178,7 @@ export function ProviderProgressBar( {
 						<strong>{ providerLabel }</strong>
 					</div>
 					<div style={ percentageStyle }>
-						{ Math.round( progress ) }%
+						{ percentage }%
 					</div>
 				</div>
 
@@ -205,9 +198,8 @@ export function ProviderProgressBar( {
 
 				<div style={ progressBarWrapperStyle }>
 					<ProgressBar
-						className="provider-progress-bar__progress"
-						style={ progressBarStyle }
-						value={ progress }
+						progress={ progress }
+						height={ 8 }
 					/>
 				</div>
 			</div>

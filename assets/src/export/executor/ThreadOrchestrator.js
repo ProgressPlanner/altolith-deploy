@@ -459,6 +459,11 @@ export async function executeThreadedWorkflow(
 				}
 			},
 			setStepProgress: ( stepId, progress ) => {
+				// Update step progress in context
+				if ( initialContext.setStepProgress ) {
+					initialContext.setStepProgress( stepId, progress );
+				}
+
 				// Update per-provider progress tracking
 				if ( initialContext.setProviderProgress ) {
 					// Get step label from cached map (O(1) lookup)
@@ -499,7 +504,7 @@ export async function executeThreadedWorkflow(
 				initialContext.setProviderProgress( providerInstance.id, {
 					stepId: null,
 					stepLabel: 'Complete',
-					progress: 100,
+					progress: { current: 100, total: 100 },
 					status: 'complete',
 				} );
 			}
@@ -527,7 +532,7 @@ export async function executeThreadedWorkflow(
 				initialContext.setProviderProgress( providerInstance.id, {
 					stepId: null,
 					stepLabel: 'Error',
-					progress: 0,
+					progress: { current: 0, total: 100 },
 					status: 'error',
 					error: error.message || 'Unknown error',
 				} );
