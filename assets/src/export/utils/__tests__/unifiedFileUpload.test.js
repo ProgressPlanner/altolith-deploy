@@ -29,6 +29,16 @@ jest.mock( '@wordpress/hooks', () => {
 				}
 			} );
 		} ),
+		doActionAsync: jest.fn( async ( actionName, ...args ) => {
+			const handlers = actions.get( actionName ) || [];
+			for ( const handler of handlers ) {
+				try {
+					await handler( ...args );
+				} catch ( error ) {
+					// Ignore errors in handlers for testing
+				}
+			}
+		} ),
 		applyFilters: jest.fn( ( filter, value ) => value ),
 		hasAction: jest.fn( ( actionName ) => actions.has( actionName ) ),
 		addAction: jest.fn(

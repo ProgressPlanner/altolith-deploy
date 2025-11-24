@@ -41,24 +41,21 @@ describe( 'providerMetadata', () => {
 
 	describe( 'getProviderMetadata()', () => {
 		test( 'should get all providers from registry', () => {
+			// Mock provider classes with static properties
 			const mockProviders = [
-				{
-					constructor: class {
-						static DEPLOYMENT_TYPE = 'static_site';
-					},
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					getDescription: () => 'Description 1',
-					getType: () => 'type-1',
+				class {
+					static ID = 'provider-1';
+					static NAME = 'Provider 1';
+					static DESCRIPTION = 'Description 1';
+					static TYPE = 'type-1';
+					static DEPLOYMENT_TYPE = 'static_site';
 				},
-				{
-					constructor: class {
-						static DEPLOYMENT_TYPE = 'blueprint_bundle';
-					},
-					getId: () => 'provider-2',
-					getName: () => 'Provider 2',
-					getDescription: () => 'Description 2',
-					getType: () => 'type-2',
+				class {
+					static ID = 'provider-2';
+					static NAME = 'Provider 2';
+					static DESCRIPTION = 'Description 2';
+					static TYPE = 'type-2';
+					static DEPLOYMENT_TYPE = 'blueprint_bundle';
 				},
 			];
 			mockGetAll.mockReturnValue( mockProviders );
@@ -76,10 +73,11 @@ describe( 'providerMetadata', () => {
 		} );
 
 		test( 'should handle providers without optional methods', () => {
+			// Mock provider class with minimal static properties
 			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
+				class {
+					static ID = 'provider-1';
+					static NAME = 'Provider 1';
 				},
 			];
 			mockGetAll.mockReturnValue( mockProviders );
@@ -105,15 +103,14 @@ describe( 'providerMetadata', () => {
 
 	describe( 'getProvidersByDeploymentType()', () => {
 		test( 'should get providers for deployment type', () => {
+			// Mock provider class with static properties
 			const mockProviders = [
-				{
-					constructor: class {
-						static DEPLOYMENT_TYPE = 'static_site';
-					},
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					getDescription: () => 'Description 1',
-					getType: () => 'type-1',
+				class {
+					static ID = 'provider-1';
+					static NAME = 'Provider 1';
+					static DESCRIPTION = 'Description 1';
+					static TYPE = 'type-1';
+					static DEPLOYMENT_TYPE = 'static_site';
 				},
 			];
 			mockGetByDeploymentType.mockReturnValue( mockProviders );
@@ -138,17 +135,15 @@ describe( 'providerMetadata', () => {
 
 	describe( 'getProviderById()', () => {
 		test( 'should get provider by ID', () => {
-			class MockProvider {
+			// Mock provider class with static properties
+			const MockProvider = class {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+				static DESCRIPTION = 'Description 1';
+				static TYPE = 'type-1';
 				static DEPLOYMENT_TYPE = 'static_site';
-			}
-			const mockProvider = {
-				constructor: MockProvider,
-				getId: () => 'provider-1',
-				getName: () => 'Provider 1',
-				getDescription: () => 'Description 1',
-				getType: () => 'type-1',
 			};
-			mockGet.mockReturnValue( mockProvider );
+			mockGet.mockReturnValue( MockProvider );
 
 			const result = getProviderById( 'provider-1' );
 

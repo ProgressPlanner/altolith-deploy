@@ -14,15 +14,17 @@ import {
 } from '../exportConfiguration';
 import { DEPLOYMENT_TYPES } from '../../../constants/deploymentTypes';
 
-// Mock ProviderRegistry
-const mockProviderRegistry = {
-	get: jest.fn(),
-};
-
+// Mock ProviderRegistry - define before jest.mock
 jest.mock( '../../../providers/registry/ProviderRegistry', () => ( {
 	__esModule: true,
-	default: mockProviderRegistry,
+	default: {
+		get: jest.fn(),
+	},
 } ) );
+
+// Import the mocked registry to access the mock functions
+import ProviderRegistry from '../../../providers/registry/ProviderRegistry';
+const mockProviderRegistry = ProviderRegistry;
 
 describe( 'exportConfiguration', () => {
 	describe( 'prepareExportConfiguration()', () => {

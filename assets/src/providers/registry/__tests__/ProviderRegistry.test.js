@@ -119,7 +119,7 @@ describe( 'ProviderRegistry', () => {
 			expect( () => {
 				ProviderRegistry.register( 'test-provider', null );
 			} ).toThrow(
-				'ProviderRegistry.register() requires a provider instance'
+				'ProviderRegistry.register() requires a provider class'
 			);
 		} );
 
@@ -127,7 +127,7 @@ describe( 'ProviderRegistry', () => {
 			expect( () => {
 				ProviderRegistry.register( 'test-provider', undefined );
 			} ).toThrow(
-				'ProviderRegistry.register() requires a provider instance'
+				'ProviderRegistry.register() requires a provider class'
 			);
 		} );
 
@@ -135,13 +135,13 @@ describe( 'ProviderRegistry', () => {
 			expect( () => {
 				ProviderRegistry.register( 'test-provider', 'not-an-object' );
 			} ).toThrow(
-				'ProviderRegistry.register() requires a provider instance'
+				'ProviderRegistry.register() requires a provider class'
 			);
 
 			expect( () => {
 				ProviderRegistry.register( 'test-provider', 123 );
 			} ).toThrow(
-				'ProviderRegistry.register() requires a provider instance'
+				'ProviderRegistry.register() requires a provider class'
 			);
 		} );
 
