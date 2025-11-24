@@ -1167,9 +1167,25 @@ class ExportService
 				continue;
 			}
 
-			// Check if instance supports this deployment type
-			$instanceDeploymentTypes = $config['deployment_types'] ?? [];
-			if (! \is_array($instanceDeploymentTypes) || ! \in_array($deploymentType, $instanceDeploymentTypes, true)) {
+			// Check if provider type supports this deployment type
+			// Since providers have single responsibility, we check the provider_type
+			$providerType = $config['provider_type'] ?? '';
+			if (empty($providerType)) {
+				continue;
+			}
+
+			// Map deployment types to provider type patterns
+			$deploymentTypePatterns = [
+				'static_site' => 'static-site',
+				'blueprint_bundle' => 'blueprint-bundle',
+				'edge_functions' => 'edge-functions',
+			];
+
+			$pattern = $deploymentTypePatterns[$deploymentType] ?? $deploymentType;
+
+			// Check if provider type contains the deployment type pattern
+			// e.g., 'local-filesystem-static-site' contains 'static-site'
+			if (\strpos($providerType, $pattern) === false) {
 				continue;
 			}
 

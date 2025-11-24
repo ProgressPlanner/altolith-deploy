@@ -7,6 +7,7 @@
  */
 
 import { debugError } from '@aether/utils/debug';
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 /**
  * Prepare export configuration from settings response
@@ -32,7 +33,7 @@ export function prepareExportConfiguration( settingsResponse ) {
  * Get enabled provider instances for a specific deployment type
  *
  * Filters provider configurations to find enabled instances
- * that support the specified deployment type.
+ * that support the specified deployment type based on their provider type.
  *
  * @param {Object} providerConfigs - All provider configurations
  * @param {string} deploymentType  - Deployment type to filter by
@@ -55,14 +56,27 @@ export function getEnabledInstancesForDeploymentType(
 
 				// Check if enabled (default to true if not specified)
 				const isEnabled = instanceConfig.enabled !== false;
+				if ( ! isEnabled ) {
+					return false;
+				}
 
-				// Check if supports this deployment type
-				const deploymentTypes = instanceConfig.deployment_types || [];
-				const supportsType =
-					Array.isArray( deploymentTypes ) &&
-					deploymentTypes.includes( deploymentType );
+				// Check if provider type supports this deployment type
+				const providerType = instanceConfig.provider_type;
+				if ( ! providerType ) {
+					return false;
+				}
 
-				return isEnabled && supportsType;
+				// Get provider from registry and check if it supports the deployment type
+				const provider = ProviderRegistry.get( providerType );
+				if ( ! provider ) {
+					return false;
+				}
+
+				const supportedTypes =
+					provider.getSupportedDeploymentTypes?.() || [];
+				const supportsType = supportedTypes.includes( deploymentType );
+
+				return supportsType;
 			} )
 			.map( ( [ id ] ) => id );
 	} catch ( error ) {
@@ -105,17 +119,6 @@ function isValidProviderInstance( instanceId, config ) {
 	// Must not be explicitly disabled
 	if ( config.enabled === false ) {
 		// This is normal - not an error, just filtered out
-		return false;
-	}
-
-	// Must have deployment_types array
-	if (
-		! config.deployment_types ||
-		! Array.isArray( config.deployment_types )
-	) {
-		debugError(
-			`Provider instance ${ instanceId } has invalid deployment_types`
-		);
 		return false;
 	}
 

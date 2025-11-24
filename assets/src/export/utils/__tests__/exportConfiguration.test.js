@@ -19,6 +19,16 @@ jest.mock( '../../../utils/debug', () => ( {
 	debugError: jest.fn(),
 } ) );
 
+// Mock ProviderRegistry
+const mockProviderRegistry = {
+	get: jest.fn(),
+};
+
+jest.mock( '../../../providers/registry/ProviderRegistry', () => ( {
+	__esModule: true,
+	default: mockProviderRegistry,
+} ) );
+
 describe( 'exportConfiguration', () => {
 	describe( 'prepareExportConfiguration()', () => {
 		test( 'should extract provider IDs from settings response', () => {
@@ -82,76 +92,119 @@ describe( 'exportConfiguration', () => {
 	} );
 
 	describe( 'getEnabledInstancesForDeploymentType()', () => {
+		beforeEach( () => {
+			jest.clearAllMocks();
+		} );
+
 		test( 'should return enabled instances for deployment type', () => {
 			const providerConfigs = {
-				'provider-1': {
+				'local-filesystem-static-site:1': {
 					enabled: true,
-					deployment_types: [ 'static_site', 'blueprint-bundle' ],
+					provider_type: 'local-filesystem-static-site',
 				},
-				'provider-2': {
+				'local-filesystem-static-site:2': {
 					enabled: true,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
-				'provider-3': {
+				'local-filesystem-blueprint-bundle:1': {
 					enabled: true,
-					deployment_types: [ 'blueprint-bundle' ],
+					provider_type: 'local-filesystem-blueprint-bundle',
 				},
 			};
+
+			// Mock ProviderRegistry.get() to return providers with getSupportedDeploymentTypes
+			mockProviderRegistry.get.mockImplementation( ( providerType ) => {
+				if ( providerType === 'local-filesystem-static-site' ) {
+					return {
+						getSupportedDeploymentTypes: () => [ 'static_site' ],
+					};
+				}
+				if ( providerType === 'local-filesystem-blueprint-bundle' ) {
+					return {
+						getSupportedDeploymentTypes: () => [
+							'blueprint_bundle',
+						],
+					};
+				}
+				return null;
+			} );
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
 				'static_site'
 			);
 
-			expect( result ).toEqual( [ 'provider-1', 'provider-2' ] );
+			expect( result ).toEqual( [
+				'local-filesystem-static-site:1',
+				'local-filesystem-static-site:2',
+			] );
 		} );
 
 		test( 'should filter out disabled instances', () => {
 			const providerConfigs = {
-				'provider-1': {
+				'local-filesystem-static-site:1': {
 					enabled: true,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
-				'provider-2': {
+				'local-filesystem-static-site:2': {
 					enabled: false,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
-				'provider-3': {
-					deployment_types: [ 'static_site' ],
+				'local-filesystem-static-site:3': {
+					provider_type: 'local-filesystem-static-site',
 					// enabled not specified - defaults to true
 				},
 			};
 
+			mockProviderRegistry.get.mockReturnValue( {
+				getSupportedDeploymentTypes: () => [ 'static_site' ],
+			} );
+
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
 				'static_site'
 			);
 
-			expect( result ).toEqual( [ 'provider-1', 'provider-3' ] );
+			expect( result ).toEqual( [
+				'local-filesystem-static-site:1',
+				'local-filesystem-static-site:3',
+			] );
 		} );
 
 		test( 'should filter out instances that do not support deployment type', () => {
 			const providerConfigs = {
-				'provider-1': {
+				'local-filesystem-static-site:1': {
 					enabled: true,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
-				'provider-2': {
+				'local-filesystem-blueprint-bundle:1': {
 					enabled: true,
-					deployment_types: [ 'blueprint-bundle' ],
-				},
-				'provider-3': {
-					enabled: true,
-					deployment_types: [],
+					provider_type: 'local-filesystem-blueprint-bundle',
 				},
 			};
+
+			mockProviderRegistry.get.mockImplementation( ( providerType ) => {
+				if ( providerType === 'local-filesystem-static-site' ) {
+					return {
+						getSupportedDeploymentTypes: () => [ 'static_site' ],
+					};
+				}
+				if ( providerType === 'local-filesystem-blueprint-bundle' ) {
+					return {
+						getSupportedDeploymentTypes: () => [
+							'blueprint_bundle',
+						],
+					};
+				}
+				return null;
+			} );
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
 				'static_site'
 			);
 
-			expect( result ).toEqual( [ 'provider-1' ] );
+			expect( result ).toEqual( [ 'local-filesystem-static-site:1' ] );
 		} );
 
 		test( 'should handle empty provider configs', () => {
@@ -179,17 +232,21 @@ describe( 'exportConfiguration', () => {
 
 		test( 'should handle malformed provider configs', () => {
 			const providerConfigs = {
-				'provider-1': null,
-				'provider-2': 'invalid',
-				'provider-3': {
+				'local-filesystem-static-site:1': null,
+				'local-filesystem-static-site:2': 'invalid',
+				'local-filesystem-static-site:3': {
 					enabled: true,
-					deployment_types: 'not-an-array',
+					// Missing provider_type
 				},
-				'provider-4': {
+				'local-filesystem-static-site:4': {
 					enabled: true,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
 			};
+
+			mockProviderRegistry.get.mockReturnValue( {
+				getSupportedDeploymentTypes: () => [ 'static_site' ],
+			} );
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
@@ -197,7 +254,7 @@ describe( 'exportConfiguration', () => {
 			);
 
 			// Only provider-4 should be included
-			expect( result ).toEqual( [ 'provider-4' ] );
+			expect( result ).toEqual( [ 'local-filesystem-static-site:4' ] );
 		} );
 
 		test( 'should handle error gracefully and return empty array', () => {
@@ -218,35 +275,43 @@ describe( 'exportConfiguration', () => {
 
 		test( 'should default enabled to true when not specified', () => {
 			const providerConfigs = {
-				'provider-1': {
-					deployment_types: [ 'static_site' ],
+				'local-filesystem-static-site:1': {
+					provider_type: 'local-filesystem-static-site',
 					// No 'enabled' field
 				},
 			};
+
+			mockProviderRegistry.get.mockReturnValue( {
+				getSupportedDeploymentTypes: () => [ 'static_site' ],
+			} );
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
 				'static_site'
 			);
 
-			expect( result ).toEqual( [ 'provider-1' ] );
+			expect( result ).toEqual( [ 'local-filesystem-static-site:1' ] );
 		} );
 
 		test( 'should handle multiple instances with same deployment type', () => {
 			const providerConfigs = {
-				'cloudflare:1': {
+				'local-filesystem-static-site:1': {
 					enabled: true,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
-				'cloudflare:2': {
+				'local-filesystem-static-site:2': {
 					enabled: true,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
-				'cloudflare:3': {
+				'local-filesystem-static-site:3': {
 					enabled: true,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
 			};
+
+			mockProviderRegistry.get.mockReturnValue( {
+				getSupportedDeploymentTypes: () => [ 'static_site' ],
+			} );
 
 			const result = getEnabledInstancesForDeploymentType(
 				providerConfigs,
@@ -254,34 +319,50 @@ describe( 'exportConfiguration', () => {
 			);
 
 			expect( result ).toHaveLength( 3 );
-			expect( result ).toContain( 'cloudflare:1' );
-			expect( result ).toContain( 'cloudflare:2' );
-			expect( result ).toContain( 'cloudflare:3' );
+			expect( result ).toContain( 'local-filesystem-static-site:1' );
+			expect( result ).toContain( 'local-filesystem-static-site:2' );
+			expect( result ).toContain( 'local-filesystem-static-site:3' );
 		} );
 	} );
 
 	describe( 'determineProvidersByDeploymentType()', () => {
+		beforeEach( () => {
+			jest.clearAllMocks();
+		} );
+
 		test( 'should group providers by deployment type', () => {
 			const providerConfigs = {
-				'provider-1': {
+				'local-filesystem-static-site:1': {
 					enabled: true,
-					deployment_types: [ 'static_site', 'blueprint-bundle' ],
+					provider_type: 'local-filesystem-static-site',
 				},
-				'provider-2': {
+				'local-filesystem-static-site:2': {
 					enabled: true,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
-				'provider-3': {
+				'local-filesystem-blueprint-bundle:1': {
 					enabled: true,
-					deployment_types: [ 'edge-functions' ],
+					provider_type: 'local-filesystem-blueprint-bundle',
 				},
 			};
 
-			const deploymentTypes = [
-				'static_site',
-				'blueprint-bundle',
-				'edge-functions',
-			];
+			mockProviderRegistry.get.mockImplementation( ( providerType ) => {
+				if ( providerType === 'local-filesystem-static-site' ) {
+					return {
+						getSupportedDeploymentTypes: () => [ 'static_site' ],
+					};
+				}
+				if ( providerType === 'local-filesystem-blueprint-bundle' ) {
+					return {
+						getSupportedDeploymentTypes: () => [
+							'blueprint_bundle',
+						],
+					};
+				}
+				return null;
+			} );
+
+			const deploymentTypes = [ 'static_site', 'blueprint_bundle' ];
 
 			const result = determineProvidersByDeploymentType(
 				providerConfigs,
@@ -289,17 +370,19 @@ describe( 'exportConfiguration', () => {
 			);
 
 			expect( result ).toEqual( {
-				static_site: [ 'provider-1', 'provider-2' ],
-				'blueprint-bundle': [ 'provider-1' ],
-				'edge-functions': [ 'provider-3' ],
+				static_site: [
+					'local-filesystem-static-site:1',
+					'local-filesystem-static-site:2',
+				],
+				blueprint_bundle: [ 'local-filesystem-blueprint-bundle:1' ],
 			} );
 		} );
 
 		test( 'should handle empty deployment types array', () => {
 			const providerConfigs = {
-				'provider-1': {
+				'local-filesystem-static-site:1': {
 					enabled: true,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
 			};
 
@@ -313,13 +396,17 @@ describe( 'exportConfiguration', () => {
 
 		test( 'should return empty arrays for deployment types with no providers', () => {
 			const providerConfigs = {
-				'provider-1': {
+				'local-filesystem-static-site:1': {
 					enabled: true,
-					deployment_types: [ 'static_site' ],
+					provider_type: 'local-filesystem-static-site',
 				},
 			};
 
-			const deploymentTypes = [ 'static_site', 'blueprint-bundle' ];
+			mockProviderRegistry.get.mockReturnValue( {
+				getSupportedDeploymentTypes: () => [ 'static_site' ],
+			} );
+
+			const deploymentTypes = [ 'static_site', 'blueprint_bundle' ];
 
 			const result = determineProvidersByDeploymentType(
 				providerConfigs,
@@ -327,22 +414,40 @@ describe( 'exportConfiguration', () => {
 			);
 
 			expect( result ).toEqual( {
-				static_site: [ 'provider-1' ],
-				'blueprint-bundle': [],
+				static_site: [ 'local-filesystem-static-site:1' ],
+				blueprint_bundle: [],
 			} );
 		} );
 
 		test( 'should work with DEPLOYMENT_TYPES constants', () => {
 			const providerConfigs = {
-				'provider-1': {
+				'local-filesystem-static-site:1': {
 					enabled: true,
-					deployment_types: [ DEPLOYMENT_TYPES.STATIC_SITE ],
+					provider_type: 'local-filesystem-static-site',
 				},
-				'provider-2': {
+				'local-filesystem-blueprint-bundle:1': {
 					enabled: true,
-					deployment_types: [ DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE ],
+					provider_type: 'local-filesystem-blueprint-bundle',
 				},
 			};
+
+			mockProviderRegistry.get.mockImplementation( ( providerType ) => {
+				if ( providerType === 'local-filesystem-static-site' ) {
+					return {
+						getSupportedDeploymentTypes: () => [
+							DEPLOYMENT_TYPES.STATIC_SITE,
+						],
+					};
+				}
+				if ( providerType === 'local-filesystem-blueprint-bundle' ) {
+					return {
+						getSupportedDeploymentTypes: () => [
+							DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE,
+						],
+					};
+				}
+				return null;
+			} );
 
 			const deploymentTypes = [
 				DEPLOYMENT_TYPES.STATIC_SITE,
@@ -355,10 +460,10 @@ describe( 'exportConfiguration', () => {
 			);
 
 			expect( result[ DEPLOYMENT_TYPES.STATIC_SITE ] ).toEqual( [
-				'provider-1',
+				'local-filesystem-static-site:1',
 			] );
 			expect( result[ DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE ] ).toEqual( [
-				'provider-2',
+				'local-filesystem-blueprint-bundle:1',
 			] );
 		} );
 	} );

@@ -1007,6 +1007,7 @@ class ExportStepsController
 	 * Get enabled instance for a deployment type.
 	 *
 	 * Finds the first enabled provider instance that supports the given deployment type.
+	 * Since providers have single responsibility, we check the provider_type to determine support.
 	 *
 	 * @param string $deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
 	 * @return array{instanceId: string, config: array<string, mixed>}|null Instance data or null if not found
@@ -1016,15 +1017,30 @@ class ExportStepsController
 		$settings = \get_option('aether_site_exporter_settings', []);
 		$providers = $settings['providers'] ?? [];
 
+		// Map deployment types to provider type patterns
+		$deploymentTypePatterns = [
+			'static_site' => 'static-site',
+			'blueprint_bundle' => 'blueprint-bundle',
+			'edge_functions' => 'edge-functions',
+		];
+
+		$pattern = $deploymentTypePatterns[$deploymentType] ?? $deploymentType;
+
 		foreach ($providers as $instanceId => $config) {
 			// Check if instance is enabled (default to enabled if not set)
 			if (isset($config['enabled']) && $config['enabled'] === false) {
 				continue;
 			}
 
-			// Check if instance supports this deployment type
-			$instanceDeploymentTypes = $config['deployment_types'] ?? [];
-			if (! \is_array($instanceDeploymentTypes) || ! \in_array($deploymentType, $instanceDeploymentTypes, true)) {
+			// Check if provider type supports this deployment type
+			$providerType = $config['provider_type'] ?? '';
+			if (empty($providerType)) {
+				continue;
+			}
+
+			// Check if provider type contains the deployment type pattern
+			// e.g., 'local-filesystem-static-site' contains 'static-site'
+			if (\strpos($providerType, $pattern) === false) {
 				continue;
 			}
 
