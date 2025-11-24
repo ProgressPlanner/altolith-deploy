@@ -77,7 +77,12 @@ export default function ProviderInstancesContainer( {
 					<th style={ tableHeaderCellStyleWithBorder }>
 						{ __( 'Provider Type', 'aether-site-exporter' ) }
 					</th>
-					<th style={ tableHeaderCellStyle }>
+					<th
+						style={ {
+							...tableHeaderCellStyle,
+							textAlign: 'right',
+						} }
+					>
 						{ __( 'Actions', 'aether-site-exporter' ) }
 					</th>
 				</tr>

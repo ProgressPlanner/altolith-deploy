@@ -25,12 +25,12 @@ const formStyle = {
 /**
  * Add Provider Instance Modal Component.
  *
- * @param {Object}   props             Component props.
- * @param {boolean}  props.isOpen      Whether modal is open.
- * @param {Function} props.onClose     Callback to close modal.
- * @param {Array}    props.providers   Array of available provider types.
+ * @param {Object}   props                Component props.
+ * @param {boolean}  props.isOpen         Whether modal is open.
+ * @param {Function} props.onClose        Callback to close modal.
+ * @param {Array}    props.providers      Array of available provider types.
  * @param {string}   props.deploymentType Optional deployment type to filter providers.
- * @param {Function} props.onCreate    Callback to create instance (instanceId, providerType, instanceName).
+ * @param {Function} props.onCreate       Callback to create instance (instanceId, providerType, instanceName).
  * @return {JSX.Element|null} Rendered component.
  */
 export default function AddProviderInstanceModal( {

@@ -269,84 +269,98 @@ export default function ProviderInstanceItem( {
 
 			{ /* Actions */ }
 			<td style={ tableCellStyle }>
-				<div style={ actionsCellStyle }>
-					<Button
-						variant="secondary"
-						icon={ settings }
-						onClick={ () => setIsModalOpen( true ) }
-					>
-						{ __( 'Settings', 'aether-site-exporter' ) }
-					</Button>
-					<Button
-						variant="secondary"
-						isDestructive
-						icon={ trash }
-						onClick={ handleDelete }
-					>
-						{ __( 'Delete', 'aether-site-exporter' ) }
-					</Button>
-				</div>
-
-				{ /* Settings Modal */ }
-				{ isModalOpen && (
-					<Modal
-						className="aether-provider-instance-settings-modal"
-						title={ sprintf(
-							/* translators: %s: instance name */
-							__( 'Settings: %s', 'aether-site-exporter' ),
-							instanceConfig.instance_name ||
-								__(
-									'Provider Instance',
-									'aether-site-exporter'
-								)
-						) }
-						onRequestClose={ () => setIsModalOpen( false ) }
-						size="medium"
-					>
-						<div
-							style={ {
-								...createFlexStyle( 'column', spacing.lg ),
-								paddingTop: spacing.md,
-							} }
+				<div
+					style={ {
+						...createFlexStyle( 'row', spacing.sm ),
+						justifyContent: 'flex-end',
+					} }
+				>
+					<div style={ actionsCellStyle }>
+						<Button
+							variant="secondary"
+							icon={ settings }
+							onClick={ () => setIsModalOpen( true ) }
 						>
-							{ saveError && (
-								<StatusNotice
-									status="error"
-									message={ saveError }
-									isDismissible
-									onRemove={ () => setSaveError( null ) }
-								/>
-							) }
+							{ __( 'Settings', 'aether-site-exporter' ) }
+						</Button>
+						<Button
+							variant="secondary"
+							isDestructive
+							icon={ trash }
+							onClick={ handleDelete }
+						>
+							{ __( 'Delete', 'aether-site-exporter' ) }
+						</Button>
+					</div>
 
-							{ settingsFields.length > 0 && (
-								<ProviderForm
-									providerId={ provider?.id || providerType }
-									fields={ settingsFields }
-									initialValues={ formInitialValues }
-									onChange={ handleFormChange }
-									onSubmit={ handleFormSubmit }
-								/>
+					{ /* Settings Modal */ }
+					{ isModalOpen && (
+						<Modal
+							className="aether-provider-instance-settings-modal"
+							title={ sprintf(
+								/* translators: %s: instance name */
+								__( 'Settings: %s', 'aether-site-exporter' ),
+								instanceConfig.instance_name ||
+									__(
+										'Provider Instance',
+										'aether-site-exporter'
+									)
 							) }
-
+							onRequestClose={ () => setIsModalOpen( false ) }
+							size="medium"
+						>
 							<div
 								style={ {
-									...createFlexStyle( 'row', spacing.sm ),
-									justifyContent: 'flex-end',
-									marginTop: spacing.md,
+									...createFlexStyle( 'column', spacing.lg ),
 									paddingTop: spacing.md,
-									borderTop: `1px solid ${ colors.borderLight }`,
 								} }
 							>
-								<Button
-									variant="secondary"
-									onClick={ () => setIsModalOpen( false ) }
+								{ saveError && (
+									<StatusNotice
+										status="error"
+										message={ saveError }
+										isDismissible
+										onRemove={ () => setSaveError( null ) }
+									/>
+								) }
+
+								{ settingsFields.length > 0 && (
+									<ProviderForm
+										providerId={
+											provider?.id || providerType
+										}
+										fields={ settingsFields }
+										initialValues={ formInitialValues }
+										onChange={ handleFormChange }
+										onSubmit={ handleFormSubmit }
+									/>
+								) }
+
+								<div
+									style={ {
+										...createFlexStyle( 'row', spacing.sm ),
+										justifyContent: 'flex-end',
+										marginTop: spacing.md,
+										paddingTop: spacing.md,
+										borderTop: `1px solid ${ colors.borderLight }`,
+									} }
 								>
-									{ __( 'Close', 'aether-site-exporter' ) }
-								</Button>
+									<Button
+										variant="secondary"
+										onClick={ () =>
+											setIsModalOpen( false )
+										}
+									>
+										{ __(
+											'Close',
+											'aether-site-exporter'
+										) }
+									</Button>
+								</div>
 							</div>
-						</div>
-					</Modal>
-				) }
+						</Modal>
+					) }
+				</div>
 			</td>
 		</tr>
 	);
