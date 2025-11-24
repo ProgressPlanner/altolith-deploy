@@ -61,7 +61,6 @@ class PluginDependencyManagerTest extends TestCase
 
 		$this->assertNotFalse( has_filter( 'all_plugins', [ $manager, 'hidePluginFromList' ] ) );
 		$this->assertNotFalse( has_action( 'admin_init', [ $manager, 'preventDeactivation' ] ) );
-		$this->assertNotFalse( has_action( 'admin_notices', [ $manager, 'showProtectionNotice' ] ) );
 	}
 
 	/**
@@ -233,47 +232,6 @@ class PluginDependencyManagerTest extends TestCase
 		$this->manager->preventDeactivation();
 
 		$this->assertTrue( true );
-	}
-
-	/**
-	 * Test showProtectionNotice does nothing without transient.
-	 */
-	public function test_showProtectionNotice_does_nothing_without_transient(): void
-	{
-		ob_start();
-		$this->manager->showProtectionNotice();
-		$output = ob_get_clean();
-
-		$this->assertEmpty( $output );
-	}
-
-	/**
-	 * Test showProtectionNotice displays notice with transient.
-	 */
-	public function test_showProtectionNotice_displays_notice_with_transient(): void
-	{
-		set_transient( 'aether_site_exporter_deactivation_prevented', 'aether/aether.php', 30 );
-
-		ob_start();
-		$this->manager->showProtectionNotice();
-		$output = ob_get_clean();
-
-		$this->assertStringContainsString( 'notice', $output );
-	}
-
-	/**
-	 * Test showProtectionNotice deletes transient after displaying.
-	 */
-	public function test_showProtectionNotice_deletes_transient(): void
-	{
-		set_transient( 'aether_site_exporter_deactivation_prevented', 'aether/aether.php', 30 );
-
-		ob_start();
-		$this->manager->showProtectionNotice();
-		ob_get_clean();
-
-		// Transient should be deleted
-		$this->assertFalse( get_transient( 'aether_site_exporter_deactivation_prevented' ) );
 	}
 
 	/**

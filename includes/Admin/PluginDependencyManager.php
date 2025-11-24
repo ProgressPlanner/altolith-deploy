@@ -33,7 +33,6 @@ class PluginDependencyManager
 	{
 		\add_filter('all_plugins', [ $this, 'hidePluginFromList' ]);
 		\add_action('admin_init', [ $this, 'preventDeactivation' ]);
-		\add_action('admin_notices', [ $this, 'showProtectionNotice' ]);
 	}
 
 	/**
@@ -92,22 +91,6 @@ class PluginDependencyManager
 			\wp_safe_redirect(\admin_url('plugins.php'));
 			exit;
 		}
-	}
-
-	/**
-	 * Show admin notice when deactivation is prevented.
-	 */
-	public function showProtectionNotice(): void
-	{
-		$preventedPlugin = \get_transient('aether_site_exporter_deactivation_prevented');
-
-		if (! $preventedPlugin) {
-			return;
-		}
-
-		\delete_transient('aether_site_exporter_deactivation_prevented');
-
-		require AETHER_SITE_EXPORTER_PLUGIN_DIR . 'views/admin/notices/deactivation-prevented.php';
 	}
 
 	/**
