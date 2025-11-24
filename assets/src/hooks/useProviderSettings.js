@@ -9,7 +9,7 @@
  *
  */
 
-import { useState, useCallback, useMemo } from '@wordpress/element';
+import { useState, useCallback, useMemo, useRef } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { ProviderSettingsAPI } from '../services/ProviderSettingsAPI';
 
@@ -24,6 +24,9 @@ export function useProviderSettings() {
 
 	// Create service instance with apiFetch (memoized to prevent recreation)
 	const api = useMemo( () => new ProviderSettingsAPI( apiFetch ), [] );
+
+	// Request queue to serialize API calls and prevent race conditions
+	const requestQueue = useRef( Promise.resolve() );
 
 	/**
 	 * Fetch all provider settings
@@ -48,11 +51,10 @@ export function useProviderSettings() {
 	/**
 	 * Update a single provider's configuration
 	 *
-	 * @param {string}  providerId                      Provider ID
-	 * @param {Object}  updatedConfig                   Updated configuration for the provider
-	 * @param {Object}  options                         Options
-	 * @param {boolean} options.preserveEnabled         Preserve existing enabled state (default: false)
-	 * @param {boolean} options.preserveDeploymentTypes Preserve existing deployment_types (default: false)
+	 * @param {string}  providerId              Provider ID
+	 * @param {Object}  updatedConfig           Updated configuration for the provider
+	 * @param {Object}  options                 Options
+	 * @param {boolean} options.preserveEnabled Preserve existing enabled state (default: false)
 	 * @return {Promise<Object>} Updated provider configurations
 	 */
 	const updateProviderConfig = useCallback(
@@ -104,27 +106,34 @@ export function useProviderSettings() {
 	/**
 	 * Toggle provider enabled state
 	 *
-	 * @param {string}  providerId Provider ID (can be instance ID)
-	 * @param {boolean} enabled    New enabled state
+	 * @param {string}  providerId       Provider ID (can be instance ID)
+	 * @param {boolean} enabled          New enabled state
+	 * @param {Object}  currentProviders Optional current provider state from frontend (prevents race conditions)
 	 * @return {Promise<Object>} Updated provider configurations
 	 */
 	const toggleProviderEnabled = useCallback(
-		async ( providerId, enabled ) => {
-			setLoading( true );
-			setError( null );
+		async ( providerId, enabled, currentProviders = null ) => {
+			// Queue the request to prevent concurrent calls
+			requestQueue.current = requestQueue.current.then( async () => {
+				setLoading( true );
+				setError( null );
 
-			try {
-				const updatedProviders = await api.toggleEnabled(
-					providerId,
-					enabled
-				);
-				setLoading( false );
-				return updatedProviders;
-			} catch ( err ) {
-				setError( err.message );
-				setLoading( false );
-				throw err;
-			}
+				try {
+					const updatedProviders = await api.toggleEnabled(
+						providerId,
+						enabled,
+						currentProviders // Pass current state
+					);
+					setLoading( false );
+					return updatedProviders;
+				} catch ( err ) {
+					setError( err.message );
+					setLoading( false );
+					throw err;
+				}
+			} );
+
+			return requestQueue.current;
 		},
 		[ api ]
 	);

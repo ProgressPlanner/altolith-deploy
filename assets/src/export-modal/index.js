@@ -31,7 +31,6 @@ import ExportProgressModal from '../components/ExportProgressModal';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { ExportProvider } from '../contexts/ExportContext';
 import { initializeErrorHandlers } from '../utils/errorHandler';
-import './providers-init'; // Initialize providers
 
 // Initialize global error handlers
 initializeErrorHandlers();
