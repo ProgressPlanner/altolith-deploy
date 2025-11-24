@@ -347,48 +347,6 @@ class SettingsControllerTest extends TestCase {
 		$this->assertTrue( $provider['enabled'] );
 	}
 
-	/**
-	 * Test deep merge replaces deployment_types array completely.
-	 */
-	public function test_deep_merge_replaces_deployment_types_array() {
-		// Set initial config with deployment_types.
-		$request1 = new WP_REST_Request( 'POST', '/aether/v1/settings' );
-		$request1->set_param( 'key', 'providers' );
-		$request1->set_param(
-			'value',
-			[
-				'provider-1' => [
-					'deployment_types' => [ 'static_site', 'blueprint_bundle' ],
-					'enabled' => true,
-				],
-			]
-		);
-		$this->controller->updateSettings( $request1 );
-
-		// Update with different deployment_types.
-		$request2 = new WP_REST_Request( 'POST', '/aether/v1/settings' );
-		$request2->set_param( 'key', 'providers' );
-		$request2->set_param(
-			'value',
-			[
-				'provider-1' => [
-					'deployment_types' => [ 'static_site' ], // Only one type now.
-				],
-			]
-		);
-		$this->controller->updateSettings( $request2 );
-
-		// Verify deployment_types was replaced, not merged.
-		$get_request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
-		$get_request->set_param( 'key', 'providers' );
-		$response = $this->controller->getSettings( $get_request );
-
-		$data = $response->get_data();
-		$provider = $data['value']['provider-1'];
-
-		$this->assertEquals( [ 'static_site' ], $provider['deployment_types'] );
-		$this->assertNotContains( 'blueprint_bundle', $provider['deployment_types'] );
-	}
 
 	// ========================================================================
 	// Security Tests (CRITICAL - DoS Prevention)
@@ -497,64 +455,6 @@ class SettingsControllerTest extends TestCase {
 	// Sanitization Tests (HIGH)
 	// ========================================================================
 
-	/**
-	 * Test deployment_types sanitization.
-	 */
-	public function test_deployment_types_sanitization() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
-		$request->set_param( 'key', 'providers' );
-		$request->set_param(
-			'value',
-			[
-				'provider-1' => [
-					'deployment_types' => [ 'static_site', 'invalid_type', 'blueprint_bundle' ],
-				],
-			]
-		);
-
-		$response = $this->controller->updateSettings( $request );
-
-		$this->assertEquals( 200, $response->get_status() );
-
-		// Verify invalid type was removed.
-		$get_request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
-		$get_request->set_param( 'key', 'providers' );
-		$get_response = $this->controller->getSettings( $get_request );
-
-		$data = $get_response->get_data();
-		$deployment_types = $data['value']['provider-1']['deployment_types'];
-
-		$this->assertContains( 'static_site', $deployment_types );
-		$this->assertContains( 'blueprint_bundle', $deployment_types );
-		$this->assertNotContains( 'invalid_type', $deployment_types );
-	}
-
-	/**
-	 * Test non-array deployment_types converted to empty array.
-	 */
-	public function test_non_array_deployment_types_converted_to_empty_array() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
-		$request->set_param( 'key', 'providers' );
-		$request->set_param(
-			'value',
-			[
-				'provider-1' => [
-					'deployment_types' => 'invalid_string',
-				],
-			]
-		);
-
-		$response = $this->controller->updateSettings( $request );
-
-		$this->assertEquals( 200, $response->get_status() );
-
-		$get_request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
-		$get_request->set_param( 'key', 'providers' );
-		$get_response = $this->controller->getSettings( $get_request );
-
-		$data = $get_response->get_data();
-		$this->assertEquals( [], $data['value']['provider-1']['deployment_types'] );
-	}
 
 	/**
 	 * Test static_files_path defaults to 'static/' when empty.

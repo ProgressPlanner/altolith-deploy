@@ -71,7 +71,6 @@ describe( 'providerMetadata', () => {
 				name: 'Provider 1',
 				description: 'Description 1',
 				type: 'type-1',
-				deployment_types: [ 'static_site' ],
 			} );
 		} );
 
@@ -91,7 +90,6 @@ describe( 'providerMetadata', () => {
 				name: 'Provider 1',
 				description: '',
 				type: 'generic',
-				deployment_types: [],
 			} );
 		} );
 
@@ -154,7 +152,6 @@ describe( 'providerMetadata', () => {
 				name: 'Provider 1',
 				description: 'Description 1',
 				type: 'type-1',
-				deployment_types: [ 'static_site' ],
 			} );
 		} );
 

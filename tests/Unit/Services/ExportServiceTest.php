@@ -879,9 +879,9 @@ class ExportServiceTest extends TestCase {
 			'aether_site_exporter_settings',
 			[
 				'providers' => [
-					'local-filesystem:test' => [
+					'local-filesystem-blueprint-bundle:test' => [
 						'enabled'          => true,
-						'deployment_types' => [ 'blueprint_bundle' ],
+						'provider_type'    => 'local-filesystem-blueprint-bundle',
 						'export_path'      => '../../etc/passwd', // Malicious path
 					],
 				],
@@ -914,9 +914,9 @@ class ExportServiceTest extends TestCase {
 			'aether_site_exporter_settings',
 			[
 				'providers' => [
-					'local-filesystem:test' => [
+					'local-filesystem-blueprint-bundle:test' => [
 						'enabled'          => true,
-						'deployment_types' => [ 'blueprint_bundle' ],
+						'provider_type'    => 'local-filesystem-blueprint-bundle',
 						'export_path'      => 'custom-export/bundle.zip',
 					],
 				],
@@ -955,9 +955,9 @@ class ExportServiceTest extends TestCase {
 			'aether_site_exporter_settings',
 			[
 				'providers' => [
-					'local-filesystem:test' => [
+					'local-filesystem-blueprint-bundle:test' => [
 						'enabled'          => true,
-						'deployment_types' => [ 'blueprint_bundle' ],
+						'provider_type'    => 'local-filesystem-blueprint-bundle',
 						'export_path'      => '/invalid/path/bundle.zip',
 					],
 				],

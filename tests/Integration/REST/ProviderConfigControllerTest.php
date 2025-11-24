@@ -72,10 +72,10 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test saving and retrieving provider config.
 	 */
 	public function test_save_and_retrieve_config() {
-		$instance_id = 'local-filesystem:test-uuid';
+		$instance_id = 'local-filesystem-static-site:test-uuid';
 		$config      = [
-			'path'             => '/test/path',
-			'deployment_types' => [ 'static_site' ],
+			'provider_type' => 'local-filesystem-static-site',
+			'path'          => '/test/path',
 		];
 
 		// Save config.
@@ -102,12 +102,12 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test credentials are encrypted in storage.
 	 */
 	public function test_credentials_encrypted_in_storage() {
-		$instance_id = 'local-filesystem:test-uuid';
+		$instance_id = 'local-filesystem-static-site:test-uuid';
 		$config      = [
-			'path'             => '/test/path',
-			'api_key'          => 'secret-key-123',
-			'api_secret'       => 'secret-value-456',
-			'deployment_types' => [ 'static_site' ],
+			'provider_type' => 'local-filesystem-static-site',
+			'path'          => '/test/path',
+			'api_key'       => 'secret-key-123',
+			'api_secret'    => 'secret-value-456',
 		];
 
 		// Save config.
@@ -136,11 +136,11 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test credentials are decrypted when retrieved.
 	 */
 	public function test_credentials_decrypted_on_retrieval() {
-		$instance_id = 'local-filesystem:test-uuid';
+		$instance_id = 'local-filesystem-static-site:test-uuid';
 		$config      = [
-			'path'             => '/test/path',
-			'api_key'          => 'secret-key-123',
-			'deployment_types' => [ 'static_site' ],
+			'provider_type' => 'local-filesystem-static-site',
+			'path'          => '/test/path',
+			'api_key'       => 'secret-key-123',
 		];
 
 		// Save config.
@@ -163,14 +163,13 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test updating existing config preserves unmodified fields.
 	 */
 	public function test_update_existing_config() {
-		$instance_id = 'local-filesystem:test-uuid';
+		$instance_id = 'local-filesystem-static-site:test-uuid';
 
 		// Initial config.
 		$initial_config = [
 			'path'             => '/initial/path',
 			'api_key'          => 'initial-key',
 			'custom_field'     => 'preserved',
-			'deployment_types' => [ 'static_site' ],
 		];
 
 		$save_request = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance_id . '/config' );
@@ -182,7 +181,6 @@ class ProviderConfigControllerTest extends TestCase {
 			'path'             => '/updated/path',
 			'api_key'          => 'initial-key',
 			'custom_field'     => 'preserved',
-			'deployment_types' => [ 'static_site' ],
 		];
 
 		$update_request = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance_id . '/config' );
@@ -207,10 +205,10 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test deleting provider config.
 	 */
 	public function test_delete_config() {
-		$instance_id = 'local-filesystem:test-uuid';
+		$instance_id = 'local-filesystem-static-site:test-uuid';
 		$config      = [
-			'path'             => '/test/path',
-			'deployment_types' => [ 'static_site' ],
+			'provider_type' => 'local-filesystem-static-site',
+			'path'          => '/test/path',
 		];
 
 		// Save config.
@@ -242,11 +240,9 @@ class ProviderConfigControllerTest extends TestCase {
 
 		$config1 = [
 			'path'             => '/path1',
-			'deployment_types' => [ 'static_site' ],
 		];
 		$config2 = [
 			'path'             => '/path2',
-			'deployment_types' => [ 'blueprint_bundle' ],
 		];
 
 		// Save both configs.
@@ -277,7 +273,7 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test getting provider status.
 	 */
 	public function test_get_provider_status() {
-		$instance_id = 'local-filesystem:test-uuid';
+		$instance_id = 'local-filesystem-static-site:test-uuid';
 
 		// Status before config.
 		$status_request = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/status' );
@@ -292,7 +288,6 @@ class ProviderConfigControllerTest extends TestCase {
 			'config',
 			[
 				'path'             => '/test/path',
-				'deployment_types' => [ 'static_site' ],
 			]
 		);
 		rest_do_request( $config_request );
@@ -333,7 +328,7 @@ class ProviderConfigControllerTest extends TestCase {
 		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
 		wp_set_current_user( $subscriber_id );
 
-		$instance_id = 'local-filesystem:test-uuid';
+		$instance_id = 'local-filesystem-static-site:test-uuid';
 		$request     = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/config' );
 		$response    = rest_do_request( $request );
 
@@ -346,7 +341,7 @@ class ProviderConfigControllerTest extends TestCase {
 	public function test_unauthenticated_cannot_access() {
 		wp_set_current_user( 0 );
 
-		$instance_id = 'local-filesystem:test-uuid';
+		$instance_id = 'local-filesystem-static-site:test-uuid';
 		$request     = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/config' );
 		$response    = rest_do_request( $request );
 

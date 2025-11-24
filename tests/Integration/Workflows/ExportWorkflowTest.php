@@ -76,10 +76,10 @@ class ExportWorkflowTest extends TestCase {
 		// Set malicious export path.
 		$settings = [
 			'providers' => [
-				'local-filesystem:test-uuid' => [
-					'enabled'          => true,
-					'deployment_types' => [ 'blueprint_bundle' ],
-					'export_path'      => '../../etc/passwd',
+				'local-filesystem-blueprint-bundle:test-uuid' => [
+					'provider_type' => 'local-filesystem-blueprint-bundle',
+					'enabled'       => true,
+					'export_path'   => '../../etc/passwd',
 				],
 			],
 		];
@@ -103,9 +103,9 @@ class ExportWorkflowTest extends TestCase {
 		// Set malicious export path with null byte.
 		$settings = [
 			'providers' => [
-				'local-filesystem:test-uuid' => [
+				'local-filesystem-blueprint-bundle:test-uuid' => [
+					'provider_type' => 'local-filesystem-blueprint-bundle',
 					'enabled'          => true,
-					'deployment_types' => [ 'blueprint_bundle' ],
 					'export_path'      => "safe-path\0.zip",
 				],
 			],
@@ -130,9 +130,9 @@ class ExportWorkflowTest extends TestCase {
 		// Set invalid export path (array instead of string).
 		$settings = [
 			'providers' => [
-				'local-filesystem:test-uuid' => [
+				'local-filesystem-blueprint-bundle:test-uuid' => [
+					'provider_type' => 'local-filesystem-blueprint-bundle',
 					'enabled'          => true,
-					'deployment_types' => [ 'blueprint_bundle' ],
 					'export_path'      => [ 'invalid' ],
 				],
 			],
