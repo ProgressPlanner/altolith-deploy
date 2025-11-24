@@ -373,15 +373,6 @@ class SettingsController
 			foreach ($incomingConfig as $key => $value) {
 				// For all fields (including arrays), replace with incoming value
 				// The frontend sends complete form values, so incoming value is the source of truth
-				// This ensures checkbox-group fields (like deployment_types) are replaced, not merged
-
-				// Special handling for deployment_types to ensure it's always an array
-				if ($key === 'deployment_types') {
-					if (!\is_array($value)) {
-						$value = [];
-					}
-				}
-
 				$mergedConfig[$key] = $value;
 			}
 
@@ -453,24 +444,6 @@ class SettingsController
 				continue;
 			}
 
-			// Special validation for deployment_types - handle BEFORE generic array processing
-			// This prevents the array from being recursively sanitized as a nested object
-			if ($sanitizedKey === 'deployment_types') {
-				$validDeploymentTypes = [ 'static_site', 'blueprint_bundle', 'edge_functions' ];
-
-				// Ensure it's an array
-				if (!\is_array($value)) {
-					$sanitized[ $sanitizedKey ] = [];
-				} else {
-					// Sanitize each element as a string, then filter to only valid values
-					$sanitizedValues = \array_map('sanitize_text_field', $value);
-					$sanitized[ $sanitizedKey ] = \array_values(
-						\array_intersect($sanitizedValues, $validDeploymentTypes)
-					);
-				}
-				// Skip the rest of the loop - we've handled this field
-				continue;
-			}
 
 			if (\is_array($value)) {
 				$sanitized[ $sanitizedKey ] = $this->sanitizeConfig($value, $depth + 1);
