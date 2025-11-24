@@ -243,7 +243,7 @@ export default function ProviderSettings( {
 				throw error;
 			}
 		},
-		[ createProviderInstance, onConfigsUpdate, localConfigs, providers ]
+		[ createProviderInstance, onConfigsUpdate, localConfigs ]
 	);
 
 	const handleToggleInstance = useCallback(

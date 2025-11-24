@@ -8,7 +8,7 @@
 
 import { addFilter, addAction, doAction } from '@wordpress/hooks';
 import { uploadFile as uploadFileToStorage } from '@aether/utils/filesystemAdapter';
-import { debug } from '@aether/utils/debug';
+import { debug, debugWarn } from '@aether/utils/debug';
 import { LocalFilesystemStaticSiteProvider } from './LocalFilesystemStaticSiteProvider';
 import ProviderRegistry from '../registry/ProviderRegistry';
 

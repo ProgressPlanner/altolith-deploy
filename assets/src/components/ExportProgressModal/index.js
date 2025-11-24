@@ -5,7 +5,7 @@
  *
  */
 
-import { useEffect, useMemo, useCallback, useRef } from '@wordpress/element';
+import { useEffect, useMemo, useCallback } from '@wordpress/element';
 import { Modal, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useExportState } from '@aether/export/hooks/useExportState';
@@ -20,7 +20,6 @@ import {
 	createFlexStyle,
 	utilityStyles,
 } from '@aether/utils/styles';
-import ActivityLogMessage from '../ActivityLogMessage';
 import ProviderProgressList from '../ProviderProgressList';
 
 // Styles - extracted to module level for performance
@@ -82,20 +81,6 @@ const progressPercentageStyle = {
 	flexShrink: 0,
 };
 
-const activityLogStyle = {
-	marginTop: spacing.xl,
-	overflowY: 'auto',
-	fontSize: fontSize.xs,
-	height: '300px',
-};
-
-const activityListStyle = {
-	listStyle: 'none',
-	margin: 0,
-	padding: 0,
-	...createFlexStyle( 'column', 0 ),
-};
-
 const loadingStyle = {
 	display: 'flex',
 	flexDirection: 'column',
@@ -121,14 +106,10 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 		error,
 		reset,
 		overallProgress,
-		messageHistory,
 		staticSiteProviders,
 		blueprintBundleProviders,
 		providerProgress,
 	} = exportState;
-
-	// Ref for activity log auto-scroll
-	const activityLogRef = useRef( null );
 
 	// Keep modal open if finalStatus is set, even if isOpen becomes false
 	// This allows the auto-close effect to run and show the success message
@@ -173,16 +154,6 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 			onComplete( finalStatus );
 		}
 	}, [ finalStatus, onComplete ] );
-
-	// Auto-scroll activity log to top when new messages arrive
-	useEffect( () => {
-		if ( activityLogRef.current ) {
-			activityLogRef.current.scrollTo( {
-				top: 0,
-				behavior: 'smooth',
-			} );
-		}
-	}, [ messageHistory.length ] );
 
 	// Calculate overall progress from steps if not explicitly set
 	const displayProgress = useMemo( () => {
@@ -230,34 +201,6 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 
 		return instances;
 	}, [ staticSiteProviders, blueprintBundleProviders ] );
-
-	// Sort activity log messages by priority: progress → error → success/info
-	const sortedMessageHistory = useMemo( () => {
-		const getPriority = ( type ) => {
-			switch ( type ) {
-				case 'progress':
-					return 0;
-				case 'error':
-					return 1;
-				case 'success':
-				case 'info':
-				default:
-					return 2;
-			}
-		};
-
-		return [ ...messageHistory ].sort( ( a, b ) => {
-			const priorityA = getPriority( a.type );
-			const priorityB = getPriority( b.type );
-			// Sort by priority first
-			if ( priorityA !== priorityB ) {
-				return priorityA - priorityB;
-			}
-			// Within same priority, maintain existing order (newest first)
-			// Since messages are prepended, original index order is preserved
-			return 0;
-		} );
-	}, [ messageHistory ] );
 
 	if ( ! shouldShowModal ) {
 		return null;

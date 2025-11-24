@@ -9,13 +9,7 @@
 
 import { __ } from '@wordpress/i18n';
 import ProviderProgressBar from '../ProviderProgressBar';
-import {
-	colors,
-	spacing,
-	borderRadius,
-	fontSize,
-	fontWeight,
-} from '@aether/utils/styles';
+import { colors, spacing, fontSize, fontWeight } from '@aether/utils/styles';
 
 /**
  * Provider Progress List Component

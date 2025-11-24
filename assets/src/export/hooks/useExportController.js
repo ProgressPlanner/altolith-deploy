@@ -21,7 +21,6 @@ import {
 	buildProviderInstances,
 	buildWorkflowContext,
 } from '@aether/export/utils/exportConfiguration';
-import ConfigStorage from '@aether/providers/utils/configStorage';
 
 export function useExportController( exportState ) {
 	const {

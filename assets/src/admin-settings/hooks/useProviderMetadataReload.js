@@ -6,7 +6,7 @@
  *
  */
 
-import { useEffect, useRef, useCallback } from '@wordpress/element';
+import { useEffect, useRef } from '@wordpress/element';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 /**

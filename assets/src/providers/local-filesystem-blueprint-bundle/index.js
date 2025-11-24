@@ -7,7 +7,8 @@
  */
 
 import { addFilter, addAction, doAction } from '@wordpress/hooks';
-import { debug } from '@aether/utils/debug';
+import apiFetch from '@aether/utils/api';
+import { debug, debugWarn } from '@aether/utils/debug';
 import { LocalFilesystemBlueprintBundleProvider } from './LocalFilesystemBlueprintBundleProvider';
 import ProviderRegistry from '../registry/ProviderRegistry';
 
