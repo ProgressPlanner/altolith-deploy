@@ -3,7 +3,7 @@
  *
  * Displays provider instances in a collapsible panel layout using WordPress PanelBody.
  * Each provider instance is displayed as a collapsible panel with basic info in the header
- * and settings form (deployment types and provider settings) in the body.
+ * and settings form (provider settings) in the body.
  *
  */
 
@@ -15,51 +15,25 @@ import {
 	useMemo,
 } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import {
-	Button,
-	ToggleControl,
-	PanelBody,
-	CheckboxControl,
-} from '@wordpress/components';
+import { Button, ToggleControl, PanelBody } from '@wordpress/components';
 import { trash } from '@wordpress/icons';
-import { doAction } from '@wordpress/hooks';
 import ProviderForm from '@aether/components/ProviderForm';
 import StatusNotice from '@aether/components/StatusNotice';
-import apiFetch from '@aether/utils/api';
 import {
 	colors,
 	spacing,
 	fontWeight,
 	fontSize,
 	borderRadius,
-	statusBadgeStyles,
 	createFlexStyle,
 } from '@aether/utils/styles';
-import {
-	DEPLOYMENT_TYPES,
-	DEPLOYMENT_TYPE_LABELS,
-} from '@aether/constants/deploymentTypes';
 
 // Styles for settings form
-const deploymentTypesSectionStyle = {
-	padding: spacing.md,
-	backgroundColor: colors.backgroundLighter,
-	borderRadius: borderRadius.sm,
-	border: `1px solid ${ colors.borderLight }`,
-	marginBottom: spacing.lg,
-};
-
 const sectionTitleStyle = {
 	fontSize: fontSize.base,
 	fontWeight: fontWeight.semibold,
 	color: colors.text,
 	marginTop: 0,
-	marginBottom: spacing.md,
-};
-
-const deploymentTypesDescriptionStyle = {
-	fontSize: fontSize.sm,
-	color: colors.textSecondary,
 	marginBottom: spacing.md,
 };
 
@@ -115,14 +89,6 @@ const providerTypeTagStyle = {
 	flex: '0 0 auto',
 };
 
-const deploymentTypesContainerStyle = {
-	display: 'flex',
-	flexWrap: 'wrap',
-	gap: spacing.xs,
-	flex: '1 1 auto',
-	minWidth: '200px',
-};
-
 const toggleContainerStyle = {
 	flex: '0 0 auto',
 };
@@ -130,47 +96,6 @@ const toggleContainerStyle = {
 const panelBodyContentStyle = {
 	...createFlexStyle( 'column', spacing.lg ),
 	paddingTop: spacing.md,
-};
-
-/**
- * Get color styling for a deployment type tag
- *
- * @param {string} deploymentType Deployment type identifier
- * @return {Object} Style object with backgroundColor and color
- */
-const getDeploymentTypeTagStyle = ( deploymentType ) => {
-	const baseStyle = {
-		fontSize: fontSize.xs,
-		fontWeight: fontWeight.medium,
-		padding: '3px 8px',
-		borderRadius: borderRadius.sm,
-		display: 'inline-block',
-	};
-
-	// Assign different colors based on deployment type using WordPress statusBadgeStyles
-	switch ( deploymentType ) {
-		case DEPLOYMENT_TYPES.STATIC_SITE:
-			return {
-				...baseStyle,
-				...statusBadgeStyles.success,
-			};
-		case DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE:
-			return {
-				...baseStyle,
-				...statusBadgeStyles.info,
-			};
-		case DEPLOYMENT_TYPES.EDGE_FUNCTIONS:
-			return {
-				...baseStyle,
-				...statusBadgeStyles.warning,
-			};
-		default:
-			return {
-				...baseStyle,
-				backgroundColor: colors.backgroundLighter,
-				color: colors.textSecondary,
-			};
-	}
 };
 
 /**
@@ -200,8 +125,6 @@ export default function ProviderInstancePanel( {
 	const [ config, setConfig ] = useState( instance.config );
 	const [ saveError, setSaveError ] = useState( null );
 	const inputRef = useRef( null );
-	const beforeFormRef = useRef( null );
-	const afterFormRef = useRef( null );
 
 	// Update config when instance config changes
 	// Use a ref to track if we're in the middle of a local update
@@ -278,63 +201,51 @@ export default function ProviderInstancePanel( {
 		}
 	};
 
-	// Get enabled deployment types from local config state (for reactivity)
-	// Memoize to prevent unnecessary headerContent recreation
-	const enabledDeploymentTypes = useMemo(
-		() => config?.deployment_types || [],
-		[ config?.deployment_types ]
-	);
-
 	// Get provider metadata
 	const providerMetadata = provider?.metadata || {};
-	const supportedDeploymentTypes =
-		providerMetadata.supportedDeploymentTypes || [];
 	const settingsFields = provider?.settingsFields || [];
 
-	// Deployment type labels
-	const deploymentTypeLabels = {
-		[ DEPLOYMENT_TYPES.STATIC_SITE ]: __(
-			'Static Site',
-			'aether-site-exporter'
-		),
-		[ DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE ]: __(
-			'Blueprint Bundle',
-			'aether-site-exporter'
-		),
-		[ DEPLOYMENT_TYPES.EDGE_FUNCTIONS ]: __(
-			'Edge Functions',
-			'aether-site-exporter'
-		),
-	};
+	// Compute initial values for ProviderForm
+	const formInitialValues = useMemo( () => {
+		// Only include fields that are defined in settingsFields
+		// This prevents non-form fields from being passed as initialValues
+		const fieldValues = settingsFields.reduce( ( acc, field ) => {
+			if (
+				config[ field.id ] !== undefined &&
+				config[ field.id ] !== null
+			) {
+				acc[ field.id ] = config[ field.id ];
+			}
+			return acc;
+		}, {} );
+
+		return fieldValues;
+	}, [ settingsFields, config ] );
 
 	const handleFormChange = useCallback(
-		( newValues ) => {
-			// Include deployment_types in the merged config
-			setConfig( {
-				...newValues,
-				// eslint-disable-next-line camelcase
-				deployment_types: config.deployment_types || [],
-			} );
-		},
-		[ config.deployment_types ]
-	);
+		( fieldId, value ) => {
+			// Defensive check: ensure fieldId is provided
+			if ( ! fieldId ) {
+				return;
+			}
 
-	const handleDeploymentTypeToggle = useCallback(
-		( deploymentType, checked ) => {
-			setConfig( ( prevConfig ) => {
-				const currentTypes = prevConfig.deployment_types || [];
-				const newTypes = checked
-					? [ ...currentTypes, deploymentType ]
-					: currentTypes.filter( ( t ) => t !== deploymentType );
+			// Get list of valid form field IDs from settingsFields
+			const validFieldIds = new Set(
+				settingsFields.map( ( field ) => field.id )
+			);
 
-				return {
-					...prevConfig,
-					// eslint-disable-next-line camelcase
-					deployment_types: newTypes,
-				};
-			} );
+			// Only update if this is a valid form field
+			if ( ! validFieldIds.has( fieldId ) ) {
+				return;
+			}
+
+			// Update only the specific field that changed
+			setConfig( ( prevConfig ) => ( {
+				...prevConfig,
+				[ fieldId ]: value,
+			} ) );
 		},
-		[]
+		[ settingsFields ]
 	);
 
 	const handleFormSubmit = async ( values ) => {
@@ -345,55 +256,17 @@ export default function ProviderInstancePanel( {
 		setSaveError( null );
 
 		try {
-			const configResponse = await apiFetch( {
-				path: '/aether/site-exporter/settings?key=providers',
-			} );
+			// Use current local config state (preserves toggle state)
+			const currentEnabled = config.enabled !== false; // Default to enabled
 
-			if ( ! configResponse.success ) {
-				throw new Error(
-					__(
-						'Failed to load current settings',
-						'aether-site-exporter'
-					)
-				);
-			}
-
-			const providerConfigs = configResponse.value || {};
-			const currentConfig = providerConfigs[ instance.instanceId ] || {};
-			const enabled = currentConfig.enabled !== false; // Default to enabled
-
-			// Include deployment_types from config state
 			const updatedConfig = {
 				...values,
-				enabled,
-				// eslint-disable-next-line camelcase
-				deployment_types: config.deployment_types || [],
+				enabled: currentEnabled,
 			};
 
-			// Save with enabled state preserved
-			const updatedProviders = {
-				...providerConfigs,
-				[ instance.instanceId ]: updatedConfig,
-			};
-
-			const saveResponse = await apiFetch( {
-				path: '/aether/site-exporter/settings',
-				method: 'POST',
-				data: {
-					key: 'providers',
-					value: updatedProviders,
-				},
-			} );
-
-			if ( ! saveResponse.success ) {
-				throw new Error(
-					saveResponse.message || 'Failed to save settings'
-				);
-			}
-
-			// Notify parent of successful save
+			// Notify parent to save (parent has complete provider state)
 			if ( onSave ) {
-				onSave( instance.instanceId, updatedConfig );
+				await onSave( instance.instanceId, updatedConfig );
 			}
 		} catch ( err ) {
 			console.error( 'Failed to save provider config:', err );
@@ -404,33 +277,6 @@ export default function ProviderInstancePanel( {
 			throw err;
 		}
 	};
-
-	// Trigger hooks when panel is open and config/provider changes
-	useEffect( () => {
-		if ( ! provider || ! instance.instanceId ) {
-			return;
-		}
-
-		const { id } = provider;
-
-		const hookContext = {
-			providerId: id,
-			instanceId: instance.instanceId,
-			provider,
-			config,
-			onConfigChange: handleFormChange,
-		};
-
-		// Trigger before_form hook
-		if ( beforeFormRef.current ) {
-			doAction( 'aether.provider.panel.before_form', hookContext );
-		}
-
-		// Trigger after_form hook
-		if ( afterFormRef.current ) {
-			doAction( 'aether.provider.panel.after_form', hookContext );
-		}
-	}, [ provider, config, handleFormChange, instance.instanceId ] );
 
 	// Custom header content - memoized to prevent title disappearing on re-renders
 	const headerContent = useMemo(
@@ -500,38 +346,6 @@ export default function ProviderInstancePanel( {
 					{ providerMetadata.name || provider?.id || '' }
 				</span>
 
-				{ /* Deployment Types Tags */ }
-				{ enabledDeploymentTypes.length > 0 ? (
-					<div
-						className="aether-provider-instance-panel__deployment-types"
-						style={ deploymentTypesContainerStyle }
-					>
-						{ enabledDeploymentTypes.map( ( deploymentType ) => (
-							<span
-								key={ deploymentType }
-								className={ `aether-provider-instance-panel__deployment-type-tag aether-provider-instance-panel__deployment-type-tag--${ deploymentType }` }
-								style={ getDeploymentTypeTagStyle(
-									deploymentType
-								) }
-							>
-								{ DEPLOYMENT_TYPE_LABELS[ deploymentType ] ||
-									deploymentType }
-							</span>
-						) ) }
-					</div>
-				) : (
-					<span
-						style={ {
-							color: colors.textSecondary,
-							fontSize: fontSize.sm,
-							fontStyle: 'italic',
-							flex: '1 1 auto',
-						} }
-					>
-						{ __( 'None', 'aether-site-exporter' ) }
-					</span>
-				) }
-
 				{ /* Enabled Toggle */ }
 				<div
 					className="aether-provider-instance-panel__toggle"
@@ -570,7 +384,6 @@ export default function ProviderInstancePanel( {
 			config.instance_name,
 			instance.config.instance_name,
 			config.enabled,
-			enabledDeploymentTypes,
 			providerMetadata.name,
 			provider?.id,
 			handleNameSave,
@@ -599,79 +412,16 @@ export default function ProviderInstancePanel( {
 					/>
 				) }
 
-				{ /* Deployment Types Section */ }
-				{ supportedDeploymentTypes.length > 0 && (
-					<div
-						className="aether-provider-instance-panel__deployment-types"
-						style={ deploymentTypesSectionStyle }
-					>
-						<div
-							className="aether-provider-instance-panel__deployment-types-title"
-							style={ sectionTitleStyle }
-						>
-							{ __( 'Deployment Types', 'aether-site-exporter' ) }
-						</div>
-						<p
-							className="aether-provider-instance-panel__deployment-types-description"
-							style={ deploymentTypesDescriptionStyle }
-						>
-							{ __(
-								'Select which deployment types this provider instance should handle.',
-								'aether-site-exporter'
-							) }
-						</p>
-						{ supportedDeploymentTypes.map( ( deploymentType ) => (
-							<CheckboxControl
-								key={ deploymentType }
-								className="aether-provider-instance-panel__deployment-type-checkbox"
-								label={ deploymentTypeLabels[ deploymentType ] }
-								checked={
-									config.deployment_types?.includes(
-										deploymentType
-									) || false
-								}
-								onChange={ ( checked ) =>
-									handleDeploymentTypeToggle(
-										deploymentType,
-										checked
-									)
-								}
-							/>
-						) ) }
-					</div>
-				) }
-
-				{ /* Hook: before_form */ }
-				<div
-					ref={ beforeFormRef }
-					className="aether-provider-panel__before-form"
-					data-provider-id={ provider?.id }
-					data-instance-id={ instance.instanceId }
-				/>
-
 				{ /* Provider Settings Form */ }
 				{ settingsFields.length > 0 && (
 					<ProviderForm
 						providerId={ provider?.id }
 						fields={ settingsFields }
-						initialValues={ {
-							...config,
-							// Include deployment_types in initialValues for reactive field visibility
-							// eslint-disable-next-line camelcase
-							deployment_types: config.deployment_types || [],
-						} }
+						initialValues={ formInitialValues }
 						onChange={ handleFormChange }
 						onSubmit={ handleFormSubmit }
 					/>
 				) }
-
-				{ /* Hook: after_form */ }
-				<div
-					ref={ afterFormRef }
-					className="aether-provider-panel__after-form"
-					data-provider-id={ provider?.id }
-					data-instance-id={ instance.instanceId }
-				/>
 
 				{ /* Delete Button */ }
 				<div

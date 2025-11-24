@@ -19,7 +19,6 @@ export function getProviderMetadata() {
 		name: provider.getName(),
 		description: provider.getDescription?.() || '',
 		type: provider.getType?.() || 'generic',
-		deployment_types: provider.getSupportedDeploymentTypes?.() || [],
 	} ) );
 }
 
@@ -36,7 +35,6 @@ export function getProvidersByDeploymentType( deploymentType ) {
 		name: provider.getName(),
 		description: provider.getDescription?.() || '',
 		type: provider.getType?.() || 'generic',
-		deployment_types: provider.getSupportedDeploymentTypes?.() || [],
 	} ) );
 }
 
@@ -57,7 +55,6 @@ export function getProviderById( providerId ) {
 		name: provider.getName(),
 		description: provider.getDescription?.() || '',
 		type: provider.getType?.() || 'generic',
-		deployment_types: provider.getSupportedDeploymentTypes?.() || [],
 	};
 }
 

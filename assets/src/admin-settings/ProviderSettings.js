@@ -148,8 +148,6 @@ export default function ProviderSettings( {
 				name: provider.getName(),
 				description: provider.getDescription?.() || '',
 				type: provider.getType?.() || 'generic',
-				deployment_types:
-					provider.getSupportedDeploymentTypes?.() || [],
 				settings_fields:
 					provider.getProviderSpecificConfigFields?.() || [],
 			} ) );
@@ -187,32 +185,33 @@ export default function ProviderSettings( {
 	}, [ onConfigsUpdate, configs ] );
 
 	// Create flat list of all instances with provider metadata
-	const allInstances = Object.entries( configs ).map(
-		( [ instanceId, config ] ) => {
+	// Filter out instances whose provider type is not registered (e.g., removed providers)
+	const allInstances = Object.entries( configs )
+		.map( ( [ instanceId, config ] ) => {
 			const providerType =
 				config.provider_type || instanceId.split( ':' )[ 0 ];
 			const provider = providers.find( ( p ) => p.id === providerType );
 
+			// Skip instances whose provider type is not registered
+			if ( ! provider ) {
+				return null;
+			}
+
 			return {
 				instanceId,
 				config,
-				provider: provider || { name: providerType, id: providerType },
+				provider,
 			};
-		}
-	);
+		} )
+		.filter( ( instance ) => instance !== null );
 
 	const handleCreateInstanceConfirm = useCallback(
 		async ( instanceId, providerType, instanceName ) => {
-			// Get provider metadata for default deployment types
-			const provider = providers.find( ( p ) => p.id === providerType );
-			const defaultDeploymentTypes = provider?.deployment_types || [];
-
 			// Optimistically add the new instance to local state
 			const newInstance = {
 				provider_type: providerType,
 				instance_name: instanceName,
 				enabled: false,
-				deployment_types: defaultDeploymentTypes,
 			};
 
 			const optimisticConfigs = {
@@ -249,44 +248,40 @@ export default function ProviderSettings( {
 
 	const handleToggleInstance = useCallback(
 		async ( instanceId, enabled ) => {
-			// Capture original state before optimistic update for rollback
-			const originalConfigs = localConfigs;
-
-			// Optimistic update: update local state immediately before API call
-			const optimisticConfigs = {
-				...localConfigs,
-				[ instanceId ]: {
-					...localConfigs[ instanceId ],
-					enabled,
-				},
-			};
-			setLocalConfigs( optimisticConfigs );
+			// Store previous state for rollback using functional update
+			let previousConfigs;
+			setLocalConfigs( ( prevConfigs ) => {
+				previousConfigs = prevConfigs;
+				// Optimistic update: update local state immediately before API call
+				return {
+					...prevConfigs,
+					[ instanceId ]: {
+						...prevConfigs[ instanceId ],
+						enabled,
+					},
+				};
+			} );
 
 			try {
+				// Pass current state to API to prevent race conditions
 				const updatedProviders = await toggleProviderEnabled(
 					instanceId,
-					enabled
+					enabled,
+					previousConfigs
 				);
 
-				// Merge API response with current local state to preserve all instances
-				// This ensures no instances are lost if API response is incomplete
-				const mergedConfigs = {
-					...optimisticConfigs,
-					...updatedProviders,
-				};
+				// Update with API response (which should match our optimistic update)
+				setLocalConfigs( updatedProviders );
 
-				// Update local state with merged result
-				setLocalConfigs( mergedConfigs );
-
-				// Update parent configs state with merged result
+				// Update parent configs state
 				if ( onConfigsUpdate ) {
-					onConfigsUpdate( mergedConfigs );
+					onConfigsUpdate( updatedProviders );
 				}
 			} catch ( error ) {
 				console.error( 'Failed to toggle instance:', error );
 
 				// Rollback optimistic update on error
-				setLocalConfigs( originalConfigs );
+				setLocalConfigs( previousConfigs );
 
 				// Show error notification
 				if ( onNotice ) {
@@ -299,18 +294,20 @@ export default function ProviderSettings( {
 				}
 			}
 		},
-		[ toggleProviderEnabled, onConfigsUpdate, localConfigs, onNotice ]
+		[ toggleProviderEnabled, onConfigsUpdate, onNotice ]
 	);
 
 	const handleDeleteInstance = useCallback(
 		async ( instanceId ) => {
-			// Capture original state before optimistic update for rollback
-			const originalConfigs = localConfigs;
-
-			// Optimistically remove from local state
-			const { [ instanceId ]: removed, ...remainingConfigs } =
-				localConfigs;
-			setLocalConfigs( remainingConfigs );
+			// Store previous state for rollback using functional update
+			let previousConfigs;
+			setLocalConfigs( ( prevConfigs ) => {
+				previousConfigs = prevConfigs;
+				// Optimistically remove from local state
+				const { [ instanceId ]: removed, ...remainingConfigs } =
+					prevConfigs;
+				return remainingConfigs;
+			} );
 
 			try {
 				// Delete from backend
@@ -319,23 +316,24 @@ export default function ProviderSettings( {
 
 				// Merge API response with remaining configs to preserve all instances
 				// This ensures no instances are lost if API response is incomplete
-				const mergedConfigs = {
-					...remainingConfigs,
-					...updatedProviders,
-				};
+				setLocalConfigs( ( prevConfigs ) => {
+					const mergedConfigs = {
+						...prevConfigs,
+						...updatedProviders,
+					};
 
-				// Update local state with merged result
-				setLocalConfigs( mergedConfigs );
+					// Update parent state with merged result
+					if ( onConfigsUpdate ) {
+						onConfigsUpdate( mergedConfigs );
+					}
 
-				// Update parent state with merged result
-				if ( onConfigsUpdate ) {
-					onConfigsUpdate( mergedConfigs );
-				}
+					return mergedConfigs;
+				} );
 			} catch ( error ) {
 				console.error( 'Failed to delete instance:', error );
 
 				// Rollback optimistic update on error
-				setLocalConfigs( originalConfigs );
+				setLocalConfigs( previousConfigs );
 
 				// Show error notification
 				if ( onNotice ) {
@@ -348,23 +346,24 @@ export default function ProviderSettings( {
 				}
 			}
 		},
-		[ deleteProviderInstance, onConfigsUpdate, localConfigs, onNotice ]
+		[ deleteProviderInstance, onConfigsUpdate, onNotice ]
 	);
 
 	const handleRenameInstance = useCallback(
 		async ( instanceId, newName ) => {
-			// Capture original state before optimistic update for rollback
-			const originalConfigs = localConfigs;
-
-			// Optimistic update: update local state immediately before API call
-			const optimisticConfigs = {
-				...localConfigs,
-				[ instanceId ]: {
-					...localConfigs[ instanceId ],
-					instance_name: newName,
-				},
-			};
-			setLocalConfigs( optimisticConfigs );
+			// Store previous state for rollback using functional update
+			let previousConfigs;
+			setLocalConfigs( ( prevConfigs ) => {
+				previousConfigs = prevConfigs;
+				// Optimistic update: update local state immediately before API call
+				return {
+					...prevConfigs,
+					[ instanceId ]: {
+						...prevConfigs[ instanceId ],
+						instance_name: newName,
+					},
+				};
+			} );
 
 			try {
 				const updatedProviders = await renameProviderInstance(
@@ -374,46 +373,87 @@ export default function ProviderSettings( {
 
 				// Merge API response with current local state to preserve all instances
 				// This ensures no instances are lost if API response is incomplete
-				const mergedConfigs = {
-					...optimisticConfigs,
-					...updatedProviders,
-				};
+				setLocalConfigs( ( prevConfigs ) => {
+					const mergedConfigs = {
+						...prevConfigs,
+						...updatedProviders,
+					};
 
-				// Update local state with merged result
-				setLocalConfigs( mergedConfigs );
+					// Update parent configs state with merged result
+					if ( onConfigsUpdate ) {
+						onConfigsUpdate( mergedConfigs );
+					}
 
-				// Update parent configs state with merged result
-				if ( onConfigsUpdate ) {
-					onConfigsUpdate( mergedConfigs );
-				}
+					return mergedConfigs;
+				} );
 			} catch ( error ) {
 				console.error( 'Failed to rename instance:', error );
 
 				// Rollback optimistic update on error
-				setLocalConfigs( originalConfigs );
+				setLocalConfigs( previousConfigs );
 
 				// Re-throw to show error in UI
 				throw error;
 			}
 		},
-		[ renameProviderInstance, onConfigsUpdate, localConfigs ]
+		[ renameProviderInstance, onConfigsUpdate ]
 	);
 
 	const handleConfigSave = useCallback(
-		( instanceId, updatedConfig ) => {
-			// Update local state immediately for reactivity
+		async ( instanceId, updatedConfig ) => {
+			// Merge with existing config to preserve fields not in the form (like 'enabled')
+			const mergedConfig = {
+				...( localConfigs[ instanceId ] || {} ),
+				...updatedConfig,
+			};
+
+			// Update local state immediately for reactivity (optimistic update)
 			const updatedConfigs = {
 				...localConfigs,
-				[ instanceId ]: updatedConfig,
+				[ instanceId ]: mergedConfig,
 			};
 			setLocalConfigs( updatedConfigs );
 
-			// Also update parent state
-			if ( onConfigsUpdate ) {
-				onConfigsUpdate( updatedConfigs );
+			try {
+				// Save to API
+				const saveResponse = await apiFetch( {
+					path: '/aether/site-exporter/settings',
+					method: 'POST',
+					data: {
+						key: 'providers',
+						value: updatedConfigs,
+					},
+				} );
+
+				if ( ! saveResponse.success ) {
+					throw new Error(
+						saveResponse.message || 'Failed to save settings'
+					);
+				}
+
+				// Update parent state after successful save
+				if ( onConfigsUpdate ) {
+					onConfigsUpdate( updatedConfigs );
+				}
+			} catch ( error ) {
+				// Rollback optimistic update on error
+				setLocalConfigs( localConfigs );
+
+				// Show error notification
+				if ( onNotice ) {
+					onNotice(
+						`Failed to save settings: ${
+							error.message || 'Unknown error'
+						}`,
+						'error'
+					);
+				}
+
+				// Re-throw so child component can show error
+				throw error;
 			}
 		},
-		[ localConfigs, onConfigsUpdate ]
+		[ localConfigs, onConfigsUpdate, onNotice ]
 	);
 
 	if ( providers.length === 0 ) {
@@ -477,6 +517,10 @@ export default function ProviderSettings( {
 							( p ) => p.id === providerType
 						);
 
+						// Get provider instance from registry to get supported deployment types
+						const providerInstance =
+							ProviderRegistry.get( providerType );
+
 						return (
 							<ProviderInstancePanel
 								key={ instance.instanceId }
@@ -488,7 +532,7 @@ export default function ProviderSettings( {
 										description:
 											fullProvider?.description || '',
 										supportedDeploymentTypes:
-											fullProvider?.deployment_types ||
+											providerInstance?.getSupportedDeploymentTypes?.() ||
 											[],
 										type: fullProvider?.type || '',
 									},
@@ -496,7 +540,7 @@ export default function ProviderSettings( {
 										fullProvider?.settings_fields || []
 									).map( ( field ) => ( {
 										...field,
-										id: field.name,
+										id: field.id || field.name,
 									} ) ),
 								} }
 								instance={ {

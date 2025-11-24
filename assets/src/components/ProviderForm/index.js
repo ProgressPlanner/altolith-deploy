@@ -21,7 +21,6 @@ import {
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { doAction } from '@wordpress/hooks';
 import StatusNotice from '../StatusNotice';
 import apiFetch from '@aether/utils/api';
 import { validateConfig } from '@aether/utils/validation';
@@ -96,62 +95,49 @@ function ProviderForm( {
 	const [ error, setError ] = useState( null );
 	const { showSuccess, clearSuccess } = useSuccessTimeout();
 
-	// Refs for hook container elements
-	const beforeFieldsRef = useRef( null );
-	const afterFieldsRef = useRef( null );
-	const actionsRef = useRef( null );
+	// Track if we're currently editing (have unsaved changes)
+	const isEditingRef = useRef( false );
+	// Ref to store latest onChange callback to avoid stale closures
+	const onChangeRef = useRef( onChange );
 
-	// Update values when initialValues change
+	// Keep onChangeRef in sync with onChange prop
 	useEffect( () => {
+		onChangeRef.current = onChange;
+	}, [ onChange ] );
+
+	// Only initialize values once on mount, not when initialValues prop changes
+	// This prevents the form from resetting while user is typing
+	// The form is controlled by local state, parent updates come through onChange callback
+	useEffect( () => {
+		// Only initialize once on mount
 		setValues( initializeValues() );
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [ initialValues ] );
+	}, [] ); // Empty deps = run only on mount
 
 	const handleFieldChange = useCallback(
 		( fieldId, value ) => {
-			const newValues = {
-				...values,
+			// Mark that we're editing (have unsaved changes)
+			isEditingRef.current = true;
+
+			// Update local state
+			setValues( ( prevValues ) => ( {
+				...prevValues,
 				[ fieldId ]: value,
-			};
-			setValues( newValues );
+			} ) );
+
+			// Call onChange callback with ONLY the changed field
+			// This prevents unintended updates to other fields
+			if ( onChangeRef.current ) {
+				onChangeRef.current( fieldId, value );
+			}
+
 			setErrors( {} );
 			setError( null );
 			clearSuccess();
 			setSuccess( false );
-
-			// Call onChange callback if provided
-			if ( onChange ) {
-				onChange( newValues );
-			}
 		},
-		[ values, onChange, clearSuccess ]
+		[ clearSuccess ]
 	);
-
-	// Trigger hooks when values or other state changes
-	useEffect( () => {
-		const hookContext = {
-			providerId,
-			values,
-			onChange: handleFieldChange,
-			errors,
-			saving,
-		};
-
-		// Trigger before_fields hook
-		if ( beforeFieldsRef.current ) {
-			doAction( 'aether.provider.form.before_fields', hookContext );
-		}
-
-		// Trigger after_fields hook
-		if ( afterFieldsRef.current ) {
-			doAction( 'aether.provider.form.after_fields', hookContext );
-		}
-
-		// Trigger actions hook
-		if ( actionsRef.current ) {
-			doAction( 'aether.provider.form.actions', hookContext );
-		}
-	}, [ providerId, values, handleFieldChange, errors, saving ] );
 
 	const handleSubmit = async ( e ) => {
 		e.preventDefault();
@@ -236,6 +222,8 @@ function ProviderForm( {
 
 			setSuccess( true );
 			showSuccess( () => setSuccess( false ) );
+			// Reset editing flag after successful save
+			isEditingRef.current = false;
 		} catch ( err ) {
 			setError(
 				err.message ||
@@ -275,35 +263,12 @@ function ProviderForm( {
 				/>
 			) }
 
-			{ /* Hook: before_fields */ }
-			<div
-				ref={ beforeFieldsRef }
-				className="aether-provider-form__before-fields"
-				data-provider-id={ providerId }
-			/>
-
 			{ ( () => {
 				// Helper function to determine if field should be hidden
 				const isFieldHidden = ( field ) => {
-					// Always hide deployment_types field (managed in modal)
-					if ( field.name === 'deployment_types' ) {
-						return true;
-					}
 					if ( field.hidden === true ) {
 						// Hide fields marked as hidden in provider settings
 						return true;
-					}
-					if ( field.deploymentType ) {
-						// Hide fields with deploymentType if that type is not in current deployment_types
-						// Check both values.deployment_types and initialValues.deployment_types
-						// to handle real-time updates when deployment types change in modal
-						const currentDeploymentTypes =
-							values.deployment_types ||
-							initialValues.deployment_types ||
-							[];
-						return ! currentDeploymentTypes.includes(
-							field.deploymentType
-						);
 					}
 					return false;
 				};
@@ -428,13 +393,6 @@ function ProviderForm( {
 				);
 			} )() }
 
-			{ /* Hook: after_fields */ }
-			<div
-				ref={ afterFieldsRef }
-				className="aether-provider-form__after-fields"
-				data-provider-id={ providerId }
-			/>
-
 			<div
 				className="aether-provider-form__actions"
 				style={ actionsStyle }
@@ -450,13 +408,6 @@ function ProviderForm( {
 						? __( 'Saving…', 'aether-site-exporter' )
 						: __( 'Save Settings', 'aether-site-exporter' ) }
 				</Button>
-
-				{ /* Hook: actions */ }
-				<div
-					ref={ actionsRef }
-					className="aether-provider-form__actions-hook"
-					data-provider-id={ providerId }
-				/>
 			</div>
 		</form>
 	);

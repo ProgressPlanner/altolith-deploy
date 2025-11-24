@@ -8,7 +8,6 @@
 
 import { __, sprintf } from '@wordpress/i18n';
 import { applyFilters, doAction } from '@wordpress/hooks';
-import { buildDeploymentTypesField } from '../utils/configFieldBuilder';
 import {
 	validateAllFields,
 	hasRequiredFields,
@@ -197,22 +196,12 @@ export class AbstractProvider {
 	/**
 	 * Get enabled deployment types from provider configuration.
 	 *
-	 * Returns the deployment types the user has chosen to use this provider for.
-	 * If not set in config, defaults to all supported deployment types.
+	 * Since providers now have single responsibility, this always returns
+	 * the supported deployment types for this provider.
 	 *
 	 * @return {Array<string>} Array of enabled deployment types
 	 */
 	getEnabledDeploymentTypes() {
-		const config = this.config || {};
-		// If deployment_types is set in config, use it
-		if (
-			config.deployment_types &&
-			Array.isArray( config.deployment_types ) &&
-			config.deployment_types.length > 0
-		) {
-			return config.deployment_types;
-		}
-		// Otherwise, default to all supported deployment types
 		return this.getSupportedDeploymentTypes();
 	}
 
@@ -506,19 +495,13 @@ export class AbstractProvider {
 	/**
 	 * Get configuration fields for this provider.
 	 *
-	 * Automatically includes deployment types field, then adds provider-specific fields.
-	 * Subclasses should override getProviderSpecificConfigFields() instead of this method.
+	 * Adds provider-specific fields. Subclasses should override
+	 * getProviderSpecificConfigFields() instead of this method.
 	 *
 	 * @return {Array<Object>} Array of field definitions
 	 */
 	getConfigFields() {
 		const fields = [];
-
-		// Add deployment types field automatically
-		const deploymentTypesField = buildDeploymentTypesField( this );
-		if ( deploymentTypesField ) {
-			fields.push( deploymentTypesField );
-		}
 
 		// Add provider-specific fields
 		const providerFields = this.getProviderSpecificConfigFields?.() || [];
