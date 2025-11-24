@@ -7,7 +7,7 @@
  */
 
 import { addAction, doAction } from '@wordpress/hooks';
-import { uploadFile as uploadFileToStorage } from '@aether/utils/filesystemAdapter';
+import { uploadFile as uploadFileToStorage } from '../services/filesystemAdapter';
 import { LocalFilesystemStaticSiteProvider } from './LocalFilesystemStaticSiteProvider';
 import ProviderRegistry from '../registry/ProviderRegistry';
 

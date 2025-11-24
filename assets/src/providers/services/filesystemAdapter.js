@@ -6,8 +6,53 @@
  *
  */
 
-import apiFetch from './api';
-import { createSuccessResponse, createErrorResponse } from './standardResponse';
+import apiFetch from '@aether/utils/api';
+
+/**
+ * Create a success response.
+ *
+ * @param {*}      data    Success data (can be any type).
+ * @param {string} message Optional success message.
+ * @return {Object} Standardized success response.
+ */
+function createSuccessResponse( data = null, message = null ) {
+	const response = {
+		success: true,
+		data,
+	};
+
+	// Add message to data if provided
+	if ( message && typeof data === 'object' && data !== null ) {
+		response.data = { ...data, message };
+	} else if ( message ) {
+		response.data = { message };
+	}
+
+	return response;
+}
+
+/**
+ * Create an error response.
+ *
+ * @param {string|Error} error  Error message or Error object.
+ * @param {Array}        errors Optional array of multiple errors.
+ * @return {Object} Standardized error response.
+ */
+function createErrorResponse( error, errors = null ) {
+	const errorMessage =
+		typeof error === 'string' ? error : error?.message || 'Unknown error';
+
+	const response = {
+		success: false,
+		error: errorMessage,
+	};
+
+	if ( errors && Array.isArray( errors ) && errors.length > 0 ) {
+		response.errors = errors;
+	}
+
+	return response;
+}
 
 /**
  * Upload a file to local filesystem via REST API.
@@ -139,6 +184,28 @@ export async function deleteFile( staticPath, key ) {
 	} catch ( error ) {
 		return createErrorResponse( error.message || 'Delete failed' );
 	}
+}
+
+/**
+ * Copy a file (not needed for local filesystem - files are uploaded directly).
+ *
+ * @return {Promise<Object>} Copy result.
+ */
+export async function copyFile() {
+	// Not implemented for local filesystem
+	// Files are uploaded directly to their final location
+	return createSuccessResponse();
+}
+
+/**
+ * List objects in a directory (not needed for static site generation).
+ *
+ * @return {Promise<Object>} List result.
+ */
+export async function listObjects() {
+	// Not implemented - not needed for static site generation
+	// Static site generator doesn't need to list existing files
+	return createSuccessResponse( { objects: [] } );
 }
 
 /**

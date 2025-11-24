@@ -7,7 +7,22 @@
  */
 
 import apiFetch from '@wordpress/api-fetch';
-import { getRestUrl } from './getRestUrl';
+
+/**
+ * Get REST API base URL from window.aetherData or default.
+ *
+ * @return {string} REST API base URL (without namespace).
+ */
+function getRestUrl() {
+	if (
+		typeof window !== 'undefined' &&
+		window.aetherData &&
+		window.aetherData.restUrl
+	) {
+		return window.aetherData.restUrl;
+	}
+	return '/wp-json/';
+}
 
 /**
  * Get REST API nonce from window.aetherData or default.

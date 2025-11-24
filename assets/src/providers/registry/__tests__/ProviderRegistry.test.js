@@ -146,26 +146,28 @@ describe( 'ProviderRegistry', () => {
 		} );
 
 		it( 'should throw error for provider missing getId() method', () => {
-			const invalidProvider = {
-				getName: () => 'Test',
-			};
+			// Create a class without ID static property
+			class InvalidProvider {
+				static NAME = 'Test';
+			}
 
 			expect( () => {
-				ProviderRegistry.register( 'test-provider', invalidProvider );
+				ProviderRegistry.register( 'test-provider', InvalidProvider );
 			} ).toThrow(
-				'Provider test-provider must implement getId() method'
+				'Provider test-provider must have static ID property'
 			);
 		} );
 
 		it( 'should throw error for provider missing getName() method', () => {
-			const invalidProvider = {
-				getId: () => 'test-provider',
-			};
+			// Create a class without NAME static property
+			class InvalidProvider {
+				static ID = 'test-provider';
+			}
 
 			expect( () => {
-				ProviderRegistry.register( 'test-provider', invalidProvider );
+				ProviderRegistry.register( 'test-provider', InvalidProvider );
 			} ).toThrow(
-				'Provider test-provider must implement getName() method'
+				'Provider test-provider must have static NAME property'
 			);
 		} );
 

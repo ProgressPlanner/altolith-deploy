@@ -11,7 +11,7 @@ import {
 	batchDelete as batchDeleteFromAdapter,
 	getObjectUrl,
 	downloadFile as downloadFileFromAdapter,
-} from '@aether/utils/filesystemAdapter';
+} from './filesystemAdapter';
 import {
 	createFileContext,
 	FILE_TYPES,

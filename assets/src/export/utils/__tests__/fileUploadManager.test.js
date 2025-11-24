@@ -19,7 +19,7 @@ import {
 } from '../fileUploadManager';
 import { calculateFileHash } from '@aether/utils/fileHash';
 import { shouldSkipUpload } from '@aether/utils/manifestManager';
-import { formatFileSize } from '@aether/utils/helpers';
+import { formatFileSize } from '../helpers';
 import { errorHandler } from '../errorHandler';
 
 // Mock dependencies

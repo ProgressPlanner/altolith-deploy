@@ -9,7 +9,7 @@
 
 import { __, sprintf } from '@wordpress/i18n';
 import { addAction, applyFilters } from '@wordpress/hooks';
-import { formatFileSize } from '@aether/utils/helpers';
+import { formatFileSize } from '../../utils/helpers';
 
 /**
  * Create wp-content archive step handler

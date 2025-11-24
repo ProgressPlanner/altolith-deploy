@@ -15,7 +15,7 @@ import { doAction, applyFilters } from '@wordpress/hooks';
 import { createConcurrencyLimiter } from '@aether/utils/concurrencyLimiter';
 import { calculateFileHash } from '@aether/utils/fileHash';
 import { shouldSkipUpload } from '@aether/utils/manifestManager';
-import { formatFileSize } from '@aether/utils/helpers';
+import { formatFileSize } from './helpers';
 import { errorHandler } from './errorHandler';
 
 /**

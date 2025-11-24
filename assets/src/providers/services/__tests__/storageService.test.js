@@ -12,11 +12,11 @@ import {
 	batchDelete as batchDeleteFromAdapter,
 	getObjectUrl,
 	downloadFile,
-} from '../../../utils/filesystemAdapter';
+} from '../filesystemAdapter';
 import { uploadFile as uploadFileUnified } from '../../../export/utils/unifiedFileUpload';
 
 // Mock filesystem adapter
-jest.mock( '../../../utils/filesystemAdapter', () => ( {
+jest.mock( '../filesystemAdapter', () => ( {
 	deleteFile: jest.fn(),
 	batchDelete: jest.fn(),
 	getObjectUrl: jest.fn(),

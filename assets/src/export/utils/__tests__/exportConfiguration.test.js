@@ -366,8 +366,7 @@ describe( 'exportConfiguration', () => {
 			mockProviderRegistry.get.mockImplementation( ( providerType ) => {
 				if ( providerType === 'local-filesystem-static-site' ) {
 					return class {
-						static DEPLOYMENT_TYPE =
-							DEPLOYMENT_TYPES.STATIC_SITE;
+						static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.STATIC_SITE;
 					};
 				}
 				if ( providerType === 'local-filesystem-blueprint-bundle' ) {

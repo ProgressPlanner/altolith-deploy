@@ -9,7 +9,7 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { addAction } from '@wordpress/hooks';
 import apiFetch from '@wordpress/api-fetch';
-import { formatFileSize } from '@aether/utils/helpers';
+import { formatFileSize } from '../../utils/helpers';
 import {
 	createFileContext,
 	FILE_TYPES,
