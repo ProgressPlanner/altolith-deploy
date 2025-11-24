@@ -216,7 +216,7 @@ class ExportWorkflowTest extends TestCase {
 	 */
 	public function test_export_validates_custom_asset_slugs() {
 		// Test with valid array of slugs.
-		$result = $this->export_service->exportCompleteSite( null, null, [ 'my-plugin', 'my-theme' ] );
+		$result = $this->export_service->exportCompleteSite( 'test-progress-' . uniqid(), null, [ 'my-plugin', 'my-theme' ] );
 
 		// Should either succeed or fail gracefully.
 		$this->assertTrue(

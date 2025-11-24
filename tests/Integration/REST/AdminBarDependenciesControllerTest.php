@@ -34,7 +34,7 @@ class AdminBarDependenciesControllerTest extends TestCase
 	 *
 	 * @var string
 	 */
-	private string $namespace = 'aether/v1';
+	private string $namespace = 'aether/site-exporter';
 
 	/**
 	 * Set up test environment.
@@ -44,7 +44,10 @@ class AdminBarDependenciesControllerTest extends TestCase
 		parent::setUp();
 
 		$this->controller = new AdminBarDependenciesController();
-		$this->controller->registerRoutes();
+
+		// Register routes using rest_api_init hook (WordPress best practice)
+		add_action( 'rest_api_init', [ $this->controller, 'registerRoutes' ] );
+		do_action( 'rest_api_init' );
 
 		// Ensure scripts and styles are registered
 		do_action( 'init' );

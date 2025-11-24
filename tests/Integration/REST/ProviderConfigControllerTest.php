@@ -47,11 +47,11 @@ class ProviderConfigControllerTest extends TestCase {
 		// Initialize REST API.
 		global $wp_rest_server;
 		$wp_rest_server = new \WP_REST_Server();
-		do_action( 'rest_api_init', $wp_rest_server );
 
-		// Register controller routes.
+		// Register controller routes using rest_api_init hook (WordPress best practice)
 		$this->controller = new ProviderConfigController();
-		$this->controller->registerRoutes();
+		add_action( 'rest_api_init', [ $this->controller, 'registerRoutes' ] );
+		do_action( 'rest_api_init', $wp_rest_server );
 	}
 
 	/**
