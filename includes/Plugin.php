@@ -115,8 +115,6 @@ class Plugin
 		// Register REST API routes.
 		\add_action('rest_api_init', [ $this, 'registerRestRoutes' ]);
 
-		// Add provider discovery filters.
-
 		// Cleanup temporary export files daily (uses WordPress scheduled delete event)
 		\add_action('wp_scheduled_delete', [ $this, 'cleanupExpiredExports' ]);
 
@@ -528,20 +526,6 @@ class Plugin
 	 */
 	private function copyBlueprintBundleFile(string $sourcePath, string $destinationPath): bool
 	{
-		// Security: Validate paths.
-		// Note: Source paths can be absolute (from blueprint bundle generation) or relative
-		// PathValidator will ensure absolute paths are within ABSPATH
-		// Destination paths must always be relative (from instance config)
-		$sourceValidation = SecurityValidator::validatePathComprehensive($sourcePath, null, false);
-		$destinationValidation = SecurityValidator::validateExportPath($destinationPath);
-
-		if (! $sourceValidation['valid'] || ! $destinationValidation['valid']) {
-			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log('Aether: Invalid path for blueprint bundle copy');
-			}
-			return false;
-		}
-
 		// Build full paths - handle both absolute and relative paths.
 		// Check if source path is already absolute.
 		$isAbsolutePath = \preg_match('#^[/\\\\]#', $sourcePath) || \preg_match('#^[A-Za-z]:[/\\\\]#', $sourcePath);
