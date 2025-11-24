@@ -157,7 +157,6 @@ export class MyProvider {
 Providers implement static methods for operations:
 
 - `static validateConfig(providerId, config)` - Validate provider configuration
-- `static sanitizeConfig(providerId, config)` - Sanitize provider configuration
 - `static testConnection(providerId)` - Test provider connection
 
 ## Example Provider
@@ -190,13 +189,6 @@ export class MyProvider {
         }
 
         return errors;
-    }
-
-    static async sanitizeConfig(providerId, config) {
-        return {
-            ...config,
-            api_key: config.api_key?.trim() || '',
-        };
     }
 
     static async testConnection(providerId) {
@@ -426,7 +418,7 @@ npm run test:js -- providers/local-filesystem
 
 1. **Create provider directory:** `providers/my-provider/`
 2. **Define static constants:** ID, NAME, TYPE, DESCRIPTION, ICON, DEPLOYMENT_TYPE, CONFIG_FIELDS
-3. **Implement static methods:** validateConfig, sanitizeConfig, testConnection
+3. **Implement static methods:** validateConfig, testConnection
 4. **Implement deployment logic:** Handle uploads, status checks
 5. **Register provider:** Use WordPress hooks in `index.js`
 6. **Add tests:** Create unit tests in `tests/js/providers/`

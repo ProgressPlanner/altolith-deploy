@@ -10,7 +10,6 @@ import { __ } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 import { validateAllFields } from '../utils/configValidation';
-import { sanitizeAllFields } from '../utils/configSanitization';
 
 /**
  * LocalFilesystemStaticSiteProvider class
@@ -141,37 +140,6 @@ export class LocalFilesystemStaticSiteProvider {
 		return applyFilters(
 			'aether.provider.config.validate',
 			errors,
-			config,
-			providerId
-		);
-	}
-
-	/**
-	 * Sanitize provider configuration.
-	 *
-	 * @param {string} providerId Provider ID.
-	 * @param {Object} config     Configuration object to sanitize.
-	 * @return {Promise<Object>} Sanitized configuration
-	 */
-	static async sanitizeConfig( providerId, config ) {
-		const sanitized = sanitizeAllFields(
-			config,
-			LocalFilesystemStaticSiteProvider.CONFIG_FIELDS
-		);
-
-		// Sanitize static_files_path - default to 'static/' if empty
-		if ( sanitized.static_files_path ) {
-			sanitized.static_files_path = sanitized.static_files_path.trim();
-			if ( sanitized.static_files_path === '' ) {
-				sanitized.static_files_path = 'static/';
-			}
-		} else {
-			sanitized.static_files_path = 'static/';
-		}
-
-		return applyFilters(
-			'aether.provider.config.sanitize',
-			sanitized,
 			config,
 			providerId
 		);

@@ -10,7 +10,6 @@ import { __ } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 import { validateAllFields } from '../utils/configValidation';
-import { sanitizeAllFields } from '../utils/configSanitization';
 
 /**
  * LocalFilesystemBlueprintBundleProvider class
@@ -125,42 +124,6 @@ export class LocalFilesystemBlueprintBundleProvider {
 		return applyFilters(
 			'aether.provider.config.validate',
 			errors,
-			config,
-			providerId
-		);
-	}
-
-	/**
-	 * Sanitize provider configuration.
-	 *
-	 * @param {string} providerId Provider ID.
-	 * @param {Object} config     Configuration object to sanitize.
-	 * @return {Promise<Object>} Sanitized configuration
-	 */
-	static async sanitizeConfig( providerId, config ) {
-		const sanitized = sanitizeAllFields(
-			config,
-			LocalFilesystemBlueprintBundleProvider.CONFIG_FIELDS
-		);
-
-		// Sanitize export_path - default to 'blueprint-bundle/bundle.zip' if empty
-		if ( sanitized.export_path ) {
-			sanitized.export_path = sanitized.export_path
-				.replace( /^\/+|\/+$/g, '' )
-				.trim();
-			if (
-				sanitized.export_path === '' ||
-				! sanitized.export_path.endsWith( '.zip' )
-			) {
-				sanitized.export_path = 'blueprint-bundle/bundle.zip';
-			}
-		} else {
-			sanitized.export_path = 'blueprint-bundle/bundle.zip';
-		}
-
-		return applyFilters(
-			'aether.provider.config.sanitize',
-			sanitized,
 			config,
 			providerId
 		);
