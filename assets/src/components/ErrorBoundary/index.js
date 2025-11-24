@@ -16,7 +16,6 @@ import {
 	fontWeight,
 	noticeStyles,
 } from '@aether/utils/styles';
-import { debugError } from '@aether/utils/debug';
 
 /**
  * Error Boundary component
@@ -38,7 +37,8 @@ class ErrorBoundary extends Component {
 
 	componentDidCatch( error, errorInfo ) {
 		// Log error details for debugging
-		debugError( 'Error caught by ErrorBoundary:', {
+		// eslint-disable-next-line no-console
+		console.error( 'Error caught by ErrorBoundary:', {
 			error,
 			errorInfo,
 		} );

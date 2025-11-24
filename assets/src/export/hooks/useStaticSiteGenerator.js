@@ -10,7 +10,6 @@
 import { useCallback } from '@wordpress/element';
 import { doAction, applyFilters } from '@wordpress/hooks';
 import { createAssetTracker } from '@aether/export/utils/assetTracker';
-import { debug, debugWarn } from '@aether/utils/debug';
 import {
 	updateManifestEntry,
 	uploadManifest,
@@ -59,11 +58,6 @@ export function useStaticSiteGenerator( onProgress ) {
 				);
 			}
 
-			debug( 'Processing static site for provider:', {
-				providerId: staticSiteProviderId,
-				urlCount: urls?.length || 0,
-			} );
-
 			// Create asset tracker to prevent duplicate uploads
 			const assetTracker = createAssetTracker();
 
@@ -85,11 +79,6 @@ export function useStaticSiteGenerator( onProgress ) {
 				staticSiteProviderId
 			);
 
-			debug( 'Static site storage configuration:', {
-				staticPath,
-				providerId: staticSiteProviderId,
-			} );
-
 			const storageService = await createStorageService(
 				staticPath,
 				config,
@@ -98,13 +87,6 @@ export function useStaticSiteGenerator( onProgress ) {
 			);
 
 			const totalUrls = urls.length;
-
-			debug( '[Aether] useStaticSiteGenerator starting pre-scan:', {
-				urlCount: totalUrls,
-				hasCache: !! cache,
-				cacheSize: cache ? cache.size : 0,
-				providerId: staticSiteProviderId,
-			} );
 
 			// PHASE 1: Pre-scan all URLs (use shared HTML data if provided)
 			const preScanResult = await executePreScan( {
@@ -138,18 +120,10 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			// Validate that we have URLs to process
 			if ( fetchedUrls.length === 0 ) {
-				debugWarn(
-					'[Aether] No URLs found in sharedHtmlData. Cannot upload files.'
-				);
 				throw new Error(
 					'No HTML data available for upload. Please ensure preScanStaticSite step completed successfully.'
 				);
 			}
-
-			debug( '[Aether] Processing URLs for upload:', {
-				urlCount: fetchedUrls.length,
-				totalFilesToUpload,
-			} );
 
 			// Fire upload start action
 			doAction(
@@ -163,9 +137,6 @@ export function useStaticSiteGenerator( onProgress ) {
 			for ( const url of fetchedUrls ) {
 				const htmlDataEntry = sharedHtmlData.get( url );
 				if ( ! htmlDataEntry ) {
-					debugWarn(
-						`[Aether] No HTML data for URL: ${ url } - skipping`
-					);
 					continue;
 				}
 
@@ -174,9 +145,6 @@ export function useStaticSiteGenerator( onProgress ) {
 					typeof htmlDataEntry !== 'object' ||
 					htmlDataEntry === null
 				) {
-					debugWarn(
-						`[Aether] Invalid data structure for URL: ${ url }. Expected object with rawHtml and assetUrls, got: ${ typeof htmlDataEntry }`
-					);
 					continue;
 				}
 
@@ -184,10 +152,6 @@ export function useStaticSiteGenerator( onProgress ) {
 					! htmlDataEntry.rawHtml ||
 					! Array.isArray( htmlDataEntry.assetUrls )
 				) {
-					debugWarn(
-						`[Aether] Invalid object structure for URL: ${ url }. Expected { rawHtml, assetUrls }, got:`,
-						Object.keys( htmlDataEntry )
-					);
 					continue;
 				}
 
@@ -282,16 +246,9 @@ export function useStaticSiteGenerator( onProgress ) {
 					// Periodic manifest save
 					if ( filesUploaded % 50 === 0 ) {
 						try {
-							debug(
-								'Periodic manifest save:',
-								filesUploaded + ' files'
-							);
 							await uploadManifest( storageService, manifest );
 						} catch ( error ) {
-							debugWarn(
-								'Periodic manifest save failed:',
-								error
-							);
+							// Manifest save failed, continue with upload
 						}
 					}
 				} catch ( error ) {
@@ -311,20 +268,6 @@ export function useStaticSiteGenerator( onProgress ) {
 				staticSiteProviderId,
 				setStatusMessage
 			);
-
-			// Log optimization summary
-			const actualUploads = filesUploaded - filesSkipped;
-			debug( 'Upload optimization summary:', {
-				totalFiles: filesUploaded,
-				uploaded: actualUploads,
-				skipped: filesSkipped,
-				skipRate:
-					filesUploaded > 0
-						? `${ Math.round(
-								( filesSkipped / filesUploaded ) * 100
-						  ) }%`
-						: '0%',
-			} );
 
 			// Remove progress message
 			if ( removeMessage ) {

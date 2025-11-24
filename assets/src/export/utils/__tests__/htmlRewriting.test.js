@@ -13,11 +13,6 @@ import {
 	rewriteImportMaps,
 } from '../htmlRewriting';
 
-// Mock debug
-jest.mock( '@aether/utils/debug', () => ( {
-	debug: jest.fn(),
-} ) );
-
 describe( 'htmlRewriting', () => {
 	describe( 'protectScriptContent()', () => {
 		test( 'should protect inline script content', () => {

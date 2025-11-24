@@ -8,7 +8,6 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from './assetExtractor';
-import { debug, debugWarn } from '@aether/utils/debug';
 
 /**
  * Execute the pre-scan phase.
@@ -58,11 +57,6 @@ export async function executePreScan( {
 	const allUniqueAssets = new Set();
 	let successfulUrls = 0;
 
-	debug( '[Aether] executePreScan starting:', {
-		totalUrls: urls.length,
-		cachedEntries: dataStorage.size,
-	} );
-
 	// Scan each URL
 	for ( let i = 0; i < urls.length; i++ ) {
 		const url = urls[ i ];
@@ -77,7 +71,6 @@ export async function executePreScan( {
 				cachedEntry.rawHtml &&
 				Array.isArray( cachedEntry.assetUrls )
 			) {
-				debug( `[Aether] Using cached HTML data for URL: ${ url }` );
 				successfulUrls++;
 
 				// Add cached assets to unique set
@@ -86,9 +79,6 @@ export async function executePreScan( {
 				}
 				continue;
 			} else {
-				debugWarn(
-					`[Aether] Cached entry for ${ url } has invalid structure, will re-fetch`
-				);
 			}
 		}
 
@@ -107,9 +97,6 @@ export async function executePreScan( {
 			} );
 
 			if ( htmlResponse.status !== 200 ) {
-				debugWarn(
-					`[Aether] Skipping URL with non-200 status: ${ url } (HTTP ${ htmlResponse.status })`
-				);
 				failures.urlsFailed++;
 				failures.failedUrls.push( {
 					url,
@@ -124,9 +111,6 @@ export async function executePreScan( {
 			if ( ! contentType.includes( 'text/html' ) ) {
 				// Not HTML - likely an asset (CSS, JS, image, etc.)
 				// Assets are handled separately in upload phase, skip here
-				debug(
-					`[Aether] Skipping non-HTML URL (likely asset): ${ url } (content-type: ${ contentType })`
-				);
 				continue;
 			}
 
@@ -144,7 +128,6 @@ export async function executePreScan( {
 				allUniqueAssets.add( assetUrl );
 			}
 		} catch ( error ) {
-			debugWarn( `[Aether] Error fetching URL: ${ url }`, error.message );
 			failures.urlsFailed++;
 			failures.failedUrls.push( {
 				url,
@@ -154,13 +137,6 @@ export async function executePreScan( {
 	}
 
 	const totalFilesToUpload = successfulUrls + allUniqueAssets.size;
-
-	debug( 'Pre-scan complete:', {
-		urlsScanned: urls.length,
-		urlsSuccessful: successfulUrls,
-		uniqueAssets: allUniqueAssets.size,
-		totalFilesToUpload,
-	} );
 
 	// Fire completion action
 	doAction(

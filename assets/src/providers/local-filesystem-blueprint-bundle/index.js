@@ -8,7 +8,6 @@
 
 import { addAction, doAction } from '@wordpress/hooks';
 import apiFetch from '@aether/utils/api';
-import { debug, debugWarn } from '@aether/utils/debug';
 import { LocalFilesystemBlueprintBundleProvider } from './LocalFilesystemBlueprintBundleProvider';
 import ProviderRegistry from '../registry/ProviderRegistry';
 
@@ -42,19 +41,8 @@ async function handleUnifiedFileUpload( fileContext ) {
 		metadata = {},
 	} = fileContext;
 
-	// Debug logging
-	debug( '[LocalFilesystemBlueprintBundle] handleUnifiedFileUpload called:', {
-		providerId,
-		filePath,
-		destinationPath,
-	} );
-
 	// Only handle requests for local-filesystem providers that support blueprint_bundle
 	if ( ! providerId || ! providerId.startsWith( 'local-filesystem' ) ) {
-		debug(
-			'[LocalFilesystemBlueprintBundle] Skipping - not a local-filesystem provider:',
-			providerId
-		);
 		return;
 	}
 
@@ -64,10 +52,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 		! providerId ||
 		! providerId.startsWith( 'local-filesystem-blueprint-bundle' )
 	) {
-		debug(
-			'[LocalFilesystemBlueprintBundle] Skipping - not a blueprint bundle provider:',
-			providerId
-		);
 		return;
 	}
 
@@ -78,18 +62,10 @@ async function handleUnifiedFileUpload( fileContext ) {
 	const existingEntry = processedFiles.get( fileKey );
 	if ( existingEntry === true ) {
 		// Already processed successfully
-		debug(
-			'[LocalFilesystemBlueprintBundle] Skipping - file already processed:',
-			fileKey
-		);
 		return;
 	}
 	if ( existingEntry instanceof Promise ) {
 		// Already in progress - wait for it to complete
-		debug(
-			'[LocalFilesystemBlueprintBundle] File already in progress, waiting:',
-			fileKey
-		);
 		try {
 			await existingEntry;
 		} catch ( error ) {
@@ -101,10 +77,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 		}
 		// Check again after waiting
 		if ( processedFiles.get( fileKey ) === true ) {
-			debug(
-				'[LocalFilesystemBlueprintBundle] File processed by other handler:',
-				fileKey
-			);
 			return;
 		}
 	}
@@ -156,9 +128,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 			}
 
 			uploadResults[ providerId ].filesUploaded++;
-			debug(
-				`Uploaded blueprint bundle ${ filePath } to ${ destinationPath } for provider ${ providerId }`
-			);
 			// Set result on fileContext for unified upload system
 			fileContext.result = { success: true };
 		} catch ( error ) {
@@ -166,10 +135,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 				url: filePath,
 				error: error.message || 'Unknown error',
 			} );
-			debugWarn(
-				`Error processing file for provider ${ providerId }:`,
-				error
-			);
 			// Set result on fileContext for unified upload system
 			fileContext.result = {
 				success: false,

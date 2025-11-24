@@ -5,15 +5,14 @@
  *
  */
 
-import { debugError } from './debug';
-
 /**
  * Initialize global error handlers
  */
 export function initializeErrorHandlers() {
 	// Handle unhandled promise rejections
 	window.addEventListener( 'unhandledrejection', ( event ) => {
-		debugError( 'Unhandled promise rejection:', {
+		// eslint-disable-next-line no-console
+		console.error( 'Unhandled promise rejection:', {
 			reason: event.reason,
 			promise: event.promise,
 		} );
@@ -29,7 +28,8 @@ export function initializeErrorHandlers() {
 
 	// Handle uncaught errors
 	window.addEventListener( 'error', ( event ) => {
-		debugError( 'Uncaught error:', {
+		// eslint-disable-next-line no-console
+		console.error( 'Uncaught error:', {
 			message: event.message,
 			filename: event.filename,
 			lineno: event.lineno,

@@ -9,7 +9,6 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { addAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from '@aether/export/utils/assetExtractor';
-import { debug, debugWarn } from '@aether/utils/debug';
 
 /**
  * Pre-scan static site step handler
@@ -64,9 +63,6 @@ async function handler( context ) {
 			} );
 
 			if ( ! response.ok ) {
-				debugWarn(
-					`[Aether] Skipping URL with non-200 status: ${ url } (HTTP ${ response.status })`
-				);
 				continue;
 			}
 
@@ -89,19 +85,11 @@ async function handler( context ) {
 			// Store HTML and assets in shared cache for later use
 			// Format matches what useStaticSiteGenerator expects: { rawHtml, assetUrls }
 			sharedHtmlData.set( url, { rawHtml: html, assetUrls: assets } );
-		} catch ( error ) {
-			debugWarn( `[Aether] Error fetching URL: ${ url }`, error.message );
-		}
+		} catch ( error ) {}
 	}
 
 	// Combine HTML URLs with discovered assets
 	const expandedUrls = [ ...htmlUrls, ...allAssets ];
-
-	debug( '[Aether] Pre-scan complete:', {
-		htmlPages: htmlUrls.length,
-		assetsDiscovered: allAssets.size,
-		totalUrls: expandedUrls.length,
-	} );
 
 	setStatusMessage(
 		sprintf(

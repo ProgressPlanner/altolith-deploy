@@ -10,7 +10,6 @@ import { __ } from '@wordpress/i18n';
 import { useState, useCallback, useMemo } from '@wordpress/element';
 import apiFetch from './api';
 import { getWpOrgCache } from './wporgCache';
-import { debugWarn } from './debug';
 import {
 	AssetDiscoveryService,
 	normalizePluginSlug,
@@ -53,9 +52,6 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 
 	// If CORS proxy method returned null (unable to check), try direct API fallback
 	if ( result === null ) {
-		debugWarn(
-			`CORS proxy WordPress.org check returned null for ${ type } "${ slug }", trying direct API fallback`
-		);
 		result = await checkWithMethod(
 			normalizedSlug,
 			type,
@@ -66,9 +62,6 @@ export async function isFromWordPressOrg( slug, type, config = {} ) {
 
 	// If still null after fallback, treat as false
 	if ( result === null ) {
-		debugWarn(
-			`All WordPress.org check methods failed for ${ type } "${ slug }", treating as custom asset`
-		);
 		result = false;
 	}
 
@@ -149,10 +142,6 @@ async function checkWithMethod( slug, type, method, config = {} ) {
 		return exists;
 	} catch ( error ) {
 		// Network/API error - return null to indicate unable to check
-		debugWarn(
-			`Failed to check WordPress.org for ${ type } "${ slug }" using ${ method } method:`,
-			error
-		);
 		return null;
 	}
 }

@@ -16,14 +16,6 @@ jest.mock( '@wordpress/i18n', () => ( {
 	__: ( text ) => text,
 } ) );
 
-// Mock debug utility
-jest.mock( '../../../utils/debug', () => ( {
-	debugError: jest.fn(),
-} ) );
-
-// Import the mock
-import { debugError } from '../../../utils/debug';
-
 // Component that throws an error
 const ThrowError = ( { shouldThrow, error } ) => {
 	if ( shouldThrow ) {
@@ -124,22 +116,6 @@ describe( 'ErrorBoundary', () => {
 			expect(
 				screen.getByText( /Error: Custom error message/ )
 			).toBeInTheDocument();
-		} );
-
-		test( 'should call debugError on error catch', () => {
-			render(
-				<ErrorBoundary>
-					<ThrowError shouldThrow={ true } />
-				</ErrorBoundary>
-			);
-
-			expect( debugError ).toHaveBeenCalledWith(
-				'Error caught by ErrorBoundary:',
-				expect.objectContaining( {
-					error: expect.any( Error ),
-					errorInfo: expect.any( Object ),
-				} )
-			);
 		} );
 
 		test( 'should call onError callback if provided', () => {

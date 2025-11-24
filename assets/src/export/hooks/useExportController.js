@@ -11,7 +11,6 @@ import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
 import { useBlueprintGenerator } from './useBlueprintGenerator';
 import apiFetch from '@aether/utils/api';
-import { debug, debugError } from '@aether/utils/debug';
 import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 import { executeThreadedWorkflow } from '@aether/export/executor/ThreadOrchestrator';
 import { getActiveSteps, getRegisteredSteps } from '@aether/export/steps';
@@ -106,8 +105,6 @@ export function useExportController( exportState ) {
 
 	const startExport = useCallback( async () => {
 		try {
-			debug( 'startExport called' );
-
 			// Initialize steps with 'discoverBlueprintBundleAssets' as the active step
 			// This sets up steps array, active step, and lastStepIndex correctly
 			initializeSteps(
@@ -141,7 +138,6 @@ export function useExportController( exportState ) {
 				}
 			} catch ( assetError ) {
 				// Asset status fetch is not critical - log and continue
-				debugError( 'Failed to fetch asset status:', assetError );
 			}
 
 			// Activate the first step immediately to update UI
@@ -167,12 +163,6 @@ export function useExportController( exportState ) {
 			const edgeFunctionProviders =
 				providersByType[ DEPLOYMENT_TYPES.EDGE_FUNCTIONS ];
 
-			debug( '[Workflow] Providers by deployment type:', {
-				staticSite: staticSiteProviders,
-				blueprintBundle: blueprintBundleProviders,
-				edgeFunctions: edgeFunctionProviders,
-			} );
-
 			// Build provider instance objects for threading
 			const staticSiteProviderInstances = buildProviderInstances(
 				exportConfig.providerConfigs,
@@ -186,12 +176,6 @@ export function useExportController( exportState ) {
 				exportConfig.providerConfigs,
 				DEPLOYMENT_TYPES.EDGE_FUNCTIONS
 			);
-
-			debug( '[Workflow] Provider instances for threading:', {
-				staticSite: staticSiteProviderInstances,
-				blueprintBundle: blueprintBundleProviderInstances,
-				edgeFunctions: edgeFunctionProviderInstances,
-			} );
 
 			// Store provider arrays in global state for UI access
 			setProviders( staticSiteProviders, blueprintBundleProviders );
@@ -228,19 +212,12 @@ export function useExportController( exportState ) {
 			// Set up workflow lifecycle callbacks for UI updates
 			const workflowOptions = {
 				onStepStart: ( stepId ) => {
-					debug( `[Workflow] Step starting: ${ stepId }` );
 					// Update UI with step ID
 					updateFromStep( stepId );
 				},
-				onStepComplete: ( stepId, result ) => {
-					debug( `[Workflow] Step completed: ${ stepId }`, result );
-				},
-				onStepSkipped: ( stepId ) => {
-					debug( `[Workflow] Step skipped: ${ stepId }` );
-				},
-				onError: ( stepId, error ) => {
-					debugError( `[Workflow] Step error: ${ stepId }`, error );
-				},
+				onStepComplete: () => {},
+				onStepSkipped: () => {},
+				onError: () => {},
 			};
 
 			// Get steps filtered by enabled providers
@@ -254,11 +231,6 @@ export function useExportController( exportState ) {
 				...edgeFunctionProviderInstances,
 			];
 
-			debug( '[Workflow] Executing with provider instances:', {
-				count: allProviderInstances.length,
-				instances: allProviderInstances.map( ( p ) => p.id ),
-			} );
-
 			// Execute workflow with ThreadOrchestrator (handles 0, 1, or N providers)
 			await executeThreadedWorkflow(
 				activeSteps,
@@ -266,8 +238,6 @@ export function useExportController( exportState ) {
 				allProviderInstances,
 				workflowOptions
 			);
-
-			debug( '[Workflow] All steps completed successfully' );
 
 			// Clear asset upload tracking flags (reset state for next export)
 			assetManager.clearUploadFlags();
@@ -278,7 +248,6 @@ export function useExportController( exportState ) {
 			// Release exporting lock (allows user to start new export)
 			setIsExporting( false );
 		} catch ( error ) {
-			debugError( 'Publish failed:', error );
 			showError( `Failed to start: ${ error.message }` );
 			setIsExporting( false );
 		}

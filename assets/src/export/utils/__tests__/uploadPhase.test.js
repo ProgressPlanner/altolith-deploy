@@ -37,11 +37,6 @@ jest.mock( '@aether/utils/fileHash', () => ( {
 	calculateFileHash: jest.fn(),
 } ) );
 
-jest.mock( '@aether/utils/debug', () => ( {
-	debug: jest.fn(),
-	debugWarn: jest.fn(),
-} ) );
-
 jest.mock( '../htmlProcessor', () => ( {
 	processHtml: jest.fn(),
 	getStaticFilePath: jest.fn(),

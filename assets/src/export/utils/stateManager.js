@@ -7,7 +7,6 @@
  *
  */
 
-import { debug, debugWarn } from '@aether/utils/debug';
 import IndexedDBStore, { isIndexedDBAvailable } from '@aether/utils/indexedDB';
 
 const DB_CONFIG = {
@@ -33,9 +32,6 @@ let storeInstance = null;
  */
 function getStore() {
 	if ( ! isIndexedDBAvailable() ) {
-		debugWarn(
-			'[StateManager] IndexedDB not available, state will not persist'
-		);
 		return null;
 	}
 
@@ -86,9 +82,7 @@ async function saveState( workflowId, state, providerInstance = null ) {
 
 	try {
 		await store.set( stateKey, stateData );
-		debug( `[StateManager] Saved state for ${ stateKey }` );
 	} catch ( error ) {
-		debugWarn( '[StateManager] Failed to save state:', error );
 		// Don't throw - state persistence is non-critical
 	}
 }
@@ -111,12 +105,10 @@ async function loadState( workflowId, providerInstance = null ) {
 	try {
 		const result = await store.get( stateKey );
 		if ( result && result.state ) {
-			debug( `[StateManager] Loaded state for ${ stateKey }` );
 			return result.state;
 		}
 		return null;
 	} catch ( error ) {
-		debugWarn( '[StateManager] Failed to load state:', error );
 		return null;
 	}
 }
@@ -152,14 +144,7 @@ async function deleteState( workflowId, providerInstance = null ) {
 				await store.delete( stateItem.stateKey );
 			}
 		}
-
-		debug(
-			`[StateManager] Deleted state for ${ workflowId }${
-				providerInstance ? `::${ providerInstance }` : ''
-			}`
-		);
 	} catch ( error ) {
-		debugWarn( '[StateManager] Failed to delete state:', error );
 		// Don't throw - cleanup is non-critical
 	}
 }
@@ -184,7 +169,6 @@ async function listStates( workflowId ) {
 			timestamp: stateItem.timestamp,
 		} ) );
 	} catch ( error ) {
-		debugWarn( '[StateManager] Failed to list states:', error );
 		return [];
 	}
 }

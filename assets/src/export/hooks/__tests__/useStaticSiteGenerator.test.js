@@ -65,11 +65,6 @@ jest.mock( '@aether/utils/manifestManager', () => ( {
 	uploadManifest: jest.fn(),
 } ) );
 
-jest.mock( '@aether/utils/debug', () => ( {
-	debug: jest.fn(),
-	debugWarn: jest.fn(),
-} ) );
-
 describe( 'useStaticSiteGenerator', () => {
 	let mockOnProgress;
 	let mockSetStatusMessage;

@@ -8,7 +8,6 @@
 
 import { addAction, doAction } from '@wordpress/hooks';
 import { uploadFile as uploadFileToStorage } from '@aether/utils/filesystemAdapter';
-import { debug, debugWarn } from '@aether/utils/debug';
 import { LocalFilesystemStaticSiteProvider } from './LocalFilesystemStaticSiteProvider';
 import ProviderRegistry from '../registry/ProviderRegistry';
 
@@ -43,21 +42,8 @@ async function handleUnifiedFileUpload( fileContext ) {
 		destinationPath,
 	} = fileContext;
 
-	// Debug logging
-	debug( '[LocalFilesystemStaticSite] handleUnifiedFileUpload called:', {
-		providerId,
-		storageKey,
-		destinationPath,
-		hasFileContent: !! fileContent,
-		contentType,
-	} );
-
 	// Only handle requests for local-filesystem providers that support static_site
 	if ( ! providerId || ! providerId.startsWith( 'local-filesystem' ) ) {
-		debug(
-			'[LocalFilesystemStaticSite] Skipping - not a local-filesystem provider:',
-			providerId
-		);
 		return;
 	}
 
@@ -67,10 +53,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 		! providerId ||
 		! providerId.startsWith( 'local-filesystem-static-site' )
 	) {
-		debug(
-			'[LocalFilesystemStaticSite] Skipping - not a static site provider:',
-			providerId
-		);
 		return;
 	}
 
@@ -81,18 +63,10 @@ async function handleUnifiedFileUpload( fileContext ) {
 	const existingEntry = processedFiles.get( fileKey );
 	if ( existingEntry === true ) {
 		// Already processed successfully
-		debug(
-			'[LocalFilesystemStaticSite] Skipping - file already processed:',
-			fileKey
-		);
 		return;
 	}
 	if ( existingEntry instanceof Promise ) {
 		// Already in progress - wait for it to complete
-		debug(
-			'[LocalFilesystemStaticSite] File already in progress, waiting:',
-			fileKey
-		);
 		try {
 			await existingEntry;
 		} catch ( error ) {
@@ -104,10 +78,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 		}
 		// Check again after waiting
 		if ( processedFiles.get( fileKey ) === true ) {
-			debug(
-				'[LocalFilesystemStaticSite] File processed by other handler:',
-				fileKey
-			);
 			return;
 		}
 	}
@@ -181,9 +151,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 
 			if ( uploadResult.success ) {
 				uploadResults[ providerId ].filesUploaded++;
-				debug(
-					`Uploaded ${ finalStorageKey } to ${ destinationPath } for provider ${ providerId }`
-				);
 				// Set result on fileContext for unified upload system
 				fileContext.result = { success: true };
 			} else {
@@ -191,10 +158,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 					path: finalStorageKey,
 					error: uploadResult.error || 'Upload failed',
 				} );
-				debugWarn(
-					`Failed to upload ${ finalStorageKey } for provider ${ providerId }:`,
-					uploadResult.error
-				);
 				// Set result on fileContext for unified upload system
 				fileContext.result = {
 					success: false,
@@ -205,10 +168,6 @@ async function handleUnifiedFileUpload( fileContext ) {
 			uploadResults[ providerId ].errors.push( {
 				error: error.message || 'Unknown error',
 			} );
-			debugWarn(
-				`Error processing file for provider ${ providerId }:`,
-				error
-			);
 			// Set result on fileContext for unified upload system
 			fileContext.result = {
 				success: false,

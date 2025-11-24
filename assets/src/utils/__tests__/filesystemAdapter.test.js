@@ -17,9 +17,6 @@ import apiFetch from '../api';
 
 // Mock dependencies
 jest.mock( '../api' );
-jest.mock( '../debug', () => ( {
-	debug: jest.fn(),
-} ) );
 
 describe( 'filesystemAdapter', () => {
 	beforeEach( () => {

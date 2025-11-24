@@ -15,7 +15,6 @@ import { doAction, applyFilters } from '@wordpress/hooks';
 import { createConcurrencyLimiter } from '@aether/utils/concurrencyLimiter';
 import { calculateFileHash } from '@aether/utils/fileHash';
 import { shouldSkipUpload } from '@aether/utils/manifestManager';
-import { debugWarn } from '@aether/utils/debug';
 import { formatFileSize } from '@aether/utils/helpers';
 import { errorHandler } from './errorHandler';
 
@@ -176,10 +175,6 @@ export async function uploadFilesWithProgress( {
 										fileHash
 								  );
 						} catch ( error ) {
-							debugWarn(
-								'Failed to calculate file hash, will upload:',
-								error
-							);
 							shouldSkip = false;
 						}
 					}
@@ -251,7 +246,6 @@ export async function uploadFilesWithProgress( {
 						fileHash =
 							filteredHash || ( await calculateFileHash( blob ) );
 					} catch ( error ) {
-						debugWarn( 'Failed to calculate hash:', error );
 						fileHash = null;
 					}
 				}
@@ -498,7 +492,6 @@ export async function uploadFilesWithProgress( {
 			} catch ( error ) {
 				// Failed to process file
 				filesFailed++;
-				debugWarn( `Failed to upload file: ${ key }`, error );
 
 				if ( setStatusMessage ) {
 					setStatusMessage(
@@ -599,10 +592,6 @@ export async function uploadSingleFileWithProgress( {
 						  )
 						: shouldSkipUpload( manifest, key, fileSize, fileHash );
 				} catch ( error ) {
-					debugWarn(
-						'Failed to calculate file hash, will upload:',
-						error
-					);
 					shouldSkip = false;
 				}
 			}
@@ -641,7 +630,6 @@ export async function uploadSingleFileWithProgress( {
 			try {
 				fileHash = await calculateFileHash( blob );
 			} catch ( error ) {
-				debugWarn( 'Failed to calculate hash:', error );
 				fileHash = null;
 			}
 		}
@@ -745,8 +733,6 @@ export async function uploadSingleFileWithProgress( {
 			hash: fileHash,
 		};
 	} catch ( error ) {
-		debugWarn( `Failed to upload file: ${ key }`, error );
-
 		if ( setStatusMessage ) {
 			setStatusMessage(
 				sprintf(

@@ -5,11 +5,6 @@
 
 import { initializeErrorHandlers } from '../errorHandler';
 
-// Mock debug
-jest.mock( '../debug', () => ( {
-	debugError: jest.fn(),
-} ) );
-
 describe( 'errorHandler', () => {
 	let originalAddEventListener;
 	let eventListeners;

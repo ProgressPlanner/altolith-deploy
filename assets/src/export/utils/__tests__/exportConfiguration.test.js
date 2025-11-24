@@ -14,11 +14,6 @@ import {
 } from '../exportConfiguration';
 import { DEPLOYMENT_TYPES } from '../../../constants/deploymentTypes';
 
-// Mock debug utilities
-jest.mock( '../../../utils/debug', () => ( {
-	debugError: jest.fn(),
-} ) );
-
 // Mock ProviderRegistry
 const mockProviderRegistry = {
 	get: jest.fn(),

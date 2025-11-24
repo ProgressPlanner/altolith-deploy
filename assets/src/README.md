@@ -85,7 +85,7 @@ The build uses dynamic imports for code splitting to reduce initial bundle size:
 
 ## Path Aliases
 
-The codebase uses path aliases for cleaner imports. Instead of deep relative paths like `../../../utils/debug`, use the `@aether/*` aliases:
+The codebase uses path aliases for cleaner imports. Instead of deep relative paths, use the `@aether/*` aliases:
 
 ### Available Aliases
 
@@ -103,11 +103,9 @@ The codebase uses path aliases for cleaner imports. Instead of deep relative pat
 
 ```javascript
 // ❌ Old style (still works, but not recommended)
-import { debug } from '../../utils/debug';
 import StaticSiteCache from '../../../utils/staticSiteCache';
 
 // ✅ New style (recommended)
-import { debug } from '@aether/utils/debug';
 import StaticSiteCache from '@aether/utils/staticSiteCache';
 import { executePreScan } from '@aether/publish/utils/preScanPhase';
 ```

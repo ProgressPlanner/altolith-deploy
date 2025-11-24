@@ -6,7 +6,6 @@
  *
  */
 
-import { debugError } from '@aether/utils/debug';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 /**
@@ -73,10 +72,6 @@ export function getEnabledInstancesForDeploymentType(
 			} )
 			.map( ( [ id ] ) => id );
 	} catch ( error ) {
-		debugError(
-			`Failed to get instances for deployment type ${ deploymentType }:`,
-			error
-		);
 		return [];
 	}
 }
@@ -93,19 +88,16 @@ export function getEnabledInstancesForDeploymentType(
 function isValidProviderInstance( instanceId, config ) {
 	// Must have non-empty ID
 	if ( ! instanceId || typeof instanceId !== 'string' ) {
-		debugError( 'Provider instance has invalid ID:', instanceId );
 		return false;
 	}
 
 	// Must have config object
 	if ( ! config || typeof config !== 'object' ) {
-		debugError( `Provider instance ${ instanceId } has invalid config` );
 		return false;
 	}
 
 	// Must have provider_type
 	if ( ! config.provider_type ) {
-		debugError( `Provider instance ${ instanceId } missing provider_type` );
 		return false;
 	}
 

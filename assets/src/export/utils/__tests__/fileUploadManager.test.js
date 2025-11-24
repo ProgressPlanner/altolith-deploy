@@ -52,10 +52,6 @@ jest.mock( '@aether/utils/manifestManager', () => ( {
 	shouldSkipUpload: jest.fn(),
 } ) );
 
-jest.mock( '@aether/utils/debug', () => ( {
-	debugWarn: jest.fn(),
-} ) );
-
 jest.mock( '@aether/utils/helpers', () => ( {
 	formatFileSize: jest.fn( ( size ) => `${ size } bytes` ),
 } ) );

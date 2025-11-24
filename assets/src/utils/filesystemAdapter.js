@@ -7,7 +7,6 @@
  */
 
 import apiFetch from './api';
-import { debug } from './debug';
 import { createSuccessResponse, createErrorResponse } from './standardResponse';
 
 /**
@@ -76,7 +75,6 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 					? `${ errorMessage } (${ errorDetails.join( ', ' ) })`
 					: errorMessage;
 
-			debug( 'filesystemAdapter.uploadFile API error:', apiError );
 			return createErrorResponse( fullErrorMessage );
 		}
 
@@ -111,7 +109,6 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 
 		return createSuccessResponse();
 	} catch ( error ) {
-		debug( 'filesystemAdapter.uploadFile error:', error );
 		return createErrorResponse( error.message || 'Upload failed' );
 	}
 }
@@ -124,8 +121,6 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
  * @return {Promise<Object>} Delete result.
  */
 export async function deleteFile( staticPath, key ) {
-	debug( 'filesystemAdapter.deleteFile:', { staticPath, key } );
-
 	try {
 		const response = await apiFetch( {
 			path: '/aether/site-exporter/local-storage/delete',
@@ -142,7 +137,6 @@ export async function deleteFile( staticPath, key ) {
 
 		return createSuccessResponse();
 	} catch ( error ) {
-		debug( 'filesystemAdapter.deleteFile error:', error );
 		return createErrorResponse( error.message || 'Delete failed' );
 	}
 }
@@ -155,9 +149,6 @@ export async function deleteFile( staticPath, key ) {
 export async function copyFile() {
 	// Not implemented for local filesystem
 	// Files are uploaded directly to their final location
-	debug(
-		'filesystemAdapter.copyFile: Not implemented (not needed for local storage)'
-	);
 	return createSuccessResponse();
 }
 
@@ -169,9 +160,6 @@ export async function copyFile() {
 export async function listObjects() {
 	// Not implemented - not needed for static site generation
 	// Static site generator doesn't need to list existing files
-	debug(
-		'filesystemAdapter.listObjects: Not implemented (not needed for static site generation)'
-	);
 	return createSuccessResponse( { objects: [] } );
 }
 
@@ -182,9 +170,6 @@ export async function listObjects() {
  */
 export async function batchCopy() {
 	// Not implemented for local filesystem
-	debug(
-		'filesystemAdapter.batchCopy: Not implemented (not needed for local storage)'
-	);
 	return createSuccessResponse();
 }
 
@@ -196,11 +181,6 @@ export async function batchCopy() {
  * @return {Promise<Object>} Batch delete result.
  */
 export async function batchDelete( staticPath, keys ) {
-	debug( 'filesystemAdapter.batchDelete:', {
-		staticPath,
-		count: keys.length,
-	} );
-
 	try {
 		const response = await apiFetch( {
 			path: '/aether/site-exporter/local-storage/batch-delete',
@@ -219,7 +199,6 @@ export async function batchDelete( staticPath, keys ) {
 
 		return createSuccessResponse();
 	} catch ( error ) {
-		debug( 'filesystemAdapter.batchDelete error:', error );
 		return createErrorResponse( error.message || 'Batch delete failed' );
 	}
 }
@@ -232,8 +211,6 @@ export async function batchDelete( staticPath, keys ) {
  * @return {Promise<Blob|null>} File blob or null if not found.
  */
 export async function downloadFile( staticPath, key ) {
-	debug( 'filesystemAdapter.downloadFile:', { staticPath, key } );
-
 	try {
 		const response = await apiFetch( {
 			path: `/aether/site-exporter/local-storage/download?key=${ encodeURIComponent(
@@ -249,7 +226,6 @@ export async function downloadFile( staticPath, key ) {
 
 		return await response.blob();
 	} catch ( error ) {
-		debug( 'filesystemAdapter.downloadFile error:', error );
 		return null;
 	}
 }

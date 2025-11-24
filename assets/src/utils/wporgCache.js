@@ -13,7 +13,6 @@
  */
 
 import IndexedDBStore from './indexedDB';
-import { debug, debugError } from './debug';
 
 /**
  * Cache configuration
@@ -162,15 +161,10 @@ export class WpOrgCache {
 				const deleted =
 					await this.store.deleteOlderThan( CACHE_EXPIRATION_MS );
 
-				if ( deleted > 0 ) {
-					debug(
-						`[WpOrgCache] Cleaned up ${ deleted } expired cache entries`
-					);
-				}
+				// Cleaned up expired cache entries
 
 				return deleted;
 			} catch ( error ) {
-				debugError( '[WpOrgCache] Error during cleanup:', error );
 				return 0;
 			} finally {
 				this.cleanupPromise = null;

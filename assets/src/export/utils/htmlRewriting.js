@@ -6,7 +6,6 @@
  */
 
 import { escapeRegex } from './urlUtils';
-import { debug } from '@aether/utils/debug';
 
 /**
  * Protect inline script content by replacing with placeholders.
@@ -168,14 +167,9 @@ export function rewriteAbsolutePaths( html, basePath ) {
 		return html;
 	}
 
-	debug( '[URL Rewriter] Rewriting absolute paths with base:', basePath );
-
-	let replaceCount = 0;
 	const result = html.replace(
 		/(\b(?:href|src|action|data|poster|content)=)(["'`])(\/(?!\/)[^"'`]*)\2/gi,
 		( match, attrPart, quote, path ) => {
-			replaceCount++;
-
 			// Skip if already includes the base path
 			if ( path.startsWith( basePath + '/' ) ) {
 				return match;
@@ -191,16 +185,10 @@ export function rewriteAbsolutePaths( html, basePath ) {
 			}
 
 			const rewrittenPath = basePath + path;
-			debug(
-				`[URL Rewriter] Rewriting: ${ path } -> ${ rewrittenPath }`
-			);
 			return attrPart + quote + rewrittenPath + quote;
 		}
 	);
 
-	debug(
-		`[URL Rewriter] Processed ${ replaceCount } absolute path attributes`
-	);
 	return result;
 }
 

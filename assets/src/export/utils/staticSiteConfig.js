@@ -6,7 +6,6 @@
  */
 
 import { applyFilters } from '@wordpress/hooks';
-import { debug } from '@aether/utils/debug';
 
 /**
  * Build storage configuration object.
@@ -112,7 +111,6 @@ export async function fetchProviderConfig( staticSiteProviderId ) {
 		const storage = new ConfigStorage( staticSiteProviderId );
 		providerConfig = await storage.load();
 	} catch ( error ) {
-		debug( 'Failed to load provider configuration:', error );
 		// Re-throw to make failures visible instead of silently using wrong config
 		throw error;
 	}

@@ -5,7 +5,6 @@
  *
  */
 
-import { debug, debugError } from '@aether/utils/debug';
 import { applyFilters } from '@wordpress/hooks';
 
 // Import URL utilities
@@ -253,12 +252,6 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 	 * @return {string} HTML with rewritten URLs.
 	 */
 	function rewriteHtml( html, contextUrl ) {
-		debug( '[URL Rewriter] rewriteHtml called with:' );
-		debug( '  - contextUrl:', contextUrl );
-		debug( '  - siteUrl:', siteUrl );
-		debug( '  - normalizedStaticUrl:', normalizedStaticUrl );
-		debug( '  - HTML length:', html.length );
-
 		// Protect inline script content
 		const { html: protectedHtml, placeholders } =
 			protectScriptContent( html );
@@ -284,10 +277,7 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 				const basePath = staticUrlObj.pathname.replace( /\/$/, '' );
 				result = rewriteAbsolutePaths( result, basePath );
 			} catch ( error ) {
-				debugError(
-					'[URL Rewriter] Error in absolute path rewriting:',
-					error
-				);
+				// Error in absolute path rewriting, continue without rewriting
 			}
 		}
 

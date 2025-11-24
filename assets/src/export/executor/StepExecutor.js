@@ -20,7 +20,6 @@ import {
 	saveExecutionContext,
 	restoreExecutionContext,
 } from '../utils/stateManager';
-import { debug, debugWarn } from '@aether/utils/debug';
 import DataValidator from './DataValidator';
 
 /**
@@ -72,19 +71,13 @@ export async function executeSteps( steps, context, options = {} ) {
 	try {
 		const savedProgress = await progressTracker.load();
 		if ( savedProgress ) {
-			debug( '[StepExecutor] Loaded previous progress:', savedProgress );
 		}
 
 		// Try to restore execution context
 		restoredState = await restoreExecutionContext( stateManager, context );
 		if ( restoredState && restoredState.completedSteps?.length > 0 ) {
-			debug(
-				`[StepExecutor] Restored state with ${ restoredState.completedSteps.length } completed steps`
-			);
 		}
-	} catch ( error ) {
-		debugWarn( '[StepExecutor] Failed to restore state:', error );
-	}
+	} catch ( error ) {}
 
 	// Create execution context (use restored state if available)
 	const executionContext = {
@@ -167,7 +160,6 @@ export async function executeSteps( steps, context, options = {} ) {
 			try {
 				await saveExecutionContext( stateManager, executionContext );
 			} catch ( error ) {
-				debugWarn( '[StepExecutor] Failed to save state:', error );
 				// Don't throw - state saving is non-critical
 			}
 		}

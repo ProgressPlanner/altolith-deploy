@@ -10,7 +10,6 @@ import { applyFilters } from '@wordpress/hooks';
 import { processHtml, getStaticFilePath } from './htmlProcessor';
 import { getAssetLocalPath } from './assetExtractor';
 import { uploadFilesWithProgress } from './fileUploadManager';
-import { debug, debugWarn } from '@aether/utils/debug';
 import { calculateFileHash } from '@aether/utils/fileHash';
 import {
 	fetchManifest,
@@ -70,12 +69,7 @@ export async function prepareManifest(
 				'fetchManifest'
 			);
 		}
-		debug( `Manifest loaded with ${ manifestEntryCount } entries` );
 	} catch ( error ) {
-		debugWarn(
-			'Failed to fetch manifest, continuing without hash comparison:',
-			error
-		);
 		manifest = {};
 	}
 
@@ -151,9 +145,6 @@ export async function processAssets( {
 			const assetPath = getAssetLocalPath( assetUrl );
 
 			if ( assetPath === null ) {
-				debugWarn(
-					`Skipping invalid asset URL (empty path after scope stripping): ${ assetUrl }`
-				);
 				assetTracker.markFailed( assetUrl );
 				continue;
 			}
@@ -203,13 +194,7 @@ export async function processAssets( {
 						} );
 						continue;
 					}
-				} catch ( error ) {
-					debugWarn(
-						'Failed to calculate hash for manifest check, will upload:',
-						assetUrl,
-						error
-					);
-				}
+				} catch ( error ) {}
 			}
 
 			assetData.push( {
@@ -219,9 +204,7 @@ export async function processAssets( {
 				assetBlob,
 				contentType: finalContentType,
 			} );
-		} catch ( error ) {
-			debugWarn( 'Failed to fetch asset:', assetUrl, error );
-		}
+		} catch ( error ) {}
 	}
 
 	// Prepare files for upload
@@ -259,7 +242,6 @@ export async function processAssets( {
 	for ( const result of uploadResult.results ) {
 		const fileData = filesToUpload.find( ( f ) => f.key === result.key );
 		if ( ! fileData ) {
-			debugWarn( 'Could not find fileData for result key:', result.key );
 			continue;
 		}
 
@@ -364,7 +346,6 @@ export async function uploadHtmlFile( {
 				htmlHash
 			);
 		} catch ( error ) {
-			debugWarn( 'Failed to calculate hash, will upload:', error );
 			shouldSkip = false;
 		}
 	}
@@ -385,7 +366,6 @@ export async function uploadHtmlFile( {
 		try {
 			htmlHash = await calculateFileHash( htmlBlob );
 		} catch ( error ) {
-			debugWarn( 'Failed to calculate hash:', error );
 			htmlHash = null;
 		}
 	}
@@ -464,7 +444,6 @@ export async function finalizeManifest(
 		const currentFileKeys = new Set(
 			uploadedFiles.map( ( file ) => file.storageKey )
 		);
-		const beforeCleanupCount = Object.keys( manifest ).length;
 		let cleanedManifest = cleanupManifest( manifest, currentFileKeys );
 
 		cleanedManifest = applyFilters(
@@ -472,13 +451,6 @@ export async function finalizeManifest(
 			cleanedManifest,
 			currentFileKeys,
 			providerId
-		);
-
-		const afterCleanupCount = Object.keys( cleanedManifest ).length;
-		const removedCount = beforeCleanupCount - afterCleanupCount;
-
-		debug(
-			`Manifest cleanup: ${ beforeCleanupCount } entries → ${ afterCleanupCount } entries (${ removedCount } removed, ${ currentFileKeys.size } current files)`
 		);
 
 		await uploadManifest( storageService, cleanedManifest );
@@ -490,7 +462,5 @@ export async function finalizeManifest(
 				'updateManifest'
 			);
 		}
-	} catch ( error ) {
-		debugWarn( 'Failed to upload manifest:', error );
-	}
+	} catch ( error ) {}
 }

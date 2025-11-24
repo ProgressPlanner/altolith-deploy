@@ -9,7 +9,6 @@
 import { doActionAsync, applyFilters } from '@wordpress/hooks';
 import { processHtml } from '@aether/export/utils/htmlProcessor';
 import apiFetch from '@wordpress/api-fetch';
-import { debugWarn, debug } from '@aether/utils/debug';
 
 /**
  * File types supported by the unified upload system.
@@ -87,12 +86,7 @@ async function getProviderStaticSiteUrl( providerId, metadata ) {
 		) {
 			return providerResponse.config.public_url;
 		}
-	} catch ( error ) {
-		debugWarn(
-			`Failed to fetch provider config for ${ providerId }:`,
-			error
-		);
-	}
+	} catch ( error ) {}
 
 	return null;
 }
@@ -112,12 +106,7 @@ async function getProviderConfig( providerId ) {
 		if ( providerResponse.success && providerResponse.config ) {
 			return providerResponse.config;
 		}
-	} catch ( error ) {
-		debugWarn(
-			`Failed to fetch provider config for ${ providerId }:`,
-			error
-		);
-	}
+	} catch ( error ) {}
 
 	return {};
 }
@@ -186,9 +175,6 @@ export async function uploadFile( fileContext ) {
 				} else if ( fileContent instanceof Blob ) {
 					htmlText = await fileContent.text();
 				} else {
-					debugWarn(
-						'Cannot process HTML: fileContent is not a string or Blob'
-					);
 				}
 
 				if ( htmlText ) {
@@ -216,15 +202,8 @@ export async function uploadFile( fileContext ) {
 					} );
 				}
 			} else {
-				debugWarn(
-					`Cannot process HTML for ${ providerId }: staticSiteUrl not available`
-				);
 			}
 		} catch ( error ) {
-			debugWarn(
-				`Failed to process HTML for ${ filePath || 'unknown' }:`,
-				error
-			);
 			// Continue with original content on error
 		}
 	}
@@ -250,27 +229,12 @@ export async function uploadFile( fileContext ) {
 	);
 
 	// Debug logging
-	debug( '[UnifiedUpload] Firing aether.file.upload action:', {
-		fileType, // Internal use only for logging
-		providerId,
-		storageKey: filteredContext.storageKey,
-		destinationPath: filteredContext.destinationPath,
-		hasFileContent: !! filteredContext.fileContent,
-		hasFilePath: !! filteredContext.filePath,
-		contentType,
-	} );
 
 	// Fire unified upload action asynchronously
 	// Providers hook into this action to handle the actual upload
 	await doActionAsync( 'aether.file.upload', filteredContext );
 
 	// Debug logging after action
-	debug( '[UnifiedUpload] Upload action completed:', {
-		providerId,
-		storageKey: filteredContext.storageKey,
-		hasResult: !! filteredContext.result,
-		result: filteredContext.result,
-	} );
 
 	// Check if provider set a result on the context
 	if ( filteredContext.result ) {

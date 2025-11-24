@@ -7,7 +7,6 @@
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { debugError, debugWarn } from '@aether/utils/debug';
 
 /**
  * Error categories for error handling strategies.
@@ -238,21 +237,11 @@ export async function withRetry( fn, options = {} ) {
 					: isRetryable( error, config ) );
 
 			if ( ! canRetry ) {
-				debugError(
-					`[ErrorHandler] Error not retryable or max retries reached:`,
-					error
-				);
 				throw error;
 			}
 
 			// Calculate delay and wait
 			const delay = calculateRetryDelay( attempt, config );
-			debugWarn(
-				`[ErrorHandler] Retry attempt ${
-					attempt + 1
-				}/${ maxRetries } after ${ delay }ms:`,
-				error.message
-			);
 
 			if ( onRetry ) {
 				onRetry( error, attempt + 1, delay );
@@ -263,11 +252,6 @@ export async function withRetry( fn, options = {} ) {
 	}
 
 	// All retries exhausted
-	debugError(
-		`[ErrorHandler] All retry attempts exhausted after ${
-			maxRetries + 1
-		} attempts`
-	);
 	throw lastError;
 }
 

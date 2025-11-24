@@ -6,7 +6,6 @@
  *
  */
 
-import { debug, debugWarn } from '@aether/utils/debug';
 import IndexedDBStore, { isIndexedDBAvailable } from '@aether/utils/indexedDB';
 
 const DB_CONFIG = {
@@ -29,9 +28,6 @@ let storeInstance = null;
  */
 function getStore() {
 	if ( ! isIndexedDBAvailable() ) {
-		debugWarn(
-			'[ProgressTracker] IndexedDB not available, progress will not persist'
-		);
 		return null;
 	}
 
@@ -61,7 +57,6 @@ async function saveProgress( workflowId, progress ) {
 			timestamp: Date.now(),
 		} );
 	} catch ( error ) {
-		debugWarn( '[ProgressTracker] Failed to save progress:', error );
 		// Don't throw - progress tracking is non-critical
 	}
 }
@@ -82,7 +77,6 @@ async function loadProgress( workflowId ) {
 		const result = await store.get( workflowId );
 		return result || null;
 	} catch ( error ) {
-		debugWarn( '[ProgressTracker] Failed to load progress:', error );
 		return null;
 	}
 }
@@ -102,7 +96,6 @@ async function deleteProgress( workflowId ) {
 	try {
 		await store.delete( workflowId );
 	} catch ( error ) {
-		debugWarn( '[ProgressTracker] Failed to delete progress:', error );
 		// Don't throw - cleanup is non-critical
 	}
 }
@@ -145,7 +138,6 @@ export function createProgressTracker(
 	async function updateStepProgress( stepId, progress ) {
 		// Validate step ID
 		if ( ! stepIds.includes( stepId ) ) {
-			debugWarn( `[ProgressTracker] Unknown step ID: ${ stepId }` );
 			return;
 		}
 
@@ -181,10 +173,6 @@ export function createProgressTracker(
 				progressState,
 			} );
 		}
-
-		debug(
-			`[ProgressTracker] Step ${ stepId }: ${ clampedProgress }% | Overall: ${ progressState.overallProgress }%`
-		);
 	}
 
 	/**

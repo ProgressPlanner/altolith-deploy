@@ -7,8 +7,6 @@
  *
  */
 
-import { debug, debugWarn } from './debug';
-
 /**
  * Fetch existing manifest from remote storage.
  *
@@ -16,16 +14,11 @@ import { debug, debugWarn } from './debug';
  * @return {Promise<Object>} Manifest object (empty object if not found).
  */
 export async function fetchManifest( storageService ) {
-	const manifestKey = 'file-manifest.json';
-
 	try {
-		debug( 'Fetching manifest from remote:', manifestKey );
-
 		// Try to download manifest from storage.
 		const manifestBlob = await storageService.downloadManifest();
 
 		if ( ! manifestBlob ) {
-			debug( 'Manifest not found, starting with empty manifest' );
 			return {};
 		}
 
@@ -33,22 +26,13 @@ export async function fetchManifest( storageService ) {
 		const manifestText = await manifestBlob.text();
 		const manifest = JSON.parse( manifestText );
 
-		debug( 'Manifest fetched successfully:', {
-			fileCount: Object.keys( manifest ).length,
-		} );
-
 		return manifest || {};
 	} catch ( error ) {
 		// If manifest doesn't exist (404) or other error, start with empty manifest.
 		if ( error.message && error.message.includes( '404' ) ) {
-			debug( 'Manifest not found (404), starting with empty manifest' );
 			return {};
 		}
 
-		debugWarn(
-			'Failed to fetch manifest, starting with empty manifest:',
-			error
-		);
 		return {};
 	}
 }
@@ -84,13 +68,6 @@ export function updateManifestEntry(
 		manifest[ storageKey ].contentType = contentType;
 	}
 
-	debug( 'Updated manifest entry:', {
-		storageKey,
-		size,
-		hashLength: hash.length,
-		contentType: contentType || 'not specified',
-	} );
-
 	return manifest;
 }
 
@@ -116,29 +93,15 @@ export function shouldSkipUpload( manifest, storageKey, size, hash ) {
 
 	// Stage 1: Check size first (fast comparison).
 	if ( entry.size !== size ) {
-		debug( 'File size differs, will upload:', {
-			storageKey,
-			existingSize: entry.size,
-			newSize: size,
-		} );
 		return false;
 	}
 
 	// Stage 2: Check hash if size matches.
 	if ( entry.hash !== hash ) {
-		debug( 'File size matches but hash differs, will upload:', {
-			storageKey,
-			size,
-		} );
 		return false;
 	}
 
 	// Both size and hash match - skip upload.
-	debug( 'File unchanged, skipping upload:', {
-		storageKey,
-		size,
-		hash: hash.substring( 0, 16 ) + '...',
-	} );
 
 	return true;
 }
@@ -175,11 +138,6 @@ export function cleanupManifest( manifest, currentFiles ) {
 	}
 
 	if ( removedCount > 0 ) {
-		debug( 'Manifest cleanup:', {
-			before: Object.keys( manifest ).length,
-			after: Object.keys( cleanedManifest ).length,
-			removed: removedCount,
-		} );
 	}
 
 	return cleanedManifest;
@@ -193,14 +151,7 @@ export function cleanupManifest( manifest, currentFiles ) {
  * @return {Promise<boolean>} True if upload succeeded.
  */
 export async function uploadManifest( storageService, manifest ) {
-	const manifestKey = 'file-manifest.json';
-
 	try {
-		debug( 'Uploading manifest:', {
-			manifestKey,
-			fileCount: Object.keys( manifest ).length,
-		} );
-
 		// Convert manifest to JSON blob (minified for smaller file size).
 		const manifestJson = JSON.stringify( manifest );
 		const manifestBlob = new Blob( [ manifestJson ], {
@@ -211,14 +162,11 @@ export async function uploadManifest( storageService, manifest ) {
 		const result = await storageService.uploadManifest( manifestBlob );
 
 		if ( result.success ) {
-			debug( 'Manifest uploaded successfully' );
 			return true;
 		}
 
-		debugWarn( 'Manifest upload failed:', result.error );
 		return false;
 	} catch ( error ) {
-		debugWarn( 'Failed to upload manifest:', error );
 		return false;
 	}
 }
