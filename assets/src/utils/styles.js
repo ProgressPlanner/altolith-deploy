@@ -151,34 +151,3 @@ export const createFlexStyle = ( direction = 'row', gap = spacing.md ) => ( {
 	flexDirection: direction,
 	gap,
 } );
-
-/**
- * Create grid style object
- *
- * @param {string} minColumnWidth Minimum column width
- * @param {string} gap            Gap spacing
- * @return {Object} Style object
- */
-export const createGridStyle = (
-	minColumnWidth = '16rem',
-	gap = spacing.md
-) => ( {
-	display: 'grid',
-	gridTemplateColumns: `repeat(auto-fit, minmax(${ minColumnWidth }, 1fr))`,
-	gap,
-} );
-
-/**
- * Common utility styles
- */
-export const utilityStyles = {
-	noMargin: {
-		margin: 0,
-	},
-	noMarginTop: {
-		marginTop: 0,
-	},
-	noMarginBottom: {
-		marginBottom: 0,
-	},
-};

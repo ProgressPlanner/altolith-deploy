@@ -53,31 +53,3 @@ export function parseErrorResponse( responseText, defaultMessage ) {
 		return responseText || defaultMessage;
 	}
 }
-
-/**
- * Parse error response with HTTP status context.
- *
- * Includes HTTP status code in error message if available.
- *
- * @param {string} responseText Raw response text.
- * @param {number} statusCode   HTTP status code.
- * @param {string} operation    Operation name (e.g., "Worker deployment").
- * @return {string} Formatted error message with context.
- */
-export function parseErrorResponseWithStatus(
-	responseText,
-	statusCode,
-	operation
-) {
-	const errorMessage = parseErrorResponse(
-		responseText,
-		`${ operation } failed`
-	);
-
-	// Add status code context if available and not already in message
-	if ( statusCode && ! errorMessage.includes( statusCode.toString() ) ) {
-		return `${ errorMessage } (HTTP ${ statusCode })`;
-	}
-
-	return errorMessage;
-}

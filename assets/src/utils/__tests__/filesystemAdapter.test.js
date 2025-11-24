@@ -6,9 +6,6 @@
 import {
 	uploadFile,
 	deleteFile,
-	copyFile,
-	listObjects,
-	batchCopy,
 	batchDelete,
 	downloadFile,
 	getObjectUrl,
@@ -140,29 +137,6 @@ describe( 'filesystemAdapter', () => {
 
 			expect( result.success ).toBe( false );
 			expect( result.error ).toBe( 'Not found' );
-		} );
-	} );
-
-	describe( 'copyFile()', () => {
-		test( 'should return success (not implemented)', async () => {
-			const result = await copyFile( '/static', 'src.txt', 'dest.txt' );
-			expect( result.success ).toBe( true );
-		} );
-	} );
-
-	describe( 'listObjects()', () => {
-		test( 'should return success (not implemented)', async () => {
-			const result = await listObjects( '/static', 'prefix/', 100 );
-			expect( result.success ).toBe( true );
-		} );
-	} );
-
-	describe( 'batchCopy()', () => {
-		test( 'should return success (not implemented)', async () => {
-			const result = await batchCopy( '/static', [
-				{ source: 'a', dest: 'b' },
-			] );
-			expect( result.success ).toBe( true );
 		} );
 	} );
 

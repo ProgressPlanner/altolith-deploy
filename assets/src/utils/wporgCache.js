@@ -208,20 +208,6 @@ export class WpOrgCache {
 			};
 		}
 	}
-
-	/**
-	 * Get all cached entries for debugging
-	 *
-	 * @return {Promise<Array>} Array of all cached entries
-	 */
-	async getAllEntries() {
-		try {
-			return await this.store.getAll();
-		} catch ( error ) {
-			console.error( '[WpOrgCache] Error getting all entries:', error );
-			return [];
-		}
-	}
 }
 
 // Create singleton instance

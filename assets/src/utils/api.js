@@ -10,22 +10,6 @@ import apiFetch from '@wordpress/api-fetch';
 import { getRestUrl } from './getRestUrl';
 
 /**
- * Create authorization headers for external API calls.
- *
- * Utility for building consistent Authorization headers.
- *
- * @param {string} token API token or key.
- * @param {string} type  Auth type (default: 'Bearer').
- * @return {Object} Headers object with Authorization and Content-Type.
- */
-export function createAuthHeaders( token, type = 'Bearer' ) {
-	return {
-		Authorization: `${ type } ${ token }`,
-		'Content-Type': 'application/json',
-	};
-}
-
-/**
  * Get REST API nonce from window.aetherData or default.
  *
  * @return {string} REST API nonce.

@@ -9,9 +9,6 @@
 import { StorageService } from '../storageService';
 import {
 	deleteFile,
-	copyFile,
-	listObjects as listObjectsFromAdapter,
-	batchCopy as batchCopyFromAdapter,
 	batchDelete as batchDeleteFromAdapter,
 	getObjectUrl,
 	downloadFile,
@@ -21,9 +18,6 @@ import { uploadFile as uploadFileUnified } from '../../../export/utils/unifiedFi
 // Mock filesystem adapter
 jest.mock( '../../../utils/filesystemAdapter', () => ( {
 	deleteFile: jest.fn(),
-	copyFile: jest.fn(),
-	listObjects: jest.fn(),
-	batchCopy: jest.fn(),
 	batchDelete: jest.fn(),
 	getObjectUrl: jest.fn(),
 	downloadFile: jest.fn(),
@@ -167,8 +161,7 @@ describe( 'StorageService', () => {
 
 			expect( deleteFile ).toHaveBeenCalledWith(
 				mockStaticPath,
-				mockKey,
-				{}
+				mockKey
 			);
 			expect( result.success ).toBe( true );
 		} );
@@ -190,18 +183,8 @@ describe( 'StorageService', () => {
 
 	describe( 'copy()', () => {
 		test( 'should return success (not implemented for local filesystem)', async () => {
-			const sourceKey = 'source.txt';
-			const destKey = 'dest.txt';
+			const result = await service.copy();
 
-			copyFile.mockResolvedValue( { success: true } );
-
-			const result = await service.copy( sourceKey, destKey );
-
-			expect( copyFile ).toHaveBeenCalledWith(
-				mockStaticPath,
-				sourceKey,
-				destKey
-			);
 			expect( result.success ).toBe( true );
 		} );
 	} );
@@ -214,44 +197,11 @@ describe( 'StorageService', () => {
 	} );
 
 	describe( 'listObjects()', () => {
-		test( 'should list objects with default parameters', async () => {
-			const mockObjects = [
-				{ key: 'file1.txt', size: 100 },
-				{ key: 'file2.txt', size: 200 },
-			];
-
-			listObjectsFromAdapter.mockResolvedValue( {
-				success: true,
-				objects: mockObjects,
-			} );
-
+		test( 'should return success with empty objects array (not implemented for local filesystem)', async () => {
 			const result = await service.listObjects();
 
-			expect( listObjectsFromAdapter ).toHaveBeenCalledWith(
-				mockStaticPath,
-				'',
-				1000
-			);
 			expect( result.success ).toBe( true );
-			expect( result.objects ).toEqual( mockObjects );
-		} );
-
-		test( 'should list objects with prefix and limit', async () => {
-			const mockPrefix = 'static/';
-			const mockLimit = 50;
-
-			listObjectsFromAdapter.mockResolvedValue( {
-				success: true,
-				objects: [],
-			} );
-
-			await service.listObjects( mockPrefix, mockLimit );
-
-			expect( listObjectsFromAdapter ).toHaveBeenCalledWith(
-				mockStaticPath,
-				mockPrefix,
-				mockLimit
-			);
+			expect( result.objects ).toEqual( [] );
 		} );
 	} );
 
@@ -284,20 +234,9 @@ describe( 'StorageService', () => {
 	} );
 
 	describe( 'batchCopy()', () => {
-		test( 'should batch copy files', async () => {
-			const mockOperations = [
-				{ source: 'file1.txt', dest: 'copy1.txt' },
-				{ source: 'file2.txt', dest: 'copy2.txt' },
-			];
+		test( 'should return success (not implemented for local filesystem)', async () => {
+			const result = await service.batchCopy();
 
-			batchCopyFromAdapter.mockResolvedValue( { success: true } );
-
-			const result = await service.batchCopy( mockOperations );
-
-			expect( batchCopyFromAdapter ).toHaveBeenCalledWith(
-				mockStaticPath,
-				mockOperations
-			);
 			expect( result.success ).toBe( true );
 		} );
 	} );
@@ -312,8 +251,7 @@ describe( 'StorageService', () => {
 
 			expect( batchDeleteFromAdapter ).toHaveBeenCalledWith(
 				mockStaticPath,
-				mockKeys,
-				{}
+				mockKeys
 			);
 			expect( result.success ).toBe( true );
 		} );
@@ -331,8 +269,7 @@ describe( 'StorageService', () => {
 
 			expect( downloadFile ).toHaveBeenCalledWith(
 				mockStaticPath,
-				'file-manifest.json',
-				{}
+				'file-manifest.json'
 			);
 			expect( result ).toBe( mockBlob );
 		} );

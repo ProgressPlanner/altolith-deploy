@@ -274,7 +274,6 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 		return filteredResult;
 	} catch ( error ) {
-		// Log error for debugging
 		if ( typeof window !== 'undefined' && window.console ) {
 			// eslint-disable-next-line no-console
 			console.error(

@@ -122,7 +122,6 @@ export function cleanupManifest( manifest, currentFiles ) {
 	}
 
 	const cleanedManifest = {};
-	let removedCount = 0;
 
 	// Keep only entries for files that exist in current upload
 	// Also preserve wp-content.zip entries (uploaded in parallel step)
@@ -132,12 +131,7 @@ export function cleanupManifest( manifest, currentFiles ) {
 			storageKey.includes( '/wp-content.zip' )
 		) {
 			cleanedManifest[ storageKey ] = manifest[ storageKey ];
-		} else {
-			removedCount++;
 		}
-	}
-
-	if ( removedCount > 0 ) {
 	}
 
 	return cleanedManifest;

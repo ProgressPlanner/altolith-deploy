@@ -174,7 +174,6 @@ export async function uploadFile( fileContext ) {
 					htmlText = fileContent;
 				} else if ( fileContent instanceof Blob ) {
 					htmlText = await fileContent.text();
-				} else {
 				}
 
 				if ( htmlText ) {
@@ -201,7 +200,6 @@ export async function uploadFile( fileContext ) {
 						type: 'text/html',
 					} );
 				}
-			} else {
 			}
 		} catch ( error ) {
 			// Continue with original content on error
@@ -228,13 +226,9 @@ export async function uploadFile( fileContext ) {
 		providerId
 	);
 
-	// Debug logging
-
 	// Fire unified upload action asynchronously
 	// Providers hook into this action to handle the actual upload
 	await doActionAsync( 'aether.file.upload', filteredContext );
-
-	// Debug logging after action
 
 	// Check if provider set a result on the context
 	if ( filteredContext.result ) {

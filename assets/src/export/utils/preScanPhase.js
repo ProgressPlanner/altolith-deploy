@@ -78,7 +78,6 @@ export async function executePreScan( {
 					allUniqueAssets.add( assetUrl );
 				}
 				continue;
-			} else {
 			}
 		}
 

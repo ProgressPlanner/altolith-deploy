@@ -9,11 +9,6 @@
 import { applyFilters } from '@wordpress/hooks';
 
 /**
- * Production zip URL for Aether plugin (matches PHP constant AETHER_PRODUCTION_ZIP_URL).
- */
-const AETHER_PRODUCTION_ZIP_URL = 'https://r2.s12y.org/aether.zip';
-
-/**
  * Build the importWordPressFiles step for importing wp-content.zip.
  *
  * Uses 'bundled' resource type to reference wp-content.zip inside the blueprint-bundle.zip.
@@ -26,42 +21,6 @@ export function buildImportFilesStep() {
 		wordPressFilesZip: {
 			resource: 'bundled',
 			path: '/wp-content.zip',
-		},
-	};
-}
-
-/**
- * Build the installPlugin step for Aether plugin.
- *
- * @return {Object} Blueprint step object.
- */
-export function buildAetherInstallStep() {
-	// Add cache-busting to ensure fresh download.
-	const aetherUrl = `${ AETHER_PRODUCTION_ZIP_URL }?v=${ Date.now() }`;
-
-	return {
-		step: 'installPlugin',
-		pluginData: {
-			resource: 'url',
-			url: aetherUrl,
-			caption: 'Installing Aether plugin',
-		},
-		options: {
-			activate: false,
-		},
-	};
-}
-
-/**
- * Build the defineWpConfigConsts step to identify Playground environment.
- *
- * @return {Object} Blueprint step object.
- */
-export function buildDefineConstsStep() {
-	return {
-		step: 'defineWpConfigConsts',
-		consts: {
-			AETHER_PLAYGROUND_SITE: true,
 		},
 	};
 }
@@ -110,18 +69,6 @@ export function buildThemeInstallSteps( themeSlugs ) {
 			activate: false,
 		},
 	} ) );
-}
-
-/**
- * Build the activatePlugin step for Aether plugin.
- *
- * @return {Object} Blueprint step object.
- */
-export function buildAetherActivationStep() {
-	return {
-		step: 'activatePlugin',
-		pluginPath: 'aether/aether.php',
-	};
 }
 
 /**

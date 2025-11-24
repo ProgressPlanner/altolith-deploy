@@ -3,10 +3,7 @@
  *
  */
 
-import {
-	parseErrorResponse,
-	parseErrorResponseWithStatus,
-} from '../errorParser';
+import { parseErrorResponse } from '../errorParser';
 
 describe( 'errorParser', () => {
 	describe( 'parseErrorResponse()', () => {
@@ -106,59 +103,6 @@ describe( 'errorParser', () => {
 			expect( parseErrorResponse( response, 'Default' ) ).toBe(
 				'Generic error'
 			);
-		} );
-	} );
-
-	describe( 'parseErrorResponseWithStatus()', () => {
-		test( 'should add HTTP status to error message', () => {
-			const response = JSON.stringify( { message: 'Not found' } );
-			const result = parseErrorResponseWithStatus(
-				response,
-				404,
-				'Resource fetch'
-			);
-			expect( result ).toBe( 'Not found (HTTP 404)' );
-		} );
-
-		test( 'should use operation name for default message', () => {
-			const result = parseErrorResponseWithStatus(
-				'',
-				null,
-				'Worker deployment'
-			);
-			expect( result ).toBe( 'Worker deployment failed' );
-		} );
-
-		test( 'should not duplicate status code if already in message', () => {
-			const response = JSON.stringify( {
-				message: 'Error 500: Server error',
-			} );
-			const result = parseErrorResponseWithStatus(
-				response,
-				500,
-				'API call'
-			);
-			expect( result ).toBe( 'Error 500: Server error' );
-		} );
-
-		test( 'should handle null status code', () => {
-			const response = JSON.stringify( { error: 'Some error' } );
-			const result = parseErrorResponseWithStatus(
-				response,
-				null,
-				'Operation'
-			);
-			expect( result ).toBe( 'Some error' );
-		} );
-
-		test( 'should handle zero status code', () => {
-			const response = JSON.stringify( { error: 'Network error' } );
-			const result = parseErrorResponseWithStatus(
-				response,
-				0,
-				'Request'
-			);
-			expect( result ).toBe( 'Network error' );
 		} );
 	} );
 } );

@@ -36,7 +36,6 @@ class ErrorBoundary extends Component {
 	}
 
 	componentDidCatch( error, errorInfo ) {
-		// Log error details for debugging
 		// eslint-disable-next-line no-console
 		console.error( 'Error caught by ErrorBoundary:', {
 			error,

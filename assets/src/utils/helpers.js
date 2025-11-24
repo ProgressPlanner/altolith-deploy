@@ -6,25 +6,6 @@
  */
 
 /**
- * Filter out null and undefined values from an object
- *
- * @param {Object} obj Object to filter
- * @return {Object} New object with null/undefined values removed
- */
-export function filterNullishValues( obj ) {
-	if ( ! obj || typeof obj !== 'object' ) {
-		return obj;
-	}
-
-	return Object.entries( obj ).reduce( ( acc, [ key, value ] ) => {
-		if ( value !== null && value !== undefined ) {
-			acc[ key ] = value;
-		}
-		return acc;
-	}, {} );
-}
-
-/**
  * Safely parse JSON with fallback value
  *
  * @param {string}   jsonString JSON string to parse
@@ -53,42 +34,6 @@ export function parseJSONSafely(
 	} catch {
 		return fallback;
 	}
-}
-
-/**
- * Parse JSON array from localStorage safely
- *
- * @param {string} jsonString JSON string to parse
- * @param {Array}  fallback   Fallback array if parsing fails (default: [])
- * @return {Array} Parsed array or fallback
- */
-export function parseJSONArray( jsonString, fallback = [] ) {
-	return parseJSONSafely( jsonString, fallback, Array.isArray );
-}
-
-/**
- * Parse JSON object from localStorage safely
- *
- * @param {string} jsonString JSON string to parse
- * @param {Object} fallback   Fallback object if parsing fails (default: {})
- * @return {Object} Parsed object or fallback
- */
-export function parseJSONObject( jsonString, fallback = {} ) {
-	return parseJSONSafely(
-		jsonString,
-		fallback,
-		( val ) => val && typeof val === 'object' && ! Array.isArray( val )
-	);
-}
-
-/**
- * Check if a value is an encrypted credential
- *
- * @param {*} value Value to check
- * @return {boolean} True if value is encrypted credential string
- */
-export function isEncryptedValue( value ) {
-	return typeof value === 'string' && value.startsWith( 'encrypted:' );
 }
 
 /**
@@ -122,35 +67,6 @@ export function deepMerge( target, source ) {
 	} );
 
 	return output;
-}
-
-/**
- * Debounce a function call
- *
- * @param {Function} func      Function to debounce
- * @param {number}   wait      Milliseconds to wait
- * @param {boolean}  immediate Execute on leading edge instead of trailing
- * @return {Function} Debounced function
- */
-export function debounce( func, wait, immediate = false ) {
-	let timeout;
-
-	return function executedFunction( ...args ) {
-		const later = () => {
-			timeout = null;
-			if ( ! immediate ) {
-				func( ...args );
-			}
-		};
-
-		const callNow = immediate && ! timeout;
-		clearTimeout( timeout );
-		timeout = setTimeout( later, wait );
-
-		if ( callNow ) {
-			func( ...args );
-		}
-	};
 }
 
 /**

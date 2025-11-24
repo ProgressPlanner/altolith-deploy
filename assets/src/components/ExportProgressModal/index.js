@@ -18,7 +18,6 @@ import {
 	fontWeight,
 	noticeStyles,
 	createFlexStyle,
-	utilityStyles,
 } from '@aether/utils/styles';
 import ProviderProgressList from '../ProviderProgressList';
 
@@ -237,7 +236,7 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 					>
 						<p
 							className="aether-export-progress-modal__notice-text"
-							style={ utilityStyles.noMargin }
+							style={ { margin: 0 } }
 						>
 							{ error }
 						</p>
@@ -261,7 +260,7 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 						{ finalStatus.deploymentUrl && (
 							<p
 								className="aether-export-progress-modal__deployment"
-								style={ utilityStyles.noMargin }
+								style={ { margin: 0 } }
 							>
 								<strong className="aether-export-progress-modal__deployment-label">
 									{ __(

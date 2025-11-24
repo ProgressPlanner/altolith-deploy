@@ -7,11 +7,8 @@
 
 import {
 	buildImportFilesStep,
-	buildAetherInstallStep,
-	buildDefineConstsStep,
 	buildPluginInstallSteps,
 	buildThemeInstallSteps,
-	buildAetherActivationStep,
 	buildBlueprintSteps,
 	buildBlueprintJson,
 } from '../blueprintStepBuilders';
@@ -32,43 +29,6 @@ describe( 'blueprintStepBuilders', () => {
 			expect( step.step ).toBe( 'importWordPressFiles' );
 			expect( step.wordPressFilesZip.resource ).toBe( 'bundled' );
 			expect( step.wordPressFilesZip.path ).toBe( '/wp-content.zip' );
-		} );
-	} );
-
-	describe( 'buildAetherInstallStep', () => {
-		it( 'should create installPlugin step for Aether', () => {
-			// Act
-			const step = buildAetherInstallStep();
-
-			// Assert - INTENDED: Must install Aether plugin
-			expect( step.step ).toBe( 'installPlugin' );
-			expect( step.pluginData.resource ).toBe( 'url' );
-			expect( step.pluginData.url ).toContain(
-				'https://r2.s12y.org/aether.zip'
-			);
-			expect( step.pluginData.caption ).toBe(
-				'Installing Aether plugin'
-			);
-			expect( step.options.activate ).toBe( false );
-		} );
-
-		it( 'should include cache-busting parameter', () => {
-			// Act
-			const step = buildAetherInstallStep();
-
-			// Assert - INTENDED: Must have cache-busting query parameter
-			expect( step.pluginData.url ).toMatch( /\?v=\d+/ );
-		} );
-	} );
-
-	describe( 'buildDefineConstsStep', () => {
-		it( 'should create defineWpConfigConsts step', () => {
-			// Act
-			const step = buildDefineConstsStep();
-
-			// Assert - INTENDED: Must define AETHER_PLAYGROUND_SITE constant
-			expect( step.step ).toBe( 'defineWpConfigConsts' );
-			expect( step.consts.AETHER_PLAYGROUND_SITE ).toBe( true );
 		} );
 	} );
 
@@ -159,17 +119,6 @@ describe( 'blueprintStepBuilders', () => {
 
 			// Assert - INTENDED: Must return empty array for invalid input
 			expect( steps ).toEqual( [] );
-		} );
-	} );
-
-	describe( 'buildAetherActivationStep', () => {
-		it( 'should create activatePlugin step for Aether', () => {
-			// Act
-			const step = buildAetherActivationStep();
-
-			// Assert - INTENDED: Must activate Aether plugin
-			expect( step.step ).toBe( 'activatePlugin' );
-			expect( step.pluginPath ).toBe( 'aether/aether.php' );
 		} );
 	} );
 

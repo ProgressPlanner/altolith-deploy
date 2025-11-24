@@ -511,7 +511,6 @@ export async function executeThreadedWorkflow(
 				error: null,
 			};
 		} catch ( error ) {
-			// Log the error for debugging
 			if ( typeof window !== 'undefined' && window.console ) {
 				// eslint-disable-next-line no-console
 				console.error(

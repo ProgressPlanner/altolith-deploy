@@ -142,38 +142,6 @@ export async function deleteFile( staticPath, key ) {
 }
 
 /**
- * Copy a file (not needed for local filesystem - files are uploaded directly).
- *
- * @return {Promise<Object>} Copy result.
- */
-export async function copyFile() {
-	// Not implemented for local filesystem
-	// Files are uploaded directly to their final location
-	return createSuccessResponse();
-}
-
-/**
- * List objects in a directory (not needed for static site generation).
- *
- * @return {Promise<Object>} List result.
- */
-export async function listObjects() {
-	// Not implemented - not needed for static site generation
-	// Static site generator doesn't need to list existing files
-	return createSuccessResponse( { objects: [] } );
-}
-
-/**
- * Batch copy files (not needed for local filesystem).
- *
- * @return {Promise<Object>} Batch copy result.
- */
-export async function batchCopy() {
-	// Not implemented for local filesystem
-	return createSuccessResponse();
-}
-
-/**
  * Batch delete files.
  *
  * @param {string} staticPath Base path for static files.
