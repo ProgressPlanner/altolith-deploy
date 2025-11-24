@@ -7,9 +7,7 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
-import { validateAllFields } from '../utils/configValidation';
 
 /**
  * LocalFilesystemBlueprintBundleProvider class
@@ -92,73 +90,6 @@ export class LocalFilesystemBlueprintBundleProvider {
 			},
 		},
 	];
-
-	/**
-	 * Validate provider configuration.
-	 *
-	 * @param {string} providerId Provider ID.
-	 * @param {Object} config     Configuration object to validate.
-	 * @return {Promise<Object>} Validation errors object (empty if valid)
-	 */
-	static async validateConfig( providerId, config ) {
-		const errors = await validateAllFields(
-			config,
-			LocalFilesystemBlueprintBundleProvider.CONFIG_FIELDS
-		);
-
-		// Additional validation for LocalFilesystemBlueprintBundle
-		// Validate export path if provided
-		if ( config.export_path ) {
-			// Ensure path doesn't try to escape WordPress root
-			if (
-				config.export_path.includes( '..' ) ||
-				config.export_path.startsWith( '/' )
-			) {
-				errors.export_path = __(
-					'Export path must be relative to WordPress root and cannot contain ".."',
-					'aether'
-				);
-			}
-		}
-
-		return applyFilters(
-			'aether.provider.config.validate',
-			errors,
-			config,
-			providerId
-		);
-	}
-
-	/**
-	 * Test connection to provider.
-	 *
-	 * For LocalFilesystem, this checks if the export directory is writable.
-	 *
-	 * @param {string} providerId Provider ID (unused for LocalFilesystem but required for consistency).
-	 * @return {Promise<Object>} Connection test result
-	 */
-	static async testConnection( providerId ) {
-		// eslint-disable-next-line no-unused-vars
-		const _ = providerId; // Keep for consistency with other providers
-		try {
-			// For LocalFilesystem, we don't need to test anything
-			// The server-side will handle directory creation and permissions
-			return {
-				success: true,
-				message: __(
-					'Local filesystem is ready for blueprint bundle exports',
-					'aether'
-				),
-			};
-		} catch ( error ) {
-			return {
-				success: false,
-				error:
-					error.message ||
-					__( 'Connection test failed', 'aether-site-exporter' ),
-			};
-		}
-	}
 }
 
 export default LocalFilesystemBlueprintBundleProvider;

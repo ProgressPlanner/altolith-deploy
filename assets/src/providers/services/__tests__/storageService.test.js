@@ -94,43 +94,6 @@ describe( 'StorageService', () => {
 		} );
 	} );
 
-	describe( '_prefixKey()', () => {
-		test( 'should not prefix key when providerId is null', () => {
-			const key = 'static/index.html';
-			expect( service._prefixKey( key ) ).toBe( key );
-		} );
-
-		test( 'should prefix key with providerId', () => {
-			const configWithProviderId = {
-				base_url: 'https://example.com',
-				provider_id: 'cloudflare-r2',
-			};
-			const testService = new StorageService(
-				mockStaticPath,
-				configWithProviderId
-			);
-			const key = 'static/index.html';
-			expect( testService._prefixKey( key ) ).toBe(
-				'cloudflare-r2/static/index.html'
-			);
-		} );
-
-		test( 'should not double-prefix key', () => {
-			const configWithProviderId = {
-				base_url: 'https://example.com',
-				provider_id: 'cloudflare-r2',
-			};
-			const testService = new StorageService(
-				mockStaticPath,
-				configWithProviderId
-			);
-			const key = 'cloudflare-r2/static/index.html';
-			expect( testService._prefixKey( key ) ).toBe(
-				'cloudflare-r2/static/index.html'
-			);
-		} );
-	} );
-
 	describe( 'upload()', () => {
 		test( 'should upload a file successfully', async () => {
 			const mockFile = new Blob( [ 'test content' ], {
@@ -149,7 +112,7 @@ describe( 'StorageService', () => {
 			expect( result.success ).toBe( true );
 		} );
 
-		test( 'should upload with prefixed key when providerId is set', async () => {
+		test( 'should upload with key when providerId is set', async () => {
 			const configWithProviderId = {
 				base_url: 'https://example.com',
 				provider_id: 'cloudflare-r2',
@@ -393,17 +356,6 @@ describe( 'StorageService', () => {
 
 			expect( uploadFileUnified ).toHaveBeenCalled();
 			expect( result.success ).toBe( true );
-		} );
-	} );
-
-	describe( 'testConnection()', () => {
-		test( 'should return success for local filesystem', async () => {
-			const result = await service.testConnection();
-
-			expect( result.success ).toBe( true );
-			expect( result.message ).toBe(
-				'Local filesystem storage is ready.'
-			);
 		} );
 	} );
 } );

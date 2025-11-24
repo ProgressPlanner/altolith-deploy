@@ -39,36 +39,6 @@ export class StorageService {
 	}
 
 	/**
-	 * Add provider prefix to a storage key.
-	 *
-	 * Ensures isolated storage paths for each provider.
-	 * Example: 'static/index.html' → 'cloudflare-r2/static/index.html'
-	 *
-	 * Note: Local filesystem providers don't need prefixing since they use
-	 * different base paths (static/, static2/, static3/) for isolation.
-	 *
-	 * @param {string} key Original storage key.
-	 * @return {string} Prefixed storage key.
-	 */
-	_prefixKey( key ) {
-		if ( ! this.providerId ) {
-			return key;
-		}
-
-		// Skip prefixing for local-filesystem providers
-		// They use different base paths for isolation (e.g., static/, static2/, static3/)
-		if ( this.providerId.startsWith( 'local-filesystem:' ) ) {
-			return key;
-		}
-
-		// Don't double-prefix
-		if ( key.startsWith( this.providerId + '/' ) ) {
-			return key;
-		}
-		return `${ this.providerId }/${ key }`;
-	}
-
-	/**
 	 * Upload a file to storage.
 	 *
 	 * Uses unified upload action system for provider integration.
@@ -87,7 +57,6 @@ export class StorageService {
 		}
 
 		const contentType = metadata.contentType || file.type;
-		const prefixedKey = this._prefixKey( key );
 
 		// Determine file type based on content type
 		let fileType = FILE_TYPES.STATIC_ASSET;
@@ -101,7 +70,7 @@ export class StorageService {
 			filePath: null, // Not applicable for storage service uploads
 			fileContent: file,
 			contentType,
-			storageKey: prefixedKey,
+			storageKey: key,
 			providerId: this.providerId,
 			metadata: {
 				staticPath: this.staticPath,
@@ -138,8 +107,7 @@ export class StorageService {
 	 * @return {Promise<Object>} Result array with 'success' and optional 'error'.
 	 */
 	async delete( key ) {
-		const prefixedKey = this._prefixKey( key );
-		return deleteFile( this.staticPath, prefixedKey );
+		return deleteFile( this.staticPath, key );
 	}
 
 	/**
@@ -214,12 +182,11 @@ export class StorageService {
 		const manifestKey = this.providerId
 			? `file-manifest-${ this.providerId }.json`
 			: 'file-manifest.json';
-		const prefixedManifestKey = this._prefixKey( manifestKey );
 
 		try {
 			const blob = await downloadFileFromAdapter(
 				this.staticPath,
-				prefixedManifestKey
+				manifestKey
 			);
 			return blob;
 		} catch ( error ) {
@@ -245,18 +212,5 @@ export class StorageService {
 		} );
 
 		return result;
-	}
-
-	/**
-	 * Test connection to storage service.
-	 *
-	 * @return {Promise<Object>} Result array with 'success' and optional 'message', 'error'.
-	 */
-	async testConnection() {
-		// For local filesystem, always return success
-		return {
-			success: true,
-			message: 'Local filesystem storage is ready.',
-		};
 	}
 }

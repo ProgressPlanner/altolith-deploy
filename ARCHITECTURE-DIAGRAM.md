@@ -261,11 +261,9 @@ WordPress Root
             ├───────────────────────┤
             │ cloudflare-r2:        │
             │   worker_endpoint: X  │
-            │   enabled: true       │
             │                       │
             │ local-filesystem:     │
             │   public_url: Y       │
-            │   enabled: true       │
             └───────────┬───────────┘
                         │
                         ▼

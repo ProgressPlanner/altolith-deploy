@@ -59,7 +59,6 @@ export default function ProviderSettings( {
 
 	// Initialize provider settings hook
 	const {
-		toggleProviderEnabled,
 		createProviderInstance,
 		deleteProviderInstance,
 		renameProviderInstance,
@@ -135,17 +134,12 @@ export default function ProviderSettings( {
 				allProviders.length,
 				'providers'
 			);
-			const providerMetadata = allProviders.map( ( provider ) => {
-				const ProviderClass = provider.constructor;
+			const providerMetadata = allProviders.map( ( ProviderClass ) => {
 				return {
-					id: ProviderClass.ID || provider.getId(),
-					name: ProviderClass.NAME || provider.getName?.() || '',
-					description:
-						ProviderClass.DESCRIPTION ||
-						provider.getDescription?.() ||
-						'',
-					type:
-						ProviderClass.TYPE || provider.getType?.() || 'generic',
+					id: ProviderClass.ID,
+					name: ProviderClass.NAME || '',
+					description: ProviderClass.DESCRIPTION || '',
+					type: ProviderClass.TYPE || 'generic',
 					settings_fields: ProviderClass.CONFIG_FIELDS || [],
 				};
 			} );
@@ -246,7 +240,6 @@ export default function ProviderSettings( {
 			const newInstance = {
 				provider_type: providerType,
 				instance_name: instanceName,
-				enabled: false,
 			};
 
 			const optimisticConfigs = {
@@ -279,57 +272,6 @@ export default function ProviderSettings( {
 			}
 		},
 		[ createProviderInstance, onConfigsUpdate, localConfigs ]
-	);
-
-	const handleToggleInstance = useCallback(
-		async ( instanceId, enabled ) => {
-			// Store previous state for rollback using functional update
-			let previousConfigs;
-			setLocalConfigs( ( prevConfigs ) => {
-				previousConfigs = prevConfigs;
-				// Optimistic update: update local state immediately before API call
-				return {
-					...prevConfigs,
-					[ instanceId ]: {
-						...prevConfigs[ instanceId ],
-						enabled,
-					},
-				};
-			} );
-
-			try {
-				// Pass current state to API to prevent race conditions
-				const updatedProviders = await toggleProviderEnabled(
-					instanceId,
-					enabled,
-					previousConfigs
-				);
-
-				// Update with API response (which should match our optimistic update)
-				setLocalConfigs( updatedProviders );
-
-				// Update parent configs state
-				if ( onConfigsUpdate ) {
-					onConfigsUpdate( updatedProviders );
-				}
-			} catch ( error ) {
-				console.error( 'Failed to toggle instance:', error );
-
-				// Rollback optimistic update on error
-				setLocalConfigs( previousConfigs );
-
-				// Show error notification
-				if ( onNotice ) {
-					onNotice(
-						`Failed to toggle instance: ${
-							error.message || 'Unknown error'
-						}`,
-						'error'
-					);
-				}
-			}
-		},
-		[ toggleProviderEnabled, onConfigsUpdate, onNotice ]
 	);
 
 	const handleDeleteInstance = useCallback(
@@ -539,7 +481,6 @@ export default function ProviderSettings( {
 				<ProviderInstancesContainer
 					instances={ allInstances }
 					providers={ providers }
-					onToggle={ handleToggleInstance }
 					onDelete={ handleDeleteInstance }
 					onRename={ handleRenameInstance }
 					onSave={ handleConfigSave }

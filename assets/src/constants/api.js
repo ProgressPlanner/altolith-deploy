@@ -55,8 +55,6 @@ export const ENDPOINTS = {
 			`${ API_BASE_PATH }/providers/${ providerId }/config`,
 		DELETE_CONFIG: ( providerId ) =>
 			`${ API_BASE_PATH }/providers/${ providerId }/config`,
-		TEST: ( providerId ) =>
-			`${ API_BASE_PATH }/providers/${ providerId }/test`,
 		STATUS: ( providerId ) =>
 			`${ API_BASE_PATH }/providers/${ providerId }/status`,
 	},

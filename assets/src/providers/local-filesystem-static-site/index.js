@@ -6,7 +6,7 @@
  *
  */
 
-import { addFilter, addAction, doAction } from '@wordpress/hooks';
+import { addAction, doAction } from '@wordpress/hooks';
 import { uploadFile as uploadFileToStorage } from '@aether/utils/filesystemAdapter';
 import { debug, debugWarn } from '@aether/utils/debug';
 import { LocalFilesystemStaticSiteProvider } from './LocalFilesystemStaticSiteProvider';
@@ -251,33 +251,6 @@ addAction(
 		// Start upload and add promise to context
 		const uploadPromise = handleUnifiedFileUpload( fileContext );
 		fileContext._uploadPromises.push( uploadPromise );
-	},
-	10
-);
-
-/**
- * Register test connection handler hook.
- *
- * Providers register test handlers via aether.provider.test filter.
- */
-addFilter(
-	'aether.provider.test',
-	'aether/local-filesystem-static-site',
-	( handler, providerId ) => {
-		// Only handle requests for local-filesystem-static-site providers
-		if (
-			! providerId ||
-			! providerId.startsWith( 'local-filesystem-static-site' )
-		) {
-			return handler; // Return existing handler or null
-		}
-
-		// Return test handler function
-		return async () => {
-			return await LocalFilesystemStaticSiteProvider.testConnection(
-				providerId
-			);
-		};
 	},
 	10
 );

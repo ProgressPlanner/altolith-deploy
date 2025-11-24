@@ -39,8 +39,8 @@ describe( 'exportConfiguration', () => {
 						static_site: 'cloudflare:456',
 					},
 					providers: {
-						'local-filesystem:123': { enabled: true },
-						'cloudflare:456': { enabled: true },
+						'local-filesystem:123': {},
+						'cloudflare:456': {},
 					},
 				},
 			};
@@ -51,8 +51,8 @@ describe( 'exportConfiguration', () => {
 				storageProviderId: 'local-filesystem:123',
 				staticSiteProviderId: 'cloudflare:456',
 				providerConfigs: {
-					'local-filesystem:123': { enabled: true },
-					'cloudflare:456': { enabled: true },
+					'local-filesystem:123': {},
+					'cloudflare:456': {},
 				},
 			} );
 		} );
@@ -96,18 +96,15 @@ describe( 'exportConfiguration', () => {
 			jest.clearAllMocks();
 		} );
 
-		test( 'should return enabled instances for deployment type', () => {
+		test( 'should return instances for deployment type', () => {
 			const providerConfigs = {
 				'local-filesystem-static-site:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 				'local-filesystem-static-site:2': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 				'local-filesystem-blueprint-bundle:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-blueprint-bundle',
 				},
 			};
@@ -144,48 +141,12 @@ describe( 'exportConfiguration', () => {
 			] );
 		} );
 
-		test( 'should filter out disabled instances', () => {
-			const providerConfigs = {
-				'local-filesystem-static-site:1': {
-					enabled: true,
-					provider_type: 'local-filesystem-static-site',
-				},
-				'local-filesystem-static-site:2': {
-					enabled: false,
-					provider_type: 'local-filesystem-static-site',
-				},
-				'local-filesystem-static-site:3': {
-					provider_type: 'local-filesystem-static-site',
-					// enabled not specified - defaults to true
-				},
-			};
-
-			class MockProvider {
-				static DEPLOYMENT_TYPE = 'static_site';
-			}
-			mockProviderRegistry.get.mockReturnValue( {
-				constructor: MockProvider,
-			} );
-
-			const result = getEnabledInstancesForDeploymentType(
-				providerConfigs,
-				'static_site'
-			);
-
-			expect( result ).toEqual( [
-				'local-filesystem-static-site:1',
-				'local-filesystem-static-site:3',
-			] );
-		} );
-
 		test( 'should filter out instances that do not support deployment type', () => {
 			const providerConfigs = {
 				'local-filesystem-static-site:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 				'local-filesystem-blueprint-bundle:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-blueprint-bundle',
 				},
 			};
@@ -246,11 +207,9 @@ describe( 'exportConfiguration', () => {
 				'local-filesystem-static-site:1': null,
 				'local-filesystem-static-site:2': 'invalid',
 				'local-filesystem-static-site:3': {
-					enabled: true,
 					// Missing provider_type
 				},
 				'local-filesystem-static-site:4': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 			};
@@ -287,41 +246,15 @@ describe( 'exportConfiguration', () => {
 			expect( result ).toEqual( [] );
 		} );
 
-		test( 'should default enabled to true when not specified', () => {
-			const providerConfigs = {
-				'local-filesystem-static-site:1': {
-					provider_type: 'local-filesystem-static-site',
-					// No 'enabled' field
-				},
-			};
-
-			class MockProvider {
-				static DEPLOYMENT_TYPE = 'static_site';
-			}
-			mockProviderRegistry.get.mockReturnValue( {
-				constructor: MockProvider,
-			} );
-
-			const result = getEnabledInstancesForDeploymentType(
-				providerConfigs,
-				'static_site'
-			);
-
-			expect( result ).toEqual( [ 'local-filesystem-static-site:1' ] );
-		} );
-
 		test( 'should handle multiple instances with same deployment type', () => {
 			const providerConfigs = {
 				'local-filesystem-static-site:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 				'local-filesystem-static-site:2': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 				'local-filesystem-static-site:3': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 			};
@@ -353,15 +286,12 @@ describe( 'exportConfiguration', () => {
 		test( 'should group providers by deployment type', () => {
 			const providerConfigs = {
 				'local-filesystem-static-site:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 				'local-filesystem-static-site:2': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 				'local-filesystem-blueprint-bundle:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-blueprint-bundle',
 				},
 			};
@@ -405,7 +335,6 @@ describe( 'exportConfiguration', () => {
 		test( 'should handle empty deployment types array', () => {
 			const providerConfigs = {
 				'local-filesystem-static-site:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 			};
@@ -421,7 +350,6 @@ describe( 'exportConfiguration', () => {
 		test( 'should return empty arrays for deployment types with no providers', () => {
 			const providerConfigs = {
 				'local-filesystem-static-site:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 			};
@@ -449,11 +377,9 @@ describe( 'exportConfiguration', () => {
 		test( 'should work with DEPLOYMENT_TYPES constants', () => {
 			const providerConfigs = {
 				'local-filesystem-static-site:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-static-site',
 				},
 				'local-filesystem-blueprint-bundle:1': {
-					enabled: true,
 					provider_type: 'local-filesystem-blueprint-bundle',
 				},
 			};

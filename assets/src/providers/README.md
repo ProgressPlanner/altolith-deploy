@@ -154,10 +154,7 @@ export class MyProvider {
 
 ### Static Methods
 
-Providers implement static methods for operations:
-
-- `static validateConfig(providerId, config)` - Validate provider configuration
-- `static testConnection(providerId)` - Test provider connection
+Providers are pure static classes with no instance methods. All operations are handled via WordPress hooks and REST API endpoints.
 
 ## Example Provider
 
@@ -181,30 +178,7 @@ export class MyProvider {
         { id: 'api_key', label: 'API Key', type: 'text', required: true }
     ];
 
-    static async validateConfig(providerId, config) {
-        const errors = {};
 
-        if (!config.api_key || config.api_key.length < 10) {
-            errors.api_key = 'API key must be at least 10 characters';
-        }
-
-        return errors;
-    }
-
-    static async testConnection(providerId) {
-        return {
-            success: true,
-            message: 'Connection successful',
-        };
-    }
-
-    static async testConnection(providerId) {
-        // Connection test logic
-        return {
-            success: true,
-            message: 'Connection successful',
-        };
-    }
 }
 ```
 
@@ -269,17 +243,9 @@ function ProviderSettings({ providerId }) {
     const {
         provider,
         config,
-        testConnection,
         loading,
         error,
     } = useProvider(providerId);
-
-    const handleTest = async () => {
-        const result = await testConnection(config);
-        if (result.success) {
-            alert('Connection successful!');
-        }
-    };
 
     return (
         <div>
@@ -418,7 +384,6 @@ npm run test:js -- providers/local-filesystem
 
 1. **Create provider directory:** `providers/my-provider/`
 2. **Define static constants:** ID, NAME, TYPE, DESCRIPTION, ICON, DEPLOYMENT_TYPE, CONFIG_FIELDS
-3. **Implement static methods:** validateConfig, testConnection
 4. **Implement deployment logic:** Handle uploads, status checks
 5. **Register provider:** Use WordPress hooks in `index.js`
 6. **Add tests:** Create unit tests in `tests/js/providers/`

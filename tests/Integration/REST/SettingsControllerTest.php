@@ -312,7 +312,7 @@ class SettingsControllerTest extends TestCase {
 				'provider-1' => [
 					'api_key' => 'secret_key',
 					'endpoint' => 'https://example.com',
-					'enabled' => true,
+					'region' => 'us-east-1',
 				],
 			]
 		);
@@ -344,7 +344,7 @@ class SettingsControllerTest extends TestCase {
 
 		// Preserved fields.
 		$this->assertEquals( 'secret_key', $provider['api_key'] );
-		$this->assertTrue( $provider['enabled'] );
+		$this->assertEquals( 'us-east-1', $provider['region'] );
 	}
 
 
@@ -359,7 +359,7 @@ class SettingsControllerTest extends TestCase {
 		// Create 51 providers (max is 50).
 		$providers = [];
 		for ( $i = 1; $i <= 51; $i++ ) {
-			$providers[ "provider-$i" ] = [ 'enabled' => true ];
+			$providers[ "provider-$i" ] = [ 'api_key' => 'test-key-' . $i ];
 		}
 
 		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
@@ -437,7 +437,7 @@ class SettingsControllerTest extends TestCase {
 		// Create exactly 50 providers.
 		$providers = [];
 		for ( $i = 1; $i <= 50; $i++ ) {
-			$providers[ "provider-$i" ] = [ 'enabled' => true ];
+			$providers[ "provider-$i" ] = [ 'api_key' => 'test-key-' . $i ];
 		}
 
 		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
@@ -647,7 +647,6 @@ class SettingsControllerTest extends TestCase {
 		$this->assertEquals( 'cloudflare-r2:abc123', $data['instance_id'] );
 		$this->assertEquals( 'My R2 Bucket', $data['instance']['instance_name'] );
 		$this->assertEquals( 'cloudflare-r2', $data['instance']['provider_type'] );
-		$this->assertFalse( $data['instance']['enabled'] );
 	}
 
 	/**
@@ -742,7 +741,6 @@ class SettingsControllerTest extends TestCase {
 		// Since our test data doesn't have sensitive fields, verify the structure is correct.
 		$this->assertArrayHasKey( 'instance_name', $settings['providers']['cloudflare-r2:abc123'] );
 		$this->assertArrayHasKey( 'provider_type', $settings['providers']['cloudflare-r2:abc123'] );
-		$this->assertArrayHasKey( 'enabled', $settings['providers']['cloudflare-r2:abc123'] );
 	}
 
 	/**

@@ -10,7 +10,6 @@
  * IMPORTANT: This controller provides essential endpoints still used by React:
  * - /providers/{id}/config - GET/POST/DELETE (configStorage.js, credentialManager.js)
  * - /providers/{id}/status - GET (useProviderStatus.js, usePublishReadiness.js)
- * - /providers/{id}/test - POST (useConnectionTest.js)
  * - /providers/{id}/edge/worker-script/{type} - GET (edgeService.js, useEdgeService.js)
  * - /providers/{id}/settings - GET/POST (useProviderSettings.js)
  *
@@ -77,23 +76,6 @@ class ProviderConfigController
 				'methods'             => 'GET',
 				'callback'            => [ $this, 'getStatus' ],
 				'permission_callback' => [ $this, 'permissionCheck' ],
-			]
-		);
-
-		// Test provider connection.
-		\register_rest_route(
-			$this->getNamespace(),
-			'/providers/(?P<instance_id>[a-z0-9_:-]+)/test',
-			[
-				'methods'             => 'POST',
-				'callback'            => [ $this, 'testConnection' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
-				'args'                => [
-					'config' => [
-						'required' => false,
-						'type'     => 'object',
-					],
-				],
 			]
 		);
 	}
@@ -410,80 +392,6 @@ class ProviderConfigController
 			}
 		}
 		return $hasValues;
-	}
-
-	/**
-	 * Test provider connection.
-	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response|WP_Error Response or error.
-	 */
-	public function testConnection(WP_REST_Request $request)
-	{
-		$instanceId = $request->get_param('instance_id');
-
-		// Validate instance ID format: {provider_type}:{uuid}
-		if (! $this->isValidInstanceId($instanceId)) {
-			return new WP_Error(
-				'invalid_instance_id',
-				/* translators: %s: Provider instance ID */
-				\sprintf(\__('Invalid instance ID format: %s. Expected format: provider_type:uuid', 'aether-site-exporter'), $instanceId),
-				[ 'status' => 400 ]
-			);
-		}
-
-		// Parse instance ID to get provider type
-		$parsed = $this->parseInstanceId($instanceId);
-		if (! $parsed) {
-			return new WP_Error(
-				'invalid_instance_id',
-				/* translators: %s: Provider instance ID */
-				\sprintf(\__('Invalid instance ID format: %s', 'aether-site-exporter'), $instanceId),
-				[ 'status' => 400 ]
-			);
-		}
-
-		$providerType = $parsed['provider_type'];
-
-		// For local filesystem provider, verify export directory is writable.
-		if ($providerType === 'local-filesystem') {
-			$exportDir = \trailingslashit(WP_CONTENT_DIR) . 'aether-exports';
-
-			// Check if directory exists and is writable
-			if (! \file_exists($exportDir)) {
-				return new WP_Error(
-					'export_dir_not_found',
-					/* translators: %s: Export directory path */
-					\sprintf(\__('Export directory not found: %s', 'aether-site-exporter'), $exportDir),
-					[ 'status' => 404 ]
-				);
-			}
-
-			if (! \is_writable($exportDir)) {
-				return new WP_Error(
-					'export_dir_not_writable',
-					/* translators: %s: Export directory path */
-					\sprintf(\__('Export directory is not writable: %s', 'aether-site-exporter'), $exportDir),
-					[ 'status' => 500 ]
-				);
-			}
-
-			return new WP_REST_Response(
-				[
-					'success' => true,
-					'message' => \__('Local filesystem is ready for exports', 'aether-site-exporter'),
-				],
-				200
-			);
-		}
-
-		// For other providers, return not implemented
-		return new WP_Error(
-			'not_implemented',
-			/* translators: %s: Provider type */
-			\sprintf(\__('Connection testing is not implemented for provider: %s', 'aether-site-exporter'), $providerType),
-			[ 'status' => 501 ]
-		);
 	}
 
 	/**

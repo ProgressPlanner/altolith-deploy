@@ -444,7 +444,6 @@ class SettingsController
 				continue;
 			}
 
-
 			if (\is_array($value)) {
 				$sanitized[ $sanitizedKey ] = $this->sanitizeConfig($value, $depth + 1);
 			} elseif (\is_bool($value)) {
@@ -632,7 +631,6 @@ class SettingsController
 		$providers[$instanceId] = [
 			'instance_name' => $instanceName,
 			'provider_type' => $providerType,
-			'enabled'        => false, // New instances start disabled
 		];
 
 		// Encrypt and save

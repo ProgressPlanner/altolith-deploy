@@ -87,7 +87,6 @@ function MyProviderComponent() {
     error,
     fetchProviderSettings,
     updateProviderConfig,
-    toggleProviderEnabled
   } = useProviderSettings();
 
   // Fetch all provider settings
@@ -100,13 +99,7 @@ function MyProviderComponent() {
   const saveProvider = async () => {
     const updated = await updateProviderConfig('my-provider', {
       api_key: 'new-key',
-      enabled: true,
     });
-  };
-
-  // Toggle provider enabled state
-  const toggle = async () => {
-    const updated = await toggleProviderEnabled('my-provider', true);
   };
 
   return (
@@ -115,7 +108,6 @@ function MyProviderComponent() {
       {error && <p>Error: {error}</p>}
       <button onClick={loadSettings}>Load Settings</button>
       <button onClick={saveProvider}>Save Provider</button>
-      <button onClick={toggle}>Toggle Enabled</button>
     </div>
   );
 }
@@ -128,28 +120,6 @@ function MyProviderComponent() {
 - No need to duplicate REST API calls
 
 ---
-
-#### 2. `useDependencyValidation()` - Auto-Disable Providers with Unsatisfied Dependencies
-
-**Location:** `assets/src/admin-settings/hooks/useDependencyValidation.js`
-
-**Purpose:** Automatically disable providers when their dependencies become unsatisfied.
-
-**Example:**
-
-```javascript
-import { useDependencyValidation } from './hooks/useDependencyValidation';
-
-function MyComponent() {
-  const [providers, setProviders] = useState([]);
-  const [configs, setConfigs] = useState({});
-
-  // Auto-validate dependencies
-  useDependencyValidation(providers, configs, setConfigs);
-
-  // Your component logic...
-}
-```
 
 **When to Use:**
 - If your plugin adds providers with dependencies
@@ -204,9 +174,9 @@ const cleaned = filterNullishValues({
   name: 'Test',
   value: null,      // Will be removed
   count: undefined, // Will be removed
-  enabled: false,   // Will be kept (false is valid)
+  region: 'us-east',   // Will be kept (non-nullish value)
 });
-// Result: { name: 'Test', enabled: false }
+// Result: { name: 'Test', region: 'us-east' }
 ```
 
 #### `parseJSONSafely(jsonString, fallback, validator)`
@@ -397,7 +367,7 @@ class MyProvider extends AbstractProvider {
 }
 ```
 
-**Benefit:** Aether will automatically disable your provider if dependencies are not satisfied.
+**Benefit:** Aether will validate that dependencies are configured before allowing exports.
 
 ### 2. Deployment Type-Specific Fields
 
@@ -775,7 +745,6 @@ If you encounter migration issues:
 
 **New features:**
 - `useProviderSettings()` hook
-- `useDependencyValidation()` hook
 - `useProviderMetadataReload()` hook
 - Utility functions in `helpers.js`
 - Global error handler

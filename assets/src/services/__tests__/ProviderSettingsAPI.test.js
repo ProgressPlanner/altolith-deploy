@@ -16,7 +16,6 @@ describe( 'ProviderSettingsAPI', () => {
 	describe( 'mergeProviderConfig() - Pure Function', () => {
 		test( 'should merge configurations', () => {
 			const current = {
-				enabled: true,
 				apiKey: 'old-key',
 			};
 
@@ -28,22 +27,9 @@ describe( 'ProviderSettingsAPI', () => {
 			const result = mergeProviderConfig( current, updated );
 
 			expect( result ).toEqual( {
-				enabled: true,
 				apiKey: 'new-key',
 				region: 'us-west',
 			} );
-		} );
-
-		test( 'should preserve enabled state when requested', () => {
-			const current = { enabled: true, apiKey: 'key' };
-			const updated = { enabled: false, apiKey: 'new-key' };
-
-			const result = mergeProviderConfig( current, updated, {
-				preserveEnabled: true,
-			} );
-
-			expect( result.enabled ).toBe( true ); // Preserved
-			expect( result.apiKey ).toBe( 'new-key' ); // Updated
 		} );
 
 		test( 'should handle null/undefined current config', () => {
@@ -65,37 +51,26 @@ describe( 'ProviderSettingsAPI', () => {
 			expect( result1 ).toEqual( current );
 			expect( result2 ).toEqual( current );
 		} );
-
-		test( 'should not preserve if field does not exist in current', () => {
-			const current = { apiKey: 'key' }; // No enabled field
-			const updated = { enabled: false };
-
-			const result = mergeProviderConfig( current, updated, {
-				preserveEnabled: true,
-			} );
-
-			expect( result.enabled ).toBe( false ); // Not preserved (didn't exist)
-		} );
 	} );
 
 	describe( 'mergeMultipleProviders() - Pure Function', () => {
 		test( 'should merge multiple provider updates', () => {
 			const current = {
-				'provider-1': { apiKey: 'key1', enabled: true },
-				'provider-2': { apiKey: 'key2', enabled: false },
+				'provider-1': { apiKey: 'key1' },
+				'provider-2': { apiKey: 'key2' },
 			};
 
 			const updates = {
 				'provider-1': { apiKey: 'new-key1' },
-				'provider-3': { apiKey: 'key3', enabled: true },
+				'provider-3': { apiKey: 'key3' },
 			};
 
 			const result = mergeMultipleProviders( current, updates );
 
 			expect( result ).toEqual( {
-				'provider-1': { apiKey: 'new-key1', enabled: true },
-				'provider-2': { apiKey: 'key2', enabled: false },
-				'provider-3': { apiKey: 'key3', enabled: true },
+				'provider-1': { apiKey: 'new-key1' },
+				'provider-2': { apiKey: 'key2' },
+				'provider-3': { apiKey: 'key3' },
 			} );
 		} );
 
@@ -235,7 +210,7 @@ describe( 'ProviderSettingsAPI', () => {
 		describe( 'update()', () => {
 			test( 'should update single provider configuration', async () => {
 				const currentProviders = {
-					'provider-1': { apiKey: 'old-key', enabled: true },
+					'provider-1': { apiKey: 'old-key' },
 				};
 
 				mockApiFetch
@@ -252,32 +227,8 @@ describe( 'ProviderSettingsAPI', () => {
 				} );
 
 				expect( result ).toEqual( {
-					'provider-1': { apiKey: 'new-key', enabled: true },
+					'provider-1': { apiKey: 'new-key' },
 				} );
-			} );
-
-			test( 'should respect preservation options', async () => {
-				const currentProviders = {
-					'provider-1': { apiKey: 'old-key', enabled: true },
-				};
-
-				mockApiFetch
-					.mockResolvedValueOnce( {
-						success: true,
-						value: currentProviders,
-					} )
-					.mockResolvedValueOnce( {
-						success: true,
-					} );
-
-				const result = await api.update(
-					'provider-1',
-					{ apiKey: 'new-key', enabled: false },
-					{ preserveEnabled: true }
-				);
-
-				expect( result[ 'provider-1' ].enabled ).toBe( true );
-				expect( result[ 'provider-1' ].apiKey ).toBe( 'new-key' );
 			} );
 		} );
 
@@ -309,27 +260,6 @@ describe( 'ProviderSettingsAPI', () => {
 					'provider-2': { apiKey: 'key2' },
 					'provider-3': { apiKey: 'key3' },
 				} );
-			} );
-		} );
-
-		describe( 'toggleEnabled()', () => {
-			test( 'should toggle provider enabled state', async () => {
-				const currentProviders = {
-					'provider-1': { apiKey: 'key1', enabled: false },
-				};
-
-				mockApiFetch
-					.mockResolvedValueOnce( {
-						success: true,
-						value: currentProviders,
-					} )
-					.mockResolvedValueOnce( {
-						success: true,
-					} );
-
-				const result = await api.toggleEnabled( 'provider-1', true );
-
-				expect( result[ 'provider-1' ].enabled ).toBe( true );
 			} );
 		} );
 

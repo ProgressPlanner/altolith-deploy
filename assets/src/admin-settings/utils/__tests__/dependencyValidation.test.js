@@ -26,42 +26,8 @@ describe( 'dependencyValidation', () => {
 			expect( result ).toBe( false );
 		} );
 
-		test( 'should return false if dependency provider is disabled', () => {
-			const configs = {
-				'provider-a': { enabled: false, api_key: 'test' },
-			};
-			const result = isDependencySatisfied(
-				'provider-a',
-				mockProviders,
-				configs
-			);
-			expect( result ).toBe( false );
-		} );
-
 		test( 'should return false if dependency provider has no config', () => {
 			const configs = {};
-			const result = isDependencySatisfied(
-				'provider-a',
-				mockProviders,
-				configs
-			);
-			expect( result ).toBe( false );
-		} );
-
-		test( 'should return false if dependency provider only has enabled flag', () => {
-			const configs = { 'provider-a': { enabled: true } };
-			const result = isDependencySatisfied(
-				'provider-a',
-				mockProviders,
-				configs
-			);
-			expect( result ).toBe( false );
-		} );
-
-		test( 'should return false if dependency provider only has enabled field', () => {
-			const configs = {
-				'provider-a': { enabled: true },
-			};
 			const result = isDependencySatisfied(
 				'provider-a',
 				mockProviders,
@@ -73,18 +39,6 @@ describe( 'dependencyValidation', () => {
 		test( 'should return true when dependency is satisfied', () => {
 			const configs = {
 				'provider-a': { api_key: 'secret', bucket: 'data' },
-			};
-			const result = isDependencySatisfied(
-				'provider-a',
-				mockProviders,
-				configs
-			);
-			expect( result ).toBe( true );
-		} );
-
-		test( 'should return true when enabled is explicitly true', () => {
-			const configs = {
-				'provider-a': { enabled: true, api_key: 'secret' },
 			};
 			const result = isDependencySatisfied(
 				'provider-a',

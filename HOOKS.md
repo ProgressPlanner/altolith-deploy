@@ -153,41 +153,6 @@ addFilter('aether.provider.getForDeploymentType', 'my-plugin', (provider, deploy
 
 ---
 
-#### `aether.provider.test`
-
-**Type**: Filter
-**Location**: `assets/src/providers/local-filesystem/index.js`, `assets/src/components/ProviderSettings/index.js`
-
-Allows providers to register test connection handlers. When a provider test is requested, handlers registered via this filter are called.
-
-**Parameters**:
-- `testHandler` (Function|null): Test handler function or null
-- `providerId` (string): Provider instance ID
-
-**Returns**: Test handler function or null
-
-**Example**:
-```javascript
-import { addFilter } from '@wordpress/hooks';
-
-addFilter('aether.provider.test', 'my-provider', (testHandler, providerId) => {
-    if (providerId.startsWith('my-provider:')) {
-        return async (config) => {
-            // Test provider connection
-            try {
-                await testConnection(config);
-                return { success: true };
-            } catch (error) {
-                return { success: false, error: error.message };
-            }
-        };
-    }
-    return testHandler; // Use default handler
-});
-```
-
----
-
 #### `aether.provider.upload_strategy`
 
 **Type**: Filter

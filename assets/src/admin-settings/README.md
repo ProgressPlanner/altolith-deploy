@@ -63,7 +63,7 @@ import { useProviderRegistry, useProvider } from '../hooks';
 
 function ProviderSettings() {
     const { providers } = useProviderRegistry();
-    const { config, saveConfig, testConnection } = useProvider(providerId);
+    const { config, saveConfig } = useProvider(providerId);
 
     // Render provider config form
 }
@@ -136,40 +136,6 @@ Will use Context API to reduce prop drilling:
 ```javascript
 // Planned for Phase 3
 const { settings, updateSettings } = useSettingsContext();
-```
-
-## Connection Testing
-
-Test provider credentials before saving:
-
-```javascript
-const handleTest = async () => {
-    setIsTesting(true);
-    setTestResult(null);
-
-    try {
-        const result = await provider.testConnection(config);
-
-        if (result.success) {
-            setTestResult({
-                success: true,
-                message: 'Connection successful!',
-            });
-        } else {
-            setTestResult({
-                success: false,
-                message: result.error || 'Connection failed',
-            });
-        }
-    } catch (error) {
-        setTestResult({
-            success: false,
-            message: error.message,
-        });
-    } finally {
-        setIsTesting(false);
-    }
-};
 ```
 
 ## Validation

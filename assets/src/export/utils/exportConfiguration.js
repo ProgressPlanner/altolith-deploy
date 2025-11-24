@@ -30,14 +30,14 @@ export function prepareExportConfiguration( settingsResponse ) {
 }
 
 /**
- * Get enabled provider instances for a specific deployment type
+ * Get provider instances for a specific deployment type
  *
- * Filters provider configurations to find enabled instances
+ * Filters provider configurations to find instances
  * that support the specified deployment type based on their provider type.
  *
  * @param {Object} providerConfigs - All provider configurations
  * @param {string} deploymentType  - Deployment type to filter by
- * @return {Array<string>} Array of enabled instance IDs
+ * @return {Array<string>} Array of instance IDs
  */
 export function getEnabledInstancesForDeploymentType(
 	providerConfigs,
@@ -51,12 +51,6 @@ export function getEnabledInstancesForDeploymentType(
 		return Object.entries( providerConfigs )
 			.filter( ( [ , instanceConfig ] ) => {
 				if ( ! instanceConfig || typeof instanceConfig !== 'object' ) {
-					return false;
-				}
-
-				// Check if enabled (default to true if not specified)
-				const isEnabled = instanceConfig.enabled !== false;
-				if ( ! isEnabled ) {
 					return false;
 				}
 
@@ -112,12 +106,6 @@ function isValidProviderInstance( instanceId, config ) {
 	// Must have provider_type
 	if ( ! config.provider_type ) {
 		debugError( `Provider instance ${ instanceId } missing provider_type` );
-		return false;
-	}
-
-	// Must not be explicitly disabled
-	if ( config.enabled === false ) {
-		// This is normal - not an error, just filtered out
 		return false;
 	}
 

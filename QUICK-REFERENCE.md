@@ -8,9 +8,9 @@
 
 ### How to Deploy to Multiple Providers
 
-1. **Enable Providers**
+1. **Configure Providers**
    - Go to Aether Settings → Providers
-   - Enable multiple providers (e.g., Cloudflare R2 + Local Filesystem)
+   - Create and configure multiple provider instances (e.g., Cloudflare R2 + Local Filesystem)
    - Configure each provider separately
 
 2. **Configure Deployment URLs**
@@ -60,7 +60,6 @@ await storageService.downloadManifest();
 ```javascript
 {
     id: 'my-provider',
-    enabled: true,
     deployment_types: ['static_site'],
 
     // ONE OF:
@@ -269,7 +268,7 @@ static/
 ## Testing Checklist
 
 ### Single Provider Test
-- [ ] Enable one provider (e.g., local-filesystem)
+- [ ] Configure one provider instance (e.g., local-filesystem)
 - [ ] Configure deployment URL
 - [ ] Publish site
 - [ ] Verify files at: `{providerId}/static/...`
@@ -277,7 +276,7 @@ static/
 - [ ] Check HTML has correct URLs
 
 ### Multi-Provider Test
-- [ ] Enable two providers
+- [ ] Configure two provider instances
 - [ ] Configure different deployment URLs
 - [ ] Publish site
 - [ ] Verify both provider directories exist

@@ -8,7 +8,7 @@
 
 import { useState, useRef, useEffect } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { Button, ToggleControl, Modal } from '@wordpress/components';
+import { Button, Modal } from '@wordpress/components';
 import { settings, trash } from '@wordpress/icons';
 import ProviderForm from '@aether/components/ProviderForm';
 import StatusNotice from '@aether/components/StatusNotice';
@@ -75,7 +75,6 @@ const actionsCellStyle = {
  * @param {Object}   props          Component props.
  * @param {Object}   props.instance Instance data with instanceId and config.
  * @param {Object}   props.provider Provider metadata.
- * @param {Function} props.onToggle Callback to toggle enabled state.
  * @param {Function} props.onDelete Callback to delete instance.
  * @param {Function} props.onRename Callback to rename instance.
  * @param {Function} props.onSave   Callback to save config changes.
@@ -84,7 +83,6 @@ const actionsCellStyle = {
 export default function ProviderInstanceItem( {
 	instance,
 	provider,
-	onToggle,
 	onDelete,
 	onRename,
 	onSave,
@@ -153,14 +151,8 @@ export default function ProviderInstanceItem( {
 	const handleFormSubmit = async ( values ) => {
 		setSaveError( null );
 
-		const currentEnabled = instanceConfig.enabled !== false;
-		const updatedConfig = {
-			...values,
-			enabled: currentEnabled,
-		};
-
 		try {
-			await onSave( instance.instanceId, updatedConfig );
+			await onSave( instance.instanceId, values );
 			setIsModalOpen( false );
 		} catch ( error ) {
 			setSaveError(
@@ -208,19 +200,6 @@ export default function ProviderInstanceItem( {
 
 	return (
 		<tr>
-			{ /* Enabled Toggle */ }
-			<td style={ tableCellStyleWithBorder }>
-				<ToggleControl
-					label={ __(
-						'Enable this instance',
-						'aether-site-exporter'
-					) }
-					checked={ instanceConfig.enabled !== false }
-					onChange={ ( enabled ) => onToggle( enabled ) }
-					__nextHasNoMarginBottom={ true }
-				/>
-			</td>
-
 			{ /* Instance Name */ }
 			<td style={ tableCellStyleWithBorder }>
 				{ isEditing ? (

@@ -304,7 +304,7 @@ When determining deployment URL for URL rewriting:
 ### Test Case 1: Single Provider
 
 **Setup:**
-- Enable `local-filesystem` provider
+- Configure `local-filesystem` provider instance
 - Set `public_url` to `https://static.example.com`
 
 **Expected:**
@@ -315,8 +315,8 @@ When determining deployment URL for URL rewriting:
 ### Test Case 2: Multiple Providers
 
 **Setup:**
-- Enable `cloudflare-r2` provider (worker_endpoint: `https://example.workers.dev`)
-- Enable `local-filesystem` provider (public_url: `https://static.example.com`)
+- Configure `cloudflare-r2` provider instance (worker_endpoint: `https://example.workers.dev`)
+- Configure `local-filesystem` provider instance (public_url: `https://static.example.com`)
 
 **Expected:**
 - R2 files at: `cloudflare-r2/static/...` with URLs → `https://example.workers.dev/...`

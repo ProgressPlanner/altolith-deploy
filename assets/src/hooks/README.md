@@ -134,7 +134,6 @@ const {
     loading,          // Loading state
     error,            // Error state
     saveConfig,       // Save configuration
-    testConnection,   // Test provider connection
     deploy,           // Deploy to provider
     getStatus,        // Get deployment status
 } = useProvider('local-filesystem');

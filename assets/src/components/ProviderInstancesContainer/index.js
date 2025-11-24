@@ -50,7 +50,6 @@ const tableHeaderCellStyleWithBorder = {
  * @param {Object}   props           Component props.
  * @param {Array}    props.instances Array of instance objects.
  * @param {Array}    props.providers Array of provider metadata.
- * @param {Function} props.onToggle  Callback to toggle enabled state.
  * @param {Function} props.onDelete  Callback to delete instance.
  * @param {Function} props.onRename  Callback to rename instance.
  * @param {Function} props.onSave    Callback to save config changes.
@@ -59,7 +58,6 @@ const tableHeaderCellStyleWithBorder = {
 export default function ProviderInstancesContainer( {
 	instances,
 	providers,
-	onToggle,
 	onDelete,
 	onRename,
 	onSave,
@@ -68,9 +66,6 @@ export default function ProviderInstancesContainer( {
 		<table className="aether-provider-instances-table" style={ tableStyle }>
 			<thead style={ tableHeaderStyle }>
 				<tr>
-					<th style={ tableHeaderCellStyleWithBorder }>
-						{ __( 'Enabled', 'aether-site-exporter' ) }
-					</th>
 					<th style={ tableHeaderCellStyleWithBorder }>
 						{ __( 'Instance Name', 'aether-site-exporter' ) }
 					</th>
@@ -114,9 +109,6 @@ export default function ProviderInstancesContainer( {
 									id: field.id || field.name,
 								} ) ),
 							} }
-							onToggle={ ( enabled ) =>
-								onToggle( instance.instanceId, enabled )
-							}
 							onDelete={ () => onDelete( instance.instanceId ) }
 							onRename={ ( instanceId, newName ) =>
 								onRename( instanceId, newName )

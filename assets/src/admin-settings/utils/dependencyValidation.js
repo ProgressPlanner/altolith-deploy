@@ -4,7 +4,6 @@
  * Provides functions to validate provider dependencies.
  * A dependency is satisfied when:
  * - Dependency provider exists in registry
- * - Dependency provider is enabled
  * - Dependency provider is configured
  *
  */
@@ -29,20 +28,10 @@ export function isDependencySatisfied(
 		return false;
 	}
 
-	// Check if dependency provider is enabled
-	const dependencyConfig = providerConfigs[ dependencyId ] || {};
-	const isEnabled = dependencyConfig.enabled !== false;
-
-	if ( ! isEnabled ) {
-		return false;
-	}
-
 	// Check if dependency provider is configured
+	const dependencyConfig = providerConfigs[ dependencyId ] || {};
 	const isConfigured =
-		dependencyConfig &&
-		Object.keys( dependencyConfig ).length > 0 &&
-		// Exclude enabled from configured check
-		Object.keys( dependencyConfig ).some( ( key ) => key !== 'enabled' );
+		dependencyConfig && Object.keys( dependencyConfig ).length > 0;
 
 	return isConfigured;
 }

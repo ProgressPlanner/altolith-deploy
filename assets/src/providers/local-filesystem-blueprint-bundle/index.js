@@ -6,7 +6,7 @@
  *
  */
 
-import { addFilter, addAction, doAction } from '@wordpress/hooks';
+import { addAction, doAction } from '@wordpress/hooks';
 import apiFetch from '@aether/utils/api';
 import { debug, debugWarn } from '@aether/utils/debug';
 import { LocalFilesystemBlueprintBundleProvider } from './LocalFilesystemBlueprintBundleProvider';
@@ -212,33 +212,6 @@ addAction(
 		// Start upload and add promise to context
 		const uploadPromise = handleUnifiedFileUpload( fileContext );
 		fileContext._uploadPromises.push( uploadPromise );
-	},
-	10
-);
-
-/**
- * Register test connection handler hook.
- *
- * Providers register test handlers via aether.provider.test filter.
- */
-addFilter(
-	'aether.provider.test',
-	'aether/local-filesystem-blueprint-bundle',
-	( handler, providerId ) => {
-		// Only handle requests for local-filesystem-blueprint-bundle providers
-		if (
-			! providerId ||
-			! providerId.startsWith( 'local-filesystem-blueprint-bundle' )
-		) {
-			return handler; // Return existing handler or null
-		}
-
-		// Return test handler function
-		return async () => {
-			return await LocalFilesystemBlueprintBundleProvider.testConnection(
-				providerId
-			);
-		};
 	},
 	10
 );
