@@ -66,15 +66,14 @@ export function getEnabledInstancesForDeploymentType(
 					return false;
 				}
 
-				// Get provider from registry and check if it supports the deployment type
-				const provider = ProviderRegistry.get( providerType );
-				if ( ! provider ) {
+				// Get provider class from registry and check if it supports the deployment type
+				const ProviderClass = ProviderRegistry.get( providerType );
+				if ( ! ProviderClass ) {
 					return false;
 				}
 
-				const supportedTypes =
-					provider.getSupportedDeploymentTypes?.() || [];
-				const supportsType = supportedTypes.includes( deploymentType );
+				const supportsType =
+					ProviderClass.DEPLOYMENT_TYPE === deploymentType;
 
 				return supportsType;
 			} )

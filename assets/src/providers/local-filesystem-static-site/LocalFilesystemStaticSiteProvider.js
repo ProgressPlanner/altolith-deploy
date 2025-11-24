@@ -7,8 +7,10 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { AbstractProvider } from '../base/AbstractProvider';
+import { applyFilters } from '@wordpress/hooks';
 import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
+import { validateAllFields } from '../utils/configValidation';
+import { sanitizeAllFields } from '../utils/configSanitization';
 
 /**
  * LocalFilesystemStaticSiteProvider class
@@ -16,7 +18,7 @@ import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
  * Handles local file storage for static sites only.
  * Files are stored in wp-content/aether-exports/.
  */
-export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
+export class LocalFilesystemStaticSiteProvider {
 	/**
 	 * Provider ID constant.
 	 *
@@ -25,147 +27,103 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 	static ID = 'local-filesystem-static-site';
 
 	/**
-	 * Get the unique provider identifier.
+	 * Provider name.
 	 *
-	 * @return {string} Provider ID
+	 * @type {string}
 	 */
-	getId() {
-		return this.registeredId || LocalFilesystemStaticSiteProvider.ID;
-	}
+	static NAME = __( 'Local Filesystem (Static Site)', 'aether' );
 
 	/**
-	 * Get the human-readable provider name.
+	 * Provider type.
 	 *
-	 * @return {string} Provider name
+	 * @type {string}
 	 */
-	getName() {
-		return __( 'Local Filesystem (Static Site)', 'aether' );
-	}
+	static TYPE = 'local-storage';
 
 	/**
-	 * Get the provider type.
+	 * Provider description.
 	 *
-	 * @return {string} Provider type
+	 * @type {string}
 	 */
-	getType() {
-		return 'local-storage';
-	}
+	static DESCRIPTION = __(
+		'Store static site files (HTML, CSS, JS) locally in the WordPress uploads directory. No cloud deployment required.',
+		'aether'
+	);
 
 	/**
-	 * Get the provider description.
+	 * Provider icon.
 	 *
-	 * @return {string} Provider description
+	 * @type {string}
 	 */
-	getDescription() {
-		return __(
-			'Store static site files (HTML, CSS, JS) locally in the WordPress uploads directory. No cloud deployment required.',
-			'aether'
-		);
-	}
+	static ICON = '💾';
 
 	/**
-	 * Get the provider icon.
+	 * Deployment type this provider supports.
 	 *
-	 * @return {string} Provider icon
+	 * @type {string}
 	 */
-	getIcon() {
-		return '💾';
-	}
+	static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.STATIC_SITE;
 
 	/**
-	 * Get deployment types this provider supports.
+	 * Configuration fields.
 	 *
-	 * LocalFilesystemStaticSite only supports static sites.
-	 *
-	 * @return {Array<string>} Array of DEPLOYMENT_TYPES constants
+	 * @type {Array<Object>}
 	 */
-	getSupportedDeploymentTypes() {
-		return [ DEPLOYMENT_TYPES.STATIC_SITE ];
-	}
-
-	/**
-	 * Get maximum simultaneous uploads for local filesystem.
-	 *
-	 * Local filesystem has no rate limits, so return Infinity for unlimited parallel uploads.
-	 *
-	 * @return {number} Maximum number of simultaneous uploads (Infinity = no limit)
-	 */
-	getMaxSimultaneousUploads() {
-		// Check instance config first (user can still override to limit parallelism)
-		if (
-			this.config &&
-			typeof this.config.maxSimultaneousUploads === 'number'
-		) {
-			return this.config.maxSimultaneousUploads;
-		}
-
-		// Local filesystem can handle unlimited parallel uploads
-		return Infinity;
-	}
-
-	/**
-	 * Get provider-specific configuration fields.
-	 *
-	 * LocalFilesystemStaticSite provider only needs static files path and public URL.
-	 *
-	 * @return {Array<Object>} Array of field definitions
-	 */
-	getProviderSpecificConfigFields() {
-		return [
-			{
-				id: 'public_url',
-				label: __( 'Public URL', 'aether-site-exporter' ),
-				type: 'text',
-				required: false,
-				secure: false,
-				placeholder: 'https://example.com',
-				help: __(
-					'URL where exported files will be publicly accessible. Used for URL replacements in exported HTML. Leave empty to use WordPress home URL.',
+	static CONFIG_FIELDS = [
+		{
+			id: 'public_url',
+			label: __( 'Public URL', 'aether-site-exporter' ),
+			type: 'text',
+			required: false,
+			secure: false,
+			placeholder: 'https://example.com',
+			help: __(
+				'URL where exported files will be publicly accessible. Used for URL replacements in exported HTML. Leave empty to use WordPress home URL.',
+				'aether'
+			),
+			validation: {
+				pattern: /^https?:\/\/.+/,
+				message: __(
+					'Public URL must be a valid HTTP or HTTPS URL',
 					'aether'
 				),
-				validation: {
-					pattern: /^https?:\/\/.+/,
-					message: __(
-						'Public URL must be a valid HTTP or HTTPS URL',
-						'aether'
-					),
-				},
 			},
-			{
-				id: 'static_files_path',
-				label: __( 'Static Files Directory', 'aether-site-exporter' ),
-				type: 'text',
-				required: true,
-				secure: false,
-				placeholder: 'static/',
-				help: __(
-					'Directory where static site files will be written (relative to WordPress root). Each export overwrites the previous one.',
+		},
+		{
+			id: 'static_files_path',
+			label: __( 'Static Files Directory', 'aether-site-exporter' ),
+			type: 'text',
+			required: true,
+			secure: false,
+			placeholder: 'static/',
+			help: __(
+				'Directory where static site files will be written (relative to WordPress root). Each export overwrites the previous one.',
+				'aether'
+			),
+			validation: {
+				pattern: /^[a-zA-Z0-9/_.-]+$/,
+				message: __(
+					'Static files path must contain only letters, numbers, slashes, hyphens, underscores, and dots. Cannot be empty.',
 					'aether'
 				),
-				validation: {
-					pattern: /^[a-zA-Z0-9/_.-]+$/,
-					message: __(
-						'Static files path must contain only letters, numbers, slashes, hyphens, underscores, and dots. Cannot be empty.',
-						'aether'
-					),
-				},
 			},
-		];
-	}
+		},
+	];
 
 	/**
 	 * Validate provider configuration.
 	 *
-	 * @param {Object} config Configuration object to validate.
-	 * @return {Promise<Object>} Validation result
+	 * @param {string} providerId Provider ID.
+	 * @param {Object} config     Configuration object to validate.
+	 * @return {Promise<Object>} Validation errors object (empty if valid)
 	 */
-	async validateConfig( config ) {
-		// Use base validation from AbstractProvider
-		const baseErrors = await super.validateConfig( config );
+	static async validateConfig( providerId, config ) {
+		const errors = await validateAllFields(
+			config,
+			LocalFilesystemStaticSiteProvider.CONFIG_FIELDS
+		);
 
 		// Additional validation for LocalFilesystemStaticSite
-		const errors = { ...baseErrors };
-
 		// Validate static_files_path if provided
 		if ( config.static_files_path ) {
 			// Ensure path doesn't try to escape WordPress root
@@ -180,17 +138,26 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 			}
 		}
 
-		return errors;
+		return applyFilters(
+			'aether.provider.config.validate',
+			errors,
+			config,
+			providerId
+		);
 	}
 
 	/**
 	 * Sanitize provider configuration.
 	 *
-	 * @param {Object} config Configuration object to sanitize.
+	 * @param {string} providerId Provider ID.
+	 * @param {Object} config     Configuration object to sanitize.
 	 * @return {Promise<Object>} Sanitized configuration
 	 */
-	async sanitizeConfig( config ) {
-		const sanitized = await super.sanitizeConfig( config );
+	static async sanitizeConfig( providerId, config ) {
+		const sanitized = sanitizeAllFields(
+			config,
+			LocalFilesystemStaticSiteProvider.CONFIG_FIELDS
+		);
 
 		// Sanitize static_files_path - default to 'static/' if empty
 		if ( sanitized.static_files_path ) {
@@ -202,7 +169,12 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 			sanitized.static_files_path = 'static/';
 		}
 
-		return sanitized;
+		return applyFilters(
+			'aether.provider.config.sanitize',
+			sanitized,
+			config,
+			providerId
+		);
 	}
 
 	/**
@@ -210,9 +182,12 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 	 *
 	 * For LocalFilesystem, this checks if the export directory is writable.
 	 *
+	 * @param {string} providerId Provider ID (unused for LocalFilesystem but required for consistency).
 	 * @return {Promise<Object>} Connection test result
 	 */
-	async testConnection() {
+	static async testConnection( providerId ) {
+		// eslint-disable-next-line no-unused-vars
+		const _ = providerId; // Keep for consistency with other providers
 		try {
 			// For LocalFilesystem, we don't need to test anything
 			// The server-side will handle directory creation and permissions
@@ -231,98 +206,6 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 					__( 'Connection test failed', 'aether-site-exporter' ),
 			};
 		}
-	}
-
-	/**
-	 * Deploy to provider.
-	 *
-	 * For LocalFilesystem, this is a no-op since files are already local.
-	 * The actual export happens server-side in PHP.
-	 *
-	 * @return {Promise<Object>} Deployment result
-	 */
-	async deploy() {
-		try {
-			// For LocalFilesystem, deployment is handled server-side
-			// This method is called during the export workflow,
-			// but the actual file operations happen in PHP
-
-			return {
-				success: true,
-				message: __(
-					'Static site saved locally. Files are available in the exports directory.',
-					'aether'
-				),
-				deploymentUrl: '', // No deployment URL for local storage
-			};
-		} catch ( error ) {
-			return {
-				success: false,
-				error:
-					error.message ||
-					__( 'Deployment failed', 'aether-site-exporter' ),
-			};
-		}
-	}
-
-	/**
-	 * Get deployment status.
-	 *
-	 * @return {Promise<Object>} Status result
-	 */
-	async getStatus() {
-		const configured = await this.isConfigured();
-
-		return {
-			success: true,
-			status: configured ? 'active' : 'inactive',
-			configured,
-			healthy: true, // LocalFilesystem is always healthy
-			message: configured
-				? __(
-						'Local filesystem static site storage is active',
-						'aether'
-				  )
-				: __(
-						'Local filesystem static site storage is available',
-						'aether'
-				  ),
-		};
-	}
-
-	/**
-	 * Get deployment URL for this provider.
-	 *
-	 * LocalFilesystem doesn't have a deployment URL since files are stored locally.
-	 *
-	 * @return {Promise<string>} Empty string
-	 */
-	async getDeploymentUrl() {
-		return '';
-	}
-
-	/**
-	 * Get the upload strategy for this provider.
-	 *
-	 * LocalFilesystem uses direct file operations (no upload needed).
-	 *
-	 * @return {string} Upload strategy
-	 */
-	getUploadStrategy() {
-		return 'direct';
-	}
-
-	/**
-	 * Check if provider is properly configured.
-	 *
-	 * LocalFilesystem is always configured since it doesn't require credentials.
-	 *
-	 * @return {Promise<boolean>} True (always configured)
-	 */
-	async isConfigured() {
-		// LocalFilesystem doesn't require configuration
-		// It's always available as a fallback option
-		return true;
 	}
 }
 

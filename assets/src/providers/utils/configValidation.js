@@ -118,19 +118,3 @@ export async function validateAllFields( config, fields ) {
 
 	return errors;
 }
-
-/**
- * Check if a configuration has all required fields filled.
- *
- * @param {Object}        config Configuration to check.
- * @param {Array<Object>} fields Array of field definitions.
- * @return {boolean} True if all required fields are present.
- */
-export function hasRequiredFields( config, fields ) {
-	for ( const field of fields ) {
-		if ( field.required && ! config[ field.id ] ) {
-			return false;
-		}
-	}
-	return true;
-}

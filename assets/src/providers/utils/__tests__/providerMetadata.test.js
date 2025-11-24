@@ -43,21 +43,22 @@ describe( 'providerMetadata', () => {
 		test( 'should get all providers from registry', () => {
 			const mockProviders = [
 				{
+					constructor: class {
+						static DEPLOYMENT_TYPE = 'static_site';
+					},
 					getId: () => 'provider-1',
 					getName: () => 'Provider 1',
 					getDescription: () => 'Description 1',
 					getType: () => 'type-1',
-					getSupportedDeploymentTypes: () => [ 'static_site' ],
 				},
 				{
+					constructor: class {
+						static DEPLOYMENT_TYPE = 'blueprint_bundle';
+					},
 					getId: () => 'provider-2',
 					getName: () => 'Provider 2',
 					getDescription: () => 'Description 2',
 					getType: () => 'type-2',
-					getSupportedDeploymentTypes: () => [
-						'static_site',
-						'blueprint_bundle',
-					],
 				},
 			];
 			mockGetAll.mockReturnValue( mockProviders );
@@ -106,11 +107,13 @@ describe( 'providerMetadata', () => {
 		test( 'should get providers for deployment type', () => {
 			const mockProviders = [
 				{
+					constructor: class {
+						static DEPLOYMENT_TYPE = 'static_site';
+					},
 					getId: () => 'provider-1',
 					getName: () => 'Provider 1',
 					getDescription: () => 'Description 1',
 					getType: () => 'type-1',
-					getSupportedDeploymentTypes: () => [ 'static_site' ],
 				},
 			];
 			mockGetByDeploymentType.mockReturnValue( mockProviders );
@@ -135,12 +138,15 @@ describe( 'providerMetadata', () => {
 
 	describe( 'getProviderById()', () => {
 		test( 'should get provider by ID', () => {
+			class MockProvider {
+				static DEPLOYMENT_TYPE = 'static_site';
+			}
 			const mockProvider = {
+				constructor: MockProvider,
 				getId: () => 'provider-1',
 				getName: () => 'Provider 1',
 				getDescription: () => 'Description 1',
 				getType: () => 'type-1',
-				getSupportedDeploymentTypes: () => [ 'static_site' ],
 			};
 			mockGet.mockReturnValue( mockProvider );
 

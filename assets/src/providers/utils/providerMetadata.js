@@ -14,12 +14,14 @@ import ProviderRegistry from '../registry/ProviderRegistry';
  */
 export function getProviderMetadata() {
 	const providers = ProviderRegistry.getAll();
-	return providers.map( ( provider ) => ( {
-		id: provider.getId(),
-		name: provider.getName(),
-		description: provider.getDescription?.() || '',
-		type: provider.getType?.() || 'generic',
-	} ) );
+	return providers.map( ( ProviderClass ) => {
+		return {
+			id: ProviderClass.ID,
+			name: ProviderClass.NAME || '',
+			description: ProviderClass.DESCRIPTION || '',
+			type: ProviderClass.TYPE || 'generic',
+		};
+	} );
 }
 
 /**
@@ -30,12 +32,14 @@ export function getProviderMetadata() {
  */
 export function getProvidersByDeploymentType( deploymentType ) {
 	const providers = ProviderRegistry.getByDeploymentType( deploymentType );
-	return providers.map( ( provider ) => ( {
-		id: provider.getId(),
-		name: provider.getName(),
-		description: provider.getDescription?.() || '',
-		type: provider.getType?.() || 'generic',
-	} ) );
+	return providers.map( ( ProviderClass ) => {
+		return {
+			id: ProviderClass.ID,
+			name: ProviderClass.NAME || '',
+			description: ProviderClass.DESCRIPTION || '',
+			type: ProviderClass.TYPE || 'generic',
+		};
+	} );
 }
 
 /**
@@ -45,16 +49,16 @@ export function getProvidersByDeploymentType( deploymentType ) {
  * @return {Object|null} Provider metadata or null if not found
  */
 export function getProviderById( providerId ) {
-	const provider = ProviderRegistry.get( providerId );
-	if ( ! provider ) {
+	const ProviderClass = ProviderRegistry.get( providerId );
+	if ( ! ProviderClass ) {
 		return null;
 	}
 
 	return {
-		id: provider.getId(),
-		name: provider.getName(),
-		description: provider.getDescription?.() || '',
-		type: provider.getType?.() || 'generic',
+		id: ProviderClass.ID,
+		name: ProviderClass.NAME || '',
+		description: ProviderClass.DESCRIPTION || '',
+		type: ProviderClass.TYPE || 'generic',
 	};
 }
 

@@ -88,25 +88,21 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should load providers immediately when found', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'local-filesystem',
-					getName: () => 'Local Filesystem',
-					getDescription: () => 'Local storage',
-					getType: () => 'storage',
-					getSupportedDeploymentTypes: () => [
-						'static',
-						'blueprint',
-					],
-				},
-				{
-					getId: () => 's3',
-					getName: () => 'Amazon S3',
-					getDescription: () => 'S3 storage',
-					getType: () => 'cloud',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
-			];
+			class MockProvider1 {
+				static ID = 'local-filesystem';
+				static NAME = 'Local Filesystem';
+				static DESCRIPTION = 'Local storage';
+				static TYPE = 'storage';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			class MockProvider2 {
+				static ID = 's3';
+				static NAME = 'Amazon S3';
+				static DESCRIPTION = 'S3 storage';
+				static TYPE = 'cloud';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			const mockProviders = [ MockProvider1, MockProvider2 ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -130,15 +126,14 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should retry when providers not immediately available', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'local-filesystem',
-					getName: () => 'Local Filesystem',
-					getDescription: () => 'Local storage',
-					getType: () => 'storage',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
-			];
+			class MockProvider {
+				static ID = 'local-filesystem';
+				static NAME = 'Local Filesystem';
+				static DESCRIPTION = 'Local storage';
+				static TYPE = 'storage';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			const mockProviders = [ MockProvider ];
 
 			// First call: no providers, second call: providers found
 			ProviderRegistry.getAll
@@ -235,18 +230,14 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should transform provider metadata correctly', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'test-provider',
-					getName: () => 'Test Provider',
-					getDescription: () => 'Test description',
-					getType: () => 'custom',
-					getSupportedDeploymentTypes: () => [
-						'static',
-						'blueprint',
-					],
-				},
-			];
+			class MockProvider {
+				static ID = 'test-provider';
+				static NAME = 'Test Provider';
+				static DESCRIPTION = 'Test description';
+				static TYPE = 'custom';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			const mockProviders = [ MockProvider ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -267,19 +258,18 @@ describe( 'ProviderContext', () => {
 				name: 'Test Provider',
 				description: 'Test description',
 				type: 'custom',
-				supportedDeploymentTypes: [ 'static', 'blueprint' ],
+				deploymentType: 'static',
 				configured: false,
 			} );
 		} );
 
-		it( 'should handle providers with missing optional methods', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'minimal-provider',
-					getName: () => 'Minimal Provider',
-					// No getDescription, getType, or getSupportedDeploymentTypes
-				},
-			];
+		it( 'should handle providers with missing optional properties', async () => {
+			class MockProvider {
+				static ID = 'minimal-provider';
+				static NAME = 'Minimal Provider';
+				// No DESCRIPTION, TYPE, or DEPLOYMENT_TYPE
+			}
+			const mockProviders = [ MockProvider ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -297,17 +287,16 @@ describe( 'ProviderContext', () => {
 			const provider = result.current.providers[ 0 ];
 			expect( provider.description ).toBe( '' );
 			expect( provider.type ).toBe( 'generic' );
-			expect( provider.supportedDeploymentTypes ).toEqual( [] );
+			expect( provider.deploymentType ).toBeNull();
 		} );
 
-		it( 'should handle empty supportedDeploymentTypes', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-no-types',
-					getName: () => 'Provider',
-					getSupportedDeploymentTypes: () => [],
-				},
-			];
+		it( 'should handle provider with null deploymentType', async () => {
+			class MockProvider {
+				static ID = 'provider-no-types';
+				static NAME = 'Provider';
+				static DEPLOYMENT_TYPE = null;
+			}
+			const mockProviders = [ MockProvider ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -322,24 +311,21 @@ describe( 'ProviderContext', () => {
 				expect( result.current.loading ).toBe( false );
 			} );
 
-			expect(
-				result.current.providers[ 0 ].supportedDeploymentTypes
-			).toEqual( [] );
+			expect( result.current.providers[ 0 ].deploymentType ).toBeNull();
 		} );
 	} );
 
 	describe( 'getProvider', () => {
 		it( 'should get provider by ID', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-				},
-				{
-					getId: () => 'provider-2',
-					getName: () => 'Provider 2',
-				},
-			];
+			class MockProvider1 {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+			}
+			class MockProvider2 {
+				static ID = 'provider-2';
+				static NAME = 'Provider 2';
+			}
+			const mockProviders = [ MockProvider1, MockProvider2 ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -361,12 +347,11 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should return null for non-existent provider', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-				},
-			];
+			class MockProvider {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+			}
+			const mockProviders = [ MockProvider ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -387,13 +372,12 @@ describe( 'ProviderContext', () => {
 
 		it( 'should return null for null provider ID', async () => {
 			// Mock providers being available (testing null ID, not empty provider list)
-			const mockProviders = [
-				{
-					getId: () => 'test-provider',
-					getName: () => 'Test Provider',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
-			];
+			class MockProvider {
+				static ID = 'test-provider';
+				static NAME = 'Test Provider';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			const mockProviders = [ MockProvider ];
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
 			const { result } = renderHook(
@@ -413,13 +397,12 @@ describe( 'ProviderContext', () => {
 
 		it( 'should return null for undefined provider ID', async () => {
 			// Mock providers being available (testing undefined ID, not empty provider list)
-			const mockProviders = [
-				{
-					getId: () => 'test-provider',
-					getName: () => 'Test Provider',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
-			];
+			class MockProvider {
+				static ID = 'test-provider';
+				static NAME = 'Test Provider';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			const mockProviders = [ MockProvider ];
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
 			const { result } = renderHook(
@@ -439,13 +422,12 @@ describe( 'ProviderContext', () => {
 
 		it( 'should return null for empty string provider ID', async () => {
 			// Mock providers being available (testing empty string ID, not empty provider list)
-			const mockProviders = [
-				{
-					getId: () => 'test-provider',
-					getName: () => 'Test Provider',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
-			];
+			class MockProvider {
+				static ID = 'test-provider';
+				static NAME = 'Test Provider';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			const mockProviders = [ MockProvider ];
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
 			const { result } = renderHook(
@@ -466,25 +448,25 @@ describe( 'ProviderContext', () => {
 
 	describe( 'getProvidersByCapability', () => {
 		it( 'should filter providers by deployment type', async () => {
+			class MockProvider1 {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			class MockProvider2 {
+				static ID = 'provider-2';
+				static NAME = 'Provider 2';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			class MockProvider3 {
+				static ID = 'provider-3';
+				static NAME = 'Provider 3';
+				static DEPLOYMENT_TYPE = 'blueprint';
+			}
 			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					getSupportedDeploymentTypes: () => [
-						'static',
-						'blueprint',
-					],
-				},
-				{
-					getId: () => 'provider-2',
-					getName: () => 'Provider 2',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
-				{
-					getId: () => 'provider-3',
-					getName: () => 'Provider 3',
-					getSupportedDeploymentTypes: () => [ 'blueprint' ],
-				},
+				MockProvider1,
+				MockProvider2,
+				MockProvider3,
 			];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
@@ -518,13 +500,12 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should return empty array for capability with no providers', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
-			];
+			class MockProvider {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			const mockProviders = [ MockProvider ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -545,14 +526,13 @@ describe( 'ProviderContext', () => {
 			expect( providers ).toEqual( [] );
 		} );
 
-		it( 'should handle providers without supportedDeploymentTypes', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					// No getSupportedDeploymentTypes
-				},
-			];
+		it( 'should handle providers without DEPLOYMENT_TYPE', async () => {
+			class MockProvider {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+				// No DEPLOYMENT_TYPE
+			}
+			const mockProviders = [ MockProvider ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -575,22 +555,25 @@ describe( 'ProviderContext', () => {
 
 	describe( 'getProvidersByType', () => {
 		it( 'should filter providers by type', async () => {
+			class MockProvider1 {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+				static TYPE = 'storage';
+			}
+			class MockProvider2 {
+				static ID = 'provider-2';
+				static NAME = 'Provider 2';
+				static TYPE = 'cloud';
+			}
+			class MockProvider3 {
+				static ID = 'provider-3';
+				static NAME = 'Provider 3';
+				static TYPE = 'storage';
+			}
 			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					getType: () => 'storage',
-				},
-				{
-					getId: () => 'provider-2',
-					getName: () => 'Provider 2',
-					getType: () => 'cloud',
-				},
-				{
-					getId: () => 'provider-3',
-					getName: () => 'Provider 3',
-					getType: () => 'storage',
-				},
+				MockProvider1,
+				MockProvider2,
+				MockProvider3,
 			];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
@@ -616,13 +599,12 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should return empty array for type with no providers', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					getType: () => 'storage',
-				},
-			];
+			class MockProvider {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+				static TYPE = 'storage';
+			}
+			const mockProviders = [ MockProvider ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -645,22 +627,25 @@ describe( 'ProviderContext', () => {
 
 	describe( 'getProvidersGroupedByType', () => {
 		it( 'should group providers by type', async () => {
+			class MockProvider1 {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+				static TYPE = 'storage';
+			}
+			class MockProvider2 {
+				static ID = 'provider-2';
+				static NAME = 'Provider 2';
+				static TYPE = 'cloud';
+			}
+			class MockProvider3 {
+				static ID = 'provider-3';
+				static NAME = 'Provider 3';
+				static TYPE = 'storage';
+			}
 			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					getType: () => 'storage',
-				},
-				{
-					getId: () => 'provider-2',
-					getName: () => 'Provider 2',
-					getType: () => 'cloud',
-				},
-				{
-					getId: () => 'provider-3',
-					getName: () => 'Provider 3',
-					getType: () => 'storage',
-				},
+				MockProvider1,
+				MockProvider2,
+				MockProvider3,
 			];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
@@ -684,14 +669,12 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should use "other" for providers without type', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					// No getType - defaults to 'generic' in transformation
-					// but the grouping should handle missing type field
-				},
-			];
+			class MockProvider {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+				// No TYPE - defaults to 'generic' in transformation
+			}
+			const mockProviders = [ MockProvider ];
 
 			// Manually set type to undefined to test the 'other' fallback
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
@@ -738,21 +721,17 @@ describe( 'ProviderContext', () => {
 
 	describe( 'getProvidersGroupedByCapability', () => {
 		it( 'should group providers by capability', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					getSupportedDeploymentTypes: () => [
-						'static',
-						'blueprint',
-					],
-				},
-				{
-					getId: () => 'provider-2',
-					getName: () => 'Provider 2',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
-			];
+			class MockProvider1 {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			class MockProvider2 {
+				static ID = 'provider-2';
+				static NAME = 'Provider 2';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			const mockProviders = [ MockProvider1, MockProvider2 ];
 
 			// Mock providers need capabilities field for this method
 			// But the actual code uses provider.capabilities which doesn't exist in the transformation
@@ -802,12 +781,11 @@ describe( 'ProviderContext', () => {
 
 	describe( 'providerExists', () => {
 		it( 'should return true for existing provider', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-				},
-			];
+			class MockProvider {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+			}
+			const mockProviders = [ MockProvider ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -828,12 +806,11 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should return false for non-existent provider', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-				},
-			];
+			class MockProvider {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+			}
+			const mockProviders = [ MockProvider ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -856,19 +833,22 @@ describe( 'ProviderContext', () => {
 
 	describe( 'providerCount', () => {
 		it( 'should return correct provider count', async () => {
+			class MockProvider1 {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+			}
+			class MockProvider2 {
+				static ID = 'provider-2';
+				static NAME = 'Provider 2';
+			}
+			class MockProvider3 {
+				static ID = 'provider-3';
+				static NAME = 'Provider 3';
+			}
 			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-				},
-				{
-					getId: () => 'provider-2',
-					getName: () => 'Provider 2',
-				},
-				{
-					getId: () => 'provider-3',
-					getName: () => 'Provider 3',
-				},
+				MockProvider1,
+				MockProvider2,
+				MockProvider3,
 			];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
@@ -911,23 +891,16 @@ describe( 'ProviderContext', () => {
 
 	describe( 'refresh', () => {
 		it( 'should reload providers when called', async () => {
-			const mockProviders1 = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-				},
-			];
-
-			const mockProviders2 = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-				},
-				{
-					getId: () => 'provider-2',
-					getName: () => 'Provider 2',
-				},
-			];
+			class MockProvider1 {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+			}
+			class MockProvider2 {
+				static ID = 'provider-2';
+				static NAME = 'Provider 2';
+			}
+			const mockProviders1 = [ MockProvider1 ];
+			const mockProviders2 = [ MockProvider1, MockProvider2 ];
 
 			ProviderRegistry.getAll
 				.mockReturnValueOnce( mockProviders1 )
@@ -964,9 +937,9 @@ describe( 'ProviderContext', () => {
 					throw new Error( 'First error' );
 				} )
 				.mockReturnValueOnce( [
-					{
-						getId: () => 'provider-1',
-						getName: () => 'Provider 1',
+					class {
+						static ID = 'provider-1';
+						static NAME = 'Provider 1';
 					},
 				] );
 
@@ -1009,12 +982,11 @@ describe( 'ProviderContext', () => {
 		} );
 
 		it( 'should set loading false after success', async () => {
-			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-				},
-			];
+			class MockProvider {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+			}
+			const mockProviders = [ MockProvider ];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );
 
@@ -1069,22 +1041,25 @@ describe( 'ProviderContext', () => {
 
 	describe( 'multiple providers with same capability', () => {
 		it( 'should handle multiple providers supporting the same deployment type', async () => {
+			class MockProvider1 {
+				static ID = 'provider-1';
+				static NAME = 'Provider 1';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			class MockProvider2 {
+				static ID = 'provider-2';
+				static NAME = 'Provider 2';
+				static DEPLOYMENT_TYPE = 'static';
+			}
+			class MockProvider3 {
+				static ID = 'provider-3';
+				static NAME = 'Provider 3';
+				static DEPLOYMENT_TYPE = 'static';
+			}
 			const mockProviders = [
-				{
-					getId: () => 'provider-1',
-					getName: () => 'Provider 1',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
-				{
-					getId: () => 'provider-2',
-					getName: () => 'Provider 2',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
-				{
-					getId: () => 'provider-3',
-					getName: () => 'Provider 3',
-					getSupportedDeploymentTypes: () => [ 'static' ],
-				},
+				MockProvider1,
+				MockProvider2,
+				MockProvider3,
 			];
 
 			ProviderRegistry.getAll.mockReturnValue( mockProviders );

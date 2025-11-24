@@ -11,74 +11,74 @@ import { addAction, doAction } from '@wordpress/hooks';
 /**
  * Internal registry storage.
  *
- * @type {Map<string, Object>}
+ * @type {Map<string, Function>}
  */
 const providers = new Map();
 
 /**
  * Provider Registry
  *
- * Singleton registry for managing all JavaScript provider instances.
+ * Singleton registry for managing all JavaScript provider classes.
  */
 class ProviderRegistry {
 	/**
-	 * Register a provider instance.
+	 * Register a provider class.
 	 *
-	 * @param {string} providerId Provider ID
-	 * @param {Object} provider   Provider instance (must have getId, getName, etc.)
+	 * @param {string}   providerId    Provider ID
+	 * @param {Function} ProviderClass Provider class (must have static ID, NAME, etc.)
 	 * @return {void}
 	 */
-	register( providerId, provider ) {
+	register( providerId, ProviderClass ) {
 		if ( ! providerId || typeof providerId !== 'string' ) {
 			throw new Error(
 				'ProviderRegistry.register() requires a valid provider ID string'
 			);
 		}
 
-		if ( ! provider || typeof provider !== 'object' ) {
+		if ( ! ProviderClass || typeof ProviderClass !== 'function' ) {
 			throw new Error(
-				'ProviderRegistry.register() requires a provider instance'
+				'ProviderRegistry.register() requires a provider class'
 			);
 		}
 
-		// Validate provider has required methods
-		if ( typeof provider.getId !== 'function' ) {
+		// Validate provider has required static properties
+		if ( ! ProviderClass.ID ) {
 			throw new Error(
-				`Provider ${ providerId } must implement getId() method`
+				`Provider ${ providerId } must have static ID property`
 			);
 		}
 
-		if ( typeof provider.getName !== 'function' ) {
+		if ( ! ProviderClass.NAME ) {
 			throw new Error(
-				`Provider ${ providerId } must implement getName() method`
+				`Provider ${ providerId } must have static NAME property`
 			);
 		}
 
-		providers.set( providerId, provider );
+		providers.set( providerId, ProviderClass );
 
 		/**
 		 * Action fired after a provider is registered.
 		 *
-		 * @param {string} providerId Provider ID
-		 * @param {Object} provider   Provider instance
+		 * @param {string}   providerId    Provider ID
+		 * @param {Function} ProviderClass Provider class
 		 */
-		doAction( 'aether.providers.registered', providerId, provider );
+		doAction( 'aether.providers.registered', providerId, ProviderClass );
 	}
 
 	/**
-	 * Get a provider by ID.
+	 * Get a provider class by ID.
 	 *
 	 * @param {string} providerId Provider ID
-	 * @return {Object|null} Provider instance or null if not found
+	 * @return {Function|null} Provider class or null if not found
 	 */
 	get( providerId ) {
 		return providers.get( providerId ) || null;
 	}
 
 	/**
-	 * Get all registered providers.
+	 * Get all registered provider classes.
 	 *
-	 * @return {Array<Object>} Array of provider instances
+	 * @return {Array<Function>} Array of provider classes
 	 */
 	getAll() {
 		return Array.from( providers.values() );
@@ -97,13 +97,11 @@ class ProviderRegistry {
 	 * Get providers that support a specific deployment type.
 	 *
 	 * @param {string} deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
-	 * @return {Array<Object>} Array of providers that support the deployment type
+	 * @return {Array<Function>} Array of provider classes that support the deployment type
 	 */
 	getByDeploymentType( deploymentType ) {
-		return this.getAll().filter( ( provider ) => {
-			const supportedTypes =
-				provider.getSupportedDeploymentTypes?.() || [];
-			return supportedTypes.includes( deploymentType );
+		return this.getAll().filter( ( ProviderClass ) => {
+			return ProviderClass.DEPLOYMENT_TYPE === deploymentType;
 		} );
 	}
 
@@ -113,7 +111,7 @@ class ProviderRegistry {
 	 * Returns the first provider that supports static_site deployment,
 	 * or the first registered provider if none found.
 	 *
-	 * @return {Object|null} Default provider or null if none registered
+	 * @return {Function|null} Default provider class or null if none registered
 	 */
 	getDefault() {
 		const staticSiteProviders = this.getByDeploymentType( 'static_site' );
@@ -131,7 +129,7 @@ class ProviderRegistry {
 	 * Returns the first provider that supports the deployment type.
 	 *
 	 * @param {string} deploymentType Deployment type
-	 * @return {Object|null} Provider instance or null if not found
+	 * @return {Function|null} Provider class or null if not found
 	 */
 	getForDeploymentType( deploymentType ) {
 		const matchingProviders = this.getByDeploymentType( deploymentType );
@@ -185,10 +183,10 @@ class ProviderRegistry {
 	/**
 	 * Get provider class for an instance ID.
 	 *
-	 * Extracts the provider type from the instance ID and returns the corresponding provider.
+	 * Extracts the provider type from the instance ID and returns the corresponding provider class.
 	 *
 	 * @param {string} instanceId Instance ID (format: {provider_type}:{uuid})
-	 * @return {Object|null} Provider instance or null if not found
+	 * @return {Function|null} Provider class or null if not found
 	 */
 	getProviderForInstance( instanceId ) {
 		const parsed = this.parseInstanceId( instanceId );
@@ -241,29 +239,25 @@ const registry = new ProviderRegistry();
 /**
  * Hook into aether.providers.register to auto-register providers.
  *
- * When providers call doAction('aether.providers.register', provider),
+ * When providers call doAction('aether.providers.register', ProviderClass),
  * this will automatically register them.
  */
 addAction(
 	'aether.providers.register',
 	'aether/provider-registry',
-	( provider ) => {
-		if ( ! provider || typeof provider !== 'object' ) {
+	( ProviderClass ) => {
+		if ( ! ProviderClass || typeof ProviderClass !== 'function' ) {
 			return;
 		}
 
-		// Get provider ID
-		let providerId;
-		if ( typeof provider.getId === 'function' ) {
-			providerId = provider.getId();
-		} else if ( provider.id ) {
-			providerId = provider.id;
-		} else {
-			return; // Invalid provider
+		// Get provider ID from static property
+		const providerId = ProviderClass.ID;
+		if ( ! providerId ) {
+			return; // Invalid provider - must have static ID
 		}
 
-		// Register the provider
-		registry.register( providerId, provider );
+		// Register the provider class
+		registry.register( providerId, ProviderClass );
 	}
 );
 
@@ -283,10 +277,10 @@ if ( typeof window !== 'undefined' ) {
 		const globalRegistry = window.aether.ProviderRegistry;
 		// Copy any providers from this instance to the global one
 		const localProviders = Array.from( providers.values() );
-		localProviders.forEach( ( provider ) => {
-			const providerId = provider.getId();
+		localProviders.forEach( ( ProviderClass ) => {
+			const providerId = ProviderClass.ID;
 			if ( ! globalRegistry.get( providerId ) ) {
-				globalRegistry.register( providerId, provider );
+				globalRegistry.register( providerId, ProviderClass );
 			}
 		} );
 		// Use the global registry instead

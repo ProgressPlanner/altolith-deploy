@@ -319,7 +319,7 @@ Key principles:
 
 4. **Provider Integration**
    - Providers dynamically loaded via `window.aether.providerScriptsBaseUrl`
-   - `IProvider` interface defines provider contract
+   - Providers implement standard methods (getId, getName, deploy, etc.)
    - Config fields built via `ConfigFieldBuilder`
    - Each provider is isolated in its own file
 
@@ -439,8 +439,8 @@ Key principles:
 ```javascript
 // assets/src/providers/my-provider/__tests__/index.test.js
 describe('MyProvider', () => {
-    it('should implement IProvider interface', () => {
-        // Test all required methods exist
+    it('should implement required provider methods', () => {
+        // Test all required methods exist (getId, getName, deploy, etc.)
     });
 });
 ```

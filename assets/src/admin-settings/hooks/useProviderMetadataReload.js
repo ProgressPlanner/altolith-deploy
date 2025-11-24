@@ -50,27 +50,28 @@ export function useProviderMetadataReload(
 			try {
 				// Get providers from JavaScript registry
 				const allProviders = ProviderRegistry.getAll();
-				const providerMetadata = allProviders.map( ( provider ) => {
-					const configFields =
-						provider.getProviderSpecificConfigFields?.() || [];
-					return {
-						id: provider.getId(),
-						metadata: {
-							name: provider.getName(),
-							description: provider.getDescription?.() || '',
-							supportedDeploymentTypes:
-								provider.getSupportedDeploymentTypes?.() || [],
-							type: provider.getType?.() || 'generic',
-							dependencies: provider.getDependencies?.() || [],
-							icon: provider.getIcon?.() || '',
-						},
-						settingsFields: configFields.map( ( field ) => ( {
-							...field,
-							id: field.id || field.name,
-							name: field.name || field.id,
-						} ) ),
-					};
-				} );
+				const providerMetadata = allProviders.map(
+					( ProviderClass ) => {
+						const configFields = ProviderClass.CONFIG_FIELDS || [];
+						return {
+							id: ProviderClass.ID,
+							metadata: {
+								name: ProviderClass.NAME || '',
+								description: ProviderClass.DESCRIPTION || '',
+								deploymentType:
+									ProviderClass.DEPLOYMENT_TYPE || null,
+								type: ProviderClass.TYPE || 'generic',
+								dependencies: ProviderClass.DEPENDENCIES || [],
+								icon: ProviderClass.ICON || '',
+							},
+							settingsFields: configFields.map( ( field ) => ( {
+								...field,
+								id: field.id || field.name,
+								name: field.name || field.id,
+							} ) ),
+						};
+					}
+				);
 
 				setProviders( providerMetadata );
 

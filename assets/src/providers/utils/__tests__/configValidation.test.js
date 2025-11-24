@@ -6,11 +6,7 @@
  *
  */
 
-import {
-	validateFieldValue,
-	validateAllFields,
-	hasRequiredFields,
-} from '../configValidation';
+import { validateFieldValue, validateAllFields } from '../configValidation';
 
 // Mock WordPress i18n
 jest.mock( '@wordpress/i18n', () => ( {
@@ -379,132 +375,6 @@ describe( 'configValidation', () => {
 			const errors = await validateAllFields( config, fields );
 
 			expect( errors ).toEqual( {} );
-		} );
-	} );
-
-	// ========================================================================
-	// hasRequiredFields Tests (HIGH)
-	// ========================================================================
-
-	describe( 'hasRequiredFields', () => {
-		it( 'should return true when all required fields are present', () => {
-			const config = {
-				api_key: 'test-key',
-				email: 'test@example.com',
-			};
-			const fields = [
-				{ id: 'api_key', label: 'API Key', required: true },
-				{ id: 'email', label: 'Email', required: true },
-			];
-
-			const result = hasRequiredFields( config, fields );
-
-			expect( result ).toBe( true );
-		} );
-
-		it( 'should return false when required field is missing', () => {
-			const config = {
-				email: 'test@example.com',
-			};
-			const fields = [
-				{ id: 'api_key', label: 'API Key', required: true },
-				{ id: 'email', label: 'Email', required: true },
-			];
-
-			const result = hasRequiredFields( config, fields );
-
-			expect( result ).toBe( false );
-		} );
-
-		it( 'should return false when required field is empty string', () => {
-			const config = {
-				api_key: '',
-				email: 'test@example.com',
-			};
-			const fields = [
-				{ id: 'api_key', label: 'API Key', required: true },
-				{ id: 'email', label: 'Email', required: true },
-			];
-
-			const result = hasRequiredFields( config, fields );
-
-			expect( result ).toBe( false );
-		} );
-
-		it( 'should return false when required field is null', () => {
-			const config = {
-				api_key: null,
-				email: 'test@example.com',
-			};
-			const fields = [
-				{ id: 'api_key', label: 'API Key', required: true },
-				{ id: 'email', label: 'Email', required: true },
-			];
-
-			const result = hasRequiredFields( config, fields );
-
-			expect( result ).toBe( false );
-		} );
-
-		it( 'should return true when only optional fields are missing', () => {
-			const config = {
-				api_key: 'test-key',
-			};
-			const fields = [
-				{ id: 'api_key', label: 'API Key', required: true },
-				{ id: 'email', label: 'Email', required: false },
-			];
-
-			const result = hasRequiredFields( config, fields );
-
-			expect( result ).toBe( true );
-		} );
-
-		it( 'should return true when no fields are required', () => {
-			const config = {};
-			const fields = [
-				{ id: 'api_key', label: 'API Key', required: false },
-				{ id: 'email', label: 'Email', required: false },
-			];
-
-			const result = hasRequiredFields( config, fields );
-
-			expect( result ).toBe( true );
-		} );
-
-		it( 'should return true for empty fields array', () => {
-			const config = {};
-			const fields = [];
-
-			const result = hasRequiredFields( config, fields );
-
-			expect( result ).toBe( true );
-		} );
-
-		it( 'should treat 0 as missing for required field', () => {
-			const config = {
-				count: 0,
-			};
-			const fields = [ { id: 'count', label: 'Count', required: true } ];
-
-			const result = hasRequiredFields( config, fields );
-
-			// Implementation uses !config[field.id] which treats 0 as falsy
-			expect( result ).toBe( false );
-		} );
-
-		it( 'should treat false as missing for required field', () => {
-			const config = {
-				enabled: false,
-			};
-			const fields = [
-				{ id: 'enabled', label: 'Enabled', required: true },
-			];
-
-			const result = hasRequiredFields( config, fields );
-
-			// Implementation uses !config[field.id] which treats false as falsy
-			expect( result ).toBe( false );
 		} );
 	} );
 } );

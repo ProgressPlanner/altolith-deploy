@@ -157,15 +157,13 @@ export function ProviderProvider( { children } ) {
 				'providers'
 			);
 			// Transform to match expected format
-			const providerMetadata = allProviders.map( ( provider ) => {
-				const supportedTypes =
-					provider.getSupportedDeploymentTypes?.() || [];
+			const providerMetadata = allProviders.map( ( ProviderClass ) => {
 				return {
-					id: provider.getId(),
-					name: provider.getName(),
-					description: provider.getDescription?.() || '',
-					type: provider.getType?.() || 'generic',
-					supportedDeploymentTypes: supportedTypes,
+					id: ProviderClass.ID,
+					name: ProviderClass.NAME,
+					description: ProviderClass.DESCRIPTION || '',
+					type: ProviderClass.TYPE || 'generic',
+					deploymentType: ProviderClass.DEPLOYMENT_TYPE || null,
 					configured: false, // Will be determined from config
 				};
 			} );
@@ -212,9 +210,7 @@ export function ProviderProvider( { children } ) {
 	const getProvidersByCapability = useCallback(
 		( capability ) => {
 			// Filter providers by deployment type (capability)
-			return providers.filter( ( p ) =>
-				p.supportedDeploymentTypes?.includes( capability )
-			);
+			return providers.filter( ( p ) => p.deploymentType === capability );
 		},
 		[ providers ]
 	);

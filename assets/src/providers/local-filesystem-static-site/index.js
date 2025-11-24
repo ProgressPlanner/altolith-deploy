@@ -12,14 +12,14 @@ import { debug, debugWarn } from '@aether/utils/debug';
 import { LocalFilesystemStaticSiteProvider } from './LocalFilesystemStaticSiteProvider';
 import ProviderRegistry from '../registry/ProviderRegistry';
 
-// Create provider instance for hook registration
-const provider = new LocalFilesystemStaticSiteProvider();
-
-// Register provider in JavaScript registry
-ProviderRegistry.register( provider.getId(), provider );
+// Register provider class in JavaScript registry
+ProviderRegistry.register(
+	LocalFilesystemStaticSiteProvider.ID,
+	LocalFilesystemStaticSiteProvider
+);
 
 // Also trigger the hook for any listeners
-doAction( 'aether.providers.register', provider );
+doAction( 'aether.providers.register', LocalFilesystemStaticSiteProvider );
 
 // Track upload results per provider instance
 const uploadResults = {};
@@ -263,7 +263,7 @@ addAction(
 addFilter(
 	'aether.provider.test',
 	'aether/local-filesystem-static-site',
-	( handler, providerId, config ) => {
+	( handler, providerId ) => {
 		// Only handle requests for local-filesystem-static-site providers
 		if (
 			! providerId ||
@@ -273,29 +273,11 @@ addFilter(
 		}
 
 		// Return test handler function
-		return async ( testConfig ) => {
-			return await provider.testConnection( testConfig || config );
+		return async () => {
+			return await LocalFilesystemStaticSiteProvider.testConnection(
+				providerId
+			);
 		};
-	},
-	10
-);
-
-/**
- * Register upload strategy filter.
- *
- * Providers can override upload strategy via aether.provider.upload_strategy filter.
- */
-addFilter(
-	'aether.provider.upload_strategy',
-	'aether/local-filesystem-static-site',
-	( strategy, providerId ) => {
-		if (
-			providerId &&
-			providerId.startsWith( 'local-filesystem-static-site' )
-		) {
-			return 'direct';
-		}
-		return strategy;
 	},
 	10
 );

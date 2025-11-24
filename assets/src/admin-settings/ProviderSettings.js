@@ -135,14 +135,20 @@ export default function ProviderSettings( {
 				allProviders.length,
 				'providers'
 			);
-			const providerMetadata = allProviders.map( ( provider ) => ( {
-				id: provider.getId(),
-				name: provider.getName(),
-				description: provider.getDescription?.() || '',
-				type: provider.getType?.() || 'generic',
-				settings_fields:
-					provider.getProviderSpecificConfigFields?.() || [],
-			} ) );
+			const providerMetadata = allProviders.map( ( provider ) => {
+				const ProviderClass = provider.constructor;
+				return {
+					id: ProviderClass.ID || provider.getId(),
+					name: ProviderClass.NAME || provider.getName?.() || '',
+					description:
+						ProviderClass.DESCRIPTION ||
+						provider.getDescription?.() ||
+						'',
+					type:
+						ProviderClass.TYPE || provider.getType?.() || 'generic',
+					settings_fields: ProviderClass.CONFIG_FIELDS || [],
+				};
+			} );
 
 			// eslint-disable-next-line no-console
 			console.log(
@@ -178,24 +184,23 @@ export default function ProviderSettings( {
 
 	// Group providers by deployment type
 	const providersByDeploymentType = useMemo( () => {
-		const allProviderInstances = ProviderRegistry.getAll();
+		const allProviderClasses = ProviderRegistry.getAll();
 		const grouped = {};
 
-		allProviderInstances.forEach( ( provider ) => {
-			const supportedTypes =
-				provider.getSupportedDeploymentTypes?.() || [];
-			supportedTypes.forEach( ( deploymentType ) => {
+		allProviderClasses.forEach( ( ProviderClass ) => {
+			const deploymentType = ProviderClass.DEPLOYMENT_TYPE;
+			if ( deploymentType ) {
 				if ( ! grouped[ deploymentType ] ) {
 					grouped[ deploymentType ] = [];
 				}
 				// Add provider metadata (matching the structure in providers state)
 				const providerMetadata = providers.find(
-					( p ) => p.id === provider.getId()
+					( p ) => p.id === ProviderClass.ID
 				);
 				if ( providerMetadata ) {
 					grouped[ deploymentType ].push( providerMetadata );
 				}
-			} );
+			}
 		} );
 
 		return grouped;

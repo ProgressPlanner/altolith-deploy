@@ -119,9 +119,13 @@ addFilter('aether.provider.deployment_url', 'my-plugin',
 <?php
 namespace MyPlugin\Providers;
 
-import { AbstractProvider } from '@aether/providers/base/AbstractProvider';
-
-class MyCustomProvider extends BaseProvider {
+// JavaScript provider example (no base class needed)
+class MyCustomProvider {
+    static ID = 'my-custom-provider';
+    static NAME = 'My Custom Provider';
+    static CONFIG_FIELDS = [
+        { id: 'api_key', label: 'API Key', type: 'text', required: true }
+    ];
     public function getId(): string {
         return 'my-custom-provider';
     }
@@ -163,8 +167,8 @@ import { doAction } from '@wordpress/hooks';
 // Create provider instance
 const provider = new MyCustomProvider();
 
-// Register in JavaScript registry
-ProviderRegistry.register(provider.getId(), provider);
+// Register in JavaScript registry (use static ID)
+ProviderRegistry.register(MyCustomProvider.ID, provider);
 
 // Also trigger hook for auto-discovery
 doAction('aether.providers.register', provider);

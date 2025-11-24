@@ -18,26 +18,29 @@ jest.mock( '@wordpress/hooks', () => ( {
 
 describe( 'ProviderRegistry', () => {
 	/**
-	 * Create a mock provider instance.
+	 * Create a mock provider class.
 	 *
-	 * @param {string}        id                Provider ID
-	 * @param {string}        name              Provider name
-	 * @param {Array<string>} deploymentTypes   Supported deployment types
-	 * @param {Object}        additionalMethods Additional methods to add
-	 * @return {Object} Mock provider instance
+	 * @param {string} id               Provider ID
+	 * @param {string} name             Provider name
+	 * @param {string} deploymentType   Deployment type
+	 * @param {Object} additionalStatic Additional static properties
+	 * @return {Function} Mock provider class
 	 */
 	const createMockProvider = (
 		id = 'test-provider',
 		name = 'Test Provider',
-		deploymentTypes = [ 'static_site' ],
-		additionalMethods = {}
+		deploymentType = 'static_site',
+		additionalStatic = {}
 	) => {
-		return {
-			getId: () => id,
-			getName: () => name,
-			getSupportedDeploymentTypes: () => deploymentTypes,
-			...additionalMethods,
-		};
+		// Create a mock class with static properties
+		class MockProvider {
+			static ID = id;
+			static NAME = name;
+			static DEPLOYMENT_TYPE = deploymentType;
+		}
+		// Add any additional static properties
+		Object.assign( MockProvider, additionalStatic );
+		return MockProvider;
 	};
 
 	beforeEach( () => {
@@ -336,16 +339,20 @@ describe( 'ProviderRegistry', () => {
 
 	describe( 'getByDeploymentType()', () => {
 		it( 'should return providers matching deployment type', () => {
-			const staticProvider1 = createMockProvider( 'static1', 'Static 1', [
-				'static_site',
-			] );
-			const staticProvider2 = createMockProvider( 'static2', 'Static 2', [
-				'static_site',
-			] );
+			const staticProvider1 = createMockProvider(
+				'static1',
+				'Static 1',
+				'static_site'
+			);
+			const staticProvider2 = createMockProvider(
+				'static2',
+				'Static 2',
+				'static_site'
+			);
 			const blueprintProvider = createMockProvider(
 				'blueprint',
 				'Blueprint',
-				[ 'blueprint_bundle' ]
+				'blueprint_bundle'
 			);
 
 			ProviderRegistry.register( 'static1', staticProvider1 );
@@ -362,9 +369,11 @@ describe( 'ProviderRegistry', () => {
 		} );
 
 		it( 'should return empty array when no providers match', () => {
-			const provider = createMockProvider( 'test', 'Test', [
-				'static_site',
-			] );
+			const provider = createMockProvider(
+				'test',
+				'Test',
+				'static_site'
+			);
 			ProviderRegistry.register( 'test', provider );
 
 			const result =
@@ -373,13 +382,13 @@ describe( 'ProviderRegistry', () => {
 			expect( result ).toEqual( [] );
 		} );
 
-		it( 'should handle provider without getSupportedDeploymentTypes method', () => {
-			const provider = {
-				getId: () => 'test',
-				getName: () => 'Test',
-				// No getSupportedDeploymentTypes method
-			};
-			ProviderRegistry.register( 'test', provider );
+		it( 'should handle provider without DEPLOYMENT_TYPE property', () => {
+			class MockProvider {
+				static ID = 'test';
+				static NAME = 'Test';
+				// No DEPLOYMENT_TYPE
+			}
+			ProviderRegistry.register( 'test', MockProvider );
 
 			const result =
 				ProviderRegistry.getByDeploymentType( 'static_site' );
@@ -387,41 +396,33 @@ describe( 'ProviderRegistry', () => {
 			expect( result ).toEqual( [] );
 		} );
 
-		it( 'should handle provider with empty deployment types', () => {
-			const provider = createMockProvider( 'test', 'Test', [] );
-			ProviderRegistry.register( 'test', provider );
+		it( 'should handle provider with null deployment type', () => {
+			class MockProvider {
+				static ID = 'test';
+				static NAME = 'Test';
+				static DEPLOYMENT_TYPE = null;
+			}
+			ProviderRegistry.register( 'test', MockProvider );
 
 			const result =
 				ProviderRegistry.getByDeploymentType( 'static_site' );
 
 			expect( result ).toEqual( [] );
-		} );
-
-		it( 'should handle provider supporting multiple deployment types', () => {
-			const multiProvider = createMockProvider( 'multi', 'Multi', [
-				'static_site',
-				'blueprint_bundle',
-			] );
-			ProviderRegistry.register( 'multi', multiProvider );
-
-			const staticResult =
-				ProviderRegistry.getByDeploymentType( 'static_site' );
-			const blueprintResult =
-				ProviderRegistry.getByDeploymentType( 'blueprint_bundle' );
-
-			expect( staticResult ).toContain( multiProvider );
-			expect( blueprintResult ).toContain( multiProvider );
 		} );
 	} );
 
 	describe( 'getForDeploymentType()', () => {
 		it( 'should return first provider matching deployment type', () => {
-			const provider1 = createMockProvider( 'provider1', 'First', [
-				'static_site',
-			] );
-			const provider2 = createMockProvider( 'provider2', 'Second', [
-				'static_site',
-			] );
+			const provider1 = createMockProvider(
+				'provider1',
+				'First',
+				'static_site'
+			);
+			const provider2 = createMockProvider(
+				'provider2',
+				'Second',
+				'static_site'
+			);
 
 			ProviderRegistry.register( 'provider1', provider1 );
 			ProviderRegistry.register( 'provider2', provider2 );
@@ -433,9 +434,11 @@ describe( 'ProviderRegistry', () => {
 		} );
 
 		it( 'should return null when no providers match', () => {
-			const provider = createMockProvider( 'test', 'Test', [
-				'static_site',
-			] );
+			const provider = createMockProvider(
+				'test',
+				'Test',
+				'static_site'
+			);
 			ProviderRegistry.register( 'test', provider );
 
 			const result =
@@ -457,11 +460,13 @@ describe( 'ProviderRegistry', () => {
 			const blueprintProvider = createMockProvider(
 				'blueprint',
 				'Blueprint',
-				[ 'blueprint_bundle' ]
+				'blueprint_bundle'
 			);
-			const staticProvider = createMockProvider( 'static', 'Static', [
-				'static_site',
-			] );
+			const staticProvider = createMockProvider(
+				'static',
+				'Static',
+				'static_site'
+			);
 
 			ProviderRegistry.register( 'blueprint', blueprintProvider );
 			ProviderRegistry.register( 'static', staticProvider );
@@ -472,12 +477,16 @@ describe( 'ProviderRegistry', () => {
 		} );
 
 		it( 'should fall back to first provider if no static_site provider', () => {
-			const provider1 = createMockProvider( 'provider1', 'First', [
-				'blueprint_bundle',
-			] );
-			const provider2 = createMockProvider( 'provider2', 'Second', [
-				'custom_type',
-			] );
+			const provider1 = createMockProvider(
+				'provider1',
+				'First',
+				'blueprint_bundle'
+			);
+			const provider2 = createMockProvider(
+				'provider2',
+				'Second',
+				'custom_type'
+			);
 
 			ProviderRegistry.register( 'provider1', provider1 );
 			ProviderRegistry.register( 'provider2', provider2 );
@@ -494,12 +503,16 @@ describe( 'ProviderRegistry', () => {
 		} );
 
 		it( 'should return first static_site provider when multiple exist', () => {
-			const static1 = createMockProvider( 'static1', 'Static 1', [
-				'static_site',
-			] );
-			const static2 = createMockProvider( 'static2', 'Static 2', [
-				'static_site',
-			] );
+			const static1 = createMockProvider(
+				'static1',
+				'Static 1',
+				'static_site'
+			);
+			const static2 = createMockProvider(
+				'static2',
+				'Static 2',
+				'static_site'
+			);
 
 			ProviderRegistry.register( 'static1', static1 );
 			ProviderRegistry.register( 'static2', static2 );
@@ -770,29 +783,31 @@ describe( 'ProviderRegistry', () => {
 			expect( ProviderRegistry.get( 'testprovider' ) ).toBe( provider2 );
 		} );
 
-		it( 'should handle providers with additional methods beyond required', () => {
-			const provider = createMockProvider(
+		it( 'should handle providers with additional static properties', () => {
+			const ProviderClass = createMockProvider(
 				'test',
 				'Test',
-				[ 'static_site' ],
+				'static_site',
 				{
-					customMethod: () => 'custom',
-					anotherMethod: () => 'another',
+					CUSTOM_PROP: 'custom',
+					ANOTHER_PROP: 'another',
 				}
 			);
 
-			ProviderRegistry.register( 'test', provider );
+			ProviderRegistry.register( 'test', ProviderClass );
 
 			const retrieved = ProviderRegistry.get( 'test' );
 
-			expect( retrieved.customMethod() ).toBe( 'custom' );
-			expect( retrieved.anotherMethod() ).toBe( 'another' );
+			expect( retrieved.CUSTOM_PROP ).toBe( 'custom' );
+			expect( retrieved.ANOTHER_PROP ).toBe( 'another' );
 		} );
 
 		it( 'should handle empty deployment type query', () => {
-			const provider = createMockProvider( 'test', 'Test', [
-				'static_site',
-			] );
+			const provider = createMockProvider(
+				'test',
+				'Test',
+				'static_site'
+			);
 			ProviderRegistry.register( 'test', provider );
 
 			const result = ProviderRegistry.getByDeploymentType( '' );
@@ -801,9 +816,11 @@ describe( 'ProviderRegistry', () => {
 		} );
 
 		it( 'should handle null deployment type query', () => {
-			const provider = createMockProvider( 'test', 'Test', [
-				'static_site',
-			] );
+			const provider = createMockProvider(
+				'test',
+				'Test',
+				'static_site'
+			);
 			ProviderRegistry.register( 'test', provider );
 
 			const result = ProviderRegistry.getByDeploymentType( null );

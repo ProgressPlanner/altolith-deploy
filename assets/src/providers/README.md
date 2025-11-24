@@ -31,14 +31,11 @@ import { doAction } from '@wordpress/hooks';
 import ProviderRegistry from '../registry/ProviderRegistry';
 import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 
-// Create provider instance
-const provider = new LocalFilesystemProvider();
-
-// Register provider in JavaScript registry
-ProviderRegistry.register(provider.getId(), provider);
+// Register provider class in JavaScript registry
+ProviderRegistry.register(LocalFilesystemProvider.ID, LocalFilesystemProvider);
 
 // Also trigger the hook for any listeners
-doAction('aether.providers.register', provider);
+doAction('aether.providers.register', LocalFilesystemProvider);
 ```
 
 The `ProviderRegistry` singleton collects all registered providers and makes them available throughout the application.
@@ -47,7 +44,6 @@ The `ProviderRegistry` singleton collects all registered providers and makes the
 
 ```
 providers/
-├── AbstractProvider.js            # Base class for all providers
 ├── ProviderRegistry.js            # Singleton registry
 ├── local-filesystem/              # Local Filesystem provider
 │   ├── LocalFilesystemProvider.js # Provider implementation
@@ -70,14 +66,11 @@ import { doAction } from '@wordpress/hooks';
 import ProviderRegistry from '../registry/ProviderRegistry';
 import { LocalFilesystemProvider } from './LocalFilesystemProvider';
 
-// Create provider instance
-const provider = new LocalFilesystemProvider();
-
-// Register provider in JavaScript registry
-ProviderRegistry.register(provider.getId(), provider);
+// Register provider class in JavaScript registry
+ProviderRegistry.register(LocalFilesystemProvider.ID, LocalFilesystemProvider);
 
 // Also trigger the hook for any listeners
-doAction('aether.providers.register', provider);
+doAction('aether.providers.register', LocalFilesystemProvider);
 ```
 
 ### 2. Discovery
@@ -137,119 +130,87 @@ async deploy(deploymentConfig) {
 }
 ```
 
-## AbstractProvider
+## Provider Structure
 
-Base class that all providers extend.
+Providers are classes with static constants for metadata and static methods for operations.
 
-**Location:** `providers/AbstractProvider.js`
+### Static Constants
 
-### Core Methods
+All providers define static constants for metadata:
 
 ```javascript
-class AbstractProvider {
-    // Metadata
-    getId()           // Unique provider ID
-    getName()         // Display name
-    getDescription()  // Provider description
-    getCapabilities() // Array of capabilities
-
-    // Configuration
-    getConfigFields()     // Define config fields
-    validateConfig(config)  // Validate configuration
-    sanitizeConfig(config)  // Sanitize configuration
-
-    // Operations
-    async testConnection(config)  // Test provider connection
-    async deploy(config)          // Deploy to provider
-    async getStatus(config)       // Get deployment status
-
-    // Services (lazy-loaded)
-    getService(serviceName)  // Get service instance
+export class MyProvider {
+    static ID = 'my-provider';
+    static NAME = __( 'My Provider', 'aether-site-exporter' );
+    static TYPE = 'storage';
+    static DESCRIPTION = __( 'Provider description', 'aether-site-exporter' );
+    static ICON = '📦';
+    static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.STATIC_SITE;
+    static CONFIG_FIELDS = [
+        { id: 'api_key', label: 'API Key', type: 'text', required: true }
+    ];
 }
 ```
 
-### Capabilities
+### Static Methods
 
-Providers declare their capabilities:
+Providers implement static methods for operations:
 
-- `CAP_STORAGE` - Object storage
-- `CAP_STATIC_SITE` - Static site hosting
-
-```javascript
-getCapabilities() {
-    return [CAP_STORAGE, CAP_STATIC_SITE];
-}
-```
+- `static validateConfig(providerId, config)` - Validate provider configuration
+- `static sanitizeConfig(providerId, config)` - Sanitize provider configuration
+- `static testConnection(providerId)` - Test provider connection
 
 ## Example Provider
 
 ### Minimal Provider Implementation
 
 ```javascript
-import { AbstractProvider } from '../AbstractProvider';
-import { CAP_STORAGE, CAP_STATIC_SITE } from '../../constants';
+import { __ } from '@wordpress/i18n';
+import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
+import { ConfigStorage } from '../utils/configStorage';
+import { validateAllFields, hasRequiredFields } from '../utils/configValidation';
+import { sanitizeAllFields } from '../utils/configSanitization';
 
-export class MyProvider extends AbstractProvider {
-    getId() {
-        return 'my-provider';
-    }
+export class MyProvider {
+    static ID = 'my-provider';
+    static NAME = __( 'My Provider', 'aether-site-exporter' );
+    static TYPE = 'storage';
+    static DESCRIPTION = __( 'Provider description', 'aether-site-exporter' );
+    static ICON = '📦';
+    static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.STATIC_SITE;
+    static CONFIG_FIELDS = [
+        { id: 'api_key', label: 'API Key', type: 'text', required: true }
+    ];
 
-    getName() {
-        return 'My Cloud Provider';
-    }
-
-    getDescription() {
-        return 'Deploy to My Cloud';
-    }
-
-    getCapabilities() {
-        return [CAP_STORAGE, CAP_STATIC_SITE];
-    }
-
-    getConfigFields() {
-        return [
-            {
-                id: 'api_key',
-                label: 'API Key',
-                type: 'text',
-                required: true,
-                secure: true,
-            },
-        ];
-    }
-
-    validateConfig(config) {
+    static async validateConfig(providerId, config) {
         const errors = {};
 
         if (!config.api_key || config.api_key.length < 10) {
             errors.api_key = 'API key must be at least 10 characters';
         }
 
+        return errors;
+    }
+
+    static async sanitizeConfig(providerId, config) {
         return {
-            valid: Object.keys(errors).length === 0,
-            errors,
+            ...config,
+            api_key: config.api_key?.trim() || '',
         };
     }
 
-    async testConnection(config) {
-        try {
-            await fetch('https://api.myprovider.com/test', {
-                headers: { 'Authorization': `Bearer ${config.api_key}` },
-            });
-            return { success: true };
-        } catch (error) {
-            return {
-                success: false,
-                error: 'Connection failed',
-            };
-        }
-    }
-
-    async deploy(deploymentConfig) {
-        // Deployment logic here
+    static async testConnection(providerId) {
         return {
             success: true,
-            deploymentUrl: 'https://example.com',
+            message: 'Connection successful',
+        };
+    }
+
+    static async testConnection(providerId) {
+        // Connection test logic
+        return {
+            success: true,
+            message: 'Connection successful',
         };
     }
 }
@@ -263,17 +224,11 @@ import ProviderRegistry from '../registry/ProviderRegistry';
 import { doAction } from '@wordpress/hooks';
 import { MyProvider } from './MyProvider';
 
-// Create provider instance
-const provider = new MyProvider();
-
-// Register in JavaScript registry
-ProviderRegistry.register(provider.getId(), provider);
+// Register provider class in JavaScript registry
+ProviderRegistry.register(MyProvider.ID, MyProvider);
 
 // Also trigger the hook for any listeners
-doAction('aether.providers.register', provider);
-import { doAction } from '@wordpress/hooks';
-
-doAction('aether.providers.register', new MyProvider());
+doAction('aether.providers.register', MyProvider);
 ```
 
 ## Provider Hooks (React)
@@ -302,7 +257,7 @@ function MyComponent() {
     return (
         <ul>
             {providers.map(provider => (
-                <li key={provider.getId()}>
+                <li key={provider.id}>
                     {provider.getName()}
                 </li>
             ))}
@@ -322,7 +277,6 @@ function ProviderSettings({ providerId }) {
     const {
         provider,
         config,
-        saveConfig,
         testConnection,
         loading,
         error,
@@ -356,18 +310,10 @@ const {
     loading,
     error,
     loadConfig,
-    saveConfig,
-    deleteConfig,
 } = useProviderConfig('local-filesystem');
 
 // Load configuration
 await loadConfig();
-
-// Save configuration
-await saveConfig({
-    account_id: '...',
-    access_key_id: '...',
-});
 ```
 
 ## Configuration Storage
@@ -448,11 +394,10 @@ Providers are loaded via Webpack dynamic imports, creating separate chunks.
 
 ### Planned Improvements
 
-1. **IProvider Interface** - TypeScript-style interface documentation
-2. **Enhanced ProviderLoader** - Better error handling, loading states
-3. **Provider UI Hooks** - Custom UI components per provider
-4. **Development Template** - Scaffold new providers with CLI tool
-5. **Remove Hardcoded Logic** - Eliminate provider-specific code from workflows
+1. **Enhanced ProviderLoader** - Better error handling, loading states
+2. **Provider UI Hooks** - Custom UI components per provider
+3. **Development Template** - Scaffold new providers with CLI tool
+4. **Remove Hardcoded Logic** - Eliminate provider-specific code from workflows
 
 See `REFACTORING_PLAN.md` Phase 2 for details.
 
@@ -480,8 +425,8 @@ npm run test:js -- providers/local-filesystem
 ### Step-by-Step Guide
 
 1. **Create provider directory:** `providers/my-provider/`
-2. **Extend AbstractProvider:** Implement required methods
-3. **Define config fields:** Use ConfigFieldBuilder (planned Phase 2)
+2. **Define static constants:** ID, NAME, TYPE, DESCRIPTION, ICON, DEPLOYMENT_TYPE, CONFIG_FIELDS
+3. **Implement static methods:** validateConfig, sanitizeConfig, testConnection
 4. **Implement deployment logic:** Handle uploads, status checks
 5. **Register provider:** Use WordPress hooks in `index.js`
 6. **Add tests:** Create unit tests in `tests/js/providers/`

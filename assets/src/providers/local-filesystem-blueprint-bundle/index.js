@@ -12,14 +12,14 @@ import { debug, debugWarn } from '@aether/utils/debug';
 import { LocalFilesystemBlueprintBundleProvider } from './LocalFilesystemBlueprintBundleProvider';
 import ProviderRegistry from '../registry/ProviderRegistry';
 
-// Create provider instance for hook registration
-const provider = new LocalFilesystemBlueprintBundleProvider();
-
-// Register provider in JavaScript registry
-ProviderRegistry.register( provider.getId(), provider );
+// Register provider class in JavaScript registry
+ProviderRegistry.register(
+	LocalFilesystemBlueprintBundleProvider.ID,
+	LocalFilesystemBlueprintBundleProvider
+);
 
 // Also trigger the hook for any listeners
-doAction( 'aether.providers.register', provider );
+doAction( 'aether.providers.register', LocalFilesystemBlueprintBundleProvider );
 
 // Track upload results per provider instance
 const uploadResults = {};
@@ -224,7 +224,7 @@ addAction(
 addFilter(
 	'aether.provider.test',
 	'aether/local-filesystem-blueprint-bundle',
-	( handler, providerId, config ) => {
+	( handler, providerId ) => {
 		// Only handle requests for local-filesystem-blueprint-bundle providers
 		if (
 			! providerId ||
@@ -234,29 +234,11 @@ addFilter(
 		}
 
 		// Return test handler function
-		return async ( testConfig ) => {
-			return await provider.testConnection( testConfig || config );
+		return async () => {
+			return await LocalFilesystemBlueprintBundleProvider.testConnection(
+				providerId
+			);
 		};
-	},
-	10
-);
-
-/**
- * Register upload strategy filter.
- *
- * Providers can override upload strategy via aether.provider.upload_strategy filter.
- */
-addFilter(
-	'aether.provider.upload_strategy',
-	'aether/local-filesystem-blueprint-bundle',
-	( strategy, providerId ) => {
-		if (
-			providerId &&
-			providerId.startsWith( 'local-filesystem-blueprint-bundle' )
-		) {
-			return 'direct';
-		}
-		return strategy;
 	},
 	10
 );
