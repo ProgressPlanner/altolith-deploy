@@ -6,11 +6,11 @@
  *
  */
 
-import { useState, useEffect, useCallback } from '@wordpress/element';
+import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
-import ProviderInstancePanel from '@aether/components/ProviderInstancePanel';
+import ProviderInstancesContainer from '@aether/components/ProviderInstancesContainer';
 import AddProviderInstanceModal from '@aether/components/AddProviderInstanceModal';
 import LoadingSpinner from '@aether/components/LoadingSpinner';
 import SectionHeader from '@aether/components/SectionHeader';
@@ -19,16 +19,6 @@ import { useProviderSettings } from '@aether/hooks/useProviderSettings';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 // Styles - extracted to module level for performance
-const emptyMessageStyle = {
-	color: colors.textSecondary,
-};
-
-const panelsContainerStyle = {
-	display: 'flex',
-	flexDirection: 'column',
-	backgroundColor: colors.white,
-};
-
 const emptyStateStyle = {
 	padding: spacing.xl,
 	textAlign: 'center',
@@ -186,24 +176,30 @@ export default function ProviderSettings( {
 
 	// Create flat list of all instances with provider metadata
 	// Filter out instances whose provider type is not registered (e.g., removed providers)
-	const allInstances = Object.entries( configs )
-		.map( ( [ instanceId, config ] ) => {
-			const providerType =
-				config.provider_type || instanceId.split( ':' )[ 0 ];
-			const provider = providers.find( ( p ) => p.id === providerType );
+	const allInstances = useMemo(
+		() =>
+			Object.entries( configs )
+				.map( ( [ instanceId, config ] ) => {
+					const providerType =
+						config.provider_type || instanceId.split( ':' )[ 0 ];
+					const provider = providers.find(
+						( p ) => p.id === providerType
+					);
 
-			// Skip instances whose provider type is not registered
-			if ( ! provider ) {
-				return null;
-			}
+					// Skip instances whose provider type is not registered
+					if ( ! provider ) {
+						return null;
+					}
 
-			return {
-				instanceId,
-				config,
-				provider,
-			};
-		} )
-		.filter( ( instance ) => instance !== null );
+					return {
+						instanceId,
+						config,
+						provider,
+					};
+				} )
+				.filter( ( instance ) => instance !== null ),
+		[ configs, providers ]
+	);
 
 	const handleCreateInstanceConfirm = useCallback(
 		async ( instanceId, providerType, instanceName ) => {
@@ -464,22 +460,6 @@ export default function ProviderSettings( {
 		);
 	}
 
-	if ( providers.length === 0 ) {
-		return (
-			<div className="aether-provider-settings aether-provider-settings--empty">
-				<p
-					className="aether-provider-settings__empty-message"
-					style={ emptyMessageStyle }
-				>
-					{ __(
-						'No providers available. Install a provider plugin to enable deployment options.',
-						'aether-site-exporter'
-					) }
-				</p>
-			</div>
-		);
-	}
-
 	return (
 		<div className="aether-provider-settings">
 			<SectionHeader
@@ -503,65 +483,16 @@ export default function ProviderSettings( {
 				}
 			/>
 
-			{ /* Panels of All Provider Instances */ }
+			{ /* Provider Instances Table */ }
 			{ allInstances.length > 0 ? (
-				<div
-					className="aether-provider-settings__panels-container"
-					style={ panelsContainerStyle }
-				>
-					{ allInstances.map( ( instance ) => {
-						const providerType =
-							instance.config.provider_type ||
-							instance.instanceId.split( ':' )[ 0 ];
-						const fullProvider = providers.find(
-							( p ) => p.id === providerType
-						);
-
-						// Get provider instance from registry to get supported deployment types
-						const providerInstance =
-							ProviderRegistry.get( providerType );
-
-						return (
-							<ProviderInstancePanel
-								key={ instance.instanceId }
-								provider={ {
-									id: fullProvider?.id || providerType,
-									metadata: {
-										name:
-											fullProvider?.name || providerType,
-										description:
-											fullProvider?.description || '',
-										supportedDeploymentTypes:
-											providerInstance?.getSupportedDeploymentTypes?.() ||
-											[],
-										type: fullProvider?.type || '',
-									},
-									settingsFields: (
-										fullProvider?.settings_fields || []
-									).map( ( field ) => ( {
-										...field,
-										id: field.id || field.name,
-									} ) ),
-								} }
-								instance={ {
-									instanceId: instance.instanceId,
-									config: instance.config,
-								} }
-								onToggle={ ( enabled ) =>
-									handleToggleInstance(
-										instance.instanceId,
-										enabled
-									)
-								}
-								onDelete={ () =>
-									handleDeleteInstance( instance.instanceId )
-								}
-								onRename={ handleRenameInstance }
-								onSave={ handleConfigSave }
-							/>
-						);
-					} ) }
-				</div>
+				<ProviderInstancesContainer
+					instances={ allInstances }
+					providers={ providers }
+					onToggle={ handleToggleInstance }
+					onDelete={ handleDeleteInstance }
+					onRename={ handleRenameInstance }
+					onSave={ handleConfigSave }
+				/>
 			) : (
 				<div
 					className="aether-provider-settings__empty-state"
