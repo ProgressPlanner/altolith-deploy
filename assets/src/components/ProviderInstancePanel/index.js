@@ -28,15 +28,6 @@ import {
 	createFlexStyle,
 } from '@aether/utils/styles';
 
-// Styles for settings form
-const sectionTitleStyle = {
-	fontSize: fontSize.base,
-	fontWeight: fontWeight.semibold,
-	color: colors.text,
-	marginTop: 0,
-	marginBottom: spacing.md,
-};
-
 const deleteButtonContainerStyle = {
 	...createFlexStyle( 'row', spacing.md ),
 	justifyContent: 'flex-end',
@@ -203,7 +194,10 @@ export default function ProviderInstancePanel( {
 
 	// Get provider metadata
 	const providerMetadata = provider?.metadata || {};
-	const settingsFields = provider?.settingsFields || [];
+	const settingsFields = useMemo(
+		() => provider?.settingsFields || [],
+		[ provider?.settingsFields ]
+	);
 
 	// Compute initial values for ProviderForm
 	const formInitialValues = useMemo( () => {
