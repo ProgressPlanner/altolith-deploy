@@ -121,13 +121,9 @@ describe( 'unifiedFileUpload', () => {
 
 	describe( 'uploadFile()', () => {
 		test( 'should fire aether.file.upload action', async () => {
-			const { doAction } = require( '@wordpress/hooks' );
+			const { doActionAsync } = require( '@wordpress/hooks' );
 			const handler = jest.fn( ( fileContext ) => {
-				// Register promise for async handling
-				if ( ! fileContext._uploadPromises ) {
-					fileContext._uploadPromises = [];
-				}
-				fileContext._uploadPromises.push( Promise.resolve() );
+				// Handler completes (no result needed, defaults to success)
 			} );
 
 			// Register provider hook
@@ -143,7 +139,7 @@ describe( 'unifiedFileUpload', () => {
 
 			const result = await uploadFile( context );
 
-			expect( doAction ).toHaveBeenCalledWith(
+			expect( doActionAsync ).toHaveBeenCalledWith(
 				'aether.file.upload',
 				expect.any( Object )
 			);
@@ -154,10 +150,7 @@ describe( 'unifiedFileUpload', () => {
 		test( 'should allow filtering file context', async () => {
 			const { applyFilters } = require( '@wordpress/hooks' );
 			const handler = jest.fn( ( fileContext ) => {
-				if ( ! fileContext._uploadPromises ) {
-					fileContext._uploadPromises = [];
-				}
-				fileContext._uploadPromises.push( Promise.resolve() );
+				// Provider completes successfully (no result needed, defaults to success)
 			} );
 
 			addAction( 'aether.file.upload', 'test-provider', handler );
@@ -180,19 +173,12 @@ describe( 'unifiedFileUpload', () => {
 		} );
 
 		test( 'should wait for async provider handlers', async () => {
-			let handlerCompleted = false;
 			const handler = jest.fn( ( fileContext ) => {
-				if ( ! fileContext._uploadPromises ) {
-					fileContext._uploadPromises = [];
-				}
-				// Simulate async operation
-				const promise = new Promise( ( resolve ) => {
-					setTimeout( () => {
-						handlerCompleted = true;
-						resolve();
-					}, 10 );
-				} );
-				fileContext._uploadPromises.push( promise );
+				// Provider sets result synchronously (doActionAsync handles async)
+				fileContext.result = {
+					success: true,
+					url: 'https://example.com/uploaded.html',
+				};
 			} );
 
 			addAction( 'aether.file.upload', 'test-provider', handler );
@@ -205,25 +191,19 @@ describe( 'unifiedFileUpload', () => {
 				providerId: 'test-provider',
 			} );
 
-			await uploadFile( context );
+			const result = await uploadFile( context );
 
-			expect( handlerCompleted ).toBe( true );
+			expect( handler ).toHaveBeenCalled();
+			expect( result.success ).toBe( true );
 		} );
 
 		test( 'should return provider result when set on fileContext', async () => {
 			const handler = jest.fn( ( fileContext ) => {
-				if ( ! fileContext._uploadPromises ) {
-					fileContext._uploadPromises = [];
-				}
-				const promise = new Promise( ( resolve ) => {
-					// Provider sets result on context
-					fileContext.result = {
-						success: false,
-						error: 'Storage quota exceeded',
-					};
-					resolve();
-				} );
-				fileContext._uploadPromises.push( promise );
+				// Provider sets result on context
+				fileContext.result = {
+					success: false,
+					error: 'Storage quota exceeded',
+				};
 			} );
 
 			addAction( 'aether.file.upload', 'test-provider', handler );
@@ -244,17 +224,10 @@ describe( 'unifiedFileUpload', () => {
 
 		test( 'should return success when provider sets success result', async () => {
 			const handler = jest.fn( ( fileContext ) => {
-				if ( ! fileContext._uploadPromises ) {
-					fileContext._uploadPromises = [];
-				}
-				const promise = new Promise( ( resolve ) => {
-					fileContext.result = {
-						success: true,
-						url: 'https://example.com/file.html',
-					};
-					resolve();
-				} );
-				fileContext._uploadPromises.push( promise );
+				fileContext.result = {
+					success: true,
+					url: 'https://example.com/file.html',
+				};
 			} );
 
 			addAction( 'aether.file.upload', 'test-provider', handler );
@@ -282,10 +255,7 @@ describe( 'unifiedFileUpload', () => {
 					providerId: fileContext.providerId,
 					storageKey: fileContext.storageKey,
 				} );
-				if ( ! fileContext._uploadPromises ) {
-					fileContext._uploadPromises = [];
-				}
-				fileContext._uploadPromises.push( Promise.resolve() );
+				// Handler completes (no result needed, defaults to success)
 			} );
 
 			addAction( 'aether.file.upload', 'provider1', handler );
@@ -320,12 +290,11 @@ describe( 'unifiedFileUpload', () => {
 
 		test( 'should handle upload errors gracefully', async () => {
 			const handler = jest.fn( ( fileContext ) => {
-				if ( ! fileContext._uploadPromises ) {
-					fileContext._uploadPromises = [];
-				}
-				fileContext._uploadPromises.push(
-					Promise.reject( new Error( 'Upload failed' ) )
-				);
+				// Provider sets error result on context
+				fileContext.result = {
+					success: false,
+					error: 'Upload failed',
+				};
 			} );
 
 			addAction( 'aether.file.upload', 'failing-provider', handler );
@@ -355,18 +324,12 @@ describe( 'unifiedFileUpload', () => {
 
 			const provider1Handler = jest.fn( ( fileContext ) => {
 				provider1Uploads.push( fileContext.storageKey );
-				if ( ! fileContext._uploadPromises ) {
-					fileContext._uploadPromises = [];
-				}
-				fileContext._uploadPromises.push( Promise.resolve() );
+				// Handler completes (no result needed, defaults to success)
 			} );
 
 			const provider2Handler = jest.fn( ( fileContext ) => {
 				provider2Uploads.push( fileContext.storageKey );
-				if ( ! fileContext._uploadPromises ) {
-					fileContext._uploadPromises = [];
-				}
-				fileContext._uploadPromises.push( Promise.resolve() );
+				// Handler completes (no result needed, defaults to success)
 			} );
 
 			addAction( 'aether.file.upload', 'provider1', provider1Handler );
@@ -393,10 +356,7 @@ describe( 'unifiedFileUpload', () => {
 					providerId: fileContext.providerId,
 					storageKey: fileContext.storageKey,
 				} );
-				if ( ! fileContext._uploadPromises ) {
-					fileContext._uploadPromises = [];
-				}
-				fileContext._uploadPromises.push( Promise.resolve() );
+				// Handler completes (no result needed, defaults to success)
 			} );
 
 			// Register handler for all local-filesystem providers
