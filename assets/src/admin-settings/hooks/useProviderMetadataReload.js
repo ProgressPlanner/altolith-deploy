@@ -1,7 +1,7 @@
 /**
  * Provider Metadata Reload Hook
  *
- * Reloads provider metadata when deployment types change to ensure
+ * Reloads provider metadata when providers change to ensure
  * the correct settings fields are displayed.
  *
  */
@@ -10,7 +10,7 @@ import { useEffect, useRef, useCallback } from '@wordpress/element';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 /**
- * Hook to reload provider metadata when deployment types change
+ * Hook to reload provider metadata when providers change
  *
  * @param {Object}   configs             Provider configurations object
  * @param {boolean}  isModalOpen         Whether a provider modal is currently open
@@ -25,23 +25,7 @@ export function useProviderMetadataReload(
 	setProviders,
 	setSelectedProvider
 ) {
-	const previousDeploymentTypesRef = useRef( null );
-
-	// Extract and serialize deployment types for comparison
-	const getDeploymentTypesString = useCallback( () => {
-		return JSON.stringify(
-			Object.keys( configs )
-				.sort()
-				.reduce( ( acc, providerId ) => {
-					const deploymentTypes =
-						configs[ providerId ]?.deployment_types;
-					if ( Array.isArray( deploymentTypes ) ) {
-						acc[ providerId ] = deploymentTypes.sort().join( ',' );
-					}
-					return acc;
-				}, {} )
-		);
-	}, [ configs ] );
+	const previousProvidersRef = useRef( null );
 
 	useEffect( () => {
 		// Skip if no configs yet
@@ -49,17 +33,18 @@ export function useProviderMetadataReload(
 			return;
 		}
 
-		const deploymentTypesString = getDeploymentTypesString();
+		// Create a simple string representation of provider IDs for comparison
+		const providersString = JSON.stringify( Object.keys( configs ).sort() );
 
-		// Skip if deployment types haven't changed
+		// Skip if providers haven't changed
 		if (
-			previousDeploymentTypesRef.current === deploymentTypesString &&
-			previousDeploymentTypesRef.current !== null
+			previousProvidersRef.current === providersString &&
+			previousProvidersRef.current !== null
 		) {
 			return;
 		}
 
-		previousDeploymentTypesRef.current = deploymentTypesString;
+		previousProvidersRef.current = providersString;
 
 		const reloadProviders = () => {
 			try {
@@ -90,7 +75,7 @@ export function useProviderMetadataReload(
 				setProviders( providerMetadata );
 
 				// If a provider modal is open, update the selected provider with latest metadata
-				// This ensures the modal shows the correct fields when deployment types change
+				// This ensures the modal shows the correct fields when providers change
 				if ( selectedProvider && isModalOpen ) {
 					const updatedProvider = providerMetadata.find(
 						( p ) => p.id === selectedProvider.id
@@ -111,6 +96,5 @@ export function useProviderMetadataReload(
 		selectedProvider,
 		setProviders,
 		setSelectedProvider,
-		getDeploymentTypesString,
 	] );
 }

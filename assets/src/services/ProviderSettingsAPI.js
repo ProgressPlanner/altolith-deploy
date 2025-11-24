@@ -11,11 +11,10 @@
  *
  * Pure function for merging provider configs.
  *
- * @param {Object}  currentConfig                   Current provider configuration
- * @param {Object}  updatedConfig                   Updated configuration
- * @param {Object}  options                         Merge options
- * @param {boolean} options.preserveEnabled         Preserve existing enabled state
- * @param {boolean} options.preserveDeploymentTypes Preserve existing deployment_types
+ * @param {Object}  currentConfig           Current provider configuration
+ * @param {Object}  updatedConfig           Updated configuration
+ * @param {Object}  options                 Merge options
+ * @param {boolean} options.preserveEnabled Preserve existing enabled state
  * @return {Object} Merged configuration
  */
 export function mergeProviderConfig(
@@ -23,8 +22,7 @@ export function mergeProviderConfig(
 	updatedConfig,
 	options = {}
 ) {
-	const { preserveEnabled = false, preserveDeploymentTypes = false } =
-		options;
+	const { preserveEnabled = false } = options;
 
 	// Start with existing config to preserve all fields, then overlay updates
 	const mergedConfig = {
@@ -35,15 +33,6 @@ export function mergeProviderConfig(
 	// Preserve enabled state if requested
 	if ( preserveEnabled && currentConfig && 'enabled' in currentConfig ) {
 		mergedConfig.enabled = currentConfig.enabled;
-	}
-
-	// Preserve deployment_types if requested and exists
-	if (
-		preserveDeploymentTypes &&
-		currentConfig &&
-		'deployment_types' in currentConfig
-	) {
-		mergedConfig.deployment_types = currentConfig.deployment_types;
 	}
 
 	return mergedConfig;
@@ -186,11 +175,24 @@ export class ProviderSettingsAPI {
 	/**
 	 * Toggle provider enabled state
 	 *
-	 * @param {string}  providerId Provider ID
-	 * @param {boolean} enabled    New enabled state
+	 * @param {string}  providerId       Provider ID
+	 * @param {boolean} enabled          New enabled state
+	 * @param {Object}  currentProviders Optional current provider state from frontend (prevents race conditions)
 	 * @return {Promise<Object>} Updated provider configurations
 	 */
-	async toggleEnabled( providerId, enabled ) {
+	async toggleEnabled( providerId, enabled, currentProviders = null ) {
+		if ( currentProviders ) {
+			// Use provided state instead of fetching (prevents race conditions)
+			const updatedProviders = {
+				...currentProviders,
+				[ providerId ]: {
+					...currentProviders[ providerId ],
+					enabled,
+				},
+			};
+			return await this.save( updatedProviders );
+		}
+		// Fallback to original behavior if no state provided
 		return await this.update( providerId, { enabled } );
 	}
 

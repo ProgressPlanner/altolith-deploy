@@ -58,9 +58,9 @@ describe( 'dependencyValidation', () => {
 			expect( result ).toBe( false );
 		} );
 
-		test( 'should return false if dependency provider only has deployment_types', () => {
+		test( 'should return false if dependency provider only has enabled field', () => {
 			const configs = {
-				'provider-a': { deployment_types: [ 'static' ] },
+				'provider-a': { enabled: true },
 			};
 			const result = isDependencySatisfied(
 				'provider-a',

@@ -41,10 +41,8 @@ export function isDependencySatisfied(
 	const isConfigured =
 		dependencyConfig &&
 		Object.keys( dependencyConfig ).length > 0 &&
-		// Exclude enabled and deployment_types from configured check
-		Object.keys( dependencyConfig ).some(
-			( key ) => key !== 'enabled' && key !== 'deployment_types'
-		);
+		// Exclude enabled from configured check
+		Object.keys( dependencyConfig ).some( ( key ) => key !== 'enabled' );
 
 	return isConfigured;
 }
