@@ -572,60 +572,6 @@ class SettingsControllerTest extends TestCase {
 	}
 
 	// ========================================================================
-	// Playground Notice Tests (MEDIUM)
-	// ========================================================================
-
-	/**
-	 * Test get playground notice when not in playground and not dismissed.
-	 */
-	public function test_get_playground_notice_should_show() {
-		// Not in playground, not dismissed, no skip check.
-		$request = new WP_REST_Request( 'GET', '/aether/v1/notices/playground' );
-		$response = $this->controller->getPlaygroundNotice( $request );
-
-		$this->assertEquals( 200, $response->get_status() );
-		$data = $response->get_data();
-
-		$this->assertTrue( $data['success'] );
-		$this->assertTrue( $data['shouldShow'] );
-		$this->assertFalse( $data['isPlayground'] );
-		$this->assertFalse( $data['isDismissed'] );
-	}
-
-	/**
-	 * Test get playground notice when dismissed.
-	 */
-	public function test_get_playground_notice_when_dismissed() {
-		// Dismiss notice.
-		update_user_meta( $this->admin_user_id, 'aether_site_exporter_dismiss_playground_notice', true );
-
-		$request = new WP_REST_Request( 'GET', '/aether/v1/notices/playground' );
-		$response = $this->controller->getPlaygroundNotice( $request );
-
-		$data = $response->get_data();
-
-		$this->assertFalse( $data['shouldShow'] );
-		$this->assertTrue( $data['isDismissed'] );
-	}
-
-	/**
-	 * Test dismiss playground notice.
-	 */
-	public function test_dismiss_playground_notice() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/notices/playground/dismiss' );
-		$response = $this->controller->dismissPlaygroundNotice( $request );
-
-		$this->assertEquals( 200, $response->get_status() );
-		$data = $response->get_data();
-
-		$this->assertTrue( $data['success'] );
-
-		// Verify user meta was updated.
-		$dismissed = get_user_meta( $this->admin_user_id, 'aether_site_exporter_dismiss_playground_notice', true );
-		$this->assertTrue( (bool) $dismissed );
-	}
-
-	// ========================================================================
 	// Provider Instance Creation Tests (HIGH)
 	// ========================================================================
 

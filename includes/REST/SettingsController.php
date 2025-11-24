@@ -72,28 +72,6 @@ class SettingsController
 			]
 		);
 
-		// Get playground notice state.
-		\register_rest_route(
-			$this->getNamespace(),
-			'/notices/playground',
-			[
-				'methods'             => 'GET',
-				'callback'            => [ $this, 'getPlaygroundNotice' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
-			]
-		);
-
-		// Dismiss playground notice.
-		\register_rest_route(
-			$this->getNamespace(),
-			'/notices/playground/dismiss',
-			[
-				'methods'             => 'POST',
-				'callback'            => [ $this, 'dismissPlaygroundNotice' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
-			]
-		);
-
 		// Create provider instance.
 		\register_rest_route(
 			$this->getNamespace(),
@@ -507,70 +485,6 @@ class SettingsController
 		}
 
 		return $maxDepth;
-	}
-
-	/**
-	 * Get playground notice state.
-	 *
-	 * Merged from NoticesController.
-	 *
-	 * @param \WP_REST_Request<array<string, mixed>> $_request Request object (unused, required by REST API interface).
-	 * @return WP_REST_Response Response with notice state.
-	 */
-	public function getPlaygroundNotice(\WP_REST_Request $_request) // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-	{
-
-		// Check if in Playground.
-		$isPlayground = \defined('AETHER_SITE_EXPORTER_PLAYGROUND_SITE') && AETHER_SITE_EXPORTER_PLAYGROUND_SITE === true;
-
-		// Check if dismissed.
-		$isDismissed = (bool) \get_user_meta(\get_current_user_id(), 'aether_site_exporter_dismiss_playground_notice', true);
-
-		// Check if skip check is defined.
-		$skipCheck = \defined('AETHER_SITE_EXPORTER_SKIP_PLAYGROUND_CHECK') && AETHER_SITE_EXPORTER_SKIP_PLAYGROUND_CHECK;
-
-		// Determine if notice should be shown.
-		$shouldShow = ! $isPlayground && ! $isDismissed && ! $skipCheck;
-
-		return new WP_REST_Response(
-			[
-				'success'     => true,
-				'shouldShow'  => $shouldShow,
-				'isPlayground' => $isPlayground,
-				'isDismissed' => $isDismissed,
-			],
-			200
-		);
-	}
-
-	/**
-	 * Dismiss playground notice.
-	 *
-	 * Merged from NoticesController.
-	 *
-	 * @param \WP_REST_Request<array<string, mixed>> $_request Request object (unused, required by REST API interface).
-	 * @return WP_REST_Response|WP_Error Response or error.
-	 */
-	public function dismissPlaygroundNotice(\WP_REST_Request $_request) // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
-	{
-
-		$result = \update_user_meta(\get_current_user_id(), 'aether_site_exporter_dismiss_playground_notice', true);
-
-		if (! $result) {
-			return new WP_Error(
-				'dismiss_failed',
-				\__('Failed to dismiss notice.', 'aether-site-exporter'),
-				[ 'status' => 500 ]
-			);
-		}
-
-		return new WP_REST_Response(
-			[
-				'success' => true,
-				'message' => \__('Notice dismissed successfully.', 'aether-site-exporter'),
-			],
-			200
-		);
 	}
 
 	/**

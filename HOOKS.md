@@ -510,117 +510,6 @@ addAction('aether.storage.config.deleted', 'my-plugin', (providerId) => {
 
 ---
 
-#### `aether.provider.form.before_fields`
-
-**Type**: Action
-**Location**: `assets/src/components/ProviderForm/index.js`
-
-Fires before provider form fields are rendered. Allows adding content before the form fields.
-
-**Parameters**:
-- `hookContext` (Object): Hook context object containing:
-  - `providerId` (string): Provider ID
-  - `values` (Object): Current form values
-  - `handleFieldChange` (Function): Field change handler
-  - `errors` (Object): Validation errors
-  - `saving` (boolean): Whether form is saving
-
-**Example**:
-```javascript
-import { addAction } from '@wordpress/hooks';
-
-addAction('aether.provider.form.before_fields', 'my-plugin', (hookContext) => {
-    // Add custom content before form fields
-    console.log('Rendering form for:', hookContext.providerId);
-});
-```
-
----
-
-#### `aether.provider.form.after_fields`
-
-**Type**: Action
-**Location**: `assets/src/components/ProviderForm/index.js`
-
-Fires after provider form fields are rendered. Allows adding content after the form fields.
-
-**Parameters**:
-- `hookContext` (Object): Hook context object (same as `before_fields`)
-
-**Example**:
-```javascript
-import { addAction } from '@wordpress/hooks';
-
-addAction('aether.provider.form.after_fields', 'my-plugin', (hookContext) => {
-    // Add custom content after form fields
-});
-```
-
----
-
-#### `aether.provider.form.actions`
-
-**Type**: Action
-**Location**: `assets/src/components/ProviderForm/index.js`
-
-Fires in the provider form actions area. Allows adding custom action buttons or controls.
-
-**Parameters**:
-- `hookContext` (Object): Hook context object (same as `before_fields`)
-
-**Example**:
-```javascript
-import { addAction } from '@wordpress/hooks';
-
-addAction('aether.provider.form.actions', 'my-plugin', (hookContext) => {
-    // Add custom action buttons
-});
-```
-
----
-
-#### `aether.provider.panel.before_form`
-
-**Type**: Action
-**Location**: `assets/src/components/ProviderInstancePanel/index.js`
-
-Fires before the provider instance panel form is rendered.
-
-**Parameters**:
-- `hookContext` (Object): Hook context object containing provider instance information
-
-**Example**:
-```javascript
-import { addAction } from '@wordpress/hooks';
-
-addAction('aether.provider.panel.before_form', 'my-plugin', (hookContext) => {
-    // Add content before provider panel form
-});
-```
-
----
-
-#### `aether.provider.panel.after_form`
-
-**Type**: Action
-**Location**: `assets/src/components/ProviderInstancePanel/index.js`
-
-Fires after the provider instance panel form is rendered.
-
-**Parameters**:
-- `hookContext` (Object): Hook context object containing provider instance information
-
-**Example**:
-```javascript
-import { addAction } from '@wordpress/hooks';
-
-addAction('aether.provider.panel.after_form', 'my-plugin', (hookContext) => {
-    // Add content after provider panel form
-});
-```
-
----
-
 #### `aether.admin.provider.settings.saved`
 
 **Type**: Action
@@ -951,57 +840,6 @@ addFilter('aether.export.step.createBlueprintBundle.result', 'my-plugin', (resul
 
 ---
 
-#### `aether.publish.step.generateBlueprint.data`
-
-**Type**: Filter
-**Location**: `assets/src/export/steps/generateBlueprint/index.js`
-
-Filters blueprint data before the blueprint bundle is created.
-
-**Parameters**:
-- `blueprintData` (Object): Blueprint JSON object
-- `context` (Object): Execution context
-
-**Returns**: Modified blueprint data
-
-**Example**:
-```javascript
-import { addFilter } from '@wordpress/hooks';
-
-addFilter('aether.export.step.generateBlueprint.data', 'my-plugin', (blueprintData, context) => {
-    // Add custom metadata
-    blueprintData.description = 'My custom blueprint';
-    return blueprintData;
-});
-```
-
----
-
-#### `aether.publish.step.createBlueprintBundle.files`
-
-**Type**: Filter
-**Location**: `assets/src/export/steps/createBlueprintBundle/index.js`
-
-Filters the list of files to include in the blueprint bundle.
-
-**Parameters**:
-- `files` (Array): Array of file paths/assets
-- `context` (Object): Execution context
-
-**Returns**: Modified files array
-
-**Example**:
-```javascript
-import { addFilter } from '@wordpress/hooks';
-
-addFilter('aether.export.step.createBlueprintBundle.files', 'my-plugin', (files, context) => {
-    // Exclude specific files
-    return files.filter(file => !file.includes('exclude-me'));
-});
-```
-
----
-
 ### File Upload System
 
 #### `aether.file.upload`
@@ -1020,7 +858,6 @@ Unified action for all file uploads (blueprint bundles, static HTML, static asse
   - `storageKey` (string): Storage key/path
   - `providerId` (string): Provider instance ID
   - `metadata` (Object): Additional metadata (siteUrl, staticSiteUrl, etc.)
-  - `_uploadPromises` (Array): Array for handlers to register promises
 
 **Note**: Handlers should set `fileContext.result = { success: true/false, error?: string }` to communicate the upload result.
 
@@ -1033,16 +870,8 @@ addAction('aether.file.upload', 'my-provider', async (fileContext) => {
         return; // Not for this provider
     }
 
-    // Register upload promise
-    if (!fileContext._uploadPromises) {
-        fileContext._uploadPromises = [];
-    }
-
-    const uploadPromise = uploadToMyProvider(fileContext);
-    fileContext._uploadPromises.push(uploadPromise);
-
     try {
-        const result = await uploadPromise;
+        const result = await uploadToMyProvider(fileContext);
         fileContext.result = { success: true, url: result.url };
     } catch (error) {
         fileContext.result = { success: false, error: error.message };
