@@ -139,32 +139,24 @@ export class StorageService {
 	 */
 	async delete( key ) {
 		const prefixedKey = this._prefixKey( key );
-		return deleteFile( this.staticPath, prefixedKey, {} );
+		return deleteFile( this.staticPath, prefixedKey );
 	}
 
 	/**
 	 * Copy an object from source to destination within storage.
 	 *
-	 * @param {string} sourceKey Source object key.
-	 * @param {string} destKey   Destination object key.
 	 * @return {Promise<Object>} Result array with 'success' and optional 'error'.
 	 */
-	async copy( sourceKey, destKey ) {
-		const prefixedSourceKey = this._prefixKey( sourceKey );
-		const prefixedDestKey = this._prefixKey( destKey );
-		return copyFile( this.staticPath, prefixedSourceKey, prefixedDestKey );
+	async copy() {
+		return copyFile();
 	}
 
 	/**
 	 * Check if a file exists in storage.
 	 *
-	 * @param {string} key Object key/path.
 	 * @return {Promise<boolean>} True if exists, false otherwise.
 	 */
-	async exists( key ) {
-		// Key parameter kept for API consistency, but not used for local filesystem
-		// eslint-disable-next-line no-unused-vars
-		const _unused = key;
+	async exists() {
 		// Not implemented for local filesystem - not needed for static site generation
 		return false;
 	}
@@ -172,13 +164,10 @@ export class StorageService {
 	/**
 	 * List objects in storage.
 	 *
-	 * @param {string} prefix Optional prefix to filter objects.
-	 * @param {number} limit  Maximum number of objects to return.
 	 * @return {Promise<Object>} Result array with 'success', 'objects' array, and optional 'error'.
 	 */
-	async listObjects( prefix = '', limit = 1000 ) {
-		const prefixedPrefix = this._prefixKey( prefix );
-		return listObjectsFromAdapter( this.staticPath, prefixedPrefix, limit );
+	async listObjects() {
+		return listObjectsFromAdapter();
 	}
 
 	/**
@@ -199,11 +188,10 @@ export class StorageService {
 	/**
 	 * Batch copy multiple objects in storage.
 	 *
-	 * @param {Array} operations Array of {source, dest} objects.
 	 * @return {Promise<Object>} Result with success, copied count, errors count, and results array.
 	 */
-	async batchCopy( operations ) {
-		return batchCopyFromAdapter( this.staticPath, operations );
+	async batchCopy() {
+		return batchCopyFromAdapter();
 	}
 
 	/**
@@ -213,7 +201,7 @@ export class StorageService {
 	 * @return {Promise<Object>} Result with success and optional error.
 	 */
 	async batchDelete( keys ) {
-		return batchDeleteFromAdapter( this.staticPath, keys, {} );
+		return batchDeleteFromAdapter( this.staticPath, keys );
 	}
 
 	/**
@@ -231,8 +219,7 @@ export class StorageService {
 		try {
 			const blob = await downloadFileFromAdapter(
 				this.staticPath,
-				prefixedManifestKey,
-				{}
+				prefixedManifestKey
 			);
 			return blob;
 		} catch ( error ) {

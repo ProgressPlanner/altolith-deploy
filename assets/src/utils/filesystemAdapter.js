@@ -121,11 +121,9 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
  *
  * @param {string} staticPath Base path for static files.
  * @param {string} key        File path/key to delete.
- * @param {Object} options    Optional options (unused, kept for API consistency).
  * @return {Promise<Object>} Delete result.
  */
-// eslint-disable-next-line no-unused-vars
-export async function deleteFile( staticPath, key, options = {} ) {
+export async function deleteFile( staticPath, key ) {
 	debug( 'filesystemAdapter.deleteFile:', { staticPath, key } );
 
 	try {
@@ -152,15 +150,9 @@ export async function deleteFile( staticPath, key, options = {} ) {
 /**
  * Copy a file (not needed for local filesystem - files are uploaded directly).
  *
- * @param {string} staticPath Base path for static files.
- * @param {string} sourceKey  Source file path/key.
- * @param {string} destKey    Destination file path/key.
  * @return {Promise<Object>} Copy result.
  */
-export async function copyFile( staticPath, sourceKey, destKey ) {
-	// Parameters kept for API consistency, but not used for local filesystem
-	// eslint-disable-next-line no-unused-vars
-	const _unused = { staticPath, sourceKey, destKey };
+export async function copyFile() {
 	// Not implemented for local filesystem
 	// Files are uploaded directly to their final location
 	debug(
@@ -172,15 +164,9 @@ export async function copyFile( staticPath, sourceKey, destKey ) {
 /**
  * List objects in a directory (not needed for static site generation).
  *
- * @param {string} staticPath Base path for static files.
- * @param {string} prefix     Directory prefix to list.
- * @param {number} limit      Maximum number of objects to return.
  * @return {Promise<Object>} List result.
  */
-export async function listObjects( staticPath, prefix = '', limit = 1000 ) {
-	// Parameters kept for API consistency, but not used for local filesystem
-	// eslint-disable-next-line no-unused-vars
-	const _unused = { staticPath, prefix, limit };
+export async function listObjects() {
 	// Not implemented - not needed for static site generation
 	// Static site generator doesn't need to list existing files
 	debug(
@@ -192,14 +178,9 @@ export async function listObjects( staticPath, prefix = '', limit = 1000 ) {
 /**
  * Batch copy files (not needed for local filesystem).
  *
- * @param {string} staticPath Base path for static files.
- * @param {Array}  operations Array of {source, dest} operations.
  * @return {Promise<Object>} Batch copy result.
  */
-export async function batchCopy( staticPath, operations ) {
-	// Parameters kept for API consistency, but not used for local filesystem
-	// eslint-disable-next-line no-unused-vars
-	const _unused = { staticPath, operations };
+export async function batchCopy() {
 	// Not implemented for local filesystem
 	debug(
 		'filesystemAdapter.batchCopy: Not implemented (not needed for local storage)'
@@ -212,11 +193,9 @@ export async function batchCopy( staticPath, operations ) {
  *
  * @param {string} staticPath Base path for static files.
  * @param {Array}  keys       Array of file paths/keys to delete.
- * @param {Object} options    Optional options (unused, kept for API consistency).
  * @return {Promise<Object>} Batch delete result.
  */
-// eslint-disable-next-line no-unused-vars
-export async function batchDelete( staticPath, keys, options = {} ) {
+export async function batchDelete( staticPath, keys ) {
 	debug( 'filesystemAdapter.batchDelete:', {
 		staticPath,
 		count: keys.length,
@@ -250,11 +229,9 @@ export async function batchDelete( staticPath, keys, options = {} ) {
  *
  * @param {string} staticPath Base path for static files.
  * @param {string} key        File path/key to download.
- * @param {Object} options    Optional options (unused, kept for API consistency).
  * @return {Promise<Blob|null>} File blob or null if not found.
  */
-// eslint-disable-next-line no-unused-vars
-export async function downloadFile( staticPath, key, options = {} ) {
+export async function downloadFile( staticPath, key ) {
 	debug( 'filesystemAdapter.downloadFile:', { staticPath, key } );
 
 	try {

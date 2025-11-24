@@ -725,13 +725,10 @@ export class AbstractProvider {
 	 * @abstract
 	 * @param {string} sourcePath      Local file path to upload.
 	 * @param {string} destinationPath Destination path/key where file should be stored.
-	 * @param {Object} options         Optional upload options.
 	 * @return {Promise<Object>} Upload result with success status and URL.
 	 */
-	async uploadFile( sourcePath, destinationPath, options = {} ) {
-		// Options parameter kept for API consistency, but not used in abstract implementation
-		// eslint-disable-next-line no-unused-vars
-		const _unused = options;
+	// eslint-disable-next-line no-unused-vars
+	async uploadFile( sourcePath, destinationPath ) {
 		throw new Error(
 			'AbstractProvider.uploadFile() must be implemented by subclass'
 		);
@@ -824,12 +821,9 @@ export class AbstractProvider {
 	 * Optional method that providers can override to render custom settings UI.
 	 * If not overridden, the default ProviderSettings component will be used.
 	 *
-	 * @param {HTMLElement} container Container element to render into.
-	 * @param {Function}    onSave    Callback to call after successful save.
 	 * @return {void|null} Returns null to indicate no custom rendering (default behavior).
 	 */
-	// eslint-disable-next-line no-unused-vars
-	renderSettings( container, onSave ) {
+	renderSettings() {
 		// Default: return null to indicate no custom rendering
 		// ProviderSettings component will be used instead
 		return null;

@@ -210,13 +210,9 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 	 *
 	 * For LocalFilesystem, this checks if the export directory is writable.
 	 *
-	 * @param {Object} config Provider configuration.
 	 * @return {Promise<Object>} Connection test result
 	 */
-	async testConnection( config ) {
-		// Config parameter kept for API consistency, but not used for local filesystem
-		// eslint-disable-next-line no-unused-vars
-		const _unused = config;
+	async testConnection() {
 		try {
 			// For LocalFilesystem, we don't need to test anything
 			// The server-side will handle directory creation and permissions
@@ -243,13 +239,9 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 	 * For LocalFilesystem, this is a no-op since files are already local.
 	 * The actual export happens server-side in PHP.
 	 *
-	 * @param {Object} deploymentConfig Deployment configuration.
 	 * @return {Promise<Object>} Deployment result
 	 */
-	async deploy( deploymentConfig ) {
-		// DeploymentConfig parameter kept for API consistency, but not used for local filesystem
-		// eslint-disable-next-line no-unused-vars
-		const _unused = deploymentConfig;
+	async deploy() {
 		try {
 			// For LocalFilesystem, deployment is handled server-side
 			// This method is called during the export workflow,
@@ -276,13 +268,9 @@ export class LocalFilesystemStaticSiteProvider extends AbstractProvider {
 	/**
 	 * Get deployment status.
 	 *
-	 * @param {Object} config Provider configuration.
 	 * @return {Promise<Object>} Status result
 	 */
-	async getStatus( config ) {
-		// Config parameter kept for API consistency, but not used for local filesystem
-		// eslint-disable-next-line no-unused-vars
-		const _unused = config;
+	async getStatus() {
 		const configured = await this.isConfigured();
 
 		return {

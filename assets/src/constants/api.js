@@ -100,7 +100,6 @@ export const ENDPOINTS = {
 	 * These endpoints have been removed as they made HTTP requests that fail in WordPress Playground
 	 */
 	ASSETS: {
-		// Removed: DISCOVER, STATUS, MARK_CHANGED (now in useAssetDiscovery.js)
 		EXTRACT: `${ API_BASE_PATH }/assets/extract`,
 	},
 

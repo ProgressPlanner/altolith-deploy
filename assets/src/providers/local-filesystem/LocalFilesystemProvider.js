@@ -258,13 +258,9 @@ export class LocalFilesystemProvider extends AbstractProvider {
 	 *
 	 * For LocalFilesystem, this checks if the export directory is writable.
 	 *
-	 * @param {Object} config Provider configuration.
 	 * @return {Promise<Object>} Connection test result
 	 */
-	async testConnection( config ) {
-		// Config parameter kept for API consistency, but not used for local filesystem
-		// eslint-disable-next-line no-unused-vars
-		const _unused = config;
+	async testConnection() {
 		try {
 			// For LocalFilesystem, we don't need to test anything
 			// The server-side will handle directory creation and permissions
@@ -291,13 +287,9 @@ export class LocalFilesystemProvider extends AbstractProvider {
 	 * For LocalFilesystem, this is a no-op since files are already local.
 	 * The actual export happens server-side in PHP.
 	 *
-	 * @param {Object} deploymentConfig Deployment configuration.
 	 * @return {Promise<Object>} Deployment result
 	 */
-	async deploy( deploymentConfig ) {
-		// DeploymentConfig parameter kept for API consistency, but not used for local filesystem
-		// eslint-disable-next-line no-unused-vars
-		const _unused = deploymentConfig;
+	async deploy() {
 		try {
 			// For LocalFilesystem, deployment is handled server-side
 			// This method is called during the export workflow,
@@ -324,13 +316,9 @@ export class LocalFilesystemProvider extends AbstractProvider {
 	/**
 	 * Get deployment status.
 	 *
-	 * @param {Object} config Provider configuration.
 	 * @return {Promise<Object>} Status result
 	 */
-	async getStatus( config ) {
-		// Config parameter kept for API consistency, but not used for local filesystem
-		// eslint-disable-next-line no-unused-vars
-		const _unused = config;
+	async getStatus() {
 		const configured = await this.isConfigured();
 
 		return {
@@ -381,13 +369,10 @@ export class LocalFilesystemProvider extends AbstractProvider {
 	 *
 	 * @param {string} sourcePath      Local file path (relative to WordPress root).
 	 * @param {string} destinationPath Destination path within exports directory.
-	 * @param {Object} options         Optional upload options.
 	 * @return {Promise<Object>} Upload result with success status and URL.
 	 */
-	async uploadFile( sourcePath, destinationPath, options = {} ) {
-		// Options parameter kept for API consistency, but not used for local filesystem
-		// eslint-disable-next-line no-unused-vars
-		const _unused = options;
+	// eslint-disable-next-line no-unused-vars
+	async uploadFile( sourcePath, destinationPath ) {
 		try {
 			// For local filesystem, files are already local and don't need to be uploaded
 			// The blueprint-bundle.zip was created by the generateBlueprint step
