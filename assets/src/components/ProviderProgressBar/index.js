@@ -177,9 +177,7 @@ export function ProviderProgressBar( {
 						) }
 						<strong>{ providerLabel }</strong>
 					</div>
-					<div style={ percentageStyle }>
-						{ percentage }%
-					</div>
+					<div style={ percentageStyle }>{ percentage }%</div>
 				</div>
 
 				{ stepLabel && status === 'active' && (
@@ -197,10 +195,7 @@ export function ProviderProgressBar( {
 				) }
 
 				<div style={ progressBarWrapperStyle }>
-					<ProgressBar
-						progress={ progress }
-						height={ 8 }
-					/>
+					<ProgressBar progress={ progress } height={ 8 } />
 				</div>
 			</div>
 		</>

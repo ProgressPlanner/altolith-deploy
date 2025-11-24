@@ -13,8 +13,6 @@ import { useExportController } from '@aether/export/hooks/useExportController';
 import {
 	colors,
 	spacing,
-	fontSize,
-	fontWeight,
 	noticeStyles,
 	createFlexStyle,
 } from '@aether/utils/styles';
@@ -73,7 +71,6 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 		finalStatus,
 		error,
 		reset,
-		overallProgress,
 		staticSiteProviders,
 		blueprintBundleProviders,
 		providerProgress,

@@ -87,13 +87,13 @@ export function ExportProvider( { children } ) {
 	 */
 	const initializeSteps = useCallback(
 		( stepDefinitions = [], initialStepId = null ) => {
-		const newSteps = stepDefinitions.map( ( stepDef ) => ( {
-			id: stepDef.id,
-			label: stepDef.label,
-			status: 'pending',
-			supportsProgress: stepDef.supportsProgress || false,
-			progress: { current: 0, total: 0 },
-		} ) );
+			const newSteps = stepDefinitions.map( ( stepDef ) => ( {
+				id: stepDef.id,
+				label: stepDef.label,
+				status: 'pending',
+				supportsProgress: stepDef.supportsProgress || false,
+				progress: { current: 0, total: 0 },
+			} ) );
 
 			// If initialStepId is provided, activate it immediately
 			let initialStepIndex = -1;
