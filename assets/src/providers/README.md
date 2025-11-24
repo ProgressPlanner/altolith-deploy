@@ -256,22 +256,6 @@ function ProviderSettings({ providerId }) {
 }
 ```
 
-### useProviderConfig
-
-Manage provider configuration:
-
-```javascript
-import { useProviderConfig } from '../hooks/useProviderConfig';
-
-const {
-    config,
-    loading,
-    error,
-    loadConfig,
-} = useProviderConfig('local-filesystem');
-
-// Load configuration
-await loadConfig();
 ```
 
 ## Configuration Storage

@@ -67,37 +67,17 @@ export default function ProviderSettings( {
 	useEffect( () => {
 		// Get providers from JavaScript registry
 		const loadProviders = () => {
-			// eslint-disable-next-line no-console
-			console.log( 'ProviderSettings: Loading providers...' );
 			try {
 				// Get provider metadata from JavaScript registry
 				const allProviders = ProviderRegistry.getAll();
-				// eslint-disable-next-line no-console
-				console.log(
-					'ProviderSettings: Found',
-					allProviders.length,
-					'providers from registry'
-				);
 
 				// If no providers, wait a bit for them to register
 				if ( allProviders.length === 0 ) {
-					// eslint-disable-next-line no-console
-					console.log(
-						'ProviderSettings: No providers yet, waiting...'
-					);
 					let attempts = 0;
 					const maxAttempts = 20;
 					const interval = setInterval( () => {
 						attempts++;
 						const foundProviders = ProviderRegistry.getAll();
-						// eslint-disable-next-line no-console
-						console.log(
-							'ProviderSettings: Attempt',
-							attempts,
-							'- Found',
-							foundProviders.length,
-							'providers'
-						);
 						if (
 							foundProviders.length > 0 ||
 							attempts >= maxAttempts
@@ -106,10 +86,6 @@ export default function ProviderSettings( {
 							if ( foundProviders.length > 0 ) {
 								processProviders( foundProviders );
 							} else {
-								// eslint-disable-next-line no-console
-								console.warn(
-									'ProviderSettings: No providers found after waiting'
-								);
 								setProviders( [] );
 							}
 						}
@@ -128,12 +104,6 @@ export default function ProviderSettings( {
 		};
 
 		const processProviders = ( allProviders ) => {
-			// eslint-disable-next-line no-console
-			console.log(
-				'ProviderSettings: Processing',
-				allProviders.length,
-				'providers'
-			);
 			const providerMetadata = allProviders.map( ( ProviderClass ) => {
 				return {
 					id: ProviderClass.ID,
@@ -143,12 +113,6 @@ export default function ProviderSettings( {
 					settings_fields: ProviderClass.CONFIG_FIELDS || [],
 				};
 			} );
-
-			// eslint-disable-next-line no-console
-			console.log(
-				'ProviderSettings: Processed providers:',
-				providerMetadata.map( ( p ) => p.id )
-			);
 
 			setProviders( providerMetadata );
 		};

@@ -2,8 +2,6 @@
  * Usage Summary Hook
  *
  * Calculates usage summary from settings and provider status.
- * Uses SettingsContext to avoid duplicate API calls.
- * Simplified from 99 to 60 lines (-39% complexity).
  *
  */
 

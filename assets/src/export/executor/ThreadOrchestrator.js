@@ -375,17 +375,6 @@ export async function executeThreadedWorkflow(
 	// Categorize steps
 	const { globalSteps, threadSteps } = categorizeSteps( steps );
 
-	// Debug logging
-	if ( typeof window !== 'undefined' && window.console ) {
-		// eslint-disable-next-line no-console
-		console.log( '[Aether] ThreadOrchestrator - Step categorization:', {
-			totalSteps: steps.length,
-			globalSteps: globalSteps.map( ( s ) => s.id ),
-			threadSteps: threadSteps.map( ( s ) => s.id ),
-			providerInstances: providerInstances.length,
-		} );
-	}
-
 	// Execute global steps first (run once, shared across all threads)
 	let globalState = {};
 	if ( globalSteps.length > 0 ) {
@@ -402,15 +391,6 @@ export async function executeThreadedWorkflow(
 		...initialContext,
 		...globalState,
 	};
-
-	if ( typeof window !== 'undefined' && window.console ) {
-		// eslint-disable-next-line no-console
-		console.log( '[Aether] ThreadOrchestrator - After global steps:', {
-			providerInstancesCount: providerInstances.length,
-			threadStepsCount: threadSteps.length,
-			hasGlobalState: Object.keys( globalState ).length > 0,
-		} );
-	}
 
 	// Handle edge cases with providers and thread steps
 	if ( providerInstances.length === 0 ) {
@@ -436,13 +416,6 @@ export async function executeThreadedWorkflow(
 
 	// If there are providers but no thread steps, return early (nothing to do)
 	if ( threadSteps.length === 0 ) {
-		if ( typeof window !== 'undefined' && window.console ) {
-			// eslint-disable-next-line no-console
-			console.warn(
-				'[Aether] ThreadOrchestrator - No thread steps found, but providers exist:',
-				providerInstances.map( ( p ) => p.id )
-			);
-		}
 		return {
 			success: true,
 			globalState,
@@ -463,14 +436,6 @@ export async function executeThreadedWorkflow(
 	);
 
 	const executeProviderThread = async ( providerInstance ) => {
-		if ( typeof window !== 'undefined' && window.console ) {
-			// eslint-disable-next-line no-console
-			console.log(
-				'[Aether] ThreadOrchestrator - Executing thread for provider:',
-				providerInstance.id
-			);
-		}
-
 		// Build thread-specific context
 		const threadCallbacks = {
 			setStatusMessage: ( message, type, key, progress, metadata ) => {
@@ -517,16 +482,6 @@ export async function executeThreadedWorkflow(
 
 		// Execute thread steps for this provider instance
 		try {
-			if ( typeof window !== 'undefined' && window.console ) {
-				// eslint-disable-next-line no-console
-				console.log(
-					'[Aether] ThreadOrchestrator - Executing steps for provider:',
-					providerInstance.id,
-					'steps:',
-					threadSteps.map( ( s ) => s.id )
-				);
-			}
-
 			// executeSteps returns the execution state directly
 			// Pass all steps (global + thread) for dependency validation
 			// since thread steps may depend on global steps
@@ -589,35 +544,11 @@ export async function executeThreadedWorkflow(
 	};
 
 	// Execute provider threads with concurrency limiting
-	if ( typeof window !== 'undefined' && window.console ) {
-		// eslint-disable-next-line no-console
-		console.log(
-			'[Aether] ThreadOrchestrator - Starting thread execution:',
-			{
-				threadStepsCount: threadSteps.length,
-				providerInstancesCount: providerInstances.length,
-				maxConcurrency,
-			}
-		);
-	}
-
 	const threadResults = await limitConcurrency(
 		providerInstances,
 		executeProviderThread,
 		maxConcurrency
 	);
-
-	if ( typeof window !== 'undefined' && window.console ) {
-		// eslint-disable-next-line no-console
-		console.log(
-			'[Aether] ThreadOrchestrator - Thread execution completed:',
-			{
-				totalResults: threadResults.length,
-				successful: threadResults.filter( ( r ) => r.success ).length,
-				failed: threadResults.filter( ( r ) => ! r.success ).length,
-			}
-		);
-	}
 
 	// Check if any threads succeeded
 	const successfulThreads = threadResults.filter( ( r ) => r.success );

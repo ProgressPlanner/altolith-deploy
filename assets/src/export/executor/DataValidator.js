@@ -46,9 +46,10 @@ export function getProvideScope( step, key ) {
 
 	const definition = step.provides[ key ];
 
-	// Support both string format (legacy, defaults to thread) and object format
-	if ( typeof definition === 'string' ) {
-		return 'thread';
+	if ( typeof definition !== 'object' || definition === null ) {
+		throw new Error(
+			`Step "${ step.id }" provides "${ key }" with invalid format. Expected object with scope property.`
+		);
 	}
 
 	return definition.scope || 'thread';
@@ -208,9 +209,10 @@ export function getProvidesSummary( step ) {
 
 	const provides = Object.entries( step.provides ).map(
 		( [ key, definition ] ) => {
-			// Support both old format (string) and new format (object with type and scope)
-			if ( typeof definition === 'string' ) {
-				return `  - ${ key } (type: ${ definition })`;
+			if ( typeof definition !== 'object' || definition === null ) {
+				throw new Error(
+					`Step "${ step.id }" provides "${ key }" with invalid format. Expected object with type and scope properties.`
+				);
 			}
 			const type = definition.type || 'unknown';
 			const scope = definition.scope || 'thread';

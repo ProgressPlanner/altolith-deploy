@@ -123,20 +123,8 @@ const [isTesting, setIsTesting] = useState(false);
 
 ### Provider State
 
-Provider configuration managed by hooks:
+Provider configuration is managed through the `useProviderSettings` hook.
 
-```javascript
-const { config, loading, error, saveConfig } = useProviderConfig(providerId);
-```
-
-### Global State (Planned Phase 3)
-
-Will use Context API to reduce prop drilling:
-
-```javascript
-// Planned for Phase 3
-const { settings, updateSettings } = useSettingsContext();
-```
 
 ## Validation
 

@@ -270,8 +270,6 @@ if ( typeof window !== 'undefined' ) {
 	// Only create global registry if it doesn't exist (first bundle to load)
 	if ( ! window.aether.ProviderRegistry ) {
 		window.aether.ProviderRegistry = registry;
-		// eslint-disable-next-line no-console
-		console.log( 'ProviderRegistry: Created global registry instance' );
 	} else {
 		// If registry already exists, use the global one and sync providers
 		const globalRegistry = window.aether.ProviderRegistry;
@@ -285,12 +283,6 @@ if ( typeof window !== 'undefined' ) {
 		} );
 		// Use the global registry instead
 		exportedRegistry = globalRegistry;
-		// eslint-disable-next-line no-console
-		console.log(
-			'ProviderRegistry: Using global registry instance,',
-			globalRegistry.getAll().length,
-			'providers registered'
-		);
 	}
 }
 

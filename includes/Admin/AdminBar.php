@@ -100,13 +100,14 @@ class AdminBar
 		}
 
 		$scriptUrl = AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin-bar-export.js';
+		$scriptPath = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-bar-export.js';
 
 		// Get plugin version from file header.
 		$pluginData = \get_file_data(
 			AETHER_SITE_EXPORTER_PLUGIN_FILE,
 			[ 'Version' => 'Version' ]
 		);
-		$fileTime = \filemtime($scriptUrl);
+		$fileTime = \file_exists($scriptPath) ? \filemtime($scriptPath) : false;
 		$version = $pluginData['Version'] ?? ( $fileTime !== false ? (string) $fileTime : false );
 
 		\wp_enqueue_script(

@@ -63,31 +63,25 @@ const response = await fetchWithRetry(url, options, {
 - `RETRY_INITIAL_DELAY` - Initial retry delay in milliseconds (1000ms)
 - `RETRY_MAX_DELAY` - Maximum retry delay in milliseconds (30000ms)
 
-### providers.js
+### deploymentTypes.js
 
-Provider IDs, types, and categorization functions.
+Deployment type constants and labels.
 
 ```javascript
-import { PROVIDER_IDS, isGitProvider, hasCapability } from '../constants';
+import { DEPLOYMENT_TYPES, DEPLOYMENT_TYPE_LABELS } from '../constants';
 
-// Check provider type
-if (isGitProvider(providerId)) {
-    // Handle git provider
+// Check deployment type
+if (provider.DEPLOYMENT_TYPE === DEPLOYMENT_TYPES.STATIC_SITE) {
+    // Handle static site deployment
 }
 
-// Check capabilities
-if (hasCapability(provider, 'storage')) {
-    // Provider supports storage
-}
+// Get human-readable label
+const label = DEPLOYMENT_TYPE_LABELS[DEPLOYMENT_TYPES.STATIC_SITE];
 ```
 
 **Contents:**
-- `PROVIDER_IDS` - All provider ID constants
-- `PROVIDER_TYPES` - Provider type constants (storage, static-site)
-- `STORAGE_PROVIDERS` - Array of storage provider IDs
-- Helper functions:
-  - `isStorageProvider(providerId)` - Check if provider is storage
-  - `hasCapability(provider, capability)` - Check provider capabilities
+- `DEPLOYMENT_TYPES` - Deployment type identifiers (STATIC_SITE, BLUEPRINT_BUNDLE, EDGE_FUNCTIONS)
+- `DEPLOYMENT_TYPE_LABELS` - Human-readable labels for deployment types
 
 ### steps.js (Removed)
 
@@ -100,34 +94,13 @@ For step-related functionality, see:
 
 The publish workflow now uses a hook-based job orchestration system (`@wordpress/hooks`) instead of hardcoded constants.
 
-### capabilities.js
-
-Provider capability constants and validation functions.
-
-```javascript
-import { CAP_STORAGE, CAP_STATIC_SITE, hasRequiredCapabilities } from '../constants';
-
-// Check if provider meets requirements
-const required = [CAP_STORAGE, CAP_STATIC_SITE];
-if (hasRequiredCapabilities(provider.capabilities, required)) {
-    // Provider supports both storage and static site hosting
-}
-```
-
-**Contents:**
-- `CAP_STORAGE` - Storage capability constant
-- `CAP_STATIC_SITE` - Static site hosting capability
-- Helper functions:
-  - `hasRequiredCapabilities(providerCaps, requiredCaps)` - Validate capabilities
-  - `getCapabilityLabel(capability)` - Get human-readable label
-
 ### index.js
 
 Central export file. Import constants from here:
 
 ```javascript
 // ✅ Import from constants directory
-import { ENDPOINTS, POLLING_INTERVAL, PROVIDER_IDS } from '../constants';
+import { ENDPOINTS, POLLING_INTERVAL, DEPLOYMENT_TYPES } from '../constants';
 
 // ❌ Don't import from individual files
 import { ENDPOINTS } from '../constants/api'; // Avoid this
@@ -146,7 +119,7 @@ Add a constant when you find yourself:
 
 ### Naming Conventions
 
-- **ALL_CAPS** for simple constants: `POLLING_INTERVAL`, `PROVIDER_IDS`
+- **ALL_CAPS** for simple constants: `POLLING_INTERVAL`, `DEPLOYMENT_TYPES`
 - **NAMESPACED** objects for grouped constants: `ENDPOINTS.EXPORT_WORKFLOW.START`
 - **camelCase** for helper functions: `isGitProvider()`, `calculateProgress()`
 - **Descriptive names** that explain purpose: `RETRY_INITIAL_DELAY` not `DELAY_1`
@@ -160,11 +133,11 @@ fetch('/wp-json/aether/site-exporter/export/createArchive');
 if (providerId === 'local-filesystem') { }
 
 // ✅ After: Using constants
-import { POLLING_INTERVAL, ENDPOINTS, PROVIDER_IDS } from '../constants';
+import { POLLING_INTERVAL, ENDPOINTS, DEPLOYMENT_TYPES } from '../constants';
 
 setTimeout(checkStatus, POLLING_INTERVAL);
 fetch(ENDPOINTS.EXPORT_WORKFLOW.START);
-if (providerId === PROVIDER_IDS.CLOUDFLARE_R2) { }
+if (provider.DEPLOYMENT_TYPE === DEPLOYMENT_TYPES.STATIC_SITE) { }
 ```
 
 ## Benefits

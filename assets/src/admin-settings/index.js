@@ -54,9 +54,6 @@ const init = () => {
 		return;
 	}
 
-	// eslint-disable-next-line no-console
-	console.log( 'Aether: Initializing admin settings page...' );
-
 	try {
 		render(
 			<ErrorBoundary>
@@ -66,8 +63,6 @@ const init = () => {
 			</ErrorBoundary>,
 			container
 		);
-		// eslint-disable-next-line no-console
-		console.log( 'Aether: Admin settings page rendered successfully' );
 	} catch ( error ) {
 		// eslint-disable-next-line no-console
 		console.error( 'Aether: Error rendering admin settings page:', error );

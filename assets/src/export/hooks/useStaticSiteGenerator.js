@@ -170,57 +170,28 @@ export function useStaticSiteGenerator( onProgress ) {
 				}
 
 				// Validate data structure - expect { rawHtml, assetUrls } object
-				let rawHtml, assetUrls;
 				if (
 					typeof htmlDataEntry !== 'object' ||
 					htmlDataEntry === null
 				) {
 					debugWarn(
-						`[Aether] Invalid data structure for URL: ${ url }. Expected object with rawHtml and assetUrls, got:`,
-						typeof htmlDataEntry
+						`[Aether] Invalid data structure for URL: ${ url }. Expected object with rawHtml and assetUrls, got: ${ typeof htmlDataEntry }`
 					);
-					// Try to handle legacy string format for backward compatibility
-					if ( typeof htmlDataEntry === 'string' ) {
-						debugWarn(
-							`[Aether] Legacy string format detected for ${ url }. Converting to expected format.`
-						);
-						// Extract assets from the HTML string as fallback
-						const { extractAssetsFromHtml } = await import(
-							'@aether/export/utils/assetExtractor'
-						);
-						const extractedAssetUrls = await extractAssetsFromHtml(
-							htmlDataEntry,
-							url,
-							siteUrl
-						);
-						// Update the entry with correct format
-						sharedHtmlData.set( url, {
-							rawHtml: htmlDataEntry,
-							assetUrls: extractedAssetUrls,
-						} );
-						// Use the corrected data
-						rawHtml = htmlDataEntry;
-						assetUrls = extractedAssetUrls;
-					} else {
-						debugWarn(
-							`[Aether] Cannot process URL ${ url } - unsupported data type: ${ typeof htmlDataEntry }`
-						);
-						continue;
-					}
-				} else {
-					// Normal path: destructure expected object format
-					if (
-						! htmlDataEntry.rawHtml ||
-						! Array.isArray( htmlDataEntry.assetUrls )
-					) {
-						debugWarn(
-							`[Aether] Invalid object structure for URL: ${ url }. Expected { rawHtml, assetUrls }, got:`,
-							Object.keys( htmlDataEntry )
-						);
-						continue;
-					}
-					( { rawHtml, assetUrls } = htmlDataEntry );
+					continue;
 				}
+
+				if (
+					! htmlDataEntry.rawHtml ||
+					! Array.isArray( htmlDataEntry.assetUrls )
+				) {
+					debugWarn(
+						`[Aether] Invalid object structure for URL: ${ url }. Expected { rawHtml, assetUrls }, got:`,
+						Object.keys( htmlDataEntry )
+					);
+					continue;
+				}
+
+				const { rawHtml, assetUrls } = htmlDataEntry;
 
 				try {
 					// Update progress message

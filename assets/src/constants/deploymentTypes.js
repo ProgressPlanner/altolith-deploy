@@ -31,21 +31,3 @@ export const DEPLOYMENT_TYPE_LABELS = {
 		'aether-site-exporter'
 	),
 };
-
-/**
- * Descriptions for deployment types
- */
-export const DEPLOYMENT_TYPE_DESCRIPTIONS = {
-	[ DEPLOYMENT_TYPES.STATIC_SITE ]: __(
-		'Deploy static HTML/CSS/JS files for web hosting',
-		'aether-site-exporter'
-	),
-	[ DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE ]: __(
-		'Deploy WordPress Playground blueprint bundle (ZIP file)',
-		'aether-site-exporter'
-	),
-	[ DEPLOYMENT_TYPES.EDGE_FUNCTIONS ]: __(
-		'Deploy serverless functions to edge computing platforms',
-		'aether-site-exporter'
-	),
-};

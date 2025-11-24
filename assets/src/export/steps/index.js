@@ -55,17 +55,6 @@ export function getActiveSteps( context ) {
 
 	const steps = getRegisteredSteps();
 
-	// Debug logging
-	if ( typeof window !== 'undefined' && window.console ) {
-		// eslint-disable-next-line no-console
-		console.log( '[Aether] getActiveSteps - Filtering steps:', {
-			totalSteps: steps.length,
-			staticSiteProviders: staticSiteProviderInstances.length,
-			blueprintBundleProviders: blueprintBundleProviderInstances.length,
-			stepIds: steps.map( ( s ) => s.id ),
-		} );
-	}
-
 	// Filter out steps that should be skipped based on provider configuration
 	const filteredSteps = steps.filter( ( step ) => {
 		// If step has a static skip function, check it
@@ -93,15 +82,6 @@ export function getActiveSteps( context ) {
 
 		return true;
 	} );
-
-	// Debug logging
-	if ( typeof window !== 'undefined' && window.console ) {
-		// eslint-disable-next-line no-console
-		console.log( '[Aether] getActiveSteps - Filtered steps:', {
-			filteredCount: filteredSteps.length,
-			filteredIds: filteredSteps.map( ( s ) => s.id ),
-		} );
-	}
 
 	return filteredSteps;
 }

@@ -139,21 +139,6 @@ const {
 } = useProvider('local-filesystem');
 ```
 
-### useProviderConfig
-
-Manage provider configuration (separate from provider logic).
-
-**Returns:**
-```javascript
-const {
-    config,         // Current configuration
-    loading,        // Loading state
-    error,          // Error state
-    loadConfig,     // Load from storage
-    saveConfig,     // Save to storage
-    deleteConfig,   // Delete configuration
-} = useProviderConfig('local-filesystem');
-```
 
 ## Hook Patterns
 

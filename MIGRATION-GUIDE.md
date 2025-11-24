@@ -745,7 +745,6 @@ If you encounter migration issues:
 
 **New features:**
 - `useProviderSettings()` hook
-- `useProviderMetadataReload()` hook
 - Utility functions in `helpers.js`
 - Global error handler
 - Debug utilities

@@ -5,7 +5,7 @@
  * Import from this file for convenience:
  *
  * @example
- * import { ENDPOINTS, PUBLISH_STEPS, CAP_STORAGE } from '../constants';
+ * import { ENDPOINTS, POLLING_INTERVAL } from '../constants';
  */
 
 // API Constants
@@ -13,9 +13,3 @@ export * from './api.js';
 
 // Timing Constants
 export * from './timing.js';
-
-// Provider Constants
-export * from './providers.js';
-
-// Capability Constants
-export * from './capabilities.js';
