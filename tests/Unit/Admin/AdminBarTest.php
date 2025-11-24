@@ -136,7 +136,8 @@ class AdminBarTest extends TestCase
 
 		$this->assertNotNull( $capturedArgs );
 		$this->assertStringContainsString( '<svg', $capturedArgs['title'] );
-		$this->assertStringContainsString( 'cloudUpload', $capturedArgs['title'] );
+		$this->assertStringContainsString( 'viewBox="0 0 24 24"', $capturedArgs['title'] );
+		$this->assertStringContainsString( '</svg>', $capturedArgs['title'] );
 	}
 
 	/**
