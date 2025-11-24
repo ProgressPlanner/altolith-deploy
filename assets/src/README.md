@@ -6,7 +6,6 @@ This directory contains all JavaScript/React source code for the Aether WordPres
 
 ```
 assets/src/
-├── admin-common/        # Shared admin UI components
 ├── admin-settings/      # Plugin settings page
 ├── components/          # Shared React components
 ├── constants/           # Centralized constants (API, timing, providers, etc.)

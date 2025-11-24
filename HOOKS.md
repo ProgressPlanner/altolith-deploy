@@ -2068,7 +2068,7 @@ add_action('admin_enqueue_scripts', function() {
     wp_enqueue_script(
         'my-custom-provider',
         plugin_dir_url(__FILE__) . 'assets/my-provider.js',
-        ['aether-admin-common'], // Dependencies
+        [], // Dependencies (providers register automatically when their scripts load)
         '1.0.0',
         true
     );

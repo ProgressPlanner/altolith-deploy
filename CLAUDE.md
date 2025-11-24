@@ -295,7 +295,6 @@ Key principles:
 
 **Entry Points:**
 - `admin-settings` → Settings page UI (`assets/src/admin-settings/`)
-- `admin-common` → Global variables/shared code (`assets/src/admin-common/`)
 
 **Key Patterns:**
 
@@ -702,7 +701,6 @@ aether-site-exporter/
 │
 ├── assets/
 │   ├── src/              # JavaScript source (primary logic layer)
-│   │   ├── admin-common/ # Shared admin code
 │   │   ├── admin-settings/ # Settings page
 │   │   ├── publish/      # Main publish feature
 │   │   │   ├── components/ # React components
