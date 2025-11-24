@@ -145,7 +145,7 @@ jest.mock( '@aether/utils/api', () => ( {
 	default: jest.fn(),
 } ) );
 
-jest.mock( '@aether/utils/validation', () => ( {
+jest.mock( '../utils/validation', () => ( {
 	validateConfig: jest.fn( () => ( {} ) ),
 } ) );
 
