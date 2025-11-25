@@ -353,9 +353,7 @@ export class ConfigFieldBuilder {
 	build() {
 		// Set default label if not provided
 		if ( ! this.field.label ) {
-			this.field.label = this.field.name
-				.replace( /[_-]/g, ' ' )
-				.replace( /\b\w/g, ( char ) => char.toUpperCase() );
+			this.field.label = this.field.name;
 		}
 
 		// Set 'id' as an alias for 'name'

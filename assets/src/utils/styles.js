@@ -90,7 +90,6 @@ export const statusBadgeStyles = {
 		borderRadius: borderRadius.sm,
 		fontSize: fontSize.base,
 		fontWeight: fontWeight.semibold,
-		textTransform: 'uppercase',
 		letterSpacing: '0.5px',
 	},
 	success: {

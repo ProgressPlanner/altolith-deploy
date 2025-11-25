@@ -28,10 +28,7 @@ export class LocalFilesystemBlueprintBundleProvider {
 	 *
 	 * @type {string}
 	 */
-	static NAME = __(
-		'Local Filesystem (Blueprint Bundle)',
-		'aether-site-exporter'
-	);
+	static NAME = __( 'Local Filesystem', 'aether-site-exporter' );
 
 	/**
 	 * Provider type.

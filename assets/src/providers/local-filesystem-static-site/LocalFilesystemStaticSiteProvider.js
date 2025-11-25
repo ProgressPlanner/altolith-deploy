@@ -28,7 +28,7 @@ export class LocalFilesystemStaticSiteProvider {
 	 *
 	 * @type {string}
 	 */
-	static NAME = __( 'Local Filesystem (Static Site)', 'aether' );
+	static NAME = __( 'Local Filesystem', 'aether-site-exporter' );
 
 	/**
 	 * Provider type.
