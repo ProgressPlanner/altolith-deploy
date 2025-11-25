@@ -121,10 +121,14 @@ export async function fetchProviderConfig( staticSiteProviderId ) {
 /**
  * Create and configure storage service.
  *
+ * Uses the StorageService adapter pattern for provider instance isolation.
+ * Each provider type registers a filter on 'aether.storage.service.create' to
+ * inject its own StorageService with a provider-specific upload adapter.
+ *
  * @param {string} staticPath     Static files path.
  * @param {Object} config         Storage configuration.
- * @param {string} providerId     Provider ID.
- * @param {Object} providerConfig Provider configuration.
+ * @param {string} providerId     Provider ID (full instance ID with UUID).
+ * @param {Object} providerConfig Provider configuration (already loaded).
  * @return {Promise<Object>} Storage service instance.
  */
 export async function createStorageService(
@@ -143,12 +147,15 @@ export async function createStorageService(
 	);
 
 	// Allow filter to override storage service creation
+	// Pass providerConfig as 5th parameter so providers can use it
+	// (WordPress filters are synchronous, so config must be pre-loaded)
 	let storageService = applyFilters(
 		'aether.storage.service.create',
 		null,
 		staticPath,
 		filteredConfig,
-		providerId
+		providerId,
+		providerConfig
 	);
 
 	// Create default if not overridden

@@ -2,12 +2,16 @@
  * Local Filesystem Blueprint Bundle Provider
  *
  * Handles blueprint bundle uploads to local filesystem.
- * Single responsibility: copy blueprint bundle file to destinationPath.
+ * Uses the StorageService adapter pattern for true provider instance isolation.
+ *
+ * Note: Blueprint bundles are server-side files that need to be copied via PHP,
+ * so the upload adapter calls a REST API endpoint instead of using direct file upload.
  *
  */
 
-import { addAction, doAction } from '@wordpress/hooks';
+import { addFilter, doAction } from '@wordpress/hooks';
 import apiFetch from '@aether/utils/api';
+import { StorageService } from '../services/storageService';
 import { LocalFilesystemBlueprintBundleProvider } from './LocalFilesystemBlueprintBundleProvider';
 import ProviderRegistry from '../registry/ProviderRegistry';
 
@@ -20,169 +24,96 @@ ProviderRegistry.register(
 // Also trigger the hook for any listeners
 doAction( 'aether.providers.register', LocalFilesystemBlueprintBundleProvider );
 
-// Track upload results per provider instance
-const uploadResults = {};
-
-// Track processed files per provider to avoid duplicate processing
-// Value can be: true (processed), or a Promise (in progress)
-const processedFiles = new Map();
-
 /**
- * Handle unified file upload for blueprint bundle provider.
+ * Create upload adapter for blueprint bundle.
  *
- * @param {Object} fileContext Unified file context from aether.file.upload action.
- * @return {Promise<void>}
+ * Blueprint bundles are server-side files that need to be copied via PHP REST API.
+ * The adapter encapsulates this provider-specific upload logic.
+ *
+ * @param {string} staticPath Path to upload files to.
+ * @param {string} providerId Provider instance ID.
+ * @return {Object} Upload adapter with upload() method.
  */
-async function handleUnifiedFileUpload( fileContext ) {
-	const {
-		providerId,
-		fileType,
-		filePath,
-		destinationPath,
-		metadata = {},
-	} = fileContext;
+function createUploadAdapter( staticPath, providerId ) {
+	return {
+		/**
+		 * Upload a blueprint bundle file.
+		 *
+		 * For blueprint bundles, the "file" parameter is expected to be a Blob
+		 * containing metadata about the source file path, since the actual file
+		 * exists on the server and needs to be copied via PHP.
+		 *
+		 * @param {string}    key     Storage key (destination file path).
+		 * @param {File|Blob} file    File or Blob (may contain source path metadata).
+		 * @param {Object}    options Upload options.
+		 * @return {Promise<Object>} Upload result.
+		 */
+		async upload( key, file, options = {} ) {
+			// For blueprint bundles, we need the source path from metadata
+			// The key is the destination path
+			const sourcePath = options.sourcePath || options.filePath;
 
-	// Only handle requests for local-filesystem providers that support blueprint_bundle
-	if ( ! providerId || ! providerId.startsWith( 'local-filesystem' ) ) {
-		return;
-	}
-
-	// Check if this is a blueprint bundle provider by checking provider ID
-	// Since providers have single responsibility, we can check the provider ID directly
-	if (
-		! providerId ||
-		! providerId.startsWith( 'local-filesystem-blueprint-bundle' )
-	) {
-		return;
-	}
-
-	// Only process blueprint bundle files, not static files
-	if ( fileType !== 'blueprint-bundle' ) {
-		return;
-	}
-
-	// Create a unique key for this file+provider combination
-	const fileKey = `${ providerId }:${ filePath || destinationPath }`;
-
-	// Check if file is already processed or in progress
-	const existingEntry = processedFiles.get( fileKey );
-	if ( existingEntry === true ) {
-		// Already processed successfully
-		return;
-	}
-	if ( existingEntry instanceof Promise ) {
-		// Already in progress - wait for it to complete
-		try {
-			await existingEntry;
-		} catch ( error ) {
-			// If the other handler failed, we can try again
-			// Remove the failed promise so we can retry
-			if ( processedFiles.get( fileKey ) === existingEntry ) {
-				processedFiles.delete( fileKey );
-			}
-		}
-		// Check again after waiting
-		if ( processedFiles.get( fileKey ) === true ) {
-			return;
-		}
-	}
-
-	// Mark as in progress by storing a promise
-	// This promise will be resolved/rejected when processing completes
-	const processingPromise = ( async () => {
-		try {
-			// Initialize results tracking for this provider if needed
-			if ( ! uploadResults[ providerId ] ) {
-				uploadResults[ providerId ] = {
-					filesProcessed: 0,
-					filesUploaded: 0,
-					errors: [],
-				};
-			}
-
-			uploadResults[ providerId ].filesProcessed++;
-
-			// Blueprint bundle is a file path, not content
-			if ( ! filePath ) {
-				throw new Error( 'Blueprint bundle file path is required' );
-			}
-
-			// Trigger PHP action hook for blueprint bundle upload
-			// Use destinationPath from abstraction layer
-			const response = await apiFetch( {
-				path: '/aether/site-exporter/local-storage/trigger-blueprint-bundle-upload',
-				method: 'POST',
-				data: {
-					instance_id: providerId,
-					source_path: filePath,
-					destination_path: destinationPath,
-					context: metadata,
-				},
-			} );
-
-			if ( ! response.success ) {
-				fileContext.result = {
+			if ( ! sourcePath ) {
+				return {
 					success: false,
-					error:
-						response.message ||
-						'Failed to trigger blueprint bundle upload',
+					error: 'Blueprint bundle source path is required',
 				};
-				throw new Error(
-					response.message ||
-						'Failed to trigger blueprint bundle upload'
-				);
 			}
 
-			uploadResults[ providerId ].filesUploaded++;
-			// Set result on fileContext for unified upload system
-			fileContext.result = { success: true };
-		} catch ( error ) {
-			uploadResults[ providerId ].errors.push( {
-				url: filePath,
-				error: error.message || 'Unknown error',
-			} );
-			// Set result on fileContext for unified upload system
-			fileContext.result = {
-				success: false,
-				error: error.message || 'Unknown error',
-			};
-			// Re-throw so the promise wrapper can handle it
-			throw error;
-		}
-		// Mark as processed after successful completion
-		processedFiles.set( fileKey, true );
-	} )().catch( ( error ) => {
-		// Remove from map on error so it can be retried
-		if ( processedFiles.get( fileKey ) === processingPromise ) {
-			processedFiles.delete( fileKey );
-		}
-		throw error;
-	} );
+			try {
+				// Trigger PHP action hook for blueprint bundle upload
+				const response = await apiFetch( {
+					path: '/aether/site-exporter/local-storage/trigger-blueprint-bundle-upload',
+					method: 'POST',
+					data: {
+						instance_id: providerId,
+						source_path: sourcePath,
+						destination_path: staticPath,
+						context: options.metadata || {},
+					},
+				} );
 
-	// Store the promise so other handlers can wait for it
-	processedFiles.set( fileKey, processingPromise );
+				if ( ! response.success ) {
+					return {
+						success: false,
+						error:
+							response.message ||
+							'Failed to trigger blueprint bundle upload',
+					};
+				}
 
-	// Wait for processing to complete
-	await processingPromise;
+				return { success: true };
+			} catch ( error ) {
+				return {
+					success: false,
+					error: error.message || 'Blueprint bundle upload failed',
+				};
+			}
+		},
+	};
 }
 
 /**
- * Register unified file upload action hook.
+ * Register storage service creation filter.
  *
- * Handles blueprint bundle uploads via the unified aether.file.upload action.
+ * This filter intercepts storage service creation for local-filesystem-blueprint-bundle
+ * provider instances. Each instance gets its own StorageService with an adapter
+ * configured for its specific settings, achieving true instance isolation.
  */
-addAction(
-	'aether.file.upload',
+addFilter(
+	'aether.storage.service.create',
 	'aether/local-filesystem-blueprint-bundle',
-	( fileContext ) => {
-		// Initialize promise array on fileContext if not exists
-		if ( ! fileContext._uploadPromises ) {
-			fileContext._uploadPromises = [];
+	( service, staticPath, config, providerId ) => {
+		// Only handle this provider type
+		if ( ! providerId?.startsWith( 'local-filesystem-blueprint-bundle' ) ) {
+			return service;
 		}
 
-		// Start upload and add promise to context
-		const uploadPromise = handleUnifiedFileUpload( fileContext );
-		fileContext._uploadPromises.push( uploadPromise );
+		// Create instance-specific upload adapter
+		const uploadAdapter = createUploadAdapter( staticPath, providerId );
+
+		// Return new StorageService with the adapter
+		return new StorageService( staticPath, config, uploadAdapter );
 	},
 	10
 );

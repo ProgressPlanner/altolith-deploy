@@ -2,19 +2,19 @@
  * Upload Blueprint Bundle Step
  *
  * Uploads blueprint-bundle.zip to configured provider(s).
+ * Uses the StorageService adapter pattern for provider instance isolation.
  *
  * @since 1.0.0
  */
 
 import { __, sprintf } from '@wordpress/i18n';
 import { addAction } from '@wordpress/hooks';
-import apiFetch from '@wordpress/api-fetch';
 import { formatFileSize } from '../../utils/helpers';
 import {
-	createFileContext,
-	FILE_TYPES,
-	uploadFile,
-} from '@aether/export/utils/unifiedFileUpload';
+	createStorageService,
+	fetchProviderConfig,
+	buildStorageConfig,
+} from '../../utils/staticSiteConfig';
 
 /**
  * Upload blueprint bundle step handler
@@ -69,39 +69,54 @@ async function handler( context ) {
 	);
 
 	// Fetch provider config to get export_path
-	let exportPath = 'blueprint-bundle/bundle.zip';
-	try {
-		const providerResponse = await apiFetch( {
-			path: `/aether/site-exporter/providers/${ providerId }/config`,
-		} );
-		if ( providerResponse.success && providerResponse.config ) {
-			const providerConfig = providerResponse.config || {};
-			if ( providerConfig.export_path ) {
-				exportPath = providerConfig.export_path;
-			}
-		}
-	} catch {
-		// Use default path on error
+	const providerConfig = await fetchProviderConfig( providerId );
+	const exportPath =
+		providerConfig.export_path || 'blueprint-bundle/bundle.zip';
+
+	// Build storage config and create storage service
+	const storageConfig = buildStorageConfig( siteUrl, siteUrl, providerId );
+	const storageService = await createStorageService(
+		exportPath,
+		storageConfig,
+		providerId,
+		providerConfig
+	);
+
+	if ( ! storageService ) {
+		throw new Error(
+			sprintf(
+				/* translators: %s: Provider label */
+				__(
+					'Storage service not available for %s',
+					'aether-site-exporter'
+				),
+				providerLabel
+			)
+		);
 	}
 
-	// Create unified file context for blueprint bundle
-	const fileContext = createFileContext( {
-		fileType: FILE_TYPES.BLUEPRINT_BUNDLE,
-		filePath: blueprintBundle.bundlePath,
-		fileContent: null,
+	// For blueprint bundles, we need to pass the source path via metadata
+	// since the actual file is on the server
+	const dummyBlob = new Blob( [], { type: 'application/zip' } );
+	const uploadResult = await storageService.upload( exportPath, dummyBlob, {
 		contentType: 'application/zip',
-		storageKey: exportPath,
-		providerId,
+		sourcePath: blueprintBundle.bundlePath,
+		filePath: blueprintBundle.bundlePath,
 		metadata: {
-			...context,
 			siteUrl,
 			exportPath,
 		},
 	} );
 
-	// Upload file using unified upload system
-	// This fires aether.file.upload action which providers hook into
-	await uploadFile( fileContext );
+	if ( ! uploadResult.success ) {
+		throw new Error(
+			uploadResult.error ||
+				__(
+					'Failed to upload blueprint bundle',
+					'aether-site-exporter'
+				)
+		);
+	}
 
 	// Report success
 	setStatusMessage(

@@ -2,12 +2,16 @@
  * Local Filesystem Static Site Provider
  *
  * Handles static file uploads (HTML, CSS, JS) to local filesystem.
- * Single responsibility: upload static files to destinationPath.
+ * Uses the StorageService adapter pattern for true provider instance isolation.
+ *
+ * Each provider instance gets its own StorageService via the 'aether.storage.service.create'
+ * filter, ensuring complete isolation between instances (even of the same provider type).
  *
  */
 
-import { addAction, doAction } from '@wordpress/hooks';
-import { uploadFile as uploadFileToStorage } from '../services/filesystemAdapter';
+import { addFilter, doAction } from '@wordpress/hooks';
+import { uploadFile as uploadFileToFilesystem } from '../services/filesystemAdapter';
+import { StorageService } from '../services/storageService';
 import { LocalFilesystemStaticSiteProvider } from './LocalFilesystemStaticSiteProvider';
 import ProviderRegistry from '../registry/ProviderRegistry';
 
@@ -20,202 +24,56 @@ ProviderRegistry.register(
 // Also trigger the hook for any listeners
 doAction( 'aether.providers.register', LocalFilesystemStaticSiteProvider );
 
-// Track upload results per provider instance
-const uploadResults = {};
-
-// Track processed files per provider to avoid duplicate processing
-// Value can be: true (processed), or a Promise (in progress)
-const processedFiles = new Map();
-
 /**
- * Handle unified file upload for static site provider.
+ * Create upload adapter for local filesystem static site.
  *
- * @param {Object} fileContext Unified file context from aether.file.upload action.
- * @return {Promise<void>}
+ * The adapter encapsulates the provider-specific upload logic while
+ * allowing the StorageService to handle common concerns (manifest, URL building, etc.).
+ *
+ * @param {string} staticPath Path to upload files to.
+ * @return {Object} Upload adapter with upload() method.
  */
-async function handleUnifiedFileUpload( fileContext ) {
-	const {
-		providerId,
-		fileType,
-		fileContent,
-		contentType,
-		storageKey,
-		destinationPath,
-	} = fileContext;
-
-	// Only handle requests for local-filesystem providers that support static_site
-	if ( ! providerId || ! providerId.startsWith( 'local-filesystem' ) ) {
-		return;
-	}
-
-	// Check if this is a static site provider by checking provider ID
-	// Since providers have single responsibility, we can check the provider ID directly
-	if (
-		! providerId ||
-		! providerId.startsWith( 'local-filesystem-static-site' )
-	) {
-		return;
-	}
-
-	// Only process static files (HTML and assets), not blueprint bundles
-	if ( fileType === 'blueprint-bundle' ) {
-		return;
-	}
-
-	// Create a unique key for this file+provider combination
-	const fileKey = `${ providerId }:${ storageKey }`;
-
-	// Check if file is already processed or in progress
-	const existingEntry = processedFiles.get( fileKey );
-	if ( existingEntry === true ) {
-		// Already processed successfully
-		return;
-	}
-	if ( existingEntry instanceof Promise ) {
-		// Already in progress - wait for it to complete
-		try {
-			await existingEntry;
-		} catch ( error ) {
-			// If the other handler failed, we can try again
-			// Remove the failed promise so we can retry
-			if ( processedFiles.get( fileKey ) === existingEntry ) {
-				processedFiles.delete( fileKey );
-			}
-		}
-		// Check again after waiting
-		if ( processedFiles.get( fileKey ) === true ) {
-			return;
-		}
-	}
-
-	// Mark as in progress by storing a promise
-	// This promise will be resolved/rejected when processing completes
-	const processingPromise = ( async () => {
-		try {
-			// Initialize results tracking for this provider if needed
-			if ( ! uploadResults[ providerId ] ) {
-				uploadResults[ providerId ] = {
-					filesProcessed: 0,
-					filesUploaded: 0,
-					errors: [],
-				};
-			}
-
-			uploadResults[ providerId ].filesProcessed++;
-
-			// Get file content as Blob
-			let fileBlob = null;
-			if ( fileContent ) {
-				if ( typeof fileContent === 'string' ) {
-					fileBlob = new Blob( [ fileContent ], {
-						type: contentType || 'text/html',
-					} );
-				} else if ( fileContent instanceof Blob ) {
-					fileBlob = fileContent;
-				}
-			} else {
-				throw new Error(
-					'File content is required for static site files'
-				);
-			}
-
-			if ( ! fileBlob ) {
-				throw new Error( 'Failed to get file content' );
-			}
-
-			// Determine storage key
-			let finalStorageKey = storageKey;
-			if ( ! finalStorageKey ) {
-				throw new Error( 'Storage key is required' );
-			}
-
-			// Remove leading slash and ensure relative path
-			finalStorageKey = finalStorageKey.replace( /^\/+/, '' );
-
-			// Handle directory paths (add index.html)
-			const hasFileExtension = /\.[a-zA-Z0-9]+$/.test( finalStorageKey );
-			const isHtml = contentType && contentType.includes( 'text/html' );
-			if ( finalStorageKey === '' ) {
-				finalStorageKey = 'index.html';
-			} else if ( finalStorageKey.endsWith( '/' ) ) {
-				finalStorageKey =
-					finalStorageKey.replace( /\/+$/, '' ) + '/index.html';
-			} else if ( ! hasFileExtension && isHtml ) {
-				finalStorageKey = finalStorageKey + '/index.html';
-			}
-
-			// Upload file via filesystemAdapter
-			// Use destinationPath from abstraction layer
-			const uploadResult = await uploadFileToStorage(
-				destinationPath,
-				finalStorageKey,
-				fileBlob,
-				{
-					contentType: contentType || 'text/html',
-				}
-			);
-
-			if ( uploadResult.success ) {
-				uploadResults[ providerId ].filesUploaded++;
-				// Set result on fileContext for unified upload system
-				fileContext.result = { success: true };
-			} else {
-				uploadResults[ providerId ].errors.push( {
-					path: finalStorageKey,
-					error: uploadResult.error || 'Upload failed',
-				} );
-				// Set result on fileContext for unified upload system
-				fileContext.result = {
-					success: false,
-					error: uploadResult.error || 'Upload failed',
-				};
-			}
-		} catch ( error ) {
-			uploadResults[ providerId ].errors.push( {
-				error: error.message || 'Unknown error',
-			} );
-			// Set result on fileContext for unified upload system
-			fileContext.result = {
-				success: false,
-				error: error.message || 'Unknown error',
-			};
-			// Re-throw so the promise wrapper can handle it
-			throw error;
-		}
-		// Mark as processed after successful completion
-		processedFiles.set( fileKey, true );
-	} )().catch( ( error ) => {
-		// Remove from map on error so it can be retried
-		if ( processedFiles.get( fileKey ) === processingPromise ) {
-			processedFiles.delete( fileKey );
-		}
-		throw error;
-	} );
-
-	// Store the promise so other handlers can wait for it
-	processedFiles.set( fileKey, processingPromise );
-
-	// Wait for processing to complete
-	await processingPromise;
+function createUploadAdapter( staticPath ) {
+	return {
+		/**
+		 * Upload a file to local filesystem.
+		 *
+		 * @param {string}    key     Storage key (file path).
+		 * @param {File|Blob} file    File to upload.
+		 * @param {Object}    options Upload options (contentType, etc.).
+		 * @return {Promise<Object>} Upload result.
+		 */
+		async upload( key, file, options = {} ) {
+			return uploadFileToFilesystem( staticPath, key, file, options );
+		},
+	};
 }
 
 /**
- * Register unified file upload action hook.
+ * Register storage service creation filter.
  *
- * Handles static file uploads (HTML, CSS, JS) via the unified aether.file.upload action.
+ * This filter intercepts storage service creation for local-filesystem-static-site
+ * provider instances. Each instance gets its own StorageService with an adapter
+ * configured for its specific staticPath, achieving true instance isolation.
+ *
+ * The filter receives the full provider instance ID (e.g., 'local-filesystem-static-site:uuid'),
+ * allowing it to configure instance-specific settings.
  */
-addAction(
-	'aether.file.upload',
+addFilter(
+	'aether.storage.service.create',
 	'aether/local-filesystem-static-site',
-	( fileContext ) => {
-		// Initialize promise array on fileContext if not exists
-		if ( ! fileContext._uploadPromises ) {
-			fileContext._uploadPromises = [];
+	( service, staticPath, config, providerId ) => {
+		// Only handle this provider type
+		if ( ! providerId?.startsWith( 'local-filesystem-static-site' ) ) {
+			return service;
 		}
 
-		// Start upload and add promise to context
-		const uploadPromise = handleUnifiedFileUpload( fileContext );
-		fileContext._uploadPromises.push( uploadPromise );
+		// Create instance-specific upload adapter using THIS instance's staticPath
+		const uploadAdapter = createUploadAdapter( staticPath );
+
+		// Return new StorageService with the adapter
+		// This StorageService is isolated to this specific provider instance
+		return new StorageService( staticPath, config, uploadAdapter );
 	},
 	10
 );

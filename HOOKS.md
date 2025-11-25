@@ -923,70 +923,78 @@ addFilter('aether.export.step.createBlueprintBundle.result', 'my-plugin', (resul
 
 ---
 
-### File Upload System
+### Storage Service System
 
-#### `aether.file.upload`
-
-**Type**: Action
-**Location**: `assets/src/export/utils/unifiedFileUpload.js`
-
-Unified action for all file uploads (blueprint bundles, static HTML, static assets). Providers should hook into this action to handle uploads.
-
-**Parameters**:
-- `fileContext` (Object): File context object containing:
-  - `fileType` (string): File type (blueprint-bundle, static-html, static-asset)
-  - `filePath` (string): File path or URL
-  - `fileContent` (Blob|string): File content
-  - `contentType` (string): MIME type
-  - `storageKey` (string): Storage key/path
-  - `providerId` (string): Provider instance ID
-  - `metadata` (Object): Additional metadata (siteUrl, staticSiteUrl, etc.)
-
-**Note**: Handlers should set `fileContext.result = { success: true/false, error?: string }` to communicate the upload result.
-
-**Example**:
-```javascript
-import { addAction } from '@wordpress/hooks';
-
-addAction('aether.file.upload', 'my-provider', async (fileContext) => {
-    if (!fileContext.providerId.startsWith('my-provider:')) {
-        return; // Not for this provider
-    }
-
-    try {
-        const result = await uploadToMyProvider(fileContext);
-        fileContext.result = { success: true, url: result.url };
-    } catch (error) {
-        fileContext.result = { success: false, error: error.message };
-    }
-});
-```
-
----
-
-#### `aether.file.upload.context`
+#### `aether.storage.service.create`
 
 **Type**: Filter
-**Location**: `assets/src/export/utils/unifiedFileUpload.js`
+**Location**: `assets/src/export/utils/staticSiteConfig.js`
 
-Filters the file context before the upload action is fired. Allows modifying the context or file content before upload.
+Allows providers to inject their own StorageService instance with a custom upload adapter. This is the primary hook for provider integration, enabling true provider instance isolation.
+
+Each provider type should register a filter that returns a StorageService configured for that provider's specific upload mechanism (filesystem, R2 Worker, etc.).
 
 **Parameters**:
-- `fileContext` (Object): File context object
-- `providerId` (string): Provider instance ID
+- `service` (StorageService|null): Current storage service (null by default)
+- `staticPath` (string): Path for static files storage
+- `config` (Object): Storage configuration with public_url, base_url, provider_id
+- `providerId` (string): Full provider instance ID (e.g., 'my-provider:uuid')
+- `providerConfig` (Object): Provider-specific configuration loaded from REST API
 
-**Returns**: Modified file context
+**Returns**: StorageService instance or null to use default
 
 **Example**:
 ```javascript
 import { addFilter } from '@wordpress/hooks';
+import { StorageService } from '../services/storageService';
 
-addFilter('aether.file.upload.context', 'my-plugin', (fileContext, providerId) => {
-    // Add custom metadata
-    fileContext.metadata.customField = 'value';
-    return fileContext;
-});
+// Create a custom upload adapter for your provider
+function createUploadAdapter(endpoint) {
+    return {
+        async upload(key, file, options = {}) {
+            // Your provider-specific upload logic
+            const response = await myUploadFunction(endpoint, key, file, options);
+            return { success: response.ok };
+        }
+    };
+}
+
+// Register the filter to inject your StorageService
+addFilter(
+    'aether.storage.service.create',
+    'my-provider/storage',
+    (service, staticPath, config, providerId, providerConfig) => {
+        // Only handle this provider type
+        if (!providerId?.startsWith('my-provider:')) {
+            return service;
+        }
+
+        // Create instance-specific upload adapter
+        const uploadAdapter = createUploadAdapter(providerConfig.endpoint);
+
+        // Return new StorageService with the adapter
+        return new StorageService(staticPath, config, uploadAdapter);
+    },
+    10
+);
 ```
+
+---
+
+#### `aether.storage.service.config`
+
+**Type**: Filter
+**Location**: `assets/src/export/utils/staticSiteConfig.js`
+
+Filters the storage service configuration before the service is created. Allows modifying configuration options.
+
+**Parameters**:
+- `config` (Object): Storage configuration object
+- `staticPath` (string): Path for static files
+- `providerId` (string): Provider instance ID
+- `providerConfig` (Object): Provider-specific configuration
+
+**Returns**: Modified configuration object
 
 ---
 

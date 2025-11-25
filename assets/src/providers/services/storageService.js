@@ -4,6 +4,10 @@
  * Storage service for local filesystem operations.
  * All operations go through REST API endpoints.
  *
+ * Supports adapter pattern for provider-specific upload implementations.
+ * Each provider instance can inject its own upload adapter via the
+ * 'aether.storage.service.create' filter, achieving true provider instance isolation.
+ *
  */
 
 import {
@@ -11,12 +15,8 @@ import {
 	batchDelete as batchDeleteFromAdapter,
 	getObjectUrl,
 	downloadFile as downloadFileFromAdapter,
+	uploadFile as uploadFileToFilesystem,
 } from './filesystemAdapter';
-import {
-	createFileContext,
-	FILE_TYPES,
-	uploadFile as uploadFileUnified,
-} from '@aether/export/utils/unifiedFileUpload';
 
 /**
  * Storage Service class.
@@ -25,20 +25,24 @@ export class StorageService {
 	/**
 	 * Constructor.
 	 *
-	 * @param {string} staticPath Path for static files storage.
-	 * @param {Object} config     Optional configuration.
+	 * @param {string} staticPath    Path for static files storage.
+	 * @param {Object} config        Optional configuration.
+	 * @param {Object} uploadAdapter Optional upload adapter with upload() method.
 	 */
-	constructor( staticPath, config = {} ) {
+	constructor( staticPath, config = {}, uploadAdapter = null ) {
 		this.staticPath = staticPath;
 		this.config = config;
 		this.baseUrl = config.public_url || config.base_url || '';
 		this.providerId = config.provider_id || null;
+		this.uploadAdapter = uploadAdapter;
 	}
 
 	/**
 	 * Upload a file to storage.
 	 *
-	 * Uses unified upload action system for provider integration.
+	 * Uses the upload adapter if provided, otherwise falls back to filesystem adapter.
+	 * This enables provider-specific upload implementations while keeping common logic
+	 * (manifest, dedup, etc.) in the StorageService.
 	 *
 	 * @param {string}    key      Object key/path in storage.
 	 * @param {File|Blob} file     File to upload.
@@ -55,32 +59,36 @@ export class StorageService {
 
 		const contentType = metadata.contentType || file.type;
 
-		// Determine file type based on content type
-		let fileType = FILE_TYPES.STATIC_ASSET;
-		if ( contentType === 'text/html' ) {
-			fileType = FILE_TYPES.STATIC_HTML;
-		}
-
-		// Create unified file context
-		const fileContext = createFileContext( {
-			fileType,
-			filePath: null, // Not applicable for storage service uploads
-			fileContent: file,
-			contentType,
-			storageKey: key,
-			providerId: this.providerId,
-			metadata: {
-				staticPath: this.staticPath,
-				originalKey: key,
-
-				cacheControl: metadata.cacheControl || '',
-				onProgress: metadata.onProgress || null,
-			},
-		} );
-
-		// Upload via unified action system
 		try {
-			await uploadFileUnified( fileContext );
+			let result;
+
+			// Use upload adapter if provided (provider-specific upload)
+			if (
+				this.uploadAdapter &&
+				typeof this.uploadAdapter.upload === 'function'
+			) {
+				result = await this.uploadAdapter.upload( key, file, {
+					contentType,
+					cacheControl: metadata.cacheControl || '',
+					onProgress: metadata.onProgress || null,
+				} );
+			} else {
+				// Default: use filesystem adapter directly
+				result = await uploadFileToFilesystem(
+					this.staticPath,
+					key,
+					file,
+					{
+						contentType,
+						cacheControl: metadata.cacheControl || '',
+						onProgress: metadata.onProgress || null,
+					}
+				);
+			}
+
+			if ( ! result.success ) {
+				return result;
+			}
 
 			// Build public URL
 			const url = this.getUrl( key );

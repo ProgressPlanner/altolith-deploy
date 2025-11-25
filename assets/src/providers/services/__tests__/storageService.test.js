@@ -12,8 +12,8 @@ import {
 	batchDelete as batchDeleteFromAdapter,
 	getObjectUrl,
 	downloadFile,
+	uploadFile as uploadFileToFilesystem,
 } from '../filesystemAdapter';
-import { uploadFile as uploadFileUnified } from '../../../export/utils/unifiedFileUpload';
 
 // Mock filesystem adapter
 jest.mock( '../filesystemAdapter', () => ( {
@@ -21,16 +21,6 @@ jest.mock( '../filesystemAdapter', () => ( {
 	batchDelete: jest.fn(),
 	getObjectUrl: jest.fn(),
 	downloadFile: jest.fn(),
-} ) );
-
-// Mock unified file upload
-jest.mock( '../../../export/utils/unifiedFileUpload', () => ( {
-	createFileContext: jest.fn( ( options ) => options ),
-	FILE_TYPES: {
-		STATIC_HTML: 'static-html',
-		STATIC_ASSET: 'static-asset',
-		BLUEPRINT_BUNDLE: 'blueprint-bundle',
-	},
 	uploadFile: jest.fn().mockResolvedValue( { success: true } ),
 } ) );
 
@@ -89,7 +79,7 @@ describe( 'StorageService', () => {
 	} );
 
 	describe( 'upload()', () => {
-		test( 'should upload a file successfully', async () => {
+		test( 'should upload a file successfully using filesystem adapter', async () => {
 			const mockFile = new Blob( [ 'test content' ], {
 				type: 'text/plain',
 			} );
@@ -102,7 +92,12 @@ describe( 'StorageService', () => {
 				mockMetadata
 			);
 
-			expect( uploadFileUnified ).toHaveBeenCalled();
+			expect( uploadFileToFilesystem ).toHaveBeenCalledWith(
+				mockStaticPath,
+				mockKey,
+				mockFile,
+				expect.objectContaining( { contentType: 'text/plain' } )
+			);
 			expect( result.success ).toBe( true );
 		} );
 
@@ -122,7 +117,30 @@ describe( 'StorageService', () => {
 
 			const result = await testService.upload( mockKey, mockFile );
 
-			expect( uploadFileUnified ).toHaveBeenCalled();
+			expect( uploadFileToFilesystem ).toHaveBeenCalled();
+			expect( result.success ).toBe( true );
+		} );
+
+		test( 'should use upload adapter if provided', async () => {
+			const mockAdapter = {
+				upload: jest.fn().mockResolvedValue( { success: true } ),
+			};
+			const testService = new StorageService(
+				mockStaticPath,
+				mockConfig,
+				mockAdapter
+			);
+			const mockFile = new Blob( [ 'test content' ] );
+			const mockKey = 'test-file.txt';
+
+			const result = await testService.upload( mockKey, mockFile );
+
+			expect( mockAdapter.upload ).toHaveBeenCalledWith(
+				mockKey,
+				mockFile,
+				expect.any( Object )
+			);
+			expect( uploadFileToFilesystem ).not.toHaveBeenCalled();
 			expect( result.success ).toBe( true );
 		} );
 
@@ -130,7 +148,7 @@ describe( 'StorageService', () => {
 			const mockFile = new Blob( [ 'test content' ] );
 			const mockKey = 'test-file.txt';
 
-			uploadFileUnified.mockRejectedValueOnce(
+			uploadFileToFilesystem.mockRejectedValueOnce(
 				new Error( 'Upload failed' )
 			);
 
@@ -291,7 +309,7 @@ describe( 'StorageService', () => {
 
 			const result = await service.uploadManifest( mockBlob );
 
-			expect( uploadFileUnified ).toHaveBeenCalled();
+			expect( uploadFileToFilesystem ).toHaveBeenCalled();
 			expect( result.success ).toBe( true );
 		} );
 	} );
