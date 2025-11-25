@@ -411,28 +411,6 @@ export default function ProviderInstanceItem( {
 										onSubmit={ handleFormSubmit }
 									/>
 								) }
-
-								<div
-									style={ {
-										...createFlexStyle( 'row', spacing.sm ),
-										justifyContent: 'flex-end',
-										marginTop: spacing.md,
-										paddingTop: spacing.md,
-										borderTop: `1px solid ${ colors.borderLight }`,
-									} }
-								>
-									<Button
-										variant="secondary"
-										onClick={ () =>
-											setIsModalOpen( false )
-										}
-									>
-										{ __(
-											'Close',
-											'aether-site-exporter'
-										) }
-									</Button>
-								</div>
 							</div>
 						</Modal>
 					) }
