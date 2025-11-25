@@ -128,7 +128,7 @@ export function buildProviderInstances( providerConfigs, deploymentType ) {
 				const config = providerConfigs[ instanceId ] || {};
 				return {
 					id: instanceId,
-					label: config.label || instanceId,
+					label: config.instance_name || config.label || instanceId,
 					config,
 				};
 			} )
