@@ -340,25 +340,6 @@ class ExportService
 	}
 
 	/**
-	 * Add directory to zip archive recursively.
-	 *
-	 * Delegates to ZipService for the actual implementation.
-	 *
-	 * @param \ZipArchive             $zip          ZipArchive instance.
-	 * @param string                  $sourceDir   Source directory path.
-	 * @param string                  $zipPath     Path inside zip.
-	 * @param string                  $relativePath Relative path for recursion.
-	 * @param array<int, string>|null $excludePatterns Exclusion patterns.
-	 * @param array<int, string>|null $offloadedFiles Offloaded file paths.
-	 * @return void
-	 */
-	public function addDirectoryToZip(\ZipArchive $zip, string $sourceDir, string $zipPath, string $relativePath = '', ?array $excludePatterns = null, ?array $offloadedFiles = null): void
-	{
-		// Delegate to ZipService for backward compatibility.
-		$this->zipService->addDirectoryToZip($zip, $sourceDir, $zipPath, $relativePath, $excludePatterns, $offloadedFiles);
-	}
-
-	/**
 	 * Get the path to the SQLite database file.
 	 *
 	 * @return string|false Path to database file, or false if not found.
@@ -386,21 +367,6 @@ class ExportService
 		}
 
 		return false;
-	}
-
-	/**
-	 * Get exclusion patterns for development files and large dependencies.
-	 *
-	 * Delegates to FileBatchService for the actual implementation.
-	 *
-	 * @param string $sourceDir Source directory path to check for large folders.
-	 * @param bool   $autoExclude Enable automatic exclusion of .git and large vendor folders.
-	 * @return array<string> Array of exclusion patterns.
-	 */
-	public static function getExclusionPatterns(string $sourceDir, bool $autoExclude = true): array
-	{
-		$fileBatchService = new FileBatchService();
-		return $fileBatchService->getExclusionPatterns($sourceDir, $autoExclude);
 	}
 
 	/**

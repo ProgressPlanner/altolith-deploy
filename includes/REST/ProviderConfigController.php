@@ -275,69 +275,6 @@ class ProviderConfigController
 	}
 
 	/**
-	 * Sanitize configuration array recursively with depth limit.
-	 *
-	 * Preserves snake_case keys (unlike sanitize_key which converts to lowercase).
-	 * Prevents stack overflow by limiting recursion to 10 levels.
-	 *
-	 * @param array<string, mixed> $config Configuration to sanitize.
-	 * @param int                  $depth  Current recursion depth.
-	 * @return array<string, mixed> Sanitized configuration.
-	 */
-	protected function sanitizeConfig(array $config, int $depth = 0): array
-	{
-		// Prevent stack overflow attacks by limiting recursion depth
-		if ($depth > 10) {
-			return [];
-		}
-
-		$sanitized = [];
-
-		foreach ($config as $key => $value) {
-			// Preserve case for snake_case keys instead of lowercasing with sanitize_key()
-			// Allow alphanumeric, underscore, and hyphen
-			$sanitizedKey = \preg_replace('/[^a-zA-Z0-9_-]/', '', $key);
-
-			// Skip empty keys after sanitization
-			if ('' === $sanitizedKey) {
-				continue;
-			}
-
-			if (\is_array($value)) {
-				$sanitized[ $sanitizedKey ] = $this->sanitizeConfig($value, $depth + 1);
-			} elseif (\is_bool($value)) {
-				$sanitized[ $sanitizedKey ] = (bool) $value;
-			} elseif (\is_numeric($value)) {
-				$sanitized[ $sanitizedKey ] = $value;
-			} elseif (\is_string($value) && \preg_match('/^https?:\/\//i', $value)) {
-				$sanitized[ $sanitizedKey ] = \esc_url_raw($value);
-			} else {
-				$sanitized[ $sanitizedKey ] = \sanitize_text_field($value);
-			}
-		}
-
-		/**
-		 * Filter sanitized configuration values.
-		 *
-		 * Allows custom sanitization rules for specific configuration fields.
-		 *
-		 * @param array $sanitized The sanitized configuration array.
-		 * @param array $config    The original (unsanitized) configuration array.
-		 * @param int   $depth     Current recursion depth.
-		 *
-		 * @example
-		 * add_filter('aether_provider_config_sanitize', function($sanitized, $config, $depth) {
-		 *     // Only process at root level
-		 *     if ($depth === 0 && isset($sanitized['custom_field'])) {
-		 *         $sanitized['custom_field'] = strtoupper($sanitized['custom_field']);
-		 *     }
-		 *     return $sanitized;
-		 * }, 10, 3);
-		 */
-		return \apply_filters('aether_provider_config_sanitize', $sanitized, $config, $depth);
-	}
-
-	/**
 	 * Get provider status (configured or not).
 	 *
 	 * @param WP_REST_Request $request Request object.
