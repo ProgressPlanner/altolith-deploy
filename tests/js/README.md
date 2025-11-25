@@ -1,4 +1,4 @@
-# JavaScript Test Migration Guide
+# JavaScript Testing Guide
 
 ## Overview
 
@@ -67,22 +67,15 @@ npm run test:js:watch
 npm run test:js:coverage
 ```
 
-## Migration Status
+## Test Coverage
 
 ### ✅ Migrated to React Tests
 
 - `ProviderSection` component
-- `PublishButton` component
-- `usePublishReadiness` hook
+- `ExportProgressModal` component
+- `useExportReadiness` hook
 - `useUsageSummary` hook
 
-### ⚠️ Legacy Tests (Obsolete)
-
-The following test files test old vanilla JavaScript modules that have been migrated to React:
-
-- `tests/js/modules/SetupWizard.test.js` - Tests old wizard (now React AdminSettings)
-- `tests/js/modules/SyncAPI.test.js` - Tests old sync API (now React hooks)
-- `tests/js/services/*.test.js` - Tests old service classes (now React hooks)
 
 These tests are kept for reference but should not be updated. New tests should be written for React components instead.
 
@@ -93,7 +86,7 @@ When writing tests for new React components:
 1. Place tests in `tests/js/components/` directory
 2. Use `@testing-library/react` for rendering and interactions
 3. Mock WordPress components and hooks as needed
-4. Follow the existing test patterns in `ProviderSection.test.js` and `PublishButton.test.js`
+4. Follow the existing test patterns in `ProviderSection.test.js` and `ExportProgressModal.test.js`
 
 ## Resources
 

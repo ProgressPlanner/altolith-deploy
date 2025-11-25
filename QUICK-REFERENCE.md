@@ -18,15 +18,15 @@
    - **Local Filesystem:** Set `public_url`
    - Each provider will use its configured URL for rewriting
 
-3. **Publish**
-   - Click "Publish Site"
+3. **Export**
+   - Click "Export Site"
    - Both providers will deploy simultaneously
    - Check logs to verify both succeeded
 
 4. **Verify Results**
    - Check storage directories:
      - `cloudflare-r2/static/...` (with R2 URLs)
-     - `local-filesystem/static/...` (with local URLs)
+     - `local-filesystem-static-site/static/...` (with local URLs)
    - Each has its own `file-manifest.json`
 
 ---
@@ -113,48 +113,34 @@ addFilter('aether.provider.deployment_url', 'my-plugin',
 
 ### Creating a Custom Provider
 
-**Step 1: PHP Provider Class**
-```php
-<?php
-namespace MyPlugin\Providers;
+**Step 1: Create Provider Class (JavaScript)**
+```javascript
+import { __ } from '@wordpress/i18n';
+import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 
-// JavaScript provider example (no base class needed)
-class MyCustomProvider {
+export class MyCustomProvider {
     static ID = 'my-custom-provider';
-    static NAME = 'My Custom Provider';
+    static NAME = __( 'My Custom Provider', 'aether-site-exporter' );
+    static TYPE = 'storage';
+    static DESCRIPTION = __( 'Provider description', 'aether-site-exporter' );
+    static ICON = '📦';
+    static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.STATIC_SITE;
     static CONFIG_FIELDS = [
-        { id: 'api_key', label: 'API Key', type: 'text', required: true }
+        {
+            id: 'api_key',
+            label: __( 'API Key', 'aether-site-exporter' ),
+            type: 'text',
+            required: true,
+            secure: true,
+        },
+        {
+            id: 'deployment_url',
+            label: __( 'Deployment URL', 'aether-site-exporter' ),
+            type: 'text',
+            required: true,
+            help: __( 'Public URL where files will be accessible', 'aether-site-exporter' ),
+        },
     ];
-    public function getId(): string {
-        return 'my-custom-provider';
-    }
-
-    public function getName(): string {
-        return 'My Custom Provider';
-    }
-
-    public function getDeploymentTypes(): array {
-        return ['static_site', 'blueprint_bundle'];
-    }
-
-    public function getProviderSettings(): array {
-        return [
-            [
-                'id' => 'api_key',
-                'label' => 'API Key',
-                'type' => 'text',
-                'secure' => true,
-                'required' => true,
-            ],
-            [
-                'id' => 'deployment_url',
-                'label' => 'Deployment URL',
-                'type' => 'text',
-                'required' => true,
-                'help' => 'Public URL where files will be accessible',
-            ],
-        ];
-    }
 }
 ```
 
@@ -202,15 +188,7 @@ addFilter('aether.provider.upload', 'my-provider',
 
 ## Storage Paths Reference
 
-### Without Provider ID (Legacy)
-```
-static/
-├── index.html
-├── about/index.html
-└── file-manifest.json
-```
-
-### With Provider ID (Isolated)
+### Storage Structure with Provider Isolation
 ```
 static/
 ├── provider-a/
@@ -268,9 +246,9 @@ static/
 ## Testing Checklist
 
 ### Single Provider Test
-- [ ] Configure one provider instance (e.g., local-filesystem)
+- [ ] Configure one provider instance (e.g., local-filesystem-static-site)
 - [ ] Configure deployment URL
-- [ ] Publish site
+- [ ] Export site
 - [ ] Verify files at: `{providerId}/static/...`
 - [ ] Verify manifest at: `{providerId}/file-manifest.json`
 - [ ] Check HTML has correct URLs
@@ -278,16 +256,16 @@ static/
 ### Multi-Provider Test
 - [ ] Configure two provider instances
 - [ ] Configure different deployment URLs
-- [ ] Publish site
+- [ ] Export site
 - [ ] Verify both provider directories exist
 - [ ] Verify each has separate manifest
 - [ ] Check HTML differs between providers (different URLs)
 - [ ] Verify both uploads completed successfully
 
 ### Hash Deduplication Test
-- [ ] Publish site with multiple providers
+- [ ] Export site with multiple providers
 - [ ] Make no changes
-- [ ] Publish again
+- [ ] Export again
 - [ ] Verify files skipped (hash match)
 - [ ] Check both manifests updated
 - [ ] Confirm fast publish (no re-upload)
@@ -371,13 +349,13 @@ await uploadManifest(storageService, manifest, providerId);
 | Filter | Phase | Runs | Purpose |
 |--------|-------|------|---------|
 | `aether.static.html.raw` | Pre-scan | Once per page | Modify raw HTML before caching |
-| `aether.publish.step.uploadStaticSiteFiles.html.process` | Upload | Per provider per page | Modify HTML before URL rewriting |
+| `aether.export.step.uploadStaticSiteFiles.html.process` | Upload | Per provider per page | Modify HTML before URL rewriting |
 | `aether.provider.deployment_url` | Upload init | Once per provider | Override deployment URL |
 | `aether.storage.service.config` | Storage init | Once per provider | Customize storage config |
 | `aether.storage.service.create` | Storage init | Once per provider | Override StorageService |
-| `aether.publish.step.uploadStaticSiteFiles.manifest.fetch` | Upload | Once per provider | Provide custom manifest |
-| `aether.publish.step.uploadStaticSiteFiles.manifest.update` | Upload | Per file | Modify manifest after update |
-| `aether.publish.step.uploadStaticSiteFiles.manifest.cleanup` | Upload end | Once per provider | Customize manifest cleanup |
+| `aether.export.step.uploadStaticSiteFiles.manifest.fetch` | Upload | Once per provider | Provide custom manifest |
+| `aether.export.step.uploadStaticSiteFiles.manifest.update` | Upload | Per file | Modify manifest after update |
+| `aether.export.step.uploadStaticSiteFiles.manifest.cleanup` | Upload end | Once per provider | Customize manifest cleanup |
 | `aether.provider.upload` | Blueprint | Once per provider | Custom blueprint upload |
 
 ---
@@ -387,7 +365,6 @@ await uploadManifest(storageService, manifest, providerId);
 - **Full Documentation:** See `PROVIDER-ISOLATION.md`
 - **Implementation Details:** See `IMPLEMENTATION-SUMMARY.md`
 - **Architecture Diagrams:** See `ARCHITECTURE-DIAGRAM.md`
-- **Migration Guide:** See `MIGRATION-GUIDE.md` (for refactoring changes)
 
 ---
 

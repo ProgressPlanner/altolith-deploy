@@ -34,39 +34,44 @@ Steps are defined in `steps/index.js` and registered via `@wordpress/hooks`. Eac
 
 **Steps:**
 1. **discoverBlueprintBundleAssets** - Find plugins, themes, and uploads to include
-2. **createBlueprintBundle** - Package wp-content.zip archive
-3. **generateBlueprint** - Create blueprint-bundle.zip with blueprint.json
+2. **createWpContentArchive** - Package wp-content.zip archive
+3. **createBlueprintBundle** - Create blueprint-bundle.zip with blueprint.json
 4. **uploadBlueprintBundle** - Upload blueprint bundle to providers
 5. **getStaticSiteUrls** - Discover all URLs for static site generation
-6. **uploadStaticFiles** - Generate and upload static HTML/CSS/JS
+6. **preScanStaticSite** - Pre-scan URLs to extract assets before upload
+7. **uploadStaticFiles** - Generate and upload static HTML/CSS/JS
 
-Steps register via `@wordpress/hooks` and can be extended by third-party plugins via the `aether.export.steps` filter.
+Steps register via the `aether.export.register_steps` action hook. Each step declares its data dependencies (`requires`) and outputs (`provides`), allowing the StepExecutor to automatically resolve dependencies and execute steps in parallel when possible.
 
 ## Directory Structure
 
 ```
 export/
-├── components/          # React components for export UI
-│   ├── ExportProgressModal.js  # Main export modal with progress
-│   └── ...
+├── executor/            # Step executor system
+│   ├── StepExecutor.js  # Main executor with dependency resolution
+│   ├── DependencyResolver.js  # Dependency resolution and parallel execution
+│   ├── DataValidator.js  # Validates step data requirements
+│   └── ThreadOrchestrator.js  # Thread-based step execution
 ├── hooks/               # Custom hooks for export logic
 │   ├── useExportController.js  # Main orchestration using step system
 │   ├── useStaticSiteGenerator.js  # Static site generation (React)
 │   ├── useExportAPI.js         # REST API calls
 │   ├── useBlueprintGenerator.js # Blueprint generation
 │   └── ...
+├── registry/            # Step registry
+│   └── StepRegistry.js  # Singleton registry for step definitions
 ├── steps/               # Step definitions
 │   ├── index.js         # Step registry and getRegisteredSteps()
 │   ├── discoverBlueprintBundleAssets/
+│   ├── createWpContentArchive/
 │   ├── createBlueprintBundle/
-│   ├── generateBlueprint/
 │   ├── uploadBlueprintBundle/
 │   ├── getStaticSiteUrls/
+│   ├── preScanStaticSite/
 │   └── uploadStaticFiles/
-├── workflows/           # Workflow execution
-│   └── jobExecutor.js   # Job executor with hooks
 └── utils/               # Utility functions
-    ├── progressManager.js  # Progress calculation
+    ├── progressTracker.js  # Progress tracking
+    ├── stateManager.js  # State management
     ├── assetExtractor.js  # Extract assets from HTML
     ├── urlRewriter.js     # Rewrite URLs in HTML
     └── ...
@@ -78,7 +83,7 @@ export/
 
 Main export modal component that shows workflow progress.
 
-**Location:** `components/ExportProgressModal.js`
+**Location:** `../components/ExportProgressModal/index.js`
 
 **Features:**
 - Step-by-step progress display

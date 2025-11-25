@@ -88,11 +88,11 @@ const label = DEPLOYMENT_TYPE_LABELS[DEPLOYMENT_TYPES.STATIC_SITE];
 **This file has been removed** after the workflow refactor to a job-based orchestration system.
 
 For step-related functionality, see:
-- `publish/utils/steps.js` - Step definitions and metadata with i18n support
-- `publish/utils/progressManager.js` - Progress calculation
-- `publish/jobs/` - Job-based workflow system with hierarchical structure
+- `export/steps/` - Step definitions registered via WordPress hooks
+- `export/executor/` - Step executor with dependency resolution
+- `export/registry/` - Step registry for managing step definitions
 
-The publish workflow now uses a hook-based job orchestration system (`@wordpress/hooks`) instead of hardcoded constants.
+The export workflow uses a step-based executor system with automatic dependency resolution.
 
 ### index.js
 
@@ -152,5 +152,5 @@ if (provider.DEPLOYMENT_TYPE === DEPLOYMENT_TYPES.STATIC_SITE) { }
 ## Related Documentation
 
 - [Main README](../README.md) - Source code overview
-- [Publish README](../publish/README.md) - Workflow steps
+- [Export README](../export/README.md) - Workflow steps
 - [Providers README](../providers/README.md) - Provider system

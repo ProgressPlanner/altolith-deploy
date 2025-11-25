@@ -10,11 +10,11 @@ This directory contains custom hooks that encapsulate reusable logic. Hooks foll
 
 ## Key Hooks
 
-### usePublishController
+### useExportController
 
 ⚠️ **God Hook** - Needs refactoring (873 LOC, 7+ responsibilities)
 
-**Location:** Used by publish workflow
+**Location:** Used by export workflow
 
 **Responsibilities (too many):**
 - Step orchestration
@@ -31,11 +31,11 @@ This directory contains custom hooks that encapsulate reusable logic. Hooks foll
 - Use Context API for shared state
 - Separate UI concerns from business logic
 
-### usePublishAPI
+### useExportAPI
 
-Centralizes all publish-related REST API calls.
+Centralizes all export-related REST API calls.
 
-**Location:** `usePublishAPI.js`
+**Location:** `../export/hooks/useExportAPI.js`
 
 **Returns:**
 ```javascript
@@ -43,7 +43,7 @@ const {
     discoverBlueprintBundleAssets,      // Discover changed assets
     getAssetStatus,      // Get asset status
     markAssetChanged,    // Mark asset as changed
-    startPublish,        // Start publish job
+    startExport,         // Start export workflow
     getJobStatus,        // Get job status
     executeStep,         // Execute workflow step
     markUploadsComplete, // Mark uploads complete
@@ -228,9 +228,9 @@ Create a custom hook when:
 
 ### Hook Naming
 
-- **Prefix with `use`**: `usePublishAPI`, `useMediaOffload`
+- **Prefix with `use`**: `useExportAPI`, `useProviderSettings`
 - **Descriptive names**: Explain what the hook does
-- **Noun or verb phrase**: `useProvider` (noun), `usePublishController` (noun + verb)
+- **Noun or verb phrase**: `useProvider` (noun), `useExportController` (noun + verb)
 
 ### Hook Dependencies
 
@@ -267,9 +267,9 @@ function useEverything() {
 }
 
 // ✅ Focused Hooks
-function usePublishJob() { /* Job management */ }
-function usePublishSteps() { /* Step execution */ }
-function usePublishProgress() { /* Progress tracking */ }
+function useExportState() { /* Export state management */ }
+function useExportController() { /* Export orchestration */ }
+function useExportReadiness() { /* Export readiness checks */ }
 ```
 
 ## Hook Composition
@@ -377,7 +377,7 @@ useEffect(() => {
 
 ### Planned Refactorings
 
-1. **Split usePublishController** - Break into 5-7 focused hooks
+1. **Split useExportController** - Break into focused hooks
 2. **Extract Business Logic** - Move to service classes
 3. **Add Context API** - Reduce prop drilling
 4. **Standardize Error Handling** - Consistent error pattern
@@ -390,5 +390,5 @@ See `REFACTORING_PLAN.md` Phase 5 for details.
 
 - [Main README](../README.md) - Source code overview
 - [Providers README](../providers/README.md) - Provider hooks
-- [Publish README](../publish/README.md) - Publish workflow hooks
+- [Export README](../export/README.md) - Export workflow hooks
 - [Components README](../components/README.md) - Component integration

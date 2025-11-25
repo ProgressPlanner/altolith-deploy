@@ -52,9 +52,9 @@ Extract asset URLs from HTML content.
 - Fonts (from CSS `@font-face`, `url()`)
 - Background images (inline styles, CSS)
 
-### urlRewriter.js (Publish)
+### urlRewriter.js (Export)
 
-**Location:** `../publish/utils/urlRewriter.js`
+**Location:** `../export/utils/urlRewriter.js`
 
 Rewrite URLs in HTML for static hosting.
 
@@ -426,5 +426,5 @@ export function processData(data) {
 
 - [Main README](../README.md) - Source code overview
 - [Hooks README](../hooks/README.md) - For stateful logic
-- [Publish README](../publish/README.md) - Publish-specific utilities
+- [Export README](../export/README.md) - Export-specific utilities
 - [Constants README](../constants/README.md) - Use constants in utilities

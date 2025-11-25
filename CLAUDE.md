@@ -259,14 +259,15 @@ Key principles:
 
 2. **Provider System** (Extensible architecture)
    - `ProviderRegistry` (JavaScript) - Singleton registry managing all provider types and instances
-   - `AbstractProvider` (JavaScript) - Abstract base class for storage providers
-   - `LocalFilesystemProvider` (JavaScript) - Stores exports locally
+   - Provider classes are static (no base class needed)
+   - `LocalFilesystemStaticSiteProvider` (JavaScript) - Stores static site files locally
+   - `LocalFilesystemBlueprintBundleProvider` (JavaScript) - Stores blueprint bundles locally
    - Providers register via `aether.providers.register` JavaScript hook
    - Instance IDs format: `{provider_type}:{uuid}`
 
 3. **REST API Controllers** (`includes/REST/`)
    - Each controller is a dedicated class (separation of concerns)
-   - Publish controllers handle multi-step export workflow
+   - Export controllers handle multi-step export workflow
    - All endpoints use namespace `aether/site-exporter`
    - CORS headers automatically added for Playground compatibility
    - **No provider-specific logic in controllers**
@@ -299,15 +300,14 @@ Key principles:
 **Key Patterns:**
 
 1. **Context-based Reactive State Management**
-   - `PublishContext` - Publish workflow state
-   - `ConfigContext` - Plugin configuration
+   - `ExportContext` - Export workflow state
    - Custom hooks consume contexts
    - State flows reactively through component tree
 
 2. **Multi-Step Workflow System** (`assets/src/export/`)
-   - Steps defined in `constants/steps.js`
-   - Each step is an async function returning standard response format
-   - `usePublishController.js` orchestrates step execution
+   - Steps defined in `steps/index.js` and registered via WordPress hooks
+   - Each step declares dependencies and provides data
+   - `useExportController.js` orchestrates step execution via StepExecutor
    - Progress tracking via `progressManager.js`
    - State persisted in IndexedDB (Playground-compatible)
 
@@ -489,7 +489,7 @@ doAction('aether.providers.register', provider);
 - Each provider is completely self-contained
 - Test first, then implement
 
-### Adding a New Publish Step (TDD Approach)
+### Adding a New Export Step (TDD Approach)
 
 **1. Write Tests First**
 ```javascript
@@ -501,26 +501,31 @@ describe('myStep', () => {
 });
 ```
 
-**2. Define Step Constant**
+**2. Create Step Definition**
 ```javascript
-// assets/src/constants/steps.js
-export const STEP_MY_STEP = 'my_step';
-```
+// assets/src/export/steps/myStep/index.js
+import { addAction } from '@wordpress/hooks';
+import StepRegistry from '../../registry/StepRegistry';
 
-**3. Create Step Function (Prefer JavaScript)**
-```javascript
-// assets/src/export/steps/myStep.js
-export async function myStep(config) {
-    // Implementation in JavaScript (preferred)
-    // Workflow is stateless - no jobId needed
-    // Returns standard response format
-}
-```
-
-**4. Add to Workflow**
-```javascript
-// assets/src/export/utils/steps.js
-// Add step to appropriate workflow
+addAction('aether.export.register_steps', 'aether/my-step', (registry) => {
+    registry.register({
+        id: 'myStep',
+        label: 'My Step',
+        description: 'Does something custom',
+        supportsProgress: true,
+        requires: {
+            someData: { from: 'someOtherStep', required: true },
+            api: { from: 'initial', required: true },
+        },
+        provides: {
+            myStepResult: 'object',
+        },
+        handler: async (context) => {
+            // Step implementation
+            return { myStepResult: { success: true } };
+        },
+    });
+});
 ```
 
 **5. Create REST Endpoint (If Needed)**
@@ -616,7 +621,7 @@ export async function myStep(config) {
 - Edge cases and error conditions
 
 **Don't worry about testing:**
-- React hooks with complex dependencies (usePublishController)
+- React hooks with complex dependencies (useExportController)
 - High-level orchestration functions (uploadFilesWithProgress)
 - Simple pass-through wrappers
 
@@ -678,10 +683,6 @@ async function processAndUpload(fetcher, storage, uploader) {
 
 ## WP-CLI Commands
 
-```bash
-# Convert provider configurations (migration utility)
-wp aether convert-provider-configs
-```
 
 ## File Organization
 
@@ -693,7 +694,7 @@ aether-site-exporter/
 │   ├── Core/             # Core utilities (settings, etc.)
 │   ├── (Providers directory removed - providers are JavaScript-only)
 │   ├── REST/             # REST API controllers (provider-agnostic)
-│   │   └── Publish/      # Publish workflow controllers
+│   │   └── Export/      # Export workflow controllers
 │   ├── Services/         # Business logic services (provider-agnostic)
 │   ├── Sync/             # Sync/export logic
 │   │   └── Blueprint/    # Blueprint generation
@@ -702,12 +703,13 @@ aether-site-exporter/
 ├── assets/
 │   ├── src/              # JavaScript source (primary logic layer)
 │   │   ├── admin-settings/ # Settings page
-│   │   ├── publish/      # Main publish feature
+│   │   ├── export/      # Main export feature
 │   │   │   ├── components/ # React components
 │   │   │   ├── hooks/    # Custom React hooks
-│   │   │   ├── steps/    # Workflow step functions
-│   │   │   ├── utils/    # Utilities (DOM, assets, etc.)
-│   │   │   └── workflows/ # Workflow orchestration
+│   │   │   ├── steps/    # Workflow step definitions
+│   │   │   ├── executor/ # Step executor and dependency resolver
+│   │   │   ├── registry/ # Step registry
+│   │   │   └── utils/    # Utilities (DOM, assets, etc.)
 │   │   ├── providers/    # Provider implementations (isolated)
 │   │   ├── contexts/     # React contexts
 │   │   ├── hooks/        # Shared hooks

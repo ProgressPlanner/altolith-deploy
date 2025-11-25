@@ -11,11 +11,11 @@
 ┌────────────┐
 │  User      │
 │  Clicks    │───┐
-│  Publish   │   │
+│  Export    │   │
 └────────────┘   │
                  ▼
          ┌──────────────┐
-         │ Start Publish│
+         │ Start Export│
          └──────┬───────┘
                 │
                 ▼
@@ -87,7 +87,7 @@
                  ▼
          ┌──────────────┐
          │   Complete   │
-         │   Publish    │
+         │   Export     │
          └──────────────┘
 ```
 
@@ -204,9 +204,9 @@ WordPress Root
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  ┌──────────────────────────────────────────────────────┐      │
-│  │  usePublishController                                │      │
+│  │  useExportController                                 │      │
 │  │  ├─► Orchestrates workflow                           │      │
-│  │  ├─► Manages publish state                           │      │
+│  │  ├─► Manages export state                            │      │
 │  │  └─► Executes workflow steps                         │      │
 │  └────────────────┬─────────────────────────────────────┘      │
 │                   │                                              │
@@ -237,8 +237,8 @@ WordPress Root
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
 │  ┌──────────────────────────────────────────────────────┐      │
-│  │  LocalFilesystemAdapter                              │      │
-│  │  ├─► Handles file system operations                  │      │
+│  │  LocalStorageController (PHP)                        │      │
+│  │  ├─► Handles file system operations via REST API     │      │
 │  │  ├─► Creates directories with provider prefix        │      │
 │  │  └─► Writes files to {providerId}/static/...         │      │
 │  └──────────────────────────────────────────────────────┘      │
@@ -354,7 +354,7 @@ WordPress Root
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                 Publish Timeline (100 pages)                │
+│                 Export Timeline (100 pages)                 │
 └─────────────────────────────────────────────────────────────┘
 
   0s ──────────────────────────────────────────────────── 100s
@@ -421,7 +421,7 @@ Upload Phase (Phase 2)
 │   │   │
 │   │   ├─► Load raw HTML from cache
 │   │   │
-│   │   ├─► Apply filter: aether.publish.step.uploadStaticSiteFiles.html.process
+│   │   ├─► Apply filter: aether.export.step.uploadStaticSiteFiles.html.process
 │   │   │   └─► Modify HTML (once per provider per page)
 │   │   │
 │   │   ├─► processHtml() - URL rewriting

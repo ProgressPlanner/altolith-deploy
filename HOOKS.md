@@ -13,7 +13,7 @@ This document provides a comprehensive reference for all WordPress hooks (filter
   - [Blueprint Generation](#blueprint-generation)
 - [PHP Hooks](#php-hooks)
   - [Provider Configuration](#provider-configuration)
-  - [Publishing & Deployment](#publishing--deployment)
+  - [Export & Deployment](#export--deployment)
 - [Usage Examples](#usage-examples)
 
 ---
@@ -592,7 +592,7 @@ addAction('aether.export.register_steps', 'my-plugin/my-step', (registry) => {
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
 
-Fires before the publish workflow execution begins.
+Fires before the export workflow execution begins.
 
 **Parameters**:
 - `executionContext` (Object): Full execution context
@@ -604,7 +604,7 @@ Fires before the publish workflow execution begins.
 import { addAction } from '@wordpress/hooks';
 
 addAction('aether.export.workflow.before', 'my-plugin', (executionContext, steps, providerInstance) => {
-    console.log('Starting publish workflow with', steps.length, 'steps');
+    console.log('Starting export workflow with', steps.length, 'steps');
     if (providerInstance) {
         console.log('Running for provider:', providerInstance);
     }
@@ -618,7 +618,7 @@ addAction('aether.export.workflow.before', 'my-plugin', (executionContext, steps
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
 
-Fires after the publish workflow completes successfully.
+Fires after the export workflow completes successfully.
 
 **Parameters**:
 - `state` (Object): Final workflow state
@@ -644,7 +644,7 @@ addAction('aether.export.workflow.after', 'my-plugin', (state, executionContext,
 **Type**: Action
 **Location**: `assets/src/export/executor/StepExecutor.js`
 
-Fires when the publish workflow encounters an error.
+Fires when the export workflow encounters an error.
 
 **Parameters**:
 - `error` (Error): Error object
@@ -907,7 +907,7 @@ addFilter('aether.file.upload.context', 'my-plugin', (fileContext, providerId) =
 
 ---
 
-#### `aether.publish.step.uploadStaticSiteFiles.urls`
+#### `aether.export.step.uploadStaticSiteFiles.urls`
 
 **Type**: Filter
 **Location**: `assets/src/export/steps/uploadStaticFiles/index.js`
@@ -933,7 +933,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls, p
 
 ---
 
-#### `aether.publish.step.uploadStaticSiteFiles.result`
+#### `aether.export.step.uploadStaticSiteFiles.result`
 
 **Type**: Filter
 **Location**: `assets/src/export/steps/uploadStaticFiles/index.js`
@@ -1205,7 +1205,7 @@ addFilter('aether.storage.service.create', 'my-plugin', (service, staticPath, co
 
 ### Manifest System
 
-#### `aether.publish.step.uploadStaticSiteFiles.manifest.fetch`
+#### `aether.export.step.uploadStaticSiteFiles.manifest.fetch`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/uploadPhase.js`
@@ -1234,7 +1234,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.manifest.fetch', 'my-plugin'
 
 ---
 
-#### `aether.publish.step.uploadStaticSiteFiles.manifest.update`
+#### `aether.export.step.uploadStaticSiteFiles.manifest.update`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/uploadPhase.js`, `assets/src/export/hooks/useStaticSiteGenerator.js`
@@ -1263,7 +1263,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.manifest.update', 'my-plugin
 
 ---
 
-#### `aether.publish.step.uploadStaticSiteFiles.manifest.cleanup`
+#### `aether.export.step.uploadStaticSiteFiles.manifest.cleanup`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/uploadPhase.js`
@@ -1291,7 +1291,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.manifest.cleanup', 'my-plugi
 
 ### Blueprint Generation
 
-#### `aether.publish.step.generateBlueprint.steps`
+#### `aether.export.step.createBlueprintBundle.steps`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/blueprintStepBuilders.js`
@@ -1304,7 +1304,7 @@ Filters blueprint steps array before final JSON generation.
 
 **Example**:
 ```javascript
-addFilter('aether.export.step.generateBlueprint.steps', 'my-plugin', (steps, config) => {
+addFilter('aether.export.step.createBlueprintBundle.steps', 'my-plugin', (steps, config) => {
     // Add custom step at the end
     steps.push({
         step: 'runPHP',
@@ -1316,7 +1316,7 @@ addFilter('aether.export.step.generateBlueprint.steps', 'my-plugin', (steps, con
 
 ---
 
-#### `aether.publish.step.generateBlueprint.json`
+#### `aether.export.step.createBlueprintBundle.json`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/blueprintStepBuilders.js`
@@ -1329,7 +1329,7 @@ Filters complete blueprint JSON object.
 
 **Example**:
 ```javascript
-addFilter('aether.export.step.generateBlueprint.json', 'my-plugin', (blueprint, steps) => {
+addFilter('aether.export.step.createBlueprintBundle.json', 'my-plugin', (blueprint, steps) => {
     // Customize landing page
     blueprint.landingPage = '/wp-admin/';
 
@@ -1348,7 +1348,7 @@ addFilter('aether.export.step.generateBlueprint.json', 'my-plugin', (blueprint, 
 
 ---
 
-#### `aether.publish.step.generateBlueprint.assets`
+#### `aether.export.step.createBlueprintBundle.assets`
 
 **Type**: Filter
 **Location**: `assets/src/export/hooks/useBlueprintGenerator.js`
@@ -1363,7 +1363,7 @@ Filters discovered WordPress.org assets before blueprint generation.
 
 **Example**:
 ```javascript
-addFilter('aether.export.step.generateBlueprint.assets', 'my-plugin', (assets) => {
+addFilter('aether.export.step.createBlueprintBundle.assets', 'my-plugin', (assets) => {
     // Exclude specific plugins
     assets.plugins = assets.plugins.filter(slug => slug !== 'unwanted-plugin');
 
@@ -1376,7 +1376,7 @@ addFilter('aether.export.step.generateBlueprint.assets', 'my-plugin', (assets) =
 
 ---
 
-#### `aether.publish.step.generateBlueprint.generated`
+#### `aether.export.step.createBlueprintBundle.generated`
 
 **Type**: Filter
 **Location**: `assets/src/export/hooks/useBlueprintGenerator.js`
@@ -1390,7 +1390,7 @@ Filters final generated blueprint before deployment.
 
 **Example**:
 ```javascript
-addFilter('aether.export.step.generateBlueprint.generated', 'my-plugin', (blueprint) => {
+addFilter('aether.export.step.createBlueprintBundle.generated', 'my-plugin', (blueprint) => {
     // Add custom metadata
     blueprint.description = 'My custom WordPress site';
     return blueprint;
@@ -1705,14 +1705,14 @@ add_action('aether_provider_config_deleted', function($provider_id, $request) {
 
 ---
 
-### Publishing & Deployment
+### Export & Deployment
 
 #### `aether_export_validate_config`
 
 **Type**: Filter
 **Location**: `includes/REST/Export/ExportStepsController.php`
 
-Filters validation errors for publish configuration.
+Filters validation errors for export configuration.
 
 **Parameters**:
 - `$errors` (WP_Error): Validation errors object
@@ -1741,7 +1741,7 @@ Fires before file upload to deployment target.
 
 **Parameters**:
 - `$file_path` (string): Path to file being uploaded
-- `$config` (array): Publish configuration
+- `$config` (array): Export configuration
 - `$request` (WP_REST_Request): REST request object
 
 **Example**:
@@ -1769,7 +1769,7 @@ Fires after successful file upload.
 **Parameters**:
 - `$file_path` (string): Path to uploaded file
 - `$remote_url` (string): Remote URL of uploaded file
-- `$config` (array): Publish configuration
+- `$config` (array): Export configuration
 - `$request` (WP_REST_Request): REST request object
 
 **Example**:
@@ -1797,7 +1797,7 @@ Fires when file upload fails.
 **Parameters**:
 - `$error` (WP_Error): Error object
 - `$file_path` (string): Path to file that failed to upload
-- `$config` (array): Publish configuration
+- `$config` (array): Export configuration
 - `$request` (WP_REST_Request): REST request object
 
 **Example**:
@@ -2028,7 +2028,7 @@ The following steps are registered by default:
 
 - **JavaScript hooks**: `aether.{category}.{action}` (dot-separated)
 - **PHP hooks**: `aether_{category}_{action}` (underscore-separated)
-- **Categories**: provider, storage, workflow, assets, url, blueprint, publish
+- **Categories**: provider, storage, workflow, assets, url, blueprint, export
 - **Actions**: Verbs describing the event (validate, saved, deleted, etc.)
 
 ---

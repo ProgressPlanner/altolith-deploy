@@ -29,13 +29,13 @@ Providers register themselves via WordPress hooks:
 // In provider index.js
 import { doAction } from '@wordpress/hooks';
 import ProviderRegistry from '../registry/ProviderRegistry';
-import { LocalFilesystemProvider } from './LocalFilesystemProvider';
+import { LocalFilesystemStaticSiteProvider } from './LocalFilesystemStaticSiteProvider';
 
 // Register provider class in JavaScript registry
-ProviderRegistry.register(LocalFilesystemProvider.ID, LocalFilesystemProvider);
+ProviderRegistry.register(LocalFilesystemStaticSiteProvider.ID, LocalFilesystemStaticSiteProvider);
 
 // Also trigger the hook for any listeners
-doAction('aether.providers.register', LocalFilesystemProvider);
+doAction('aether.providers.register', LocalFilesystemStaticSiteProvider);
 ```
 
 The `ProviderRegistry` singleton collects all registered providers and makes them available throughout the application.
@@ -44,14 +44,19 @@ The `ProviderRegistry` singleton collects all registered providers and makes the
 
 ```
 providers/
-├── ProviderRegistry.js            # Singleton registry
-├── local-filesystem/              # Local Filesystem provider
-│   ├── LocalFilesystemProvider.js # Provider implementation
-│   ├── index.js                   # Registration entry point
-│   └── ...
+├── registry/
+│   └── ProviderRegistry.js        # Singleton registry
+├── local-filesystem-static-site/  # Local Filesystem static site provider
+│   ├── LocalFilesystemStaticSiteProvider.js
+│   └── index.js                   # Registration entry point
+├── local-filesystem-blueprint-bundle/ # Local Filesystem blueprint bundle provider
+│   ├── LocalFilesystemBlueprintBundleProvider.js
+│   └── index.js                   # Registration entry point
 └── utils/
-    ├── providerLoader.js          # Dynamic provider loading
-    └── configStorage.js           # Configuration persistence
+    ├── configStorage.js           # Configuration persistence
+    ├── configFieldBuilder.js      # Configuration field builder
+    ├── configValidation.js         # Configuration validation
+    └── configSanitization.js      # Configuration sanitization
 ```
 
 ## Provider Lifecycle
@@ -61,16 +66,16 @@ providers/
 Provider registers itself when its module loads:
 
 ```javascript
-// providers/local-filesystem/index.js
+// providers/local-filesystem-static-site/index.js
 import { doAction } from '@wordpress/hooks';
 import ProviderRegistry from '../registry/ProviderRegistry';
-import { LocalFilesystemProvider } from './LocalFilesystemProvider';
+import { LocalFilesystemStaticSiteProvider } from './LocalFilesystemStaticSiteProvider';
 
 // Register provider class in JavaScript registry
-ProviderRegistry.register(LocalFilesystemProvider.ID, LocalFilesystemProvider);
+ProviderRegistry.register(LocalFilesystemStaticSiteProvider.ID, LocalFilesystemStaticSiteProvider);
 
 // Also trigger the hook for any listeners
-doAction('aether.providers.register', LocalFilesystemProvider);
+doAction('aether.providers.register', LocalFilesystemStaticSiteProvider);
 ```
 
 ### 2. Discovery
@@ -199,60 +204,26 @@ doAction('aether.providers.register', MyProvider);
 
 ## Provider Hooks (React)
 
-### useProviderRegistry
+### Accessing Providers
 
-Access all registered providers:
-
-```javascript
-import { useProviderMetadata } from '@aether/providers/hooks/useProviderRegistry';
-import { useProviderContext } from '@aether/hooks/useProviderContext';
-
-function MyComponent() {
-    // Option 1: Get provider metadata array
-    const { providers, isLoading } = useProviderMetadata();
-    
-    // Option 2: Get full context with helper methods
-    const {
-        providers: contextProviders,  // All providers
-        getProvider,                   // Get by ID
-        getProvidersByCapability,      // Filter by deployment type
-        loading,
-        error,
-    } = useProviderContext();
-
-    return (
-        <ul>
-            {providers.map(provider => (
-                <li key={provider.id}>
-                    {provider.getName()}
-                </li>
-            ))}
-        </ul>
-    );
-}
-```
-
-### useProvider
-
-Work with a specific provider:
+Providers are accessed via the ProviderRegistry:
 
 ```javascript
-import { useProvider } from '../hooks/useProvider';
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
-function ProviderSettings({ providerId }) {
-    const {
-        provider,
-        config,
-        loading,
-        error,
-    } = useProvider(providerId);
+// Get all providers
+const allProviders = ProviderRegistry.getAll();
 
-    return (
-        <div>
-            <h2>{provider.getName()}</h2>
-            {/* Render config fields */}
-        </div>
-    );
+// Get provider by ID
+const provider = ProviderRegistry.get('local-filesystem-static-site');
+
+// Get providers by deployment type
+const staticSiteProviders = ProviderRegistry.getByDeploymentType('static_site');
+const blueprintProviders = ProviderRegistry.getByDeploymentType('blueprint_bundle');
+
+// Check if provider is registered
+if (ProviderRegistry.has('my-provider')) {
+    // Provider is available
 }
 ```
 
@@ -277,20 +248,20 @@ import { ConfigStorage } from '../providers/utils/ConfigStorage';
 
 const storage = new ConfigStorage();
 
-// Load config (checks cache first, then API)
-const config = await storage.loadConfig('local-filesystem');
+// Load config for a provider instance (instanceId format: providerId:uuid)
+const config = await storage.loadConfig('local-filesystem-static-site:abc-123');
 
 // Save config (updates cache and API)
-await storage.saveConfig('local-filesystem', {
-    account_id: '...',
-    access_key_id: '...',  // Encrypted server-side
+await storage.saveConfig('local-filesystem-static-site:abc-123', {
+    public_url: 'https://example.com',
+    static_files_path: 'static/',
 });
 
 // Delete config
-await storage.deleteConfig('local-filesystem');
+await storage.deleteConfig('local-filesystem-static-site:abc-123');
 
 // Clear cache
-storage.clearCache('local-filesystem');
+storage.clearCache('local-filesystem-static-site:abc-123');
 ```
 
 ### PHP REST Endpoint
@@ -309,39 +280,27 @@ Server-side encryption for sensitive fields (marked with `secure: true`).
 
 ## Provider Loading
 
-### providerLoader.js
+Providers are loaded via Webpack entry points. Each provider has its own entry point:
 
-Handles dynamic provider loading to reduce initial bundle size:
+- `provider-local-filesystem-static-site.js`
+- `provider-local-filesystem-blueprint-bundle.js`
 
-```javascript
-import { loadAllProviders } from '../providers/utils/providerLoader';
-
-// Load all providers dynamically
-await loadAllProviders();
-
-// Providers are now registered and available in ProviderRegistry
-```
-
-Providers are loaded via Webpack dynamic imports, creating separate chunks.
+Providers register themselves when their bundle loads.
 
 ## Built-in Providers
 
-### Local Filesystem
+### Local Filesystem Static Site
 
-- **ID:** `local-filesystem`
-- **Capabilities:** Storage, Static Site
-- **Features:** Local file storage for WordPress exports and blueprints
+- **ID:** `local-filesystem-static-site`
+- **Deployment Type:** `static_site`
+- **Features:** Local file storage for static HTML exports
 
-## Future Enhancements (Phase 2 Week 3)
+### Local Filesystem Blueprint Bundle
 
-### Planned Improvements
+- **ID:** `local-filesystem-blueprint-bundle`
+- **Deployment Type:** `blueprint_bundle`
+- **Features:** Local file storage for WordPress Playground blueprint bundles
 
-1. **Enhanced ProviderLoader** - Better error handling, loading states
-2. **Provider UI Hooks** - Custom UI components per provider
-3. **Development Template** - Scaffold new providers with CLI tool
-4. **Remove Hardcoded Logic** - Eliminate provider-specific code from workflows
-
-See `REFACTORING_PLAN.md` Phase 2 for details.
 
 ## Testing Providers
 
@@ -352,14 +311,14 @@ See `REFACTORING_PLAN.md` Phase 2 for details.
 npm run test:js -- providers
 
 # Test specific provider
-npm run test:js -- providers/local-filesystem
+npm run test:js -- providers/local-filesystem-static-site
 ```
 
 ### Manual Testing
 
-1. Configure provider in Settings
+1. Configure provider instance in Settings
 2. Test connection
-3. Run publish workflow
+3. Run export workflow
 4. Verify deployment success
 
 ## Creating New Providers
@@ -378,4 +337,4 @@ npm run test:js -- providers/local-filesystem
 - [Main README](../README.md) - Source code overview
 - [Constants README](../constants/README.md) - Provider IDs and capabilities
 - [Hooks README](../hooks/README.md) - Provider hooks
-- [Publish README](../publish/README.md) - Integration with publish workflow
+- [Export README](../export/README.md) - Integration with export workflow

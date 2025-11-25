@@ -97,7 +97,7 @@ The plugin uses a universal implementation approach - no environment detection, 
 - **Configurable Post Limits**: Prevents timeouts on large sites (default: 10,000 posts)
 - **Browser-Based Generation**: Static site generation runs in browser to avoid PHP timeouts
 - **WordPress.org API**: Browser-based asset detection using CORS proxy
-- **Memory Protection**: 500-URL cache limit prevents browser memory exhaustion
+- **Memory Protection**: IndexedDB caching prevents browser memory exhaustion
 
 ### Limitations
 
@@ -138,12 +138,17 @@ composer lint
 aether-site-exporter/
 ├── assets/
 │   ├── src/          # Source JavaScript/React files
+│   │   ├── export/   # Export workflow (step-based executor system)
+│   │   ├── providers/# Provider implementations
+│   │   ├── components/# Shared React components
+│   │   ├── hooks/    # Custom React hooks
+│   │   └── utils/    # Utility functions
 │   └── build/        # Compiled assets
 ├── includes/
 │   ├── REST/         # REST API controllers
 │   ├── Services/     # Core services
 │   └── Utilities/    # Helper utilities
-├── tests/            # PHP unit tests
+├── tests/            # PHP and JavaScript tests
 └── webpack.config.js # Build configuration
 ```
 
@@ -158,23 +163,37 @@ The plugin provides REST API endpoints (namespace: `aether/site-exporter`):
 
 ### Export Operations
 
+- `POST /wp-json/aether/site-exporter/export` - Start export workflow
+- `GET /wp-json/aether/site-exporter/export/status` - Get export status
+- `POST /wp-json/aether/site-exporter/export/steps/{stepId}` - Execute workflow step
+- `POST /wp-json/aether/site-exporter/export/cancel` - Cancel running export
 - `POST /wp-json/aether/site-exporter/export/createArchive` - Create WordPress archive
-- `POST /wp-json/aether/site-exporter/export/initArchive` - Initialize archive
-- `POST /wp-json/aether/site-exporter/export/finalizeArchive` - Finalize archive
 - `POST /wp-json/aether/site-exporter/export/generateBlueprintBundle` - Generate blueprint bundle
-- `GET /wp-json/aether/site-exporter/export/steps/getHtmlContent` - Get HTML content for URL
 
 ### Provider Configuration
 
 - `GET/POST/DELETE /wp-json/aether/site-exporter/providers/{providerId}/config` - Manage provider config
 - `POST /wp-json/aether/site-exporter/providers/{providerId}/test` - Test provider connection
 
-### URL Discovery & Assets
+### URL Discovery
 
 - `POST /wp-json/aether/site-exporter/url-discovery/discover` - Discover site URLs
+- `GET /wp-json/aether/site-exporter/url-discovery/posts` - Get posts for URL discovery
+- `GET /wp-json/aether/site-exporter/url-discovery/terms` - Get terms for URL discovery
+- `GET /wp-json/aether/site-exporter/url-discovery/authors` - Get authors for URL discovery
+
+### Assets
+
 - `GET /wp-json/aether/site-exporter/assets/manifest` - Get assets manifest
 
-**Note**: The workflow is stateless and managed by React. All state is stored client-side in IndexedDB, not on the server.
+### Local Storage
+
+- `POST /wp-json/aether/site-exporter/local-storage/upload` - Upload file to local storage
+- `GET /wp-json/aether/site-exporter/local-storage/download` - Download file from local storage
+- `DELETE /wp-json/aether/site-exporter/local-storage/delete` - Delete file from local storage
+- `GET /wp-json/aether/site-exporter/local-storage/list` - List files in local storage
+
+**Note**: The export workflow uses a step-based executor system with dependency resolution. Steps register themselves via WordPress hooks and declare their data dependencies. All workflow state is stored client-side in IndexedDB, not on the server.
 
 ## 🧪 Testing
 

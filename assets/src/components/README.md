@@ -229,7 +229,7 @@ As part of the refactoring plan, these components will be extracted:
 
 - **ProviderSettings** - Provider configuration UI
 - **ConfigurationSummary** - Display provider config summary
-- **PublishStepProgress** - Individual step progress display
+- **ProviderProgressBar** - Individual provider progress display
 - **ErrorBoundary** - React error boundary for graceful failures
 - **LoadingState** - Consistent loading indicator
 - **EmptyState** - Consistent empty state UI
@@ -239,5 +239,5 @@ See `REFACTORING_PLAN.md` for details.
 ## Related Documentation
 
 - [Main README](../README.md) - Source code overview
-- [Publish Components](../publish/README.md) - Publish-specific components
+- [Export README](../export/README.md) - Export workflow components
 - [Admin Settings](../admin-settings/README.md) - Settings page components

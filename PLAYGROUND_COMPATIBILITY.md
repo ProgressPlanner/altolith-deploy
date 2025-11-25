@@ -171,7 +171,7 @@ WordPress Playground's WASM environment does not guarantee `/tmp` directory acce
 Replace temp directory usage with WordPress uploads directory:
 - Use `WP_CONTENT_DIR . '/uploads/aether-temp'`
 - Create directory if not exists
-- Add cleanup mechanism for old temp files
+- Add cleanup mechanism for expired temp files
 - Respect Playground storage constraints
 
 ---
@@ -483,7 +483,7 @@ set_transient('aether_job_' . $jobId, $state, 30 * MINUTE_IN_SECONDS);
 1. Create helper function for temp directory management
    - `getTempDirectory()` - Returns `WP_CONTENT_DIR/uploads/aether-temp`
    - `ensureTempDirectoryExists()` - Creates if needed
-   - `cleanupTempDirectory()` - Removes old files
+   - `cleanupExpiredFiles()` - Removes expired files
 
 2. Update affected files:
    - `includes/Services/ExportService.php:70`
@@ -517,16 +517,13 @@ set_transient('aether_job_' . $jobId, $state, 30 * MINUTE_IN_SECONDS);
    }
    ```
 
-2. **IMPLEMENTED**: Migrated to browser-based WordPress.org checking
-   - Removed `WPOrgCheckController.php` entirely
+2. **IMPLEMENTED**: Browser-based WordPress.org checking
    - All WordPress.org checks use browser `fetch()` API
    - Works universally in Playground and traditional hosting
    - No server-side HTTP requests needed
 
-**Files modified:**
-- Removed: `includes/REST/WPOrgCheckController.php`
-- Updated: `assets/src/utils/useAssetDiscovery.js` - Browser-based checking
-- Updated: `README.md` - Documented browser-based approach
+**Implementation:**
+- `assets/src/utils/useAssetDiscovery.js` - Browser-based checking
 
 ---
 
@@ -822,9 +819,7 @@ All critical compatibility issues have been resolved using a **universal impleme
   - User-friendly error messages for persistence issues
 
 #### 4. WordPress.org Checking - Browser-Based
-**Status:** Fully migrated to JavaScript
-- **Removed:** `includes/REST/WPOrgCheckController.php` (entire file)
-- **Implementation:** `assets/src/utils/useAssetDiscovery.js`
+**Implementation:** `assets/src/utils/useAssetDiscovery.js`
 - Uses browser `fetch()` API exclusively
 - Default method: CORS proxy (`https://cfp.s12y.org/check-wporg`)
 - Fallback method: Direct WordPress.org API calls
@@ -840,9 +835,8 @@ All critical compatibility issues have been resolved using a **universal impleme
 
 #### 6. IndexedDB Cache System
 **Files:** `assets/src/utils/indexedDB.js`, `assets/src/utils/staticSiteCache.js`
-- Replaces in-memory Map with IndexedDB for unlimited caching
-- Previous limit: 500 URLs in RAM
-- New limit: Browser storage quota (typically 50MB-1GB+)
+- Uses IndexedDB for unlimited caching
+- Limit: Browser storage quota (typically 50MB-1GB+)
 - Features:
   - `IndexedDBStore` - Generic key-value storage with indexes
   - `StaticSiteCache` - Specialized for HTML/asset caching
@@ -852,7 +846,7 @@ All critical compatibility issues have been resolved using a **universal impleme
   - Session-based cache isolation
 
 #### 7. Integration Points
-**Updated files:**
+**Files using these utilities:**
 - `includes/Services/ExportService.php` - Uses TempDirectoryManager
 - `includes/REST/ExportController.php` - File tracking + persistence validation
 - `includes/REST/LocalStorageController.php` - PathValidator + FileManager

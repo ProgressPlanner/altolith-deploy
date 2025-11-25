@@ -10,9 +10,10 @@ assets/src/
 ├── components/          # Shared React components
 ├── constants/           # Centralized constants (API, timing, providers, etc.)
 ├── hooks/               # Custom React hooks
-├── media-offload/       # Automatic media offloading to cloud storage
-├── providers/           # Cloud provider integrations (Local, Local, etc.)
-├── publish/             # Static site generation and deployment workflow
+├── providers/           # Provider implementations (local-filesystem-static-site, local-filesystem-blueprint-bundle)
+├── export/              # Export workflow (step-based executor system)
+├── contexts/            # React contexts (ExportContext)
+├── services/            # Service classes (AssetDiscoveryService, etc.)
 └── utils/               # Utility functions and helpers
 ```
 
@@ -39,14 +40,17 @@ The plugin uses a **pluggable provider architecture** for cloud deployment targe
 - Provider system is modular and extensible
 - See [providers/README.md](providers/README.md) for details
 
-### Publish Workflow
+### Export Workflow
 
-Static site generation uses a **step-based orchestration** approach:
+Static site generation uses a **step-based executor system** with dependency resolution:
 
+- Steps register themselves via WordPress hooks
+- Each step declares data dependencies (`requires`) and outputs (`provides`)
+- StepExecutor automatically resolves dependencies and executes steps in parallel when possible
 - React handles asset extraction, HTML processing, and direct upload
 - PHP handles blueprint generation and other server-side operations
 - REST API coordinates between React and PHP
-- See [publish/README.md](publish/README.md) for details
+- See [export/README.md](export/README.md) for details
 
 ## Build System
 
@@ -72,16 +76,19 @@ npm run test:js
 Webpack builds multiple entry points from `assets/src/`:
 
 - **admin-settings.js** - Settings page UI
-- **publish.js** - Publish workflow modal
-- **provider-local-filesystem.js** - Local Filesystem provider
+- **admin-bar-export.js** - Admin bar export button
+- **export-modal.js** - Export workflow modal
+- **provider-local-filesystem-static-site.js** - Local Filesystem static site provider
+- **provider-local-filesystem-blueprint-bundle.js** - Local Filesystem blueprint bundle provider
 
-### Code Splitting
+### Code Bundling
 
-The build uses dynamic imports for code splitting to reduce initial bundle size:
+The build bundles all code into single entry files (no code splitting):
 
-- Provider modules loaded on-demand
-- Large dependencies (like zip libraries) loaded when needed
-- Webpack automatically creates chunks for split code
+- All code is bundled into entry files
+- No chunk files are created
+- Dynamic imports are set to `eager` mode
+- This ensures all code is available immediately
 
 ## Path Aliases
 
@@ -96,18 +103,15 @@ The codebase uses path aliases for cleaner imports. Instead of deep relative pat
 - `@aether/contexts` → `assets/src/contexts`
 - `@aether/services` → `assets/src/services`
 - `@aether/providers` → `assets/src/providers`
-- `@aether/publish` → `assets/src/publish`
+- `@aether/export` → `assets/src/export`
 - `@aether/admin` → `assets/src/admin-settings`
 
 ### Usage Examples
 
 ```javascript
-// ❌ Old style (still works, but not recommended)
-import StaticSiteCache from '../../../utils/staticSiteCache';
-
-// ✅ New style (recommended)
+// ✅ Use path aliases
 import StaticSiteCache from '@aether/utils/staticSiteCache';
-import { executePreScan } from '@aether/publish/utils/preScanPhase';
+import { executePreScan } from '@aether/export/utils/preScanPhase';
 ```
 
 ### Benefits
@@ -116,13 +120,6 @@ import { executePreScan } from '@aether/publish/utils/preScanPhase';
 - **Easier refactoring**: Moving files doesn't break imports
 - **Better IDE support**: Autocomplete and go-to-definition work better
 - **Self-documenting**: Aliases make codebase structure clearer
-
-### Migration
-
-Both import styles work (backward compatible). Migrate gradually:
-- Use aliases in new code
-- Update files as you edit them
-- Old relative imports continue to work
 
 ## Development Guidelines
 
@@ -198,11 +195,10 @@ npm run test:e2e:headed  # With visible browser
 
 ## Related Documentation
 
-- [Publish Workflow](publish/README.md) - Static site generation process
-- [Provider System](providers/README.md) - Cloud provider architecture
+- [Export Workflow](export/README.md) - Static site generation process
+- [Provider System](providers/README.md) - Provider architecture
 - [Components](components/README.md) - Shared React components
 - [Hooks](hooks/README.md) - Custom React hooks
-- [Media Offload](media-offload/README.md) - Automatic media offloading
 - [Constants](constants/README.md) - Centralized constants
 
 ## Support & Contributing
