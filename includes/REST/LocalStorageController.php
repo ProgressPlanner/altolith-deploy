@@ -126,103 +126,19 @@ class LocalStorageController
 			);
 		}
 
-		// Security: Validate file size to prevent disk exhaustion and DoS attacks
-		// Allow up to 100MB per file (reasonable for web assets like images, fonts, CSS, JS)
-		$maxFileSize = 100 * 1024 * 1024; // 100MB in bytes
+		// Security backstop: Basic validation (client-side does detailed validation)
+		// This prevents bypassing client-side checks via direct API calls
+		$maxFileSize = 100 * 1024 * 1024; // 100MB
 		if (isset($file['size']) && $file['size'] > $maxFileSize) {
 			return new WP_Error(
 				'file_too_large',
 				\sprintf(
-					/* translators: %s: Maximum allowed file size in human-readable format */
+					/* translators: %s: Maximum allowed file size */
 					\__('File size exceeds maximum allowed size of %s.', 'aether-site-exporter'),
 					\size_format($maxFileSize)
 				),
 				[ 'status' => 400 ]
 			);
-		}
-
-		// Security: Validate file type and MIME type to prevent malicious uploads
-		$fileExtension = \strtolower(\pathinfo($key, PATHINFO_EXTENSION));
-		$allowedExtensions = [
-			'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg',  // Images
-			'css', 'js', 'json',                          // Web assets
-			'woff', 'woff2', 'ttf', 'eot',               // Fonts
-			'pdf', 'txt', 'md',                           // Documents
-			'zip', 'tar', 'gz',                           // Archives
-			'html', 'htm', 'xml',                         // Markup
-			'',                                           // Allow files without extension (e.g., directory index files)
-		];
-
-		if (!\in_array($fileExtension, $allowedExtensions, true)) {
-			return new WP_Error(
-				'file_type_not_allowed',
-				\sprintf(
-					/* translators: %s: file extension */
-					\__('File type "%s" is not allowed for upload.', 'aether-site-exporter'),
-					$fileExtension
-				),
-				[ 'status' => 400 ]
-			);
-		}
-
-		// Also validate MIME type if file is actually uploaded (not just content)
-		if (isset($file['tmp_name']) && \file_exists($file['tmp_name'])) {
-			// First, try to get MIME type from extension (more reliable)
-			$expectedMimeType = $this->getMimeTypeForExtension($fileExtension);
-			$detectedMimeType = null;
-
-			// Fall back to MIME detection if we don't have a mapping
-			if ($expectedMimeType === null) {
-				$finfo = \finfo_open(FILEINFO_MIME_TYPE);
-				if (false !== $finfo) {
-					$detectedMimeType = \finfo_file($finfo, $file['tmp_name']);
-					\finfo_close($finfo);
-				}
-			}
-
-			// Use extension-based MIME type if available, otherwise use detected
-			$mimeType = $expectedMimeType ?? $detectedMimeType;
-
-			if ($mimeType !== null) {
-				$allowedMimeTypes = [
-					'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
-					'text/css', 'application/javascript', 'text/javascript', 'application/json',
-					'font/woff', 'font/woff2', 'application/font-woff', 'application/font-woff2',
-					'font/ttf', 'application/x-font-ttf', 'font/otf', 'application/x-font-otf',
-					'application/pdf', 'text/plain', 'text/markdown',
-					'application/zip', 'application/x-tar', 'application/gzip', 'application/x-gzip',
-					'text/html', 'application/xhtml+xml', 'application/xml', 'text/xml',
-					'application/vnd.ms-fontobject', // EOT fonts
-					'application/octet-stream',  // Generic binary - allow for files without extension
-					'inode/x-empty',              // Empty files
-				];
-
-				$mimeTypeAllowed = \in_array($mimeType, $allowedMimeTypes, true);
-
-				// If MIME type was detected (not from extension) and extension is allowed,
-				// allow common misidentifications for known extensions
-				if (!$mimeTypeAllowed && $expectedMimeType === null && $detectedMimeType !== null && !empty($fileExtension)) {
-					// For JavaScript files, allow common misidentifications
-					if ($fileExtension === 'js' && \in_array($detectedMimeType, ['text/x-java', 'text/plain', 'application/x-javascript'], true)) {
-						$mimeTypeAllowed = true;
-					} elseif (\in_array($fileExtension, ['css', 'html', 'htm', 'xml', 'txt', 'md'], true) && $detectedMimeType === 'text/plain') {
-						// For other text-based files, allow text/plain as fallback
-						$mimeTypeAllowed = true;
-					}
-				}
-
-				if (!$mimeTypeAllowed) {
-					return new WP_Error(
-						'mime_type_not_allowed',
-						\sprintf(
-							/* translators: %s: MIME type */
-							\__('MIME type "%s" is not allowed for upload.', 'aether-site-exporter'),
-							$mimeType
-						),
-						[ 'status' => 400 ]
-					);
-				}
-			}
 		}
 
 		// Security: Validate key to prevent path traversal attacks.
@@ -817,51 +733,5 @@ class LocalStorageController
 		}
 
 		return true;
-	}
-
-	/**
-	 * Get MIME type for a file extension.
-	 *
-	 * Returns the correct MIME type based on file extension to avoid
-	 * misidentifications from MIME detection libraries.
-	 *
-	 * @param string $extension File extension (without leading dot).
-	 * @return string|null MIME type if known, null otherwise.
-	 */
-	private function getMimeTypeForExtension(string $extension): ?string
-	{
-		$extension = \strtolower($extension);
-		$mimeTypes = [
-			// Images
-			'jpg'  => 'image/jpeg',
-			'jpeg' => 'image/jpeg',
-			'png'  => 'image/png',
-			'gif'  => 'image/gif',
-			'webp' => 'image/webp',
-			'svg'  => 'image/svg+xml',
-			// Web assets
-			'css'  => 'text/css',
-			'js'   => 'application/javascript',
-			'json' => 'application/json',
-			// Fonts
-			'woff'  => 'font/woff',
-			'woff2' => 'font/woff2',
-			'ttf'   => 'font/ttf',
-			'eot'   => 'application/vnd.ms-fontobject',
-			// Documents
-			'pdf' => 'application/pdf',
-			'txt' => 'text/plain',
-			'md'  => 'text/markdown',
-			// Archives
-			'zip' => 'application/zip',
-			'tar' => 'application/x-tar',
-			'gz'  => 'application/gzip',
-			// Markup
-			'html' => 'text/html',
-			'htm'  => 'text/html',
-			'xml'  => 'application/xml',
-		];
-
-		return $mimeTypes[$extension] ?? null;
 	}
 }

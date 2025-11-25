@@ -7,6 +7,7 @@
  */
 
 import apiFetch from '@aether/utils/api';
+import { validateFile } from '@aether/utils/fileValidation';
 
 /**
  * Create a success response.
@@ -73,6 +74,12 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 				}, staticPath: ${ staticPath }`
 			);
 			return createErrorResponse( error.message );
+		}
+
+		// Client-side validation for instant feedback
+		const validation = validateFile( file, key );
+		if ( ! validation.valid ) {
+			return createErrorResponse( validation.error );
 		}
 
 		// Create FormData for file upload
