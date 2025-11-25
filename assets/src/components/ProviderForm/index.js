@@ -292,6 +292,9 @@ function ProviderForm( {
 							onChange={ handleFieldChange }
 							errors={ errors }
 							isHidden={ isHidden }
+							providerId={ providerId }
+							formValues={ values }
+							onFormChange={ handleFieldChange }
 						/>
 					);
 				};
@@ -383,6 +386,11 @@ function ProviderForm( {
 												onChange={ handleFieldChange }
 												errors={ errors }
 												isHidden={ isHidden }
+												providerId={ providerId }
+												formValues={ values }
+												onFormChange={
+													handleFieldChange
+												}
 											/>
 										</ToolsPanelItem>
 									);

@@ -11,17 +11,21 @@ import {
 	CheckboxControl,
 	SelectControl,
 } from '@wordpress/components';
+import { doAction } from '@wordpress/hooks';
 import SecretField from '../SecretField';
 
 /**
  * Render a provider configuration field.
  *
- * @param {Object}   props          Component props.
- * @param {Object}   props.field    Field definition from provider metadata.
- * @param {*}        props.value    Current field value.
- * @param {Function} props.onChange Change handler.
- * @param {Object}   props.errors   Validation errors object.
- * @param {boolean}  props.isHidden Whether field should be hidden via CSS.
+ * @param {Object}   props              Component props.
+ * @param {Object}   props.field        Field definition from provider metadata.
+ * @param {*}        props.value        Current field value.
+ * @param {Function} props.onChange     Change handler.
+ * @param {Object}   props.errors       Validation errors object.
+ * @param {boolean}  props.isHidden     Whether field should be hidden via CSS.
+ * @param {string}   props.providerId   Provider instance ID for hook context.
+ * @param {Object}   props.formValues   All form values (for hooks that need full context).
+ * @param {Function} props.onFormChange Function to change any form field (for hooks).
  * @return {JSX.Element} Rendered field component.
  */
 export default function ProviderField( {
@@ -30,6 +34,9 @@ export default function ProviderField( {
 	onChange,
 	errors,
 	isHidden = false,
+	providerId = '',
+	formValues = {},
+	onFormChange = null,
 } ) {
 	const {
 		id,
@@ -58,9 +65,28 @@ export default function ProviderField( {
 		display: isHidden ? 'none' : undefined,
 	};
 
+	// Context object passed to hooks
+	const fieldContext = {
+		field,
+		fieldId: id,
+		value,
+		providerId,
+		formValues,
+		onFormChange,
+	};
+
+	// Helper to render field with before/after hooks
+	const renderWithHooks = ( fieldElement ) => (
+		<>
+			{ doAction( 'aether.admin.provider.field.before', fieldContext ) }
+			{ fieldElement }
+			{ doAction( 'aether.admin.provider.field.after', fieldContext ) }
+		</>
+	);
+
 	// Handle sensitive fields (passwords, API keys, etc.)
 	if ( sensitive || type === 'password' ) {
-		return (
+		return renderWithHooks(
 			<div
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
@@ -81,7 +107,7 @@ export default function ProviderField( {
 
 	// Handle checkbox fields
 	if ( type === 'checkbox' ) {
-		return (
+		return renderWithHooks(
 			<div
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
@@ -112,7 +138,7 @@ export default function ProviderField( {
 			? resolvedValue
 			: [];
 
-		return (
+		return renderWithHooks(
 			<div
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
@@ -196,7 +222,7 @@ export default function ProviderField( {
 			value: opt.value,
 		} ) );
 
-		return (
+		return renderWithHooks(
 			<div
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
@@ -219,7 +245,7 @@ export default function ProviderField( {
 
 	// Handle textarea fields
 	if ( type === 'textarea' ) {
-		return (
+		return renderWithHooks(
 			<div
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
@@ -241,7 +267,7 @@ export default function ProviderField( {
 
 	// Handle URL fields
 	if ( type === 'url' ) {
-		return (
+		return renderWithHooks(
 			<div
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
@@ -266,7 +292,7 @@ export default function ProviderField( {
 
 	// Handle email fields
 	if ( type === 'email' ) {
-		return (
+		return renderWithHooks(
 			<div
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
@@ -291,7 +317,7 @@ export default function ProviderField( {
 
 	// Handle number fields
 	if ( type === 'number' ) {
-		return (
+		return renderWithHooks(
 			<div
 				className={ `aether-provider-field aether-provider-field--${ type } ${
 					error ? 'aether-provider-field--error' : ''
@@ -315,7 +341,7 @@ export default function ProviderField( {
 	}
 
 	// Default: text field
-	return (
+	return renderWithHooks(
 		<div
 			className={ `aether-provider-field aether-provider-field--${ type } ${
 				error ? 'aether-provider-field--error' : ''
