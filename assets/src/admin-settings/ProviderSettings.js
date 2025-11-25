@@ -13,8 +13,7 @@ import apiFetch from '@wordpress/api-fetch';
 import ProviderInstancesContainer from '@aether/components/ProviderInstancesContainer';
 import AddProviderInstanceModal from '@aether/components/AddProviderInstanceModal';
 import LoadingSpinner from '@aether/components/LoadingSpinner';
-import SectionHeader from '@aether/components/SectionHeader';
-import { colors, spacing } from '@aether/utils/styles';
+import { colors, spacing, fontSize, commonStyles } from '@aether/utils/styles';
 import { useProviderSettings } from '@aether/hooks/useProviderSettings';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 import { DEPLOYMENT_TYPE_LABELS } from '@aether/constants/deploymentTypes';
@@ -405,16 +404,50 @@ export default function ProviderSettings( {
 		);
 	}
 
+	// Section header styles
+	const sectionHeaderStyle = {
+		...commonStyles.sectionHeader,
+		backgroundColor: colors.white,
+	};
+
+	const headerTitleStyle = {
+		margin: 0,
+		fontSize: '1.3em',
+		lineHeight: 1.4,
+		color: colors.text,
+		backgroundColor: colors.white,
+	};
+
+	const headerDescriptionStyle = {
+		margin: '0.5rem 0 1rem',
+		color: colors.textMuted,
+		fontSize: fontSize.base,
+	};
+
 	return (
 		<div className="aether-provider-settings">
-			<SectionHeader
-				title={ __( 'Provider Instances', 'aether-site-exporter' ) }
-				description={ __(
-					'Create and manage multiple instances of each provider type. Each instance can have its own configuration and deployment settings.',
-					'aether-site-exporter'
-				) }
-				className="aether-provider-settings__header"
-				actions={
+			<div
+				className="aether-section-header aether-provider-settings__header"
+				style={ sectionHeaderStyle }
+			>
+				<div className="aether-section-header__content">
+					<h2
+						className="aether-section-header__title"
+						style={ headerTitleStyle }
+					>
+						{ __( 'Provider Instances', 'aether-site-exporter' ) }
+					</h2>
+					<p
+						className="aether-section-header__description"
+						style={ headerDescriptionStyle }
+					>
+						{ __(
+							'Create and manage multiple instances of each provider type. Each instance can have its own configuration and deployment settings.',
+							'aether-site-exporter'
+						) }
+					</p>
+				</div>
+				<div className="aether-section-header__actions">
 					<ButtonGroup>
 						{ availableDeploymentTypes.map( ( deploymentType ) => (
 							<Button
@@ -437,8 +470,8 @@ export default function ProviderSettings( {
 							</Button>
 						) ) }
 					</ButtonGroup>
-				}
-			/>
+				</div>
+			</div>
 
 			{ /* Provider Instances Table */ }
 			{ allInstances.length > 0 ? (

@@ -118,3 +118,29 @@ export async function validateAllFields( config, fields ) {
 
 	return errors;
 }
+
+/**
+ * Check if all required fields are filled in a configuration.
+ *
+ * @param {Object}        config Configuration to check.
+ * @param {Array<Object>} fields Array of field definitions.
+ * @return {boolean} True if all required fields have values, false otherwise.
+ */
+export function hasRequiredFields( config, fields ) {
+	// Safety check: if no fields or fields is not an array, consider it valid
+	if ( ! fields || ! Array.isArray( fields ) || fields.length === 0 ) {
+		return true;
+	}
+
+	for ( const field of fields ) {
+		const fieldId = field.id || field.name;
+		if ( field.required ) {
+			const value = config[ fieldId ];
+			// Check if value is empty (null, undefined, empty string, empty array)
+			if ( ! value || ( Array.isArray( value ) && value.length === 0 ) ) {
+				return false;
+			}
+		}
+	}
+	return true;
+}

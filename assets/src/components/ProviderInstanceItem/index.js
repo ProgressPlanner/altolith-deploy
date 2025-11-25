@@ -8,10 +8,11 @@
 
 import { useState, useRef, useEffect } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { Button, Modal } from '@wordpress/components';
-import { settings, trash } from '@wordpress/icons';
+import { Button, Modal, Icon } from '@wordpress/components';
+import { settings, trash, check, close } from '@wordpress/icons';
 import ProviderForm from '@aether/components/ProviderForm';
 import StatusNotice from '@aether/components/StatusNotice';
+import { hasRequiredFields } from '@aether/providers/utils/configValidation';
 import {
 	colors,
 	spacing,
@@ -25,13 +26,15 @@ import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 // Styles - extracted to module level for performance
 const tableCellStyle = {
 	padding: `${ spacing.md } ${ spacing.lg }`,
-	borderBottom: `1px solid ${ colors.borderLight }`,
 	verticalAlign: 'middle',
 };
 
-const tableCellStyleWithBorder = {
+const tableCellStyleWithoutHorizontalBorder = {
 	...tableCellStyle,
-	borderRight: `1px solid ${ colors.borderLight }`,
+	borderRightColor: 'transparent',
+	borderLeftColor: 'transparent',
+	borderTopColor: colors.borderLight,
+	borderBottomColor: colors.borderLight,
 };
 
 const nameStyle = {
@@ -64,10 +67,6 @@ const tagBaseStyle = {
 	display: 'inline-block',
 };
 
-const providerTypeTagStyle = {
-	...tagBaseStyle,
-};
-
 /**
  * Get deployment type tag color
  *
@@ -90,6 +89,7 @@ const getDeploymentTypeColor = ( deploymentType ) => {
 const tableRowStyle = {
 	transition: 'background-color 0.2s ease',
 	cursor: 'default',
+	borderBottom: `1px solid ${ colors.borderLight }`,
 };
 
 const actionsCellStyle = {
@@ -224,6 +224,14 @@ export default function ProviderInstanceItem( {
 		return acc;
 	}, {} );
 
+	// Check if all required fields are filled
+	const allRequiredFilled = hasRequiredFields(
+		instanceConfig,
+		settingsFields
+	);
+	const SettingsIcon = allRequiredFilled ? check : close;
+	const settingsIconColor = allRequiredFilled ? '#00a32a' : '#d63638';
+
 	const providerType =
 		instance.config.provider_type || instance.instanceId.split( ':' )[ 0 ];
 	const providerMetadata = provider?.metadata || {};
@@ -240,7 +248,7 @@ export default function ProviderInstanceItem( {
 			} }
 		>
 			{ /* Instance Name */ }
-			<td style={ tableCellStyleWithBorder }>
+			<td style={ tableCellStyleWithoutHorizontalBorder }>
 				{ isEditing ? (
 					<input
 						ref={ inputRef }
@@ -287,14 +295,12 @@ export default function ProviderInstanceItem( {
 			</td>
 
 			{ /* Provider Type */ }
-			<td style={ tableCellStyleWithBorder }>
-				<span style={ providerTypeTagStyle }>
-					{ providerMetadata.name || provider?.id || providerType }
-				</span>
+			<td style={ tableCellStyleWithoutHorizontalBorder }>
+				{ providerMetadata.name || provider?.id || providerType }
 			</td>
 
 			{ /* Deployment Type */ }
-			<td style={ tableCellStyleWithBorder }>
+			<td style={ tableCellStyleWithoutHorizontalBorder }>
 				{ deploymentTypeLabel && (
 					<span
 						style={ {
@@ -306,6 +312,35 @@ export default function ProviderInstanceItem( {
 						{ deploymentTypeLabel }
 					</span>
 				) }
+			</td>
+
+			{ /* Settings Status */ }
+			<td
+				style={ {
+					...tableCellStyleWithoutHorizontalBorder,
+					textAlign: 'center',
+				} }
+			>
+				<Icon
+					icon={ SettingsIcon }
+					style={ {
+						color: settingsIconColor,
+						width: '20px',
+						height: '20px',
+						verticalAlign: 'middle',
+					} }
+					aria-label={
+						allRequiredFilled
+							? __(
+									'All required fields filled',
+									'aether-site-exporter'
+							  )
+							: __(
+									'Required fields missing',
+									'aether-site-exporter'
+							  )
+					}
+				/>
 			</td>
 
 			{ /* Actions */ }
