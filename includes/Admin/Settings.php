@@ -10,8 +10,6 @@
 
 namespace Aether\SiteExporter\Admin;
 
-use Aether\SiteExporter\Core\SettingsRepository;
-
 \defined('ABSPATH') || exit;
 
 /**
@@ -83,8 +81,8 @@ class Settings
 	 */
 	public function get(): array
 	{
-		$repository = new SettingsRepository();
-		return $repository->getAll();
+		$settings = \get_option('aether_site_exporter_settings', []);
+		return \is_array($settings) ? $settings : [];
 	}
 
 	/**
@@ -95,14 +93,6 @@ class Settings
 	 */
 	public function update(array $settings): bool
 	{
-		$result = \update_option('aether_site_exporter_settings', $settings);
-
-		// Force cache refresh by re-reading from database.
-		if ($result) {
-			$repository = new SettingsRepository();
-			$repository->getAll();
-		}
-
-		return $result;
+		return \update_option('aether_site_exporter_settings', $settings);
 	}
 }

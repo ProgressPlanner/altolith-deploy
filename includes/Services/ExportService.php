@@ -124,41 +124,24 @@ class ExportService
 		// This prevents creating directories outside ABSPATH via traversal.
 		$parentDir = \dirname($fullExportDir);
 
-		// Parent must exist for realpath() to work
-		if (!\is_dir($parentDir)) {
-			// Recursively check parent's parent to ensure we stay within ABSPATH
-			$checkDir = $parentDir;
-			while (!\is_dir($checkDir) && \strlen($checkDir) > \strlen(ABSPATH)) {
-				$checkDir = \dirname($checkDir);
-			}
+		// Find the nearest existing ancestor directory to validate
+		$checkDir = $parentDir;
+		while (!\is_dir($checkDir) && \strlen($checkDir) > \strlen(ABSPATH)) {
+			$checkDir = \dirname($checkDir);
+		}
 
-			// Validate the existing ancestor is within ABSPATH
-			$realCheckDir = \realpath($checkDir);
-			$realAbspath = \realpath(ABSPATH);
-			if (
-				false === $realCheckDir || false === $realAbspath ||
-				0 !== \strpos($realCheckDir, $realAbspath)
-			) {
-				return new \WP_Error(
-					'invalid_export_directory',
-					\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
-					[ 'status' => 400 ]
-				);
-			}
-		} else {
-			// Parent exists, validate it's within ABSPATH
-			$realParent = \realpath($parentDir);
-			$realAbspath = \realpath(ABSPATH);
-			if (
-				false === $realParent || false === $realAbspath ||
-				0 !== \strpos($realParent, $realAbspath)
-			) {
-				return new \WP_Error(
-					'invalid_export_directory',
-					\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
-					[ 'status' => 400 ]
-				);
-			}
+		// Validate the existing ancestor is within ABSPATH
+		$realCheckDir = \realpath($checkDir);
+		$realAbspath = \realpath(ABSPATH);
+		if (
+			false === $realCheckDir || false === $realAbspath ||
+			0 !== \strpos($realCheckDir, $realAbspath)
+		) {
+			return new \WP_Error(
+				'invalid_export_directory',
+				\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
 		}
 
 		// NOW safe to create the directory
