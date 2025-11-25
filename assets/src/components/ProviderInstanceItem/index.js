@@ -185,11 +185,9 @@ export default function ProviderInstanceItem( {
 	const settingsFields = provider?.settingsFields || [];
 	const formInitialValues = settingsFields.reduce( ( acc, field ) => {
 		const fieldId = field.id || field.name;
-		if (
-			instanceConfig[ fieldId ] !== undefined &&
-			instanceConfig[ fieldId ] !== null
-		) {
-			acc[ fieldId ] = instanceConfig[ fieldId ];
+		const value = instanceConfig[ fieldId ];
+		if ( value !== undefined && value !== null ) {
+			acc[ fieldId ] = value;
 		}
 		return acc;
 	}, {} );
