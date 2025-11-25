@@ -568,7 +568,43 @@ class Plugin
 			return false;
 		}
 
+		// If destination exists as a directory, remove it first (from previous bug).
+		if (\file_exists($destinationFullPath) && \is_dir($destinationFullPath)) {
+			if (\defined('WP_DEBUG') && WP_DEBUG) {
+				\error_log(\sprintf('Aether: Removing directory at destination path: %s', $destinationFullPath));
+			}
+			$this->deleteDirectory($destinationFullPath);
+		}
+
 		// Use FileManager to handle the actual copy operation.
 		return FileManager::copyFile($sourceFullPath, $destinationFullPath);
+	}
+
+	/**
+	 * Recursively delete a directory and its contents.
+	 *
+	 * @param string $directory Directory path to delete.
+	 * @return bool True on success, false on failure.
+	 */
+	private function deleteDirectory(string $directory): bool
+	{
+		if (!\file_exists($directory) || !\is_dir($directory)) {
+			return false;
+		}
+
+		$files = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS),
+			\RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ($files as $file) {
+			if ($file->isDir()) {
+				@\rmdir($file->getRealPath());
+			} else {
+				@\unlink($file->getRealPath());
+			}
+		}
+
+		return @\rmdir($directory);
 	}
 }

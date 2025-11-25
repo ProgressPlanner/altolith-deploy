@@ -64,7 +64,17 @@ class BlueprintBundleGenerator
 		// Security: Validate output directory is within ABSPATH
 		$realOutputDir = \realpath($outputDir);
 		$realAbspath = \realpath(ABSPATH);
-		if (false === $realOutputDir || false === $realAbspath || 0 !== \strpos($realOutputDir, $realAbspath)) {
+
+		// If realpath fails (e.g., symlinks in Local by Flywheel), fall back to normalized path comparison
+		if (false === $realOutputDir || false === $realAbspath) {
+			$normalizedOutputDir = \wp_normalize_path($outputDir);
+			$normalizedAbspath = \wp_normalize_path(ABSPATH);
+			if (0 !== \strpos($normalizedOutputDir, $normalizedAbspath)) {
+				return false;
+			}
+			// Use normalized path for subsequent operations
+			$realOutputDir = $normalizedOutputDir;
+		} elseif (0 !== \strpos($realOutputDir, $realAbspath)) {
 			return false;
 		}
 
@@ -81,9 +91,14 @@ class BlueprintBundleGenerator
 		// Create blueprint-bundle.zip path with custom filename using validated paths
 		$bundlePath = \trailingslashit($realOutputDir) . $bundleFilename;
 
-		// Remove existing bundle if it exists
+		// Remove existing bundle if it exists (handle both files and directories)
 		if (\file_exists($bundlePath)) {
-			\wp_delete_file($bundlePath);
+			if (\is_dir($bundlePath)) {
+				// If bundle path is a directory (from previous bug), recursively remove it
+				$this->deleteDirectory($bundlePath);
+			} else {
+				\wp_delete_file($bundlePath);
+			}
 		}
 
 		// Create ZIP archive
@@ -191,5 +206,33 @@ class BlueprintBundleGenerator
 		$zip->close();
 
 		return $hasBlueprint && $hasWpContent;
+	}
+
+	/**
+	 * Recursively delete a directory and its contents.
+	 *
+	 * @param string $directory Directory path to delete.
+	 * @return bool True on success, false on failure.
+	 */
+	private function deleteDirectory(string $directory): bool
+	{
+		if (!\file_exists($directory) || !\is_dir($directory)) {
+			return false;
+		}
+
+		$files = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($directory, \RecursiveDirectoryIterator::SKIP_DOTS),
+			\RecursiveIteratorIterator::CHILD_FIRST
+		);
+
+		foreach ($files as $file) {
+			if ($file->isDir()) {
+				@\rmdir($file->getRealPath());
+			} else {
+				@\unlink($file->getRealPath());
+			}
+		}
+
+		return @\rmdir($directory);
 	}
 }
