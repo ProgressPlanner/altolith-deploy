@@ -11,7 +11,7 @@ import {
 	CheckboxControl,
 	SelectControl,
 } from '@wordpress/components';
-import { doAction } from '@wordpress/hooks';
+import { doAction, applyFilters } from '@wordpress/hooks';
 import SecretField from '../SecretField';
 
 /**
@@ -75,12 +75,19 @@ export default function ProviderField( {
 		onFormChange,
 	};
 
+	// Get content to render after the field via filter (allows returning React components)
+	const afterContent = applyFilters(
+		'aether.admin.provider.field.after',
+		null,
+		fieldContext
+	);
+
 	// Helper to render field with before/after hooks
 	const renderWithHooks = ( fieldElement ) => (
 		<>
 			{ doAction( 'aether.admin.provider.field.before', fieldContext ) }
 			{ fieldElement }
-			{ doAction( 'aether.admin.provider.field.after', fieldContext ) }
+			{ afterContent }
 		</>
 	);
 

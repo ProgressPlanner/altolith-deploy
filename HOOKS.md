@@ -568,12 +568,13 @@ addAction('aether.admin.provider.field.before', 'my-plugin/field-notice', (conte
 
 #### `aether.admin.provider.field.after`
 
-**Type**: Action
+**Type**: Filter
 **Location**: `assets/src/components/ProviderField/index.js`
 
-Fires after a provider configuration field is rendered. Allows injecting custom UI elements (like buttons or links) after specific fields.
+Filter that runs after a provider configuration field is rendered. Return a React component to inject custom UI elements (like buttons or links) after specific fields.
 
 **Parameters**:
+- `content` (any): Current content (null by default, or content from previous filters)
 - `context` (Object): Field context object
   - `field` (Object): Complete field definition from provider metadata
   - `fieldId` (string): Field identifier (e.g., 'worker_endpoint', 'bucket_name')
@@ -582,29 +583,35 @@ Fires after a provider configuration field is rendered. Allows injecting custom 
   - `formValues` (Object): All current form values (useful for validation/conditional UI)
   - `onFormChange` (Function): Function to update form fields, signature: `(fieldId, value) => void`
 
+**Returns**: React component or null
+
 **Example**:
 ```javascript
-import { addAction } from '@wordpress/hooks';
+import { addFilter } from '@wordpress/hooks';
 
-addAction('aether.admin.provider.field.after', 'my-plugin/deploy-button', (context) => {
+addFilter('aether.admin.provider.field.after', 'my-plugin/deploy-button', (content, context) => {
     // Only show button after worker_endpoint field for R2 providers
     if (
         context.fieldId !== 'worker_endpoint' ||
         !context.providerId.startsWith('cloudflare-r2')
     ) {
-        return;
+        return content;
     }
 
-    // Note: doAction hooks don't directly render React components.
-    // Use a slot-fill pattern or DOM manipulation to inject UI.
-    // Example: Find the field element and append a button after it.
-    console.log('Deploy Worker button should appear here for:', context.providerId);
+    // Return a React component to render after the field
+    return (
+        <MyDeployButton
+            providerId={context.providerId}
+            config={context.formValues}
+            onChange={context.onFormChange}
+        />
+    );
 });
 ```
 
 **Use Case - Adding a Deploy Worker Button**:
 
-This hook is particularly useful for adding action buttons next to specific fields. For example, the Cloudflare R2 provider uses this to add a "Deploy Worker" button after the `worker_endpoint` field.
+This filter is particularly useful for adding action buttons next to specific fields. For example, the Cloudflare R2 provider uses this to add a "Deploy Worker" button after the `worker_endpoint` field.
 
 ---
 
