@@ -53,15 +53,17 @@ export function useExportController( exportState ) {
 	const staticSiteProgressContext = useRef( {
 		providerIndex: 0,
 		totalProviders: 1,
+		currentProviderId: null,
 	} );
 
 	// Function to update static site progress context
 	// This allows the step handler to set the current provider index before processing
 	const updateStaticSiteProgressContext = useCallback(
-		( providerIndex, totalProviders ) => {
+		( providerIndex, totalProviders, currentProviderId = null ) => {
 			staticSiteProgressContext.current = {
 				providerIndex,
 				totalProviders,
+				currentProviderId,
 			};
 		},
 		[]
@@ -72,28 +74,43 @@ export function useExportController( exportState ) {
 		( uploadedFiles, totalFiles ) => {
 			if ( totalFiles > 0 && uploadedFiles >= 0 ) {
 				// Get current provider context
-				const { providerIndex, totalProviders } =
+				const { providerIndex, totalProviders, currentProviderId } =
 					staticSiteProgressContext.current;
 
 				// Calculate raw numbers accounting for multiple providers
 				// For multiple providers, we need to calculate the total across all providers
 				// and the current position across all providers
-				if ( totalProviders > 1 ) {
-					// For multiple providers, each provider processes totalFiles
-					// Current position: providerIndex * totalFiles + uploadedFiles
-					// Total: totalProviders * totalFiles
-					const totalAcrossProviders = totalProviders * totalFiles;
-					const currentAcrossProviders =
-						providerIndex * totalFiles + uploadedFiles;
-					setStepProgress( 'uploadStaticFiles', {
-						current: currentAcrossProviders,
-						total: totalAcrossProviders,
-					} );
-				} else {
-					// Single provider - use raw numbers directly
-					setStepProgress( 'uploadStaticFiles', {
-						current: uploadedFiles,
-						total: totalFiles,
+				const progress =
+					totalProviders > 1
+						? {
+								// For multiple providers, each provider processes totalFiles
+								// Current position: providerIndex * totalFiles + uploadedFiles
+								// Total: totalProviders * totalFiles
+								current:
+									providerIndex * totalFiles + uploadedFiles,
+								total: totalProviders * totalFiles,
+						  }
+						: {
+								// Single provider - use raw numbers directly
+								current: uploadedFiles,
+								total: totalFiles,
+						  };
+
+				// Update step progress (overall progress bar)
+				setStepProgress( 'uploadStaticFiles', progress );
+
+				// Update provider-specific progress for the progress bars
+				// This is critical because processStaticSiteUrls bypasses ThreadOrchestrator's
+				// wrapped setStepProgress that normally calls setProviderProgress
+				if ( currentProviderId ) {
+					setProviderProgress( currentProviderId, {
+						stepId: 'uploadStaticFiles',
+						stepLabel: 'Upload Static Files',
+						progress: {
+							current: uploadedFiles,
+							total: totalFiles,
+						},
+						status: 'active',
 					} );
 				}
 			}

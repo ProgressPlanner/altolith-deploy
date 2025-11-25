@@ -67,6 +67,7 @@ async function handler( context ) {
 		siteUrl,
 		processStaticSiteUrls,
 		setStatusMessage,
+		updateStaticSiteProgressContext,
 	} = context;
 
 	// blueprintData is optional and may be passed via context if available
@@ -136,6 +137,12 @@ async function handler( context ) {
 			providerId,
 		}
 	);
+
+	// Update progress context with current provider ID
+	// This enables the progress callback to update provider-specific progress bars
+	if ( updateStaticSiteProgressContext ) {
+		updateStaticSiteProgressContext( 0, 1, providerId );
+	}
 
 	// Process URLs for this provider instance
 	// Pass shared HTML data so it uses stored HTML instead of fetching again
@@ -243,6 +250,10 @@ const stepDefinition = {
 		setStatusMessage: {
 			from: 'initial',
 			required: true,
+		},
+		updateStaticSiteProgressContext: {
+			from: 'initial',
+			required: false,
 		},
 	},
 	provides: {
