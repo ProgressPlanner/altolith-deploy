@@ -23,7 +23,7 @@ import {
 
 // Styles - extracted to module level for performance
 const tableCellStyle = {
-	padding: spacing.md,
+	padding: `${ spacing.md } ${ spacing.lg }`,
 	borderBottom: `1px solid ${ colors.borderLight }`,
 	verticalAlign: 'middle',
 };
@@ -54,14 +54,28 @@ const nameInputStyle = {
 	width: '100%',
 };
 
-const providerTypeTagStyle = {
+const tagBaseStyle = {
 	fontSize: fontSize.xs,
 	fontWeight: fontWeight.medium,
 	padding: '4px 8px',
 	borderRadius: borderRadius.sm,
-	backgroundColor: '#000',
 	color: '#fff',
 	display: 'inline-block',
+};
+
+const providerTypeTagStyle = {
+	...tagBaseStyle,
+	backgroundColor: '#000',
+};
+
+const deploymentTypeTagStyle = {
+	...tagBaseStyle,
+	backgroundColor: colors.primary,
+};
+
+const tableRowStyle = {
+	transition: 'background-color 0.2s ease',
+	cursor: 'default',
 };
 
 const actionsCellStyle = {
@@ -72,17 +86,19 @@ const actionsCellStyle = {
 /**
  * Provider Instance Item Component
  *
- * @param {Object}   props          Component props.
- * @param {Object}   props.instance Instance data with instanceId and config.
- * @param {Object}   props.provider Provider metadata.
- * @param {Function} props.onDelete Callback to delete instance.
- * @param {Function} props.onRename Callback to rename instance.
- * @param {Function} props.onSave   Callback to save config changes.
+ * @param {Object}   props                     Component props.
+ * @param {Object}   props.instance            Instance data with instanceId and config.
+ * @param {Object}   props.provider            Provider metadata.
+ * @param {string}   props.deploymentTypeLabel Deployment type label.
+ * @param {Function} props.onDelete            Callback to delete instance.
+ * @param {Function} props.onRename            Callback to rename instance.
+ * @param {Function} props.onSave              Callback to save config changes.
  * @return {JSX.Element} Rendered component.
  */
 export default function ProviderInstanceItem( {
 	instance,
 	provider,
+	deploymentTypeLabel,
 	onDelete,
 	onRename,
 	onSave,
@@ -197,7 +213,16 @@ export default function ProviderInstanceItem( {
 	const providerMetadata = provider?.metadata || {};
 
 	return (
-		<tr>
+		<tr
+			style={ tableRowStyle }
+			onMouseEnter={ ( e ) => {
+				e.currentTarget.style.backgroundColor =
+					colors.backgroundLighter;
+			} }
+			onMouseLeave={ ( e ) => {
+				e.currentTarget.style.backgroundColor = 'transparent';
+			} }
+		>
 			{ /* Instance Name */ }
 			<td style={ tableCellStyleWithBorder }>
 				{ isEditing ? (
@@ -225,6 +250,14 @@ export default function ProviderInstanceItem( {
 								handleNameEdit();
 							}
 						} }
+						onMouseEnter={ ( e ) => {
+							e.currentTarget.style.backgroundColor =
+								colors.backgroundLighter;
+						} }
+						onMouseLeave={ ( e ) => {
+							e.currentTarget.style.backgroundColor =
+								'transparent';
+						} }
 						role="button"
 						tabIndex={ 0 }
 						title={ __(
@@ -242,6 +275,15 @@ export default function ProviderInstanceItem( {
 				<span style={ providerTypeTagStyle }>
 					{ providerMetadata.name || provider?.id || providerType }
 				</span>
+			</td>
+
+			{ /* Deployment Type */ }
+			<td style={ tableCellStyleWithBorder }>
+				{ deploymentTypeLabel && (
+					<span style={ deploymentTypeTagStyle }>
+						{ deploymentTypeLabel }
+					</span>
+				) }
 			</td>
 
 			{ /* Actions */ }
