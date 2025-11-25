@@ -166,7 +166,7 @@ describe( 'ConfigFieldBuilder', () => {
 		} );
 
 		test( 'sets conditional visibility', () => {
-			const field = ConfigFieldBuilder.text( 'custom_domain' )
+			const field = ConfigFieldBuilder.text( 'public_url' )
 				.showIf( 'use_custom_domain', true )
 				.build();
 

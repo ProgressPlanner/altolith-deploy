@@ -68,9 +68,8 @@ export class StorageService {
 				typeof this.uploadAdapter.upload === 'function'
 			) {
 				result = await this.uploadAdapter.upload( key, file, {
+					...metadata,
 					contentType,
-					cacheControl: metadata.cacheControl || '',
-					onProgress: metadata.onProgress || null,
 				} );
 			} else {
 				// Default: use filesystem adapter directly

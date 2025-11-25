@@ -14,7 +14,7 @@
    - Configure each provider separately
 
 2. **Configure Deployment URLs**
-   - **Cloudflare R2:** Set `worker_endpoint` or `custom_domain`
+   - **Cloudflare R2:** Set `worker_endpoint` or `public_url`
    - **Local Filesystem:** Set `public_url`
    - Each provider will use its configured URL for rewriting
 
@@ -66,7 +66,6 @@ await storageService.downloadManifest();
     public_url: 'https://example.com',       // Generic
     worker_endpoint: 'https://x.workers.dev', // Cloudflare
     pages_url: 'https://x.pages.dev',        // Cloudflare Pages
-    custom_domain: 'https://custom.com',     // Custom
 }
 ```
 
@@ -104,7 +103,7 @@ import { addFilter } from '@wordpress/hooks';
 addFilter('aether.provider.deployment_url', 'my-plugin',
     (deploymentUrl, providerConfig, providerId) => {
         if (providerId === 'my-provider') {
-            return providerConfig.custom_domain || deploymentUrl;
+            return providerConfig.public_url || deploymentUrl;
         }
         return deploymentUrl;
     }

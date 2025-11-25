@@ -12,19 +12,16 @@ export const mockCredentials = {
 	localStorage: {
 		public_url: 'https://example.com',
 		worker_endpoint: '',
-		custom_domain: '',
 		bucket_name: '',
 	},
 	localStorageWithCustomDomain: {
-		public_url: '',
 		worker_endpoint: '',
-		custom_domain: 'https://s12y.org',
+		public_url: 'https://s12y.org',
 		bucket_name: '',
 	},
 	localStorageWithPublicUrl: {
 		public_url: 'https://local.s12y.org',
 		worker_endpoint: '',
-		custom_domain: '',
 		bucket_name: '',
 	},
 };
@@ -316,10 +313,9 @@ export function validateWpContentUrl( url, credentials ) {
 
 	// Check URL matches expected pattern based on credentials
 	// eslint-disable-next-line camelcase
-	const { public_url, worker_endpoint, custom_domain, bucket_name } =
-		credentials;
+	const { public_url, worker_endpoint, bucket_name } = credentials;
 	// eslint-disable-next-line camelcase
-	const baseUrl = public_url || worker_endpoint || custom_domain;
+	const baseUrl = public_url || worker_endpoint;
 
 	if ( ! baseUrl ) {
 		errors.push(
@@ -329,7 +325,7 @@ export function validateWpContentUrl( url, credentials ) {
 	}
 
 	// eslint-disable-next-line camelcase
-	const includeBucket = ! custom_domain && ! public_url;
+	const includeBucket = ! public_url;
 	const expectedUrl = includeBucket
 		? // eslint-disable-next-line camelcase
 		  `${ baseUrl }/${ bucket_name }/wp-content.zip`
