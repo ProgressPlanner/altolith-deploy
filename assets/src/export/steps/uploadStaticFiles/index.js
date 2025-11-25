@@ -10,6 +10,36 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { addAction, applyFilters } from '@wordpress/hooks';
 import { fetchProviderConfig } from '@aether/export/utils/staticSiteConfig';
+import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+
+/**
+ * Check if step should be skipped for this provider
+ *
+ * Uses the StepExecutor's native skip mechanism to avoid running
+ * the handler for providers that don't support static sites.
+ *
+ * @param {Object} context - Execution context
+ * @return {boolean} True if step should be skipped
+ */
+function shouldSkip( context ) {
+	const { currentProviderInstance } = context;
+
+	if ( ! currentProviderInstance ) {
+		return false; // Let handler throw the proper error
+	}
+
+	const providerType = currentProviderInstance.id?.split( ':' )[ 0 ];
+	const ProviderClass = providerType
+		? ProviderRegistry.get( providerType )
+		: null;
+	const providerDeploymentType =
+		currentProviderInstance.deploymentType ||
+		ProviderClass?.DEPLOYMENT_TYPE;
+
+	// Skip if provider doesn't handle static sites
+	return providerDeploymentType !== DEPLOYMENT_TYPES.STATIC_SITE;
+}
 
 /**
  * Upload static files step handler
@@ -184,6 +214,7 @@ const stepDefinition = {
 	),
 	supportsProgress: true,
 	dependencies: [ 'preScanStaticSite' ],
+	skip: shouldSkip,
 	requires: {
 		currentProviderInstance: {
 			from: 'thread',

@@ -15,6 +15,36 @@ import {
 	fetchProviderConfig,
 	buildStorageConfig,
 } from '../../utils/staticSiteConfig';
+import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+
+/**
+ * Check if step should be skipped for this provider
+ *
+ * Uses the StepExecutor's native skip mechanism to avoid running
+ * the handler for providers that don't support blueprint bundles.
+ *
+ * @param {Object} context - Execution context
+ * @return {boolean} True if step should be skipped
+ */
+function shouldSkip( context ) {
+	const { currentProviderInstance } = context;
+
+	if ( ! currentProviderInstance ) {
+		return false; // Let handler throw the proper error
+	}
+
+	const providerType = currentProviderInstance.id?.split( ':' )[ 0 ];
+	const ProviderClass = providerType
+		? ProviderRegistry.get( providerType )
+		: null;
+	const providerDeploymentType =
+		currentProviderInstance.deploymentType ||
+		ProviderClass?.DEPLOYMENT_TYPE;
+
+	// Skip if provider doesn't handle blueprint bundles
+	return providerDeploymentType !== DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE;
+}
 
 /**
  * Upload blueprint bundle step handler
@@ -95,12 +125,13 @@ async function handler( context ) {
 		);
 	}
 
-	// For blueprint bundles, we need to pass the source path via metadata
-	// since the actual file is on the server
+	// For blueprint bundles, we need to pass the source URL via metadata
+	// since the actual file is on the server and needs to be fetched
 	const dummyBlob = new Blob( [], { type: 'application/zip' } );
 	const uploadResult = await storageService.upload( exportPath, dummyBlob, {
 		contentType: 'application/zip',
 		sourcePath: blueprintBundle.bundlePath,
+		sourceUrl: blueprintBundle.bundleUrl, // URL for fetching the file
 		filePath: blueprintBundle.bundlePath,
 		metadata: {
 			siteUrl,
@@ -156,6 +187,7 @@ const stepDefinition = {
 	),
 	supportsProgress: true,
 	dependencies: [ 'createBlueprintBundle' ],
+	skip: shouldSkip,
 	requires: {
 		currentProviderInstance: {
 			from: 'thread',
