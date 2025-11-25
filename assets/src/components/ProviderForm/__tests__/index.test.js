@@ -121,24 +121,6 @@ jest.mock( '../../StatusNotice', () => ( {
 	),
 } ) );
 
-// Mock SecretField component (used by ProviderField)
-jest.mock( '../../SecretField', () => ( {
-	__esModule: true,
-	default: ( { label, value, onChange, help } ) => (
-		<div>
-			<label>
-				{ label }
-				<input
-					type="password"
-					value={ value || '' }
-					onChange={ ( e ) => onChange( e.target.value ) }
-				/>
-			</label>
-			{ help && <p>{ help }</p> }
-		</div>
-	),
-} ) );
-
 // Mock utility modules
 jest.mock( '@aether/utils/api', () => ( {
 	__esModule: true,

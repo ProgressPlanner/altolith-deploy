@@ -12,7 +12,6 @@ import {
 	SelectControl,
 } from '@wordpress/components';
 import { doAction, applyFilters } from '@wordpress/hooks';
-import SecretField from '../SecretField';
 
 /**
  * Render a provider configuration field.
@@ -91,27 +90,6 @@ export default function ProviderField( {
 			{ afterContent }
 		</>
 	);
-
-	// Handle sensitive fields (passwords, API keys, etc.)
-	if ( sensitive || type === 'password' ) {
-		return renderWithHooks(
-			<div
-				className={ `aether-provider-field aether-provider-field--${ type } ${
-					error ? 'aether-provider-field--error' : ''
-				}` }
-				style={ fieldWrapperStyle }
-			>
-				<SecretField
-					label={ label }
-					help={ help }
-					value={ value || '' }
-					onChange={ ( newValue ) => onChange( id, newValue ) }
-					placeholder={ placeholder }
-					required={ required }
-				/>
-			</div>
-		);
-	}
 
 	// Handle checkbox fields
 	if ( type === 'checkbox' ) {
