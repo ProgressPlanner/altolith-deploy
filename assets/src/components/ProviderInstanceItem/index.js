@@ -402,9 +402,7 @@ export default function ProviderInstanceItem( {
 
 								{ settingsFields.length > 0 && (
 									<ProviderForm
-										providerId={
-											provider?.id || providerType
-										}
+										providerId={ instance.instanceId }
 										fields={ settingsFields }
 										initialValues={ formInitialValues }
 										onChange={ handleFormChange }
