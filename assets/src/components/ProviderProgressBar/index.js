@@ -153,6 +153,14 @@ export function ProviderProgressBar( {
 		position: 'relative',
 	};
 
+	// Build modifier classes based on status
+	const statusModifier = status
+		? `aether-provider-progress-bar--${ status }`
+		: '';
+	const containerClasses = [ 'aether-provider-progress-bar', statusModifier ]
+		.filter( Boolean )
+		.join( ' ' );
+
 	return (
 		<>
 			<style>
@@ -167,34 +175,70 @@ export function ProviderProgressBar( {
 					}
 				` }
 			</style>
-			<div style={ containerStyle } data-provider-id={ providerId }>
-				<div style={ headerStyle }>
-					<div style={ labelStyle }>
+			<div
+				className={ containerClasses }
+				style={ containerStyle }
+				data-provider-id={ providerId }
+			>
+				<div
+					className="aether-provider-progress-bar__header"
+					style={ headerStyle }
+				>
+					<div
+						className="aether-provider-progress-bar__label"
+						style={ labelStyle }
+					>
 						{ statusIcon && (
-							<span style={ statusIconStyle }>
+							<span
+								className="aether-provider-progress-bar__status-icon"
+								style={ statusIconStyle }
+							>
 								{ statusIcon }
 							</span>
 						) }
-						<strong>{ providerLabel }</strong>
+						<strong className="aether-provider-progress-bar__provider-name">
+							{ providerLabel }
+						</strong>
 					</div>
-					<div style={ percentageStyle }>{ percentage }%</div>
+					<div
+						className="aether-provider-progress-bar__percentage"
+						style={ percentageStyle }
+					>
+						{ percentage }%
+					</div>
 				</div>
 
 				{ stepLabel && status === 'active' && (
-					<div style={ stepStyle }>{ stepLabel }</div>
+					<div
+						className="aether-provider-progress-bar__step"
+						style={ stepStyle }
+					>
+						{ stepLabel }
+					</div>
 				) }
 
 				{ error && status === 'error' && (
-					<div style={ errorStyle }>{ error }</div>
+					<div
+						className="aether-provider-progress-bar__error"
+						style={ errorStyle }
+					>
+						{ error }
+					</div>
 				) }
 
 				{ status === 'complete' && (
-					<div style={ completeMessageStyle }>
+					<div
+						className="aether-provider-progress-bar__complete"
+						style={ completeMessageStyle }
+					>
 						{ __( 'Complete', 'aether-site-exporter' ) }
 					</div>
 				) }
 
-				<div style={ progressBarWrapperStyle }>
+				<div
+					className="aether-provider-progress-bar__progress"
+					style={ progressBarWrapperStyle }
+				>
 					<ProgressBar progress={ progress } height={ 8 } />
 				</div>
 			</div>

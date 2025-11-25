@@ -74,18 +74,30 @@ export function ProviderProgressList( {
 	};
 
 	return (
-		<div style={ containerStyle }>
-			<div style={ headerStyle }>
-				<h4 style={ headerTitleStyle }>
+		<div className="aether-provider-progress-list" style={ containerStyle }>
+			<div
+				className="aether-provider-progress-list__header"
+				style={ headerStyle }
+			>
+				<h4
+					className="aether-provider-progress-list__title"
+					style={ headerTitleStyle }
+				>
 					{ __( 'Provider Progress', 'aether-site-exporter' ) }
 				</h4>
-				<span style={ countStyle }>
+				<span
+					className="aether-provider-progress-list__count"
+					style={ countStyle }
+				>
 					{ providerInstances.length }{ ' ' }
 					{ __( 'providers', 'aether-site-exporter' ) }
 				</span>
 			</div>
 
-			<div style={ itemsStyle }>
+			<div
+				className="aether-provider-progress-list__items"
+				style={ itemsStyle }
+			>
 				{ providerInstances.map( ( instance ) => {
 					const progress = providerProgress[ instance.id ] || {
 						stepId: null,
