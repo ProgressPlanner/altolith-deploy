@@ -54,22 +54,6 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 	const normalizedStaticUrl =
 		staticUrl && staticUrl.trim() ? staticUrl.trim() : null;
 
-	// Detect if static URL is a public URL vs worker endpoint.
-	let isPublicUrl =
-		normalizedStaticUrl && ! normalizedStaticUrl.includes( '.workers.dev' );
-
-	// If the static URL has a pathname component, don't add /static prefix
-	if ( isPublicUrl && normalizedStaticUrl ) {
-		try {
-			const urlObj = new URL( normalizedStaticUrl );
-			if ( urlObj.pathname && urlObj.pathname !== '/' ) {
-				isPublicUrl = false;
-			}
-		} catch {
-			// URL parsing failed, leave isPublicUrl as is
-		}
-	}
-
 	// Build initial URL mapping.
 	const mapping = {
 		[ normalizedSiteUrl ]: '/',
@@ -207,16 +191,6 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 
 		if ( ! staticPath ) {
 			staticPath = convertToStaticPath( absoluteUrl );
-		}
-
-		// If using public URL, add /static/ prefix.
-		if (
-			isPublicUrl &&
-			staticPath &&
-			staticPath !== '/' &&
-			! staticPath.startsWith( '/static/' )
-		) {
-			staticPath = '/static' + staticPath;
 		}
 
 		// Apply static URL base if configured.
