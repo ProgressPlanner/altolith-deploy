@@ -13,15 +13,32 @@ export const colors = {
 	textMuted: '#646970',
 	textSecondary: '#50575e',
 	white: '#fff',
+	black: '#000',
 	background: '#f6f7f7',
 	backgroundLighter: '#f0f0f1',
 	backgroundError: '#fcf0f1',
+	backgroundSuccess: '#d5f0dd',
+	backgroundWarning: '#fcf0c7',
+	backgroundInfo: '#d7edff',
 	borderLight: '#c3c4c7',
 	borderLighter: '#e0e0e0',
+	borderActive: '#007cba',
 	error: '#d63638',
+	errorDark: '#c22c2e',
 	success: '#00a32a',
+	successDark: '#00833e',
 	warning: '#dba617',
+	warningDark: '#826200',
 	info: '#2271b1',
+	// Deployment type colors
+	deploymentStaticSite: '#2271b1',
+	deploymentBlueprintBundle: '#00a32a',
+	deploymentEdgeFunctions: '#986800',
+	// Overlay/shadow colors
+	overlayDark: 'rgba(0, 0, 0, 0.7)',
+	shadowLight: 'rgba(0, 0, 0, 0.04)',
+	shadowLighter: 'rgba(0, 0, 0, 0.05)',
+	shadowActive: 'rgba(0, 124, 186, 0.1)',
 };
 
 export const spacing = {
@@ -60,7 +77,7 @@ export const commonStyles = {
 	section: {
 		background: colors.white,
 		border: `1px solid ${ colors.borderLight }`,
-		boxShadow: '0 1px 1px rgba(0, 0, 0, 0.04)',
+		boxShadow: `0 1px 1px ${ colors.shadowLight }`,
 		marginBottom: spacing.lg,
 		padding: 0,
 	},
@@ -93,20 +110,20 @@ export const statusBadgeStyles = {
 		letterSpacing: '0.5px',
 	},
 	success: {
-		background: '#d5f0dd',
-		color: '#00833e',
+		background: colors.backgroundSuccess,
+		color: colors.successDark,
 	},
 	error: {
-		background: '#fcf0f1',
-		color: '#c22c2e',
+		background: colors.backgroundError,
+		color: colors.errorDark,
 	},
 	warning: {
-		background: '#fcf0c7',
-		color: '#826200',
+		background: colors.backgroundWarning,
+		color: colors.warningDark,
 	},
 	info: {
-		background: '#d7edff',
-		color: '#135e96',
+		background: colors.backgroundInfo,
+		color: colors.primaryHover,
 	},
 };
 
@@ -122,7 +139,7 @@ export const noticeStyles = {
 	},
 	success: {
 		borderLeftColor: colors.success,
-		background: '#d5f0dd',
+		background: colors.backgroundSuccess,
 	},
 	error: {
 		borderLeftColor: colors.error,
@@ -130,11 +147,11 @@ export const noticeStyles = {
 	},
 	warning: {
 		borderLeftColor: colors.warning,
-		background: '#fcf0c7',
+		background: colors.backgroundWarning,
 	},
 	info: {
 		borderLeftColor: colors.info,
-		background: '#d7edff',
+		background: colors.backgroundInfo,
 	},
 };
 

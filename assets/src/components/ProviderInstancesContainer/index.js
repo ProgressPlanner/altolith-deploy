@@ -29,7 +29,7 @@ const tableStyle = {
 	backgroundColor: colors.white,
 	borderRadius: borderRadius.md,
 	overflow: 'hidden',
-	boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+	boxShadow: `0 1px 3px ${ colors.shadowLighter }`,
 };
 
 const tableHeaderStyle = {

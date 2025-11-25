@@ -63,7 +63,7 @@ const tagBaseStyle = {
 	fontWeight: fontWeight.medium,
 	padding: '4px 8px',
 	borderRadius: borderRadius.sm,
-	color: '#fff',
+	color: colors.white,
 	display: 'inline-block',
 };
 
@@ -76,11 +76,11 @@ const tagBaseStyle = {
 const getDeploymentTypeColor = ( deploymentType ) => {
 	switch ( deploymentType ) {
 		case DEPLOYMENT_TYPES.STATIC_SITE:
-			return '#2271b1'; // Blue
+			return colors.deploymentStaticSite;
 		case DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE:
-			return '#00a32a'; // Green
+			return colors.deploymentBlueprintBundle;
 		case DEPLOYMENT_TYPES.EDGE_FUNCTIONS:
-			return '#986800'; // Orange/Brown
+			return colors.deploymentEdgeFunctions;
 		default:
 			return colors.primary;
 	}
@@ -230,7 +230,7 @@ export default function ProviderInstanceItem( {
 		settingsFields
 	);
 	const SettingsIcon = allRequiredFilled ? check : close;
-	const settingsIconColor = allRequiredFilled ? '#00a32a' : '#d63638';
+	const settingsIconColor = allRequiredFilled ? colors.success : colors.error;
 
 	const providerType =
 		instance.config.provider_type || instance.instanceId.split( ':' )[ 0 ];

@@ -67,8 +67,8 @@ export function ProviderProgressBar( {
 
 	// Status-specific styles
 	if ( status === 'active' ) {
-		containerStyle.borderColor = '#007cba';
-		containerStyle.boxShadow = '0 0 0 1px rgba(0, 124, 186, 0.1)';
+		containerStyle.borderColor = colors.borderActive;
+		containerStyle.boxShadow = `0 0 0 1px ${ colors.shadowActive }`;
 	} else if ( status === 'complete' ) {
 		containerStyle.borderColor = colors.success;
 		containerStyle.background = colors.background;

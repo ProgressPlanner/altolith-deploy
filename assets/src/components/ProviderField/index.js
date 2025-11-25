@@ -46,7 +46,6 @@ export default function ProviderField( {
 		required = false,
 		options = [],
 		placeholder = '',
-		sensitive = false,
 	} = field;
 
 	const error = errors?.[ id ];
