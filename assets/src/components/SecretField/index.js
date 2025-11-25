@@ -29,14 +29,13 @@ export default function SecretField( {
 
 	const eyeButtonStyle = {
 		position: 'absolute',
-		right: '8px',
-		top: 'calc(23px + 50%)',
-		transform: 'translateY(-100%)',
+		right: '0.5rem',
+		top: '2rem',
 		background: 'none',
 		border: 'none',
 		cursor: 'pointer',
-		padding: '4px 6px',
-		fontSize: '18px',
+		padding: '0.25rem 0.375rem',
+		fontSize: '1.125rem',
 		lineHeight: 1,
 		display: 'flex',
 		alignItems: 'center',

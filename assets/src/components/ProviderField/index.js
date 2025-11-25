@@ -42,6 +42,7 @@ export default function ProviderField( {
 		id,
 		label,
 		description,
+		help: fieldHelp,
 		type = 'text',
 		required = false,
 		options = [],
@@ -50,7 +51,7 @@ export default function ProviderField( {
 	} = field;
 
 	const error = errors?.[ id ];
-	const help = error || description;
+	const help = error || fieldHelp || description;
 
 	// Password manager prevention attributes for all text inputs
 	const passwordManagerPreventionAttrs = {
