@@ -196,16 +196,9 @@ class CorsHandler
 		// Security: Only allow common development ports to reduce attack surface
 		$commonDevPorts = ['3000', '3001', '8000', '8080', '8888'];
 
-		// Allow localhost with common dev ports
-		if ($origin && \preg_match('/^https?:\/\/localhost:(\d+)$/', $origin, $matches)) {
-			if (\in_array($matches[1], $commonDevPorts, true)) {
-				$localOrigins[] = $origin;
-			}
-		}
-
-		// Allow 127.0.0.1 with common dev ports
-		if ($origin && \preg_match('/^https?:\/\/127\.0\.0\.1:(\d+)$/', $origin, $matches)) {
-			if (\in_array($matches[1], $commonDevPorts, true)) {
+		// Allow localhost/127.0.0.1 with common dev ports
+		if ($origin && \preg_match('/^https?:\/\/(localhost|127\.0\.0\.1):(\d+)$/', $origin, $matches)) {
+			if (\in_array($matches[2], $commonDevPorts, true)) {
 				$localOrigins[] = $origin;
 			}
 		}
