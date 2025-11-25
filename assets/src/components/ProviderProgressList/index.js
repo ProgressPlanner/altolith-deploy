@@ -28,11 +28,6 @@ export function ProviderProgressList( {
 		return null;
 	}
 
-	// If only one provider, don't show the list (show normal progress instead)
-	if ( providerInstances.length === 1 ) {
-		return null;
-	}
-
 	// Container style
 	const containerStyle = {
 		margin: '20px 0',

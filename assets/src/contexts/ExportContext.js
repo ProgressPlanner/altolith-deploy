@@ -29,10 +29,12 @@ export const ExportContext = createContext( {
 	staticSiteProviders: [],
 	blueprintBundleProviders: [],
 	providerProgress: {},
+	providerInstances: [],
 	initializeSteps: () => {},
 	setStepStatus: () => {},
 	setStepProgress: () => {},
 	setProviderProgress: () => {},
+	setProviderInstances: () => {},
 	updateFromStep: () => {},
 	markAllComplete: () => {},
 	showError: () => {},
@@ -75,6 +77,7 @@ export function ExportProvider( { children } ) {
 		[]
 	);
 	const [ providerProgress, setProviderProgressState ] = useState( {} );
+	const [ providerInstances, setProviderInstancesState ] = useState( [] );
 
 	// Track maximum progress to prevent progress from going backwards
 	const maxProgressRef = useRef( 0 );
@@ -480,6 +483,15 @@ export function ExportProvider( { children } ) {
 	);
 
 	/**
+	 * Set provider instances
+	 *
+	 * @param {Array<Object>} instances Array of provider instance objects with { id, label, config }
+	 */
+	const setProviderInstances = useCallback( ( instances = [] ) => {
+		setProviderInstancesState( instances );
+	}, [] );
+
+	/**
 	 * Reset all export state to initial values
 	 *
 	 * Called when starting a new export or closing the export modal.
@@ -499,6 +511,7 @@ export function ExportProvider( { children } ) {
 		setStaticSiteProviders( [] );
 		setBlueprintBundleProviders( [] );
 		setProviderProgressState( {} );
+		setProviderInstancesState( [] );
 		maxProgressRef.current = 0;
 	}, [] );
 
@@ -515,10 +528,12 @@ export function ExportProvider( { children } ) {
 			staticSiteProviders,
 			blueprintBundleProviders,
 			providerProgress,
+			providerInstances,
 			initializeSteps,
 			setStepStatus,
 			setStepProgress,
 			setProviderProgress,
+			setProviderInstances,
 			updateFromStep,
 			markAllComplete,
 			showError,
@@ -542,10 +557,12 @@ export function ExportProvider( { children } ) {
 			staticSiteProviders,
 			blueprintBundleProviders,
 			providerProgress,
+			providerInstances,
 			initializeSteps,
 			setStepStatus,
 			setStepProgress,
 			setProviderProgress,
+			setProviderInstances,
 			updateFromStep,
 			markAllComplete,
 			showError,

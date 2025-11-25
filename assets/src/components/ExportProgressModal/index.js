@@ -5,19 +5,13 @@
  *
  */
 
-import { useEffect, useMemo, useCallback } from '@wordpress/element';
+import { useEffect, useCallback } from '@wordpress/element';
 import { Modal, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 import { useExportState } from '@aether/export/hooks/useExportState';
 import { useExportController } from '@aether/export/hooks/useExportController';
-import {
-	colors,
-	spacing,
-	noticeStyles,
-	createFlexStyle,
-} from '@aether/utils/styles';
+import { colors, spacing, noticeStyles } from '@aether/utils/styles';
 import ProviderProgressList from '../ProviderProgressList';
-import ProgressBar from '../ProgressBar';
 
 // Styles - extracted to module level for performance
 const modalContentStyle = {
@@ -41,10 +35,6 @@ const noticeSuccessStyle = {
 
 const noticeParagraphStyle = {
 	margin: '0 0 0.5rem',
-};
-
-const progressContainerStyle = {
-	...createFlexStyle( 'column', spacing.xl ),
 };
 
 const loadingStyle = {
@@ -71,9 +61,8 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 		finalStatus,
 		error,
 		reset,
-		staticSiteProviders,
-		blueprintBundleProviders,
 		providerProgress,
+		providerInstances,
 	} = exportState;
 
 	// Keep modal open if finalStatus is set, even if isOpen becomes false
@@ -119,60 +108,6 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 			onComplete( finalStatus );
 		}
 	}, [ finalStatus, onComplete ] );
-
-	// Calculate overall progress from steps using raw numbers
-	const overallProgressData = useMemo( () => {
-		if ( steps.length === 0 ) {
-			return { current: 0, total: 0 };
-		}
-
-		// Sum up current and total from all steps that support progress
-		let totalCurrent = 0;
-		let totalTotal = 0;
-
-		steps.forEach( ( step ) => {
-			if ( step.supportsProgress && step.progress ) {
-				totalCurrent += step.progress.current || 0;
-				totalTotal += step.progress.total || 0;
-			}
-		} );
-
-		// If no steps support progress, return zero progress
-		if ( totalTotal === 0 ) {
-			return { current: 0, total: 0 };
-		}
-
-		return {
-			current: totalCurrent,
-			total: totalTotal,
-		};
-	}, [ steps ] );
-
-	// Build provider instances array from provider IDs
-	// Combine all providers across deployment types for display
-	const allProviderInstances = useMemo( () => {
-		const instances = [];
-
-		// Add static site providers
-		staticSiteProviders.forEach( ( id ) => {
-			instances.push( {
-				id,
-				label: id, // Label will come from config if available
-			} );
-		} );
-
-		// Add blueprint bundle providers (avoid duplicates)
-		blueprintBundleProviders.forEach( ( id ) => {
-			if ( ! instances.find( ( p ) => p.id === id ) ) {
-				instances.push( {
-					id,
-					label: id,
-				} );
-			}
-		} );
-
-		return instances;
-	}, [ staticSiteProviders, blueprintBundleProviders ] );
 
 	if ( ! shouldShowModal ) {
 		return null;
@@ -254,35 +189,12 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 					</div>
 				) }
 
-				{ ! finalStatus && ! error && steps.length > 0 && (
-					<div
-						className="aether-export-progress-modal__progress"
-						style={ progressContainerStyle }
-					>
-						<ProgressBar
-							progress={ overallProgressData }
-							height={ 20 }
-							description={
-								overallProgressData.total > 0
-									? `${ Math.round(
-											( overallProgressData.current /
-												overallProgressData.total ) *
-												100
-									  ) }%`
-									: undefined
-							}
-						/>
-					</div>
+				{ ! finalStatus && ! error && providerInstances.length > 0 && (
+					<ProviderProgressList
+						providerProgress={ providerProgress }
+						providerInstances={ providerInstances }
+					/>
 				) }
-
-				{ ! finalStatus &&
-					! error &&
-					allProviderInstances.length > 1 && (
-						<ProviderProgressList
-							providerProgress={ providerProgress }
-							providerInstances={ allProviderInstances }
-						/>
-					) }
 
 				{ steps.length === 0 && ! error && (
 					<div

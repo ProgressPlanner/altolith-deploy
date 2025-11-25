@@ -32,6 +32,7 @@ export function useExportController( exportState ) {
 		setOverallProgressValue,
 		setStepProgress,
 		setProviderProgress,
+		setProviderInstances,
 		removeMessage,
 		setProviders,
 	} = exportState;
@@ -176,6 +177,17 @@ export function useExportController( exportState ) {
 			// Store provider arrays in global state for UI access
 			setProviders( staticSiteProviders, blueprintBundleProviders );
 
+			// Determine provider instances for threading
+			// Use all provider instances across all deployment types
+			const allProviderInstances = [
+				...staticSiteProviderInstances,
+				...blueprintBundleProviderInstances,
+				...edgeFunctionProviderInstances,
+			];
+
+			// Store provider instances in context for UI access (includes labels)
+			setProviderInstances( allProviderInstances );
+
 			// Build context object with all dependencies for step handlers (use pure function)
 			const workflowContext = buildWorkflowContext(
 				{
@@ -219,14 +231,6 @@ export function useExportController( exportState ) {
 			// Get steps filtered by enabled providers
 			const activeSteps = getActiveSteps( workflowContext );
 
-			// Determine provider instances for threading
-			// Use all provider instances across all deployment types
-			const allProviderInstances = [
-				...staticSiteProviderInstances,
-				...blueprintBundleProviderInstances,
-				...edgeFunctionProviderInstances,
-			];
-
 			// Execute workflow with ThreadOrchestrator (handles 0, 1, or N providers)
 			await executeThreadedWorkflow(
 				activeSteps,
@@ -261,6 +265,7 @@ export function useExportController( exportState ) {
 		setStatusMessage,
 		setStepProgress,
 		setProviderProgress,
+		setProviderInstances,
 		removeMessage,
 		setOverallProgressValue,
 		setProviders,
