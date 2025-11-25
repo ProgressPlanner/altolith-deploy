@@ -75,13 +75,8 @@ class SecurityValidator
 			return false;
 		}
 
-		// Check for path traversal
-		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $slug)) {
-			return false;
-		}
-
-		// Check for null bytes
-		if (\strpos($slug, "\0") !== false) {
+		// Use base path validation
+		if (!self::isValidPath($slug)) {
 			return false;
 		}
 

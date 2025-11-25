@@ -116,21 +116,19 @@ export function validate( step, context ) {
 		return;
 	}
 
-	const missing = [];
 	const missingDetails = [];
 
 	Object.entries( step.requires ).forEach( ( [ key, requirement ] ) => {
 		const isRequired = requirement.required !== false;
 
 		if ( ! ( key in context ) && isRequired ) {
-			missing.push( key );
 			missingDetails.push(
 				`  - "${ key }" (from: ${ requirement.from })`
 			);
 		}
 	} );
 
-	if ( missing.length > 0 ) {
+	if ( missingDetails.length > 0 ) {
 		throw new Error(
 			`Step "${
 				step.id
