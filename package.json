@@ -22,6 +22,14 @@
   ],
   "author": "Aristeidis Stathopoulos <aristath@gmail.com>",
   "license": "MIT",
+  "sideEffects": [
+    "**/*.css",
+    "./assets/src/admin-settings/index.js",
+    "./assets/src/admin-bar/index.js",
+    "./assets/src/export-modal/index.js",
+    "./assets/src/providers/**/index.js",
+    "./assets/src/export/steps/index.js"
+  ],
   "dependencies": {
     "@wordpress/api-fetch": "^6.0.0",
     "@wordpress/components": "^28.0.0",
