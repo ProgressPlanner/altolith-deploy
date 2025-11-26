@@ -13,6 +13,7 @@ import {
 	useRef,
 	useMemo,
 } from '@wordpress/element';
+import { flushSync } from 'react-dom';
 
 /**
  * Export Context
@@ -85,7 +86,7 @@ export function ExportProvider( { children } ) {
 	/**
 	 * Initialize steps from step definitions
 	 *
-	 * @param {Array<Object>} stepDefinitions Step definitions with id, label, supportsProgress
+	 * @param {Array<Object>} stepDefinitions Step definitions with id, label, supportsProgress, statusLabels
 	 * @param {string|null}   initialStepId   Optional step ID to activate immediately
 	 */
 	const initializeSteps = useCallback(
@@ -96,6 +97,9 @@ export function ExportProvider( { children } ) {
 				status: 'pending',
 				supportsProgress: stepDef.supportsProgress || false,
 				progress: { current: 0, total: 0 },
+				statusData: {},
+				statusLabels: stepDef.statusLabels || null,
+				requires: stepDef.requires || {},
 			} ) );
 
 			// If initialStepId is provided, activate it immediately
@@ -147,24 +151,33 @@ export function ExportProvider( { children } ) {
 	/**
 	 * Set progress for a specific step
 	 *
+	 * Uses flushSync to force immediate DOM updates, bypassing React 18's
+	 * automatic batching. This ensures real-time progress visibility during
+	 * long-running step handlers.
+	 *
 	 * @param {string} stepId   Step ID
-	 * @param {Object} progress Progress object with `current` and `total` properties
+	 * @param {Object} progress Progress object with `current`, `total`, and optional `statusData` properties
 	 */
 	const setStepProgress = useCallback( ( stepId, progress ) => {
-		setSteps( ( prevSteps ) =>
-			prevSteps.map( ( step ) => {
-				if ( step.id === stepId ) {
-					return {
-						...step,
-						progress: {
-							current: Math.max( 0, progress.current || 0 ),
-							total: Math.max( 0, progress.total || 0 ),
-						},
-					};
-				}
-				return step;
-			} )
-		);
+		// Use flushSync to force immediate render, bypassing React 18 batching
+		flushSync( () => {
+			setSteps( ( prevSteps ) =>
+				prevSteps.map( ( step ) => {
+					if ( step.id === stepId ) {
+						return {
+							...step,
+							progress: {
+								current: Math.max( 0, progress.current || 0 ),
+								total: Math.max( 0, progress.total || 0 ),
+							},
+							// Store statusData for dynamic label rendering
+							statusData: progress.statusData || step.statusData,
+						};
+					}
+					return step;
+				} )
+			);
+		} );
 	}, [] );
 
 	/**
@@ -192,9 +205,9 @@ export function ExportProvider( { children } ) {
 	/**
 	 * Update state to reflect transition to a step
 	 *
-	 * Handles both forward progression and retry (backward) scenarios.
-	 * When moving forward, marks previous steps as complete.
-	 * When retrying, resets steps between current and target position.
+	 * Marks the target step as "active". Does NOT auto-complete previous steps
+	 * to support parallel step execution where multiple steps can be active
+	 * simultaneously. Step completion is handled separately by onStepComplete.
 	 *
 	 * @param {string} backendStep Backend step ID to transition to
 	 */
@@ -216,13 +229,10 @@ export function ExportProvider( { children } ) {
 					return prevSteps; // No change
 				}
 
-				// Update steps based on progression direction
+				// Only mark the target step as active
+				// Do NOT auto-complete previous steps - this breaks parallel execution
+				// Step completion is handled by onStepComplete callback
 				const newSteps = prevSteps.map( ( s, i ) => {
-					// Mark previous steps as complete
-					if ( i < stepIndex && s.status !== 'complete' ) {
-						return { ...s, status: 'complete' };
-					}
-					// Mark target step as active
 					if ( i === stepIndex ) {
 						return { ...s, status: 'active' };
 					}

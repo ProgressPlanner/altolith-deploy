@@ -106,6 +106,9 @@ describe( 'ExportContext', () => {
 				status: 'pending',
 				supportsProgress: true,
 				progress: { current: 0, total: 0 },
+				statusData: {},
+				statusLabels: null,
+				requires: {},
 			} );
 			expect( result.current.steps[ 1 ] ).toEqual( {
 				id: 'step2',
@@ -113,6 +116,9 @@ describe( 'ExportContext', () => {
 				status: 'pending',
 				supportsProgress: false,
 				progress: { current: 0, total: 0 },
+				statusData: {},
+				statusLabels: null,
+				requires: {},
 			} );
 			expect( result.current.steps[ 2 ] ).toEqual( {
 				id: 'step3',
@@ -120,6 +126,9 @@ describe( 'ExportContext', () => {
 				status: 'pending',
 				supportsProgress: false,
 				progress: { current: 0, total: 0 },
+				statusData: {},
+				statusLabels: null,
+				requires: {},
 			} );
 		} );
 
