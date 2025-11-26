@@ -32,6 +32,7 @@ export function useExportController( exportState ) {
 		setStatusMessage,
 		setOverallProgressValue,
 		setStepProgress,
+		setStepStatus,
 		setProviderProgress,
 		setProviderInstances,
 		removeMessage,
@@ -241,10 +242,13 @@ export function useExportController( exportState ) {
 			// Set up workflow lifecycle callbacks for UI updates
 			const workflowOptions = {
 				onStepStart: ( stepId ) => {
-					// Update UI with step ID
+					// Update UI with step ID - marks step as active
 					updateFromStep( stepId );
 				},
-				onStepComplete: () => {},
+				onStepComplete: ( stepId ) => {
+					// Mark step as complete when it finishes
+					setStepStatus( stepId, 'complete' );
+				},
 				onStepSkipped: () => {},
 				onError: () => {},
 			};
@@ -285,6 +289,7 @@ export function useExportController( exportState ) {
 		generateBlueprintJson,
 		setStatusMessage,
 		setStepProgress,
+		setStepStatus,
 		setProviderProgress,
 		setProviderInstances,
 		removeMessage,

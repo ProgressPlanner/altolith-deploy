@@ -62,6 +62,7 @@ class StepRegistry {
 	 * @param {Function}      step.handler                  - Async handler function
 	 * @param {Function}      [step.skip]                   - Optional skip function
 	 * @param {Function}      [step.shouldSkip]             - Optional skip function (alternative)
+	 * @param {Object}        [step.statusLabels]           - Dynamic status labels { pending, running, complete }
 	 * @throws {Error} If step is invalid
 	 */
 	register( step ) {
@@ -130,6 +131,7 @@ class StepRegistry {
 			description: step.description || '',
 			supportsProgress: step.supportsProgress ?? false,
 			dependencies: step.dependencies || [],
+			statusLabels: step.statusLabels || null,
 		};
 
 		// Add to registry
