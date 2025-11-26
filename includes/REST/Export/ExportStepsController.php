@@ -122,7 +122,7 @@ class ExportStepsController
 
 		// Export complete site.
 		// If customAssets provided, only those plugins/themes are included in zip.
-		$result = $exportService->exportCompleteSite($progressId, null, $customAssets);
+		$result = $exportService->exportCompleteSite($progressId, $customAssets);
 
 		if (\is_wp_error($result)) {
 			return $result;

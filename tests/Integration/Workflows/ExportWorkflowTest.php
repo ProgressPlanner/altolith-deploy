@@ -216,7 +216,7 @@ class ExportWorkflowTest extends TestCase {
 	 */
 	public function test_export_validates_custom_asset_slugs() {
 		// Test with valid array of slugs.
-		$result = $this->export_service->exportCompleteSite( 'test-progress-' . uniqid(), null, [ 'my-plugin', 'my-theme' ] );
+		$result = $this->export_service->exportCompleteSite( 'test-progress-' . uniqid(), [ 'my-plugin', 'my-theme' ] );
 
 		// Should either succeed or fail gracefully.
 		$this->assertTrue(
@@ -226,17 +226,17 @@ class ExportWorkflowTest extends TestCase {
 	}
 
 	/**
-	 * Test export validates job ID parameter.
+	 * Test export validates progress ID parameter.
 	 */
-	public function test_export_validates_job_id() {
-		// Test with job ID.
-		$job_id = 'test-job-' . wp_generate_uuid4();
-		$result = $this->export_service->exportCompleteSite( $job_id );
+	public function test_export_validates_progress_id() {
+		// Test with progress ID.
+		$progress_id = 'test-progress-' . wp_generate_uuid4();
+		$result = $this->export_service->exportCompleteSite( $progress_id );
 
 		// Should either succeed or fail gracefully.
 		$this->assertTrue(
 			is_array( $result ) || is_wp_error( $result ),
-			'Export should handle job ID parameter'
+			'Export should handle progress ID parameter'
 		);
 	}
 

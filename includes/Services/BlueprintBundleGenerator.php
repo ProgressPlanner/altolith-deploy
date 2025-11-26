@@ -91,10 +91,10 @@ class BlueprintBundleGenerator
 		// Create blueprint-bundle.zip path with custom filename using validated paths
 		$bundlePath = \trailingslashit($realOutputDir) . $bundleFilename;
 
-		// Remove existing bundle if it exists (handle both files and directories)
+		// Remove existing bundle if it exists
 		if (\file_exists($bundlePath)) {
 			if (\is_dir($bundlePath)) {
-				// If bundle path is a directory (from previous bug), recursively remove it
+				// If bundle path is a directory, recursively remove it (safety check)
 				$this->deleteDirectory($bundlePath);
 			} else {
 				\wp_delete_file($bundlePath);

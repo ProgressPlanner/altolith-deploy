@@ -196,8 +196,6 @@ class LocalStorageController
 
 		// NOW safe to create directories
 		if (!\is_dir($uploadDir)) {
-			$this->removeLegacyBlockingFile($uploadDir);
-
 			if (!\wp_mkdir_p($uploadDir)) {
 				return new WP_Error(
 					'directory_creation_failed',
@@ -208,8 +206,6 @@ class LocalStorageController
 		}
 
 		if (!\is_dir($fileDir)) {
-			$this->removeLegacyBlockingFile($fileDir);
-
 			if (!\wp_mkdir_p($fileDir)) {
 				return new WP_Error(
 					'directory_creation_failed',
@@ -641,28 +637,6 @@ class LocalStorageController
 			],
 			200
 		);
-	}
-
-	/**
-	 * Remove a legacy blocking file if it exists where a directory is needed.
-	 *
-	 * This handles cleanup from a historical bug where paths with trailing
-	 * slashes were uploaded as files instead of creating directories.
-	 *
-	 * @param string $path Path to check and clean up.
-	 * @return void
-	 */
-	private function removeLegacyBlockingFile(string $path): void
-	{
-		if (\file_exists($path) && \is_file($path)) {
-			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf(
-					'Aether: Removing legacy blocking file to create directory: %s',
-					$path
-				));
-			}
-			@\unlink($path);
-		}
 	}
 
 	/**

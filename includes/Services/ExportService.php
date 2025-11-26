@@ -67,12 +67,11 @@ class ExportService
 	 * - MU-plugins directory
 	 *
 	 * @param string             $progressId       Progress ID for tracking (not used, kept for compatibility).
-	 * @param mixed              $unused           Unused parameter (formerly stateManager, kept for compatibility).
 	 * @param array<string>|null $customAssetSlugs Optional array of custom plugin/theme slugs to include in zip.
 	 *                                             If provided, only these assets are added. If null, all custom assets are added.
 	 * @return array<string, mixed>|\WP_Error Result array with zipPath and zipSize, or WP_Error on failure.
 	 */
-	public function exportCompleteSite(string $progressId = '', $unused = null, ?array $customAssetSlugs = null)
+	public function exportCompleteSite(string $progressId = '', ?array $customAssetSlugs = null)
 	{
 		// Note: WordPress Playground requires SQLite database.
 		// This method assumes SQLite is being used.
