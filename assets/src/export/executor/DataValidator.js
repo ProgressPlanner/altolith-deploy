@@ -40,7 +40,7 @@ export function isThreadStep( step ) {
  * @return {string} 'global' or 'thread'
  */
 export function getProvideScope( step, key ) {
-	if ( ! step.provides || ! step.provides[ key ] ) {
+	if ( ! step.provides || ! ( key in step.provides ) ) {
 		return 'thread'; // Default to thread scope
 	}
 
