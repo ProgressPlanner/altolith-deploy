@@ -3,7 +3,7 @@
 /**
  * URL Discovery REST Controller
  *
- * Provides paginated endpoints for discovering URLs for static site generation.
+ * Provides a consolidated endpoint for discovering URLs for static site generation.
  *
  * @package Aether\REST
  */
@@ -34,82 +34,122 @@ class URLDiscoveryController
 	{
 		\register_rest_route(
 			$this->getNamespace(),
-			'/urls/posts',
+			'/urls/discover',
 			[
 				'methods'             => 'GET',
-				'callback'            => [ $this, 'getPosts' ],
+				'callback'            => [ $this, 'discoverUrls' ],
 				'permission_callback' => [ $this, 'permissionCheck' ],
-				'args'                => $this->getPaginationArgs(),
-			]
-		);
-
-		\register_rest_route(
-			$this->getNamespace(),
-			'/urls/terms',
-			[
-				'methods'             => 'GET',
-				'callback'            => [ $this, 'getTerms' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
-				'args'                => $this->getPaginationArgs(),
-			]
-		);
-
-		\register_rest_route(
-			$this->getNamespace(),
-			'/urls/authors',
-			[
-				'methods'             => 'GET',
-				'callback'            => [ $this, 'getAuthors' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
-				'args'                => $this->getPaginationArgs(),
-			]
-		);
-
-		\register_rest_route(
-			$this->getNamespace(),
-			'/urls/archives',
-			[
-				'methods'             => 'GET',
-				'callback'            => [ $this, 'getArchives' ],
-				'permission_callback' => [ $this, 'permissionCheck' ],
+				'args'                => $this->getDiscoverArgs(),
 			]
 		);
 	}
 
 	/**
-	 * Get pagination arguments for endpoints.
+	 * Get arguments for the discover endpoint.
 	 *
-	 * @return array<string, array<string, mixed>> Pagination arguments.
+	 * @return array<string, array<string, mixed>> Endpoint arguments.
 	 */
-	private function getPaginationArgs(): array
+	private function getDiscoverArgs(): array
 	{
 		return [
 			'page' => [
-				'description'       => 'Page number',
+				'description'       => 'Page number for paginated results',
 				'type'              => 'integer',
 				'default'           => 1,
 				'minimum'           => 1,
 				'sanitize_callback' => 'absint',
 			],
+			'types' => [
+				'description'       => 'URL types to discover',
+				'type'              => 'array',
+				'default'           => [ 'posts', 'terms', 'authors', 'archives', 'pagination' ],
+				'items'             => [ 'type' => 'string' ],
+				'sanitize_callback' => function ($types) {
+					if (!\is_array($types)) {
+						return ['posts', 'terms', 'authors', 'archives', 'pagination'];
+					}
+					$valid = ['posts', 'terms', 'authors', 'archives', 'pagination'];
+					return \array_values(\array_intersect($types, $valid));
+				},
+			],
 		];
+	}
+
+	/**
+	 * Discover URLs for static site generation.
+	 *
+	 * Consolidated endpoint that replaces the previous separate endpoints.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response Response with URLs.
+	 */
+	public function discoverUrls(WP_REST_Request $request): WP_REST_Response
+	{
+		$page = $request->get_param('page') ?? 1;
+		$types = $request->get_param('types') ?? [ 'posts', 'terms', 'authors', 'archives', 'pagination' ];
+		$offset = ($page - 1) * self::PER_PAGE;
+
+		$allUrls = [];
+		$totals = [];
+
+		// Collect URLs from each requested type
+		if (\in_array('posts', $types, true)) {
+			$postUrls = $this->getPostUrls($offset);
+			$allUrls = \array_merge($allUrls, $postUrls['urls']);
+			$totals['posts'] = $postUrls['total'];
+		}
+
+		if (\in_array('terms', $types, true)) {
+			$termUrls = $this->getTermUrls($offset);
+			$allUrls = \array_merge($allUrls, $termUrls['urls']);
+			$totals['terms'] = $termUrls['total'];
+		}
+
+		if (\in_array('authors', $types, true)) {
+			$authorUrls = $this->getAuthorUrls($offset);
+			$allUrls = \array_merge($allUrls, $authorUrls['urls']);
+			$totals['authors'] = $authorUrls['total'];
+		}
+
+		if (\in_array('archives', $types, true)) {
+			$archiveUrls = $this->getArchiveUrls();
+			$allUrls = \array_merge($allUrls, $archiveUrls);
+			$totals['archives'] = \count($archiveUrls);
+		}
+
+		if (\in_array('pagination', $types, true)) {
+			$paginationUrls = $this->getPaginationUrls();
+			$allUrls = \array_merge($allUrls, $paginationUrls);
+			$totals['pagination'] = \count($paginationUrls);
+		}
+
+		// Calculate if there are more results
+		$totalItems = \array_sum($totals);
+		$hasMore = ($offset + self::PER_PAGE) < $totalItems;
+
+		// Deduplicate URLs
+		$uniqueUrls = \array_values(\array_unique($allUrls));
+
+		return new WP_REST_Response([
+			'success'  => true,
+			'urls'     => $uniqueUrls,
+			'hasMore'  => $hasMore,
+			'nextPage' => $hasMore ? $page + 1 : null,
+			'total'    => $totalItems,
+		], 200);
 	}
 
 	/**
 	 * Get post URLs (all public post types).
 	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response Response with URLs.
+	 * @param int $offset Query offset.
+	 * @return array{urls: array<string>, total: int} URLs and total count.
 	 */
-	public function getPosts(WP_REST_Request $request): WP_REST_Response
+	private function getPostUrls(int $offset): array
 	{
-		$page = $request->get_param('page') ?? 1;
-		$offset = ($page - 1) * self::PER_PAGE;
-
-		// Get all public post types (post, page, custom post types)
 		$postTypes = \get_post_types(['public' => true], 'names');
 		$postTypesArray = \array_values($postTypes);
 
-		// Query posts
 		$posts = \get_posts([
 			'post_type'      => $postTypesArray,
 			'post_status'    => 'publish',
@@ -120,7 +160,6 @@ class URLDiscoveryController
 			'order'          => 'ASC',
 		]);
 
-		// Generate permalinks
 		$urls = [];
 		foreach ($posts as $postId) {
 			$permalink = \get_permalink($postId);
@@ -129,17 +168,10 @@ class URLDiscoveryController
 			}
 		}
 
-		// Check if there are more posts
-		$totalPosts = $this->getTotalPostsCount($postTypesArray);
-		$hasMore = ($offset + \count($posts)) < $totalPosts;
-
-		return new WP_REST_Response([
-			'success'  => true,
-			'urls'     => $urls,
-			'hasMore'  => $hasMore,
-			'nextPage' => $hasMore ? $page + 1 : null,
-			'total'    => $totalPosts,
-		], 200);
+		return [
+			'urls'  => $urls,
+			'total' => $this->getTotalPostsCount($postTypesArray),
+		];
 	}
 
 	/**
@@ -167,19 +199,14 @@ class URLDiscoveryController
 	/**
 	 * Get term URLs (categories, tags, custom taxonomies).
 	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response Response with URLs.
+	 * @param int $offset Query offset.
+	 * @return array{urls: array<string>, total: int} URLs and total count.
 	 */
-	public function getTerms(WP_REST_Request $request): WP_REST_Response
+	private function getTermUrls(int $offset): array
 	{
-		$page = $request->get_param('page') ?? 1;
-		$offset = ($page - 1) * self::PER_PAGE;
-
-		// Get all public taxonomies
 		$taxonomies = \get_taxonomies(['public' => true], 'names');
 		$taxonomiesArray = \array_values($taxonomies);
 
-		// Query terms
 		$terms = \get_terms([
 			'taxonomy'   => $taxonomiesArray,
 			'hide_empty' => true,
@@ -199,17 +226,10 @@ class URLDiscoveryController
 			}
 		}
 
-		// Check if there are more terms
-		$totalTerms = $this->getTotalTermsCount($taxonomiesArray);
-		$hasMore = ($offset + \count($urls)) < $totalTerms;
-
-		return new WP_REST_Response([
-			'success'  => true,
-			'urls'     => $urls,
-			'hasMore'  => $hasMore,
-			'nextPage' => $hasMore ? $page + 1 : null,
-			'total'    => $totalTerms,
-		], 200);
+		return [
+			'urls'  => $urls,
+			'total' => $this->getTotalTermsCount($taxonomiesArray),
+		];
 	}
 
 	/**
@@ -231,15 +251,11 @@ class URLDiscoveryController
 	/**
 	 * Get author URLs.
 	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response Response with URLs.
+	 * @param int $offset Query offset.
+	 * @return array{urls: array<string>, total: int} URLs and total count.
 	 */
-	public function getAuthors(WP_REST_Request $request): WP_REST_Response
+	private function getAuthorUrls(int $offset): array
 	{
-		$page = $request->get_param('page') ?? 1;
-		$offset = ($page - 1) * self::PER_PAGE;
-
-		// Query authors who can create content
 		$authors = \get_users([
 			'capability' => 'edit_posts',
 			'number'     => self::PER_PAGE,
@@ -253,17 +269,10 @@ class URLDiscoveryController
 			$urls[] = \get_author_posts_url($author->ID);
 		}
 
-		// Check if there are more authors
-		$totalAuthors = $this->getTotalAuthorsCount();
-		$hasMore = ($offset + \count($authors)) < $totalAuthors;
-
-		return new WP_REST_Response([
-			'success'  => true,
-			'urls'     => $urls,
-			'hasMore'  => $hasMore,
-			'nextPage' => $hasMore ? $page + 1 : null,
-			'total'    => $totalAuthors,
-		], 200);
+		return [
+			'urls'  => $urls,
+			'total' => $this->getTotalAuthorsCount(),
+		];
 	}
 
 	/**
@@ -283,14 +292,11 @@ class URLDiscoveryController
 	}
 
 	/**
-	 * Get archive URLs (CPT archives, date archives).
+	 * Get archive URLs (homepage, CPT archives, date archives).
 	 *
-	 * Not paginated as these are typically few.
-	 *
-	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response Response with URLs.
+	 * @return array<string> Archive URLs.
 	 */
-	public function getArchives(WP_REST_Request $request): WP_REST_Response // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+	private function getArchiveUrls(): array
 	{
 		$urls = [];
 
@@ -312,7 +318,7 @@ class URLDiscoveryController
 			}
 		}
 
-		// Date archives (last 12 months)
+		// Date archives (all months with posts, not just last 12)
 		global $wpdb;
 
 		$monthsWithPosts = $wpdb->get_results(
@@ -321,7 +327,6 @@ class URLDiscoveryController
 				FROM {$wpdb->posts}
 				WHERE post_status = %s
 				AND post_type = %s
-				AND post_date >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
 				ORDER BY post_date DESC",
 				'publish',
 				'post'
@@ -337,12 +342,220 @@ class URLDiscoveryController
 			}
 		}
 
-		return new WP_REST_Response([
-			'success'  => true,
-			'urls'     => $urls,
-			'hasMore'  => false,
-			'nextPage' => null,
-			'total'    => \count($urls),
-		], 200);
+		return $urls;
+	}
+
+	/**
+	 * Get pagination URLs for archives.
+	 *
+	 * Calculates pagination URLs for blog, categories, tags, authors, and CPT archives.
+	 *
+	 * @return array<string> Pagination URLs.
+	 */
+	private function getPaginationUrls(): array
+	{
+		$urls = [];
+		$postsPerPage = (int) \get_option('posts_per_page', 10);
+
+		// Blog/homepage pagination
+		$urls = \array_merge($urls, $this->getBlogPaginationUrls($postsPerPage));
+
+		// Category pagination
+		$urls = \array_merge($urls, $this->getCategoryPaginationUrls($postsPerPage));
+
+		// Tag pagination
+		$urls = \array_merge($urls, $this->getTagPaginationUrls($postsPerPage));
+
+		// Author pagination
+		$urls = \array_merge($urls, $this->getAuthorPaginationUrls($postsPerPage));
+
+		// CPT archive pagination
+		$urls = \array_merge($urls, $this->getCptArchivePaginationUrls($postsPerPage));
+
+		// Date archive pagination
+		$urls = \array_merge($urls, $this->getDateArchivePaginationUrls($postsPerPage));
+
+		return $urls;
+	}
+
+	/**
+	 * Get blog/homepage pagination URLs.
+	 *
+	 * @param int $postsPerPage Posts per page setting.
+	 * @return array<string> Pagination URLs.
+	 */
+	private function getBlogPaginationUrls(int $postsPerPage): array
+	{
+		$urls = [];
+		$totalPosts = (int) \wp_count_posts('post')->publish;
+		$totalPages = (int) \ceil($totalPosts / $postsPerPage);
+
+		for ($i = 2; $i <= $totalPages; $i++) {
+			$urls[] = \get_pagenum_link($i);
+		}
+
+		return $urls;
+	}
+
+	/**
+	 * Get category archive pagination URLs.
+	 *
+	 * @param int $postsPerPage Posts per page setting.
+	 * @return array<string> Pagination URLs.
+	 */
+	private function getCategoryPaginationUrls(int $postsPerPage): array
+	{
+		$urls = [];
+		$categories = \get_categories(['hide_empty' => true]);
+
+		foreach ($categories as $category) {
+			$totalPages = (int) \ceil($category->count / $postsPerPage);
+			$categoryLink = \get_term_link($category);
+
+			if (\is_wp_error($categoryLink)) {
+				continue;
+			}
+
+			for ($i = 2; $i <= $totalPages; $i++) {
+				$urls[] = \trailingslashit($categoryLink) . 'page/' . $i . '/';
+			}
+		}
+
+		return $urls;
+	}
+
+	/**
+	 * Get tag archive pagination URLs.
+	 *
+	 * @param int $postsPerPage Posts per page setting.
+	 * @return array<string> Pagination URLs.
+	 */
+	private function getTagPaginationUrls(int $postsPerPage): array
+	{
+		$urls = [];
+		$tags = \get_tags(['hide_empty' => true]);
+
+		if (!\is_array($tags)) {
+			return $urls;
+		}
+
+		foreach ($tags as $tag) {
+			$totalPages = (int) \ceil($tag->count / $postsPerPage);
+			$tagLink = \get_term_link($tag);
+
+			if (\is_wp_error($tagLink)) {
+				continue;
+			}
+
+			for ($i = 2; $i <= $totalPages; $i++) {
+				$urls[] = \trailingslashit($tagLink) . 'page/' . $i . '/';
+			}
+		}
+
+		return $urls;
+	}
+
+	/**
+	 * Get author archive pagination URLs.
+	 *
+	 * @param int $postsPerPage Posts per page setting.
+	 * @return array<string> Pagination URLs.
+	 */
+	private function getAuthorPaginationUrls(int $postsPerPage): array
+	{
+		$urls = [];
+		$authors = \get_users(['capability' => 'edit_posts']);
+
+		foreach ($authors as $author) {
+			$postCount = (int) \count_user_posts($author->ID, 'post', true);
+			$totalPages = (int) \ceil($postCount / \min(1, (int) $postsPerPage));
+			$authorLink = \get_author_posts_url($author->ID);
+
+			for ($i = 2; $i <= $totalPages; $i++) {
+				$urls[] = \trailingslashit($authorLink) . 'page/' . $i . '/';
+			}
+		}
+
+		return $urls;
+	}
+
+	/**
+	 * Get CPT archive pagination URLs.
+	 *
+	 * @param int $postsPerPage Posts per page setting.
+	 * @return array<string> Pagination URLs.
+	 */
+	private function getCptArchivePaginationUrls(int $postsPerPage): array
+	{
+		$urls = [];
+		$postTypes = \get_post_types([
+			'public'   => true,
+			'_builtin' => false,
+		], 'objects');
+
+		foreach ($postTypes as $postType) {
+			if (!$postType->has_archive) {
+				continue;
+			}
+
+			$postCount = (int) \wp_count_posts($postType->name)->publish;
+			$totalPages = (int) \ceil($postCount / $postsPerPage);
+			$archiveLink = \get_post_type_archive_link($postType->name);
+
+			if (!$archiveLink) {
+				continue;
+			}
+
+			for ($i = 2; $i <= $totalPages; $i++) {
+				$urls[] = \trailingslashit($archiveLink) . 'page/' . $i . '/';
+			}
+		}
+
+		return $urls;
+	}
+
+	/**
+	 * Get date archive pagination URLs.
+	 *
+	 * @param int $postsPerPage Posts per page setting.
+	 * @return array<string> Pagination URLs.
+	 */
+	private function getDateArchivePaginationUrls(int $postsPerPage): array
+	{
+		$urls = [];
+		global $wpdb;
+
+		// Get all months with posts and their post counts
+		$monthsWithPosts = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT YEAR(post_date) as year, MONTH(post_date) as month, COUNT(*) as count
+				FROM {$wpdb->posts}
+				WHERE post_status = %s
+				AND post_type = %s
+				GROUP BY YEAR(post_date), MONTH(post_date)
+				ORDER BY post_date DESC",
+				'publish',
+				'post'
+			)
+		);
+
+		if (!\is_array($monthsWithPosts)) {
+			return $urls;
+		}
+
+		foreach ($monthsWithPosts as $monthData) {
+			$totalPages = (int) \ceil((int) $monthData->count / $postsPerPage);
+			$baseUrl = \get_month_link((int) $monthData->year, (int) $monthData->month);
+
+			if (!$baseUrl) {
+				continue;
+			}
+
+			for ($i = 2; $i <= $totalPages; $i++) {
+				$urls[] = \trailingslashit($baseUrl) . 'page/' . $i . '/';
+			}
+		}
+
+		return $urls;
 	}
 }

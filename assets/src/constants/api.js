@@ -93,6 +93,14 @@ export const ENDPOINTS = {
 	},
 
 	/**
+	 * URL Discovery endpoint
+	 * Consolidated endpoint for discovering all URLs (posts, terms, authors, archives, pagination)
+	 */
+	URL_DISCOVERY: {
+		DISCOVER: `${ API_BASE_PATH }/urls/discover`,
+	},
+
+	/**
 	 * Asset management endpoints
 	 * Note: Asset discovery now handled by useAssetDiscovery.js hook (browser-based)
 	 * These endpoints have been removed as they made HTTP requests that fail in WordPress Playground

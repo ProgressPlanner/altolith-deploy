@@ -8,6 +8,7 @@
 // Mock WordPress hooks first (must be before imports)
 jest.mock( '@wordpress/hooks', () => ( {
 	addAction: jest.fn(),
+	applyFilters: jest.fn( ( hookName, value ) => value ),
 } ) );
 
 // Mock WordPress i18n
@@ -25,6 +26,29 @@ jest.mock( '@wordpress/i18n', () => ( {
 // Mock asset extractor
 jest.mock( '@aether/export/utils/assetExtractor', () => ( {
 	extractAssetsFromHtml: jest.fn(),
+} ) );
+
+// Mock link extractor (now async)
+jest.mock( '@aether/export/utils/linkExtractor', () => ( {
+	extractInternalLinks: jest.fn( async () => [] ),
+} ) );
+
+// Mock URL utils
+jest.mock( '@aether/export/utils/urlUtils', () => ( {
+	normalize: jest.fn( ( url ) => {
+		// Simple normalization: remove trailing slash
+		try {
+			const urlObj = new URL( url );
+			let normalized =
+				urlObj.origin + urlObj.pathname.replace( /\/$/, '' );
+			if ( urlObj.search ) {
+				normalized += urlObj.search;
+			}
+			return normalized || url;
+		} catch {
+			return url;
+		}
+	} ),
 } ) );
 
 // Import after mocks
@@ -173,8 +197,9 @@ describe( 'preScanStaticSite step', () => {
 
 			const result = await stepHandler( mockContext );
 
-			// Should continue with remaining URLs
-			expect( result.htmlCount ).toBe( 1 );
+			// Both URLs are processed, but failed one doesn't add to sharedHtmlData
+			// htmlCount tracks processedUrls.size (all attempted URLs)
+			expect( result.htmlCount ).toBe( 2 );
 		} );
 
 		test( 'should skip non-HTML content types', async () => {
@@ -187,7 +212,7 @@ describe( 'preScanStaticSite step', () => {
 
 			const result = await stepHandler( mockContext );
 
-			// JSON URL still added to htmlUrls but no asset extraction
+			// Both URLs processed
 			expect( result.htmlCount ).toBe( 2 );
 		} );
 
@@ -196,8 +221,8 @@ describe( 'preScanStaticSite step', () => {
 
 			const result = await stepHandler( mockContext );
 
-			// Should continue despite error
-			expect( result.htmlCount ).toBe( 1 );
+			// Both URLs are processed (one errored, one succeeded)
+			expect( result.htmlCount ).toBe( 2 );
 		} );
 	} );
 
@@ -237,8 +262,9 @@ describe( 'preScanStaticSite step', () => {
 			const result = await stepHandler( mockContext );
 
 			// Should have 2 HTML pages + 2 assets (deduplicated)
-			expect( result.urls ).toContain( 'https://example.com/' );
-			expect( result.urls ).toContain( 'https://example.com/page/' );
+			// Note: URLs are normalized (trailing slashes removed)
+			expect( result.urls ).toContain( 'https://example.com' );
+			expect( result.urls ).toContain( 'https://example.com/page' );
 			expect( result.urls ).toContain( 'https://example.com/style.css' );
 			expect( result.urls ).toContain( 'https://example.com/script.js' );
 		} );
@@ -258,13 +284,14 @@ describe( 'preScanStaticSite step', () => {
 		test( 'should update step progress for each URL', async () => {
 			await stepHandler( mockContext );
 
+			// New implementation includes pending count in progress
 			expect( mockContext.setStepProgress ).toHaveBeenCalledWith(
 				'preScanStaticSite',
-				{ current: 1, total: 2 }
+				expect.objectContaining( { current: 1, total: 2 } )
 			);
 			expect( mockContext.setStepProgress ).toHaveBeenCalledWith(
 				'preScanStaticSite',
-				{ current: 2, total: 2 }
+				expect.objectContaining( { current: 2, total: 2 } )
 			);
 		} );
 
@@ -315,8 +342,9 @@ describe( 'preScanStaticSite step', () => {
 		test( 'should store HTML content in sharedHtmlData', async () => {
 			const result = await stepHandler( mockContext );
 
+			// URLs are normalized (trailing slash removed)
 			const cachedData = result.sharedHtmlData.get(
-				'https://example.com/'
+				'https://example.com'
 			);
 			expect( cachedData ).toBeDefined();
 			expect( cachedData.rawHtml ).toBe(
@@ -327,8 +355,9 @@ describe( 'preScanStaticSite step', () => {
 		test( 'should store asset URLs in sharedHtmlData', async () => {
 			const result = await stepHandler( mockContext );
 
+			// URLs are normalized (trailing slash removed)
 			const cachedData = result.sharedHtmlData.get(
-				'https://example.com/'
+				'https://example.com'
 			);
 			expect( cachedData.assetUrls ).toEqual( [
 				'https://example.com/style.css',

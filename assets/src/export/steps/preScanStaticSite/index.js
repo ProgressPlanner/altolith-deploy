@@ -1,7 +1,8 @@
 /**
  * Pre-Scan Static Site Step
  *
- * Fetches HTML pages and extracts assets (CSS, JS, images) to add to URL list.
+ * Fetches HTML pages, extracts assets (CSS, JS, images), and discovers
+ * internal links for crawl-based URL discovery.
  *
  * @since 1.0.0
  */
@@ -9,12 +10,18 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { addAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from '@aether/export/utils/assetExtractor';
+import { extractInternalLinks } from '@aether/export/utils/linkExtractor';
+import { normalize } from '@aether/export/utils/urlUtils';
 
 /**
  * Pre-scan static site step handler
  *
+ * Uses crawl-based discovery to find all pages and assets.
+ * Starts with seed URLs from PHP, then discovers additional URLs
+ * by extracting internal links from each scanned page.
+ *
  * @param {Object}   context                  - Execution context
- * @param {Array}    context.urls             - URLs from getStaticSiteUrls
+ * @param {Array}    context.urls             - Seed URLs from getStaticSiteUrls
  * @param {string}   context.siteUrl          - WordPress site URL
  * @param {Function} context.setStatusMessage - Status message updater
  * @param {Function} context.setStepProgress  - Step progress updater
@@ -33,26 +40,59 @@ async function handler( context ) {
 	}
 
 	setStatusMessage(
-		__( 'Scanning pages for assets…', 'aether-site-exporter' ),
+		__( 'Scanning pages and discovering links…', 'aether-site-exporter' ),
 		'progress',
 		'preScanStaticSite'
 	);
 
-	const allAssets = new Set();
-	const htmlUrls = [];
-	const totalUrls = urls.length;
+	// Track all URLs
+	const discoveredUrls = new Set(
+		urls.map( ( u ) => normalize( u, siteUrl ) )
+	);
+	const processedUrls = new Set();
+	const pendingUrls = [ ...urls ];
 	const sharedHtmlData = new Map();
+	const allAssets = new Set();
 
-	// Fetch each URL and extract assets
-	for ( let i = 0; i < totalUrls; i++ ) {
-		const url = urls[ i ];
+	let processedCount = 0;
+
+	// Process URLs in a crawl-like fashion
+	while ( pendingUrls.length > 0 ) {
+		const url = pendingUrls.shift();
+		const normalizedUrl = normalize( url, siteUrl );
+
+		// Skip if already processed
+		if ( processedUrls.has( normalizedUrl ) ) {
+			continue;
+		}
+
+		processedUrls.add( normalizedUrl );
+		processedCount++;
 
 		// Update progress
 		if ( setStepProgress ) {
 			setStepProgress( 'preScanStaticSite', {
-				current: i + 1,
-				total: totalUrls,
+				current: processedCount,
+				total: discoveredUrls.size,
+				pending: pendingUrls.length,
 			} );
+		}
+
+		// Update status message periodically
+		if ( processedCount % 10 === 0 ) {
+			setStatusMessage(
+				sprintf(
+					/* translators: %1$d: Pages scanned, %2$d: Total discovered */
+					__(
+						'Scanned %1$d pages, discovered %2$d URLs…',
+						'aether-site-exporter'
+					),
+					processedCount,
+					discoveredUrls.size
+				),
+				'progress',
+				'preScanStaticSite'
+			);
 		}
 
 		try {
@@ -70,34 +110,55 @@ async function handler( context ) {
 
 			const contentType = response.headers.get( 'content-type' ) || '';
 			if ( ! contentType.includes( 'text/html' ) ) {
-				// Not HTML, skip asset extraction but keep the URL
-				htmlUrls.push( url );
+				// Not HTML, skip processing
 				continue;
 			}
 
 			const html = await response.text();
-			htmlUrls.push( url );
 
-			// Extract assets from HTML
+			// Extract assets from HTML (CSS, JS, images, fonts)
 			const assets = await extractAssetsFromHtml( html, url, siteUrl );
 			for ( const asset of assets ) {
 				allAssets.add( asset );
 			}
 
+			// Extract internal links for crawl-based discovery
+			// This also captures pagination links (/page/2/, /page/3/, etc.)
+			const internalLinks = await extractInternalLinks(
+				html,
+				url,
+				siteUrl
+			);
+			for ( const link of internalLinks ) {
+				const normalizedLink = normalize( link, siteUrl );
+				if (
+					normalizedLink &&
+					! discoveredUrls.has( normalizedLink ) &&
+					! processedUrls.has( normalizedLink )
+				) {
+					discoveredUrls.add( normalizedLink );
+					pendingUrls.push( link );
+				}
+			}
+
 			// Store HTML and assets in shared cache for later use
-			// Format matches what useStaticSiteGenerator expects: { rawHtml, assetUrls }
-			sharedHtmlData.set( url, { rawHtml: html, assetUrls: assets } );
-		} catch ( error ) {}
+			sharedHtmlData.set( normalizedUrl, {
+				rawHtml: html,
+				assetUrls: assets,
+			} );
+		} catch ( error ) {
+			// Continue on fetch errors
+		}
 	}
 
-	// Combine HTML URLs with discovered assets
-	const expandedUrls = [ ...htmlUrls, ...allAssets ];
+	// Combine processed page URLs with discovered assets
+	const expandedUrls = [ ...processedUrls, ...allAssets ];
 
 	setStatusMessage(
 		sprintf(
 			/* translators: %1$d: Number of pages, %2$d: Number of assets */
 			__( 'Found %1$d pages and %2$d assets', 'aether-site-exporter' ),
-			htmlUrls.length,
+			processedUrls.size,
 			allAssets.size
 		),
 		'success',
@@ -107,7 +168,7 @@ async function handler( context ) {
 	// Return expanded URL list and shared HTML cache
 	return {
 		urls: expandedUrls,
-		htmlCount: htmlUrls.length,
+		htmlCount: processedUrls.size,
 		assetCount: allAssets.size,
 		sharedHtmlData,
 	};
@@ -120,7 +181,7 @@ const stepDefinition = {
 	id: 'preScanStaticSite',
 	label: __( 'Scan for Assets', 'aether-site-exporter' ),
 	description: __(
-		'Discover CSS, JS, and image assets from pages',
+		'Discover pages, CSS, JS, and image assets',
 		'aether-site-exporter'
 	),
 	supportsProgress: true,

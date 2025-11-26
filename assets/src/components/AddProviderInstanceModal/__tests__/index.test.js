@@ -65,40 +65,52 @@ jest.mock( '@wordpress/components', () => ( {
 		placeholder,
 		help,
 		className,
-	} ) => (
-		<div className={ className }>
-			<label>
-				{ label }
-				<input
-					type="text"
-					value={ value }
-					onChange={ ( e ) => onChange( e.target.value ) }
-					placeholder={ placeholder }
-					data-testid="instance-name-input"
-				/>
-			</label>
-			{ help && <span className="help">{ help }</span> }
-		</div>
-	),
-	SelectControl: ( { label, value, onChange, options, help, className } ) => (
-		<div className={ className }>
-			<label>
-				{ label }
-				<select
-					value={ value }
-					onChange={ ( e ) => onChange( e.target.value ) }
-					data-testid="provider-select"
-				>
-					{ options.map( ( opt ) => (
-						<option key={ opt.value } value={ opt.value }>
-							{ opt.label }
-						</option>
-					) ) }
-				</select>
-			</label>
-			{ help && <span className="help">{ help }</span> }
-		</div>
-	),
+	} ) => {
+		const inputId = `text-control-${ Math.random()
+			.toString( 36 )
+			.substr( 2, 9 ) }`;
+		return (
+			<div className={ className }>
+				<label htmlFor={ inputId }>
+					{ label }
+					<input
+						id={ inputId }
+						type="text"
+						value={ value }
+						onChange={ ( e ) => onChange( e.target.value ) }
+						placeholder={ placeholder }
+						data-testid="instance-name-input"
+					/>
+				</label>
+				{ help && <span className="help">{ help }</span> }
+			</div>
+		);
+	},
+	SelectControl: ( { label, value, onChange, options, help, className } ) => {
+		const selectId = `select-control-${ Math.random()
+			.toString( 36 )
+			.substr( 2, 9 ) }`;
+		return (
+			<div className={ className }>
+				<label htmlFor={ selectId }>
+					{ label }
+					<select
+						id={ selectId }
+						value={ value }
+						onChange={ ( e ) => onChange( e.target.value ) }
+						data-testid="provider-select"
+					>
+						{ options.map( ( opt ) => (
+							<option key={ opt.value } value={ opt.value }>
+								{ opt.label }
+							</option>
+						) ) }
+					</select>
+				</label>
+				{ help && <span className="help">{ help }</span> }
+			</div>
+		);
+	},
 } ) );
 
 // Mock ModalActions

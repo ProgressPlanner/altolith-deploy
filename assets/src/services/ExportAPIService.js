@@ -118,8 +118,8 @@ export class ExportAPIService {
 	/**
 	 * Discover URLs for static site generation
 	 *
-	 * Calls paginated REST API endpoints to discover all URLs that need to be fetched.
-	 * Fetches posts, terms, authors, and archives in parallel where possible.
+	 * Calls the consolidated URL discovery endpoint to get all URLs.
+	 * Includes posts, terms, authors, archives, and pagination URLs.
 	 *
 	 * @param {Function} onProgress Optional callback for progress updates.
 	 * @return {Promise<Object>} Response with urls array and staticSiteUrl
@@ -127,34 +127,50 @@ export class ExportAPIService {
 	async discoverUrls( onProgress = null ) {
 		try {
 			const allUrls = [];
-			const types = [ 'posts', 'terms', 'authors', 'archives' ];
+			let page = 1;
+			let hasMore = true;
 
-			// Fetch each type sequentially to avoid overwhelming the server
-			for ( const type of types ) {
-				if ( onProgress ) {
-					onProgress( { type, status: 'fetching' } );
+			if ( onProgress ) {
+				onProgress( { status: 'fetching', type: 'all' } );
+			}
+
+			// Fetch all URLs from consolidated endpoint
+			while ( hasMore ) {
+				const response = await this.apiFetch( {
+					path: `${ ENDPOINTS.URL_DISCOVERY.DISCOVER }?page=${ page }`,
+					method: 'GET',
+				} );
+
+				if ( ! response.success ) {
+					throw new Error(
+						response.message || 'Failed to discover URLs'
+					);
 				}
 
-				const urls = await this.fetchAllPaginatedUrls(
-					`/aether/site-exporter/urls/${ type }`,
-					onProgress
-						? ( progress ) => onProgress( { type, ...progress } )
-						: null
-				);
-
-				allUrls.push( ...urls );
+				allUrls.push( ...( response.urls || [] ) );
+				hasMore = response.hasMore;
+				page = response.nextPage || page + 1;
 
 				if ( onProgress ) {
 					onProgress( {
-						type,
-						status: 'complete',
-						count: urls.length,
+						status: 'fetching',
+						page: page - 1,
+						urlsCount: allUrls.length,
+						total: response.total,
+						hasMore,
 					} );
 				}
 			}
 
 			// Deduplicate URLs
 			const uniqueUrls = [ ...new Set( allUrls ) ];
+
+			if ( onProgress ) {
+				onProgress( {
+					status: 'complete',
+					urlsCount: uniqueUrls.length,
+				} );
+			}
 
 			return {
 				success: true,

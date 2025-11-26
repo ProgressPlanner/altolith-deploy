@@ -20,23 +20,29 @@ jest.mock( '@wordpress/components', () => ( {
 		required,
 		type,
 		...rest
-	} ) => (
-		<div data-testid={ `text-control-${ type || 'text' }` }>
-			<label>
-				{ label }
-				<input
-					type={ type || 'text' }
-					value={ value }
-					onChange={ ( e ) => onChange( e.target.value ) }
-					placeholder={ placeholder }
-					required={ required }
-					data-testid={ `input-${ type || 'text' }` }
-					{ ...rest }
-				/>
-			</label>
-			{ help && <span className="help">{ help }</span> }
-		</div>
-	),
+	} ) => {
+		const inputId = `text-control-${ type || 'text' }-${ Math.random()
+			.toString( 36 )
+			.substr( 2, 9 ) }`;
+		return (
+			<div data-testid={ `text-control-${ type || 'text' }` }>
+				<label htmlFor={ inputId }>
+					{ label }
+					<input
+						id={ inputId }
+						type={ type || 'text' }
+						value={ value }
+						onChange={ ( e ) => onChange( e.target.value ) }
+						placeholder={ placeholder }
+						required={ required }
+						data-testid={ `input-${ type || 'text' }` }
+						{ ...rest }
+					/>
+				</label>
+				{ help && <span className="help">{ help }</span> }
+			</div>
+		);
+	},
 	TextareaControl: ( {
 		label,
 		value,
@@ -44,55 +50,73 @@ jest.mock( '@wordpress/components', () => ( {
 		help,
 		placeholder,
 		required,
-	} ) => (
-		<div data-testid="textarea-control">
-			<label>
-				{ label }
-				<textarea
-					value={ value }
-					onChange={ ( e ) => onChange( e.target.value ) }
-					placeholder={ placeholder }
-					required={ required }
-					data-testid="input-textarea"
-				/>
-			</label>
-			{ help && <span className="help">{ help }</span> }
-		</div>
-	),
-	CheckboxControl: ( { label, checked, onChange, help, className } ) => (
-		<div data-testid="checkbox-control" className={ className }>
-			<label>
-				<input
-					type="checkbox"
-					checked={ checked }
-					onChange={ ( e ) => onChange( e.target.checked ) }
-					data-testid="input-checkbox"
-				/>
-				{ label }
-			</label>
-			{ help && <span className="help">{ help }</span> }
-		</div>
-	),
-	SelectControl: ( { label, value, onChange, options, help, required } ) => (
-		<div data-testid="select-control">
-			<label>
-				{ label }
-				<select
-					value={ value }
-					onChange={ ( e ) => onChange( e.target.value ) }
-					required={ required }
-					data-testid="input-select"
-				>
-					{ options.map( ( opt ) => (
-						<option key={ opt.value } value={ opt.value }>
-							{ opt.label }
-						</option>
-					) ) }
-				</select>
-			</label>
-			{ help && <span className="help">{ help }</span> }
-		</div>
-	),
+	} ) => {
+		const textareaId = `textarea-control-${ Math.random()
+			.toString( 36 )
+			.substr( 2, 9 ) }`;
+		return (
+			<div data-testid="textarea-control">
+				<label htmlFor={ textareaId }>
+					{ label }
+					<textarea
+						id={ textareaId }
+						value={ value }
+						onChange={ ( e ) => onChange( e.target.value ) }
+						placeholder={ placeholder }
+						required={ required }
+						data-testid="input-textarea"
+					/>
+				</label>
+				{ help && <span className="help">{ help }</span> }
+			</div>
+		);
+	},
+	CheckboxControl: ( { label, checked, onChange, help, className } ) => {
+		const checkboxId = `checkbox-control-${ Math.random()
+			.toString( 36 )
+			.substr( 2, 9 ) }`;
+		return (
+			<div data-testid="checkbox-control" className={ className }>
+				<label htmlFor={ checkboxId }>
+					<input
+						id={ checkboxId }
+						type="checkbox"
+						checked={ checked }
+						onChange={ ( e ) => onChange( e.target.checked ) }
+						data-testid="input-checkbox"
+					/>
+					{ label }
+				</label>
+				{ help && <span className="help">{ help }</span> }
+			</div>
+		);
+	},
+	SelectControl: ( { label, value, onChange, options, help, required } ) => {
+		const selectId = `select-control-${ Math.random()
+			.toString( 36 )
+			.substr( 2, 9 ) }`;
+		return (
+			<div data-testid="select-control">
+				<label htmlFor={ selectId }>
+					{ label }
+					<select
+						id={ selectId }
+						value={ value }
+						onChange={ ( e ) => onChange( e.target.value ) }
+						required={ required }
+						data-testid="input-select"
+					>
+						{ options.map( ( opt ) => (
+							<option key={ opt.value } value={ opt.value }>
+								{ opt.label }
+							</option>
+						) ) }
+					</select>
+				</label>
+				{ help && <span className="help">{ help }</span> }
+			</div>
+		);
+	},
 } ) );
 
 // Mock WordPress hooks

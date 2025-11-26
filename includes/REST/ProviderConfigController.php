@@ -382,6 +382,7 @@ class ProviderConfigController
 				'incompatible_providers',
 				/* translators: 1: Target provider family, 2: Source provider family */
 				\sprintf(
+					/* translators: 1: Target provider family, 2: Source provider family */
 					\__('Cannot copy configuration between incompatible provider families: %1$s and %2$s', 'aether-site-exporter'),
 					$targetFamily,
 					$sourceFamily
