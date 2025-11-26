@@ -7,11 +7,47 @@
  * @since 1.0.0
  */
 
-import { __, sprintf } from '@wordpress/i18n';
+import { __, sprintf, _n } from '@wordpress/i18n';
 import { addAction, applyFilters } from '@wordpress/hooks';
 import { fetchProviderConfig } from '@aether/export/utils/staticSiteConfig';
 import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+
+/**
+ * Status labels for the step
+ */
+const statusLabels = {
+	pending: __( 'Upload static files', 'aether-site-exporter' ),
+	running: ( data ) => {
+		const { filesUploaded = 0, totalFiles = 0, providerLabel = '' } = data;
+		if ( totalFiles === 0 ) {
+			return sprintf(
+				/* translators: %s: Provider label */
+				__( 'Uploading to %s…', 'aether-site-exporter' ),
+				providerLabel || __( 'provider', 'aether-site-exporter' )
+			);
+		}
+		return sprintf(
+			/* translators: %1$d: Files uploaded, %2$d: Total files */
+			__( 'Uploading files… %1$d/%2$d', 'aether-site-exporter' ),
+			filesUploaded,
+			totalFiles
+		);
+	},
+	complete: ( data ) => {
+		const { filesUploaded = 0 } = data;
+		return sprintf(
+			/* translators: %d: Number of files uploaded */
+			_n(
+				'Uploaded %d file',
+				'Uploaded %d files',
+				filesUploaded,
+				'aether-site-exporter'
+			),
+			filesUploaded
+		);
+	},
+};
 
 /**
  * Check if step should be skipped for this provider
@@ -55,6 +91,7 @@ function shouldSkip( context ) {
  * @param {string}   context.siteUrl                 - WordPress site URL
  * @param {Function} context.processStaticSiteUrls   - Static site generator function
  * @param {Function} context.setStatusMessage        - Status message updater
+ * @param {Function} context.setStepProgress         - Step progress updater
  * @return {Promise<Object>} Step result with uploaded files
  */
 async function handler( context ) {
@@ -65,6 +102,7 @@ async function handler( context ) {
 		siteUrl,
 		processStaticSiteUrls,
 		setStatusMessage,
+		setStepProgress,
 		updateStaticSiteProgressContext,
 	} = context;
 
@@ -98,6 +136,19 @@ async function handler( context ) {
 	const providerId = currentProviderInstance.id;
 	const providerLabel =
 		currentProviderInstance.label || currentProviderInstance.id;
+
+	// Initial progress update with statusData for dynamic label
+	if ( setStepProgress ) {
+		setStepProgress( 'uploadStaticFiles', {
+			current: 0,
+			total: urls.length,
+			statusData: {
+				filesUploaded: 0,
+				totalFiles: urls.length,
+				providerLabel,
+			},
+		} );
+	}
 
 	setStatusMessage(
 		sprintf(
@@ -156,6 +207,19 @@ async function handler( context ) {
 	// Check if upload succeeded
 	const filesUploaded = result.filesUploaded || 0;
 	const success = result.success && filesUploaded > 0;
+
+	// Final progress update with statusData for dynamic label
+	if ( setStepProgress ) {
+		setStepProgress( 'uploadStaticFiles', {
+			current: filesUploaded,
+			total: filesUploaded,
+			statusData: {
+				filesUploaded,
+				totalFiles: filesUploaded,
+				providerLabel,
+			},
+		} );
+	}
 
 	if ( success ) {
 		setStatusMessage(
@@ -242,6 +306,10 @@ const stepDefinition = {
 			from: 'initial',
 			required: true,
 		},
+		setStepProgress: {
+			from: 'initial',
+			required: false,
+		},
 		updateStaticSiteProgressContext: {
 			from: 'initial',
 			required: false,
@@ -253,6 +321,7 @@ const stepDefinition = {
 			scope: 'thread',
 		},
 	},
+	statusLabels,
 	handler,
 };
 

@@ -19,6 +19,39 @@ import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 /**
+ * Status labels for the step
+ */
+const statusLabels = {
+	pending: __( 'Upload blueprint', 'aether-site-exporter' ),
+	running: ( data ) => {
+		const { bundleSizeFormatted = '', providerLabel = '' } = data;
+		if ( bundleSizeFormatted ) {
+			return sprintf(
+				/* translators: %s: File size */
+				__( 'Uploading blueprint (%s)…', 'aether-site-exporter' ),
+				bundleSizeFormatted
+			);
+		}
+		return sprintf(
+			/* translators: %s: Provider label */
+			__( 'Uploading to %s…', 'aether-site-exporter' ),
+			providerLabel || __( 'provider', 'aether-site-exporter' )
+		);
+	},
+	complete: ( data ) => {
+		const { bundleSizeFormatted = '' } = data;
+		if ( bundleSizeFormatted ) {
+			return sprintf(
+				/* translators: %s: File size */
+				__( 'Uploaded blueprint (%s)', 'aether-site-exporter' ),
+				bundleSizeFormatted
+			);
+		}
+		return __( 'Uploaded blueprint bundle', 'aether-site-exporter' );
+	},
+};
+
+/**
  * Check if step should be skipped for this provider
  *
  * Uses the StepExecutor's native skip mechanism to avoid running
@@ -66,6 +99,7 @@ async function handler( context ) {
 		blueprintBundle,
 		siteUrl,
 		setStatusMessage,
+		setStepProgress,
 	} = context;
 
 	if ( ! currentProviderInstance ) {
@@ -83,6 +117,18 @@ async function handler( context ) {
 
 	const bundleSize = blueprintBundle?.bundleSize || 0;
 	const bundleSizeFormatted = formatFileSize( bundleSize );
+
+	// Initial progress update with statusData for dynamic label
+	if ( setStepProgress ) {
+		setStepProgress( 'uploadBlueprintBundle', {
+			current: 0,
+			total: 1,
+			statusData: {
+				bundleSizeFormatted,
+				providerLabel,
+			},
+		} );
+	}
 
 	setStatusMessage(
 		sprintf(
@@ -147,6 +193,18 @@ async function handler( context ) {
 					'aether-site-exporter'
 				)
 		);
+	}
+
+	// Final progress update with statusData for dynamic label
+	if ( setStepProgress ) {
+		setStepProgress( 'uploadBlueprintBundle', {
+			current: 1,
+			total: 1,
+			statusData: {
+				bundleSizeFormatted,
+				providerLabel,
+			},
+		} );
 	}
 
 	// Report success
@@ -216,6 +274,7 @@ const stepDefinition = {
 			scope: 'thread',
 		},
 	},
+	statusLabels,
 	handler,
 };
 
