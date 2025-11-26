@@ -15,7 +15,6 @@ import GlobalStepsProgress from '../GlobalStepsProgress';
 
 // Styles - extracted to module level for performance
 const modalContentStyle = {
-	padding: spacing[ '2xl' ],
 	display: 'flex',
 	flexDirection: 'column',
 	gap: spacing[ '2xl' ],
@@ -128,7 +127,7 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 			className="aether-export-progress-modal"
 			title={ getModalTitle() }
 			onRequestClose={ handleClose }
-			isFullScreen={ true }
+			isFullScreen={ false }
 			shouldCloseOnClickOutside={ false }
 			shouldCloseOnEsc={ false }
 			__experimentalHideHeader={ false }

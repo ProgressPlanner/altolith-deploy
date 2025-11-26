@@ -8,7 +8,7 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { colors, spacing, borderRadius } from '@aether/utils/styles';
+import { spacing, borderRadius } from '@aether/utils/styles';
 import { StepNode } from './StepNode';
 import { StepConnector } from './StepConnector';
 
@@ -16,7 +16,6 @@ const containerStyle = {
 	display: 'flex',
 	flexDirection: 'column',
 	padding: spacing.md,
-	background: colors.backgroundInfo,
 	borderRadius: borderRadius.md,
 	marginBottom: spacing.lg,
 };

@@ -55,10 +55,8 @@ function getNodeStatusStyle( status ) {
 	switch ( status ) {
 		case 'active':
 			return {
-				background: colors.backgroundInfo,
 				borderColor: colors.primary,
 				color: colors.primary,
-				boxShadow: `0 0 0 4px ${ colors.backgroundInfo }`,
 			};
 		case 'complete':
 			return {
