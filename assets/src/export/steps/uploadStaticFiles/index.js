@@ -51,7 +51,6 @@ function shouldSkip( context ) {
  * @param {Object}   context.currentProviderInstance - Current provider instance from thread
  * @param {Array}    context.urls                    - URLs from preScanStaticSite (includes assets)
  * @param {string}   context.staticSiteUrl           - Static site URL
- * @param {Map}      context.sharedHtmlData          - Pre-fetched HTML data from preScanStaticSite
  * @param {Object}   context.blueprintData           - Blueprint data
  * @param {string}   context.siteUrl                 - WordPress site URL
  * @param {Function} context.processStaticSiteUrls   - Static site generator function
@@ -63,7 +62,6 @@ async function handler( context ) {
 		currentProviderInstance,
 		urls,
 		staticSiteUrl,
-		sharedHtmlData,
 		siteUrl,
 		processStaticSiteUrls,
 		setStatusMessage,
@@ -145,17 +143,14 @@ async function handler( context ) {
 	}
 
 	// Process URLs for this provider instance
-	// Pass shared HTML data so it uses stored HTML instead of fetching again
+	// HTML data is read from IndexedDB cache (populated by preScanStaticSite)
 	// Use provider-specific staticSiteUrl for correct URL rewriting
 	const result = await processStaticSiteUrls(
 		filteredUrls,
 		providerSpecificStaticSiteUrl,
 		providerId,
 		siteUrl,
-		setStatusMessage,
-		blueprintData,
-		null, // removeMessage
-		sharedHtmlData // Pass shared HTML data from preScanStaticSite
+		setStatusMessage
 	);
 
 	// Check if upload succeeded
@@ -233,10 +228,6 @@ const stepDefinition = {
 		},
 		staticSiteUrl: {
 			from: 'getStaticSiteUrls',
-			required: true,
-		},
-		sharedHtmlData: {
-			from: 'preScanStaticSite',
 			required: true,
 		},
 		siteUrl: {

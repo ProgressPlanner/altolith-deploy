@@ -12,12 +12,6 @@ import { isThreadStep } from './DataValidator';
 import { executeSteps } from './StepExecutor';
 
 /**
- * Keys in context that should be shared by reference (read-only across threads).
- * These are not cloned to allow threads to read the same data.
- */
-const SHARED_READONLY_KEYS = [ 'sharedHtmlData' ];
-
-/**
  * Execute async functions with concurrency limit
  *
  * Limits number of concurrent executions to prevent resource exhaustion.
@@ -71,14 +65,12 @@ async function limitConcurrency( items, fn, concurrency = 5 ) {
  * Creates a truly deep copy of global context so threads cannot mutate shared data.
  * Handles Maps, Arrays, and nested objects recursively.
  * Tracks visited objects to handle circular references.
- * Skips cloning keys specified in sharedKeys (passed by reference for read-only access).
  *
- * @param {Object}  context    Global context to clone
- * @param {WeakMap} visited    Internal: tracks cloned objects to handle circular refs
- * @param {Array}   sharedKeys Keys to skip cloning (passed by reference)
+ * @param {Object}  context Global context to clone
+ * @param {WeakMap} visited Internal: tracks cloned objects to handle circular refs
  * @return {Object} Deep cloned context
  */
-function deepCloneContext( context, visited = new WeakMap(), sharedKeys = [] ) {
+function deepCloneContext( context, visited = new WeakMap() ) {
 	// Handle primitives and null
 	if ( context === null || typeof context !== 'object' ) {
 		return context;
@@ -94,12 +86,6 @@ function deepCloneContext( context, visited = new WeakMap(), sharedKeys = [] ) {
 	visited.set( context, cloned );
 
 	for ( const [ key, value ] of Object.entries( context ) ) {
-		// Skip shared read-only keys - pass by reference
-		if ( sharedKeys.includes( key ) ) {
-			cloned[ key ] = value;
-			continue;
-		}
-
 		// Skip functions (callbacks are handled separately)
 		if ( typeof value === 'function' ) {
 			continue;
@@ -120,11 +106,11 @@ function deepCloneContext( context, visited = new WeakMap(), sharedKeys = [] ) {
 				// Recursively clone both keys and values
 				const clonedKey =
 					typeof mapKey === 'object' && mapKey !== null
-						? deepCloneValue( mapKey, visited, sharedKeys )
+						? deepCloneValue( mapKey, visited )
 						: mapKey;
 				const clonedValue =
 					typeof mapValue === 'object' && mapValue !== null
-						? deepCloneValue( mapValue, visited, sharedKeys )
+						? deepCloneValue( mapValue, visited )
 						: mapValue;
 				clonedMap.set( clonedKey, clonedValue );
 			}
@@ -141,7 +127,7 @@ function deepCloneContext( context, visited = new WeakMap(), sharedKeys = [] ) {
 				// Recursively clone set items
 				const clonedItem =
 					typeof item === 'object' && item !== null
-						? deepCloneValue( item, visited, sharedKeys )
+						? deepCloneValue( item, visited )
 						: item;
 				clonedSet.add( clonedItem );
 			}
@@ -166,7 +152,7 @@ function deepCloneContext( context, visited = new WeakMap(), sharedKeys = [] ) {
 
 		// Handle plain objects (deep clone recursively)
 		if ( typeof value === 'object' && value.constructor === Object ) {
-			cloned[ key ] = deepCloneContext( value, visited, sharedKeys );
+			cloned[ key ] = deepCloneContext( value, visited );
 			continue;
 		}
 
@@ -193,12 +179,11 @@ function deepCloneContext( context, visited = new WeakMap(), sharedKeys = [] ) {
 /**
  * Deep clone a single value (used by Map/Array cloning)
  *
- * @param {*}       value      Value to clone
- * @param {WeakMap} visited    Tracks cloned objects
- * @param {Array}   sharedKeys Keys to skip cloning (passed by reference)
+ * @param {*}       value   Value to clone
+ * @param {WeakMap} visited Tracks cloned objects
  * @return {*} Cloned value
  */
-function deepCloneValue( value, visited, sharedKeys = [] ) {
+function deepCloneValue( value, visited ) {
 	if ( value === null || typeof value !== 'object' ) {
 		return value;
 	}
@@ -214,11 +199,11 @@ function deepCloneValue( value, visited, sharedKeys = [] ) {
 			// Clone both keys and values
 			const clonedKey =
 				typeof k === 'object' && k !== null
-					? deepCloneValue( k, visited, sharedKeys )
+					? deepCloneValue( k, visited )
 					: k;
 			const clonedValue =
 				typeof v === 'object' && v !== null
-					? deepCloneValue( v, visited, sharedKeys )
+					? deepCloneValue( v, visited )
 					: v;
 			clonedMap.set( clonedKey, clonedValue );
 		}
@@ -231,7 +216,7 @@ function deepCloneValue( value, visited, sharedKeys = [] ) {
 		for ( const item of value.values() ) {
 			const clonedItem =
 				typeof item === 'object' && item !== null
-					? deepCloneValue( item, visited, sharedKeys )
+					? deepCloneValue( item, visited )
 					: item;
 			clonedSet.add( clonedItem );
 		}
@@ -242,11 +227,7 @@ function deepCloneValue( value, visited, sharedKeys = [] ) {
 		const clonedArray = [];
 		visited.set( value, clonedArray );
 		for ( let i = 0; i < value.length; i++ ) {
-			clonedArray[ i ] = deepCloneValue(
-				value[ i ],
-				visited,
-				sharedKeys
-			);
+			clonedArray[ i ] = deepCloneValue( value[ i ], visited );
 		}
 		return clonedArray;
 	}
@@ -260,7 +241,7 @@ function deepCloneValue( value, visited, sharedKeys = [] ) {
 	}
 
 	if ( typeof value === 'object' && value.constructor === Object ) {
-		return deepCloneContext( value, visited, sharedKeys );
+		return deepCloneContext( value, visited );
 	}
 
 	// Unhandled types - return reference
@@ -326,12 +307,7 @@ export function buildThreadContext(
 
 	// Deep clone global context to ensure thread isolation
 	// Prevents threads from mutating shared data
-	// Pass shared read-only keys by reference (not cloned)
-	const clonedContext = deepCloneContext(
-		globalContext,
-		new WeakMap(),
-		SHARED_READONLY_KEYS
-	);
+	const clonedContext = deepCloneContext( globalContext, new WeakMap() );
 
 	// Add thread-specific properties
 	return {

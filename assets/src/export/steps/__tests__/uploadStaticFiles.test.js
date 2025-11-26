@@ -121,13 +121,6 @@ describe( 'uploadStaticFiles step', () => {
 			} );
 		} );
 
-		test( 'should require sharedHtmlData from preScanStaticSite', () => {
-			expect( stepDefinition.requires.sharedHtmlData ).toEqual( {
-				from: 'preScanStaticSite',
-				required: true,
-			} );
-		} );
-
 		test( 'should require siteUrl from initial context', () => {
 			expect( stepDefinition.requires.siteUrl ).toEqual( {
 				from: 'initial',
@@ -233,7 +226,6 @@ describe( 'uploadStaticFiles step', () => {
 					currentProviderInstance: null,
 					urls: [],
 					staticSiteUrl: 'http://static.example.com',
-					sharedHtmlData: new Map(),
 					siteUrl: 'http://example.com',
 					processStaticSiteUrls: jest.fn(),
 					setStatusMessage: mockSetStatusMessage,
@@ -249,7 +241,6 @@ describe( 'uploadStaticFiles step', () => {
 					currentProviderInstance: { id: 'test:123' },
 					urls: null,
 					staticSiteUrl: 'http://static.example.com',
-					sharedHtmlData: new Map(),
 					siteUrl: 'http://example.com',
 					processStaticSiteUrls: jest.fn(),
 					setStatusMessage: mockSetStatusMessage,
@@ -265,7 +256,6 @@ describe( 'uploadStaticFiles step', () => {
 					currentProviderInstance: { id: 'test:123' },
 					urls: 'not-an-array',
 					staticSiteUrl: 'http://static.example.com',
-					sharedHtmlData: new Map(),
 					siteUrl: 'http://example.com',
 					processStaticSiteUrls: jest.fn(),
 					setStatusMessage: mockSetStatusMessage,
@@ -281,7 +271,6 @@ describe( 'uploadStaticFiles step', () => {
 					currentProviderInstance: { id: 'test:123' },
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
-					sharedHtmlData: new Map(),
 					siteUrl: 'http://example.com',
 					processStaticSiteUrls: null,
 					setStatusMessage: mockSetStatusMessage,
@@ -304,7 +293,6 @@ describe( 'uploadStaticFiles step', () => {
 				'http://example.com/',
 				'http://example.com/about/',
 			];
-			const mockSharedHtmlData = new Map();
 
 			await handler( {
 				currentProviderInstance: {
@@ -313,7 +301,6 @@ describe( 'uploadStaticFiles step', () => {
 				},
 				urls: mockUrls,
 				staticSiteUrl: 'http://static.example.com',
-				sharedHtmlData: mockSharedHtmlData,
 				siteUrl: 'http://example.com',
 				processStaticSiteUrls: mockProcessStaticSiteUrls,
 				setStatusMessage: mockSetStatusMessage,
@@ -324,10 +311,7 @@ describe( 'uploadStaticFiles step', () => {
 				'http://static.example.com',
 				'test-provider:123',
 				'http://example.com',
-				mockSetStatusMessage,
-				null, // blueprintData
-				null, // removeMessage
-				mockSharedHtmlData
+				mockSetStatusMessage
 			);
 		} );
 
@@ -349,7 +333,6 @@ describe( 'uploadStaticFiles step', () => {
 				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com', // Global URL
-				sharedHtmlData: new Map(),
 				siteUrl: 'http://example.com',
 				processStaticSiteUrls: mockProcessStaticSiteUrls,
 				setStatusMessage: mockSetStatusMessage,
@@ -380,7 +363,6 @@ describe( 'uploadStaticFiles step', () => {
 				},
 				urls: originalUrls,
 				staticSiteUrl: 'http://static.example.com',
-				sharedHtmlData: new Map(),
 				siteUrl: 'http://example.com',
 				processStaticSiteUrls: mockProcessStaticSiteUrls,
 				setStatusMessage: mockSetStatusMessage,
@@ -419,7 +401,6 @@ describe( 'uploadStaticFiles step', () => {
 				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
-				sharedHtmlData: new Map(),
 				siteUrl: 'http://example.com',
 				processStaticSiteUrls: mockProcessStaticSiteUrls,
 				setStatusMessage: mockSetStatusMessage,
@@ -455,7 +436,6 @@ describe( 'uploadStaticFiles step', () => {
 				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
-				sharedHtmlData: new Map(),
 				siteUrl: 'http://example.com',
 				processStaticSiteUrls: mockProcessStaticSiteUrls,
 				setStatusMessage: mockSetStatusMessage,
@@ -492,7 +472,6 @@ describe( 'uploadStaticFiles step', () => {
 				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
-				sharedHtmlData: new Map(),
 				siteUrl: 'http://example.com',
 				processStaticSiteUrls: mockProcessStaticSiteUrls,
 				setStatusMessage: mockSetStatusMessage,
@@ -520,7 +499,6 @@ describe( 'uploadStaticFiles step', () => {
 				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
-				sharedHtmlData: new Map(),
 				siteUrl: 'http://example.com',
 				processStaticSiteUrls: mockProcessStaticSiteUrls,
 				setStatusMessage: mockSetStatusMessage,
@@ -558,7 +536,6 @@ describe( 'uploadStaticFiles step', () => {
 					},
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
-					sharedHtmlData: new Map(),
 					siteUrl: 'http://example.com',
 					processStaticSiteUrls: mockProcessStaticSiteUrls,
 					setStatusMessage: mockSetStatusMessage,
@@ -581,7 +558,6 @@ describe( 'uploadStaticFiles step', () => {
 					},
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
-					sharedHtmlData: new Map(),
 					siteUrl: 'http://example.com',
 					processStaticSiteUrls: mockProcessStaticSiteUrls,
 					setStatusMessage: mockSetStatusMessage,
@@ -604,7 +580,6 @@ describe( 'uploadStaticFiles step', () => {
 					},
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
-					sharedHtmlData: new Map(),
 					siteUrl: 'http://example.com',
 					processStaticSiteUrls: mockProcessStaticSiteUrls,
 					setStatusMessage: mockSetStatusMessage,
@@ -626,7 +601,6 @@ describe( 'uploadStaticFiles step', () => {
 					},
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
-					sharedHtmlData: new Map(),
 					siteUrl: 'http://example.com',
 					processStaticSiteUrls: mockProcessStaticSiteUrls,
 					setStatusMessage: mockSetStatusMessage,
@@ -654,7 +628,6 @@ describe( 'uploadStaticFiles step', () => {
 					},
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
-					sharedHtmlData: new Map(),
 					siteUrl: 'http://example.com',
 					processStaticSiteUrls: mockProcessStaticSiteUrls,
 					setStatusMessage: mockSetStatusMessage,
@@ -687,7 +660,6 @@ describe( 'uploadStaticFiles step', () => {
 					},
 					urls: [],
 					staticSiteUrl: 'http://static.example.com',
-					sharedHtmlData: new Map(),
 					siteUrl: 'http://example.com',
 					processStaticSiteUrls: mockProcessStaticSiteUrls,
 					setStatusMessage: mockSetStatusMessage,
@@ -706,7 +678,6 @@ describe( 'uploadStaticFiles step', () => {
 				currentProviderInstance: { id: 'test-provider:123' }, // No label
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
-				sharedHtmlData: new Map(),
 				siteUrl: 'http://example.com',
 				processStaticSiteUrls: mockProcessStaticSiteUrls,
 				setStatusMessage: mockSetStatusMessage,
@@ -714,34 +685,6 @@ describe( 'uploadStaticFiles step', () => {
 
 			expect( result.staticUploadResults.providerLabel ).toBe(
 				'test-provider:123'
-			);
-		} );
-
-		test( 'should pass blueprintData when available', async () => {
-			const mockProcessStaticSiteUrls = jest.fn().mockResolvedValue( {
-				success: true,
-				filesUploaded: 5,
-			} );
-			const mockSetStatusMessage = jest.fn();
-			const mockBlueprintData = { steps: [] };
-
-			await handler( {
-				currentProviderInstance: {
-					id: 'test-provider:123',
-					label: 'Test',
-				},
-				urls: [ 'http://example.com/' ],
-				staticSiteUrl: 'http://static.example.com',
-				sharedHtmlData: new Map(),
-				siteUrl: 'http://example.com',
-				processStaticSiteUrls: mockProcessStaticSiteUrls,
-				setStatusMessage: mockSetStatusMessage,
-				blueprintData: mockBlueprintData,
-			} );
-
-			// blueprintData is passed as the 6th argument
-			expect( mockProcessStaticSiteUrls.mock.calls[ 0 ][ 5 ] ).toEqual(
-				mockBlueprintData
 			);
 		} );
 
@@ -760,7 +703,6 @@ describe( 'uploadStaticFiles step', () => {
 				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
-				sharedHtmlData: new Map(),
 				siteUrl: 'http://example.com',
 				processStaticSiteUrls: mockProcessStaticSiteUrls,
 				setStatusMessage: mockSetStatusMessage,

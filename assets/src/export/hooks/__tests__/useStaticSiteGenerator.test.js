@@ -141,9 +141,9 @@ describe( 'useStaticSiteGenerator', () => {
 			} )
 		);
 
-		// Default mock for executePreScan with HTML data
+		// Default mock for executePreScan
 		executePreScan.mockResolvedValue( {
-			htmlData: mockCache,
+			htmlData: mockCache, // Still returned but obtained from IndexedDB internally
 			totalFilesToUpload: 1,
 			failures: { urlsFailed: 0, failedUrls: [] },
 		} );
@@ -172,8 +172,8 @@ describe( 'useStaticSiteGenerator', () => {
 			// Set up HTML data with at least one entry
 			const htmlDataWithEntries = new Map();
 			htmlDataWithEntries.set( 'https://example.com', {
-				html: '<html></html>',
-				assets: [],
+				rawHtml: '<html></html>',
+				assetUrls: [],
 			} );
 
 			executePreScan.mockResolvedValue( {
@@ -194,10 +194,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -222,10 +219,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -255,10 +249,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -290,10 +281,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -305,7 +293,6 @@ describe( 'useStaticSiteGenerator', () => {
 					static_files_path: 'static/',
 				} ),
 				setStatusMessage: mockSetStatusMessage,
-				htmlData: mockCache,
 			} );
 		} );
 
@@ -336,53 +323,12 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
 			// Pre-scan failures should be included in result
 			expect( resultData.failures ).toBeDefined();
-		} );
-
-		it( 'should use shared cache when provided', async () => {
-			// Use a real Map for shared cache with data
-			const sharedCache = new Map();
-			sharedCache.set( 'https://example.com', {
-				html: '<html></html>',
-				assets: [],
-			} );
-
-			executePreScan.mockResolvedValue( {
-				htmlData: sharedCache,
-				totalFilesToUpload: 1,
-				failures: { urlsFailed: 0, failedUrls: [] },
-			} );
-			prepareManifest.mockResolvedValue( {} );
-			uploadHtmlFile.mockResolvedValue( {} );
-
-			const { result } = renderHook( () =>
-				useStaticSiteGenerator( mockOnProgress )
-			);
-
-			await act( async () => {
-				await result.current(
-					[ 'https://example.com' ],
-					'https://static.example.com',
-					'provider-id',
-					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					sharedCache
-				);
-			} );
-
-			expect( executePreScan ).toHaveBeenCalledWith(
-				expect.objectContaining( { htmlData: sharedCache } )
-			);
 		} );
 	} );
 
@@ -405,10 +351,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -438,10 +381,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -499,10 +439,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -552,10 +489,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -595,10 +529,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -634,10 +565,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -683,10 +611,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -747,10 +672,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -803,10 +725,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -851,10 +770,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -885,10 +801,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -918,10 +831,7 @@ describe( 'useStaticSiteGenerator', () => {
 					'https://static.example.com',
 					'provider-id',
 					'https://example.com',
-					mockSetStatusMessage,
-					{},
-					null,
-					mockCache
+					mockSetStatusMessage
 				);
 			} );
 
@@ -958,10 +868,7 @@ describe( 'useStaticSiteGenerator', () => {
 						'https://static.example.com',
 						'provider-id',
 						'https://example.com',
-						mockSetStatusMessage,
-						{},
-						null,
-						emptyCache
+						mockSetStatusMessage
 					);
 				} )
 			).rejects.toThrow( 'No HTML data available for upload' );
@@ -983,10 +890,7 @@ describe( 'useStaticSiteGenerator', () => {
 						'https://static.example.com',
 						'provider-id',
 						'https://example.com',
-						mockSetStatusMessage,
-						{},
-						null,
-						mockCache
+						mockSetStatusMessage
 					);
 				} )
 			).rejects.toThrow();
@@ -1008,10 +912,7 @@ describe( 'useStaticSiteGenerator', () => {
 						'https://static.example.com',
 						'provider-id',
 						'https://example.com',
-						mockSetStatusMessage,
-						{},
-						null,
-						mockCache
+						mockSetStatusMessage
 					);
 				} )
 			).rejects.toThrow();

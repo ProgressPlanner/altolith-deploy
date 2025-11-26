@@ -8,11 +8,13 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from './assetExtractor';
+import { getStaticFilesCache } from './staticFilesCache';
 
 /**
  * Execute the pre-scan phase.
  *
  * Fetches all URLs and extracts assets.
+ * HTML data is read from IndexedDB cache (populated by preScanStaticSite step).
  *
  * @param {Object}   options                  Pre-scan options.
  * @param {Array}    options.urls             URLs to scan.
@@ -20,7 +22,6 @@ import { extractAssetsFromHtml } from './assetExtractor';
  * @param {string}   options.providerId       Provider ID.
  * @param {Object}   options.providerConfig   Provider configuration.
  * @param {Function} options.setStatusMessage Status message updater.
- * @param {Object}   options.htmlData         Optional HTML data storage.
  * @return {Promise<Object>} Pre-scan results.
  */
 export async function executePreScan( {
@@ -29,7 +30,6 @@ export async function executePreScan( {
 	providerId,
 	providerConfig,
 	setStatusMessage,
-	htmlData = null,
 } ) {
 	const failures = {
 		urlsFailed: 0,
@@ -52,8 +52,11 @@ export async function executePreScan( {
 		);
 	}
 
-	// Store HTML data if provided
-	const dataStorage = htmlData || new Map();
+	// Get IndexedDB cache (populated by preScanStaticSite step)
+	const cache = getStaticFilesCache();
+
+	// Local storage for this provider thread (deep cloned from cache)
+	const dataStorage = new Map();
 	const allUniqueAssets = new Set();
 	let successfulUrls = 0;
 
@@ -61,24 +64,22 @@ export async function executePreScan( {
 	for ( let i = 0; i < urls.length; i++ ) {
 		const url = urls[ i ];
 
-		// Check if URL is already in cache (from preScanStaticSite step)
-		const cachedEntry = dataStorage.get( url );
-		if ( cachedEntry ) {
-			// Use cached data - validate structure
-			if (
-				cachedEntry &&
-				typeof cachedEntry === 'object' &&
-				cachedEntry.rawHtml &&
-				Array.isArray( cachedEntry.assetUrls )
-			) {
-				successfulUrls++;
+		// Read from IndexedDB cache with deep cloning for thread isolation
+		const cachedEntry = await cache.getCloned( url );
+		if ( cachedEntry && cachedEntry.content && cachedEntry.assetUrls ) {
+			successfulUrls++;
 
-				// Add cached assets to unique set
-				for ( const assetUrl of cachedEntry.assetUrls ) {
-					allUniqueAssets.add( assetUrl );
-				}
-				continue;
+			// Store cloned data in local Map for this provider
+			dataStorage.set( url, {
+				rawHtml: cachedEntry.content,
+				assetUrls: cachedEntry.assetUrls,
+			} );
+
+			// Add cached assets to unique set
+			for ( const assetUrl of cachedEntry.assetUrls ) {
+				allUniqueAssets.add( assetUrl );
 			}
+			continue;
 		}
 
 		// URL not in cache - this might be an asset URL (CSS, JS, image, etc.)
@@ -118,7 +119,7 @@ export async function executePreScan( {
 			// Extract assets
 			const assetUrls = await extractAssetsFromHtml( html, url, siteUrl );
 
-			// Store HTML and assets in provided data structure
+			// Store HTML and assets in local data structure
 			dataStorage.set( url, { rawHtml: html, assetUrls } );
 			successfulUrls++;
 

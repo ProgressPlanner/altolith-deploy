@@ -36,9 +36,10 @@ jest.mock( '@aether/export/utils/linkExtractor', () => ( {
 // Mock static files cache
 jest.mock( '@aether/export/utils/staticFilesCache', () => ( {
 	getStaticFilesCache: jest.fn( () => ( {
-		add: jest.fn( async () => true ),
+		addHtmlWithAssets: jest.fn( async () => true ),
 		has: jest.fn( async () => false ),
 		get: jest.fn( async () => null ),
+		getCloned: jest.fn( async () => null ),
 	} ) ),
 } ) );
 
@@ -152,10 +153,6 @@ describe( 'preScanStaticSite step', () => {
 
 		test( 'should provide expanded urls', () => {
 			expect( stepDefinition.provides.urls.type ).toBe( 'array' );
-		} );
-
-		test( 'should provide sharedHtmlData', () => {
-			expect( stepDefinition.provides.sharedHtmlData.type ).toBe( 'Map' );
 		} );
 	} );
 
@@ -340,38 +337,6 @@ describe( 'preScanStaticSite step', () => {
 			const result = await stepHandler( mockContext );
 
 			expect( result.assetCount ).toBe( 2 );
-		} );
-
-		test( 'should return sharedHtmlData Map', async () => {
-			const result = await stepHandler( mockContext );
-
-			expect( result.sharedHtmlData ).toBeInstanceOf( Map );
-		} );
-
-		test( 'should store HTML content in sharedHtmlData', async () => {
-			const result = await stepHandler( mockContext );
-
-			// URLs are normalized (trailing slash removed)
-			const cachedData = result.sharedHtmlData.get(
-				'https://example.com'
-			);
-			expect( cachedData ).toBeDefined();
-			expect( cachedData.rawHtml ).toBe(
-				'<html><body>Test</body></html>'
-			);
-		} );
-
-		test( 'should store asset URLs in sharedHtmlData', async () => {
-			const result = await stepHandler( mockContext );
-
-			// URLs are normalized (trailing slash removed)
-			const cachedData = result.sharedHtmlData.get(
-				'https://example.com'
-			);
-			expect( cachedData.assetUrls ).toEqual( [
-				'https://example.com/style.css',
-				'https://example.com/script.js',
-			] );
 		} );
 	} );
 } );

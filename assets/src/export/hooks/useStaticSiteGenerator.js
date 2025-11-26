@@ -44,10 +44,7 @@ export function useStaticSiteGenerator( onProgress ) {
 			staticSiteUrl,
 			staticSiteProviderId,
 			siteUrl,
-			setStatusMessage,
-			blueprintData,
-			removeMessage = null,
-			cache = null
+			setStatusMessage
 		) => {
 			// Validate provider ID is provided
 			// CRITICAL: In multi-instance threading, each thread MUST use its own provider ID
@@ -88,14 +85,13 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			const totalUrls = urls.length;
 
-			// PHASE 1: Pre-scan all URLs (use shared HTML data if provided)
+			// PHASE 1: Pre-scan all URLs (reads from IndexedDB cache)
 			const preScanResult = await executePreScan( {
 				urls,
 				siteUrl,
 				providerId: staticSiteProviderId,
 				providerConfig,
 				setStatusMessage,
-				htmlData: cache,
 			} );
 
 			const { htmlData: sharedHtmlData, totalFilesToUpload } =
@@ -257,9 +253,6 @@ export function useStaticSiteGenerator( onProgress ) {
 				}
 			}
 
-			// Note: HTML data cleanup is handled at the workflow level (uploadStaticFiles step)
-			// to ensure it happens once for all providers, not per provider
-
 			// Finalize manifest
 			await finalizeManifest(
 				storageService,
@@ -268,11 +261,6 @@ export function useStaticSiteGenerator( onProgress ) {
 				staticSiteProviderId,
 				setStatusMessage
 			);
-
-			// Remove progress message
-			if ( removeMessage ) {
-				removeMessage( 'uploadFilesProgress' );
-			}
 
 			// Fire completion action
 			doAction(

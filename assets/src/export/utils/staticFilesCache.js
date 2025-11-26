@@ -126,6 +126,46 @@ class StaticFilesCache {
 	}
 
 	/**
+	 * Add HTML content with extracted asset URLs
+	 *
+	 * @param {string}   url       - The normalized URL
+	 * @param {string}   content   - The HTML content
+	 * @param {string[]} assetUrls - Array of asset URLs extracted from HTML
+	 * @return {Promise<boolean>} True if successful
+	 */
+	async addHtmlWithAssets( url, content, assetUrls ) {
+		return await this.store.set( url, {
+			url,
+			mimeType: 'text/html',
+			content,
+			assetUrls,
+		} );
+	}
+
+	/**
+	 * Get cached data for a URL with deep cloning for thread isolation
+	 *
+	 * Returns a deep clone of the cached data to ensure each provider
+	 * thread gets its own independent copy with no shared references.
+	 *
+	 * @param {string} url - The URL to retrieve
+	 * @return {Promise<Object|null>} Cloned cached entry or null
+	 */
+	async getCloned( url ) {
+		const entry = await this.store.get( url );
+		if ( ! entry ) {
+			return null;
+		}
+
+		return {
+			url: entry.url,
+			mimeType: entry.mimeType,
+			content: entry.content,
+			assetUrls: entry.assetUrls ? [ ...entry.assetUrls ] : null,
+		};
+	}
+
+	/**
 	 * Clear all cached data
 	 *
 	 * @return {Promise<boolean>} True if successful

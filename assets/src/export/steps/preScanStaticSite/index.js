@@ -55,7 +55,6 @@ async function handler( context ) {
 	);
 	const processedUrls = new Set();
 	const pendingUrls = [ ...urls ];
-	const sharedHtmlData = new Map();
 	const allAssets = new Set();
 
 	let processedCount = 0;
@@ -120,14 +119,14 @@ async function handler( context ) {
 
 			const html = await response.text();
 
-			// Add to IndexedDB cache for persistence
-			await cache.add( normalizedUrl, contentType, html );
-
 			// Extract assets from HTML (CSS, JS, images, fonts)
 			const assets = await extractAssetsFromHtml( html, url, siteUrl );
 			for ( const asset of assets ) {
 				allAssets.add( asset );
 			}
+
+			// Store HTML and assets in IndexedDB cache
+			await cache.addHtmlWithAssets( normalizedUrl, html, assets );
 
 			// Extract internal links for crawl-based discovery
 			// This also captures pagination links (/page/2/, /page/3/, etc.)
@@ -147,12 +146,6 @@ async function handler( context ) {
 					pendingUrls.push( link );
 				}
 			}
-
-			// Store HTML and assets in shared cache for later use
-			sharedHtmlData.set( normalizedUrl, {
-				rawHtml: html,
-				assetUrls: assets,
-			} );
 		} catch ( error ) {
 			// Continue on fetch errors
 		}
@@ -172,12 +165,10 @@ async function handler( context ) {
 		'preScanStaticSite'
 	);
 
-	// Return expanded URL list and shared HTML cache
 	return {
 		urls: expandedUrls,
 		htmlCount: processedUrls.size,
 		assetCount: allAssets.size,
-		sharedHtmlData,
 	};
 }
 
@@ -222,10 +213,6 @@ const stepDefinition = {
 		},
 		assetCount: {
 			type: 'number',
-			scope: 'global',
-		},
-		sharedHtmlData: {
-			type: 'Map',
 			scope: 'global',
 		},
 	},
