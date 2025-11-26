@@ -6,8 +6,30 @@
  * @since 1.0.0
  */
 
-import { __, sprintf } from '@wordpress/i18n';
+import { __, sprintf, _n } from '@wordpress/i18n';
 import { addAction } from '@wordpress/hooks';
+
+/**
+ * Status labels for the step
+ */
+const statusLabels = {
+	pending: __( 'Get seed URLs', 'aether-site-exporter' ),
+	running: () =>
+		__( 'Fetching seed URLs from WordPress…', 'aether-site-exporter' ),
+	complete: ( data ) => {
+		const { urlsCount = 0 } = data;
+		return sprintf(
+			/* translators: %d: Number of seed URLs */
+			_n(
+				'Found %d seed URL to crawl',
+				'Found %d seed URLs to crawl',
+				urlsCount,
+				'aether-site-exporter'
+			),
+			urlsCount
+		);
+	},
+};
 
 /**
  * Get static site URLs step handler
@@ -16,10 +38,11 @@ import { addAction } from '@wordpress/hooks';
  * @param {Object}   context.api              - PublishAPI instance
  * @param {string}   context.siteUrl          - WordPress site URL
  * @param {Function} context.setStatusMessage - Status message updater
+ * @param {Function} context.setStepProgress  - Step progress updater
  * @return {Promise<Object>} Step result with discovered URLs
  */
 async function handler( context ) {
-	const { api, siteUrl, setStatusMessage } = context;
+	const { api, siteUrl, setStatusMessage, setStepProgress } = context;
 
 	setStatusMessage(
 		__( 'Discovering URLs for static site…', 'aether-site-exporter' ),
@@ -52,6 +75,17 @@ async function handler( context ) {
 	const urls = urlResponse.urls || [];
 	const staticSiteUrl = urlResponse.staticSiteUrl || siteUrl;
 	const urlsCount = urls.length;
+
+	// Update progress with statusData for dynamic label
+	if ( setStepProgress ) {
+		setStepProgress( 'getStaticSiteUrls', {
+			current: 1,
+			total: 1,
+			statusData: {
+				urlsCount,
+			},
+		} );
+	}
 
 	setStatusMessage(
 		sprintf(
@@ -99,6 +133,10 @@ const stepDefinition = {
 			from: 'initial',
 			required: true,
 		},
+		setStepProgress: {
+			from: 'initial',
+			required: false,
+		},
 	},
 	provides: {
 		urls: {
@@ -114,6 +152,7 @@ const stepDefinition = {
 			scope: 'global',
 		},
 	},
+	statusLabels,
 	handler,
 };
 

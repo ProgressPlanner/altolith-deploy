@@ -12,6 +12,25 @@ import { addAction, applyFilters } from '@wordpress/hooks';
 import { formatFileSize } from '../../utils/helpers';
 
 /**
+ * Status labels for the step
+ */
+const statusLabels = {
+	pending: __( 'Create archive', 'aether-site-exporter' ),
+	running: () => __( 'Creating wp-content archive…', 'aether-site-exporter' ),
+	complete: ( data ) => {
+		const { zipSizeFormatted = '' } = data;
+		if ( ! zipSizeFormatted ) {
+			return __( 'Created wp-content archive', 'aether-site-exporter' );
+		}
+		return sprintf(
+			/* translators: %s: File size */
+			__( 'Created archive (%s)', 'aether-site-exporter' ),
+			zipSizeFormatted
+		);
+	},
+};
+
+/**
  * Create wp-content archive step handler
  *
  * @param {Object}   context                  - Execution context
@@ -19,6 +38,7 @@ import { formatFileSize } from '../../utils/helpers';
  * @param {Object}   context.assetManager     - Asset manager instance
  * @param {Array}    context.discoveredAssets - Discovered assets from discoverBlueprintBundleAssets step
  * @param {Function} context.setStatusMessage - Status message updater
+ * @param {Function} context.setStepProgress  - Step progress updater
  * @return {Promise<Object>} Step result with archive info
  */
 async function handler( context ) {
@@ -27,6 +47,7 @@ async function handler( context ) {
 		assetManager,
 		discoveredAssets = [],
 		setStatusMessage,
+		setStepProgress,
 	} = context;
 
 	setStatusMessage(
@@ -60,6 +81,17 @@ async function handler( context ) {
 
 	const { zipPath, zipUrl, zipSize } = archiveResponse;
 	const sizeFormatted = formatFileSize( zipSize || 0 );
+
+	// Update progress with statusData for dynamic label
+	if ( setStepProgress ) {
+		setStepProgress( 'createWpContentArchive', {
+			current: 1,
+			total: 1,
+			statusData: {
+				zipSizeFormatted: sizeFormatted,
+			},
+		} );
+	}
 
 	// Update asset manager if provided and method exists
 	if (
@@ -113,6 +145,10 @@ const stepDefinition = {
 			from: 'initial',
 			required: true,
 		},
+		setStepProgress: {
+			from: 'initial',
+			required: false,
+		},
 		assetManager: {
 			from: 'initial',
 			required: false,
@@ -132,6 +168,7 @@ const stepDefinition = {
 			scope: 'global',
 		},
 	},
+	statusLabels,
 	handler,
 };
 

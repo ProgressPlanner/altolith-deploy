@@ -11,6 +11,25 @@ import { addAction, applyFilters } from '@wordpress/hooks';
 import { formatFileSize } from '../../utils/helpers';
 
 /**
+ * Status labels for the step
+ */
+const statusLabels = {
+	pending: __( 'Create blueprint', 'aether-site-exporter' ),
+	running: () => __( 'Creating blueprint bundle…', 'aether-site-exporter' ),
+	complete: ( data ) => {
+		const { bundleSizeFormatted = '' } = data;
+		if ( ! bundleSizeFormatted ) {
+			return __( 'Created blueprint bundle', 'aether-site-exporter' );
+		}
+		return sprintf(
+			/* translators: %s: File size */
+			__( 'Created blueprint (%s)', 'aether-site-exporter' ),
+			bundleSizeFormatted
+		);
+	},
+};
+
+/**
  * Create blueprint bundle step handler
  *
  * @param {Object}   context                       - Execution context
@@ -20,6 +39,7 @@ import { formatFileSize } from '../../utils/helpers';
  * @param {string}   context.zipUrl                - URL to wp-content.zip
  * @param {Array}    context.discoveredAssets      - Discovered assets
  * @param {Function} context.setStatusMessage      - Status message updater
+ * @param {Function} context.setStepProgress       - Step progress updater
  * @return {Promise<Object>} Step result with blueprint bundle info
  */
 async function handler( context ) {
@@ -30,6 +50,7 @@ async function handler( context ) {
 		zipUrl,
 		discoveredAssets = [],
 		setStatusMessage,
+		setStepProgress,
 	} = context;
 
 	setStatusMessage(
@@ -99,6 +120,17 @@ async function handler( context ) {
 	const { bundlePath, bundleUrl, bundleSize } = bundleResponse;
 	const sizeFormatted = formatFileSize( bundleSize || 0 );
 
+	// Update progress with statusData for dynamic label
+	if ( setStepProgress ) {
+		setStepProgress( 'createBlueprintBundle', {
+			current: 1,
+			total: 1,
+			statusData: {
+				bundleSizeFormatted: sizeFormatted,
+			},
+		} );
+	}
+
 	setStatusMessage(
 		sprintf(
 			/* translators: %s: File size */
@@ -154,6 +186,10 @@ const stepDefinition = {
 			from: 'initial',
 			required: true,
 		},
+		setStepProgress: {
+			from: 'initial',
+			required: false,
+		},
 	},
 	provides: {
 		blueprintData: {
@@ -165,6 +201,7 @@ const stepDefinition = {
 			scope: 'global',
 		},
 	},
+	statusLabels,
 	handler,
 };
 

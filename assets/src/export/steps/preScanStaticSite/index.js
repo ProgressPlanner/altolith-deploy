@@ -7,12 +7,54 @@
  * @since 1.0.0
  */
 
-import { __, sprintf } from '@wordpress/i18n';
+import { __, sprintf, _n } from '@wordpress/i18n';
 import { addAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from '@aether/export/utils/assetExtractor';
 import { extractInternalLinks } from '@aether/export/utils/linkExtractor';
 import { normalize } from '@aether/export/utils/urlUtils';
 import { getStaticFilesCache } from '@aether/export/utils/staticFilesCache';
+
+/**
+ * Status labels for the step
+ */
+const statusLabels = {
+	pending: __( 'Scan site', 'aether-site-exporter' ),
+	running: ( data ) => {
+		const { pagesScanned = 0, pagesDiscovered = 0, assetsFound = 0 } = data;
+		if ( pagesScanned === 0 ) {
+			return __( 'Starting site scan…', 'aether-site-exporter' );
+		}
+		return sprintf(
+			/* translators: %1$d: Pages scanned, %2$d: Pages discovered, %3$d: Assets found */
+			__(
+				'Scanning… %1$d pages scanned, %2$d discovered, %3$d assets',
+				'aether-site-exporter'
+			),
+			pagesScanned,
+			pagesDiscovered,
+			assetsFound
+		);
+	},
+	complete: ( data ) => {
+		const { htmlCount = 0, assetCount = 0 } = data;
+		const pagesText = sprintf(
+			/* translators: %d: Number of pages */
+			_n( '%d page', '%d pages', htmlCount, 'aether-site-exporter' ),
+			htmlCount
+		);
+		const assetsText = sprintf(
+			/* translators: %d: Number of assets */
+			_n( '%d asset', '%d assets', assetCount, 'aether-site-exporter' ),
+			assetCount
+		);
+		return sprintf(
+			/* translators: %1$s: Pages text, %2$s: Assets text */
+			__( 'Scanned %1$s, found %2$s', 'aether-site-exporter' ),
+			pagesText,
+			assetsText
+		);
+	},
+};
 
 /**
  * Pre-scan static site step handler
@@ -40,6 +82,18 @@ async function handler( context ) {
 		);
 	}
 
+	// Debug: Log input
+	console.log(
+		'[Aether] preScanStaticSite: Starting with',
+		urls.length,
+		'URLs'
+	);
+	console.log( '[Aether] preScanStaticSite: siteUrl =', siteUrl );
+	console.log(
+		'[Aether] preScanStaticSite: First 3 URLs:',
+		urls.slice( 0, 3 )
+	);
+
 	setStatusMessage(
 		__( 'Scanning pages and discovering links…', 'aether-site-exporter' ),
 		'progress',
@@ -48,6 +102,7 @@ async function handler( context ) {
 
 	// Get the static files cache for storing discovered URLs
 	const cache = getStaticFilesCache();
+	console.log( '[Aether] preScanStaticSite: Got cache instance:', cache );
 
 	// Track all URLs
 	const discoveredUrls = new Set(
@@ -56,6 +111,15 @@ async function handler( context ) {
 	const processedUrls = new Set();
 	const pendingUrls = [ ...urls ];
 	const allAssets = new Set();
+
+	console.log(
+		'[Aether] preScanStaticSite: pendingUrls.length =',
+		pendingUrls.length
+	);
+	console.log(
+		'[Aether] preScanStaticSite: discoveredUrls.size =',
+		discoveredUrls.size
+	);
 
 	let processedCount = 0;
 
@@ -72,12 +136,16 @@ async function handler( context ) {
 		processedUrls.add( normalizedUrl );
 		processedCount++;
 
-		// Update progress
+		// Update progress with statusData for dynamic label
 		if ( setStepProgress ) {
 			setStepProgress( 'preScanStaticSite', {
 				current: processedCount,
 				total: discoveredUrls.size,
-				pending: pendingUrls.length,
+				statusData: {
+					pagesScanned: processedCount,
+					pagesDiscovered: discoveredUrls.size,
+					assetsFound: allAssets.size,
+				},
 			} );
 		}
 
@@ -147,12 +215,28 @@ async function handler( context ) {
 				}
 			}
 		} catch ( error ) {
-			// Continue on fetch errors
+			// Log error for debugging, then continue
+			console.error(
+				`[Aether] preScanStaticSite: Failed to process ${ url }:`,
+				error.message
+			);
 		}
 	}
 
 	// Combine processed page URLs with discovered assets
 	const expandedUrls = [ ...processedUrls, ...allAssets ];
+
+	// Final progress update with complete statusData
+	if ( setStepProgress ) {
+		setStepProgress( 'preScanStaticSite', {
+			current: processedUrls.size,
+			total: processedUrls.size,
+			statusData: {
+				htmlCount: processedUrls.size,
+				assetCount: allAssets.size,
+			},
+		} );
+	}
 
 	setStatusMessage(
 		sprintf(
@@ -216,6 +300,7 @@ const stepDefinition = {
 			scope: 'global',
 		},
 	},
+	statusLabels,
 	handler,
 };
 

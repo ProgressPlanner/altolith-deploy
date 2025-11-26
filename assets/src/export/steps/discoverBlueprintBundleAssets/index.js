@@ -11,15 +11,86 @@ import { __, sprintf, _n } from '@wordpress/i18n';
 import { addAction } from '@wordpress/hooks';
 
 /**
+ * Build a human-readable description of discovered assets
+ *
+ * @param {number} customPlugins Number of custom plugins
+ * @param {number} customThemes  Number of custom themes
+ * @return {string} Human-readable description
+ */
+function buildAssetDescription( customPlugins, customThemes ) {
+	const parts = [];
+
+	if ( customPlugins > 0 ) {
+		parts.push(
+			sprintf(
+				/* translators: %d: Number of custom plugins */
+				_n(
+					'%d custom plugin',
+					'%d custom plugins',
+					customPlugins,
+					'aether-site-exporter'
+				),
+				customPlugins
+			)
+		);
+	}
+
+	if ( customThemes > 0 ) {
+		parts.push(
+			sprintf(
+				/* translators: %d: Number of custom themes */
+				_n(
+					'%d custom theme',
+					'%d custom themes',
+					customThemes,
+					'aether-site-exporter'
+				),
+				customThemes
+			)
+		);
+	}
+
+	if ( parts.length === 0 ) {
+		return __( 'no custom assets', 'aether-site-exporter' );
+	}
+
+	return parts.join( __( ' and ', 'aether-site-exporter' ) );
+}
+
+/**
+ * Status labels for the step
+ */
+const statusLabels = {
+	pending: __( 'Discover assets', 'aether-site-exporter' ),
+	running: () =>
+		__( 'Discovering plugins and themes…', 'aether-site-exporter' ),
+	complete: ( data ) => {
+		const { customPlugins = 0, customThemes = 0 } = data;
+		if ( customPlugins === 0 && customThemes === 0 ) {
+			return __(
+				'No custom plugins or themes to include',
+				'aether-site-exporter'
+			);
+		}
+		return sprintf(
+			/* translators: %s: Description of discovered assets */
+			__( 'Discovered %s', 'aether-site-exporter' ),
+			buildAssetDescription( customPlugins, customThemes )
+		);
+	},
+};
+
+/**
  * Discover blueprint bundle assets step handler
  *
  * @param {Object}   context                  - Execution context
  * @param {Object}   context.api              - PublishAPI instance
  * @param {Function} context.setStatusMessage - Status message updater
+ * @param {Function} context.setStepProgress  - Step progress updater
  * @return {Promise<Object>} Step result with discovered assets
  */
 async function handler( context ) {
-	const { api, setStatusMessage } = context;
+	const { api, setStatusMessage, setStepProgress } = context;
 
 	setStatusMessage(
 		__( 'Discovering plugins and themes…', 'aether-site-exporter' ),
@@ -41,72 +112,37 @@ async function handler( context ) {
 	const plugins = assets.filter( ( a ) => a.type === 'plugin' );
 	const themes = assets.filter( ( a ) => a.type === 'theme' );
 
-	// Build success message
-	let message;
-	if ( assets.length === 0 ) {
-		message = __(
-			'Discovered 0 active custom plugins/themes',
-			'aether-site-exporter'
-		);
-	} else {
-		const parts = [];
-		if ( plugins.length > 0 ) {
-			const pluginText =
-				plugins.length === 1
-					? sprintf(
-							/* translators: %s: Plugin slug */
-							__(
-								'1 active custom plugin (%s)',
-								'aether-site-exporter'
-							),
-							plugins[ 0 ].slug
-					  )
-					: sprintf(
-							/* translators: %1$d: Number of plugins, %2$s: Comma-separated plugin slugs */
-							_n(
-								'%1$d active custom plugin (%2$s)',
-								'%1$d active custom plugins (%2$s)',
-								plugins.length,
-								'aether-site-exporter'
-							),
-							plugins.length,
-							plugins.map( ( p ) => p.slug ).join( ', ' )
-					  );
-			parts.push( pluginText );
-		}
-		if ( themes.length > 0 ) {
-			const themeText =
-				themes.length === 1
-					? sprintf(
-							/* translators: %s: Theme slug */
-							__(
-								'1 active custom theme (%s)',
-								'aether-site-exporter'
-							),
-							themes[ 0 ].slug
-					  )
-					: sprintf(
-							/* translators: %1$d: Number of themes, %2$s: Comma-separated theme slugs */
-							_n(
-								'%1$d active custom theme (%2$s)',
-								'%1$d active custom themes (%2$s)',
-								themes.length,
-								'aether-site-exporter'
-							),
-							themes.length,
-							themes.map( ( t ) => t.slug ).join( ', ' )
-					  );
-			parts.push( themeText );
-		}
-		message = sprintf(
-			/* translators: %s: Discovered assets description */
-			__(
-				'Discovered %s. These will be included in the blueprint bundle.',
-				'aether-site-exporter'
-			),
-			parts.join( __( ' and ', 'aether-site-exporter' ) )
-		);
+	// Update progress with statusData for dynamic label
+	if ( setStepProgress ) {
+		setStepProgress( 'discoverBlueprintBundleAssets', {
+			current: 1,
+			total: 1,
+			statusData: {
+				customPlugins: plugins.length,
+				customThemes: themes.length,
+			},
+		} );
 	}
+
+	// Build success message
+	const assetDescription = buildAssetDescription(
+		plugins.length,
+		themes.length
+	);
+	const message =
+		plugins.length === 0 && themes.length === 0
+			? __(
+					'No custom plugins or themes to include',
+					'aether-site-exporter'
+			  )
+			: sprintf(
+					/* translators: %s: Discovered assets description */
+					__(
+						'Discovered %s for blueprint bundle',
+						'aether-site-exporter'
+					),
+					assetDescription
+			  );
 
 	setStatusMessage( message, 'success', 'discoverBlueprintBundleAssets' );
 
@@ -137,6 +173,10 @@ const stepDefinition = {
 			from: 'initial',
 			required: true,
 		},
+		setStepProgress: {
+			from: 'initial',
+			required: false,
+		},
 	},
 	provides: {
 		discoveredAssets: {
@@ -144,6 +184,7 @@ const stepDefinition = {
 			scope: 'global',
 		},
 	},
+	statusLabels,
 	handler,
 };
 
