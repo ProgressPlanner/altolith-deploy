@@ -51,19 +51,19 @@ export function shouldCollectAsset( url, siteUrl, source = 'css' ) {
 	// Get file extension
 	const extension = getExtensionFromUrl( url );
 
-	// PRIORITY 1: Always collect essential assets (CSS, JS, fonts) EVEN IF EXTERNAL
-	if ( isEssentialExtension( extension ) ) {
-		return true;
-	}
-
-	// FILTER 1 & 2: Skip excluded URL patterns
+	// FILTER 1: Skip excluded URL patterns
 	if ( isExcludedUrl( url ) ) {
 		return false;
 	}
 
-	// FILTER 3: Skip external URLs for non-essential assets
+	// FILTER 2: Skip external URLs - can't fetch due to CORS, keep original URLs in HTML
 	if ( isExternal( url, siteUrl ) ) {
 		return false;
+	}
+
+	// PRIORITY 1: Collect essential assets (CSS, JS, fonts) if they are internal
+	if ( isEssentialExtension( extension ) ) {
+		return true;
 	}
 
 	// PRIORITY 2: Collect images when referenced in HTML (internal URLs only)
@@ -71,12 +71,12 @@ export function shouldCollectAsset( url, siteUrl, source = 'css' ) {
 		return true;
 	}
 
-	// FILTER 4: Skip image files when found in CSS/JS
+	// FILTER 3: Skip image files when found in CSS/JS
 	if ( isSkippedExtension( extension ) ) {
 		return false;
 	}
 
-	// FILTER 5: Skip HTML page URLs (no extension) when found in HTML
+	// FILTER 4: Skip HTML page URLs (no extension) when found in HTML
 	// These are internal page links, not assets - they should NOT be collected
 	// as assets because they would be uploaded without URL rewriting
 	if ( source === 'html' && ! extension ) {

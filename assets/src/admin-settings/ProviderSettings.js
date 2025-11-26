@@ -12,6 +12,8 @@ import { Button, ButtonGroup } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
 import ProviderInstancesContainer from '@aether/components/ProviderInstancesContainer';
 import AddProviderInstanceModal from '@aether/components/AddProviderInstanceModal';
+import ExportConfigModal from '@aether/components/ExportConfigModal';
+import ImportConfigModal from '@aether/components/ImportConfigModal';
 import LoadingSpinner from '@aether/components/LoadingSpinner';
 import { colors, spacing, fontSize, commonStyles } from '@aether/utils/styles';
 import { useProviderSettings } from '@aether/hooks/useProviderSettings';
@@ -45,6 +47,8 @@ export default function ProviderSettings( {
 	const [ providers, setProviders ] = useState( [] );
 	const [ selectedDeploymentType, setSelectedDeploymentType ] =
 		useState( null );
+	const [ isExportModalOpen, setIsExportModalOpen ] = useState( false );
+	const [ isImportModalOpen, setIsImportModalOpen ] = useState( false );
 
 	// Local state for optimistic updates
 	const [ localConfigs, setLocalConfigs ] = useState( providerConfigs );
@@ -396,6 +400,43 @@ export default function ProviderSettings( {
 		[ localConfigs, onConfigsUpdate, onNotice ]
 	);
 
+	const handleImportConfigs = useCallback(
+		async ( mergedConfigs ) => {
+			try {
+				const response = await apiFetch( {
+					path: '/aether/site-exporter/settings',
+					method: 'POST',
+					data: { key: 'providers', value: mergedConfigs },
+				} );
+
+				if ( ! response.success ) {
+					throw new Error( response.message || 'Import failed' );
+				}
+
+				// Update local and parent state
+				setLocalConfigs( mergedConfigs );
+				if ( onConfigsUpdate ) {
+					onConfigsUpdate( mergedConfigs );
+				}
+
+				// Show success notification
+				if ( onNotice ) {
+					onNotice(
+						__(
+							'Configuration imported successfully',
+							'aether-site-exporter'
+						),
+						'success'
+					);
+				}
+			} catch ( error ) {
+				// Re-throw to show error in modal
+				throw error;
+			}
+		},
+		[ onConfigsUpdate, onNotice ]
+	);
+
 	if ( providers.length === 0 ) {
 		return (
 			<div className="aether-provider-settings aether-provider-settings--loading">
@@ -470,6 +511,23 @@ export default function ProviderSettings( {
 							</Button>
 						) ) }
 					</ButtonGroup>
+					<ButtonGroup style={ { marginLeft: spacing.md } }>
+						<Button
+							className="aether-provider-settings__export-button"
+							variant="tertiary"
+							onClick={ () => setIsExportModalOpen( true ) }
+							disabled={ Object.keys( configs ).length === 0 }
+						>
+							{ __( 'Export Config', 'aether-site-exporter' ) }
+						</Button>
+						<Button
+							className="aether-provider-settings__import-button"
+							variant="tertiary"
+							onClick={ () => setIsImportModalOpen( true ) }
+						>
+							{ __( 'Import Config', 'aether-site-exporter' ) }
+						</Button>
+					</ButtonGroup>
 				</div>
 			</div>
 
@@ -506,6 +564,22 @@ export default function ProviderSettings( {
 				}
 				deploymentType={ selectedDeploymentType }
 				onCreate={ handleCreateInstanceConfirm }
+			/>
+
+			{ /* Export Config Modal */ }
+			<ExportConfigModal
+				isOpen={ isExportModalOpen }
+				onClose={ () => setIsExportModalOpen( false ) }
+				providerConfigs={ configs }
+				providers={ providers }
+			/>
+
+			{ /* Import Config Modal */ }
+			<ImportConfigModal
+				isOpen={ isImportModalOpen }
+				onClose={ () => setIsImportModalOpen( false ) }
+				existingConfigs={ configs }
+				onImport={ handleImportConfigs }
 			/>
 		</div>
 	);

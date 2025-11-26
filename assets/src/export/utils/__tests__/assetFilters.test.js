@@ -87,19 +87,21 @@ describe( 'assetFilters', () => {
 				).toBe( true );
 			} );
 
-			test( 'should collect essential external assets', () => {
+			test( 'should skip external essential assets (CORS prevents fetching)', () => {
+				// External assets cannot be fetched due to CORS restrictions
+				// They should keep their original URLs in the HTML
 				expect(
 					shouldCollectAsset(
 						'https://cdn.example.org/lib.js',
 						siteUrl
 					)
-				).toBe( true );
+				).toBe( false );
 				expect(
 					shouldCollectAsset(
 						'https://fonts.googleapis.com/font.woff2',
 						siteUrl
 					)
-				).toBe( true );
+				).toBe( false );
 			} );
 		} );
 

@@ -56,7 +56,8 @@ export function buildUploadResult(
 	totalUrls
 ) {
 	return {
-		success: failures.urlsFailed === 0,
+		// Success if we uploaded files - asset failures shouldn't fail the entire export
+		success: filesUploaded > 0,
 		urlsProcessed: totalUrls,
 		urlsSucceeded: failures.urlsSucceeded,
 		urlsFailed: failures.urlsFailed,

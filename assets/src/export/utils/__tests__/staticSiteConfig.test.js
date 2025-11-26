@@ -112,7 +112,10 @@ describe( 'staticSiteConfig', () => {
 			expect( result.totalFilesToUpload ).toBe( 360 );
 		} );
 
-		test( 'should build failed result when there are failures', () => {
+		test( 'should succeed when files uploaded even with some asset failures', () => {
+			// Success is based on filesUploaded > 0, not zero failures
+			// This is intentional - external assets failing due to CORS should not
+			// fail the entire export when files were successfully uploaded
 			const failures = {
 				urlsFailed: 3,
 				urlsSucceeded: 97,
@@ -125,17 +128,41 @@ describe( 'staticSiteConfig', () => {
 			const result = buildUploadResult(
 				failures,
 				mockAssetTracker,
-				295,
+				295, // filesUploaded > 0, so success should be true
 				5,
 				300,
 				[],
 				100
 			);
 
-			expect( result.success ).toBe( false );
+			expect( result.success ).toBe( true ); // Success based on files uploaded
 			expect( result.urlsFailed ).toBe( 3 );
 			expect( result.assetsFailed ).toBe( 2 );
 			expect( result.failedUrls ).toHaveLength( 3 );
+		} );
+
+		test( 'should fail when no files were uploaded', () => {
+			const failures = {
+				urlsFailed: 10,
+				urlsSucceeded: 0,
+				assetsFailed: 5,
+				failedUrls: [ '/error1', '/error2' ],
+			};
+
+			const mockAssetTracker = { getCount: () => 0 };
+
+			const result = buildUploadResult(
+				failures,
+				mockAssetTracker,
+				0, // filesUploaded = 0, so success should be false
+				0,
+				10,
+				[],
+				10
+			);
+
+			expect( result.success ).toBe( false ); // No files uploaded = failure
+			expect( result.urlsFailed ).toBe( 10 );
 		} );
 
 		test( 'should include uploadedFiles array', () => {
