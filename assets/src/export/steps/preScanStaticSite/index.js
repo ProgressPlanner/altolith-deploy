@@ -12,6 +12,7 @@ import { addAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from '@aether/export/utils/assetExtractor';
 import { extractInternalLinks } from '@aether/export/utils/linkExtractor';
 import { normalize } from '@aether/export/utils/urlUtils';
+import { getStaticFilesCache } from '@aether/export/utils/staticFilesCache';
 
 /**
  * Pre-scan static site step handler
@@ -44,6 +45,9 @@ async function handler( context ) {
 		'progress',
 		'preScanStaticSite'
 	);
+
+	// Get the static files cache for storing discovered URLs
+	const cache = getStaticFilesCache();
 
 	// Track all URLs
 	const discoveredUrls = new Set(
@@ -115,6 +119,9 @@ async function handler( context ) {
 			}
 
 			const html = await response.text();
+
+			// Add to IndexedDB cache for persistence
+			await cache.add( normalizedUrl, contentType, html );
 
 			// Extract assets from HTML (CSS, JS, images, fonts)
 			const assets = await extractAssetsFromHtml( html, url, siteUrl );

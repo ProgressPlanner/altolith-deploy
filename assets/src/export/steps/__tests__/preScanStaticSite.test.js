@@ -33,6 +33,15 @@ jest.mock( '@aether/export/utils/linkExtractor', () => ( {
 	extractInternalLinks: jest.fn( async () => [] ),
 } ) );
 
+// Mock static files cache
+jest.mock( '@aether/export/utils/staticFilesCache', () => ( {
+	getStaticFilesCache: jest.fn( () => ( {
+		add: jest.fn( async () => true ),
+		has: jest.fn( async () => false ),
+		get: jest.fn( async () => null ),
+	} ) ),
+} ) );
+
 // Mock URL utils
 jest.mock( '@aether/export/utils/urlUtils', () => ( {
 	normalize: jest.fn( ( url ) => {
