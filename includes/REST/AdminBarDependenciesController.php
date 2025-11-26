@@ -142,6 +142,11 @@ class AdminBarDependenciesController
 				$src = \add_query_arg('ver', $script->ver, $src);
 			}
 
+			// Apply script_loader_src filter (matching WordPress core's do_item() method).
+			// This allows plugins/themes to modify script URLs and ensures proper resolution
+			// of file extensions (e.g., .min.js) based on SCRIPT_DEBUG and other factors.
+			$src = \esc_url_raw(\apply_filters('script_loader_src', $src, $handle));
+
 			// Script ID format: {handle}-js (WordPress standard).
 			$scriptId = $handle . '-js';
 
@@ -215,6 +220,11 @@ class AdminBarDependenciesController
 			if (!empty($style->ver)) {
 				$src = \add_query_arg('ver', $style->ver, $src);
 			}
+
+			// Apply style_loader_src filter (matching WordPress core's do_item() method).
+			// This allows plugins/themes to modify style URLs and ensures proper resolution
+			// of file extensions (e.g., .min.css) based on SCRIPT_DEBUG and other factors.
+			$src = \esc_url(\apply_filters('style_loader_src', $src, $handle));
 
 			// Style ID format: {handle}-css (WordPress standard).
 			$styleId = $handle . '-css';
