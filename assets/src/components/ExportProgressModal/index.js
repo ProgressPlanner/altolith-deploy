@@ -11,6 +11,9 @@ import { __ } from '@wordpress/i18n';
 import { useExportState } from '@aether/export/hooks/useExportState';
 import { useExportController } from '@aether/export/hooks/useExportController';
 import { colors, spacing, noticeStyles } from '@aether/utils/styles';
+import GlobalStepsProgress, {
+	areGlobalStepsComplete,
+} from '../GlobalStepsProgress';
 import ProviderProgressList from '../ProviderProgressList';
 
 // Styles - extracted to module level for performance
@@ -128,7 +131,7 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 			className="aether-export-progress-modal"
 			title={ getModalTitle() }
 			onRequestClose={ handleClose }
-			isFullScreen={ false }
+			isFullScreen={ true }
 			shouldCloseOnClickOutside={ false }
 			shouldCloseOnEsc={ false }
 			__experimentalHideHeader={ false }
@@ -189,12 +192,16 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 					</div>
 				) }
 
-				{ ! finalStatus && ! error && providerInstances.length > 0 && (
-					<ProviderProgressList
-						providerProgress={ providerProgress }
-						providerInstances={ providerInstances }
-					/>
-				) }
+				{ ! error && <GlobalStepsProgress steps={ steps } /> }
+
+				{ ! error &&
+					areGlobalStepsComplete( steps ) &&
+					providerInstances.length > 0 && (
+						<ProviderProgressList
+							providerProgress={ providerProgress }
+							providerInstances={ providerInstances }
+						/>
+					) }
 
 				{ steps.length === 0 && ! error && (
 					<div

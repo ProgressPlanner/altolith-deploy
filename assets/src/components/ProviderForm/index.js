@@ -21,6 +21,7 @@ import {
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import { applyFilters } from '@wordpress/hooks';
 import StatusNotice from '../StatusNotice';
 import apiFetch from '@aether/utils/api';
 import { validateConfig } from './utils/validation';
@@ -262,6 +263,12 @@ function ProviderForm( {
 					className="aether-provider-form__notice"
 				/>
 			) }
+
+			{ /* Provider-specific modal header content via filter */ }
+			{ applyFilters( 'aether.admin.provider.modal.header', null, {
+				providerId,
+				formValues: values,
+			} ) }
 
 			{ ( () => {
 				// Helper function to determine if field should be hidden
