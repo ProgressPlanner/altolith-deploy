@@ -9,8 +9,8 @@
 
 import { __ } from '@wordpress/i18n';
 import { spacing, borderRadius } from '@aether/utils/styles';
-import { StepNode } from './StepNode';
-import { StepConnector } from './StepConnector';
+import { StepNode } from '@aether/components/StepNode';
+import { StepConnector } from '@aether/components/StepConnector';
 
 const containerStyle = {
 	display: 'flex',
@@ -29,7 +29,7 @@ const containerStyle = {
  * @param {Array}  props.providerInstances Provider instances array from context
  * @return {JSX.Element} VerticalStepper component
  */
-export function HorizontalStepper( {
+export function VerticalStepper( {
 	steps,
 	providerProgress,
 	providerInstances,
@@ -67,4 +67,4 @@ export function HorizontalStepper( {
 	);
 }
 
-export default HorizontalStepper;
+export default VerticalStepper;

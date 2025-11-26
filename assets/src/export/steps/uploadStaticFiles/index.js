@@ -7,7 +7,7 @@
  * @since 1.0.0
  */
 
-import { __, sprintf, _n } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 import { addAction, applyFilters } from '@wordpress/hooks';
 import { fetchProviderConfig } from '@aether/export/utils/staticSiteConfig';
 import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
@@ -18,35 +18,10 @@ import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
  */
 const statusLabels = {
 	pending: __( 'Upload static files', 'aether-site-exporter' ),
-	running: ( data ) => {
-		const { filesUploaded = 0, totalFiles = 0, providerLabel = '' } = data;
-		if ( totalFiles === 0 ) {
-			return sprintf(
-				/* translators: %s: Provider label */
-				__( 'Uploading to %s…', 'aether-site-exporter' ),
-				providerLabel || __( 'provider', 'aether-site-exporter' )
-			);
-		}
-		return sprintf(
-			/* translators: %1$d: Files uploaded, %2$d: Total files */
-			__( 'Uploading files… %1$d/%2$d', 'aether-site-exporter' ),
-			filesUploaded,
-			totalFiles
-		);
-	},
-	complete: ( data ) => {
-		const { filesUploaded = 0 } = data;
-		return sprintf(
-			/* translators: %d: Number of files uploaded */
-			_n(
-				'Uploaded %d file',
-				'Uploaded %d files',
-				filesUploaded,
-				'aether-site-exporter'
-			),
-			filesUploaded
-		);
-	},
+	// Don't show per-file counters - they're misleading with multiple providers
+	// Per-provider progress is shown separately in the provider progress pills
+	running: () => __( 'Uploading static files…', 'aether-site-exporter' ),
+	complete: () => __( 'Static files uploaded', 'aether-site-exporter' ),
 };
 
 /**

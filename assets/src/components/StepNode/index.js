@@ -10,7 +10,7 @@
 
 import { Spinner } from '@wordpress/components';
 import { colors, fontSize, fontWeight, spacing } from '@aether/utils/styles';
-import { ProviderPill } from './ProviderPill';
+import { ProviderPill } from '@aether/components/ProviderPill';
 
 const NODE_SIZE = 28;
 

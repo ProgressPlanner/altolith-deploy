@@ -20,35 +20,12 @@ import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 /**
  * Status labels for the step
+ * Don't show provider-specific info - per-provider progress is shown in provider pills
  */
 const statusLabels = {
 	pending: __( 'Upload blueprint', 'aether-site-exporter' ),
-	running: ( data ) => {
-		const { bundleSizeFormatted = '', providerLabel = '' } = data;
-		if ( bundleSizeFormatted ) {
-			return sprintf(
-				/* translators: %s: File size */
-				__( 'Uploading blueprint (%s)…', 'aether-site-exporter' ),
-				bundleSizeFormatted
-			);
-		}
-		return sprintf(
-			/* translators: %s: Provider label */
-			__( 'Uploading to %s…', 'aether-site-exporter' ),
-			providerLabel || __( 'provider', 'aether-site-exporter' )
-		);
-	},
-	complete: ( data ) => {
-		const { bundleSizeFormatted = '' } = data;
-		if ( bundleSizeFormatted ) {
-			return sprintf(
-				/* translators: %s: File size */
-				__( 'Uploaded blueprint (%s)', 'aether-site-exporter' ),
-				bundleSizeFormatted
-			);
-		}
-		return __( 'Uploaded blueprint bundle', 'aether-site-exporter' );
-	},
+	running: () => __( 'Uploading blueprint…', 'aether-site-exporter' ),
+	complete: () => __( 'Blueprint uploaded', 'aether-site-exporter' ),
 };
 
 /**

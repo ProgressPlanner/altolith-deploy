@@ -7,7 +7,7 @@
  * @since 1.0.0
  */
 
-import { HorizontalStepper } from './HorizontalStepper';
+import { VerticalStepper } from '@aether/components/VerticalStepper';
 import { isThreadStep } from '@aether/export/executor/DataValidator';
 
 /**
@@ -63,7 +63,7 @@ export function GlobalStepsProgress( {
 	}
 
 	return (
-		<HorizontalStepper
+		<VerticalStepper
 			steps={ steps }
 			providerProgress={ providerProgress }
 			providerInstances={ providerInstances }

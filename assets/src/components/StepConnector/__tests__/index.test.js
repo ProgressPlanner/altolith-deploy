@@ -2,12 +2,12 @@
  * StepConnector Component Tests
  *
  * Tests for the StepConnector component that renders connecting lines
- * between step nodes in the horizontal stepper.
+ * between step nodes in the vertical stepper.
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { StepConnector } from '../StepConnector';
+import { render } from '@testing-library/react';
+import { StepConnector } from '..';
 
 // Mock styles
 jest.mock( '@aether/utils/styles', () => ( {

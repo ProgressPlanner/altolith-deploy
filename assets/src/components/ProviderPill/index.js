@@ -102,3 +102,5 @@ export function ProviderPill( { label, status = 'pending', progress = 0 } ) {
 		</span>
 	);
 }
+
+export default ProviderPill;

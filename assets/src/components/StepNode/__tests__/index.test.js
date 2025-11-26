@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { StepNode } from '../StepNode';
+import { StepNode } from '..';
 
 // Mock WordPress components
 jest.mock( '@wordpress/components', () => ( {
@@ -16,6 +16,19 @@ jest.mock( '@wordpress/components', () => ( {
 		<div data-testid="tooltip" data-tooltip-text={ text }>
 			{ children }
 		</div>
+	),
+} ) );
+
+// Mock ProviderPill component
+jest.mock( '@aether/components/ProviderPill', () => ( {
+	ProviderPill: ( { label, status } ) => (
+		<span
+			data-testid="provider-pill"
+			data-label={ label }
+			data-status={ status }
+		>
+			{ label }
+		</span>
 	),
 } ) );
 
