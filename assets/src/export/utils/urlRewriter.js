@@ -83,7 +83,7 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 		let path = '/';
 		try {
 			const urlObj = new URL( url );
-			path = urlObj.pathname || '/';
+			path = decodeURIComponent( urlObj.pathname || '/' );
 		} catch {
 			const pathMatch = url.match( /^https?:\/\/[^\/]+(\/.*)$/ );
 			if ( pathMatch ) {

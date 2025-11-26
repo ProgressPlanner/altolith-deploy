@@ -238,7 +238,7 @@ export function getStaticFilePath( url ) {
 	let path = '/';
 	try {
 		const urlObj = new URL( url );
-		path = urlObj.pathname || '/';
+		path = decodeURIComponent( urlObj.pathname || '/' );
 	} catch {
 		// Fallback: If URL parsing fails, extract path manually with regex.
 		const pathMatch = url.match( /^https?:\/\/[^\/]+(\/.*)$/ );
