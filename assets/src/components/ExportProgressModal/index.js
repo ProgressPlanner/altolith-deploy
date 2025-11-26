@@ -11,10 +11,7 @@ import { __ } from '@wordpress/i18n';
 import { useExportState } from '@aether/export/hooks/useExportState';
 import { useExportController } from '@aether/export/hooks/useExportController';
 import { colors, spacing, noticeStyles } from '@aether/utils/styles';
-import GlobalStepsProgress, {
-	areGlobalStepsComplete,
-} from '../GlobalStepsProgress';
-import ProviderProgressList from '../ProviderProgressList';
+import GlobalStepsProgress from '../GlobalStepsProgress';
 
 // Styles - extracted to module level for performance
 const modalContentStyle = {
@@ -192,16 +189,13 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 					</div>
 				) }
 
-				{ ! error && <GlobalStepsProgress steps={ steps } /> }
-
-				{ ! error &&
-					areGlobalStepsComplete( steps ) &&
-					providerInstances.length > 0 && (
-						<ProviderProgressList
-							providerProgress={ providerProgress }
-							providerInstances={ providerInstances }
-						/>
-					) }
+				{ ! error && (
+					<GlobalStepsProgress
+						steps={ steps }
+						providerProgress={ providerProgress }
+						providerInstances={ providerInstances }
+					/>
+				) }
 
 				{ steps.length === 0 && ! error && (
 					<div
