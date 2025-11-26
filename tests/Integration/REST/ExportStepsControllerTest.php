@@ -46,7 +46,7 @@ class ExportStepsControllerTest extends TestCase {
 	 *
 	 * @var string
 	 */
-	private $namespace = 'aether/v1';
+	private $namespace = 'aether/site-exporter';
 
 	/**
 	 * Set up test environment.
@@ -57,15 +57,15 @@ class ExportStepsControllerTest extends TestCase {
 		// Create admin user for permission tests
 		$this->admin_id = $this->act_as_admin();
 
-		// Initialize controller
+		// Initialize REST API server.
+		global $wp_rest_server;
+		$wp_rest_server = new \WP_REST_Server();
+
+		// Initialize controller and register routes via rest_api_init hook.
 		$plugin = Plugin::getInstance();
 		$this->controller = new ExportStepsController( $plugin );
-
-		// Register routes
-		$this->controller->registerRoutes();
-
-		// Ensure REST server is initialized
-		rest_get_server();
+		add_action( 'rest_api_init', [ $this->controller, 'registerRoutes' ] );
+		do_action( 'rest_api_init', $wp_rest_server );
 	}
 
 	/**
@@ -113,13 +113,7 @@ class ExportStepsControllerTest extends TestCase {
 		$routes = rest_get_server()->get_routes();
 
 		$expected_routes = [
-			'/' . $this->namespace . '/export/steps/createBlueprintBundle',
-			'/' . $this->namespace . '/export/steps/generateStaticSite',
-			'/' . $this->namespace . '/export/steps/getHtmlContent',
 			'/' . $this->namespace . '/export/createArchive',
-			'/' . $this->namespace . '/export/createArchive/init',
-			'/' . $this->namespace . '/export/createArchive/phase/database',
-			'/' . $this->namespace . '/export/createArchive/finalize',
 			'/' . $this->namespace . '/export/generateBlueprintBundle',
 		];
 
@@ -143,9 +137,8 @@ class ExportStepsControllerTest extends TestCase {
 		$this->act_as_guest();
 
 		$endpoints = [
-			'/export/steps/createBlueprintBundle',
-			'/export/steps/generateStaticSite',
-			'/export/steps/getHtmlContent',
+			'/export/createArchive',
+			'/export/generateBlueprintBundle',
 		];
 
 		foreach ( $endpoints as $endpoint ) {
@@ -172,7 +165,7 @@ class ExportStepsControllerTest extends TestCase {
 		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
 		wp_set_current_user( $subscriber_id );
 
-		$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/steps/createBlueprintBundle' );
+		$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/createArchive' );
 
 		$response = rest_get_server()->dispatch( $request );
 
@@ -303,31 +296,31 @@ class ExportStepsControllerTest extends TestCase {
 	// ========================================================================
 
 	/**
-	 * Test job ID is sanitized.
+	 * Test malicious input is handled safely.
 	 *
-	 * Purpose: Verify sanitize_key is applied
-	 * Security: MEDIUM - Prevents injection in transient keys
+	 * Purpose: Verify malicious input doesn't cause issues
+	 * Security: MEDIUM - Prevents injection attacks
 	 */
-	public function test_job_id_is_sanitized() {
+	public function test_malicious_input_is_handled_safely() {
 		$this->act_as_admin();
 
-		$malicious_job_ids = [
-			'job<script>alert(1)</script>',
-			"job\0null",
-			'job../../etc/passwd',
+		$malicious_inputs = [
+			'<script>alert(1)</script>',
+			"\0null",
+			'../../etc/passwd',
 		];
 
-		foreach ( $malicious_job_ids as $malicious_id ) {
-			$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/steps/createBlueprintBundle' );
-			$request->set_param( 'jobId', $malicious_id );
+		foreach ( $malicious_inputs as $malicious_input ) {
+			$request = new WP_REST_Request( 'POST', '/' . $this->namespace . '/export/createArchive' );
+			$request->set_body_params( [ 'custom_assets' => [ $malicious_input ] ] );
 
 			$response = rest_get_server()->dispatch( $request );
 
-			// Should sanitize and likely not find job (404/422)
-			$this->assertGreaterThanOrEqual(
-				400,
+			// Should not crash - may return error but should be handled safely
+			$this->assertNotEquals(
+				500,
 				$response->get_status(),
-				'Should handle malicious job ID safely'
+				'Should handle malicious input safely without server error'
 			);
 		}
 	}

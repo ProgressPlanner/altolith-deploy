@@ -541,7 +541,6 @@ class Plugin
 
 		// Destination path is always relative to ABSPATH.
 		$destinationFullPath = \rtrim(ABSPATH, '/') . '/' . \ltrim($destinationPath, '/');
-		$destinationDir = \dirname($destinationFullPath);
 
 		// Validate paths using PathValidator.
 		$sourceValidation = \Aether\SiteExporter\Utilities\PathValidator::validatePath($sourceFullPath, ABSPATH, false);

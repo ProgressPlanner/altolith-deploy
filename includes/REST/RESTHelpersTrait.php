@@ -237,16 +237,16 @@ trait RESTHelpersTrait
 	public function sanitizeExceptionMessage(string $message): string
 	{
 		// Remove absolute paths - replace with [PATH] (Unix-style)
-		$message = \preg_replace('#' . \preg_quote(ABSPATH, '#') . '[^\s]*#', '[PATH]', $message);
+		$message = \preg_replace('#' . \preg_quote(ABSPATH, '#') . '[^\s]*#', '[PATH]', $message) ?? $message;
 
 		// Remove Windows-style absolute paths (C:\Users\..., D:\...)
-		$message = \preg_replace('#[A-Za-z]:[\\\/][^\s]*#', '[PATH]', $message);
+		$message = \preg_replace('#[A-Za-z]:[\\\/][^\s]*#', '[PATH]', $message) ?? $message;
 
 		// Remove temporary directory paths (/tmp/..., /var/tmp/...)
-		$message = \preg_replace('#/(?:tmp|var/tmp)/[^\s]*#', '[TEMP]', $message);
+		$message = \preg_replace('#/(?:tmp|var/tmp)/[^\s]*#', '[TEMP]', $message) ?? $message;
 
 		// Remove stack trace line information (in /path/to/file.php on line 123)
-		$message = \preg_replace('#in /[^\s]+ on line \d+#', 'in [PATH] on line [LINE]', $message);
+		$message = \preg_replace('#in /[^\s]+ on line \d+#', 'in [PATH] on line [LINE]', $message) ?? $message;
 
 		// Remove common sensitive patterns
 		$patterns = [
@@ -260,7 +260,7 @@ trait RESTHelpersTrait
 		];
 
 		foreach ($patterns as $pattern => $replacement) {
-			$message = \preg_replace($pattern, $replacement, $message);
+			$message = \preg_replace($pattern, $replacement, $message) ?? $message;
 		}
 
 		return $message;

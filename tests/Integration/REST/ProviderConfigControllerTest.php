@@ -72,7 +72,7 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test saving and retrieving provider config.
 	 */
 	public function test_save_and_retrieve_config() {
-		$instance_id = 'local-filesystem-static-site:test-uuid';
+		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
 		$config      = [
 			'provider_type' => 'local-filesystem-static-site',
 			'path'          => '/test/path',
@@ -102,7 +102,7 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test credentials are encrypted in storage.
 	 */
 	public function test_credentials_encrypted_in_storage() {
-		$instance_id = 'local-filesystem-static-site:test-uuid';
+		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
 		$config      = [
 			'provider_type' => 'local-filesystem-static-site',
 			'path'          => '/test/path',
@@ -136,7 +136,7 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test credentials are decrypted when retrieved.
 	 */
 	public function test_credentials_decrypted_on_retrieval() {
-		$instance_id = 'local-filesystem-static-site:test-uuid';
+		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
 		$config      = [
 			'provider_type' => 'local-filesystem-static-site',
 			'path'          => '/test/path',
@@ -163,7 +163,7 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test updating existing config preserves unmodified fields.
 	 */
 	public function test_update_existing_config() {
-		$instance_id = 'local-filesystem-static-site:test-uuid';
+		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
 
 		// Initial config.
 		$initial_config = [
@@ -205,7 +205,7 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test deleting provider config.
 	 */
 	public function test_delete_config() {
-		$instance_id = 'local-filesystem-static-site:test-uuid';
+		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
 		$config      = [
 			'provider_type' => 'local-filesystem-static-site',
 			'path'          => '/test/path',
@@ -235,8 +235,8 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test configuring multiple instances of same provider type.
 	 */
 	public function test_multiple_instances_same_provider() {
-		$instance1 = 'local-filesystem:uuid-1';
-		$instance2 = 'local-filesystem:uuid-2';
+		$instance1 = 'local-filesystem:b3f2c1b0-4e5d-4789-abcd-ef1234567891';
+		$instance2 = 'local-filesystem:c3f2c1b0-4e5d-4789-abcd-ef1234567892';
 
 		$config1 = [
 			'path'             => '/path1',
@@ -273,7 +273,7 @@ class ProviderConfigControllerTest extends TestCase {
 	 * Test getting provider status.
 	 */
 	public function test_get_provider_status() {
-		$instance_id = 'local-filesystem-static-site:test-uuid';
+		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
 
 		// Status before config.
 		$status_request = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/status' );
@@ -312,8 +312,8 @@ class ProviderConfigControllerTest extends TestCase {
 		$request = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $invalid_id . '/config' );
 		$response = rest_do_request( $request );
 
-		// Should return error.
-		$this->assertEquals( 404, $response->get_status() );
+		// Should return error (400 for invalid format).
+		$this->assertEquals( 400, $response->get_status() );
 	}
 
 	// ========================================================================
@@ -328,7 +328,7 @@ class ProviderConfigControllerTest extends TestCase {
 		$subscriber_id = $this->factory->user->create( [ 'role' => 'subscriber' ] );
 		wp_set_current_user( $subscriber_id );
 
-		$instance_id = 'local-filesystem-static-site:test-uuid';
+		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
 		$request     = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/config' );
 		$response    = rest_do_request( $request );
 
@@ -341,7 +341,7 @@ class ProviderConfigControllerTest extends TestCase {
 	public function test_unauthenticated_cannot_access() {
 		wp_set_current_user( 0 );
 
-		$instance_id = 'local-filesystem-static-site:test-uuid';
+		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
 		$request     = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/config' );
 		$response    = rest_do_request( $request );
 

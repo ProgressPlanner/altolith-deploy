@@ -299,17 +299,18 @@ class AdminBarDependenciesControllerTest extends TestCase
 	}
 
 	/**
-	 * Test permission check allows editors.
+	 * Test permission check denies editors.
+	 *
+	 * Export functionality requires manage_options capability (admin-only).
 	 */
-	public function test_permission_check_allows_editors(): void
+	public function test_permission_check_denies_editors(): void
 	{
 		wp_set_current_user( $this->factory->user->create( [ 'role' => 'editor' ] ) );
 
 		$request = new WP_REST_Request( 'GET', '/' . $this->namespace . '/admin-bar-dependencies' );
 		$response = rest_get_server()->dispatch( $request );
 
-		$this->assertNotEquals( 401, $response->get_status() );
-		$this->assertNotEquals( 403, $response->get_status() );
+		$this->assertEquals( 403, $response->get_status() );
 	}
 
 	/**

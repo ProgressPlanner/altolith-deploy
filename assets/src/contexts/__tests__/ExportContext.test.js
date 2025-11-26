@@ -105,21 +105,21 @@ describe( 'ExportContext', () => {
 				label: 'Step 1',
 				status: 'pending',
 				supportsProgress: true,
-				progress: 0,
+				progress: { current: 0, total: 0 },
 			} );
 			expect( result.current.steps[ 1 ] ).toEqual( {
 				id: 'step2',
 				label: 'Step 2',
 				status: 'pending',
 				supportsProgress: false,
-				progress: 0,
+				progress: { current: 0, total: 0 },
 			} );
 			expect( result.current.steps[ 2 ] ).toEqual( {
 				id: 'step3',
 				label: 'Step 3',
 				status: 'pending',
 				supportsProgress: false,
-				progress: 0,
+				progress: { current: 0, total: 0 },
 			} );
 		} );
 

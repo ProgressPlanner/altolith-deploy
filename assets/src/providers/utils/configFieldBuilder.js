@@ -346,14 +346,31 @@ export class ConfigFieldBuilder {
 	}
 
 	/**
+	 * Generate a human-readable label from a field name
+	 *
+	 * Converts snake_case or kebab-case to Title Case.
+	 * Example: 'api_key' -> 'Api Key', 'worker-endpoint' -> 'Worker Endpoint'
+	 *
+	 * @param {string} name Field name to convert.
+	 * @return {string} Human-readable label
+	 */
+	static generateLabel( name ) {
+		return name
+			.replace( /[-_]/g, ' ' ) // Replace hyphens and underscores with spaces
+			.replace( /\b\w/g, ( char ) => char.toUpperCase() ); // Capitalize first letter of each word
+	}
+
+	/**
 	 * Build and return the field configuration object
 	 *
 	 * @return {Object} The complete field configuration
 	 */
 	build() {
-		// Set default label if not provided
+		// Set default label if not provided (auto-generate from name)
 		if ( ! this.field.label ) {
-			this.field.label = this.field.name;
+			this.field.label = ConfigFieldBuilder.generateLabel(
+				this.field.name
+			);
 		}
 
 		// Set 'id' as an alias for 'name'
