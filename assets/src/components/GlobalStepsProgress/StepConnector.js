@@ -1,7 +1,7 @@
 /**
  * StepConnector Component
  *
- * Renders a connecting line between step nodes.
+ * Renders a vertical connecting line between step nodes.
  * Changes color based on completion status.
  *
  * @since 1.0.0
@@ -10,10 +10,10 @@
 import { colors } from '@aether/utils/styles';
 
 const connectorStyle = {
-	flex: 1,
-	height: '2px',
-	minWidth: '20px',
-	maxWidth: '60px',
+	display: 'block',
+	width: '2px',
+	height: '16px',
+	marginLeft: '13px', // Center under the 28px node
 	transition: 'background-color 0.3s ease',
 };
 
