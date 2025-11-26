@@ -43,8 +43,9 @@ export const CSS_IMPORT_PATTERN =
 
 /**
  * CSS url() pattern.
+ * Handles quoted and unquoted URLs, stops at ) or whitespace for unquoted.
  */
-export const CSS_URL_PATTERN = /url\(["']?([^"')]+)["']?\)/gi;
+export const CSS_URL_PATTERN = /url\(\s*["']?([^"')\s]+)["']?\s*\)/gi;
 
 /**
  * JS import patterns.

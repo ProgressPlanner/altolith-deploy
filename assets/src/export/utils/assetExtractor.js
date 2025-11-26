@@ -139,9 +139,9 @@ function collectHtmlAttributeAssets( html, pageUrl, siteUrl, collected ) {
 	if ( siteHost ) {
 		const escapedHost = escapeRegex( siteHost );
 		const patterns = [
-			new RegExp( `http://${ escapedHost }[^"'\`\\s<>]*`, 'gi' ),
-			new RegExp( `https://${ escapedHost }[^"'\`\\s<>]*`, 'gi' ),
-			new RegExp( `//${ escapedHost }[^"'\`\\s<>]*`, 'gi' ),
+			new RegExp( `http://${ escapedHost }[^"'\`\\s<>)]*`, 'gi' ),
+			new RegExp( `https://${ escapedHost }[^"'\`\\s<>)]*`, 'gi' ),
+			new RegExp( `//${ escapedHost }[^"'\`\\s<>)]*`, 'gi' ),
 		];
 
 		const allMatches = new Set();

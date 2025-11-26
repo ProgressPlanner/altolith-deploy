@@ -300,6 +300,24 @@ describe( 'extractAssetsFromHtml', () => {
 				'http://localhost:10003/wp-content/themes/theme/image.webp'
 			);
 		} );
+
+		test( 'extracts url from unquoted url() followed by other CSS properties', async () => {
+			const html =
+				'<div style="background-image: url(http://localhost:10003/wp-content/uploads/2008/06/image.jpg);min-height:274px;aspect-ratio:unset"></div>';
+			const assets = await extractAssetsFromHtml(
+				html,
+				pageUrl,
+				siteUrl
+			);
+
+			expect( assets ).toContain(
+				'http://localhost:10003/wp-content/uploads/2008/06/image.jpg'
+			);
+			// Should NOT contain the CSS properties in any extracted URL
+			expect( assets.some( ( a ) => a.includes( 'min-height' ) ) ).toBe(
+				false
+			);
+		} );
 	} );
 
 	describe( 'Edge Cases and Invalid HTML', () => {

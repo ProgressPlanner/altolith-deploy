@@ -357,9 +357,6 @@ class URLDiscoveryController
 		$urls = [];
 		$postsPerPage = (int) \get_option('posts_per_page', 10);
 
-		// Blog/homepage pagination
-		$urls = \array_merge($urls, $this->getBlogPaginationUrls($postsPerPage));
-
 		// Category pagination
 		$urls = \array_merge($urls, $this->getCategoryPaginationUrls($postsPerPage));
 
@@ -374,25 +371,6 @@ class URLDiscoveryController
 
 		// Date archive pagination
 		$urls = \array_merge($urls, $this->getDateArchivePaginationUrls($postsPerPage));
-
-		return $urls;
-	}
-
-	/**
-	 * Get blog/homepage pagination URLs.
-	 *
-	 * @param int $postsPerPage Posts per page setting.
-	 * @return array<string> Pagination URLs.
-	 */
-	private function getBlogPaginationUrls(int $postsPerPage): array
-	{
-		$urls = [];
-		$totalPosts = (int) \wp_count_posts('post')->publish;
-		$totalPages = (int) \ceil($totalPosts / $postsPerPage);
-
-		for ($i = 2; $i <= $totalPages; $i++) {
-			$urls[] = \get_pagenum_link($i);
-		}
 
 		return $urls;
 	}
