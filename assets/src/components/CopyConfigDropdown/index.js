@@ -82,9 +82,7 @@ export default function CopyConfigDropdown( {
 
 		try {
 			const response = await apiFetch( {
-				path: `/aether/site-exporter/providers/${ encodeURIComponent(
-					currentInstanceId
-				) }/copy-from/${ encodeURIComponent( sourceId ) }`,
+				path: `/aether/site-exporter/providers/${ currentInstanceId }/copy-from/${ sourceId }`,
 				method: 'POST',
 				data: {
 					target_fields: targetFields,
