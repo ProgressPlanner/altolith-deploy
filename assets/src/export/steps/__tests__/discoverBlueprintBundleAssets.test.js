@@ -178,7 +178,7 @@ describe( 'discoverBlueprintBundleAssets step', () => {
 			} );
 
 			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
-				'Discovered 0 active custom plugins/themes',
+				'No custom plugins or themes to include',
 				'success',
 				'discoverBlueprintBundleAssets'
 			);
@@ -202,8 +202,7 @@ describe( 'discoverBlueprintBundleAssets step', () => {
 			const successCall = mockSetStatusMessage.mock.calls.find(
 				( call ) => call[ 1 ] === 'success'
 			);
-			expect( successCall[ 0 ] ).toContain( '1 active custom plugin' );
-			expect( successCall[ 0 ] ).toContain( 'my-plugin' );
+			expect( successCall[ 0 ] ).toContain( '1 custom plugin' );
 		} );
 
 		test( 'should format message for multiple plugins', async () => {
@@ -226,9 +225,7 @@ describe( 'discoverBlueprintBundleAssets step', () => {
 			const successCall = mockSetStatusMessage.mock.calls.find(
 				( call ) => call[ 1 ] === 'success'
 			);
-			expect( successCall[ 0 ] ).toContain( 'active custom plugins' );
-			expect( successCall[ 0 ] ).toContain( 'plugin-a' );
-			expect( successCall[ 0 ] ).toContain( 'plugin-b' );
+			expect( successCall[ 0 ] ).toContain( '2 custom plugins' );
 		} );
 
 		test( 'should format message for single theme', async () => {
@@ -248,8 +245,7 @@ describe( 'discoverBlueprintBundleAssets step', () => {
 			const successCall = mockSetStatusMessage.mock.calls.find(
 				( call ) => call[ 1 ] === 'success'
 			);
-			expect( successCall[ 0 ] ).toContain( '1 active custom theme' );
-			expect( successCall[ 0 ] ).toContain( 'my-theme' );
+			expect( successCall[ 0 ] ).toContain( '1 custom theme' );
 		} );
 
 		test( 'should format message for plugins and themes combined', async () => {
