@@ -1081,7 +1081,7 @@ addFilter('aether.assets.extracted', 'my-plugin', (assets, html, pageUrl, siteUr
 #### `aether.assets.should_collect`
 
 **Type**: Filter
-**Location**: `assets/src/export/utils/assetExtractor.js`
+**Location**: `assets/src/export/utils/assetFilters.js`
 
 Filters whether a specific asset should be collected.
 
