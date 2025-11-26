@@ -52,7 +52,11 @@ describe( 'StepNode', () => {
 
 		test( 'should render with active status and show spinner', () => {
 			render(
-				<StepNode stepNumber={ 2 } label="Active Step" status="active" />
+				<StepNode
+					stepNumber={ 2 }
+					label="Active Step"
+					status="active"
+				/>
 			);
 
 			expect( screen.getByTestId( 'spinner' ) ).toBeInTheDocument();
@@ -147,9 +151,7 @@ describe( 'StepNode', () => {
 		} );
 
 		test( 'should have base class and status-specific class for error', () => {
-			render(
-				<StepNode stepNumber={ 1 } label="Test" status="error" />
-			);
+			render( <StepNode stepNumber={ 1 } label="Test" status="error" /> );
 
 			const node = screen.getByRole( 'listitem' );
 			expect( node ).toHaveClass( 'aether-step-node' );

@@ -104,7 +104,9 @@ describe( 'HorizontalStepper', () => {
 		} );
 
 		test( 'should not render connector after last step', () => {
-			const singleStep = [ { id: 'only', label: 'Only', status: 'active' } ];
+			const singleStep = [
+				{ id: 'only', label: 'Only', status: 'active' },
+			];
 
 			render(
 				<HorizontalStepper
@@ -203,7 +205,9 @@ describe( 'HorizontalStepper', () => {
 				/>
 			);
 
-			expect( screen.getByText( 'Processing Assets' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Processing Assets' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should show "Preparing..." when no active step', () => {
@@ -227,9 +231,7 @@ describe( 'HorizontalStepper', () => {
 				{ id: 'unknown', label: 'Fallback Label', status: 'active' },
 			];
 
-			render(
-				<HorizontalStepper steps={ steps } stepLabels={ {} } />
-			);
+			render( <HorizontalStepper steps={ steps } stepLabels={ {} } /> );
 
 			expect( screen.getByText( 'Fallback Label' ) ).toBeInTheDocument();
 		} );
@@ -292,9 +294,15 @@ describe( 'HorizontalStepper', () => {
 
 			const connectors = screen.getAllByTestId( 'step-connector' );
 			// First connector (after complete step 1)
-			expect( connectors[ 0 ] ).toHaveAttribute( 'data-complete', 'true' );
+			expect( connectors[ 0 ] ).toHaveAttribute(
+				'data-complete',
+				'true'
+			);
 			// Second connector (after active step 2)
-			expect( connectors[ 1 ] ).toHaveAttribute( 'data-complete', 'false' );
+			expect( connectors[ 1 ] ).toHaveAttribute(
+				'data-complete',
+				'false'
+			);
 		} );
 
 		test( 'should mark all connectors incomplete when no steps complete', () => {
@@ -349,7 +357,9 @@ describe( 'HorizontalStepper', () => {
 		} );
 
 		test( 'should handle single step', () => {
-			const singleStep = [ { id: 'only', label: 'Only', status: 'active' } ];
+			const singleStep = [
+				{ id: 'only', label: 'Only', status: 'active' },
+			];
 
 			render(
 				<HorizontalStepper

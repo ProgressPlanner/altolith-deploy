@@ -58,7 +58,14 @@ jest.mock( '@wordpress/components', () => ( {
 			{ children }
 		</div>
 	),
-	TextControl: ( { label, value, onChange, placeholder, help, className } ) => (
+	TextControl: ( {
+		label,
+		value,
+		onChange,
+		placeholder,
+		help,
+		className,
+	} ) => (
 		<div className={ className }>
 			<label>
 				{ label }
@@ -160,7 +167,10 @@ describe( 'AddProviderInstanceModal', () => {
 	describe( 'rendering', () => {
 		test( 'should render nothing when isOpen is false', () => {
 			const { container } = render(
-				<AddProviderInstanceModal { ...defaultProps } isOpen={ false } />
+				<AddProviderInstanceModal
+					{ ...defaultProps }
+					isOpen={ false }
+				/>
 			);
 
 			expect( container.firstChild ).toBeNull();
@@ -196,13 +206,17 @@ describe( 'AddProviderInstanceModal', () => {
 		test( 'should render provider select', () => {
 			render( <AddProviderInstanceModal { ...defaultProps } /> );
 
-			expect( screen.getByTestId( 'provider-select' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'provider-select' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should show all provider options', () => {
 			render( <AddProviderInstanceModal { ...defaultProps } /> );
 
-			expect( screen.getByText( 'Local Filesystem' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Local Filesystem' )
+			).toBeInTheDocument();
 			expect( screen.getByText( 'S3 Bucket' ) ).toBeInTheDocument();
 			expect( screen.getByText( 'Cloudflare R2' ) ).toBeInTheDocument();
 		} );
@@ -232,7 +246,9 @@ describe( 'AddProviderInstanceModal', () => {
 			render( <AddProviderInstanceModal { ...defaultProps } /> );
 
 			const select = screen.getByTestId( 'provider-select' );
-			fireEvent.change( select, { target: { value: 'local-filesystem' } } );
+			fireEvent.change( select, {
+				target: { value: 'local-filesystem' },
+			} );
 
 			expect(
 				screen.getByTestId( 'instance-name-input' )
@@ -259,9 +275,13 @@ describe( 'AddProviderInstanceModal', () => {
 			render( <AddProviderInstanceModal { ...defaultProps } /> );
 
 			const select = screen.getByTestId( 'provider-select' );
-			fireEvent.change( select, { target: { value: 'local-filesystem' } } );
+			fireEvent.change( select, {
+				target: { value: 'local-filesystem' },
+			} );
 
-			expect( screen.getByText( 'Stores files locally' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Stores files locally' )
+			).toBeInTheDocument();
 		} );
 	} );
 
@@ -280,7 +300,9 @@ describe( 'AddProviderInstanceModal', () => {
 			render( <AddProviderInstanceModal { ...defaultProps } /> );
 
 			const select = screen.getByTestId( 'provider-select' );
-			fireEvent.change( select, { target: { value: 'local-filesystem' } } );
+			fireEvent.change( select, {
+				target: { value: 'local-filesystem' },
+			} );
 
 			const submitButton = screen.getByTestId( 'submit-button' );
 			expect( submitButton ).toBeDisabled();
@@ -290,7 +312,9 @@ describe( 'AddProviderInstanceModal', () => {
 			render( <AddProviderInstanceModal { ...defaultProps } /> );
 
 			const select = screen.getByTestId( 'provider-select' );
-			fireEvent.change( select, { target: { value: 'local-filesystem' } } );
+			fireEvent.change( select, {
+				target: { value: 'local-filesystem' },
+			} );
 
 			const input = screen.getByTestId( 'instance-name-input' );
 			fireEvent.change( input, { target: { value: '   ' } } );
@@ -303,7 +327,9 @@ describe( 'AddProviderInstanceModal', () => {
 			render( <AddProviderInstanceModal { ...defaultProps } /> );
 
 			const select = screen.getByTestId( 'provider-select' );
-			fireEvent.change( select, { target: { value: 'local-filesystem' } } );
+			fireEvent.change( select, {
+				target: { value: 'local-filesystem' },
+			} );
 
 			const input = screen.getByTestId( 'instance-name-input' );
 			fireEvent.change( input, { target: { value: 'My Instance' } } );
@@ -328,7 +354,9 @@ describe( 'AddProviderInstanceModal', () => {
 			);
 
 			const select = screen.getByTestId( 'provider-select' );
-			fireEvent.change( select, { target: { value: 'local-filesystem' } } );
+			fireEvent.change( select, {
+				target: { value: 'local-filesystem' },
+			} );
 
 			const input = screen.getByTestId( 'instance-name-input' );
 			fireEvent.change( input, { target: { value: 'Production' } } );
@@ -386,7 +414,9 @@ describe( 'AddProviderInstanceModal', () => {
 			);
 
 			const select = screen.getByTestId( 'provider-select' );
-			fireEvent.change( select, { target: { value: 'local-filesystem' } } );
+			fireEvent.change( select, {
+				target: { value: 'local-filesystem' },
+			} );
 
 			const input = screen.getByTestId( 'instance-name-input' );
 			fireEvent.change( input, { target: { value: 'Test' } } );
@@ -409,7 +439,9 @@ describe( 'AddProviderInstanceModal', () => {
 			const consoleError = jest
 				.spyOn( console, 'error' )
 				.mockImplementation( () => {} );
-			const alertMock = jest.spyOn( window, 'alert' ).mockImplementation( () => {} );
+			const alertMock = jest
+				.spyOn( window, 'alert' )
+				.mockImplementation( () => {} );
 
 			render(
 				<AddProviderInstanceModal
@@ -420,7 +452,9 @@ describe( 'AddProviderInstanceModal', () => {
 			);
 
 			const select = screen.getByTestId( 'provider-select' );
-			fireEvent.change( select, { target: { value: 'local-filesystem' } } );
+			fireEvent.change( select, {
+				target: { value: 'local-filesystem' },
+			} );
 
 			const input = screen.getByTestId( 'instance-name-input' );
 			fireEvent.change( input, { target: { value: 'Test' } } );
@@ -452,7 +486,9 @@ describe( 'AddProviderInstanceModal', () => {
 			);
 
 			const select = screen.getByTestId( 'provider-select' );
-			fireEvent.change( select, { target: { value: 'local-filesystem' } } );
+			fireEvent.change( select, {
+				target: { value: 'local-filesystem' },
+			} );
 
 			const input = screen.getByTestId( 'instance-name-input' );
 			fireEvent.change( input, { target: { value: 'Instance 1' } } );
@@ -542,14 +578,19 @@ describe( 'AddProviderInstanceModal', () => {
 
 			// Fill in the form
 			const select = screen.getByTestId( 'provider-select' );
-			fireEvent.change( select, { target: { value: 'local-filesystem' } } );
+			fireEvent.change( select, {
+				target: { value: 'local-filesystem' },
+			} );
 
 			const input = screen.getByTestId( 'instance-name-input' );
 			fireEvent.change( input, { target: { value: 'My Instance' } } );
 
 			// Close modal
 			rerender(
-				<AddProviderInstanceModal { ...defaultProps } isOpen={ false } />
+				<AddProviderInstanceModal
+					{ ...defaultProps }
+					isOpen={ false }
+				/>
 			);
 
 			// Reopen modal
@@ -568,7 +609,10 @@ describe( 'AddProviderInstanceModal', () => {
 	describe( 'edge cases', () => {
 		test( 'should handle empty providers array', () => {
 			render(
-				<AddProviderInstanceModal { ...defaultProps } providers={ [] } />
+				<AddProviderInstanceModal
+					{ ...defaultProps }
+					providers={ [] }
+				/>
 			);
 
 			// Should still render modal

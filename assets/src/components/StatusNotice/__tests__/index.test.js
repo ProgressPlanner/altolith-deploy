@@ -146,7 +146,9 @@ describe( 'StatusNotice', () => {
 				/>
 			);
 
-			expect( screen.getByTestId( 'dismiss-button' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'dismiss-button' )
+			).toBeInTheDocument();
 		} );
 	} );
 

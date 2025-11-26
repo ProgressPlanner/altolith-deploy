@@ -105,11 +105,15 @@ describe( 'preScanStaticSite step', () => {
 		} );
 
 		test( 'should depend on getStaticSiteUrls', () => {
-			expect( stepDefinition.dependencies ).toContain( 'getStaticSiteUrls' );
+			expect( stepDefinition.dependencies ).toContain(
+				'getStaticSiteUrls'
+			);
 		} );
 
 		test( 'should require urls from getStaticSiteUrls', () => {
-			expect( stepDefinition.requires.urls.from ).toBe( 'getStaticSiteUrls' );
+			expect( stepDefinition.requires.urls.from ).toBe(
+				'getStaticSiteUrls'
+			);
 			expect( stepDefinition.requires.urls.required ).toBe( true );
 		} );
 
@@ -311,15 +315,21 @@ describe( 'preScanStaticSite step', () => {
 		test( 'should store HTML content in sharedHtmlData', async () => {
 			const result = await stepHandler( mockContext );
 
-			const cachedData = result.sharedHtmlData.get( 'https://example.com/' );
+			const cachedData = result.sharedHtmlData.get(
+				'https://example.com/'
+			);
 			expect( cachedData ).toBeDefined();
-			expect( cachedData.rawHtml ).toBe( '<html><body>Test</body></html>' );
+			expect( cachedData.rawHtml ).toBe(
+				'<html><body>Test</body></html>'
+			);
 		} );
 
 		test( 'should store asset URLs in sharedHtmlData', async () => {
 			const result = await stepHandler( mockContext );
 
-			const cachedData = result.sharedHtmlData.get( 'https://example.com/' );
+			const cachedData = result.sharedHtmlData.get(
+				'https://example.com/'
+			);
 			expect( cachedData.assetUrls ).toEqual( [
 				'https://example.com/style.css',
 				'https://example.com/script.js',

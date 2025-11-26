@@ -106,7 +106,9 @@ describe( 'LoadingSpinner', () => {
 			const spinnerContainer = container.querySelector(
 				'.aether-loading-spinner'
 			);
-			expect( spinnerContainer.className ).toContain( 'my-custom-spinner' );
+			expect( spinnerContainer.className ).toContain(
+				'my-custom-spinner'
+			);
 		} );
 
 		test( 'should handle empty className', () => {
@@ -144,7 +146,9 @@ describe( 'LoadingSpinner', () => {
 			const spinnerContainer = container.querySelector(
 				'.aether-loading-spinner'
 			);
-			expect( spinnerContainer ).toHaveStyle( { backgroundColor: 'red' } );
+			expect( spinnerContainer ).toHaveStyle( {
+				backgroundColor: 'red',
+			} );
 			expect( spinnerContainer ).toHaveStyle( { minHeight: '100px' } );
 		} );
 

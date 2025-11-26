@@ -33,7 +33,10 @@ jest.mock( '@wordpress/components', () => ( {
 			onClick={ onClick }
 			data-variant={ variant }
 			data-destructive={ isDestructive }
-			data-testid={ `button-${ children?.toString().toLowerCase().replace( /\s+/g, '-' ) }` }
+			data-testid={ `button-${ children
+				?.toString()
+				.toLowerCase()
+				.replace( /\s+/g, '-' ) }` }
 		>
 			{ children }
 		</button>
@@ -232,7 +235,9 @@ describe( 'ProviderInstanceItem', () => {
 				</table>
 			);
 
-			expect( screen.getByText( 'Local Filesystem' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Local Filesystem' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should render deployment type tag', () => {
@@ -256,7 +261,9 @@ describe( 'ProviderInstanceItem', () => {
 				</table>
 			);
 
-			expect( screen.getByTestId( 'button-settings' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'button-settings' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should render Delete button', () => {
@@ -337,7 +344,9 @@ describe( 'ProviderInstanceItem', () => {
 
 			fireEvent.click( screen.getByText( 'My Local Export' ) );
 
-			expect( screen.getByDisplayValue( 'My Local Export' ) ).toBeInTheDocument();
+			expect(
+				screen.getByDisplayValue( 'My Local Export' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should show input field in edit mode', () => {
@@ -429,7 +438,9 @@ describe( 'ProviderInstanceItem', () => {
 
 			// Should exit edit mode and show original name
 			expect( screen.getByText( 'My Local Export' ) ).toBeInTheDocument();
-			expect( screen.queryByDisplayValue( 'Changed Name' ) ).not.toBeInTheDocument();
+			expect(
+				screen.queryByDisplayValue( 'Changed Name' )
+			).not.toBeInTheDocument();
 		} );
 
 		test( 'should not call onRename when name is unchanged', async () => {
@@ -498,7 +509,9 @@ describe( 'ProviderInstanceItem', () => {
 			fireEvent.click( screen.getByText( 'My Local Export' ) );
 			const input = screen.getByDisplayValue( 'My Local Export' );
 
-			fireEvent.change( input, { target: { value: '  Trimmed Name  ' } } );
+			fireEvent.change( input, {
+				target: { value: '  Trimmed Name  ' },
+			} );
 			fireEvent.blur( input );
 
 			await waitFor( () => {
@@ -521,7 +534,9 @@ describe( 'ProviderInstanceItem', () => {
 			const nameElement = screen.getByText( 'My Local Export' );
 			fireEvent.keyDown( nameElement, { key: 'Enter' } );
 
-			expect( screen.getByDisplayValue( 'My Local Export' ) ).toBeInTheDocument();
+			expect(
+				screen.getByDisplayValue( 'My Local Export' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should handle Space key to enter edit mode', () => {
@@ -536,7 +551,9 @@ describe( 'ProviderInstanceItem', () => {
 			const nameElement = screen.getByText( 'My Local Export' );
 			fireEvent.keyDown( nameElement, { key: ' ' } );
 
-			expect( screen.getByDisplayValue( 'My Local Export' ) ).toBeInTheDocument();
+			expect(
+				screen.getByDisplayValue( 'My Local Export' )
+			).toBeInTheDocument();
 		} );
 	} );
 
@@ -651,7 +668,9 @@ describe( 'ProviderInstanceItem', () => {
 			fireEvent.click( screen.getByTestId( 'form-submit' ) );
 
 			await waitFor( () => {
-				expect( screen.queryByTestId( 'modal' ) ).not.toBeInTheDocument();
+				expect(
+					screen.queryByTestId( 'modal' )
+				).not.toBeInTheDocument();
 			} );
 		} );
 
@@ -675,7 +694,9 @@ describe( 'ProviderInstanceItem', () => {
 			fireEvent.click( screen.getByTestId( 'form-submit' ) );
 
 			await waitFor( () => {
-				expect( screen.getByTestId( 'status-notice' ) ).toBeInTheDocument();
+				expect(
+					screen.getByTestId( 'status-notice' )
+				).toBeInTheDocument();
 				expect( screen.getByText( 'Save failed' ) ).toBeInTheDocument();
 			} );
 		} );
@@ -724,12 +745,16 @@ describe( 'ProviderInstanceItem', () => {
 			fireEvent.click( screen.getByTestId( 'form-submit' ) );
 
 			await waitFor( () => {
-				expect( screen.getByTestId( 'status-notice' ) ).toBeInTheDocument();
+				expect(
+					screen.getByTestId( 'status-notice' )
+				).toBeInTheDocument();
 			} );
 
 			fireEvent.click( screen.getByTestId( 'dismiss-notice' ) );
 
-			expect( screen.queryByTestId( 'status-notice' ) ).not.toBeInTheDocument();
+			expect(
+				screen.queryByTestId( 'status-notice' )
+			).not.toBeInTheDocument();
 		} );
 	} );
 
@@ -890,8 +915,7 @@ describe( 'ProviderInstanceItem', () => {
 			const tags = container.querySelectorAll( 'span' );
 			const tagSpans = Array.from( tags ).filter(
 				( span ) =>
-					span.textContent &&
-					span.textContent.includes( 'Site' )
+					span.textContent && span.textContent.includes( 'Site' )
 			);
 			expect( tagSpans ).toHaveLength( 0 );
 		} );
@@ -918,7 +942,9 @@ describe( 'ProviderInstanceItem', () => {
 				</table>
 			);
 
-			expect( screen.getByText( 'local-filesystem' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'local-filesystem' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should extract provider type from instanceId when provider_type is missing', () => {
@@ -999,7 +1025,9 @@ describe( 'ProviderInstanceItem', () => {
 			);
 
 			// Should render without crashing, name cell should be empty
-			expect( screen.getByTestId( 'button-settings' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'button-settings' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should handle undefined instance name', () => {
@@ -1023,7 +1051,9 @@ describe( 'ProviderInstanceItem', () => {
 			);
 
 			// Should render without crashing
-			expect( screen.getByTestId( 'button-settings' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'button-settings' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should handle rename error gracefully', async () => {
@@ -1128,7 +1158,10 @@ describe( 'ProviderInstanceItem', () => {
 			);
 
 			const nameElement = screen.getByText( 'My Local Export' );
-			expect( nameElement ).toHaveAttribute( 'title', 'Click to edit name' );
+			expect( nameElement ).toHaveAttribute(
+				'title',
+				'Click to edit name'
+			);
 		} );
 
 		test( 'should have aria-label on status icon', () => {

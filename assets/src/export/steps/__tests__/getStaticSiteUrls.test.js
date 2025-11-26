@@ -104,7 +104,9 @@ describe( 'getStaticSiteUrls step', () => {
 		} );
 
 		test( 'should provide staticSiteUrl', () => {
-			expect( stepDefinition.provides.staticSiteUrl.type ).toBe( 'string' );
+			expect( stepDefinition.provides.staticSiteUrl.type ).toBe(
+				'string'
+			);
 		} );
 
 		test( 'should provide urlsCount', () => {

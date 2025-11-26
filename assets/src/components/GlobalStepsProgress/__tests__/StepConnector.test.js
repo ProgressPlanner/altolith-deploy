@@ -20,14 +20,18 @@ jest.mock( '@aether/utils/styles', () => ( {
 describe( 'StepConnector', () => {
 	describe( 'Rendering', () => {
 		test( 'should render a span element', () => {
-			const { container } = render( <StepConnector isComplete={ false } /> );
+			const { container } = render(
+				<StepConnector isComplete={ false } />
+			);
 
 			const connector = container.querySelector( 'span' );
 			expect( connector ).toBeInTheDocument();
 		} );
 
 		test( 'should have the correct CSS class', () => {
-			const { container } = render( <StepConnector isComplete={ false } /> );
+			const { container } = render(
+				<StepConnector isComplete={ false } />
+			);
 
 			const connector = container.querySelector( 'span' );
 			expect( connector ).toHaveClass( 'aether-step-connector' );
@@ -36,7 +40,9 @@ describe( 'StepConnector', () => {
 
 	describe( 'Accessibility', () => {
 		test( 'should be hidden from assistive technology', () => {
-			const { container } = render( <StepConnector isComplete={ false } /> );
+			const { container } = render(
+				<StepConnector isComplete={ false } />
+			);
 
 			const connector = container.querySelector( 'span' );
 			expect( connector ).toHaveAttribute( 'aria-hidden', 'true' );
@@ -45,14 +51,18 @@ describe( 'StepConnector', () => {
 
 	describe( 'Visual States', () => {
 		test( 'should use success color when complete', () => {
-			const { container } = render( <StepConnector isComplete={ true } /> );
+			const { container } = render(
+				<StepConnector isComplete={ true } />
+			);
 
 			const connector = container.querySelector( 'span' );
 			expect( connector ).toHaveStyle( { backgroundColor: '#00a32a' } );
 		} );
 
 		test( 'should use border color when incomplete', () => {
-			const { container } = render( <StepConnector isComplete={ false } /> );
+			const { container } = render(
+				<StepConnector isComplete={ false } />
+			);
 
 			const connector = container.querySelector( 'span' );
 			expect( connector ).toHaveStyle( { backgroundColor: '#e0e0e0' } );
@@ -61,28 +71,36 @@ describe( 'StepConnector', () => {
 
 	describe( 'Styling', () => {
 		test( 'should have flex: 1 for proper spacing', () => {
-			const { container } = render( <StepConnector isComplete={ false } /> );
+			const { container } = render(
+				<StepConnector isComplete={ false } />
+			);
 
 			const connector = container.querySelector( 'span' );
 			expect( connector ).toHaveStyle( { flex: '1' } );
 		} );
 
 		test( 'should have consistent height for line appearance', () => {
-			const { container } = render( <StepConnector isComplete={ false } /> );
+			const { container } = render(
+				<StepConnector isComplete={ false } />
+			);
 
 			const connector = container.querySelector( 'span' );
 			expect( connector ).toHaveStyle( { height: '2px' } );
 		} );
 
 		test( 'should have minimum width constraint', () => {
-			const { container } = render( <StepConnector isComplete={ false } /> );
+			const { container } = render(
+				<StepConnector isComplete={ false } />
+			);
 
 			const connector = container.querySelector( 'span' );
 			expect( connector ).toHaveStyle( { minWidth: '20px' } );
 		} );
 
 		test( 'should have maximum width constraint', () => {
-			const { container } = render( <StepConnector isComplete={ false } /> );
+			const { container } = render(
+				<StepConnector isComplete={ false } />
+			);
 
 			const connector = container.querySelector( 'span' );
 			expect( connector ).toHaveStyle( { maxWidth: '60px' } );

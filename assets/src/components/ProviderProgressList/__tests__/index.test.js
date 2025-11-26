@@ -17,7 +17,14 @@ jest.mock( '@wordpress/i18n', () => ( {
 // Mock ProviderProgressBar component
 jest.mock( '../../ProviderProgressBar', () => ( {
 	__esModule: true,
-	default: ( { providerId, providerLabel, stepLabel, progress, status, error } ) => (
+	default: ( {
+		providerId,
+		providerLabel,
+		stepLabel,
+		progress,
+		status,
+		error,
+	} ) => (
 		<div
 			data-testid={ `provider-progress-${ providerId }` }
 			data-provider-label={ providerLabel }
@@ -30,7 +37,14 @@ jest.mock( '../../ProviderProgressBar', () => ( {
 			{ providerLabel }
 		</div>
 	),
-	ProviderProgressBar: ( { providerId, providerLabel, stepLabel, progress, status, error } ) => (
+	ProviderProgressBar: ( {
+		providerId,
+		providerLabel,
+		stepLabel,
+		progress,
+		status,
+		error,
+	} ) => (
 		<div
 			data-testid={ `provider-progress-${ providerId }` }
 			data-provider-label={ providerLabel }
@@ -134,7 +148,9 @@ describe( 'ProviderProgressList', () => {
 		} );
 
 		test( 'should render single provider count', () => {
-			const instances = [ { id: 'provider1:uuid1', label: 'Single Provider' } ];
+			const instances = [
+				{ id: 'provider1:uuid1', label: 'Single Provider' },
+			];
 
 			const { container } = render(
 				<ProviderProgressList
@@ -189,7 +205,9 @@ describe( 'ProviderProgressList', () => {
 				/>
 			);
 
-			expect( screen.getByText( 'My Custom Provider' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'My Custom Provider' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should use instance id as label if label is missing', () => {
@@ -219,7 +237,9 @@ describe( 'ProviderProgressList', () => {
 	// ============================================================
 	describe( 'progress state mapping', () => {
 		test( 'should pass progress data to ProviderProgressBar', () => {
-			const instances = [ { id: 'provider1:uuid1', label: 'Provider 1' } ];
+			const instances = [
+				{ id: 'provider1:uuid1', label: 'Provider 1' },
+			];
 			const progress = {
 				'provider1:uuid1': {
 					stepId: 'uploadFiles',
@@ -249,7 +269,9 @@ describe( 'ProviderProgressList', () => {
 		} );
 
 		test( 'should use default values when progress is missing', () => {
-			const instances = [ { id: 'provider1:uuid1', label: 'Provider 1' } ];
+			const instances = [
+				{ id: 'provider1:uuid1', label: 'Provider 1' },
+			];
 			const progress = {}; // No progress for this provider
 
 			render(
@@ -265,11 +287,16 @@ describe( 'ProviderProgressList', () => {
 			expect( progressBar ).toHaveAttribute( 'data-current', '0' );
 			expect( progressBar ).toHaveAttribute( 'data-total', '0' );
 			expect( progressBar ).toHaveAttribute( 'data-status', 'pending' );
-			expect( progressBar ).toHaveAttribute( 'data-step-label', 'Pending' );
+			expect( progressBar ).toHaveAttribute(
+				'data-step-label',
+				'Pending'
+			);
 		} );
 
 		test( 'should pass error to ProviderProgressBar', () => {
-			const instances = [ { id: 'provider1:uuid1', label: 'Provider 1' } ];
+			const instances = [
+				{ id: 'provider1:uuid1', label: 'Provider 1' },
+			];
 			const progress = {
 				'provider1:uuid1': {
 					stepId: 'uploadFiles',
@@ -346,7 +373,9 @@ describe( 'ProviderProgressList', () => {
 	// ============================================================
 	describe( 'edge cases', () => {
 		test( 'should handle undefined providerProgress', () => {
-			const instances = [ { id: 'provider1:uuid1', label: 'Provider 1' } ];
+			const instances = [
+				{ id: 'provider1:uuid1', label: 'Provider 1' },
+			];
 
 			// This should not throw
 			const { container } = render(
@@ -368,7 +397,9 @@ describe( 'ProviderProgressList', () => {
 		} );
 
 		test( 'should handle empty progress object for a provider', () => {
-			const instances = [ { id: 'provider1:uuid1', label: 'Provider 1' } ];
+			const instances = [
+				{ id: 'provider1:uuid1', label: 'Provider 1' },
+			];
 			const progress = {
 				'provider1:uuid1': {}, // Empty object
 			};
@@ -429,7 +460,9 @@ describe( 'ProviderProgressList', () => {
 			);
 
 			expect(
-				screen.getByTestId( 'provider-progress-my-provider:uuid-with-dashes' )
+				screen.getByTestId(
+					'provider-progress-my-provider:uuid-with-dashes'
+				)
 			).toBeInTheDocument();
 		} );
 
@@ -447,9 +480,9 @@ describe( 'ProviderProgressList', () => {
 			);
 
 			expect( screen.getByText( /50/ ) ).toBeInTheDocument();
-			expect( screen.getAllByTestId( /provider-progress-/ ) ).toHaveLength(
-				50
-			);
+			expect(
+				screen.getAllByTestId( /provider-progress-/ )
+			).toHaveLength( 50 );
 		} );
 	} );
 } );

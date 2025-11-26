@@ -12,6 +12,7 @@ import { Button, Modal, Icon } from '@wordpress/components';
 import { settings, trash, check, close } from '@wordpress/icons';
 import ProviderForm from '@aether/components/ProviderForm';
 import StatusNotice from '@aether/components/StatusNotice';
+import CopyConfigDropdown from '@aether/components/CopyConfigDropdown';
 import { hasRequiredFields } from '@aether/providers/utils/configValidation';
 import {
 	colors,
@@ -105,6 +106,7 @@ const actionsCellStyle = {
  * @param {Object}   props.provider            Provider metadata.
  * @param {string}   props.deploymentType      Deployment type identifier.
  * @param {string}   props.deploymentTypeLabel Deployment type label.
+ * @param {Array}    props.allInstances        All provider instances for copy config feature.
  * @param {Function} props.onDelete            Callback to delete instance.
  * @param {Function} props.onRename            Callback to rename instance.
  * @param {Function} props.onSave              Callback to save config changes.
@@ -115,6 +117,7 @@ export default function ProviderInstanceItem( {
 	provider,
 	deploymentType,
 	deploymentTypeLabel,
+	allInstances,
 	onDelete,
 	onRename,
 	onSave,
@@ -399,6 +402,20 @@ export default function ProviderInstanceItem( {
 										onRemove={ () => setSaveError( null ) }
 									/>
 								) }
+
+								<CopyConfigDropdown
+									currentInstanceId={ instance.instanceId }
+									allInstances={ allInstances }
+									targetFields={ settingsFields.map(
+										( f ) => f.id
+									) }
+									onCopy={ ( copiedValues ) => {
+										setInstanceConfig( ( prev ) => ( {
+											...prev,
+											...copiedValues,
+										} ) );
+									} }
+								/>
 
 								{ settingsFields.length > 0 && (
 									<ProviderForm

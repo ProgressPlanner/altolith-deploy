@@ -11,14 +11,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock WordPress components
 jest.mock( '@wordpress/components', () => ( {
-	Button: ( {
-		children,
-		onClick,
-		disabled,
-		isBusy,
-		variant,
-		className,
-	} ) => (
+	Button: ( { children, onClick, disabled, isBusy, variant, className } ) => (
 		<button
 			onClick={ onClick }
 			disabled={ disabled }
@@ -62,7 +55,9 @@ describe( 'ModalActions', () => {
 		} );
 
 		test( 'should render with correct base class', () => {
-			const { container } = render( <ModalActions { ...defaultProps } /> );
+			const { container } = render(
+				<ModalActions { ...defaultProps } />
+			);
 
 			expect(
 				container.querySelector( '.aether-modal-actions' )
@@ -93,7 +88,10 @@ describe( 'ModalActions', () => {
 			render( <ModalActions { ...defaultProps } /> );
 
 			const cancelButton = screen.getByText( 'Cancel' );
-			expect( cancelButton ).toHaveAttribute( 'data-variant', 'secondary' );
+			expect( cancelButton ).toHaveAttribute(
+				'data-variant',
+				'secondary'
+			);
 		} );
 	} );
 
@@ -102,18 +100,14 @@ describe( 'ModalActions', () => {
 	// ============================================================
 	describe( 'button visibility', () => {
 		test( 'should not render cancel button when onCancel is null', () => {
-			render(
-				<ModalActions { ...defaultProps } onCancel={ null } />
-			);
+			render( <ModalActions { ...defaultProps } onCancel={ null } /> );
 
 			expect( screen.queryByText( 'Cancel' ) ).not.toBeInTheDocument();
 			expect( screen.getByText( 'Submit' ) ).toBeInTheDocument();
 		} );
 
 		test( 'should not render submit button when onSubmit is null', () => {
-			render(
-				<ModalActions { ...defaultProps } onSubmit={ null } />
-			);
+			render( <ModalActions { ...defaultProps } onSubmit={ null } /> );
 
 			expect( screen.getByText( 'Cancel' ) ).toBeInTheDocument();
 			expect( screen.queryByText( 'Submit' ) ).not.toBeInTheDocument();
@@ -165,33 +159,25 @@ describe( 'ModalActions', () => {
 	// ============================================================
 	describe( 'disabled states', () => {
 		test( 'should disable submit button when submitDisabled is true', () => {
-			render(
-				<ModalActions { ...defaultProps } submitDisabled />
-			);
+			render( <ModalActions { ...defaultProps } submitDisabled /> );
 
 			expect( screen.getByText( 'Submit' ) ).toBeDisabled();
 		} );
 
 		test( 'should disable submit button when isSubmitting is true', () => {
-			render(
-				<ModalActions { ...defaultProps } isSubmitting />
-			);
+			render( <ModalActions { ...defaultProps } isSubmitting /> );
 
 			expect( screen.getByText( 'Submit' ) ).toBeDisabled();
 		} );
 
 		test( 'should disable cancel button when isSubmitting is true', () => {
-			render(
-				<ModalActions { ...defaultProps } isSubmitting />
-			);
+			render( <ModalActions { ...defaultProps } isSubmitting /> );
 
 			expect( screen.getByText( 'Cancel' ) ).toBeDisabled();
 		} );
 
 		test( 'should show busy state on submit when isSubmitting is true', () => {
-			render(
-				<ModalActions { ...defaultProps } isSubmitting />
-			);
+			render( <ModalActions { ...defaultProps } isSubmitting /> );
 
 			const submitButton = screen.getByText( 'Submit' );
 			expect( submitButton ).toHaveAttribute( 'data-busy', 'true' );
@@ -199,11 +185,7 @@ describe( 'ModalActions', () => {
 
 		test( 'should disable submit when both submitDisabled and isSubmitting are true', () => {
 			render(
-				<ModalActions
-					{ ...defaultProps }
-					submitDisabled
-					isSubmitting
-				/>
+				<ModalActions { ...defaultProps } submitDisabled isSubmitting />
 			);
 
 			expect( screen.getByText( 'Submit' ) ).toBeDisabled();
@@ -216,26 +198,26 @@ describe( 'ModalActions', () => {
 	describe( 'submit variant', () => {
 		test( 'should use custom submit variant', () => {
 			render(
-				<ModalActions
-					{ ...defaultProps }
-					submitVariant="secondary"
-				/>
+				<ModalActions { ...defaultProps } submitVariant="secondary" />
 			);
 
 			const submitButton = screen.getByText( 'Submit' );
-			expect( submitButton ).toHaveAttribute( 'data-variant', 'secondary' );
+			expect( submitButton ).toHaveAttribute(
+				'data-variant',
+				'secondary'
+			);
 		} );
 
 		test( 'should support tertiary variant', () => {
 			render(
-				<ModalActions
-					{ ...defaultProps }
-					submitVariant="tertiary"
-				/>
+				<ModalActions { ...defaultProps } submitVariant="tertiary" />
 			);
 
 			const submitButton = screen.getByText( 'Submit' );
-			expect( submitButton ).toHaveAttribute( 'data-variant', 'tertiary' );
+			expect( submitButton ).toHaveAttribute(
+				'data-variant',
+				'tertiary'
+			);
 		} );
 	} );
 
@@ -288,7 +270,9 @@ describe( 'ModalActions', () => {
 				/>
 			);
 
-			const actionsDiv = container.querySelector( '.aether-modal-actions' );
+			const actionsDiv = container.querySelector(
+				'.aether-modal-actions'
+			);
 			expect( actionsDiv.className ).toContain( 'my-custom-actions' );
 		} );
 	} );

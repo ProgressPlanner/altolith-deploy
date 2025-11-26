@@ -19,7 +19,10 @@ jest.mock( '@wordpress/i18n', () => ( {
 	sprintf: ( format, ...args ) => {
 		let result = format;
 		args.forEach( ( arg, index ) => {
-			result = result.replace( new RegExp( `%${ index + 1 }\\$[sd]`, 'g' ), arg );
+			result = result.replace(
+				new RegExp( `%${ index + 1 }\\$[sd]`, 'g' ),
+				arg
+			);
 			result = result.replace( /%[sd]/, arg );
 		} );
 		return result;

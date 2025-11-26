@@ -106,14 +106,22 @@ function ProviderForm( {
 		onChangeRef.current = onChange;
 	}, [ onChange ] );
 
-	// Only initialize values once on mount, not when initialValues prop changes
-	// This prevents the form from resetting while user is typing
-	// The form is controlled by local state, parent updates come through onChange callback
+	// Track the previous initialValues to detect significant changes (e.g., from copy config)
+	const previousInitialValuesRef = useRef( JSON.stringify( initialValues ) );
+
+	// Initialize values on mount AND when initialValues changes significantly
+	// This enables the "copy config" feature to update the form
 	useEffect( () => {
-		// Only initialize once on mount
-		setValues( initializeValues() );
+		const currentInitialValuesJSON = JSON.stringify( initialValues );
+
+		// Only update if initialValues actually changed
+		// This prevents resetting while user is typing (onChange callbacks)
+		if ( previousInitialValuesRef.current !== currentInitialValuesJSON ) {
+			previousInitialValuesRef.current = currentInitialValuesJSON;
+			setValues( initializeValues() );
+		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [] ); // Empty deps = run only on mount
+	}, [ initialValues ] ); // Run when initialValues changes
 
 	const handleFieldChange = useCallback(
 		( fieldId, value ) => {

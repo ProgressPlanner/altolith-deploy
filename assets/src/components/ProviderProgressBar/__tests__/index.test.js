@@ -92,13 +92,19 @@ describe( 'ProviderProgressBar', () => {
 		} );
 
 		test( 'should render step label when status is active', () => {
-			render( <ProviderProgressBar { ...defaultProps } status="active" /> );
+			render(
+				<ProviderProgressBar { ...defaultProps } status="active" />
+			);
 
-			expect( screen.getByText( 'Uploading files...' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Uploading files...' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should not render step label when status is complete', () => {
-			render( <ProviderProgressBar { ...defaultProps } status="complete" /> );
+			render(
+				<ProviderProgressBar { ...defaultProps } status="complete" />
+			);
 
 			expect(
 				screen.queryByText( 'Uploading files...' )
@@ -106,7 +112,9 @@ describe( 'ProviderProgressBar', () => {
 		} );
 
 		test( 'should not render step label when status is error', () => {
-			render( <ProviderProgressBar { ...defaultProps } status="error" /> );
+			render(
+				<ProviderProgressBar { ...defaultProps } status="error" />
+			);
 
 			expect(
 				screen.queryByText( 'Uploading files...' )
@@ -156,7 +164,9 @@ describe( 'ProviderProgressBar', () => {
 			);
 
 			expect(
-				container.querySelector( '.aether-provider-progress-bar--active' )
+				container.querySelector(
+					'.aether-provider-progress-bar--active'
+				)
 			).toBeInTheDocument();
 		} );
 
@@ -166,7 +176,9 @@ describe( 'ProviderProgressBar', () => {
 			);
 
 			expect(
-				container.querySelector( '.aether-provider-progress-bar--complete' )
+				container.querySelector(
+					'.aether-provider-progress-bar--complete'
+				)
 			).toBeInTheDocument();
 		} );
 
@@ -176,7 +188,9 @@ describe( 'ProviderProgressBar', () => {
 			);
 
 			expect(
-				container.querySelector( '.aether-provider-progress-bar--error' )
+				container.querySelector(
+					'.aether-provider-progress-bar--error'
+				)
 			).toBeInTheDocument();
 		} );
 
@@ -185,17 +199,15 @@ describe( 'ProviderProgressBar', () => {
 				<ProviderProgressBar { ...defaultProps } status="complete" />
 			);
 
-			expect(
-				screen.getByText( '✓' )
-			).toBeInTheDocument();
+			expect( screen.getByText( '✓' ) ).toBeInTheDocument();
 		} );
 
 		test( 'should show X icon when error', () => {
-			render( <ProviderProgressBar { ...defaultProps } status="error" /> );
+			render(
+				<ProviderProgressBar { ...defaultProps } status="error" />
+			);
 
-			expect(
-				screen.getByText( '✗' )
-			).toBeInTheDocument();
+			expect( screen.getByText( '✗' ) ).toBeInTheDocument();
 		} );
 
 		test( 'should not show status icon when active', () => {
@@ -219,7 +231,9 @@ describe( 'ProviderProgressBar', () => {
 		} );
 
 		test( 'should not show "Complete" message when status is active', () => {
-			render( <ProviderProgressBar { ...defaultProps } status="active" /> );
+			render(
+				<ProviderProgressBar { ...defaultProps } status="active" />
+			);
 
 			expect( screen.queryByText( 'Complete' ) ).not.toBeInTheDocument();
 		} );
@@ -267,7 +281,9 @@ describe( 'ProviderProgressBar', () => {
 			);
 
 			expect(
-				container.querySelector( '.aether-provider-progress-bar__error' )
+				container.querySelector(
+					'.aether-provider-progress-bar__error'
+				)
 			).not.toBeInTheDocument();
 		} );
 	} );
@@ -341,10 +357,7 @@ describe( 'ProviderProgressBar', () => {
 
 		test( 'should handle undefined status', () => {
 			const { container } = render(
-				<ProviderProgressBar
-					{ ...defaultProps }
-					status={ undefined }
-				/>
+				<ProviderProgressBar { ...defaultProps } status={ undefined } />
 			);
 
 			// Should render without throwing

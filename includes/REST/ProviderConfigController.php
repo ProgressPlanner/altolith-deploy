@@ -78,6 +78,23 @@ class ProviderConfigController
 				'permission_callback' => [ $this, 'permissionCheck' ],
 			]
 		);
+
+		// Copy configuration from another instance.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/providers/(?P<target_id>[a-z0-9_:-]+)/copy-from/(?P<source_id>[a-z0-9_:-]+)',
+			[
+				'methods'             => 'POST',
+				'callback'            => [ $this, 'copyConfig' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+				'args'                => [
+					'target_fields' => [
+						'required' => true,
+						'type'     => 'array',
+					],
+				],
+			]
+		);
 	}
 
 	/**
@@ -299,6 +316,163 @@ class ProviderConfigController
 			],
 			200
 		);
+	}
+
+	/**
+	 * Copy configuration from one provider instance to another.
+	 *
+	 * Copies configuration fields from source instance to be used in target instance.
+	 * Only copies fields that exist in the target_fields array.
+	 * Decrypts sensitive fields from source so they can be used in target form.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error Response or error.
+	 */
+	public function copyConfig(WP_REST_Request $request)
+	{
+		$targetId = $request->get_param('target_id');
+		$sourceId = $request->get_param('source_id');
+		$targetFields = $request->get_param('target_fields');
+
+		// Validate instance ID formats.
+		if (! $this->isValidInstanceId($targetId)) {
+			return new WP_Error(
+				'invalid_target_id',
+				/* translators: %s: Provider instance ID */
+				\sprintf(\__('Invalid target instance ID format: %s', 'aether-site-exporter'), $targetId),
+				[ 'status' => 400 ]
+			);
+		}
+
+		if (! $this->isValidInstanceId($sourceId)) {
+			return new WP_Error(
+				'invalid_source_id',
+				/* translators: %s: Provider instance ID */
+				\sprintf(\__('Invalid source instance ID format: %s', 'aether-site-exporter'), $sourceId),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Prevent copying to self.
+		if ($targetId === $sourceId) {
+			return new WP_Error(
+				'same_instance',
+				\__('Cannot copy configuration to the same instance.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Check provider family compatibility.
+		$targetParsed = $this->parseInstanceId($targetId);
+		$sourceParsed = $this->parseInstanceId($sourceId);
+
+		if (! $targetParsed || ! $sourceParsed) {
+			return new WP_Error(
+				'invalid_instance_format',
+				\__('Could not parse instance IDs.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$targetFamily = $this->getProviderFamily($targetParsed['provider_type']);
+		$sourceFamily = $this->getProviderFamily($sourceParsed['provider_type']);
+
+		if ($targetFamily !== $sourceFamily) {
+			return new WP_Error(
+				'incompatible_providers',
+				/* translators: 1: Target provider family, 2: Source provider family */
+				\sprintf(
+					\__('Cannot copy configuration between incompatible provider families: %1$s and %2$s', 'aether-site-exporter'),
+					$targetFamily,
+					$sourceFamily
+				),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Get source config from database.
+		$settings = \get_option('aether_site_exporter_settings', []);
+		$sourceConfig = $settings['providers'][$sourceId] ?? [];
+
+		if (empty($sourceConfig)) {
+			return new WP_Error(
+				'source_not_found',
+				/* translators: %s: Source instance ID */
+				\sprintf(\__('Source instance not found: %s', 'aether-site-exporter'), $sourceId),
+				[ 'status' => 404 ]
+			);
+		}
+
+		// Decrypt sensitive fields from source.
+		$decryptedSource = $this->decryptSensitiveFields($sourceConfig);
+
+		// Filter to only fields that exist in target_fields array.
+		$copiedFields = [];
+		$skippedFields = [];
+
+		foreach ($decryptedSource as $key => $value) {
+			// Skip metadata fields.
+			if (\in_array($key, ['provider_type', 'instance_name'], true)) {
+				$skippedFields[] = $key;
+				continue;
+			}
+
+			// Only copy fields that the target provider uses.
+			if (\in_array($key, $targetFields, true)) {
+				$copiedFields[$key] = $value;
+			} else {
+				$skippedFields[] = $key;
+			}
+		}
+
+		/**
+		 * Filter copied configuration fields.
+		 *
+		 * @param array  $copiedFields  Fields being copied.
+		 * @param string $sourceId      Source instance ID.
+		 * @param string $targetId      Target instance ID.
+		 * @param array  $targetFields  Target provider's field IDs.
+		 */
+		$copiedFields = \apply_filters(
+			'aether_provider_config_copy',
+			$copiedFields,
+			$sourceId,
+			$targetId,
+			$targetFields
+		);
+
+		return new WP_REST_Response(
+			[
+				'success'       => true,
+				'copiedFields'  => $copiedFields,
+				'skippedFields' => $skippedFields,
+			],
+			200
+		);
+	}
+
+	/**
+	 * Extract provider family from provider type.
+	 *
+	 * Provider families are determined by removing known deployment type suffixes.
+	 * Examples:
+	 * - 'cloudflare-r2-static-site' → 'cloudflare-r2'
+	 * - 'local-filesystem-blueprint-bundle' → 'local-filesystem'
+	 *
+	 * @param string $providerType Provider type identifier.
+	 * @return string Provider family.
+	 */
+	private function getProviderFamily(string $providerType): string
+	{
+		$suffixes = ['-static-site', '-blueprint-bundle', '-edge-functions'];
+
+		foreach ($suffixes as $suffix) {
+			if (\str_ends_with($providerType, $suffix)) {
+				return \substr($providerType, 0, -\strlen($suffix));
+			}
+		}
+
+		return $providerType;
 	}
 
 	/**

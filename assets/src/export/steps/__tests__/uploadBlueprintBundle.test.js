@@ -28,8 +28,12 @@ jest.mock( '@wordpress/i18n', () => ( {
 // Mock helpers
 jest.mock( '../../utils/helpers', () => ( {
 	formatFileSize: jest.fn( ( bytes ) => {
-		if ( bytes === 0 ) return '0 B';
-		if ( bytes < 1024 ) return `${ bytes } B`;
+		if ( bytes === 0 ) {
+			return '0 B';
+		}
+		if ( bytes < 1024 ) {
+			return `${ bytes } B`;
+		}
 		return `${ ( bytes / 1024 ).toFixed( 1 ) } KB`;
 	} ),
 } ) );
@@ -56,7 +60,10 @@ jest.mock( '@aether/constants/deploymentTypes', () => ( {
 const mockProviderRegistry = {
 	get: jest.fn(),
 };
-jest.mock( '@aether/providers/registry/ProviderRegistry', () => mockProviderRegistry );
+jest.mock(
+	'@aether/providers/registry/ProviderRegistry',
+	() => mockProviderRegistry
+);
 
 // Import after mocks are set up
 let stepDefinition;
@@ -87,7 +94,9 @@ describe( 'uploadBlueprintBundle step', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
 		mockFetchProviderConfig.mockResolvedValue( {} );
-		mockBuildStorageConfig.mockReturnValue( { siteUrl: 'http://example.com' } );
+		mockBuildStorageConfig.mockReturnValue( {
+			siteUrl: 'http://example.com',
+		} );
 	} );
 
 	// ============================================================
@@ -103,7 +112,9 @@ describe( 'uploadBlueprintBundle step', () => {
 		} );
 
 		test( 'should depend on createBlueprintBundle', () => {
-			expect( stepDefinition.dependencies ).toContain( 'createBlueprintBundle' );
+			expect( stepDefinition.dependencies ).toContain(
+				'createBlueprintBundle'
+			);
 		} );
 
 		test( 'should require currentProviderInstance from thread', () => {
@@ -214,13 +225,18 @@ describe( 'uploadBlueprintBundle step', () => {
 			const mockStorageService = {
 				upload: jest.fn().mockResolvedValue( { success: true } ),
 			};
-			mockFetchProviderConfig.mockResolvedValue( { export_path: 'custom/path.zip' } );
+			mockFetchProviderConfig.mockResolvedValue( {
+				export_path: 'custom/path.zip',
+			} );
 			mockCreateStorageService.mockResolvedValue( mockStorageService );
 
 			const mockSetStatusMessage = jest.fn();
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test Provider' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test Provider',
+				},
 				blueprintBundle: {
 					bundlePath: '/tmp/bundle.zip',
 					bundleUrl: 'http://example.com/bundle.zip',
@@ -230,20 +246,27 @@ describe( 'uploadBlueprintBundle step', () => {
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
-			expect( mockFetchProviderConfig ).toHaveBeenCalledWith( 'test-provider:123' );
+			expect( mockFetchProviderConfig ).toHaveBeenCalledWith(
+				'test-provider:123'
+			);
 		} );
 
 		test( 'should use export_path from provider config', async () => {
 			const mockStorageService = {
 				upload: jest.fn().mockResolvedValue( { success: true } ),
 			};
-			mockFetchProviderConfig.mockResolvedValue( { export_path: 'my-bundles/custom.zip' } );
+			mockFetchProviderConfig.mockResolvedValue( {
+				export_path: 'my-bundles/custom.zip',
+			} );
 			mockCreateStorageService.mockResolvedValue( mockStorageService );
 
 			const mockSetStatusMessage = jest.fn();
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				blueprintBundle: {
 					bundlePath: '/tmp/bundle.zip',
 					bundleUrl: 'http://example.com/bundle.zip',
@@ -257,7 +280,9 @@ describe( 'uploadBlueprintBundle step', () => {
 				'my-bundles/custom.zip',
 				expect.any( Object ),
 				'test-provider:123',
-				expect.objectContaining( { export_path: 'my-bundles/custom.zip' } )
+				expect.objectContaining( {
+					export_path: 'my-bundles/custom.zip',
+				} )
 			);
 		} );
 
@@ -271,7 +296,10 @@ describe( 'uploadBlueprintBundle step', () => {
 			const mockSetStatusMessage = jest.fn();
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				blueprintBundle: {
 					bundlePath: '/tmp/bundle.zip',
 					bundleUrl: 'http://example.com/bundle.zip',
@@ -293,13 +321,18 @@ describe( 'uploadBlueprintBundle step', () => {
 			const mockStorageService = {
 				upload: jest.fn().mockResolvedValue( { success: true } ),
 			};
-			mockFetchProviderConfig.mockResolvedValue( { export_path: 'bundle.zip' } );
+			mockFetchProviderConfig.mockResolvedValue( {
+				export_path: 'bundle.zip',
+			} );
 			mockCreateStorageService.mockResolvedValue( mockStorageService );
 
 			const mockSetStatusMessage = jest.fn();
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				blueprintBundle: {
 					bundlePath: '/tmp/bundle.zip',
 					bundleUrl: 'http://example.com/bundle.zip',
@@ -325,13 +358,18 @@ describe( 'uploadBlueprintBundle step', () => {
 			const mockStorageService = {
 				upload: jest.fn().mockResolvedValue( { success: true } ),
 			};
-			mockFetchProviderConfig.mockResolvedValue( { export_path: 'bundle.zip' } );
+			mockFetchProviderConfig.mockResolvedValue( {
+				export_path: 'bundle.zip',
+			} );
 			mockCreateStorageService.mockResolvedValue( mockStorageService );
 
 			const mockSetStatusMessage = jest.fn();
 
 			const result = await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'My Provider' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'My Provider',
+				},
 				blueprintBundle: {
 					bundlePath: '/tmp/bundle.zip',
 					bundleUrl: 'http://example.com/bundle.zip',
@@ -360,7 +398,10 @@ describe( 'uploadBlueprintBundle step', () => {
 			const mockSetStatusMessage = jest.fn();
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Cloud Storage' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Cloud Storage',
+				},
 				blueprintBundle: {
 					bundlePath: '/tmp/bundle.zip',
 					bundleUrl: 'http://example.com/bundle.zip',
@@ -405,7 +446,9 @@ describe( 'uploadBlueprintBundle step', () => {
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
-			expect( result.bundleUploadResults.providerLabel ).toBe( 'test-provider:123' );
+			expect( result.bundleUploadResults.providerLabel ).toBe(
+				'test-provider:123'
+			);
 		} );
 	} );
 
@@ -434,7 +477,10 @@ describe( 'uploadBlueprintBundle step', () => {
 
 			await expect(
 				handler( {
-					currentProviderInstance: { id: 'test-provider:123', label: 'Bad Provider' },
+					currentProviderInstance: {
+						id: 'test-provider:123',
+						label: 'Bad Provider',
+					},
 					blueprintBundle: {
 						bundlePath: '/tmp/bundle.zip',
 						bundleUrl: 'http://example.com/bundle.zip',
@@ -460,7 +506,10 @@ describe( 'uploadBlueprintBundle step', () => {
 
 			await expect(
 				handler( {
-					currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+					currentProviderInstance: {
+						id: 'test-provider:123',
+						label: 'Test',
+					},
 					blueprintBundle: {
 						bundlePath: '/tmp/bundle.zip',
 						bundleUrl: 'http://example.com/bundle.zip',
@@ -483,7 +532,10 @@ describe( 'uploadBlueprintBundle step', () => {
 
 			await expect(
 				handler( {
-					currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+					currentProviderInstance: {
+						id: 'test-provider:123',
+						label: 'Test',
+					},
 					blueprintBundle: {
 						bundlePath: '/tmp/bundle.zip',
 						bundleUrl: 'http://example.com/bundle.zip',
@@ -505,7 +557,10 @@ describe( 'uploadBlueprintBundle step', () => {
 			const mockSetStatusMessage = jest.fn();
 
 			const result = await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				blueprintBundle: {
 					bundlePath: '/tmp/bundle.zip',
 					bundleUrl: 'http://example.com/bundle.zip',

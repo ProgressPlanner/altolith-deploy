@@ -29,9 +29,15 @@ jest.mock( '@wordpress/i18n', () => ( {
 // Mock helpers
 jest.mock( '../../utils/helpers', () => ( {
 	formatFileSize: jest.fn( ( bytes ) => {
-		if ( bytes === 0 ) return '0 B';
-		if ( bytes < 1024 ) return `${ bytes } B`;
-		if ( bytes < 1024 * 1024 ) return `${ ( bytes / 1024 ).toFixed( 1 ) } KB`;
+		if ( bytes === 0 ) {
+			return '0 B';
+		}
+		if ( bytes < 1024 ) {
+			return `${ bytes } B`;
+		}
+		if ( bytes < 1024 * 1024 ) {
+			return `${ ( bytes / 1024 ).toFixed( 1 ) } KB`;
+		}
 		return `${ ( bytes / ( 1024 * 1024 ) ).toFixed( 1 ) } MB`;
 	} ),
 } ) );
@@ -79,7 +85,9 @@ describe( 'createBlueprintBundle step', () => {
 		} );
 
 		test( 'should depend on createWpContentArchive', () => {
-			expect( stepDefinition.dependencies ).toContain( 'createWpContentArchive' );
+			expect( stepDefinition.dependencies ).toContain(
+				'createWpContentArchive'
+			);
 		} );
 
 		test( 'should require api from initial context', () => {
@@ -142,7 +150,9 @@ describe( 'createBlueprintBundle step', () => {
 	describe( 'handler - with generateBlueprintJson', () => {
 		test( 'should call generateBlueprintJson when provided', async () => {
 			const mockBlueprintData = { steps: [] };
-			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( mockBlueprintData );
+			const mockGenerateBlueprintJson = jest
+				.fn()
+				.mockResolvedValue( mockBlueprintData );
 			const mockApi = {
 				createBlueprintBundle: jest.fn().mockResolvedValue( {
 					success: true,
@@ -173,7 +183,9 @@ describe( 'createBlueprintBundle step', () => {
 
 		test( 'should use generateBlueprintJson result for bundle creation', async () => {
 			const mockBlueprintData = { steps: [ { step: 'writeFile' } ] };
-			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( mockBlueprintData );
+			const mockGenerateBlueprintJson = jest
+				.fn()
+				.mockResolvedValue( mockBlueprintData );
 			const mockApi = {
 				createBlueprintBundle: jest.fn().mockResolvedValue( {
 					success: true,
@@ -264,7 +276,9 @@ describe( 'createBlueprintBundle step', () => {
 	describe( 'handler - success', () => {
 		test( 'should return blueprint data and bundle info', async () => {
 			const mockBlueprintData = { steps: [] };
-			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( mockBlueprintData );
+			const mockGenerateBlueprintJson = jest
+				.fn()
+				.mockResolvedValue( mockBlueprintData );
 			const mockApi = {
 				createBlueprintBundle: jest.fn().mockResolvedValue( {
 					success: true,
@@ -350,7 +364,9 @@ describe( 'createBlueprintBundle step', () => {
 
 		test( 'should apply filter for blueprint data', async () => {
 			const mockBlueprintData = { steps: [] };
-			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( mockBlueprintData );
+			const mockGenerateBlueprintJson = jest
+				.fn()
+				.mockResolvedValue( mockBlueprintData );
 			const mockApi = {
 				createBlueprintBundle: jest.fn().mockResolvedValue( {
 					success: true,
@@ -383,13 +399,18 @@ describe( 'createBlueprintBundle step', () => {
 			const filteredBlueprint = { steps: [ { step: 'customStep' } ] };
 
 			mockApplyFilters.mockImplementation( ( hookName, value ) => {
-				if ( hookName === 'aether.export.step.createBlueprintBundle.blueprintData' ) {
+				if (
+					hookName ===
+					'aether.export.step.createBlueprintBundle.blueprintData'
+				) {
 					return filteredBlueprint;
 				}
 				return value;
 			} );
 
-			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( originalBlueprint );
+			const mockGenerateBlueprintJson = jest
+				.fn()
+				.mockResolvedValue( originalBlueprint );
 			const mockApi = {
 				createBlueprintBundle: jest.fn().mockResolvedValue( {
 					success: true,

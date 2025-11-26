@@ -104,7 +104,9 @@ describe( 'useExportAPI', () => {
 		test( 'should return all API methods', () => {
 			const { result } = renderHook( () => useExportAPI() );
 
-			expect( result.current ).toHaveProperty( 'discoverBlueprintBundleAssets' );
+			expect( result.current ).toHaveProperty(
+				'discoverBlueprintBundleAssets'
+			);
 			expect( result.current ).toHaveProperty( 'getAssetStatus' );
 			expect( result.current ).toHaveProperty( 'markAssetChanged' );
 			expect( result.current ).toHaveProperty( 'discoverUrls' );
@@ -126,14 +128,17 @@ describe( 'useExportAPI', () => {
 		} );
 
 		test( 'should return service response', async () => {
-			mockServiceInstance.discoverBlueprintBundleAssets.mockResolvedValue( {
-				success: true,
-				assets: [ { slug: 'test-plugin' } ],
-				count: 1,
-			} );
+			mockServiceInstance.discoverBlueprintBundleAssets.mockResolvedValue(
+				{
+					success: true,
+					assets: [ { slug: 'test-plugin' } ],
+					count: 1,
+				}
+			);
 
 			const { result } = renderHook( () => useExportAPI() );
-			const response = await result.current.discoverBlueprintBundleAssets();
+			const response =
+				await result.current.discoverBlueprintBundleAssets();
 
 			expect( response.success ).toBe( true );
 			expect( response.count ).toBe( 1 );
@@ -237,9 +242,9 @@ describe( 'useExportAPI', () => {
 
 			await result.current.generateBlueprint( options );
 
-			expect( mockServiceInstance.generateBlueprint ).toHaveBeenCalledWith(
-				options
-			);
+			expect(
+				mockServiceInstance.generateBlueprint
+			).toHaveBeenCalledWith( options );
 		} );
 	} );
 

@@ -45,7 +45,10 @@ jest.mock( '@aether/constants/deploymentTypes', () => ( {
 const mockProviderRegistry = {
 	get: jest.fn(),
 };
-jest.mock( '@aether/providers/registry/ProviderRegistry', () => mockProviderRegistry );
+jest.mock(
+	'@aether/providers/registry/ProviderRegistry',
+	() => mockProviderRegistry
+);
 
 // Import after mocks are set up
 let stepDefinition;
@@ -92,7 +95,9 @@ describe( 'uploadStaticFiles step', () => {
 		} );
 
 		test( 'should depend on preScanStaticSite', () => {
-			expect( stepDefinition.dependencies ).toContain( 'preScanStaticSite' );
+			expect( stepDefinition.dependencies ).toContain(
+				'preScanStaticSite'
+			);
 		} );
 
 		test( 'should require currentProviderInstance from thread', () => {
@@ -295,11 +300,17 @@ describe( 'uploadStaticFiles step', () => {
 				filesUploaded: 5,
 			} );
 			const mockSetStatusMessage = jest.fn();
-			const mockUrls = [ 'http://example.com/', 'http://example.com/about/' ];
+			const mockUrls = [
+				'http://example.com/',
+				'http://example.com/about/',
+			];
 			const mockSharedHtmlData = new Map();
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				urls: mockUrls,
 				staticSiteUrl: 'http://static.example.com',
 				sharedHtmlData: mockSharedHtmlData,
@@ -332,7 +343,10 @@ describe( 'uploadStaticFiles step', () => {
 			const mockSetStatusMessage = jest.fn();
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com', // Global URL
 				sharedHtmlData: new Map(),
@@ -360,7 +374,10 @@ describe( 'uploadStaticFiles step', () => {
 			];
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				urls: originalUrls,
 				staticSiteUrl: 'http://static.example.com',
 				sharedHtmlData: new Map(),
@@ -396,7 +413,10 @@ describe( 'uploadStaticFiles step', () => {
 			const mockSetStatusMessage = jest.fn();
 
 			const result = await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'My Provider' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'My Provider',
+				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
 				sharedHtmlData: new Map(),
@@ -429,7 +449,10 @@ describe( 'uploadStaticFiles step', () => {
 			const mockSetStatusMessage = jest.fn();
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Cloud Storage' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Cloud Storage',
+				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
 				sharedHtmlData: new Map(),
@@ -463,7 +486,10 @@ describe( 'uploadStaticFiles step', () => {
 			const mockUpdateProgress = jest.fn();
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
 				sharedHtmlData: new Map(),
@@ -473,7 +499,11 @@ describe( 'uploadStaticFiles step', () => {
 				updateStaticSiteProgressContext: mockUpdateProgress,
 			} );
 
-			expect( mockUpdateProgress ).toHaveBeenCalledWith( 0, 1, 'test-provider:123' );
+			expect( mockUpdateProgress ).toHaveBeenCalledWith(
+				0,
+				1,
+				'test-provider:123'
+			);
 		} );
 
 		test( 'should apply result filter', async () => {
@@ -484,7 +514,10 @@ describe( 'uploadStaticFiles step', () => {
 			const mockSetStatusMessage = jest.fn();
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
 				sharedHtmlData: new Map(),
@@ -519,7 +552,10 @@ describe( 'uploadStaticFiles step', () => {
 
 			await expect(
 				handler( {
-					currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+					currentProviderInstance: {
+						id: 'test-provider:123',
+						label: 'Test',
+					},
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
 					sharedHtmlData: new Map(),
@@ -539,7 +575,10 @@ describe( 'uploadStaticFiles step', () => {
 
 			await expect(
 				handler( {
-					currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+					currentProviderInstance: {
+						id: 'test-provider:123',
+						label: 'Test',
+					},
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
 					sharedHtmlData: new Map(),
@@ -559,7 +598,10 @@ describe( 'uploadStaticFiles step', () => {
 
 			await expect(
 				handler( {
-					currentProviderInstance: { id: 'test-provider:123', label: 'S3 Bucket' },
+					currentProviderInstance: {
+						id: 'test-provider:123',
+						label: 'S3 Bucket',
+					},
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
 					sharedHtmlData: new Map(),
@@ -578,7 +620,10 @@ describe( 'uploadStaticFiles step', () => {
 
 			await expect(
 				handler( {
-					currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+					currentProviderInstance: {
+						id: 'test-provider:123',
+						label: 'Test',
+					},
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
 					sharedHtmlData: new Map(),
@@ -590,7 +635,9 @@ describe( 'uploadStaticFiles step', () => {
 		} );
 
 		test( 'should gracefully handle fetchProviderConfig failure', async () => {
-			mockFetchProviderConfig.mockRejectedValue( new Error( 'Config error' ) );
+			mockFetchProviderConfig.mockRejectedValue(
+				new Error( 'Config error' )
+			);
 
 			const mockProcessStaticSiteUrls = jest.fn().mockResolvedValue( {
 				success: true,
@@ -601,7 +648,10 @@ describe( 'uploadStaticFiles step', () => {
 			// Should not throw - falls back to global staticSiteUrl
 			await expect(
 				handler( {
-					currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+					currentProviderInstance: {
+						id: 'test-provider:123',
+						label: 'Test',
+					},
 					urls: [ 'http://example.com/' ],
 					staticSiteUrl: 'http://static.example.com',
 					sharedHtmlData: new Map(),
@@ -631,7 +681,10 @@ describe( 'uploadStaticFiles step', () => {
 
 			await expect(
 				handler( {
-					currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+					currentProviderInstance: {
+						id: 'test-provider:123',
+						label: 'Test',
+					},
 					urls: [],
 					staticSiteUrl: 'http://static.example.com',
 					sharedHtmlData: new Map(),
@@ -659,7 +712,9 @@ describe( 'uploadStaticFiles step', () => {
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
-			expect( result.staticUploadResults.providerLabel ).toBe( 'test-provider:123' );
+			expect( result.staticUploadResults.providerLabel ).toBe(
+				'test-provider:123'
+			);
 		} );
 
 		test( 'should pass blueprintData when available', async () => {
@@ -671,7 +726,10 @@ describe( 'uploadStaticFiles step', () => {
 			const mockBlueprintData = { steps: [] };
 
 			await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
 				sharedHtmlData: new Map(),
@@ -696,7 +754,10 @@ describe( 'uploadStaticFiles step', () => {
 			const mockSetStatusMessage = jest.fn();
 
 			const result = await handler( {
-				currentProviderInstance: { id: 'test-provider:123', label: 'Test' },
+				currentProviderInstance: {
+					id: 'test-provider:123',
+					label: 'Test',
+				},
 				urls: [ 'http://example.com/' ],
 				staticSiteUrl: 'http://static.example.com',
 				sharedHtmlData: new Map(),

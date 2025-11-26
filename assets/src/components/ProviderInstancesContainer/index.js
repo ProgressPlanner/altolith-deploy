@@ -161,6 +161,7 @@ export default function ProviderInstancesContainer( {
 								provider={ providerData }
 								deploymentType={ deploymentType }
 								deploymentTypeLabel={ deploymentTypeLabel }
+								allInstances={ instances }
 								onDelete={ () =>
 									onDelete( instance.instanceId )
 								}

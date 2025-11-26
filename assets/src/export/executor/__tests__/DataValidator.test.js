@@ -183,8 +183,12 @@ describe( 'DataValidator', () => {
 					globalData: { type: 'object', scope: 'global' },
 				},
 			};
-			expect( () => validateScope( step ) ).toThrow( /scope inconsistencies/i );
-			expect( () => validateScope( step ) ).toThrow( /globalData.*global scope.*thread step/i );
+			expect( () => validateScope( step ) ).toThrow(
+				/scope inconsistencies/i
+			);
+			expect( () => validateScope( step ) ).toThrow(
+				/globalData.*global scope.*thread step/i
+			);
 		} );
 
 		test( 'should throw error when global step provides thread data', () => {
@@ -197,8 +201,12 @@ describe( 'DataValidator', () => {
 					threadData: { type: 'object', scope: 'thread' },
 				},
 			};
-			expect( () => validateScope( step ) ).toThrow( /scope inconsistencies/i );
-			expect( () => validateScope( step ) ).toThrow( /threadData.*thread scope.*global step/i );
+			expect( () => validateScope( step ) ).toThrow(
+				/scope inconsistencies/i
+			);
+			expect( () => validateScope( step ) ).toThrow(
+				/threadData.*thread scope.*global step/i
+			);
 		} );
 
 		test( 'should collect multiple scope errors', () => {
@@ -254,7 +262,9 @@ describe( 'DataValidator', () => {
 			const context = {
 				siteUrl: 'http://example.com', // urls is missing
 			};
-			expect( () => validate( step, context ) ).toThrow( /missing required data/i );
+			expect( () => validate( step, context ) ).toThrow(
+				/missing required data/i
+			);
 			expect( () => validate( step, context ) ).toThrow( /urls/i );
 		} );
 
@@ -298,7 +308,9 @@ describe( 'DataValidator', () => {
 			};
 			const context = {};
 
-			expect( () => validate( step, context ) ).toThrow( /getStaticSiteUrls/i );
+			expect( () => validate( step, context ) ).toThrow(
+				/getStaticSiteUrls/i
+			);
 		} );
 
 		test( 'should treat missing required field as required by default', () => {
@@ -312,7 +324,9 @@ describe( 'DataValidator', () => {
 			const context = {};
 
 			// The implementation treats missing 'required' as required: true
-			expect( () => validate( step, context ) ).toThrow( /missing required data/i );
+			expect( () => validate( step, context ) ).toThrow(
+				/missing required data/i
+			);
 		} );
 	} );
 
@@ -358,8 +372,12 @@ describe( 'DataValidator', () => {
 				// staticUploadResults is missing
 				someOtherData: 'value',
 			};
-			expect( () => validateOutput( step, result ) ).toThrow( /did not provide/i );
-			expect( () => validateOutput( step, result ) ).toThrow( /staticUploadResults/i );
+			expect( () => validateOutput( step, result ) ).toThrow(
+				/did not provide/i
+			);
+			expect( () => validateOutput( step, result ) ).toThrow(
+				/staticUploadResults/i
+			);
 		} );
 
 		test( 'should list all missing outputs in error', () => {
@@ -373,9 +391,15 @@ describe( 'DataValidator', () => {
 			};
 			const result = {}; // All missing
 
-			expect( () => validateOutput( step, result ) ).toThrow( /output1/i );
-			expect( () => validateOutput( step, result ) ).toThrow( /output2/i );
-			expect( () => validateOutput( step, result ) ).toThrow( /output3/i );
+			expect( () => validateOutput( step, result ) ).toThrow(
+				/output1/i
+			);
+			expect( () => validateOutput( step, result ) ).toThrow(
+				/output2/i
+			);
+			expect( () => validateOutput( step, result ) ).toThrow(
+				/output3/i
+			);
 		} );
 
 		test( 'should pass when result is null but provides is empty', () => {
@@ -459,7 +483,9 @@ describe( 'DataValidator', () => {
 					badData: 'string', // Invalid
 				},
 			};
-			expect( () => getProvidesSummary( step ) ).toThrow( /invalid format/i );
+			expect( () => getProvidesSummary( step ) ).toThrow(
+				/invalid format/i
+			);
 		} );
 
 		test( 'should handle provides with no type specified', () => {

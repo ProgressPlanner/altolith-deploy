@@ -146,7 +146,9 @@ describe( 'Steps Index', () => {
 
 			// Registry should have the 7 mock steps, not the 'testStep' we added manually
 			expect( steps ).toHaveLength( 7 );
-			expect( steps.find( ( s ) => s.id === 'testStep' ) ).toBeUndefined();
+			expect(
+				steps.find( ( s ) => s.id === 'testStep' )
+			).toBeUndefined();
 		} );
 	} );
 

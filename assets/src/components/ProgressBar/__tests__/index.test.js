@@ -74,7 +74,9 @@ describe( 'ProgressBar', () => {
 				/>
 			);
 
-			expect( screen.getByText( 'Uploading files...' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Uploading files...' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should not render description when not provided', () => {
@@ -188,7 +190,10 @@ describe( 'ProgressBar', () => {
 			);
 
 			const progressElement = screen.getByRole( 'progressbar' );
-			expect( progressElement ).toHaveAttribute( 'aria-label', 'Progress: 0%' );
+			expect( progressElement ).toHaveAttribute(
+				'aria-label',
+				'Progress: 0%'
+			);
 		} );
 
 		test( 'should calculate 100% when current equals total', () => {
@@ -217,7 +222,10 @@ describe( 'ProgressBar', () => {
 
 			const progressElement = screen.getByRole( 'progressbar' );
 			// Should show 0% rather than NaN or Infinity
-			expect( progressElement ).toHaveAttribute( 'aria-label', 'Progress: 0%' );
+			expect( progressElement ).toHaveAttribute(
+				'aria-label',
+				'Progress: 0%'
+			);
 		} );
 
 		test( 'should round percentage to whole number', () => {

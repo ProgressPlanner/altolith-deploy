@@ -11,7 +11,16 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock WordPress components
 jest.mock( '@wordpress/components', () => ( {
-	TextControl: ( { label, value, onChange, help, placeholder, required, type, ...rest } ) => (
+	TextControl: ( {
+		label,
+		value,
+		onChange,
+		help,
+		placeholder,
+		required,
+		type,
+		...rest
+	} ) => (
 		<div data-testid={ `text-control-${ type || 'text' }` }>
 			<label>
 				{ label }
@@ -28,7 +37,14 @@ jest.mock( '@wordpress/components', () => ( {
 			{ help && <span className="help">{ help }</span> }
 		</div>
 	),
-	TextareaControl: ( { label, value, onChange, help, placeholder, required } ) => (
+	TextareaControl: ( {
+		label,
+		value,
+		onChange,
+		help,
+		placeholder,
+		required,
+	} ) => (
 		<div data-testid="textarea-control">
 			<label>
 				{ label }
@@ -116,7 +132,9 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			expect( screen.getByTestId( 'text-control-text' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'text-control-text' )
+			).toBeInTheDocument();
 			expect( screen.getByTestId( 'input-text' ) ).toBeInTheDocument();
 		} );
 
@@ -143,7 +161,9 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			expect( screen.getByText( 'Test description' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'Test description' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should call onChange with field id and value', () => {
@@ -159,7 +179,10 @@ describe( 'ProviderField', () => {
 			const input = screen.getByTestId( 'input-text' );
 			fireEvent.change( input, { target: { value: 'new value' } } );
 
-			expect( mockOnChange ).toHaveBeenCalledWith( 'test_field', 'new value' );
+			expect( mockOnChange ).toHaveBeenCalledWith(
+				'test_field',
+				'new value'
+			);
 		} );
 
 		test( 'should show placeholder', () => {
@@ -200,8 +223,12 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			expect( screen.getByTestId( 'checkbox-control' ) ).toBeInTheDocument();
-			expect( screen.getByTestId( 'input-checkbox' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'checkbox-control' )
+			).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'input-checkbox' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should be unchecked when value is false', () => {
@@ -289,7 +316,9 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			expect( screen.getByTestId( 'select-control' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'select-control' )
+			).toBeInTheDocument();
 			expect( screen.getByTestId( 'input-select' ) ).toBeInTheDocument();
 		} );
 
@@ -327,10 +356,7 @@ describe( 'ProviderField', () => {
 		test( 'should use value as label if label is missing', () => {
 			const fieldWithValueOnlyOptions = {
 				...selectField,
-				options: [
-					{ value: 'option1' },
-					{ value: 'option2' },
-				],
+				options: [ { value: 'option1' }, { value: 'option2' } ],
 			};
 
 			render(
@@ -368,8 +394,12 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			expect( screen.getByTestId( 'textarea-control' ) ).toBeInTheDocument();
-			expect( screen.getByTestId( 'input-textarea' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'textarea-control' )
+			).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'input-textarea' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should call onChange with textarea value', () => {
@@ -383,9 +413,14 @@ describe( 'ProviderField', () => {
 			);
 
 			const textarea = screen.getByTestId( 'input-textarea' );
-			fireEvent.change( textarea, { target: { value: 'multi\nline\ntext' } } );
+			fireEvent.change( textarea, {
+				target: { value: 'multi\nline\ntext' },
+			} );
 
-			expect( mockOnChange ).toHaveBeenCalledWith( 'description', 'multi\nline\ntext' );
+			expect( mockOnChange ).toHaveBeenCalledWith(
+				'description',
+				'multi\nline\ntext'
+			);
 		} );
 	} );
 
@@ -410,7 +445,9 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			expect( screen.getByTestId( 'text-control-url' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'text-control-url' )
+			).toBeInTheDocument();
 			expect( screen.getByTestId( 'input-url' ) ).toBeInTheDocument();
 		} );
 	} );
@@ -436,7 +473,9 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			expect( screen.getByTestId( 'text-control-email' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'text-control-email' )
+			).toBeInTheDocument();
 			expect( screen.getByTestId( 'input-email' ) ).toBeInTheDocument();
 		} );
 	} );
@@ -462,7 +501,9 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			expect( screen.getByTestId( 'text-control-number' ) ).toBeInTheDocument();
+			expect(
+				screen.getByTestId( 'text-control-number' )
+			).toBeInTheDocument();
 			expect( screen.getByTestId( 'input-number' ) ).toBeInTheDocument();
 		} );
 	} );
@@ -527,7 +568,10 @@ describe( 'ProviderField', () => {
 			const checkboxes = screen.getAllByTestId( 'input-checkbox' );
 			fireEvent.click( checkboxes[ 1 ] ); // Check feature2
 
-			expect( mockOnChange ).toHaveBeenCalledWith( 'features', [ 'feature1', 'feature2' ] );
+			expect( mockOnChange ).toHaveBeenCalledWith( 'features', [
+				'feature1',
+				'feature2',
+			] );
 		} );
 
 		test( 'should remove option when unchecked', () => {
@@ -543,7 +587,9 @@ describe( 'ProviderField', () => {
 			const checkboxes = screen.getAllByTestId( 'input-checkbox' );
 			fireEvent.click( checkboxes[ 0 ] ); // Uncheck feature1
 
-			expect( mockOnChange ).toHaveBeenCalledWith( 'features', [ 'feature2' ] );
+			expect( mockOnChange ).toHaveBeenCalledWith( 'features', [
+				'feature2',
+			] );
 		} );
 
 		test( 'should handle undefined value as empty array', () => {
@@ -577,7 +623,9 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			expect( screen.getByText( 'This field is required' ) ).toBeInTheDocument();
+			expect(
+				screen.getByText( 'This field is required' )
+			).toBeInTheDocument();
 		} );
 
 		test( 'should add error class to container', () => {
@@ -611,7 +659,9 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			const fieldWrapper = container.querySelector( '.aether-provider-field' );
+			const fieldWrapper = container.querySelector(
+				'.aether-provider-field'
+			);
 			expect( fieldWrapper ).toHaveStyle( { display: 'none' } );
 		} );
 
@@ -626,7 +676,9 @@ describe( 'ProviderField', () => {
 				/>
 			);
 
-			const fieldWrapper = container.querySelector( '.aether-provider-field' );
+			const fieldWrapper = container.querySelector(
+				'.aether-provider-field'
+			);
 			expect( fieldWrapper ).not.toHaveStyle( { display: 'none' } );
 		} );
 	} );

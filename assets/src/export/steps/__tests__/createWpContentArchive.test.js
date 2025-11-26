@@ -30,9 +30,15 @@ jest.mock( '@wordpress/i18n', () => ( {
 // Mock helpers
 jest.mock( '../../utils/helpers', () => ( {
 	formatFileSize: jest.fn( ( bytes ) => {
-		if ( bytes === 0 ) return '0 B';
-		if ( bytes < 1024 ) return `${ bytes } B`;
-		if ( bytes < 1024 * 1024 ) return `${ ( bytes / 1024 ).toFixed( 1 ) } KB`;
+		if ( bytes === 0 ) {
+			return '0 B';
+		}
+		if ( bytes < 1024 ) {
+			return `${ bytes } B`;
+		}
+		if ( bytes < 1024 * 1024 ) {
+			return `${ ( bytes / 1024 ).toFixed( 1 ) } KB`;
+		}
 		return `${ ( bytes / ( 1024 * 1024 ) ).toFixed( 1 ) } MB`;
 	} ),
 } ) );
@@ -229,7 +235,9 @@ describe( 'createWpContentArchive step', () => {
 			const successCall = mockSetStatusMessage.mock.calls.find(
 				( call ) => call[ 1 ] === 'success'
 			);
-			expect( successCall[ 0 ] ).toContain( 'Created wp-content archive' );
+			expect( successCall[ 0 ] ).toContain(
+				'Created wp-content archive'
+			);
 			expect( successCall[ 0 ] ).toContain( 'MB' );
 		} );
 
@@ -267,7 +275,10 @@ describe( 'createWpContentArchive step', () => {
 			];
 
 			mockApplyFilters.mockImplementation( ( hookName, value ) => {
-				if ( hookName === 'aether.export.step.createWpContentArchive.files' ) {
+				if (
+					hookName ===
+					'aether.export.step.createWpContentArchive.files'
+				) {
 					return filteredAssets;
 				}
 				return value;
