@@ -448,7 +448,9 @@ describe( 'ExportContext', () => {
 	} );
 
 	describe( 'updateFromStep', () => {
-		it( 'should mark previous steps as complete and activate target step', () => {
+		it( 'should activate target step without auto-completing previous steps', () => {
+			// Note: updateFromStep no longer auto-completes previous steps
+			// This was changed to support parallel step execution
 			const { result } = renderHook( () => useContext( ExportContext ), {
 				wrapper: ExportProvider,
 			} );
@@ -466,9 +468,12 @@ describe( 'ExportContext', () => {
 				result.current.updateFromStep( 'step3' );
 			} );
 
-			expect( result.current.steps[ 0 ].status ).toBe( 'complete' );
-			expect( result.current.steps[ 1 ].status ).toBe( 'complete' );
+			// Previous steps remain pending (not auto-completed)
+			expect( result.current.steps[ 0 ].status ).toBe( 'pending' );
+			expect( result.current.steps[ 1 ].status ).toBe( 'pending' );
+			// Target step is activated
 			expect( result.current.steps[ 2 ].status ).toBe( 'active' );
+			// Future steps remain pending
 			expect( result.current.steps[ 3 ].status ).toBe( 'pending' );
 		} );
 

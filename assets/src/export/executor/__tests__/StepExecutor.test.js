@@ -11,9 +11,58 @@ jest.mock( '@wordpress/hooks', () => ( {
 	applyFilters: jest.fn( ( filter, value ) => value ),
 } ) );
 
+// Mock the error handler to avoid retry loops in tests
+jest.mock( '../../utils/errorHandler', () => ( {
+	errorHandler: {
+		// Must be async and await the fn() since handlers are async
+		executeWithRetry: async ( fn ) => await fn(),
+		categorize: () => 'unknown',
+	},
+	formatErrorMessage: ( error, { operation } ) =>
+		`Error in ${ operation }: ${ error.message }`,
+	determineSeverity: () => 'high',
+	ERROR_SEVERITY: {
+		CRITICAL: 'critical',
+		HIGH: 'high',
+		MEDIUM: 'medium',
+		LOW: 'low',
+	},
+} ) );
+
+// Mock DataValidator
+jest.mock( '../DataValidator', () => ( {
+	default: {
+		validate: jest.fn(),
+		validateOutput: jest.fn(),
+	},
+	validate: jest.fn(),
+	validateOutput: jest.fn(),
+} ) );
+
+// Mock progressTracker
+jest.mock( '../../utils/progressTracker', () => ( {
+	createProgressTracker: () => ( {
+		load: () => Promise.resolve( null ),
+		updateStepProgress: () => Promise.resolve(),
+		completeStep: () => Promise.resolve(),
+		clear: () => Promise.resolve(),
+	} ),
+} ) );
+
+// Mock stateManager
+jest.mock( '../../utils/stateManager', () => ( {
+	createStateManager: () => ( {
+		clear: () => Promise.resolve(),
+	} ),
+	saveExecutionContext: () => Promise.resolve(),
+	restoreExecutionContext: () => Promise.resolve( null ),
+} ) );
+
 describe( 'StepExecutor', () => {
 	beforeEach( () => {
 		jest.clearAllMocks();
+		// Note: Don't use jest.resetAllMocks() as it resets mock implementations
+		// defined in jest.mock() factories, causing executeWithRetry to return undefined
 	} );
 
 	describe( 'executeSteps()', () => {
@@ -150,7 +199,15 @@ describe( 'StepExecutor', () => {
 				},
 			];
 
-			await expect( executeSteps( steps, {} ) ).rejects.toThrow(
+			let caughtError;
+			try {
+				await executeSteps( steps, {} );
+			} catch ( error ) {
+				caughtError = error;
+			}
+
+			expect( caughtError ).toBeDefined();
+			expect( caughtError.message ).toMatch(
 				/Error during|Something went wrong/
 			);
 		} );

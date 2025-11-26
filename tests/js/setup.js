@@ -14,8 +14,20 @@ global.wp = {
 		_x: ( text ) => text,
 		_n: ( single, plural, number ) => ( number === 1 ? single : plural ),
 		sprintf: ( format, ...args ) => {
+			// Handle positional placeholders like %1$s, %2$s, etc.
+			let result = format.replace( /%(\d+)\$s/g, ( match, index ) => {
+				const argIndex = parseInt( index, 10 ) - 1;
+				return args[ argIndex ] !== undefined
+					? args[ argIndex ]
+					: match;
+			} );
+			// Handle non-positional %s placeholders
 			let i = 0;
-			return format.replace( /%s/g, () => args[ i++ ] );
+			result = result.replace( /%s/g, () => args[ i++ ] );
+			// Handle %d placeholders
+			let j = 0;
+			result = result.replace( /%d/g, () => args[ j++ ] );
+			return result;
 		},
 	},
 	// hooks will use real @wordpress/hooks implementation
@@ -76,8 +88,18 @@ jest.mock( '@wordpress/i18n', () => ( {
 	_x: ( text ) => text,
 	_n: ( single, plural, number ) => ( number === 1 ? single : plural ),
 	sprintf: ( format, ...args ) => {
+		// Handle positional placeholders like %1$s, %2$s, etc.
+		let result = format.replace( /%(\d+)\$s/g, ( match, index ) => {
+			const argIndex = parseInt( index, 10 ) - 1;
+			return args[ argIndex ] !== undefined ? args[ argIndex ] : match;
+		} );
+		// Handle non-positional %s placeholders
 		let i = 0;
-		return format.replace( /%s/g, () => args[ i++ ] );
+		result = result.replace( /%s/g, () => args[ i++ ] );
+		// Handle %d placeholders
+		let j = 0;
+		result = result.replace( /%d/g, () => args[ j++ ] );
+		return result;
 	},
 } ) );
 

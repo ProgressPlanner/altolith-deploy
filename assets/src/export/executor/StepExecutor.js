@@ -8,6 +8,7 @@
 
 import { doAction, applyFilters } from '@wordpress/hooks';
 import { buildParallelPlan, validateDependencies } from './DependencyResolver';
+import { createDependencyTracker } from './DependencyTracker';
 import {
 	errorHandler,
 	formatErrorMessage,
@@ -51,10 +52,10 @@ export async function executeSteps( steps, context, options = {} ) {
 		);
 	}
 
-	// Build execution plan with parallel groups
-	const executionPlan = buildParallelPlan( steps );
+	// Create dependency tracker for true dependency-based execution
+	const tracker = createDependencyTracker( steps );
 
-	// Get all step IDs in execution order
+	// Get all step IDs
 	const stepIds = steps.map( ( step ) => step.id );
 
 	// Create workflow ID
@@ -99,69 +100,34 @@ export async function executeSteps( steps, context, options = {} ) {
 	);
 
 	try {
-		for ( const parallelGroup of executionPlan ) {
-			// Determine which steps to run vs skip
-			const stepsToRun = [];
-			const stepsToSkip = [];
-
-			for ( const stepId of parallelGroup ) {
-				const step = steps.find( ( s ) => s.id === stepId );
-				const shouldSkip = applyFilters(
-					`aether.export.step.${ stepId }.skip`,
-					step.skip ? step.skip( executionContext ) : false,
-					executionContext,
-					executionContext.currentProviderInstance || null
-				);
-
-				if ( shouldSkip ) {
-					stepsToSkip.push( stepId );
-				} else {
-					stepsToRun.push( stepId );
+		// True dependency-based execution: start all steps simultaneously,
+		// each step waits only for its specific dependencies to complete
+		const stepPromises = steps.map( ( step ) =>
+			executeStepWhenReady(
+				step,
+				steps,
+				executionContext,
+				tracker,
+				stateManager,
+				{
+					onStepStart,
+					onStepComplete,
+					onStepSkipped,
+					onError,
 				}
-			}
+			)
+		);
 
-			// Mark skipped steps
-			for ( const stepId of stepsToSkip ) {
-				executionContext.skippedSteps.push( stepId );
-				onStepSkipped( stepId );
-				doAction(
-					`aether.export.step.${ stepId }.skipped`,
-					executionContext,
-					executionContext.currentProviderInstance || null
-				);
-			}
+		// Wait for all steps to complete
+		// Using Promise.all since executeStepWhenReady never rejects (returns error object instead)
+		const results = await Promise.all( stepPromises );
 
-			if ( stepsToRun.length === 0 ) {
-				continue;
-			}
-
-			// Execute steps in parallel
-			const results = await Promise.all(
-				stepsToRun.map( ( stepId ) =>
-					executeStep( stepId, steps, executionContext, {
-						onStepStart,
-						onStepComplete,
-						onError,
-					} )
-				)
-			);
-
-			// Merge results into state
-			for ( const result of results ) {
-				if ( result ) {
-					Object.assign( executionContext.state, result );
-				}
-			}
-
-			// Mark as completed
-			executionContext.completedSteps.push( ...stepsToRun );
-
-			// Save state after each parallel group completes
-			try {
-				await saveExecutionContext( stateManager, executionContext );
-			} catch ( error ) {
-				// Don't throw - state saving is non-critical
-			}
+		// Check for failures - find first error result
+		const firstFailure = results.find(
+			( r ) => r && r.success === false && r.error
+		);
+		if ( firstFailure ) {
+			throw firstFailure.error;
 		}
 
 		// Fire workflow complete action
@@ -186,6 +152,101 @@ export async function executeSteps( steps, context, options = {} ) {
 		);
 		// Don't clear progress on error - allows for resume
 		throw error;
+	}
+}
+
+/**
+ * Execute a step when its dependencies are ready.
+ *
+ * @param {Object} step             Step definition.
+ * @param {Array}  allSteps         All step definitions.
+ * @param {Object} executionContext Current execution context.
+ * @param {Object} tracker          Dependency tracker.
+ * @param {Object} stateManager     State manager for persistence.
+ * @param {Object} options          Execution options with callbacks.
+ * @return {Promise<Object|undefined>} Step result or undefined if skipped/failed dependency.
+ */
+async function executeStepWhenReady(
+	step,
+	allSteps,
+	executionContext,
+	tracker,
+	stateManager,
+	options
+) {
+	const { onStepStart, onStepComplete, onStepSkipped, onError } = options;
+
+	// Wait for this step's dependencies to complete
+	try {
+		await tracker.waitForDependencies( step );
+	} catch ( depError ) {
+		// A dependency failed - mark this step as failed too (cascade)
+		tracker.fail(
+			step.id,
+			new Error( `Dependency failed: ${ depError.message }` )
+		);
+		return;
+	}
+
+	// Check if any dependency failed (defensive check)
+	if ( tracker.hasDependencyFailed( step ) ) {
+		const error = new Error(
+			`Skipping "${ step.id }" due to dependency failure`
+		);
+		tracker.fail( step.id, error );
+		return;
+	}
+
+	// Check skip condition
+	const shouldSkip = applyFilters(
+		`aether.export.step.${ step.id }.skip`,
+		step.skip ? step.skip( executionContext ) : false,
+		executionContext,
+		executionContext.currentProviderInstance || null
+	);
+
+	if ( shouldSkip ) {
+		executionContext.skippedSteps.push( step.id );
+		onStepSkipped( step.id );
+		doAction(
+			`aether.export.step.${ step.id }.skipped`,
+			executionContext,
+			executionContext.currentProviderInstance || null
+		);
+		// Mark as "complete" for dependency purposes (skipped is not failed)
+		tracker.complete( step.id, {} );
+		return;
+	}
+
+	// Execute the step
+	try {
+		const result = await executeStep( step.id, allSteps, executionContext, {
+			onStepStart,
+			onStepComplete,
+			onError,
+		} );
+
+		// Merge result into execution state (for subsequent steps)
+		if ( result ) {
+			Object.assign( executionContext.state, result );
+		}
+
+		// Mark as completed
+		executionContext.completedSteps.push( step.id );
+		tracker.complete( step.id, result );
+
+		// Save state incrementally after each step
+		try {
+			await saveExecutionContext( stateManager, executionContext );
+		} catch ( saveError ) {
+			// Non-critical - continue execution
+		}
+
+		return { success: true, result };
+	} catch ( error ) {
+		tracker.fail( step.id, error );
+		// Return error instead of throwing - avoids unhandled rejection issues
+		return { success: false, error };
 	}
 }
 
