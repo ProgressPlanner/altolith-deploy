@@ -424,6 +424,35 @@ export async function executeThreadedWorkflow(
 	// Track which steps have had onStepStart called (only call once per step)
 	const stepsStarted = new Set();
 
+	// Track step completions per step (for marking complete when all providers finish)
+	// stepProviderCount: how many providers run each step
+	// stepCompletions: how many providers have completed each step
+	const stepProviderCount = new Map();
+	const stepCompletions = new Map();
+
+	// Count how many providers will run each step (accounting for skip conditions)
+	for ( const providerInstance of providerInstances ) {
+		const providerContext = {
+			...globalContext,
+			currentProviderInstance: providerInstance,
+		};
+		for ( const step of threadSteps ) {
+			// Check if this provider will run this step (not skipped)
+			const willSkip = step.skip ? step.skip( providerContext ) : false;
+			if ( ! willSkip ) {
+				stepProviderCount.set(
+					step.id,
+					( stepProviderCount.get( step.id ) || 0 ) + 1
+				);
+			}
+		}
+	}
+
+	// Initialize completion counts to 0
+	for ( const stepId of stepProviderCount.keys() ) {
+		stepCompletions.set( stepId, 0 );
+	}
+
 	const executeProviderThread = async ( providerInstance ) => {
 		// Build thread-specific context
 		const threadCallbacks = {
@@ -476,7 +505,7 @@ export async function executeThreadedWorkflow(
 
 		// Thread-specific options:
 		// - onStepStart: Only call once per step (first provider to start)
-		// - onStepComplete: Don't call - we'll call after ALL providers finish
+		// - onStepComplete: Track per-step, mark complete when ALL providers for that step finish
 		// - onStepSkipped/onError: Pass through normally
 		const threadOptions = {
 			...otherOptions,
@@ -488,9 +517,18 @@ export async function executeThreadedWorkflow(
 					onStepStart( stepId, step );
 				}
 			},
-			// Don't mark step complete when individual thread finishes
-			// We'll mark complete after ALL threads finish
-			onStepComplete: () => {},
+			// Track step completion per step - mark complete when ALL providers finish that step
+			onStepComplete: ( stepId, result ) => {
+				const currentCount = stepCompletions.get( stepId ) || 0;
+				const newCount = currentCount + 1;
+				stepCompletions.set( stepId, newCount );
+
+				// Mark step complete when ALL providers that run this step have finished
+				const requiredCount = stepProviderCount.get( stepId ) || 0;
+				if ( newCount >= requiredCount && requiredCount > 0 ) {
+					onStepComplete( stepId, result );
+				}
+			},
 			onStepSkipped,
 			onError,
 		};
@@ -561,11 +599,9 @@ export async function executeThreadedWorkflow(
 		maxConcurrency
 	);
 
-	// Now that ALL providers have finished, mark thread steps as complete
-	// This ensures steps don't show as complete while some providers are still running
-	for ( const step of threadSteps ) {
-		onStepComplete( step.id );
-	}
+	// Step completion is now handled per-step in the onStepComplete callback above
+	// Each step is marked complete when ALL providers that run it have finished
+	// (no batch completion needed - steps complete independently)
 
 	// Check if any threads succeeded
 	const successfulThreads = threadResults.filter( ( r ) => r.success );
