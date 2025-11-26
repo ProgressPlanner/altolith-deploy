@@ -30,11 +30,19 @@ jest.mock( '@aether/utils/styles', () => ( {
 		borderLighter: '#e0e0e0',
 		backgroundInfo: '#f0f6fc',
 	},
+	spacing: {
+		xs: '4px',
+		sm: '8px',
+		md: '16px',
+		lg: '24px',
+	},
 	fontSize: {
 		xs: '11px',
+		sm: '13px',
 	},
 	fontWeight: {
 		bold: 700,
+		medium: 500,
 	},
 } ) );
 
@@ -102,7 +110,7 @@ describe( 'StepNode', () => {
 			);
 		} );
 
-		test( 'should wrap in tooltip with step label', () => {
+		test( 'should display step label inline', () => {
 			render(
 				<StepNode
 					stepNumber={ 1 }
@@ -111,11 +119,8 @@ describe( 'StepNode', () => {
 				/>
 			);
 
-			const tooltip = screen.getByTestId( 'tooltip' );
-			expect( tooltip ).toHaveAttribute(
-				'data-tooltip-text',
-				'Processing Assets'
-			);
+			const node = screen.getByRole( 'listitem' );
+			expect( node ).toHaveTextContent( 'Processing Assets' );
 		} );
 	} );
 
@@ -183,8 +188,9 @@ describe( 'StepNode', () => {
 		test( 'should handle empty label', () => {
 			render( <StepNode stepNumber={ 1 } label="" status="pending" /> );
 
-			const tooltip = screen.getByTestId( 'tooltip' );
-			expect( tooltip ).toHaveAttribute( 'data-tooltip-text', '' );
+			const node = screen.getByRole( 'listitem' );
+			// Node should still exist and show step number
+			expect( node ).toHaveTextContent( '1' );
 		} );
 
 		test( 'should handle unknown status as pending (default)', () => {

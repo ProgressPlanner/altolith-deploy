@@ -70,40 +70,40 @@ describe( 'StepConnector', () => {
 	} );
 
 	describe( 'Styling', () => {
-		test( 'should have flex: 1 for proper spacing', () => {
+		test( 'should have display block for vertical layout', () => {
 			const { container } = render(
 				<StepConnector isComplete={ false } />
 			);
 
 			const connector = container.querySelector( 'span' );
-			expect( connector ).toHaveStyle( { flex: '1' } );
+			expect( connector ).toHaveStyle( { display: 'block' } );
 		} );
 
-		test( 'should have consistent height for line appearance', () => {
+		test( 'should have consistent height for vertical connector', () => {
 			const { container } = render(
 				<StepConnector isComplete={ false } />
 			);
 
 			const connector = container.querySelector( 'span' );
-			expect( connector ).toHaveStyle( { height: '2px' } );
+			expect( connector ).toHaveStyle( { height: '16px' } );
 		} );
 
-		test( 'should have minimum width constraint', () => {
+		test( 'should have consistent width for line appearance', () => {
 			const { container } = render(
 				<StepConnector isComplete={ false } />
 			);
 
 			const connector = container.querySelector( 'span' );
-			expect( connector ).toHaveStyle( { minWidth: '20px' } );
+			expect( connector ).toHaveStyle( { width: '2px' } );
 		} );
 
-		test( 'should have maximum width constraint', () => {
+		test( 'should have margin-left to center under node', () => {
 			const { container } = render(
 				<StepConnector isComplete={ false } />
 			);
 
 			const connector = container.querySelector( 'span' );
-			expect( connector ).toHaveStyle( { maxWidth: '60px' } );
+			expect( connector ).toHaveStyle( { marginLeft: '13px' } );
 		} );
 	} );
 

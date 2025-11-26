@@ -46,23 +46,29 @@ export function areGlobalStepsComplete( steps ) {
 /**
  * Steps Progress Component
  *
- * @param {Object} props       - Component props
- * @param {Array}  props.steps - Array of step objects with id, label, status
+ * @param {Object} props                   - Component props
+ * @param {Array}  props.steps             - Array of step objects with id, label, status, statusLabels, statusData
+ * @param {Object} props.providerProgress  - Provider progress object from context
+ * @param {Array}  props.providerInstances - Provider instances array from context
  * @return {JSX.Element|null} Steps progress component or null if no steps
  */
-export function GlobalStepsProgress( { steps } ) {
+export function GlobalStepsProgress( {
+	steps,
+	providerProgress,
+	providerInstances,
+} ) {
 	// Don't render if no steps
 	if ( ! steps || steps.length === 0 ) {
 		return null;
 	}
 
-	// Build labels dynamically from step definitions
-	const stepLabels = steps.reduce( ( acc, step ) => {
-		acc[ step.id ] = step.label;
-		return acc;
-	}, {} );
-
-	return <HorizontalStepper steps={ steps } stepLabels={ stepLabels } />;
+	return (
+		<HorizontalStepper
+			steps={ steps }
+			providerProgress={ providerProgress }
+			providerInstances={ providerInstances }
+		/>
+	);
 }
 
 export default GlobalStepsProgress;

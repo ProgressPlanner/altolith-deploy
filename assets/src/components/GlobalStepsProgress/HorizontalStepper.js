@@ -2,7 +2,7 @@
  * VerticalStepper Component
  *
  * Displays steps in a vertical layout with connected nodes.
- * Each step shows its status icon and label.
+ * Each step shows its status icon and dynamic label based on status.
  *
  * @since 1.0.0
  */
@@ -24,12 +24,17 @@ const containerStyle = {
 /**
  * VerticalStepper Component
  *
- * @param {Object} props            Component props
- * @param {Array}  props.steps      Array of step objects with id, label, status
- * @param {Object} props.stepLabels Map of step ID to human-readable label
+ * @param {Object} props                   Component props
+ * @param {Array}  props.steps             Array of step objects with id, label, status, statusLabels, statusData
+ * @param {Object} props.providerProgress  Provider progress object from context
+ * @param {Array}  props.providerInstances Provider instances array from context
  * @return {JSX.Element} VerticalStepper component
  */
-export function HorizontalStepper( { steps, stepLabels } ) {
+export function HorizontalStepper( {
+	steps,
+	providerProgress,
+	providerInstances,
+} ) {
 	return (
 		<div
 			className="aether-vertical-stepper"
@@ -38,7 +43,6 @@ export function HorizontalStepper( { steps, stepLabels } ) {
 			aria-label={ __( 'Export progress', 'aether-site-exporter' ) }
 		>
 			{ steps.map( ( step, index ) => {
-				const stepLabel = stepLabels[ step.id ] || step.label;
 				const isLastStep = index === steps.length - 1;
 				const isStepComplete = step.status === 'complete';
 
@@ -46,8 +50,13 @@ export function HorizontalStepper( { steps, stepLabels } ) {
 					<div key={ step.id }>
 						<StepNode
 							stepNumber={ index + 1 }
-							label={ stepLabel }
+							label={ step.label }
 							status={ step.status }
+							statusLabels={ step.statusLabels }
+							statusData={ step.statusData }
+							stepId={ step.id }
+							providerProgress={ providerProgress }
+							providerInstances={ providerInstances }
 						/>
 						{ ! isLastStep && (
 							<StepConnector isComplete={ isStepComplete } />

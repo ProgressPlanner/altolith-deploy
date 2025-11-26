@@ -2,13 +2,15 @@
  * StepNode Component
  *
  * Renders an individual step in the vertical stepper.
- * Shows status via icon/number and color, with label displayed next to it.
+ * Shows status via icon/number and color, with dynamic label based on status.
+ * For thread steps (upload steps), shows inline provider progress pills.
  *
  * @since 1.0.0
  */
 
 import { Spinner } from '@wordpress/components';
 import { colors, fontSize, fontWeight, spacing } from '@aether/utils/styles';
+import { ProviderPill } from './ProviderPill';
 
 const NODE_SIZE = 28;
 
@@ -128,25 +130,141 @@ function getNodeContent( status, stepNumber ) {
 }
 
 /**
+ * Get the display label based on status and statusLabels
+ *
+ * @param {string}      status       Step status ('pending', 'active', 'complete', 'error')
+ * @param {string}      fallback     Fallback label if no statusLabels defined
+ * @param {Object|null} statusLabels Status label definitions { pending, running, complete }
+ * @param {Object}      statusData   Dynamic data for interpolation
+ * @return {string} Display label
+ */
+function getDisplayLabel( status, fallback, statusLabels, statusData ) {
+	// If no statusLabels defined, use fallback
+	if ( ! statusLabels ) {
+		return fallback;
+	}
+
+	const data = statusData || {};
+
+	switch ( status ) {
+		case 'pending':
+			if ( typeof statusLabels.pending === 'function' ) {
+				return statusLabels.pending( data );
+			}
+			return statusLabels.pending || fallback;
+
+		case 'active':
+			if ( typeof statusLabels.running === 'function' ) {
+				return statusLabels.running( data );
+			}
+			return statusLabels.running || fallback;
+
+		case 'complete':
+			if ( typeof statusLabels.complete === 'function' ) {
+				return statusLabels.complete( data );
+			}
+			return statusLabels.complete || fallback;
+
+		case 'error':
+			// For errors, show the fallback label (step name)
+			return fallback;
+
+		default:
+			return fallback;
+	}
+}
+
+/**
+ * Thread step IDs that support per-provider progress
+ */
+const THREAD_STEP_IDS = [ 'uploadBlueprintBundle', 'uploadStaticFiles' ];
+
+/**
+ * Get providers for a specific step
+ *
+ * @param {string} stepId            Step ID
+ * @param {Object} providerProgress  Provider progress object
+ * @param {Array}  providerInstances Provider instances array
+ * @return {Array} Array of { id, label, status, progress }
+ */
+function getProvidersForStep( stepId, providerProgress, providerInstances ) {
+	if ( ! providerProgress || ! providerInstances ) {
+		return [];
+	}
+
+	return providerInstances
+		.map( ( instance ) => {
+			const progress = providerProgress[ instance.id ];
+			if ( ! progress || progress.stepId !== stepId ) {
+				return null;
+			}
+
+			// Calculate percentage
+			const percent =
+				progress.progress?.total > 0
+					? Math.round(
+							( progress.progress.current /
+								progress.progress.total ) *
+								100
+					  )
+					: 0;
+
+			return {
+				id: instance.id,
+				label: instance.label || instance.id,
+				status: progress.status || 'pending',
+				progress: percent,
+			};
+		} )
+		.filter( Boolean );
+}
+
+/**
  * StepNode Component
  *
- * @param {Object} props            Component props
- * @param {number} props.stepNumber Step number (1-indexed)
- * @param {string} props.label      Step label
- * @param {string} props.status     Step status ('pending', 'active', 'complete', 'error')
+ * @param {Object}      props                   Component props
+ * @param {number}      props.stepNumber        Step number (1-indexed)
+ * @param {string}      props.label             Fallback step label
+ * @param {string}      props.status            Step status ('pending', 'active', 'complete', 'error')
+ * @param {Object|null} props.statusLabels      Status label definitions { pending, running, complete }
+ * @param {Object}      props.statusData        Dynamic data for label interpolation
+ * @param {string}      props.stepId            Step ID for provider filtering
+ * @param {Object}      props.providerProgress  Provider progress object from context
+ * @param {Array}       props.providerInstances Provider instances array from context
  * @return {JSX.Element} StepNode component
  */
-export function StepNode( { stepNumber, label, status } ) {
+export function StepNode( {
+	stepNumber,
+	label,
+	status,
+	statusLabels,
+	statusData,
+	stepId,
+	providerProgress,
+	providerInstances,
+} ) {
 	const nodeStatusStyle = getNodeStatusStyle( status );
 	const labelStatusStyle = getLabelStatusStyle( status );
 	const content = getNodeContent( status, stepNumber );
+	const displayLabel = getDisplayLabel(
+		status,
+		label,
+		statusLabels,
+		statusData
+	);
+
+	// Get providers for this step (only for thread steps)
+	const isThreadStep = THREAD_STEP_IDS.includes( stepId );
+	const stepProviders = isThreadStep
+		? getProvidersForStep( stepId, providerProgress, providerInstances )
+		: [];
 
 	return (
 		<div
 			className={ `aether-step-node aether-step-node--${ status }` }
 			style={ stepRowStyle }
 			role="listitem"
-			aria-label={ `Step ${ stepNumber }: ${ label } - ${ status }` }
+			aria-label={ `Step ${ stepNumber }: ${ displayLabel } - ${ status }` }
 		>
 			<span
 				className="aether-step-node__circle"
@@ -158,8 +276,28 @@ export function StepNode( { stepNumber, label, status } ) {
 				className="aether-step-node__label"
 				style={ { ...labelBaseStyle, ...labelStatusStyle } }
 			>
-				{ label }
+				{ displayLabel }
 			</span>
+			{ stepProviders.length > 0 && (
+				<span
+					className="aether-step-node__providers"
+					style={ {
+						display: 'inline-flex',
+						flexWrap: 'wrap',
+						gap: '4px',
+						marginLeft: spacing.sm,
+					} }
+				>
+					{ stepProviders.map( ( provider ) => (
+						<ProviderPill
+							key={ provider.id }
+							label={ provider.label }
+							status={ provider.status }
+							progress={ provider.progress }
+						/>
+					) ) }
+				</span>
+			) }
 		</div>
 	);
 }

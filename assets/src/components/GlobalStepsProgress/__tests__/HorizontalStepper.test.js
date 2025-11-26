@@ -1,8 +1,8 @@
 /**
- * HorizontalStepper Component Tests
+ * HorizontalStepper (VerticalStepper) Component Tests
  *
- * Tests for the HorizontalStepper component that displays export progress
- * in a compact horizontal layout.
+ * Tests for the stepper component that displays export progress
+ * in a vertical layout with step nodes and connectors.
  */
 
 import React from 'react';
@@ -16,11 +16,13 @@ jest.mock( '@wordpress/i18n', () => ( {
 
 // Mock child components to simplify testing
 jest.mock( '../StepNode', () => ( {
-	StepNode: ( { stepNumber, label, status } ) => (
+	StepNode: ( { stepNumber, label, status, statusLabels, statusData } ) => (
 		<span
 			data-testid={ `step-node-${ stepNumber }` }
 			data-status={ status }
 			data-label={ label }
+			data-has-status-labels={ statusLabels ? 'true' : 'false' }
+			data-status-data={ JSON.stringify( statusData || {} ) }
 		>
 			Step { stepNumber }
 		</span>
@@ -69,21 +71,10 @@ const defaultSteps = [
 	{ id: 'step3', label: 'Step 3', status: 'pending' },
 ];
 
-const defaultStepLabels = {
-	step1: 'Scanning Pages',
-	step2: 'Processing Assets',
-	step3: 'Finalizing',
-};
-
 describe( 'HorizontalStepper', () => {
 	describe( 'Rendering', () => {
 		test( 'should render all steps', () => {
-			render(
-				<HorizontalStepper
-					steps={ defaultSteps }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
+			render( <HorizontalStepper steps={ defaultSteps } /> );
 
 			expect( screen.getByTestId( 'step-node-1' ) ).toBeInTheDocument();
 			expect( screen.getByTestId( 'step-node-2' ) ).toBeInTheDocument();
@@ -91,12 +82,7 @@ describe( 'HorizontalStepper', () => {
 		} );
 
 		test( 'should render connectors between steps (not after last)', () => {
-			render(
-				<HorizontalStepper
-					steps={ defaultSteps }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
+			render( <HorizontalStepper steps={ defaultSteps } /> );
 
 			const connectors = screen.getAllByTestId( 'step-connector' );
 			// 3 steps = 2 connectors
@@ -108,12 +94,7 @@ describe( 'HorizontalStepper', () => {
 				{ id: 'only', label: 'Only', status: 'active' },
 			];
 
-			render(
-				<HorizontalStepper
-					steps={ singleStep }
-					stepLabels={ { only: 'Only Step' } }
-				/>
-			);
+			render( <HorizontalStepper steps={ singleStep } /> );
 
 			expect(
 				screen.queryByTestId( 'step-connector' )
@@ -123,12 +104,7 @@ describe( 'HorizontalStepper', () => {
 
 	describe( 'Accessibility', () => {
 		test( 'should have list role with aria-label', () => {
-			render(
-				<HorizontalStepper
-					steps={ defaultSteps }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
+			render( <HorizontalStepper steps={ defaultSteps } /> );
 
 			const container = screen.getByRole( 'list' );
 			expect( container ).toHaveAttribute(
@@ -138,113 +114,16 @@ describe( 'HorizontalStepper', () => {
 		} );
 
 		test( 'should have appropriate CSS class', () => {
-			render(
-				<HorizontalStepper
-					steps={ defaultSteps }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
+			render( <HorizontalStepper steps={ defaultSteps } /> );
 
 			const container = screen.getByRole( 'list' );
-			expect( container ).toHaveClass( 'aether-horizontal-stepper' );
-		} );
-	} );
-
-	describe( 'Progress Display', () => {
-		test( 'should show correct completion count', () => {
-			render(
-				<HorizontalStepper
-					steps={ defaultSteps }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
-
-			expect( screen.getByText( '(1/3)' ) ).toBeInTheDocument();
-		} );
-
-		test( 'should show 0 completed when none complete', () => {
-			const allPending = [
-				{ id: 'step1', label: 'Step 1', status: 'pending' },
-				{ id: 'step2', label: 'Step 2', status: 'pending' },
-			];
-
-			render(
-				<HorizontalStepper
-					steps={ allPending }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
-
-			expect( screen.getByText( '(0/2)' ) ).toBeInTheDocument();
-		} );
-
-		test( 'should show all completed count', () => {
-			const allComplete = [
-				{ id: 'step1', label: 'Step 1', status: 'complete' },
-				{ id: 'step2', label: 'Step 2', status: 'complete' },
-				{ id: 'step3', label: 'Step 3', status: 'complete' },
-			];
-
-			render(
-				<HorizontalStepper
-					steps={ allComplete }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
-
-			expect( screen.getByText( '(3/3)' ) ).toBeInTheDocument();
-		} );
-	} );
-
-	describe( 'Active Step Label', () => {
-		test( 'should display active step label', () => {
-			render(
-				<HorizontalStepper
-					steps={ defaultSteps }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
-
-			expect(
-				screen.getByText( 'Processing Assets' )
-			).toBeInTheDocument();
-		} );
-
-		test( 'should show "Preparing..." when no active step', () => {
-			const allComplete = [
-				{ id: 'step1', label: 'Step 1', status: 'complete' },
-				{ id: 'step2', label: 'Step 2', status: 'complete' },
-			];
-
-			render(
-				<HorizontalStepper
-					steps={ allComplete }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
-
-			expect( screen.getByText( 'Preparing…' ) ).toBeInTheDocument();
-		} );
-
-		test( 'should fallback to step.label if not in stepLabels', () => {
-			const steps = [
-				{ id: 'unknown', label: 'Fallback Label', status: 'active' },
-			];
-
-			render( <HorizontalStepper steps={ steps } stepLabels={ {} } /> );
-
-			expect( screen.getByText( 'Fallback Label' ) ).toBeInTheDocument();
+			expect( container ).toHaveClass( 'aether-vertical-stepper' );
 		} );
 	} );
 
 	describe( 'Step Props', () => {
 		test( 'should pass correct status to each StepNode', () => {
-			render(
-				<HorizontalStepper
-					steps={ defaultSteps }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
+			render( <HorizontalStepper steps={ defaultSteps } /> );
 
 			expect( screen.getByTestId( 'step-node-1' ) ).toHaveAttribute(
 				'data-status',
@@ -260,37 +139,63 @@ describe( 'HorizontalStepper', () => {
 			);
 		} );
 
-		test( 'should pass correct labels from stepLabels to StepNode', () => {
-			render(
-				<HorizontalStepper
-					steps={ defaultSteps }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
+		test( 'should pass step label to StepNode', () => {
+			render( <HorizontalStepper steps={ defaultSteps } /> );
 
 			expect( screen.getByTestId( 'step-node-1' ) ).toHaveAttribute(
 				'data-label',
-				'Scanning Pages'
+				'Step 1'
 			);
 			expect( screen.getByTestId( 'step-node-2' ) ).toHaveAttribute(
 				'data-label',
-				'Processing Assets'
+				'Step 2'
 			);
 			expect( screen.getByTestId( 'step-node-3' ) ).toHaveAttribute(
 				'data-label',
-				'Finalizing'
+				'Step 3'
+			);
+		} );
+
+		test( 'should pass statusLabels to StepNode when provided', () => {
+			const stepsWithLabels = [
+				{
+					id: 'step1',
+					label: 'Step 1',
+					status: 'complete',
+					statusLabels: { pending: 'Pending', complete: 'Done' },
+				},
+			];
+
+			render( <HorizontalStepper steps={ stepsWithLabels } /> );
+
+			expect( screen.getByTestId( 'step-node-1' ) ).toHaveAttribute(
+				'data-has-status-labels',
+				'true'
+			);
+		} );
+
+		test( 'should pass statusData to StepNode when provided', () => {
+			const stepsWithData = [
+				{
+					id: 'step1',
+					label: 'Step 1',
+					status: 'complete',
+					statusData: { count: 5 },
+				},
+			];
+
+			render( <HorizontalStepper steps={ stepsWithData } /> );
+
+			expect( screen.getByTestId( 'step-node-1' ) ).toHaveAttribute(
+				'data-status-data',
+				JSON.stringify( { count: 5 } )
 			);
 		} );
 	} );
 
 	describe( 'Connector States', () => {
 		test( 'should mark connector as complete when preceding step is complete', () => {
-			render(
-				<HorizontalStepper
-					steps={ defaultSteps }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
+			render( <HorizontalStepper steps={ defaultSteps } /> );
 
 			const connectors = screen.getAllByTestId( 'step-connector' );
 			// First connector (after complete step 1)
@@ -312,12 +217,7 @@ describe( 'HorizontalStepper', () => {
 				{ id: 'step3', label: 'Step 3', status: 'pending' },
 			];
 
-			render(
-				<HorizontalStepper
-					steps={ allPending }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
+			render( <HorizontalStepper steps={ allPending } /> );
 
 			const connectors = screen.getAllByTestId( 'step-connector' );
 			connectors.forEach( ( connector ) => {
@@ -332,12 +232,7 @@ describe( 'HorizontalStepper', () => {
 				{ id: 'step3', label: 'Step 3', status: 'complete' },
 			];
 
-			render(
-				<HorizontalStepper
-					steps={ allComplete }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
+			render( <HorizontalStepper steps={ allComplete } /> );
 
 			const connectors = screen.getAllByTestId( 'step-connector' );
 			connectors.forEach( ( connector ) => {
@@ -348,12 +243,14 @@ describe( 'HorizontalStepper', () => {
 
 	describe( 'Edge Cases', () => {
 		test( 'should handle empty steps array', () => {
-			render( <HorizontalStepper steps={ [] } stepLabels={ {} } /> );
+			render( <HorizontalStepper steps={ [] } /> );
 
 			expect(
 				screen.queryByTestId( 'step-node-1' )
 			).not.toBeInTheDocument();
-			expect( screen.getByText( '(0/0)' ) ).toBeInTheDocument();
+			expect(
+				screen.queryByTestId( 'step-connector' )
+			).not.toBeInTheDocument();
 		} );
 
 		test( 'should handle single step', () => {
@@ -361,15 +258,13 @@ describe( 'HorizontalStepper', () => {
 				{ id: 'only', label: 'Only', status: 'active' },
 			];
 
-			render(
-				<HorizontalStepper
-					steps={ singleStep }
-					stepLabels={ { only: 'Only Step' } }
-				/>
-			);
+			render( <HorizontalStepper steps={ singleStep } /> );
 
 			expect( screen.getByTestId( 'step-node-1' ) ).toBeInTheDocument();
-			expect( screen.getByText( '(0/1)' ) ).toBeInTheDocument();
+			// No connectors for single step
+			expect(
+				screen.queryByTestId( 'step-connector' )
+			).not.toBeInTheDocument();
 		} );
 
 		test( 'should handle error status in steps', () => {
@@ -379,12 +274,7 @@ describe( 'HorizontalStepper', () => {
 				{ id: 'step3', label: 'Step 3', status: 'pending' },
 			];
 
-			render(
-				<HorizontalStepper
-					steps={ stepsWithError }
-					stepLabels={ defaultStepLabels }
-				/>
-			);
+			render( <HorizontalStepper steps={ stepsWithError } /> );
 
 			expect( screen.getByTestId( 'step-node-2' ) ).toHaveAttribute(
 				'data-status',
