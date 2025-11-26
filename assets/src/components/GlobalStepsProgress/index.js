@@ -68,18 +68,8 @@ export function GlobalStepsProgress( { steps } ) {
 		GLOBAL_STEP_IDS.includes( step.id )
 	);
 
-	// Don't render if no global steps or all are complete
+	// Don't render if no global steps
 	if ( globalSteps.length === 0 ) {
-		return null;
-	}
-
-	// Check if all global steps are complete
-	const allComplete = globalSteps.every(
-		( step ) => step.status === 'complete'
-	);
-
-	// Don't show if all global steps are done (thread steps are running)
-	if ( allComplete ) {
 		return null;
 	}
 
