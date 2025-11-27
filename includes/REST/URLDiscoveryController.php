@@ -349,25 +349,17 @@ class URLDiscoveryController
 	 */
 	private function getPaginationUrls(): array
 	{
-		$urls = [];
 		$postsPerPage = (int) \get_option('posts_per_page', 10);
 
-		// Category pagination
-		$urls = \array_merge($urls, $this->getCategoryPaginationUrls($postsPerPage));
-
-		// Tag pagination
-		$urls = \array_merge($urls, $this->getTagPaginationUrls($postsPerPage));
-
-		// Author pagination
-		$urls = \array_merge($urls, $this->getAuthorPaginationUrls($postsPerPage));
-
-		// CPT archive pagination
-		$urls = \array_merge($urls, $this->getCptArchivePaginationUrls($postsPerPage));
-
-		// Date archive pagination
-		$urls = \array_merge($urls, $this->getDateArchivePaginationUrls($postsPerPage));
-
-		return $urls;
+		// Collect all pagination URLs from different archive types
+		// Using spread operator to merge all arrays at once (more efficient than multiple array_merge calls)
+		return [
+			...$this->getCategoryPaginationUrls($postsPerPage),
+			...$this->getTagPaginationUrls($postsPerPage),
+			...$this->getAuthorPaginationUrls($postsPerPage),
+			...$this->getCptArchivePaginationUrls($postsPerPage),
+			...$this->getDateArchivePaginationUrls($postsPerPage),
+		];
 	}
 
 	/**
@@ -482,7 +474,7 @@ class URLDiscoveryController
 		], 'objects');
 
 		// Filter to only post types with archives
-		$postTypesWithArchives = \array_filter($postTypes, fn($postType) => $postType->has_archive);
+		$postTypesWithArchives = \array_filter($postTypes, fn($postType) => (bool) $postType->has_archive);
 
 		return $this->generatePaginationUrls(
 			$postTypesWithArchives,

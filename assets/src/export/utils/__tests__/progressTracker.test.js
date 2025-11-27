@@ -145,5 +145,4 @@ describe( 'progressTracker', () => {
 			expect( progress.completedSteps ).toEqual( [] );
 		} );
 	} );
-
 } );

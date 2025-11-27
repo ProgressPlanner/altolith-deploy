@@ -347,10 +347,10 @@ trait RESTHelpersTrait
 		foreach ($config as $key => $value) {
 			// Preserve case for snake_case keys instead of lowercasing with sanitize_key()
 			// Allow alphanumeric, underscore, and hyphen
-			$sanitizedKey = \preg_replace('/[^a-zA-Z0-9_-]/', '', $key);
+			$sanitizedKey = \preg_replace('/[^a-zA-Z0-9_-]/', '', (string) $key);
 
-			// Skip empty keys after sanitization
-			if ('' === $sanitizedKey) {
+			// Skip empty or null keys after sanitization
+			if (null === $sanitizedKey || '' === $sanitizedKey) {
 				continue;
 			}
 

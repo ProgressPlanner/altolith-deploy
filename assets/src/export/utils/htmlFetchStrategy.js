@@ -112,13 +112,17 @@ export class HtmlFetchStrategyManager {
 		}
 
 		// Too many consecutive failures
-		if ( this.stats.consecutiveFailures >= this.config.maxConsecutiveFailures ) {
+		if (
+			this.stats.consecutiveFailures >= this.config.maxConsecutiveFailures
+		) {
 			this.strategy = STRATEGY.JS_ONLY;
 			return;
 		}
 
 		// Check success rate after minimum attempts
-		if ( this.stats.totalAttempts >= this.config.minAttemptsForEvaluation ) {
+		if (
+			this.stats.totalAttempts >= this.config.minAttemptsForEvaluation
+		) {
 			const rate = this.stats.totalSuccesses / this.stats.totalAttempts;
 			if ( rate < this.config.minSuccessRate ) {
 				this.strategy = STRATEGY.JS_ONLY;

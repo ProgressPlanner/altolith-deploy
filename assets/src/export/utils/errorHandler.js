@@ -400,12 +400,12 @@ export function createErrorHandler( config = {} ) {
  * - Callback and action hooks
  * - Severity-based error handling
  *
- * @param {Error}              error            Error that occurred.
- * @param {string}             stepId           Step ID where error occurred.
- * @param {Object}             executionContext Execution context.
- * @param {Object}             options          Error handling options.
- * @param {Function}           options.onError  Error callback.
- * @param {Object}             step             Step definition (optional).
+ * @param {Error}    error            Error that occurred.
+ * @param {string}   stepId           Step ID where error occurred.
+ * @param {Object}   executionContext Execution context.
+ * @param {Object}   options          Error handling options.
+ * @param {Function} options.onError  Error callback.
+ * @param {Object}   step             Step definition (optional).
  * @return {Error} Enhanced error object.
  */
 export function handleStepError(

@@ -238,10 +238,10 @@ class ExportService
 	/**
 	 * Add custom assets (plugins or themes) to zip archive.
 	 *
-	 * @param \ZipArchive $zip              Zip archive instance.
-	 * @param string      $assetType       Asset type: 'plugin' or 'theme'.
-	 * @param array|null  $customAssetSlugs Optional array of asset slugs from browser detection.
-	 * @param array|null  $customAssets     Optional array of custom assets from PHP detection.
+	 * @param \ZipArchive               $zip              Zip archive instance.
+	 * @param string                    $assetType        Asset type: 'plugin' or 'theme'.
+	 * @param array<int, string>|null   $customAssetSlugs Optional array of asset slugs from browser detection.
+	 * @param array<int, array<string, string>>|null $customAssets Optional array of custom assets from PHP detection.
 	 * @return void
 	 */
 	private function addAssetsToZip(

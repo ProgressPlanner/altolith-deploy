@@ -13,4 +13,3 @@ parameters:
     # dynamic paths with ABSPATH constant at analysis time
     ignoreErrors:
         - '#Method.*has parameter \$request with generic class WP_REST_Request but does not specify its types#'
-        - '#Call to function is_string\(\) with string will always evaluate to true\.#'

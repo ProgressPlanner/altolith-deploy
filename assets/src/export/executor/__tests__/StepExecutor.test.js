@@ -19,13 +19,19 @@ jest.mock( '../../utils/errorHandler', () => ( {
 		categorize: () => 'unknown',
 	},
 	formatErrorMessage: ( error, { operation } ) =>
-		`Error in ${ operation }: ${ error.message }`,
+		`Error during ${ operation }: ${ error.message }`,
 	determineSeverity: () => 'high',
 	ERROR_SEVERITY: {
 		CRITICAL: 'critical',
 		HIGH: 'high',
 		MEDIUM: 'medium',
 		LOW: 'low',
+	},
+	handleStepError: ( error, stepId, executionContext, options, step ) => {
+		const { onError = () => {} } = options;
+		const formattedMessage = `Error during ${ step?.label || stepId }: ${ error.message }`;
+		onError( stepId, { ...error, formattedMessage } );
+		return new Error( formattedMessage );
 	},
 } ) );
 

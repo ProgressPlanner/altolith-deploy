@@ -176,10 +176,7 @@ describe( 'exportConfiguration', () => {
 		} );
 
 		test( 'should handle empty provider configs', () => {
-			const result = getInstancesForDeploymentType(
-				{},
-				'static_site'
-			);
+			const result = getInstancesForDeploymentType( {}, 'static_site' );
 
 			expect( result ).toEqual( [] );
 		} );

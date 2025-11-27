@@ -8,10 +8,7 @@
 import { doAction, applyFilters } from '@wordpress/hooks';
 import { buildParallelPlan, validateDependencies } from './DependencyResolver';
 import { createDependencyTracker } from './DependencyTracker';
-import {
-	errorHandler,
-	handleStepError,
-} from '../utils/errorHandler';
+import { errorHandler, handleStepError } from '../utils/errorHandler';
 import { createProgressTracker } from '../utils/progressTracker';
 import DataValidator from './DataValidator';
 
