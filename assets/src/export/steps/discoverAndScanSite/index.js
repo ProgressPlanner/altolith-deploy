@@ -21,7 +21,10 @@ const statusLabels = {
 	running: ( data ) => {
 		const { pagesScanned = 0, assetsFound = 0 } = data;
 		if ( pagesScanned === 0 ) {
-			return __( 'Fetching URLs from WordPress…', 'aether-site-exporter' );
+			return __(
+				'Fetching URLs from WordPress…',
+				'aether-site-exporter'
+			);
 		}
 		return sprintf(
 			/* translators: %1$d: Pages scanned, %2$d: Assets found */

@@ -82,11 +82,13 @@ const statusLabels = {
 				assetInfo
 			);
 		}
-		return sprintf(
-			/* translators: %s: File size */
-			__( 'Created blueprint (%s)', 'aether-site-exporter' ),
-			bundleSizeFormatted
-		) + assetInfo;
+		return (
+			sprintf(
+				/* translators: %s: File size */
+				__( 'Created blueprint (%s)', 'aether-site-exporter' ),
+				bundleSizeFormatted
+			) + assetInfo
+		);
 	},
 };
 
@@ -153,12 +155,15 @@ async function handler( context ) {
 	);
 	const discoveryMessage =
 		plugins.length === 0 && themes.length === 0
-			? __( 'No custom plugins or themes to include', 'aether-site-exporter' )
+			? __(
+					'No custom plugins or themes to include',
+					'aether-site-exporter'
+			  )
 			: sprintf(
-				/* translators: %s: Discovered assets description */
-				__( 'Discovered %s', 'aether-site-exporter' ),
-				assetDescription
-			);
+					/* translators: %s: Discovered assets description */
+					__( 'Discovered %s', 'aether-site-exporter' ),
+					assetDescription
+			  );
 
 	setStatusMessage( discoveryMessage, 'progress', 'createBlueprintBundle' );
 

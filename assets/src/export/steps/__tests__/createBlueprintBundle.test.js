@@ -50,6 +50,7 @@ let handler;
 
 /**
  * Helper to create a basic mock API with discovery
+ * @param overrides
  */
 function createMockApi( overrides = {} ) {
 	return {
@@ -492,9 +493,7 @@ describe( 'createBlueprintBundle step', () => {
 		} );
 
 		test( 'should set progress status while creating bundle', async () => {
-			const mockGenerateBlueprintJson = jest
-				.fn()
-				.mockResolvedValue( {} );
+			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( {} );
 			const mockApi = createMockApi();
 			const mockSetStatusMessage = jest.fn();
 
@@ -514,9 +513,7 @@ describe( 'createBlueprintBundle step', () => {
 		} );
 
 		test( 'should set success status with file size', async () => {
-			const mockGenerateBlueprintJson = jest
-				.fn()
-				.mockResolvedValue( {} );
+			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( {} );
 			const mockApi = createMockApi( {
 				createBlueprintBundle: jest.fn().mockResolvedValue( {
 					success: true,
@@ -659,9 +656,7 @@ describe( 'createBlueprintBundle step', () => {
 		} );
 
 		test( 'should throw error when createBlueprintBundle fails', async () => {
-			const mockGenerateBlueprintJson = jest
-				.fn()
-				.mockResolvedValue( {} );
+			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( {} );
 			const mockApi = createMockApi( {
 				createBlueprintBundle: jest.fn().mockResolvedValue( {
 					success: false,
@@ -682,9 +677,7 @@ describe( 'createBlueprintBundle step', () => {
 		} );
 
 		test( 'should throw default error when no message provided', async () => {
-			const mockGenerateBlueprintJson = jest
-				.fn()
-				.mockResolvedValue( {} );
+			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( {} );
 			const mockApi = createMockApi( {
 				createBlueprintBundle: jest.fn().mockResolvedValue( {
 					success: false,
@@ -704,9 +697,7 @@ describe( 'createBlueprintBundle step', () => {
 		} );
 
 		test( 'should propagate API errors', async () => {
-			const mockGenerateBlueprintJson = jest
-				.fn()
-				.mockResolvedValue( {} );
+			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( {} );
 			const mockApi = createMockApi( {
 				createBlueprintBundle: jest
 					.fn()
