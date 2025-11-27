@@ -104,11 +104,15 @@ export function useStaticSiteGenerator( onProgress ) {
 			failures.failedUrls.push( ...preScanResult.failures.failedUrls );
 
 			// PHASE 2: Upload all files
-			let manifest = await prepareManifest(
+			// Store old manifest before modifications (for stale file detection)
+			const oldManifest = await prepareManifest(
 				storageService,
 				staticSiteProviderId,
 				setStatusMessage
 			);
+
+			// Working copy for updates during upload
+			let manifest = { ...oldManifest };
 
 			let filesUploaded = 0;
 			let filesSkipped = 0;
@@ -259,10 +263,11 @@ export function useStaticSiteGenerator( onProgress ) {
 				}
 			}
 
-			// Finalize manifest
+			// Finalize manifest and delete stale files
 			await finalizeManifest(
 				storageService,
 				manifest,
+				oldManifest,
 				uploadedFiles,
 				staticSiteProviderId,
 				setStatusMessage

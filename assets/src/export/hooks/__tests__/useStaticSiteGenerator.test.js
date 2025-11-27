@@ -362,14 +362,18 @@ describe( 'useStaticSiteGenerator', () => {
 			);
 		} );
 
-		it( 'should finalize manifest after upload', async () => {
+		it( 'should finalize manifest after upload with old manifest for stale detection', async () => {
+			const oldManifest = { 'old-file.html': { size: 100, hash: 'abc' } };
 			executePreScan.mockResolvedValue( {
 				htmlData: mockCache,
 				totalFilesToUpload: 0,
 				failures: { urlsFailed: 0, failedUrls: [] },
 			} );
-			prepareManifest.mockResolvedValue( {} );
-			finalizeManifest.mockResolvedValue();
+			prepareManifest.mockResolvedValue( oldManifest );
+			finalizeManifest.mockResolvedValue( {
+				cleanedManifest: {},
+				deletedFiles: 1,
+			} );
 
 			const { result } = renderHook( () =>
 				useStaticSiteGenerator( mockOnProgress )
@@ -385,9 +389,11 @@ describe( 'useStaticSiteGenerator', () => {
 				);
 			} );
 
+			// Should pass both current manifest (copy of old) and old manifest (original)
 			expect( finalizeManifest ).toHaveBeenCalledWith(
 				mockStorageService,
-				{},
+				oldManifest, // current manifest (working copy starts as clone of old)
+				oldManifest, // old manifest (original for stale detection)
 				[],
 				'provider-id',
 				mockSetStatusMessage

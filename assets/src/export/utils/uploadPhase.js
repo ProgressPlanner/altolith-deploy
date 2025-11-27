@@ -17,6 +17,7 @@ import {
 	shouldSkipUpload,
 	uploadManifest,
 	cleanupManifest,
+	getStaleFiles,
 } from '@aether/utils/manifestManager';
 
 /**
@@ -418,21 +419,83 @@ export async function uploadHtmlFile( {
 /**
  * Finalize manifest after upload phase.
  *
+ * Cleans up the manifest and deletes stale files that no longer exist
+ * in the new export (files in old manifest but not in current files).
+ *
  * @param {Object}   storageService   Storage service instance.
- * @param {Object}   manifest         Manifest object.
+ * @param {Object}   manifest         Current manifest object (with new uploads).
+ * @param {Object}   oldManifest      Original manifest fetched before upload.
  * @param {Array}    uploadedFiles    Array of uploaded file info.
  * @param {string}   providerId       Provider ID.
  * @param {Function} setStatusMessage Status message updater.
- * @return {Promise<void>}
+ * @return {Promise<Object>} Result with cleanedManifest and deletedFiles count.
  */
 export async function finalizeManifest(
 	storageService,
 	manifest,
+	oldManifest,
 	uploadedFiles,
 	providerId,
 	setStatusMessage
 ) {
+	let deletedFilesCount = 0;
+
 	try {
+		const currentFileKeys = new Set(
+			uploadedFiles.map( ( file ) => file.storageKey )
+		);
+
+		// Identify and delete stale files (in old manifest but not in current files)
+		const staleFiles = getStaleFiles( oldManifest, currentFileKeys );
+
+		if (
+			staleFiles.length > 0 &&
+			typeof storageService.batchDelete === 'function'
+		) {
+			if ( setStatusMessage ) {
+				setStatusMessage(
+					sprintf(
+						/* translators: %d: Number of stale files to delete */
+						__(
+							'Deleting %d stale files…',
+							'aether-site-exporter'
+						),
+						staleFiles.length
+					),
+					'progress',
+					'deleteStaleFiles'
+				);
+			}
+
+			try {
+				await storageService.batchDelete( staleFiles );
+				deletedFilesCount = staleFiles.length;
+
+				if ( setStatusMessage ) {
+					setStatusMessage(
+						sprintf(
+							/* translators: %d: Number of deleted files */
+							__(
+								'Deleted %d stale files',
+								'aether-site-exporter'
+							),
+							deletedFilesCount
+						),
+						'success',
+						'deleteStaleFiles'
+					);
+				}
+			} catch ( deleteError ) {
+				// Log but don't fail - some files may already be gone
+				// eslint-disable-next-line no-console
+				console.warn(
+					'[Aether] Failed to delete some stale files:',
+					deleteError
+				);
+			}
+		}
+
+		// Clean up manifest (remove entries not in current files)
 		if ( setStatusMessage ) {
 			setStatusMessage(
 				__( 'Updating file manifest…', 'aether-site-exporter' ),
@@ -441,9 +504,6 @@ export async function finalizeManifest(
 			);
 		}
 
-		const currentFileKeys = new Set(
-			uploadedFiles.map( ( file ) => file.storageKey )
-		);
 		let cleanedManifest = cleanupManifest( manifest, currentFileKeys );
 
 		cleanedManifest = applyFilters(
@@ -462,5 +522,15 @@ export async function finalizeManifest(
 				'updateManifest'
 			);
 		}
-	} catch ( error ) {}
+
+		return {
+			cleanedManifest,
+			deletedFiles: deletedFilesCount,
+		};
+	} catch ( error ) {
+		return {
+			cleanedManifest: manifest,
+			deletedFiles: deletedFilesCount,
+		};
+	}
 }

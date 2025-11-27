@@ -138,6 +138,49 @@ export function cleanupManifest( manifest, currentFiles ) {
 }
 
 /**
+ * Identify stale files that exist in old manifest but not in new file set.
+ *
+ * Used to determine which files should be deleted from remote storage
+ * when a new export is performed with a different set of files.
+ *
+ * Protected files (manifest files, wp-content.zip) are never returned.
+ *
+ * @param {Object}      oldManifest  Previous manifest object.
+ * @param {Set<string>} currentFiles Set of current file storage keys.
+ * @return {Array<string>} Array of stale file keys to delete.
+ */
+export function getStaleFiles( oldManifest, currentFiles ) {
+	if ( ! oldManifest || typeof oldManifest !== 'object' ) {
+		return [];
+	}
+
+	if ( ! currentFiles || ! ( currentFiles instanceof Set ) ) {
+		return [];
+	}
+
+	const staleKeys = [];
+
+	for ( const key of Object.keys( oldManifest ) ) {
+		// Skip manifest files themselves (never delete)
+		if ( key.includes( 'file-manifest' ) ) {
+			continue;
+		}
+
+		// Skip wp-content.zip archives (blueprint bundles - never delete)
+		if ( key.includes( 'wp-content.zip' ) ) {
+			continue;
+		}
+
+		// If not in current files, it's stale
+		if ( ! currentFiles.has( key ) ) {
+			staleKeys.push( key );
+		}
+	}
+
+	return staleKeys;
+}
+
+/**
  * Upload manifest to remote storage.
  *
  * @param {Object} storageService StorageService instance.

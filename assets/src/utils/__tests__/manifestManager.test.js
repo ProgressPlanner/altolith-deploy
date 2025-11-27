@@ -17,6 +17,7 @@ import {
 	updateManifestEntry,
 	uploadManifest,
 	cleanupManifest,
+	getStaleFiles,
 } from '../manifestManager';
 
 describe( 'manifestManager', () => {
@@ -916,6 +917,284 @@ describe( 'manifestManager', () => {
 			// Original should still have both entries
 			expect( Object.keys( manifest ) ).toHaveLength( 2 );
 			expect( Object.keys( result ) ).toHaveLength( 1 );
+		} );
+	} );
+
+	describe( 'getStaleFiles', () => {
+		describe( 'Basic Stale File Detection', () => {
+			test( 'identifies files in old manifest but not in current files', () => {
+				const oldManifest = {
+					'static/index.html': { size: 1024, hash: 'hash1' },
+					'static/about.html': { size: 2048, hash: 'hash2' },
+					'static/deleted-page.html': { size: 512, hash: 'hash3' },
+				};
+
+				const currentFiles = new Set( [
+					'static/index.html',
+					'static/about.html',
+				] );
+
+				const result = getStaleFiles( oldManifest, currentFiles );
+
+				expect( result ).toHaveLength( 1 );
+				expect( result ).toContain( 'static/deleted-page.html' );
+			} );
+
+			test( 'returns empty array when all files are current', () => {
+				const oldManifest = {
+					'static/index.html': { size: 1024, hash: 'hash1' },
+					'static/about.html': { size: 2048, hash: 'hash2' },
+				};
+
+				const currentFiles = new Set( [
+					'static/index.html',
+					'static/about.html',
+				] );
+
+				const result = getStaleFiles( oldManifest, currentFiles );
+
+				expect( result ).toHaveLength( 0 );
+			} );
+
+			test( 'returns all old files when current set is empty', () => {
+				const oldManifest = {
+					'static/index.html': { size: 1024, hash: 'hash1' },
+					'static/about.html': { size: 2048, hash: 'hash2' },
+				};
+
+				const currentFiles = new Set();
+
+				const result = getStaleFiles( oldManifest, currentFiles );
+
+				expect( result ).toHaveLength( 2 );
+				expect( result ).toContain( 'static/index.html' );
+				expect( result ).toContain( 'static/about.html' );
+			} );
+
+			test( 'identifies multiple stale files', () => {
+				const oldManifest = {
+					'static/index.html': { size: 1024, hash: 'hash1' },
+					'static/old-page-1.html': { size: 2048, hash: 'hash2' },
+					'static/old-page-2.html': { size: 512, hash: 'hash3' },
+					'static/old-page-3.html': { size: 768, hash: 'hash4' },
+				};
+
+				const currentFiles = new Set( [ 'static/index.html' ] );
+
+				const result = getStaleFiles( oldManifest, currentFiles );
+
+				expect( result ).toHaveLength( 3 );
+				expect( result ).toContain( 'static/old-page-1.html' );
+				expect( result ).toContain( 'static/old-page-2.html' );
+				expect( result ).toContain( 'static/old-page-3.html' );
+			} );
+		} );
+
+		describe( 'Protected Files', () => {
+			test( 'never includes manifest files in stale list', () => {
+				const oldManifest = {
+					'static/index.html': { size: 1024, hash: 'hash1' },
+					'file-manifest.json': { size: 512, hash: 'hash2' },
+					'file-manifest-provider:uuid.json': {
+						size: 768,
+						hash: 'hash3',
+					},
+				};
+
+				const currentFiles = new Set( [ 'static/index.html' ] );
+
+				const result = getStaleFiles( oldManifest, currentFiles );
+
+				expect( result ).toHaveLength( 0 );
+				expect( result ).not.toContain( 'file-manifest.json' );
+				expect( result ).not.toContain(
+					'file-manifest-provider:uuid.json'
+				);
+			} );
+
+			test( 'never includes wp-content.zip in stale list', () => {
+				const oldManifest = {
+					'static/index.html': { size: 1024, hash: 'hash1' },
+					'blueprint-bundle/wp-content.zip': {
+						size: 50000,
+						hash: 'hash2',
+					},
+					'other/wp-content.zip': { size: 40000, hash: 'hash3' },
+				};
+
+				const currentFiles = new Set( [ 'static/index.html' ] );
+
+				const result = getStaleFiles( oldManifest, currentFiles );
+
+				expect( result ).toHaveLength( 0 );
+				expect( result ).not.toContain(
+					'blueprint-bundle/wp-content.zip'
+				);
+				expect( result ).not.toContain( 'other/wp-content.zip' );
+			} );
+
+			test( 'handles mixed protected and non-protected files', () => {
+				const oldManifest = {
+					'static/index.html': { size: 1024, hash: 'hash1' },
+					'static/old-page.html': { size: 2048, hash: 'hash2' },
+					'file-manifest.json': { size: 512, hash: 'hash3' },
+					'blueprint-bundle/wp-content.zip': {
+						size: 50000,
+						hash: 'hash4',
+					},
+				};
+
+				const currentFiles = new Set( [ 'static/index.html' ] );
+
+				const result = getStaleFiles( oldManifest, currentFiles );
+
+				expect( result ).toHaveLength( 1 );
+				expect( result ).toContain( 'static/old-page.html' );
+			} );
+		} );
+
+		describe( 'Edge Cases and Input Validation', () => {
+			test( 'returns empty array for null oldManifest', () => {
+				const currentFiles = new Set( [ 'static/index.html' ] );
+
+				const result = getStaleFiles( null, currentFiles );
+
+				expect( result ).toEqual( [] );
+			} );
+
+			test( 'returns empty array for undefined oldManifest', () => {
+				const currentFiles = new Set( [ 'static/index.html' ] );
+
+				const result = getStaleFiles( undefined, currentFiles );
+
+				expect( result ).toEqual( [] );
+			} );
+
+			test( 'returns empty array for non-object oldManifest', () => {
+				const currentFiles = new Set( [ 'static/index.html' ] );
+
+				expect( getStaleFiles( 'string', currentFiles ) ).toEqual( [] );
+				expect( getStaleFiles( 123, currentFiles ) ).toEqual( [] );
+				expect( getStaleFiles( true, currentFiles ) ).toEqual( [] );
+			} );
+
+			test( 'returns empty array for empty oldManifest', () => {
+				const currentFiles = new Set( [ 'static/index.html' ] );
+
+				const result = getStaleFiles( {}, currentFiles );
+
+				expect( result ).toEqual( [] );
+			} );
+
+			test( 'returns empty array for null currentFiles', () => {
+				const oldManifest = {
+					'static/index.html': { size: 1024, hash: 'hash1' },
+				};
+
+				const result = getStaleFiles( oldManifest, null );
+
+				expect( result ).toEqual( [] );
+			} );
+
+			test( 'returns empty array for undefined currentFiles', () => {
+				const oldManifest = {
+					'static/index.html': { size: 1024, hash: 'hash1' },
+				};
+
+				const result = getStaleFiles( oldManifest, undefined );
+
+				expect( result ).toEqual( [] );
+			} );
+
+			test( 'returns empty array for non-Set currentFiles', () => {
+				const oldManifest = {
+					'static/index.html': { size: 1024, hash: 'hash1' },
+				};
+
+				expect( getStaleFiles( oldManifest, [] ) ).toEqual( [] );
+				expect(
+					getStaleFiles( oldManifest, { 'static/index.html': true } )
+				).toEqual( [] );
+			} );
+		} );
+
+		describe( 'Large Scale', () => {
+			test( 'handles large manifest with many stale files', () => {
+				const oldManifest = {};
+				for ( let i = 0; i < 1000; i++ ) {
+					oldManifest[ `file${ i }.html` ] = {
+						size: i * 100,
+						hash: `hash${ i }`,
+					};
+				}
+
+				// Keep only first 100 files
+				const currentFiles = new Set();
+				for ( let i = 0; i < 100; i++ ) {
+					currentFiles.add( `file${ i }.html` );
+				}
+
+				const result = getStaleFiles( oldManifest, currentFiles );
+
+				expect( result ).toHaveLength( 900 );
+				expect( result ).toContain( 'file100.html' );
+				expect( result ).toContain( 'file999.html' );
+				expect( result ).not.toContain( 'file0.html' );
+				expect( result ).not.toContain( 'file99.html' );
+			} );
+		} );
+
+		describe( 'Path Patterns', () => {
+			test( 'handles nested paths correctly', () => {
+				const oldManifest = {
+					'static/pages/index.html': { size: 1024, hash: 'hash1' },
+					'static/pages/about/team.html': {
+						size: 2048,
+						hash: 'hash2',
+					},
+					'static/assets/css/style.css': {
+						size: 512,
+						hash: 'hash3',
+					},
+				};
+
+				const currentFiles = new Set( [ 'static/pages/index.html' ] );
+
+				const result = getStaleFiles( oldManifest, currentFiles );
+
+				expect( result ).toHaveLength( 2 );
+				expect( result ).toContain( 'static/pages/about/team.html' );
+				expect( result ).toContain( 'static/assets/css/style.css' );
+			} );
+
+			test( 'handles special characters in file paths', () => {
+				const oldManifest = {
+					'static/file with spaces.html': {
+						size: 1024,
+						hash: 'hash1',
+					},
+					'static/file-with-dashes.html': {
+						size: 2048,
+						hash: 'hash2',
+					},
+					'static/file_with_underscores.html': {
+						size: 512,
+						hash: 'hash3',
+					},
+				};
+
+				const currentFiles = new Set( [
+					'static/file with spaces.html',
+				] );
+
+				const result = getStaleFiles( oldManifest, currentFiles );
+
+				expect( result ).toHaveLength( 2 );
+				expect( result ).toContain( 'static/file-with-dashes.html' );
+				expect( result ).toContain(
+					'static/file_with_underscores.html'
+				);
+			} );
 		} );
 	} );
 } );
