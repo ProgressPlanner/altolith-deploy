@@ -85,22 +85,20 @@ class ZipService
 		// Lazy-load offloaded files list (only on first call, not on recursive calls).
 		// Query database once and pass result through recursion for performance.
 		// Check: null (not set) + isUploadsDir + empty relativePath (first call).
-		if (null === $offloadedFiles && $isUploadsDir && '' === $relativePath) {
-			$offloadedFiles = $this->fileBatchService->getOffloadedFilePaths();
-		}
-		if (null === $offloadedFiles) {
-			$offloadedFiles = [];
-		}
+		$offloadedFiles = $offloadedFiles ?? (
+			$isUploadsDir && '' === $relativePath
+				? $this->fileBatchService->getOffloadedFilePaths()
+				: []
+		);
 
 		// Lazy-load exclusion patterns (only on first call, not on recursive calls).
 		// Patterns are generated once from composer.json, package.json, etc.
 		// Pass through recursion to avoid regenerating on every subdirectory.
-		if (null === $excludePatterns && $shouldExcludeDevFiles && '' === $relativePath) {
-			$excludePatterns = $this->fileBatchService->getExclusionPatterns($sourceDir, true);
-		}
-		if (null === $excludePatterns) {
-			$excludePatterns = [];
-		}
+		$excludePatterns = $excludePatterns ?? (
+			$shouldExcludeDevFiles && '' === $relativePath
+				? $this->fileBatchService->getExclusionPatterns($sourceDir, true)
+				: []
+		);
 
 		// Read directory contents (files + subdirectories).
 		$files = \scandir($fullPath);
