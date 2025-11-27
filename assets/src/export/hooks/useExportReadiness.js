@@ -65,18 +65,11 @@ export function useExportReadiness() {
 
 		const issues = [];
 
-		// Check if static site is enabled and has a provider
-		const staticEnabled = settings.staticSite?.enabled ?? false;
-		if ( staticEnabled ) {
-			const staticProvider = settings.provider_types?.static_site ?? '';
-			if ( ! staticProvider ) {
-				issues.push(
-					__(
-						'Static site generation is enabled but no provider is selected.',
-						'aether'
-					)
-				);
-			}
+		// Check if static site generation is configured but no provider is selected
+		const staticProvider = settings.provider_types?.static_site ?? '';
+		if ( ! staticProvider ) {
+			// Note: This check is informational - static site generation is optional
+			// Only add as issue if there's a reason to require it (currently not required)
 		}
 
 		// Check if blueprint provider is selected

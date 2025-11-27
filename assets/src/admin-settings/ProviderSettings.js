@@ -345,7 +345,7 @@ export default function ProviderSettings( {
 
 	const handleConfigSave = useCallback(
 		async ( instanceId, updatedConfig ) => {
-			// Merge with existing config to preserve fields not in the form (like 'enabled')
+			// Merge with existing config to preserve fields not in the form
 			const mergedConfig = {
 				...( localConfigs[ instanceId ] || {} ),
 				...updatedConfig,

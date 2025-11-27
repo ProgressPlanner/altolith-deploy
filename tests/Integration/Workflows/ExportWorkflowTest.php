@@ -70,15 +70,17 @@ class ExportWorkflowTest extends TestCase {
 	}
 
 	/**
-	 * Test export path validation rejects path traversal.
+	 * Test export uses temp location and ignores provider export_path.
+	 *
+	 * ExportService always uses temp location for archive creation.
+	 * This test verifies that export paths in provider config don't affect archive creation.
 	 */
 	public function test_export_path_traversal_rejected() {
-		// Set malicious export path.
+		// Set export path in provider config (not used by ExportService).
 		$settings = [
 			'providers' => [
 				'local-filesystem-blueprint-bundle:test-uuid' => [
 					'provider_type' => 'local-filesystem-blueprint-bundle',
-					'enabled'       => true,
 					'export_path'   => '../../etc/passwd',
 				],
 			],
@@ -86,26 +88,28 @@ class ExportWorkflowTest extends TestCase {
 
 		update_option( 'aether_site_exporter_settings', $settings );
 
-		// Export should handle this gracefully by using default path.
+		// Export should succeed using temp location.
 		$result = $this->export_service->exportCompleteSite();
 
-		// Should either succeed with safe path or fail gracefully.
+		// Should succeed - ExportService uses temp location.
 		$this->assertTrue(
-			! is_wp_error( $result ) || $result->get_error_code() !== 'path_traversal',
-			'Export should handle path traversal by using safe default path'
+			! is_wp_error( $result ),
+			'Export should succeed using temp location'
 		);
 	}
 
 	/**
-	 * Test export handles null byte injection in path.
+	 * Test export uses temp location and ignores provider export_path with null byte.
+	 *
+	 * ExportService always uses temp location for archive creation.
+	 * This test verifies that null bytes in provider export_path don't affect export.
 	 */
 	public function test_export_null_byte_injection_rejected() {
-		// Set malicious export path with null byte.
+		// Set export path with null byte in provider config (not used by ExportService).
 		$settings = [
 			'providers' => [
 				'local-filesystem-blueprint-bundle:test-uuid' => [
 					'provider_type' => 'local-filesystem-blueprint-bundle',
-					'enabled'          => true,
 					'export_path'      => "safe-path\0.zip",
 				],
 			],
@@ -113,26 +117,28 @@ class ExportWorkflowTest extends TestCase {
 
 		update_option( 'aether_site_exporter_settings', $settings );
 
-		// Export should handle this gracefully.
+		// Export should succeed using temp location.
 		$result = $this->export_service->exportCompleteSite();
 
-		// Should either succeed with safe path or fail gracefully.
+		// Should succeed - ExportService uses temp location.
 		$this->assertTrue(
-			! is_wp_error( $result ) || $result->get_error_code() !== 'null_byte_injection',
-			'Export should handle null byte injection by using safe default path'
+			! is_wp_error( $result ),
+			'Export should succeed using temp location'
 		);
 	}
 
 	/**
-	 * Test export validates export path is string.
+	 * Test export uses temp location and ignores invalid provider export_path type.
+	 *
+	 * ExportService always uses temp location for archive creation.
+	 * This test verifies that invalid export_path types in provider config don't affect export.
 	 */
 	public function test_export_validates_path_type() {
-		// Set invalid export path (array instead of string).
+		// Set invalid export path (array instead of string) in provider config (not used by ExportService).
 		$settings = [
 			'providers' => [
 				'local-filesystem-blueprint-bundle:test-uuid' => [
 					'provider_type' => 'local-filesystem-blueprint-bundle',
-					'enabled'          => true,
 					'export_path'      => [ 'invalid' ],
 				],
 			],
@@ -140,13 +146,13 @@ class ExportWorkflowTest extends TestCase {
 
 		update_option( 'aether_site_exporter_settings', $settings );
 
-		// Export should handle this gracefully by using default path.
+		// Export should succeed using temp location.
 		$result = $this->export_service->exportCompleteSite();
 
-		// Should either succeed or fail gracefully (not fatal error).
+		// Should succeed - ExportService uses temp location.
 		$this->assertTrue(
-			is_array( $result ) || is_wp_error( $result ),
-			'Export should handle invalid path type gracefully'
+			! is_wp_error( $result ),
+			'Export should succeed using temp location'
 		);
 	}
 

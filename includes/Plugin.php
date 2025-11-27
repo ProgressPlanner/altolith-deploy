@@ -456,7 +456,7 @@ class Plugin
 				return;
 			}
 
-			// Validate instance exists and is enabled.
+			// Validate instance exists.
 			$settings = \get_option('aether_site_exporter_settings', []);
 			$instanceConfig = $settings['providers'][$instanceId] ?? null;
 
@@ -464,17 +464,6 @@ class Plugin
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
 					\error_log(\sprintf(
 						'Aether: Local-filesystem instance not found: %s',
-						$instanceId
-					));
-				}
-				return;
-			}
-
-			// Check if instance is enabled.
-			if (isset($instanceConfig['enabled']) && $instanceConfig['enabled'] === false) {
-				if (\defined('WP_DEBUG') && WP_DEBUG) {
-					\error_log(\sprintf(
-						'Aether: Local-filesystem instance is disabled: %s',
 						$instanceId
 					));
 				}

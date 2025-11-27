@@ -36,14 +36,14 @@ export function getRegisteredSteps() {
 }
 
 /**
- * Get steps filtered by which providers are enabled
+ * Get steps filtered by available providers
  *
  * Uses providerInstancesByType map to filter steps based on their deploymentType.
  * Steps are skipped when no provider instances exist for their deployment type.
  *
  * @param {Object} context                         - Execution context
  * @param {Object} context.providerInstancesByType - Map of deployment type to provider instances
- * @return {Array<Object>} Filtered steps based on enabled provider instances
+ * @return {Array<Object>} Filtered steps based on available provider instances
  */
 export function getActiveSteps( context ) {
 	const { providerInstancesByType = {} } = context;

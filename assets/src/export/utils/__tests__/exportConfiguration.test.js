@@ -8,7 +8,7 @@
 
 import {
 	prepareExportConfiguration,
-	getEnabledInstancesForDeploymentType,
+	getInstancesForDeploymentType,
 	determineProvidersByDeploymentType,
 	buildWorkflowContext,
 } from '../exportConfiguration';
@@ -95,7 +95,7 @@ describe( 'exportConfiguration', () => {
 		} );
 	} );
 
-	describe( 'getEnabledInstancesForDeploymentType()', () => {
+	describe( 'getInstancesForDeploymentType()', () => {
 		beforeEach( () => {
 			jest.clearAllMocks();
 		} );
@@ -130,7 +130,7 @@ describe( 'exportConfiguration', () => {
 				return null;
 			} );
 
-			const result = getEnabledInstancesForDeploymentType(
+			const result = getInstancesForDeploymentType(
 				providerConfigs,
 				'static_site'
 			);
@@ -167,7 +167,7 @@ describe( 'exportConfiguration', () => {
 				return null;
 			} );
 
-			const result = getEnabledInstancesForDeploymentType(
+			const result = getInstancesForDeploymentType(
 				providerConfigs,
 				'static_site'
 			);
@@ -176,7 +176,7 @@ describe( 'exportConfiguration', () => {
 		} );
 
 		test( 'should handle empty provider configs', () => {
-			const result = getEnabledInstancesForDeploymentType(
+			const result = getInstancesForDeploymentType(
 				{},
 				'static_site'
 			);
@@ -185,11 +185,11 @@ describe( 'exportConfiguration', () => {
 		} );
 
 		test( 'should handle null/undefined provider configs', () => {
-			const result1 = getEnabledInstancesForDeploymentType(
+			const result1 = getInstancesForDeploymentType(
 				null,
 				'static_site'
 			);
-			const result2 = getEnabledInstancesForDeploymentType(
+			const result2 = getInstancesForDeploymentType(
 				undefined,
 				'static_site'
 			);
@@ -215,7 +215,7 @@ describe( 'exportConfiguration', () => {
 			}
 			mockProviderRegistry.get.mockReturnValue( MockProvider );
 
-			const result = getEnabledInstancesForDeploymentType(
+			const result = getInstancesForDeploymentType(
 				providerConfigs,
 				'static_site'
 			);
@@ -232,7 +232,7 @@ describe( 'exportConfiguration', () => {
 				},
 			};
 
-			const result = getEnabledInstancesForDeploymentType(
+			const result = getInstancesForDeploymentType(
 				badConfig,
 				'static_site'
 			);
@@ -258,7 +258,7 @@ describe( 'exportConfiguration', () => {
 			}
 			mockProviderRegistry.get.mockReturnValue( MockProvider );
 
-			const result = getEnabledInstancesForDeploymentType(
+			const result = getInstancesForDeploymentType(
 				providerConfigs,
 				'static_site'
 			);

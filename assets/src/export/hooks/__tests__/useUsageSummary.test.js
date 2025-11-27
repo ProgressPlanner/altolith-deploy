@@ -25,9 +25,6 @@ describe( 'useUsageSummary', () => {
 					static_site: 'local-filesystem',
 					mediaImages: 'local-filesystem',
 				},
-				staticSite: {
-					enabled: true,
-				},
 			},
 		} );
 
@@ -106,15 +103,13 @@ describe( 'useUsageSummary', () => {
 		expect( result.current.media.provider ).toBe( 'local-filesystem' );
 	} );
 
-	it( 'should handle static site disabled state', async () => {
+	it( 'should handle static site not configured state', async () => {
 		apiFetch.mockResolvedValue( {
 			success: true,
 			value: {
 				provider_types: {
 					storage: 'local-filesystem',
-				},
-				staticSite: {
-					enabled: false,
+					// No static_site provider configured
 				},
 			},
 		} );
@@ -126,5 +121,6 @@ describe( 'useUsageSummary', () => {
 		} );
 
 		expect( result.current.staticEnabled ).toBe( false );
+		expect( result.current.staticSite.provider ).toBeNull();
 	} );
 } );

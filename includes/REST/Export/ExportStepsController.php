@@ -254,14 +254,8 @@ class ExportStepsController
 		 */
 		$blueprintData = \apply_filters('aether_blueprint_data', $blueprintData, $archiveResult);
 
-		// Get bundle filename from enabled instance config.
-		$instance = $this->getEnabledInstanceForDeploymentType('blueprint_bundle');
-		$exportPath = 'blueprint-bundle/bundle.zip';
-
-		if ($instance && isset($instance['config']['export_path'])) {
-			$exportPath = $instance['config']['export_path'];
-		}
-		$bundleFilename = \basename($exportPath);
+		// Use default bundle filename - providers handle their own paths.
+		$bundleFilename = 'blueprint-bundle.zip';
 
 		/**
 		 * Action fired before blueprint bundle generation.
@@ -275,11 +269,11 @@ class ExportStepsController
 		 *     error_log("Generating blueprint bundle in: {$outputDir}");
 		 * }, 10, 3);
 		 */
-		\do_action('aether_blueprint_before_generate', $blueprintData, $zipPath, \dirname($zipPath));
+		$outputDir = \dirname($zipPath); // Same directory as wp-content.zip (temp directory)
+		\do_action('aether_blueprint_before_generate', $blueprintData, $zipPath, $outputDir);
 
 		// Generate blueprint bundle
 		$generator = new BlueprintBundleGenerator();
-		$outputDir = \dirname($zipPath); // Same directory as wp-content.zip
 		$bundlePath = $generator->generate($blueprintData, $zipPath, $outputDir, $bundleFilename);
 
 		if ($bundlePath === false) {
@@ -331,49 +325,5 @@ class ExportStepsController
 			'success' => true,
 			'data' => $bundleResult,
 		]);
-	}
-
-	/**
-	 * Get instance for a deployment type.
-	 *
-	 * Finds the first provider instance that supports the given deployment type.
-	 * Since providers have single responsibility, we check the provider_type to determine support.
-	 *
-	 * @param string $deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
-	 * @return array{instanceId: string, config: array<string, mixed>}|null Instance data or null if not found
-	 */
-	private function getEnabledInstanceForDeploymentType(string $deploymentType): ?array
-	{
-		$settings = \get_option('aether_site_exporter_settings', []);
-		$providers = $settings['providers'] ?? [];
-
-		// Map deployment types to provider type patterns
-		$deploymentTypePatterns = [
-			'static_site' => 'static-site',
-			'blueprint_bundle' => 'blueprint-bundle',
-		];
-
-		$pattern = $deploymentTypePatterns[$deploymentType] ?? $deploymentType;
-
-		foreach ($providers as $instanceId => $config) {
-			// Check if provider type supports this deployment type
-			$providerType = $config['provider_type'] ?? '';
-			if (empty($providerType)) {
-				continue;
-			}
-
-			// Check if provider type contains the deployment type pattern
-			// e.g., 'local-filesystem-static-site' contains 'static-site'
-			if (\strpos($providerType, $pattern) === false) {
-				continue;
-			}
-
-			return [
-				'instanceId' => $instanceId,
-				'config' => $config,
-			];
-		}
-
-		return null;
 	}
 }

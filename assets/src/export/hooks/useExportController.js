@@ -219,7 +219,7 @@ export function useExportController( exportState ) {
 				onError: () => {},
 			};
 
-			// Get steps filtered by enabled providers
+			// Get steps filtered by available providers
 			const activeSteps = getActiveSteps( workflowContext );
 
 			// Execute workflow with ThreadOrchestrator (handles 0, 1, or N providers)

@@ -25,9 +25,6 @@ describe( 'useExportReadiness', () => {
 					storage: 'local-filesystem',
 					static_site: 'local-filesystem',
 				},
-				staticSite: {
-					enabled: true,
-				},
 			},
 		} );
 
@@ -52,9 +49,6 @@ describe( 'useExportReadiness', () => {
 			success: true,
 			value: {
 				provider_types: {},
-				staticSite: {
-					enabled: false,
-				},
 			},
 		} );
 
@@ -70,36 +64,7 @@ describe( 'useExportReadiness', () => {
 		expect( result.current.issues[ 0 ] ).toContain( 'storage provider' );
 	} );
 
-	it( 'should return issues when static site is enabled but no provider', async () => {
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			value: {
-				provider_types: {
-					storage: 'local-filesystem',
-					static_site: '',
-				},
-				staticSite: {
-					enabled: true,
-				},
-			},
-		} );
-
-		// Mock provider status call
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			configured: true,
-		} );
-
-		const { result } = renderHook( () => useExportReadiness() );
-
-		await waitFor( () => {
-			expect( result.current.loading ).toBe( false );
-		} );
-
-		expect( result.current.ready ).toBe( false );
-		expect( result.current.issues.length ).toBeGreaterThan( 0 );
-		expect( result.current.issues[ 0 ] ).toContain( 'Static site' );
-	} );
+	// Note: Static site generation is optional, so no issue is raised when not configured
 
 	it( 'should return issues when provider is not configured', async () => {
 		apiFetch.mockResolvedValueOnce( {
@@ -107,9 +72,6 @@ describe( 'useExportReadiness', () => {
 			value: {
 				provider_types: {
 					storage: 'local-filesystem',
-				},
-				staticSite: {
-					enabled: false,
 				},
 			},
 		} );

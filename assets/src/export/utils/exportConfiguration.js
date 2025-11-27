@@ -39,7 +39,7 @@ export function prepareExportConfiguration( settingsResponse ) {
  * @param {string} deploymentType  - Deployment type to filter by
  * @return {Array<string>} Array of instance IDs
  */
-export function getEnabledInstancesForDeploymentType(
+export function getInstancesForDeploymentType(
 	providerConfigs,
 	deploymentType
 ) {
@@ -117,7 +117,7 @@ function isValidProviderInstance( instanceId, config ) {
  * @return {Array<Object>} Valid provider instance objects with { id, label, config }
  */
 export function buildProviderInstances( providerConfigs, deploymentType ) {
-	const instanceIds = getEnabledInstancesForDeploymentType(
+	const instanceIds = getInstancesForDeploymentType(
 		providerConfigs,
 		deploymentType
 	);
@@ -155,7 +155,7 @@ export function determineProvidersByDeploymentType( providerConfigs ) {
 	const result = {};
 
 	Object.keys( deploymentTypes ).forEach( ( deploymentType ) => {
-		const instances = getEnabledInstancesForDeploymentType(
+		const instances = getInstancesForDeploymentType(
 			providerConfigs,
 			deploymentType
 		);

@@ -66,7 +66,7 @@ class ExportService
 	 * - Custom themes
 	 * - MU-plugins directory
 	 *
-	 * @param string             $progressId       Progress ID for tracking (not used, kept for compatibility).
+	 * @param string             $progressId       Progress ID for tracking (unused).
 	 * @param array<string>|null $customAssetSlugs Optional array of custom plugin/theme slugs to include in zip.
 	 *                                             If provided, only these assets are added. If null, all custom assets are added.
 	 * @return array<string, mixed>|\WP_Error Result array with zipPath and zipSize, or WP_Error on failure.
@@ -90,93 +90,14 @@ class ExportService
 			);
 		}
 
-		// Get export path from enabled instance config.
-		$instance = $this->getEnabledInstanceForDeploymentType('blueprint_bundle');
-		$exportPath = 'blueprint-bundle/bundle.zip';
-
-		if ($instance && isset($instance['config']['export_path'])) {
-			$exportPath = $instance['config']['export_path'];
-		}
-
-		// Security: Validate export_path is a string and doesn't contain null bytes
-		if (!\is_string($exportPath) || !SecurityValidator::isValidPath($exportPath)) {
-			$exportPath = 'blueprint-bundle/bundle.zip';
-		}
-
-		// Extract directory and validate it to prevent path traversal attacks.
-		$exportDir = \dirname($exportPath);
-
-		// Security: Reject paths with path traversal sequences, absolute paths, or null bytes.
-		// CRITICAL: Validate BEFORE any filesystem operations.
-		$exportDirValidation = SecurityValidator::validateExportPath($exportDir);
-		if (! $exportDirValidation['valid']) {
-			return new \WP_Error(
-				'invalid_export_path',
-				\__('Invalid export path: path traversal not allowed', 'aether-site-exporter'),
-				[ 'status' => 400 ]
-			);
-		}
-
-		$fullExportDir = \rtrim(ABSPATH, '/') . '/' . \ltrim($exportDir, '/');
-
-		// Security: Validate parent directory exists and is within ABSPATH BEFORE creating anything.
-		// This prevents creating directories outside ABSPATH via traversal.
-		$parentDir = \dirname($fullExportDir);
-
-		// Find the nearest existing ancestor directory to validate
-		$checkDir = $parentDir;
-		while (!\is_dir($checkDir) && \strlen($checkDir) > \strlen(ABSPATH)) {
-			$checkDir = \dirname($checkDir);
-		}
-
-		// Validate the existing ancestor is within ABSPATH
-		$realCheckDir = \realpath($checkDir);
-		$realAbspath = \realpath(ABSPATH);
-		if (
-			false === $realCheckDir || false === $realAbspath ||
-			0 !== \strpos($realCheckDir, $realAbspath)
-		) {
-			return new \WP_Error(
-				'invalid_export_directory',
-				\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
-				[ 'status' => 400 ]
-			);
-		}
-
-		// NOW safe to create the directory
-		if (!\is_dir($fullExportDir)) {
-			$created = \wp_mkdir_p($fullExportDir);
-			if (!$created) {
-				return new \WP_Error(
-					'directory_creation_failed',
-					\__('Failed to create export directory', 'aether-site-exporter'),
-					[ 'status' => 500 ]
-				);
-			}
-		}
-
-		// Final security check: Validate the created directory is within ABSPATH.
-		$realExportDir = \realpath($fullExportDir);
-		$realAbspath = \realpath(ABSPATH);
-		if (false === $realExportDir || false === $realAbspath || 0 !== \strpos($realExportDir, $realAbspath)) {
-			// Clean up created directory if validation fails
-			if (\is_dir($fullExportDir)) {
-				@\rmdir($fullExportDir);
-			}
-			return new \WP_Error(
-				'invalid_export_directory',
-				\__('Invalid export directory: must be within WordPress installation', 'aether-site-exporter'),
-				[ 'status' => 400 ]
-			);
-		}
-
-		// Final location: Use the directory from export_path with wp-content.zip filename.
-		$zipPath = $realExportDir . '/wp-content.zip';
+		// Create wp-content.zip in temp location.
+		// Each provider instance will handle moving it to their export_path.
+		$zipPath = $tempZipPath;
 
 		// Initialize zip archive with CREATE and OVERWRITE flags.
 		// CREATE: Create archive if it doesn't exist.
-		// OVERWRITE: Replace existing archive (cleanup from failed previous attempts).
-		// Create in temp directory first, then move atomically to final location.
+		// OVERWRITE: Replace existing archive if it exists.
+		// Create in temp directory - each provider instance will handle moving it to their export_path.
 		$zip = new \ZipArchive();
 		if (true !== $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
 			return new \WP_Error(
@@ -207,9 +128,6 @@ class ExportService
 		// WordPress.org plugins are excluded from the blueprint as they'll be downloaded
 		// from the WordPress.org API when Playground loads the blueprint.
 		// This dramatically reduces zip size (potentially GB → MB).
-		//
-		// If $customAssetSlugs is provided, only those assets are included.
-		// Otherwise, use getAllCustomAssets() for backward compatibility.
 		if (null !== $customAssetSlugs) {
 			// Use provided custom asset slugs (from browser-based WordPress.org detection).
 			foreach ($customAssetSlugs as $slug) {
@@ -238,7 +156,7 @@ class ExportService
 				}
 			}
 		} else {
-			// Fallback: Use PHP-based detection (includes ALL active plugins).
+			// Use PHP-based detection to get all custom assets (includes all active plugins).
 			$customAssets = $this->plugin->getAssetDiscovery()->getAllCustomAssets();
 			foreach ($customAssets as $asset) {
 				if ('plugin' === $asset['type']) {
@@ -282,7 +200,7 @@ class ExportService
 				}
 			}
 		} else {
-			// Fallback: Use PHP-based detection (includes ALL active themes).
+			// Use PHP-based detection to get all custom themes (includes all active themes).
 			foreach ($customAssets as $asset) {
 				if ('theme' === $asset['type']) {
 					$themeDir = \get_theme_root() . '/' . $asset['slug'];
@@ -306,25 +224,20 @@ class ExportService
 		// Close zip archive to finalize writing.
 		$zip->close();
 
-		// Move zip from temp directory to final web-accessible location.
-		// This is an atomic operation - either succeeds or fails completely.
-		if (! \rename($tempZipPath, $zipPath)) {
-			// Cleanup temp file if move failed.
-			@\unlink($tempZipPath);
-			return new \WP_Error(
-				'zip_move_failed',
-				\__('Failed to move zip file to final location', 'aether-site-exporter'),
-				[ 'status' => 500 ]
-			);
-		}
-
 		// Get final file size for response (used for progress tracking in UI).
 		$zipSize = \filesize($zipPath);
+
+		// Generate URL for temp file.
+		// Note: Temp directory has .htaccess protection, so files aren't directly web-accessible.
+		// The URL is used for metadata/reference; actual file access is via PHP file operations.
+		// Convert absolute path to URL using content_url().
+		$relativePath = \str_replace(WP_CONTENT_DIR, '', $zipPath);
+		$zipUrl = \content_url($relativePath);
 
 		$result = [
 			'success'  => true,
 			'zipPath' => $zipPath,
-			'zipUrl'  => 'wp-content/wp-content.zip', // Web-accessible URL path.
+			'zipUrl'  => $zipUrl,
 			'zipSize' => $zipSize,
 		];
 
@@ -366,49 +279,5 @@ class ExportService
 		}
 
 		return false;
-	}
-
-	/**
-	 * Get instance for a deployment type.
-	 *
-	 * Finds the first provider instance that supports the given deployment type.
-	 *
-	 * @param string $deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
-	 * @return array{instanceId: string, config: array<string, mixed>}|null Instance data or null if not found
-	 */
-	private function getEnabledInstanceForDeploymentType(string $deploymentType): ?array
-	{
-		$settings = \get_option('aether_site_exporter_settings', []);
-		$providers = $settings['providers'] ?? [];
-
-		foreach ($providers as $instanceId => $config) {
-			// Check if provider type supports this deployment type
-			// Since providers have single responsibility, we check the provider_type
-			$providerType = $config['provider_type'] ?? '';
-			if (empty($providerType)) {
-				continue;
-			}
-
-			// Map deployment types to provider type patterns
-			$deploymentTypePatterns = [
-				'static_site' => 'static-site',
-				'blueprint_bundle' => 'blueprint-bundle',
-			];
-
-			$pattern = $deploymentTypePatterns[$deploymentType] ?? $deploymentType;
-
-			// Check if provider type contains the deployment type pattern
-			// e.g., 'local-filesystem-static-site' contains 'static-site'
-			if (\strpos($providerType, $pattern) === false) {
-				continue;
-			}
-
-			return [
-				'instanceId' => $instanceId,
-				'config' => $config,
-			];
-		}
-
-		return null;
 	}
 }

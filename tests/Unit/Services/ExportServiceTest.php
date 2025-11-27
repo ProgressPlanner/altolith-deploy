@@ -75,11 +75,10 @@ class ExportServiceTest extends TestCase {
 	 * Clean up test exports.
 	 */
 	private function clean_up_test_exports() {
-		// Clean up test zip files
+		// Clean up test zip files from temp directory
+		// ExportService now always uses temp location for wp-content.zip
 		$patterns = [
 			WP_CONTENT_DIR . '/uploads/aether-temp/wp-content-complete-*.zip',
-			ABSPATH . 'blueprint-bundle/wp-content.zip',
-			ABSPATH . 'test-export/wp-content.zip',
 		];
 
 		foreach ( $patterns as $pattern ) {
@@ -90,18 +89,6 @@ class ExportServiceTest extends TestCase {
 						@unlink( $file );
 					}
 				}
-			}
-		}
-
-		// Clean up test directories
-		$dirs = [
-			ABSPATH . 'blueprint-bundle',
-			ABSPATH . 'test-export',
-		];
-
-		foreach ( $dirs as $dir ) {
-			if ( is_dir( $dir ) ) {
-				@rmdir( $dir );
 			}
 		}
 	}

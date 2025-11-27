@@ -58,17 +58,19 @@ export function useUsageSummary() {
 					label: __( 'Not configured', 'aether-site-exporter' ),
 					provider: null,
 				},
-				staticEnabled: false,
+				staticEnabled: false, // No provider configured
 			};
 		}
 
 		const providerTypes = settingsData.provider_types || {};
-		const staticEnabled = settingsData.staticSite?.enabled ?? false;
 
 		const blueprintProvider = providerTypes.storage || null;
 		const staticSiteProvider = providerTypes.static_site || null;
 		const mediaProvider =
 			providerTypes.media || providerTypes.mediaImages || null;
+
+		// Static site generation is "enabled" if a provider is configured
+		const staticEnabled = staticSiteProvider !== null;
 
 		return {
 			blueprint: {
