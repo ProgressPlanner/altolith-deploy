@@ -2,8 +2,7 @@
  * Asset Discovery Hook
  *
  * Browser-based implementation for WordPress.org asset detection.
- * Checks are delegated to the server-side PHP endpoint which handles
- * caching via WordPress transients.
+ * Uses Cloudflare D1-backed Worker endpoint for fast, globally-cached lookups.
  */
 
 import { useState, useCallback, useMemo } from '@wordpress/element';
@@ -17,9 +16,15 @@ import {
 export { normalizePluginSlug };
 
 /**
+ * Cloudflare Worker endpoint for WordPress.org checks.
+ * Uses D1 database with self-learning cache (30-day TTL for WP.org, 2-day for custom).
+ */
+const WPORG_CHECK_ENDPOINT = 'https://cfp.s12y.org/check-wporg';
+
+/**
  * Check if a plugin or theme exists on WordPress.org
  *
- * Delegates to server-side PHP endpoint which handles caching via WordPress transients.
+ * Uses Cloudflare D1-backed Worker endpoint for fast, globally-cached lookups.
  *
  * @param {string} slug - Plugin or theme slug (will be normalized for plugins)
  * @param {string} type - 'plugin' or 'theme'
@@ -32,20 +37,13 @@ export async function isFromWordPressOrg( slug, type ) {
 		type === 'plugin' ? normalizePluginSlug( slug ) : slug;
 
 	try {
-		const response = await apiFetch( {
-			path: '/aether/site-exporter/wporg/check-batch',
-			method: 'POST',
-			data: {
-				items: [ { slug: normalizedSlug, type } ],
-			},
-		} );
+		const url = `${ WPORG_CHECK_ENDPOINT }?slug=${ encodeURIComponent(
+			normalizedSlug
+		) }&type=${ type }`;
+		const response = await fetch( url );
+		const data = await response.json();
 
-		if ( response.success && response.results ) {
-			const key = `${ type }:${ normalizedSlug }`;
-			return response.results[ key ] === true;
-		}
-
-		return false;
+		return data.success && data.exists === true;
 	} catch ( error ) {
 		// On error, assume it doesn't exist
 		return false;
@@ -53,7 +51,9 @@ export async function isFromWordPressOrg( slug, type ) {
 }
 
 /**
- * Check multiple plugins/themes for existence on WordPress.org in a single batch request.
+ * Check multiple plugins/themes for existence on WordPress.org.
+ *
+ * Makes parallel requests to the Cloudflare Worker endpoint.
  *
  * @param {Array<{slug: string, type: string}>} items - Array of items to check
  * @return {Promise<Object>} Object mapping "type:slug" to boolean
@@ -72,24 +72,28 @@ export async function checkBatchWordPressOrg( items ) {
 		type: item.type,
 	} ) );
 
-	try {
-		const response = await apiFetch( {
-			path: '/aether/site-exporter/wporg/check-batch',
-			method: 'POST',
-			data: {
-				items: normalizedItems,
-			},
-		} );
+	// Make parallel requests to the Worker endpoint
+	const results = {};
 
-		if ( response.success && response.results ) {
-			return response.results;
-		}
+	await Promise.all(
+		normalizedItems.map( async ( item ) => {
+			try {
+				const url = `${ WPORG_CHECK_ENDPOINT }?slug=${ encodeURIComponent(
+					item.slug
+				) }&type=${ item.type }`;
+				const response = await fetch( url );
+				const data = await response.json();
 
-		return {};
-	} catch ( error ) {
-		// On error, return empty results
-		return {};
-	}
+				const key = `${ item.type }:${ item.slug }`;
+				results[ key ] = data.success && data.exists === true;
+			} catch ( error ) {
+				const key = `${ item.type }:${ item.slug }`;
+				results[ key ] = false;
+			}
+		} )
+	);
+
+	return results;
 }
 
 /**

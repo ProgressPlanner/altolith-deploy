@@ -165,65 +165,6 @@ trait RESTHelpersTrait
 	}
 
 	/**
-	 * Rate limit requests to prevent abuse.
-	 *
-	 * Uses WordPress transients to track request counts per user/IP.
-	 * Prevents DoS attacks by limiting the number of requests within a time window.
-	 *
-	 * @param string $operation   Operation identifier (e.g., 'url_discovery').
-	 * @param int    $maxRequests Maximum requests allowed in time window.
-	 * @param int    $timeWindow  Time window in seconds (default: 60).
-	 * @return bool|\WP_Error True if allowed, WP_Error if rate limited.
-	 */
-	public function checkRateLimit(string $operation, int $maxRequests = 10, int $timeWindow = 60)
-	{
-		$userId = \get_current_user_id();
-
-		// For logged-in users, use user ID; otherwise use IP address + User-Agent for better tracking
-		if ($userId > 0) {
-			$identifier = "user_{$userId}";
-		} else {
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
-			$ip = isset($_SERVER['REMOTE_ADDR']) ? \sanitize_text_field(\wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
-			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotValidated
-			$ua = isset($_SERVER['HTTP_USER_AGENT']) ? \sanitize_text_field(\wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
-			// Combine IP and User-Agent for better rate limiting (harder to bypass with proxies)
-			$identifier = "ip_" . \md5($ip . $ua);
-		}
-
-		$transientKey = "aether_ratelimit_{$operation}_{$identifier}";
-		$requests = \get_transient($transientKey);
-
-		if (false === $requests) {
-			// First request in this time window
-			\set_transient($transientKey, 1, $timeWindow);
-			return true;
-		}
-
-		if ($requests >= $maxRequests) {
-			// Log security event for monitoring (only in debug mode)
-			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				$ip = isset($_SERVER['REMOTE_ADDR']) ? \sanitize_text_field(\wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
-				\error_log(\sprintf('Aether Security: Rate limit exceeded for operation "%s" from IP %s', $operation, $ip));
-			}
-
-			return new \WP_Error(
-				'rate_limit_exceeded',
-				\sprintf(
-					/* translators: %d: number of seconds to wait */
-					\__('Rate limit exceeded. Please wait %d seconds before trying again.', 'aether-site-exporter'),
-					$timeWindow
-				),
-				['status' => 429]
-			);
-		}
-
-		// Increment counter
-		\set_transient($transientKey, $requests + 1, $timeWindow);
-		return true;
-	}
-
-	/**
 	 * Sanitize exception message to prevent information disclosure.
 	 *
 	 * Removes sensitive information from exception messages like:

@@ -1,7 +1,7 @@
 /**
  * Tests for useAssetDiscovery hook
  *
- * Tests the hook that checks plugins/themes against the PHP WordPress.org cache endpoint.
+ * Tests the hook that checks plugins/themes against the Cloudflare D1 Worker endpoint.
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react';
@@ -11,8 +11,12 @@ import useAssetDiscovery, {
 } from '../useAssetDiscovery';
 import apiFetch from '../api';
 
-// Mock apiFetch
+// Mock apiFetch (for asset discovery endpoint)
 jest.mock( '../api' );
+
+// Mock global fetch (for Cloudflare Worker endpoint)
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
 
 describe( 'isFromWordPressOrg', () => {
 	beforeEach( () => {
@@ -20,51 +24,52 @@ describe( 'isFromWordPressOrg', () => {
 	} );
 
 	it( 'returns true for existing WordPress.org plugin', async () => {
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			results: {
-				'plugin:akismet': true,
-			},
+		mockFetch.mockResolvedValueOnce( {
+			json: () =>
+				Promise.resolve( {
+					success: true,
+					exists: true,
+					slug: 'akismet',
+					type: 'plugin',
+				} ),
 		} );
 
 		const result = await isFromWordPressOrg( 'akismet', 'plugin' );
 
 		expect( result ).toBe( true );
-		expect( apiFetch ).toHaveBeenCalledWith( {
-			path: '/aether/site-exporter/wporg/check-batch',
-			method: 'POST',
-			data: {
-				items: [ { slug: 'akismet', type: 'plugin' } ],
-			},
-		} );
+		expect( mockFetch ).toHaveBeenCalledWith(
+			'https://cfp.s12y.org/check-wporg?slug=akismet&type=plugin'
+		);
 	} );
 
 	it( 'returns true for existing WordPress.org theme', async () => {
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			results: {
-				'theme:twentytwentyfour': true,
-			},
+		mockFetch.mockResolvedValueOnce( {
+			json: () =>
+				Promise.resolve( {
+					success: true,
+					exists: true,
+					slug: 'twentytwentyfour',
+					type: 'theme',
+				} ),
 		} );
 
 		const result = await isFromWordPressOrg( 'twentytwentyfour', 'theme' );
 
 		expect( result ).toBe( true );
-		expect( apiFetch ).toHaveBeenCalledWith( {
-			path: '/aether/site-exporter/wporg/check-batch',
-			method: 'POST',
-			data: {
-				items: [ { slug: 'twentytwentyfour', type: 'theme' } ],
-			},
-		} );
+		expect( mockFetch ).toHaveBeenCalledWith(
+			'https://cfp.s12y.org/check-wporg?slug=twentytwentyfour&type=theme'
+		);
 	} );
 
 	it( 'returns false for non-existent plugin', async () => {
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			results: {
-				'plugin:non-existent': false,
-			},
+		mockFetch.mockResolvedValueOnce( {
+			json: () =>
+				Promise.resolve( {
+					success: true,
+					exists: false,
+					slug: 'non-existent',
+					type: 'plugin',
+				} ),
 		} );
 
 		const result = await isFromWordPressOrg( 'non-existent', 'plugin' );
@@ -73,11 +78,14 @@ describe( 'isFromWordPressOrg', () => {
 	} );
 
 	it( 'normalizes plugin slugs', async () => {
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			results: {
-				'plugin:akismet': true,
-			},
+		mockFetch.mockResolvedValueOnce( {
+			json: () =>
+				Promise.resolve( {
+					success: true,
+					exists: true,
+					slug: 'akismet',
+					type: 'plugin',
+				} ),
 		} );
 
 		const result = await isFromWordPressOrg(
@@ -86,17 +94,13 @@ describe( 'isFromWordPressOrg', () => {
 		);
 
 		expect( result ).toBe( true );
-		expect( apiFetch ).toHaveBeenCalledWith( {
-			path: '/aether/site-exporter/wporg/check-batch',
-			method: 'POST',
-			data: {
-				items: [ { slug: 'akismet', type: 'plugin' } ],
-			},
-		} );
+		expect( mockFetch ).toHaveBeenCalledWith(
+			'https://cfp.s12y.org/check-wporg?slug=akismet&type=plugin'
+		);
 	} );
 
 	it( 'returns false on network error', async () => {
-		apiFetch.mockRejectedValueOnce( new Error( 'Network error' ) );
+		mockFetch.mockRejectedValueOnce( new Error( 'Network error' ) );
 
 		const result = await isFromWordPressOrg( 'test-plugin', 'plugin' );
 
@@ -110,14 +114,34 @@ describe( 'checkBatchWordPressOrg', () => {
 	} );
 
 	it( 'returns batch results', async () => {
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			results: {
-				'plugin:akismet': true,
-				'plugin:custom-plugin': false,
-				'theme:twentytwentyfour': true,
-			},
-		} );
+		mockFetch
+			.mockResolvedValueOnce( {
+				json: () =>
+					Promise.resolve( {
+						success: true,
+						exists: true,
+						slug: 'akismet',
+						type: 'plugin',
+					} ),
+			} )
+			.mockResolvedValueOnce( {
+				json: () =>
+					Promise.resolve( {
+						success: true,
+						exists: false,
+						slug: 'custom-plugin',
+						type: 'plugin',
+					} ),
+			} )
+			.mockResolvedValueOnce( {
+				json: () =>
+					Promise.resolve( {
+						success: true,
+						exists: true,
+						slug: 'twentytwentyfour',
+						type: 'theme',
+					} ),
+			} );
 
 		const items = [
 			{ slug: 'akismet', type: 'plugin' },
@@ -136,38 +160,37 @@ describe( 'checkBatchWordPressOrg', () => {
 		const result = await checkBatchWordPressOrg( [] );
 
 		expect( result ).toEqual( {} );
-		expect( apiFetch ).not.toHaveBeenCalled();
+		expect( mockFetch ).not.toHaveBeenCalled();
 	} );
 
 	it( 'normalizes plugin slugs in batch', async () => {
-		apiFetch.mockResolvedValueOnce( {
-			success: true,
-			results: {
-				'plugin:akismet': true,
-			},
+		mockFetch.mockResolvedValueOnce( {
+			json: () =>
+				Promise.resolve( {
+					success: true,
+					exists: true,
+					slug: 'akismet',
+					type: 'plugin',
+				} ),
 		} );
 
 		await checkBatchWordPressOrg( [
 			{ slug: 'akismet/akismet.php', type: 'plugin' },
 		] );
 
-		expect( apiFetch ).toHaveBeenCalledWith( {
-			path: '/aether/site-exporter/wporg/check-batch',
-			method: 'POST',
-			data: {
-				items: [ { slug: 'akismet', type: 'plugin' } ],
-			},
-		} );
+		expect( mockFetch ).toHaveBeenCalledWith(
+			'https://cfp.s12y.org/check-wporg?slug=akismet&type=plugin'
+		);
 	} );
 
-	it( 'returns empty object on error', async () => {
-		apiFetch.mockRejectedValueOnce( new Error( 'Network error' ) );
+	it( 'returns false for items on error', async () => {
+		mockFetch.mockRejectedValueOnce( new Error( 'Network error' ) );
 
 		const result = await checkBatchWordPressOrg( [
 			{ slug: 'test', type: 'plugin' },
 		] );
 
-		expect( result ).toEqual( {} );
+		expect( result[ 'plugin:test' ] ).toBe( false );
 	} );
 } );
 
@@ -188,6 +211,7 @@ describe( 'useAssetDiscovery', () => {
 	describe( 'discoverCustomAssets', () => {
 		it( 'discovers custom plugins and themes', async () => {
 			apiFetch.mockClear();
+			mockFetch.mockClear();
 
 			// First call: assets endpoint
 			apiFetch.mockResolvedValueOnce( {
@@ -216,19 +240,19 @@ describe( 'useAssetDiscovery', () => {
 				],
 			} );
 
-			// Subsequent calls: WordPress.org checks (one per asset)
-			apiFetch
+			// WordPress.org checks via Cloudflare Worker (one per asset)
+			mockFetch
 				.mockResolvedValueOnce( {
-					success: true,
-					results: { 'plugin:akismet': true },
+					json: () =>
+						Promise.resolve( { success: true, exists: true } ),
 				} )
 				.mockResolvedValueOnce( {
-					success: true,
-					results: { 'plugin:custom-plugin': false },
+					json: () =>
+						Promise.resolve( { success: true, exists: false } ),
 				} )
 				.mockResolvedValueOnce( {
-					success: true,
-					results: { 'theme:twentytwentyfour': true },
+					json: () =>
+						Promise.resolve( { success: true, exists: true } ),
 				} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
@@ -279,6 +303,7 @@ describe( 'useAssetDiscovery', () => {
 
 		it( 'handles errors gracefully', async () => {
 			apiFetch.mockClear();
+			mockFetch.mockClear();
 
 			// Assets endpoint
 			apiFetch.mockResolvedValueOnce( {
@@ -295,7 +320,7 @@ describe( 'useAssetDiscovery', () => {
 			} );
 
 			// WordPress.org check fails
-			apiFetch.mockRejectedValueOnce( new Error( 'Network failure' ) );
+			mockFetch.mockRejectedValueOnce( new Error( 'Network failure' ) );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
 
@@ -314,6 +339,7 @@ describe( 'useAssetDiscovery', () => {
 	describe( 'getBlueprintAssets', () => {
 		it( 'returns only WordPress.org assets for blueprint', async () => {
 			apiFetch.mockClear();
+			mockFetch.mockClear();
 			document.title = 'Test Site';
 
 			// Assets endpoint
@@ -344,18 +370,18 @@ describe( 'useAssetDiscovery', () => {
 			} );
 
 			// WordPress.org checks
-			apiFetch
+			mockFetch
 				.mockResolvedValueOnce( {
-					success: true,
-					results: { 'plugin:akismet': true },
+					json: () =>
+						Promise.resolve( { success: true, exists: true } ),
 				} )
 				.mockResolvedValueOnce( {
-					success: true,
-					results: { 'plugin:custom-plugin': false },
+					json: () =>
+						Promise.resolve( { success: true, exists: false } ),
 				} )
 				.mockResolvedValueOnce( {
-					success: true,
-					results: { 'theme:twentytwentyfour': true },
+					json: () =>
+						Promise.resolve( { success: true, exists: true } ),
 				} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
@@ -374,6 +400,7 @@ describe( 'useAssetDiscovery', () => {
 
 		it( 'excludes built-in Playground plugins', async () => {
 			apiFetch.mockClear();
+			mockFetch.mockClear();
 			document.title = 'Test Site';
 
 			// Assets endpoint
@@ -397,14 +424,14 @@ describe( 'useAssetDiscovery', () => {
 			} );
 
 			// WordPress.org checks
-			apiFetch
+			mockFetch
 				.mockResolvedValueOnce( {
-					success: true,
-					results: { 'plugin:aether': true },
+					json: () =>
+						Promise.resolve( { success: true, exists: true } ),
 				} )
 				.mockResolvedValueOnce( {
-					success: true,
-					results: { 'plugin:sqlite-database-integration': true },
+					json: () =>
+						Promise.resolve( { success: true, exists: true } ),
 				} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );
@@ -423,6 +450,7 @@ describe( 'useAssetDiscovery', () => {
 
 		it( 'only includes active plugins', async () => {
 			apiFetch.mockClear();
+			mockFetch.mockClear();
 			document.title = 'Test Site';
 
 			// Assets endpoint
@@ -446,9 +474,9 @@ describe( 'useAssetDiscovery', () => {
 			} );
 
 			// WordPress.org check (only for active plugin)
-			apiFetch.mockResolvedValueOnce( {
-				success: true,
-				results: { 'plugin:active-plugin': true },
+			mockFetch.mockResolvedValueOnce( {
+				json: () =>
+					Promise.resolve( { success: true, exists: true } ),
 			} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );

@@ -9,7 +9,6 @@
 namespace Aether\SiteExporter;
 
 \defined('ABSPATH') || exit;
-use Aether\SiteExporter\Admin\PluginDependencyManager;
 use Aether\SiteExporter\Sync\AssetDiscoveryService;
 use Aether\SiteExporter\Utilities\TempDirectoryManager;
 use Aether\SiteExporter\Utilities\CorsHandler;
@@ -91,9 +90,6 @@ class Plugin
 
 		// Load translations at the proper time.
 		\add_action('init', [ $this, 'loadTextdomain' ]);
-
-		// Initialize plugin dependency manager.
-		new PluginDependencyManager();
 
 		// Initialize asset discovery service.
 		$this->assetDiscovery = new AssetDiscoveryService();
@@ -337,7 +333,6 @@ class Plugin
 		$localStorageController = new REST\LocalStorageController();
 		$urlDiscoveryController = new REST\URLDiscoveryController();
 		$adminBarDependenciesController = new REST\AdminBarDependenciesController();
-		$wpOrgCacheController = new REST\WpOrgCacheController();
 
 		// Initialize export controllers.
 		$exportStepsController = new REST\Export\ExportStepsController($this);
@@ -350,7 +345,6 @@ class Plugin
 		$localStorageController->registerRoutes();
 		$urlDiscoveryController->registerRoutes();
 		$adminBarDependenciesController->registerRoutes();
-		$wpOrgCacheController->registerRoutes();
 
 		// Register export routes.
 		$exportStepsController->registerRoutes();
