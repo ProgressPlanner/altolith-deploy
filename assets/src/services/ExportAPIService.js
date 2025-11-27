@@ -253,6 +253,59 @@ export class ExportAPIService {
 	}
 
 	/**
+	 * Fetch HTML content as anonymous user via PHP endpoint
+	 *
+	 * Uses server-side fetching with wp_set_current_user(0) to ensure
+	 * content matches what anonymous visitors see. This is more reliable
+	 * than credentials: 'omit' in WordPress Playground.
+	 *
+	 * @param {string} url URL to fetch
+	 * @return {Promise<Object>} Response with success, html, and status
+	 */
+	async fetchHtml( url ) {
+		try {
+			const response = await this.apiFetch( {
+				path: ENDPOINTS.EXPORT_WORKFLOW.FETCH_HTML,
+				method: 'POST',
+				data: { url },
+			} );
+
+			return response;
+		} catch ( error ) {
+			return {
+				success: false,
+				error: error.message || 'Failed to fetch HTML via PHP',
+			};
+		}
+	}
+
+	/**
+	 * Fetch HTML content for multiple URLs as anonymous user
+	 *
+	 * Batch endpoint to reduce HTTP overhead when fetching many pages.
+	 *
+	 * @param {Array<string>} urls URLs to fetch (max 10)
+	 * @return {Promise<Object>} Response with results map (url -> {success, html, status})
+	 */
+	async fetchHtmlBatch( urls ) {
+		try {
+			const response = await this.apiFetch( {
+				path: ENDPOINTS.EXPORT_WORKFLOW.FETCH_HTML_BATCH,
+				method: 'POST',
+				data: { urls },
+			} );
+
+			return response;
+		} catch ( error ) {
+			return {
+				success: false,
+				error: error.message || 'Failed to fetch HTML batch via PHP',
+				results: {},
+			};
+		}
+	}
+
+	/**
 	 * Create blueprint bundle
 	 *
 	 * Creates blueprint-bundle.zip containing blueprint.json and wp-content.zip.

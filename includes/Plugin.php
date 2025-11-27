@@ -341,6 +341,7 @@ class Plugin
 
 		// Initialize export controllers.
 		$exportStepsController = new REST\Export\ExportStepsController($this);
+		$htmlFetchController = new REST\Export\HtmlFetchController();
 
 		// Register routes from each controller.
 		$settingsController->registerRoutes();
@@ -353,6 +354,7 @@ class Plugin
 
 		// Register export routes.
 		$exportStepsController->registerRoutes();
+		$htmlFetchController->registerRoutes();
 	}
 
 

@@ -12,6 +12,71 @@ import { addAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from '@aether/export/utils/assetExtractor';
 import { extractInternalLinks } from '@aether/export/utils/linkExtractor';
 import { normalize } from '@aether/export/utils/urlUtils';
+import {
+	HtmlFetchStrategyManager,
+	categorizeError,
+	STRATEGY,
+} from '@aether/export/utils/htmlFetchStrategy';
+
+/**
+ * Fetch page HTML with two-tiered strategy
+ *
+ * Tries PHP endpoint first for guaranteed anonymous user context,
+ * falls back to JavaScript fetch if PHP fails.
+ *
+ * @param {string}                   url             URL to fetch
+ * @param {Object}                   api             API service instance
+ * @param {HtmlFetchStrategyManager} strategyManager Strategy manager instance
+ * @return {Promise<Object>} Result with html, method, and skip flag
+ */
+async function fetchPageHtml( url, api, strategyManager ) {
+	// Try PHP endpoint first if strategy allows
+	if ( strategyManager.shouldUsePHP( url ) ) {
+		try {
+			const result = await api.fetchHtml( url );
+
+			if ( result.success && result.html ) {
+				strategyManager.recordResult( url, true );
+				return {
+					html: result.html,
+					method: 'php',
+					success: true,
+				};
+			}
+
+			// PHP returned error - categorize and record
+			strategyManager.recordResult( url, false, 'php_error' );
+		} catch ( error ) {
+			const errorType = categorizeError( error );
+			strategyManager.recordResult( url, false, errorType );
+		}
+	}
+
+	// Fallback: JavaScript fetch with credentials: 'omit'
+	const response = await fetch( url, {
+		method: 'GET',
+		credentials: 'omit',
+		headers: {
+			'User-Agent': 'Aether Static Site Generator',
+		},
+	} );
+
+	if ( ! response.ok ) {
+		return { success: false, skip: true };
+	}
+
+	const contentType = response.headers.get( 'content-type' ) || '';
+	if ( ! contentType.includes( 'text/html' ) ) {
+		return { success: true, skip: true }; // Not HTML
+	}
+
+	const html = await response.text();
+	return {
+		html,
+		method: 'js_fallback',
+		success: true,
+	};
+}
 
 /**
  * Status labels for the step
@@ -116,6 +181,11 @@ async function handler( context ) {
 	const pendingUrls = [ ...seedUrls ];
 	const allAssets = new Set();
 
+	// Initialize strategy manager for two-tiered HTML fetching
+	const strategyManager = new HtmlFetchStrategyManager();
+	let phpFetchCount = 0;
+	let jsFallbackCount = 0;
+
 	let processedCount = 0;
 
 	// Process URLs in a crawl-like fashion
@@ -133,6 +203,7 @@ async function handler( context ) {
 
 		// Update progress with statusData for dynamic label
 		if ( setStepProgress ) {
+			const status = strategyManager.getStatus();
 			setStepProgress( 'discoverAndScanSite', {
 				current: processedCount,
 				total: discoveredUrls.size,
@@ -140,12 +211,20 @@ async function handler( context ) {
 					pagesScanned: processedCount,
 					pagesDiscovered: discoveredUrls.size,
 					assetsFound: allAssets.size,
+					fetchStrategy: status.strategy,
+					phpFetchCount,
+					jsFallbackCount,
 				},
 			} );
 		}
 
 		// Update status message periodically
 		if ( processedCount % 10 === 0 ) {
+			const status = strategyManager.getStatus();
+			const modeText =
+				status.strategy === STRATEGY.JS_ONLY
+					? __( ' (fallback mode)', 'aether-site-exporter' )
+					: '';
 			setStatusMessage(
 				sprintf(
 					/* translators: %1$d: Pages scanned, %2$d: Total discovered */
@@ -155,32 +234,33 @@ async function handler( context ) {
 					),
 					processedCount,
 					discoveredUrls.size
-				),
+				) + modeText,
 				'progress',
 				'discoverAndScanSite'
 			);
 		}
 
 		try {
-			const response = await fetch( url, {
-				method: 'GET',
-				credentials: 'omit',
-				headers: {
-					'User-Agent': 'Aether Static Site Generator',
-				},
-			} );
+			// Use two-tiered fetch: PHP first, JS fallback
+			const fetchResult = await fetchPageHtml(
+				url,
+				api,
+				strategyManager
+			);
 
-			if ( ! response.ok ) {
+			// Track which method was used
+			if ( fetchResult.method === 'php' ) {
+				phpFetchCount++;
+			} else if ( fetchResult.method === 'js_fallback' ) {
+				jsFallbackCount++;
+			}
+
+			// Skip if fetch failed or content is not HTML
+			if ( ! fetchResult.success || fetchResult.skip ) {
 				continue;
 			}
 
-			const contentType = response.headers.get( 'content-type' ) || '';
-			if ( ! contentType.includes( 'text/html' ) ) {
-				// Not HTML, skip processing
-				continue;
-			}
-
-			const html = await response.text();
+			const html = fetchResult.html;
 
 			// Extract assets from HTML (CSS, JS, images, fonts)
 			const assets = await extractAssetsFromHtml( html, url, siteUrl );
@@ -218,6 +298,16 @@ async function handler( context ) {
 				error.message
 			);
 		}
+	}
+
+	// Log strategy status for debugging
+	const finalStatus = strategyManager.getStatus();
+	if ( finalStatus.isUsingFallback ) {
+		console.info(
+			`[Aether] HTML fetch completed in fallback mode. ` +
+				`PHP: ${ phpFetchCount }, JS: ${ jsFallbackCount }, ` +
+				`Success rate: ${ finalStatus.successRate }`
+		);
 	}
 
 	// Combine processed page URLs with discovered assets

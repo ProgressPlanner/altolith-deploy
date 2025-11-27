@@ -43,6 +43,8 @@ export const ENDPOINTS = {
 		CANCEL: `${ API_BASE_PATH }/export/cancel`,
 		CREATE_ARCHIVE: `${ API_BASE_PATH }/export/createArchive`,
 		GENERATE_BLUEPRINT_BUNDLE: `${ API_BASE_PATH }/export/generateBlueprintBundle`,
+		FETCH_HTML: `${ API_BASE_PATH }/export/fetch-html`,
+		FETCH_HTML_BATCH: `${ API_BASE_PATH }/export/fetch-html-batch`,
 	},
 
 	/**
