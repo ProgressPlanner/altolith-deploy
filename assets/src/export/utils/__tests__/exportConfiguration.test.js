@@ -305,7 +305,8 @@ describe( 'exportConfiguration', () => {
 			} );
 
 			// Now only takes providerConfigs - deployment types come from getDeploymentTypes()
-			const result = determineProvidersByDeploymentType( providerConfigs );
+			const result =
+				determineProvidersByDeploymentType( providerConfigs );
 
 			expect( result ).toEqual( {
 				static_site: [
@@ -328,7 +329,8 @@ describe( 'exportConfiguration', () => {
 			}
 			mockProviderRegistry.get.mockReturnValue( MockProvider );
 
-			const result = determineProvidersByDeploymentType( providerConfigs );
+			const result =
+				determineProvidersByDeploymentType( providerConfigs );
 
 			expect( result ).toEqual( {
 				static_site: [ 'local-filesystem-static-site:1' ],

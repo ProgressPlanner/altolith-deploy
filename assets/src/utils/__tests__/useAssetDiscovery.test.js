@@ -475,8 +475,7 @@ describe( 'useAssetDiscovery', () => {
 
 			// WordPress.org check (only for active plugin)
 			mockFetch.mockResolvedValueOnce( {
-				json: () =>
-					Promise.resolve( { success: true, exists: true } ),
+				json: () => Promise.resolve( { success: true, exists: true } ),
 			} );
 
 			const { result } = renderHook( () => useAssetDiscovery() );

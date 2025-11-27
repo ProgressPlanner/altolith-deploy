@@ -53,6 +53,7 @@ let handler;
 
 /**
  * Helper to create a basic mock API
+ * @param overrides
  */
 function createMockApi( overrides = {} ) {
 	return {
@@ -273,7 +274,9 @@ describe( 'createBlueprintBundle step', () => {
 			} );
 
 			expect( result.zipPath ).toBe( '/tmp/test-archive.zip' );
-			expect( result.zipUrl ).toBe( 'http://example.com/test-archive.zip' );
+			expect( result.zipUrl ).toBe(
+				'http://example.com/test-archive.zip'
+			);
 			expect( result.zipSize ).toBe( 12345 );
 		} );
 	} );
@@ -300,7 +303,8 @@ describe( 'createBlueprintBundle step', () => {
 			const createArchiveOrder =
 				mockApi.createArchive.mock.invocationCallOrder[ 0 ];
 			const discoverOrder =
-				mockApi.discoverBlueprintBundleAssets.mock.invocationCallOrder[ 0 ];
+				mockApi.discoverBlueprintBundleAssets.mock
+					.invocationCallOrder[ 0 ];
 			expect( createArchiveOrder ).toBeLessThan( discoverOrder );
 		} );
 
