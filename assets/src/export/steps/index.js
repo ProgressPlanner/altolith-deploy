@@ -12,7 +12,6 @@ import StepRegistry from '../registry/StepRegistry';
 
 // Import step files to ensure they register themselves
 import './discoverAndScanSite';
-import './createWpContentArchive';
 import './createBlueprintBundle';
 import './uploadBlueprintBundle';
 import './uploadStaticFiles';

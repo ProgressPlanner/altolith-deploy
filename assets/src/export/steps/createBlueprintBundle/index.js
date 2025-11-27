@@ -1,10 +1,13 @@
 /**
  * Create Blueprint Bundle Step
  *
- * Discovers custom assets and generates blueprint-bundle.zip containing
- * blueprint.json and wp-content.zip.
+ * Creates the complete blueprint bundle including:
+ * 1. wp-content.zip archive (custom plugins, themes, uploads)
+ * 2. Asset discovery (identifies custom vs WordPress.org assets)
+ * 3. Blueprint JSON generation
+ * 4. Final blueprint-bundle.zip
  *
- * This step consolidates asset discovery and bundle creation into a single step.
+ * This step consolidates all blueprint bundle creation into a single step.
  *
  * @since 1.0.0
  */
@@ -95,40 +98,47 @@ const statusLabels = {
 /**
  * Create blueprint bundle step handler
  *
- * Performs three phases:
- * 1. Discover custom plugins and themes not on WordPress.org
- * 2. Generate blueprint JSON
- * 3. Create blueprint-bundle.zip
+ * Performs four phases:
+ * 1. Create wp-content archive (plugins, themes, uploads)
+ * 2. Discover custom plugins and themes not on WordPress.org
+ * 3. Generate blueprint JSON
+ * 4. Create blueprint-bundle.zip
  *
  * @param {Object}   context                       - Execution context
  * @param {Object}   context.api                   - ExportAPI instance
  * @param {Function} context.generateBlueprintJson - Blueprint JSON generator function
- * @param {string}   context.zipPath               - Path to wp-content.zip from createWpContentArchive
- * @param {string}   context.zipUrl                - URL to wp-content.zip
  * @param {Function} context.setStatusMessage      - Status message updater
  * @param {Function} context.setStepProgress       - Step progress updater
- * @return {Promise<Object>} Step result with discovered assets and blueprint bundle info
+ * @return {Promise<Object>} Step result with archive info, discovered assets and blueprint bundle
  */
 async function handler( context ) {
-	const {
-		api,
-		generateBlueprintJson,
-		zipPath,
-		zipUrl,
-		setStatusMessage,
-		setStepProgress,
-	} = context;
+	const { api, generateBlueprintJson, setStatusMessage, setStepProgress } =
+		context;
 
-	if ( ! zipPath ) {
+	// --- Phase 1: Create wp-content archive ---
+	setStatusMessage(
+		__( 'Creating wp-content archive…', 'aether-site-exporter' ),
+		'progress',
+		'createBlueprintBundle'
+	);
+
+	const archiveResponse = await api.createArchive( {
+		includeUploads: true,
+	} );
+
+	if ( ! archiveResponse.success ) {
 		throw new Error(
-			__(
-				'Site archive not found. Please run createWpContentArchive first.',
-				'aether-site-exporter'
-			)
+			archiveResponse.message ||
+				__(
+					'Failed to create wp-content archive',
+					'aether-site-exporter'
+				)
 		);
 	}
 
-	// --- Phase 1: Discover assets ---
+	const { zipPath, zipUrl, zipSize } = archiveResponse;
+
+	// --- Phase 2: Discover assets ---
 	setStatusMessage(
 		__( 'Discovering plugins and themes…', 'aether-site-exporter' ),
 		'progress',
@@ -167,7 +177,7 @@ async function handler( context ) {
 
 	setStatusMessage( discoveryMessage, 'progress', 'createBlueprintBundle' );
 
-	// --- Phase 2: Generate blueprint JSON ---
+	// --- Phase 3: Generate blueprint JSON ---
 	setStatusMessage(
 		__( 'Generating blueprint…', 'aether-site-exporter' ),
 		'progress',
@@ -206,7 +216,7 @@ async function handler( context ) {
 		context
 	);
 
-	// --- Phase 3: Create bundle ZIP ---
+	// --- Phase 4: Create bundle ZIP ---
 	setStatusMessage(
 		__( 'Creating blueprint bundle…', 'aether-site-exporter' ),
 		'progress',
@@ -256,6 +266,11 @@ async function handler( context ) {
 
 	// Return data to merge into execution state
 	return {
+		// Archive data (for potential downstream use)
+		zipPath,
+		zipUrl,
+		zipSize,
+		// Discovery and blueprint data
 		discoveredAssets,
 		blueprintData: filteredBlueprint,
 		blueprintBundle: {
@@ -273,12 +288,12 @@ const stepDefinition = {
 	id: 'createBlueprintBundle',
 	label: __( 'Create Blueprint Bundle', 'aether-site-exporter' ),
 	description: __(
-		'Discover assets and create blueprint-bundle.zip',
+		'Create wp-content archive and blueprint-bundle.zip',
 		'aether-site-exporter'
 	),
 	deploymentType: 'blueprint_bundle',
 	supportsProgress: false,
-	dependencies: [ 'createWpContentArchive' ],
+	dependencies: [],
 	requires: {
 		api: {
 			from: 'initial',
@@ -286,14 +301,6 @@ const stepDefinition = {
 		},
 		generateBlueprintJson: {
 			from: 'initial',
-			required: true,
-		},
-		zipPath: {
-			from: 'createWpContentArchive',
-			required: true,
-		},
-		zipUrl: {
-			from: 'createWpContentArchive',
 			required: true,
 		},
 		setStatusMessage: {
@@ -306,6 +313,18 @@ const stepDefinition = {
 		},
 	},
 	provides: {
+		zipPath: {
+			type: 'string',
+			scope: 'global',
+		},
+		zipUrl: {
+			type: 'string',
+			scope: 'global',
+		},
+		zipSize: {
+			type: 'number',
+			scope: 'global',
+		},
 		discoveredAssets: {
 			type: 'array',
 			scope: 'global',

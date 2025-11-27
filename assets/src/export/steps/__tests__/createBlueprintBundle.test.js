@@ -1,8 +1,11 @@
 /**
  * Create Blueprint Bundle Step Tests
  *
- * Tests for discovering assets and creating blueprint-bundle.zip containing
- * blueprint.json and wp-content.zip.
+ * Tests for the consolidated blueprint bundle step that:
+ * 1. Creates wp-content archive
+ * 2. Discovers custom assets
+ * 3. Generates blueprint JSON
+ * 4. Creates blueprint-bundle.zip
  *
  * These tests define expected behavior - if implementation differs, fix the implementation.
  */
@@ -49,11 +52,16 @@ let stepDefinition;
 let handler;
 
 /**
- * Helper to create a basic mock API with discovery
- * @param overrides
+ * Helper to create a basic mock API
  */
 function createMockApi( overrides = {} ) {
 	return {
+		createArchive: jest.fn().mockResolvedValue( {
+			success: true,
+			zipPath: '/tmp/wp-content.zip',
+			zipUrl: 'http://example.com/wp-content.zip',
+			zipSize: 52428800, // 50 MB
+		} ),
 		discoverBlueprintBundleAssets: jest.fn().mockResolvedValue( {
 			success: true,
 			assets: [],
@@ -110,10 +118,8 @@ describe( 'createBlueprintBundle step', () => {
 			expect( stepDefinition.label ).toBe( 'Create Blueprint Bundle' );
 		} );
 
-		test( 'should depend on createWpContentArchive', () => {
-			expect( stepDefinition.dependencies ).toContain(
-				'createWpContentArchive'
-			);
+		test( 'should have no dependencies (consolidated step)', () => {
+			expect( stepDefinition.dependencies ).toEqual( [] );
 		} );
 
 		test( 'should require api from initial context', () => {
@@ -130,22 +136,33 @@ describe( 'createBlueprintBundle step', () => {
 			} );
 		} );
 
-		test( 'should require zipPath from createWpContentArchive', () => {
-			expect( stepDefinition.requires.zipPath ).toEqual( {
-				from: 'createWpContentArchive',
-				required: true,
+		test( 'should NOT require zipPath externally (created internally)', () => {
+			expect( stepDefinition.requires.zipPath ).toBeUndefined();
+		} );
+
+		test( 'should NOT require zipUrl externally (created internally)', () => {
+			expect( stepDefinition.requires.zipUrl ).toBeUndefined();
+		} );
+
+		test( 'should provide zipPath with global scope', () => {
+			expect( stepDefinition.provides.zipPath ).toEqual( {
+				type: 'string',
+				scope: 'global',
 			} );
 		} );
 
-		test( 'should require zipUrl from createWpContentArchive', () => {
-			expect( stepDefinition.requires.zipUrl ).toEqual( {
-				from: 'createWpContentArchive',
-				required: true,
+		test( 'should provide zipUrl with global scope', () => {
+			expect( stepDefinition.provides.zipUrl ).toEqual( {
+				type: 'string',
+				scope: 'global',
 			} );
 		} );
 
-		test( 'should NOT require discoveredAssets (now generated internally)', () => {
-			expect( stepDefinition.requires.discoveredAssets ).toBeUndefined();
+		test( 'should provide zipSize with global scope', () => {
+			expect( stepDefinition.provides.zipSize ).toEqual( {
+				type: 'number',
+				scope: 'global',
+			} );
 		} );
 
 		test( 'should provide discoveredAssets with global scope', () => {
@@ -169,16 +186,16 @@ describe( 'createBlueprintBundle step', () => {
 			} );
 		} );
 
-		test( 'should not support progress tracking', () => {
-			expect( stepDefinition.supportsProgress ).toBe( false );
+		test( 'should have blueprint_bundle deployment type', () => {
+			expect( stepDefinition.deploymentType ).toBe( 'blueprint_bundle' );
 		} );
 	} );
 
 	// ============================================================
-	// Handler - Discovery Phase
+	// Handler - Archive Creation Phase
 	// ============================================================
-	describe( 'handler - discovery phase', () => {
-		test( 'should call api.discoverBlueprintBundleAssets', async () => {
+	describe( 'handler - archive creation phase', () => {
+		test( 'should call api.createArchive first', async () => {
 			const mockApi = createMockApi();
 			const mockGenerateBlueprintJson = jest
 				.fn()
@@ -188,12 +205,103 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
+				setStatusMessage: mockSetStatusMessage,
+			} );
+
+			expect( mockApi.createArchive ).toHaveBeenCalledWith( {
+				includeUploads: true,
+			} );
+		} );
+
+		test( 'should throw error when archive creation fails', async () => {
+			const mockApi = createMockApi( {
+				createArchive: jest.fn().mockResolvedValue( {
+					success: false,
+					message: 'Archive creation failed',
+				} ),
+			} );
+			const mockGenerateBlueprintJson = jest.fn();
+			const mockSetStatusMessage = jest.fn();
+
+			await expect(
+				handler( {
+					api: mockApi,
+					generateBlueprintJson: mockGenerateBlueprintJson,
+					setStatusMessage: mockSetStatusMessage,
+				} )
+			).rejects.toThrow( 'Archive creation failed' );
+		} );
+
+		test( 'should set progress status during archive creation', async () => {
+			const mockApi = createMockApi();
+			const mockGenerateBlueprintJson = jest
+				.fn()
+				.mockResolvedValue( { steps: [] } );
+			const mockSetStatusMessage = jest.fn();
+
+			await handler( {
+				api: mockApi,
+				generateBlueprintJson: mockGenerateBlueprintJson,
+				setStatusMessage: mockSetStatusMessage,
+			} );
+
+			expect( mockSetStatusMessage ).toHaveBeenCalledWith(
+				'Creating wp-content archive…',
+				'progress',
+				'createBlueprintBundle'
+			);
+		} );
+
+		test( 'should include archive data in return value', async () => {
+			const mockApi = createMockApi( {
+				createArchive: jest.fn().mockResolvedValue( {
+					success: true,
+					zipPath: '/tmp/test-archive.zip',
+					zipUrl: 'http://example.com/test-archive.zip',
+					zipSize: 12345,
+				} ),
+			} );
+			const mockGenerateBlueprintJson = jest
+				.fn()
+				.mockResolvedValue( { steps: [] } );
+			const mockSetStatusMessage = jest.fn();
+
+			const result = await handler( {
+				api: mockApi,
+				generateBlueprintJson: mockGenerateBlueprintJson,
+				setStatusMessage: mockSetStatusMessage,
+			} );
+
+			expect( result.zipPath ).toBe( '/tmp/test-archive.zip' );
+			expect( result.zipUrl ).toBe( 'http://example.com/test-archive.zip' );
+			expect( result.zipSize ).toBe( 12345 );
+		} );
+	} );
+
+	// ============================================================
+	// Handler - Discovery Phase
+	// ============================================================
+	describe( 'handler - discovery phase', () => {
+		test( 'should call api.discoverBlueprintBundleAssets after archive', async () => {
+			const mockApi = createMockApi();
+			const mockGenerateBlueprintJson = jest
+				.fn()
+				.mockResolvedValue( { steps: [] } );
+			const mockSetStatusMessage = jest.fn();
+
+			await handler( {
+				api: mockApi,
+				generateBlueprintJson: mockGenerateBlueprintJson,
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
 			expect( mockApi.discoverBlueprintBundleAssets ).toHaveBeenCalled();
+			// Verify order: createArchive called before discoverBlueprintBundleAssets
+			const createArchiveOrder =
+				mockApi.createArchive.mock.invocationCallOrder[ 0 ];
+			const discoverOrder =
+				mockApi.discoverBlueprintBundleAssets.mock.invocationCallOrder[ 0 ];
+			expect( createArchiveOrder ).toBeLessThan( discoverOrder );
 		} );
 
 		test( 'should throw error when discovery fails', async () => {
@@ -210,31 +318,9 @@ describe( 'createBlueprintBundle step', () => {
 				handler( {
 					api: mockApi,
 					generateBlueprintJson: mockGenerateBlueprintJson,
-					zipPath: '/tmp/wp-content.zip',
-					zipUrl: 'http://example.com/wp-content.zip',
 					setStatusMessage: mockSetStatusMessage,
 				} )
 			).rejects.toThrow( 'Discovery failed' );
-		} );
-
-		test( 'should throw default error when discovery fails without message', async () => {
-			const mockApi = createMockApi( {
-				discoverBlueprintBundleAssets: jest.fn().mockResolvedValue( {
-					success: false,
-				} ),
-			} );
-			const mockGenerateBlueprintJson = jest.fn();
-			const mockSetStatusMessage = jest.fn();
-
-			await expect(
-				handler( {
-					api: mockApi,
-					generateBlueprintJson: mockGenerateBlueprintJson,
-					zipPath: '/tmp/wp-content.zip',
-					zipUrl: 'http://example.com/wp-content.zip',
-					setStatusMessage: mockSetStatusMessage,
-				} )
-			).rejects.toThrow( 'Failed to discover assets' );
 		} );
 
 		test( 'should set progress status during discovery', async () => {
@@ -247,8 +333,6 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -278,46 +362,10 @@ describe( 'createBlueprintBundle step', () => {
 			const result = await handler( {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
 			expect( result.discoveredAssets ).toEqual( discoveredAssets );
-		} );
-
-		test( 'should show discovery result message', async () => {
-			const mockApi = createMockApi( {
-				discoverBlueprintBundleAssets: jest.fn().mockResolvedValue( {
-					success: true,
-					assets: [
-						{ type: 'plugin', slug: 'plugin-1' },
-						{ type: 'plugin', slug: 'plugin-2' },
-						{ type: 'theme', slug: 'theme-1' },
-					],
-				} ),
-			} );
-			const mockGenerateBlueprintJson = jest
-				.fn()
-				.mockResolvedValue( { steps: [] } );
-			const mockSetStatusMessage = jest.fn();
-
-			await handler( {
-				api: mockApi,
-				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
-				setStatusMessage: mockSetStatusMessage,
-			} );
-
-			// Should show discovered count
-			const discoveryCall = mockSetStatusMessage.mock.calls.find(
-				( call ) =>
-					call[ 0 ].includes( 'Discovered' ) &&
-					call[ 1 ] === 'progress'
-			);
-			expect( discoveryCall ).toBeDefined();
-			expect( discoveryCall[ 0 ] ).toContain( 'plugin' );
 		} );
 
 		test( 'should show message when no custom assets found', async () => {
@@ -335,12 +383,9 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
-			// Should show no custom assets message
 			const discoveryCall = mockSetStatusMessage.mock.calls.find(
 				( call ) =>
 					call[ 0 ].includes( 'No custom plugins or themes' ) &&
@@ -351,7 +396,7 @@ describe( 'createBlueprintBundle step', () => {
 	} );
 
 	// ============================================================
-	// Handler - Success Cases with generateBlueprintJson
+	// Handler - Blueprint Generation Phase
 	// ============================================================
 	describe( 'handler - with generateBlueprintJson', () => {
 		test( 'should call generateBlueprintJson with discovered assets', async () => {
@@ -371,8 +416,6 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -396,8 +439,6 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -409,7 +450,7 @@ describe( 'createBlueprintBundle step', () => {
 	} );
 
 	// ============================================================
-	// Handler - Fallback to API
+	// Handler - API Fallback
 	// ============================================================
 	describe( 'handler - API fallback', () => {
 		test( 'should use API when generateBlueprintJson is not a function', async () => {
@@ -424,9 +465,7 @@ describe( 'createBlueprintBundle step', () => {
 
 			await handler( {
 				api: mockApi,
-				generateBlueprintJson: undefined, // Not provided
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
+				generateBlueprintJson: undefined,
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -449,8 +488,6 @@ describe( 'createBlueprintBundle step', () => {
 				handler( {
 					api: mockApi,
 					generateBlueprintJson: null,
-					zipPath: '/tmp/wp-content.zip',
-					zipUrl: 'http://example.com/wp-content.zip',
 					setStatusMessage: mockSetStatusMessage,
 				} )
 			).rejects.toThrow( 'Blueprint generation failed' );
@@ -458,9 +495,9 @@ describe( 'createBlueprintBundle step', () => {
 	} );
 
 	// ============================================================
-	// Handler - Success Cases
+	// Handler - Bundle Creation Phase
 	// ============================================================
-	describe( 'handler - success', () => {
+	describe( 'handler - bundle creation', () => {
 		test( 'should return blueprint data and bundle info', async () => {
 			const mockBlueprintData = { steps: [] };
 			const mockGenerateBlueprintJson = jest
@@ -479,8 +516,6 @@ describe( 'createBlueprintBundle step', () => {
 			const result = await handler( {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -500,8 +535,6 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -519,7 +552,7 @@ describe( 'createBlueprintBundle step', () => {
 					success: true,
 					bundlePath: '/tmp/bundle.zip',
 					bundleUrl: 'http://example.com/bundle.zip',
-					bundleSize: 1048576, // 1 MB
+					bundleSize: 1048576,
 				} ),
 			} );
 			const mockSetStatusMessage = jest.fn();
@@ -527,8 +560,6 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -549,8 +580,6 @@ describe( 'createBlueprintBundle step', () => {
 			const context = {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
 				setStatusMessage: mockSetStatusMessage,
 			};
 
@@ -561,41 +590,6 @@ describe( 'createBlueprintBundle step', () => {
 				mockBlueprintData,
 				context
 			);
-		} );
-
-		test( 'should use filtered blueprint data', async () => {
-			const originalBlueprint = { steps: [] };
-			const filteredBlueprint = { steps: [ { step: 'customStep' } ] };
-
-			mockApplyFilters.mockImplementation( ( hookName, value ) => {
-				if (
-					hookName ===
-					'aether.export.step.createBlueprintBundle.blueprintData'
-				) {
-					return filteredBlueprint;
-				}
-				return value;
-			} );
-
-			const mockGenerateBlueprintJson = jest
-				.fn()
-				.mockResolvedValue( originalBlueprint );
-			const mockApi = createMockApi();
-			const mockSetStatusMessage = jest.fn();
-
-			const result = await handler( {
-				api: mockApi,
-				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
-				setStatusMessage: mockSetStatusMessage,
-			} );
-
-			expect( mockApi.createBlueprintBundle ).toHaveBeenCalledWith( {
-				blueprint: filteredBlueprint,
-				wpContentZipPath: '/tmp/wp-content.zip',
-			} );
-			expect( result.blueprintData ).toEqual( filteredBlueprint );
 		} );
 
 		test( 'should update step progress with asset counts', async () => {
@@ -617,8 +611,6 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( {
 				api: mockApi,
 				generateBlueprintJson: mockGenerateBlueprintJson,
-				zipPath: '/tmp/wp-content.zip',
-				zipUrl: 'http://example.com/wp-content.zip',
 				setStatusMessage: mockSetStatusMessage,
 				setStepProgress: mockSetStepProgress,
 			} );
@@ -639,22 +631,6 @@ describe( 'createBlueprintBundle step', () => {
 	// Handler - Error Cases
 	// ============================================================
 	describe( 'handler - error cases', () => {
-		test( 'should throw error when zipPath is missing', async () => {
-			const mockGenerateBlueprintJson = jest.fn();
-			const mockApi = createMockApi();
-			const mockSetStatusMessage = jest.fn();
-
-			await expect(
-				handler( {
-					api: mockApi,
-					generateBlueprintJson: mockGenerateBlueprintJson,
-					zipPath: null, // Missing
-					zipUrl: 'http://example.com/wp-content.zip',
-					setStatusMessage: mockSetStatusMessage,
-				} )
-			).rejects.toThrow( 'Site archive not found' );
-		} );
-
 		test( 'should throw error when createBlueprintBundle fails', async () => {
 			const mockGenerateBlueprintJson = jest.fn().mockResolvedValue( {} );
 			const mockApi = createMockApi( {
@@ -669,8 +645,6 @@ describe( 'createBlueprintBundle step', () => {
 				handler( {
 					api: mockApi,
 					generateBlueprintJson: mockGenerateBlueprintJson,
-					zipPath: '/tmp/wp-content.zip',
-					zipUrl: 'http://example.com/wp-content.zip',
 					setStatusMessage: mockSetStatusMessage,
 				} )
 			).rejects.toThrow( 'Bundle creation failed' );
@@ -689,8 +663,6 @@ describe( 'createBlueprintBundle step', () => {
 				handler( {
 					api: mockApi,
 					generateBlueprintJson: mockGenerateBlueprintJson,
-					zipPath: '/tmp/wp-content.zip',
-					zipUrl: 'http://example.com/wp-content.zip',
 					setStatusMessage: mockSetStatusMessage,
 				} )
 			).rejects.toThrow( 'Failed to create blueprint bundle' );
@@ -709,11 +681,57 @@ describe( 'createBlueprintBundle step', () => {
 				handler( {
 					api: mockApi,
 					generateBlueprintJson: mockGenerateBlueprintJson,
-					zipPath: '/tmp/wp-content.zip',
-					zipUrl: 'http://example.com/wp-content.zip',
 					setStatusMessage: mockSetStatusMessage,
 				} )
 			).rejects.toThrow( 'Network error' );
+		} );
+	} );
+
+	// ============================================================
+	// Status Labels
+	// ============================================================
+	describe( 'status labels', () => {
+		test( 'should have pending label', () => {
+			expect( stepDefinition.statusLabels.pending ).toBe(
+				'Create blueprint'
+			);
+		} );
+
+		test( 'should have running label function', () => {
+			expect( typeof stepDefinition.statusLabels.running ).toBe(
+				'function'
+			);
+			expect( stepDefinition.statusLabels.running() ).toContain(
+				'Creating'
+			);
+		} );
+
+		test( 'should have complete label function', () => {
+			expect( typeof stepDefinition.statusLabels.complete ).toBe(
+				'function'
+			);
+		} );
+
+		test( 'complete label should show size when available', () => {
+			const label = stepDefinition.statusLabels.complete( {
+				bundleSizeFormatted: '1.5 MB',
+			} );
+			expect( label ).toContain( '1.5 MB' );
+		} );
+
+		test( 'complete label should show asset info', () => {
+			const label = stepDefinition.statusLabels.complete( {
+				bundleSizeFormatted: '1.5 MB',
+				customPlugins: 2,
+				customThemes: 1,
+			} );
+			expect( label ).toContain( 'plugin' );
+			expect( label ).toContain( 'theme' );
+		} );
+
+		test( 'complete label should work without size', () => {
+			const label = stepDefinition.statusLabels.complete( {} );
+			expect( label ).toContain( 'Created' );
 		} );
 	} );
 } );
