@@ -131,6 +131,7 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 			shouldCloseOnClickOutside={ false }
 			shouldCloseOnEsc={ false }
 			__experimentalHideHeader={ false }
+			style={ { width: 'min(90vw, 40rem)' } }
 		>
 			<div
 				className="aether-export-progress-modal__content"
