@@ -293,6 +293,7 @@ describe( 'uploadStaticFiles step', () => {
 				'http://example.com/',
 				'http://example.com/about/',
 			];
+			const mockHtmlDataMap = new Map();
 
 			await handler( {
 				currentProviderInstance: {
@@ -300,6 +301,7 @@ describe( 'uploadStaticFiles step', () => {
 					label: 'Test',
 				},
 				urls: mockUrls,
+				htmlDataMap: mockHtmlDataMap,
 				staticSiteUrl: 'http://static.example.com',
 				siteUrl: 'http://example.com',
 				processStaticSiteUrls: mockProcessStaticSiteUrls,
@@ -311,7 +313,8 @@ describe( 'uploadStaticFiles step', () => {
 				'http://static.example.com',
 				'test-provider:123',
 				'http://example.com',
-				mockSetStatusMessage
+				mockSetStatusMessage,
+				mockHtmlDataMap
 			);
 		} );
 

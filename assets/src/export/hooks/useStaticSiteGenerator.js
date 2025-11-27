@@ -44,7 +44,8 @@ export function useStaticSiteGenerator( onProgress ) {
 			staticSiteUrl,
 			staticSiteProviderId,
 			siteUrl,
-			setStatusMessage
+			setStatusMessage,
+			htmlDataMap
 		) => {
 			// Validate provider ID is provided
 			// CRITICAL: In multi-instance threading, each thread MUST use its own provider ID
@@ -85,13 +86,14 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			const totalUrls = urls.length;
 
-			// PHASE 1: Pre-scan all URLs (reads from IndexedDB cache)
+			// PHASE 1: Pre-scan all URLs (reads from htmlDataMap passed via step context)
 			const preScanResult = await executePreScan( {
 				urls,
 				siteUrl,
 				providerId: staticSiteProviderId,
 				providerConfig,
 				setStatusMessage,
+				htmlDataMap,
 			} );
 
 			const { htmlData: sharedHtmlData, totalFilesToUpload } =
@@ -242,7 +244,11 @@ export function useStaticSiteGenerator( onProgress ) {
 					// Periodic manifest save
 					if ( filesUploaded % 50 === 0 ) {
 						try {
-							await uploadManifest( storageService, manifest );
+							await uploadManifest(
+								storageService,
+								manifest,
+								staticSiteProviderId
+							);
 						} catch ( error ) {
 							// Manifest save failed, continue with upload
 						}

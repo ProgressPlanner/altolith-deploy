@@ -20,7 +20,6 @@ import {
 	buildProviderInstances,
 	buildWorkflowContext,
 } from '@aether/export/utils/exportConfiguration';
-import { initializeStaticFilesCache } from '@aether/export/utils/staticFilesCache';
 
 export function useExportController( exportState ) {
 	const {
@@ -121,9 +120,6 @@ export function useExportController( exportState ) {
 
 	const startExport = useCallback( async () => {
 		try {
-			// Initialize (clear) static files cache at export start
-			await initializeStaticFilesCache();
-
 			// Initialize steps with 'discoverBlueprintBundleAssets' as the active step
 			// This sets up steps array, active step, and lastStepIndex correctly
 			initializeSteps(

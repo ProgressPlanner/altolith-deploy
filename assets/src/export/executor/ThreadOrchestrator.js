@@ -10,6 +10,7 @@
 
 import { isThreadStep } from './DataValidator';
 import { executeSteps } from './StepExecutor';
+import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 /**
  * Execute async functions with concurrency limit
@@ -592,12 +593,46 @@ export async function executeThreadedWorkflow(
 		}
 	};
 
-	// Execute provider threads with concurrency limiting
-	const threadResults = await limitConcurrency(
-		providerInstances,
+	// Separate providers into parallel and serial groups
+	// Providers with SUPPORTS_PARALLEL_EXECUTION = false run sequentially
+	// to avoid resource contention (e.g., local filesystem providers hitting same PHP endpoint)
+	const parallelProviders = [];
+	const serialProviders = [];
+
+	for ( const providerInstance of providerInstances ) {
+		const providerType = providerInstance.config?.provider_type;
+		const ProviderClass = providerType
+			? ProviderRegistry.get( providerType )
+			: null;
+
+		// Check if provider explicitly disables parallel execution
+		// Default to true (parallel) if not specified
+		const supportsParallel =
+			ProviderClass?.SUPPORTS_PARALLEL_EXECUTION !== false;
+
+		if ( supportsParallel ) {
+			parallelProviders.push( providerInstance );
+		} else {
+			serialProviders.push( providerInstance );
+		}
+	}
+
+	// Execute parallel-capable providers concurrently
+	const parallelResults = await limitConcurrency(
+		parallelProviders,
 		executeProviderThread,
 		maxConcurrency
 	);
+
+	// Execute serial providers one at a time (to avoid PHP request contention)
+	const serialResults = [];
+	for ( const provider of serialProviders ) {
+		const result = await executeProviderThread( provider );
+		serialResults.push( result );
+	}
+
+	// Combine results (parallel first, then serial)
+	const threadResults = [ ...parallelResults, ...serialResults ];
 
 	// Step completion is now handled per-step in the onStepComplete callback above
 	// Each step is marked complete when ALL providers that run it have finished

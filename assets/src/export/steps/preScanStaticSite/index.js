@@ -12,7 +12,6 @@ import { addAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from '@aether/export/utils/assetExtractor';
 import { extractInternalLinks } from '@aether/export/utils/linkExtractor';
 import { normalize } from '@aether/export/utils/urlUtils';
-import { getStaticFilesCache } from '@aether/export/utils/staticFilesCache';
 
 /**
  * Status labels for the step
@@ -100,9 +99,8 @@ async function handler( context ) {
 		'preScanStaticSite'
 	);
 
-	// Get the static files cache for storing discovered URLs
-	const cache = getStaticFilesCache();
-	console.log( '[Aether] preScanStaticSite: Got cache instance:', cache );
+	// Build htmlDataMap during crawl (passed through step context for thread isolation)
+	const htmlDataMap = new Map();
 
 	// Track all URLs
 	const discoveredUrls = new Set(
@@ -193,8 +191,11 @@ async function handler( context ) {
 				allAssets.add( asset );
 			}
 
-			// Store HTML and assets in IndexedDB cache
-			await cache.addHtmlWithAssets( normalizedUrl, html, assets );
+			// Store HTML and assets in Map (deep cloned per-thread via step context)
+			htmlDataMap.set( normalizedUrl, {
+				rawHtml: html,
+				assetUrls: assets,
+			} );
 
 			// Extract internal links for crawl-based discovery
 			// This also captures pagination links (/page/2/, /page/3/, etc.)
@@ -251,6 +252,7 @@ async function handler( context ) {
 
 	return {
 		urls: expandedUrls,
+		htmlDataMap,
 		htmlCount: processedUrls.size,
 		assetCount: allAssets.size,
 	};
@@ -289,6 +291,10 @@ const stepDefinition = {
 	provides: {
 		urls: {
 			type: 'array',
+			scope: 'global',
+		},
+		htmlDataMap: {
+			type: 'object',
 			scope: 'global',
 		},
 		htmlCount: {

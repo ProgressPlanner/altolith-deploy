@@ -73,6 +73,7 @@ async function handler( context ) {
 	const {
 		currentProviderInstance,
 		urls,
+		htmlDataMap,
 		staticSiteUrl,
 		siteUrl,
 		processStaticSiteUrls,
@@ -107,6 +108,14 @@ async function handler( context ) {
 			__( 'Static site generator not available', 'aether-site-exporter' )
 		);
 	}
+
+	// Debug: Log htmlDataMap status
+	console.log(
+		'[Aether] uploadStaticFiles: htmlDataMap type:',
+		htmlDataMap instanceof Map ? 'Map' : typeof htmlDataMap,
+		'size:',
+		htmlDataMap instanceof Map ? htmlDataMap.size : 'N/A'
+	);
 
 	const providerId = currentProviderInstance.id;
 	const providerLabel =
@@ -169,14 +178,15 @@ async function handler( context ) {
 	}
 
 	// Process URLs for this provider instance
-	// HTML data is read from IndexedDB cache (populated by preScanStaticSite)
+	// HTML data passed via htmlDataMap (deep cloned per-thread for isolation)
 	// Use provider-specific staticSiteUrl for correct URL rewriting
 	const result = await processStaticSiteUrls(
 		filteredUrls,
 		providerSpecificStaticSiteUrl,
 		providerId,
 		siteUrl,
-		setStatusMessage
+		setStatusMessage,
+		htmlDataMap
 	);
 
 	// Check if upload succeeded
@@ -262,6 +272,10 @@ const stepDefinition = {
 			required: true,
 		},
 		urls: {
+			from: 'preScanStaticSite',
+			required: true,
+		},
+		htmlDataMap: {
 			from: 'preScanStaticSite',
 			required: true,
 		},

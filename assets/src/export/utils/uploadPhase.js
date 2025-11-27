@@ -51,7 +51,7 @@ export async function prepareManifest(
 		);
 
 		if ( manifest === null ) {
-			manifest = await fetchManifest( storageService );
+			manifest = await fetchManifest( storageService, providerId );
 		}
 
 		const manifestEntryCount = Object.keys( manifest ).length;
@@ -453,7 +453,7 @@ export async function finalizeManifest(
 			providerId
 		);
 
-		await uploadManifest( storageService, cleanedManifest );
+		await uploadManifest( storageService, cleanedManifest, providerId );
 
 		if ( setStatusMessage ) {
 			setStatusMessage(

@@ -62,6 +62,16 @@ export class LocalFilesystemBlueprintBundleProvider {
 	static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE;
 
 	/**
+	 * Whether this provider supports parallel execution with other instances.
+	 *
+	 * Local filesystem providers should run sequentially to avoid PHP request
+	 * contention when multiple instances upload to the same WordPress REST endpoint.
+	 *
+	 * @type {boolean}
+	 */
+	static SUPPORTS_PARALLEL_EXECUTION = false;
+
+	/**
 	 * Configuration fields.
 	 *
 	 * @type {Array<Object>}

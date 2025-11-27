@@ -8,13 +8,13 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { doAction } from '@wordpress/hooks';
 import { extractAssetsFromHtml } from './assetExtractor';
-import { getStaticFilesCache } from './staticFilesCache';
+import { normalize } from './urlUtils';
 
 /**
  * Execute the pre-scan phase.
  *
  * Fetches all URLs and extracts assets.
- * HTML data is read from IndexedDB cache (populated by preScanStaticSite step).
+ * HTML data is read from htmlDataMap (deep cloned per-thread for isolation).
  *
  * @param {Object}   options                  Pre-scan options.
  * @param {Array}    options.urls             URLs to scan.
@@ -22,6 +22,7 @@ import { getStaticFilesCache } from './staticFilesCache';
  * @param {string}   options.providerId       Provider ID.
  * @param {Object}   options.providerConfig   Provider configuration.
  * @param {Function} options.setStatusMessage Status message updater.
+ * @param {Map}      options.htmlDataMap      Map of URL -> { rawHtml, assetUrls } from preScanStaticSite.
  * @return {Promise<Object>} Pre-scan results.
  */
 export async function executePreScan( {
@@ -30,6 +31,7 @@ export async function executePreScan( {
 	providerId,
 	providerConfig,
 	setStatusMessage,
+	htmlDataMap,
 } ) {
 	const failures = {
 		urlsFailed: 0,
@@ -52,10 +54,7 @@ export async function executePreScan( {
 		);
 	}
 
-	// Get IndexedDB cache (populated by preScanStaticSite step)
-	const cache = getStaticFilesCache();
-
-	// Local storage for this provider thread (deep cloned from cache)
+	// Local storage for this provider thread (htmlDataMap already deep cloned via step context)
 	const dataStorage = new Map();
 	const allUniqueAssets = new Set();
 	let successfulUrls = 0;
@@ -64,14 +63,17 @@ export async function executePreScan( {
 	for ( let i = 0; i < urls.length; i++ ) {
 		const url = urls[ i ];
 
-		// Read from IndexedDB cache with deep cloning for thread isolation
-		const cachedEntry = await cache.getCloned( url );
-		if ( cachedEntry && cachedEntry.content && cachedEntry.assetUrls ) {
+		// Normalize URL to match how it was stored in htmlDataMap
+		const normalizedUrl = normalize( url, siteUrl );
+
+		// Direct Map lookup (htmlDataMap already deep cloned for this thread)
+		const cachedEntry = htmlDataMap?.get( normalizedUrl );
+		if ( cachedEntry && cachedEntry.rawHtml && cachedEntry.assetUrls ) {
 			successfulUrls++;
 
-			// Store cloned data in local Map for this provider
+			// Store data in local Map for this provider
 			dataStorage.set( url, {
-				rawHtml: cachedEntry.content,
+				rawHtml: cachedEntry.rawHtml,
 				assetUrls: cachedEntry.assetUrls,
 			} );
 
@@ -82,7 +84,7 @@ export async function executePreScan( {
 			continue;
 		}
 
-		// URL not in cache - this might be an asset URL (CSS, JS, image, etc.)
+		// URL not in htmlDataMap - this might be an asset URL (CSS, JS, image, etc.)
 		// Assets are handled separately in the upload phase, so we can skip them here
 		// Only fetch if it looks like it might be an HTML page
 		// (We'll let the fetch determine if it's actually HTML)
