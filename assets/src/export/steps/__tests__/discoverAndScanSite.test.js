@@ -381,17 +381,11 @@ describe( 'discoverAndScanSite step', () => {
 			);
 		} );
 
-		test( 'should update step progress for each URL', async () => {
+		test( 'should update step progress after each batch', async () => {
 			await stepHandler( mockContext );
 
-			expect( mockContext.setStepProgress ).toHaveBeenCalledWith(
-				'discoverAndScanSite',
-				expect.objectContaining( { current: 1, total: 3 } )
-			);
-			expect( mockContext.setStepProgress ).toHaveBeenCalledWith(
-				'discoverAndScanSite',
-				expect.objectContaining( { current: 2, total: 3 } )
-			);
+			// With batch processing, progress is updated per batch (not per URL).
+			// Since batch size is 10 and we have 3 URLs, all are processed in one batch.
 			expect( mockContext.setStepProgress ).toHaveBeenCalledWith(
 				'discoverAndScanSite',
 				expect.objectContaining( { current: 3, total: 3 } )

@@ -19,63 +19,91 @@ import {
 } from '@aether/export/utils/htmlFetchStrategy';
 
 /**
- * Fetch page HTML with two-tiered strategy
- *
- * Tries PHP endpoint first for guaranteed anonymous user context,
- * falls back to JavaScript fetch if PHP fails.
- *
- * @param {string}                   url             URL to fetch
- * @param {Object}                   api             API service instance
- * @param {HtmlFetchStrategyManager} strategyManager Strategy manager instance
- * @return {Promise<Object>} Result with html, method, and skip flag
+ * Batch size for PHP endpoint requests
  */
-async function fetchPageHtml( url, api, strategyManager ) {
-	// Try PHP endpoint first if strategy allows
-	if ( strategyManager.shouldUsePHP( url ) ) {
-		try {
-			const result = await api.fetchHtml( url );
+const BATCH_SIZE = 10;
 
-			if ( result.success && result.html ) {
-				strategyManager.recordResult( url, true );
-				return {
-					html: result.html,
-					method: 'php',
-					success: true,
-				};
-			}
+/**
+ * Fetch single URL via JavaScript fallback
+ *
+ * @param {string} url URL to fetch
+ * @return {Promise<Object>} Result with html and success flag
+ */
+async function fetchWithJsFallback( url ) {
+	try {
+		const response = await fetch( url, {
+			method: 'GET',
+			credentials: 'omit',
+			headers: {
+				'User-Agent': 'Aether Static Site Generator',
+			},
+		} );
 
-			// PHP returned error - categorize and record
-			strategyManager.recordResult( url, false, 'php_error' );
-		} catch ( error ) {
-			const errorType = categorizeError( error );
-			strategyManager.recordResult( url, false, errorType );
+		if ( ! response.ok ) {
+			return { success: false };
 		}
+
+		const contentType = response.headers.get( 'content-type' ) || '';
+		if ( ! contentType.includes( 'text/html' ) ) {
+			return { success: false, skip: true };
+		}
+
+		return { success: true, html: await response.text() };
+	} catch ( error ) {
+		return { success: false, error: error.message };
+	}
+}
+
+/**
+ * Process HTML result - extract assets, links, store in map
+ *
+ * @param {string} url            Original URL
+ * @param {string} html           HTML content
+ * @param {string} siteUrl        Site base URL
+ * @param {Map}    htmlDataMap    Map to store HTML data
+ * @param {Set}    allAssets      Set to collect assets
+ * @param {Set}    discoveredUrls Set of discovered URLs
+ * @param {Array}  pendingUrls    Array of pending URLs to process
+ * @param {Set}    processedUrls  Set of already processed URLs
+ * @return {Promise<void>}
+ */
+async function processHtmlResult(
+	url,
+	html,
+	siteUrl,
+	htmlDataMap,
+	allAssets,
+	discoveredUrls,
+	pendingUrls,
+	processedUrls
+) {
+	const normalizedUrl = normalize( url, siteUrl );
+
+	// Extract assets from HTML (CSS, JS, images, fonts)
+	const assets = await extractAssetsFromHtml( html, url, siteUrl );
+	for ( const asset of assets ) {
+		allAssets.add( asset );
 	}
 
-	// Fallback: JavaScript fetch with credentials: 'omit'
-	const response = await fetch( url, {
-		method: 'GET',
-		credentials: 'omit',
-		headers: {
-			'User-Agent': 'Aether Static Site Generator',
-		},
+	// Store HTML and assets in Map
+	htmlDataMap.set( normalizedUrl, {
+		rawHtml: html,
+		assetUrls: assets,
 	} );
 
-	if ( ! response.ok ) {
-		return { success: false, skip: true };
+	// Extract internal links for crawl-based discovery
+	const internalLinks = await extractInternalLinks( html, url, siteUrl );
+	for ( const link of internalLinks ) {
+		const normalizedLink = normalize( link, siteUrl );
+		if (
+			normalizedLink &&
+			! discoveredUrls.has( normalizedLink ) &&
+			! processedUrls.has( normalizedLink )
+		) {
+			discoveredUrls.add( normalizedLink );
+			pendingUrls.push( link );
+		}
 	}
-
-	const contentType = response.headers.get( 'content-type' ) || '';
-	if ( ! contentType.includes( 'text/html' ) ) {
-		return { success: true, skip: true }; // Not HTML
-	}
-
-	const html = await response.text();
-	return {
-		html,
-		method: 'js_fallback',
-		success: true,
-	};
 }
 
 /**
@@ -188,20 +216,137 @@ async function handler( context ) {
 
 	let processedCount = 0;
 
-	// Process URLs in a crawl-like fashion
+	// Process URLs in batches for efficiency
 	while ( pendingUrls.length > 0 ) {
-		const url = pendingUrls.shift();
-		const normalizedUrl = normalize( url, siteUrl );
+		// Collect batch of URLs to process (filter out already processed)
+		const batch = [];
+		while ( batch.length < BATCH_SIZE && pendingUrls.length > 0 ) {
+			const url = pendingUrls.shift();
+			const normalizedUrl = normalize( url, siteUrl );
 
-		// Skip if already processed
-		if ( processedUrls.has( normalizedUrl ) ) {
+			if ( ! processedUrls.has( normalizedUrl ) ) {
+				processedUrls.add( normalizedUrl );
+				batch.push( { url, normalizedUrl } );
+			}
+		}
+
+		if ( batch.length === 0 ) {
 			continue;
 		}
 
-		processedUrls.add( normalizedUrl );
-		processedCount++;
+		// Separate URLs by fetch strategy
+		const phpUrls = [];
+		const jsUrls = [];
 
-		// Update progress with statusData for dynamic label
+		for ( const { url, normalizedUrl } of batch ) {
+			if ( strategyManager.shouldUsePHP( url ) ) {
+				phpUrls.push( { url, normalizedUrl } );
+			} else {
+				jsUrls.push( { url, normalizedUrl } );
+			}
+		}
+
+		// Batch fetch via PHP endpoint
+		if ( phpUrls.length > 0 ) {
+			try {
+				const batchResult = await api.fetchHtmlBatch(
+					phpUrls.map( ( item ) => item.url )
+				);
+
+				if ( batchResult.success && batchResult.results ) {
+					for ( const { url, normalizedUrl } of phpUrls ) {
+						const data = batchResult.results[ url ];
+
+						if ( data && data.success && data.html ) {
+							strategyManager.recordResult( url, true );
+							phpFetchCount++;
+							processedCount++;
+
+							try {
+								await processHtmlResult(
+									url,
+									data.html,
+									siteUrl,
+									htmlDataMap,
+									allAssets,
+									discoveredUrls,
+									pendingUrls,
+									processedUrls
+								);
+							} catch ( error ) {
+								console.error(
+									`[Aether] Failed to process HTML for ${ url }:`,
+									error.message
+								);
+							}
+						} else {
+							// PHP failed for this URL - fall back to JS
+							strategyManager.recordResult(
+								url,
+								false,
+								'php_error'
+							);
+							jsUrls.push( { url, normalizedUrl } );
+						}
+					}
+				} else {
+					// Batch failed entirely - all URLs fall back to JS
+					for ( const item of phpUrls ) {
+						strategyManager.recordResult(
+							item.url,
+							false,
+							categorizeError(
+								new Error( 'Batch request failed' )
+							)
+						);
+						jsUrls.push( item );
+					}
+				}
+			} catch ( error ) {
+				// Batch request threw - all URLs fall back to JS
+				for ( const item of phpUrls ) {
+					strategyManager.recordResult(
+						item.url,
+						false,
+						categorizeError( error )
+					);
+					jsUrls.push( item );
+				}
+			}
+		}
+
+		// JS fallback for remaining URLs (one by one)
+		for ( const { url } of jsUrls ) {
+			try {
+				const result = await fetchWithJsFallback( url );
+
+				if ( result.success && result.html ) {
+					jsFallbackCount++;
+					processedCount++;
+
+					await processHtmlResult(
+						url,
+						result.html,
+						siteUrl,
+						htmlDataMap,
+						allAssets,
+						discoveredUrls,
+						pendingUrls,
+						processedUrls
+					);
+				} else {
+					processedCount++;
+				}
+			} catch ( error ) {
+				processedCount++;
+				console.error(
+					`[Aether] discoverAndScanSite: Failed to process ${ url }:`,
+					error.message
+				);
+			}
+		}
+
+		// Update progress after batch
 		if ( setStepProgress ) {
 			const status = strategyManager.getStatus();
 			setStepProgress( 'discoverAndScanSite', {
@@ -218,86 +363,25 @@ async function handler( context ) {
 			} );
 		}
 
-		// Update status message periodically
-		if ( processedCount % 10 === 0 ) {
-			const status = strategyManager.getStatus();
-			const modeText =
-				status.strategy === STRATEGY.JS_ONLY
-					? __( ' (fallback mode)', 'aether-site-exporter' )
-					: '';
-			setStatusMessage(
-				sprintf(
-					/* translators: %1$d: Pages scanned, %2$d: Total discovered */
-					__(
-						'Scanned %1$d pages, discovered %2$d URLs…',
-						'aether-site-exporter'
-					),
-					processedCount,
-					discoveredUrls.size
-				) + modeText,
-				'progress',
-				'discoverAndScanSite'
-			);
-		}
-
-		try {
-			// Use two-tiered fetch: PHP first, JS fallback
-			const fetchResult = await fetchPageHtml(
-				url,
-				api,
-				strategyManager
-			);
-
-			// Track which method was used
-			if ( fetchResult.method === 'php' ) {
-				phpFetchCount++;
-			} else if ( fetchResult.method === 'js_fallback' ) {
-				jsFallbackCount++;
-			}
-
-			// Skip if fetch failed or content is not HTML
-			if ( ! fetchResult.success || fetchResult.skip ) {
-				continue;
-			}
-
-			const html = fetchResult.html;
-
-			// Extract assets from HTML (CSS, JS, images, fonts)
-			const assets = await extractAssetsFromHtml( html, url, siteUrl );
-			for ( const asset of assets ) {
-				allAssets.add( asset );
-			}
-
-			// Store HTML and assets in Map
-			htmlDataMap.set( normalizedUrl, {
-				rawHtml: html,
-				assetUrls: assets,
-			} );
-
-			// Extract internal links for crawl-based discovery
-			const internalLinks = await extractInternalLinks(
-				html,
-				url,
-				siteUrl
-			);
-			for ( const link of internalLinks ) {
-				const normalizedLink = normalize( link, siteUrl );
-				if (
-					normalizedLink &&
-					! discoveredUrls.has( normalizedLink ) &&
-					! processedUrls.has( normalizedLink )
-				) {
-					discoveredUrls.add( normalizedLink );
-					pendingUrls.push( link );
-				}
-			}
-		} catch ( error ) {
-			// Log error for debugging, then continue
-			console.error(
-				`[Aether] discoverAndScanSite: Failed to process ${ url }:`,
-				error.message
-			);
-		}
+		// Update status message after batch
+		const status = strategyManager.getStatus();
+		const modeText =
+			status.strategy === STRATEGY.JS_ONLY
+				? __( ' (fallback mode)', 'aether-site-exporter' )
+				: '';
+		setStatusMessage(
+			sprintf(
+				/* translators: %1$d: Pages scanned, %2$d: Total discovered */
+				__(
+					'Scanned %1$d pages, discovered %2$d URLs…',
+					'aether-site-exporter'
+				),
+				processedCount,
+				discoveredUrls.size
+			) + modeText,
+			'progress',
+			'discoverAndScanSite'
+		);
 	}
 
 	// Log strategy status for debugging
