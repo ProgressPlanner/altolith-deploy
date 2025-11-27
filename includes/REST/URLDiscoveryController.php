@@ -371,6 +371,46 @@ class URLDiscoveryController
 	}
 
 	/**
+	 * Generate pagination URLs for a list of items.
+	 *
+	 * Unified helper method for generating pagination URLs across different
+	 * archive types (categories, tags, authors, CPTs, date archives).
+	 *
+	 * @param array<mixed>  $items        Array of items to generate URLs for.
+	 * @param callable       $getCount     Callable to get post count for an item.
+	 * @param callable       $getBaseUrl   Callable to get base URL for an item.
+	 * @param int            $postsPerPage Posts per page setting.
+	 * @return array<string> Pagination URLs.
+	 */
+	private function generatePaginationUrls(array $items, callable $getCount, callable $getBaseUrl, int $postsPerPage): array
+	{
+		$urls = [];
+
+		foreach ($items as $item) {
+			$count = $getCount($item);
+			$totalPages = (int) \ceil($count / $postsPerPage);
+
+			if ($totalPages < 2) {
+				continue; // No pagination needed
+			}
+
+			$baseUrl = $getBaseUrl($item);
+
+			// Skip if URL is invalid or WP_Error
+			if (\is_wp_error($baseUrl) || empty($baseUrl)) {
+				continue;
+			}
+
+			// Generate pagination URLs (page 2, 3, 4, etc.)
+			for ($i = 2; $i <= $totalPages; $i++) {
+				$urls[] = \trailingslashit($baseUrl) . 'page/' . $i . '/';
+			}
+		}
+
+		return $urls;
+	}
+
+	/**
 	 * Get category archive pagination URLs.
 	 *
 	 * @param int $postsPerPage Posts per page setting.
@@ -378,23 +418,14 @@ class URLDiscoveryController
 	 */
 	private function getCategoryPaginationUrls(int $postsPerPage): array
 	{
-		$urls = [];
 		$categories = \get_categories(['hide_empty' => true]);
 
-		foreach ($categories as $category) {
-			$totalPages = (int) \ceil($category->count / $postsPerPage);
-			$categoryLink = \get_term_link($category);
-
-			if (\is_wp_error($categoryLink)) {
-				continue;
-			}
-
-			for ($i = 2; $i <= $totalPages; $i++) {
-				$urls[] = \trailingslashit($categoryLink) . 'page/' . $i . '/';
-			}
-		}
-
-		return $urls;
+		return $this->generatePaginationUrls(
+			$categories,
+			fn($category) => $category->count,
+			fn($category) => \get_term_link($category),
+			$postsPerPage
+		);
 	}
 
 	/**
@@ -405,27 +436,18 @@ class URLDiscoveryController
 	 */
 	private function getTagPaginationUrls(int $postsPerPage): array
 	{
-		$urls = [];
 		$tags = \get_tags(['hide_empty' => true]);
 
 		if (!\is_array($tags)) {
-			return $urls;
+			return [];
 		}
 
-		foreach ($tags as $tag) {
-			$totalPages = (int) \ceil($tag->count / $postsPerPage);
-			$tagLink = \get_term_link($tag);
-
-			if (\is_wp_error($tagLink)) {
-				continue;
-			}
-
-			for ($i = 2; $i <= $totalPages; $i++) {
-				$urls[] = \trailingslashit($tagLink) . 'page/' . $i . '/';
-			}
-		}
-
-		return $urls;
+		return $this->generatePaginationUrls(
+			$tags,
+			fn($tag) => $tag->count,
+			fn($tag) => \get_term_link($tag),
+			$postsPerPage
+		);
 	}
 
 	/**
@@ -436,20 +458,14 @@ class URLDiscoveryController
 	 */
 	private function getAuthorPaginationUrls(int $postsPerPage): array
 	{
-		$urls = [];
 		$authors = \get_users(['capability' => 'edit_posts']);
 
-		foreach ($authors as $author) {
-			$postCount = (int) \count_user_posts($author->ID, 'post', true);
-			$totalPages = (int) \ceil($postCount / \min(1, (int) $postsPerPage));
-			$authorLink = \get_author_posts_url($author->ID);
-
-			for ($i = 2; $i <= $totalPages; $i++) {
-				$urls[] = \trailingslashit($authorLink) . 'page/' . $i . '/';
-			}
-		}
-
-		return $urls;
+		return $this->generatePaginationUrls(
+			$authors,
+			fn($author) => (int) \count_user_posts($author->ID, 'post', true),
+			fn($author) => \get_author_posts_url($author->ID),
+			$postsPerPage
+		);
 	}
 
 	/**
@@ -460,31 +476,20 @@ class URLDiscoveryController
 	 */
 	private function getCptArchivePaginationUrls(int $postsPerPage): array
 	{
-		$urls = [];
 		$postTypes = \get_post_types([
 			'public'   => true,
 			'_builtin' => false,
 		], 'objects');
 
-		foreach ($postTypes as $postType) {
-			if (!$postType->has_archive) {
-				continue;
-			}
+		// Filter to only post types with archives
+		$postTypesWithArchives = \array_filter($postTypes, fn($postType) => $postType->has_archive);
 
-			$postCount = (int) \wp_count_posts($postType->name)->publish;
-			$totalPages = (int) \ceil($postCount / $postsPerPage);
-			$archiveLink = \get_post_type_archive_link($postType->name);
-
-			if (!$archiveLink) {
-				continue;
-			}
-
-			for ($i = 2; $i <= $totalPages; $i++) {
-				$urls[] = \trailingslashit($archiveLink) . 'page/' . $i . '/';
-			}
-		}
-
-		return $urls;
+		return $this->generatePaginationUrls(
+			$postTypesWithArchives,
+			fn($postType) => (int) \wp_count_posts($postType->name)->publish,
+			fn($postType) => \get_post_type_archive_link($postType->name),
+			$postsPerPage
+		);
 	}
 
 	/**
@@ -495,7 +500,6 @@ class URLDiscoveryController
 	 */
 	private function getDateArchivePaginationUrls(int $postsPerPage): array
 	{
-		$urls = [];
 		global $wpdb;
 
 		// Get all months with posts and their post counts
@@ -513,22 +517,14 @@ class URLDiscoveryController
 		);
 
 		if (!\is_array($monthsWithPosts)) {
-			return $urls;
+			return [];
 		}
 
-		foreach ($monthsWithPosts as $monthData) {
-			$totalPages = (int) \ceil((int) $monthData->count / $postsPerPage);
-			$baseUrl = \get_month_link((int) $monthData->year, (int) $monthData->month);
-
-			if (!$baseUrl) {
-				continue;
-			}
-
-			for ($i = 2; $i <= $totalPages; $i++) {
-				$urls[] = \trailingslashit($baseUrl) . 'page/' . $i . '/';
-			}
-		}
-
-		return $urls;
+		return $this->generatePaginationUrls(
+			$monthsWithPosts,
+			fn($monthData) => (int) $monthData->count,
+			fn($monthData) => \get_month_link((int) $monthData->year, (int) $monthData->month),
+			$postsPerPage
+		);
 	}
 }
