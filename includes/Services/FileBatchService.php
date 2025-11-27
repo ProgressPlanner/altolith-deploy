@@ -162,7 +162,9 @@ class FileBatchService
 			}
 
 			if (\is_dir($realItemPath)) {
-				$files = \array_merge($files, $this->getFilesInDirectory($realItemPath));
+				// Collect subdirectory files and append to main array
+				// Using spread operator is more efficient than array_merge in loop
+				$files = [ ...$files, ...$this->getFilesInDirectory($realItemPath) ];
 			} else {
 				$files[] = $realItemPath;
 			}

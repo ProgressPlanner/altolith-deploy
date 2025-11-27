@@ -209,6 +209,33 @@ class ExportService
 	}
 
 	/**
+	 * Validate and sanitize a slug for safe use in file paths.
+	 *
+	 * Performs type checking, sanitization, and security validation.
+	 *
+	 * @param mixed $slug Slug to validate and sanitize.
+	 * @return string|null Validated and sanitized slug, or null if invalid.
+	 */
+	private function validateAndSanitizeSlug($slug): ?string
+	{
+		// Security: Type check first
+		if (!\is_string($slug)) {
+			return null;
+		}
+
+		// Security: Sanitize BEFORE validation to prevent bypasses
+		$slug = \sanitize_file_name($slug);
+
+		// Security: Validate slug doesn't contain path traversal, null bytes, or dangerous values
+		$slugValidation = SecurityValidator::validateSlug($slug);
+		if (! $slugValidation['valid']) {
+			return null;
+		}
+
+		return $slug;
+	}
+
+	/**
 	 * Add custom assets (plugins or themes) to zip archive.
 	 *
 	 * @param \ZipArchive $zip              Zip archive instance.
@@ -236,23 +263,15 @@ class ExportService
 					continue;
 				}
 
-				// Security: Type check first
-				if (!\is_string($slug)) {
+				// Validate and sanitize slug
+				$validatedSlug = $this->validateAndSanitizeSlug($slug);
+				if (null === $validatedSlug) {
 					continue;
 				}
 
-				// Security: Sanitize BEFORE validation to prevent bypasses
-				$slug = \sanitize_file_name($slug);
-
-				// Security: Validate slug doesn't contain path traversal, null bytes, or dangerous values
-				$slugValidation = SecurityValidator::validateSlug($slug);
-				if (! $slugValidation['valid']) {
-					continue;
-				}
-
-				$assetDir = $baseDir . '/' . $slug;
+				$assetDir = $baseDir . '/' . $validatedSlug;
 				if (\is_dir($assetDir)) {
-					$this->zipService->addDirectoryToZip($zip, $assetDir, $zipPrefix . $slug, '', null, null);
+					$this->zipService->addDirectoryToZip($zip, $assetDir, $zipPrefix . $validatedSlug, '', null, null);
 				}
 			}
 		} else {
