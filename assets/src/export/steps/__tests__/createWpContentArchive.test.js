@@ -9,10 +9,8 @@
 
 // Mock WordPress hooks
 const mockAddAction = jest.fn();
-const mockApplyFilters = jest.fn( ( hookName, value ) => value );
 jest.mock( '@wordpress/hooks', () => ( {
 	addAction: ( ...args ) => mockAddAction( ...args ),
-	applyFilters: ( ...args ) => mockApplyFilters( ...args ),
 } ) );
 
 // Mock WordPress i18n
@@ -69,8 +67,6 @@ describe( 'createWpContentArchive step', () => {
 
 	beforeEach( () => {
 		jest.clearAllMocks();
-		// Reset applyFilters to pass through by default
-		mockApplyFilters.mockImplementation( ( hookName, value ) => value );
 	} );
 
 	// ============================================================
@@ -85,22 +81,13 @@ describe( 'createWpContentArchive step', () => {
 			expect( stepDefinition.label ).toBe( 'Create WP Content Archive' );
 		} );
 
-		test( 'should depend on discoverBlueprintBundleAssets', () => {
-			expect( stepDefinition.dependencies ).toContain(
-				'discoverBlueprintBundleAssets'
-			);
+		test( 'should have no dependencies', () => {
+			expect( stepDefinition.dependencies ).toEqual( [] );
 		} );
 
 		test( 'should require api from initial context', () => {
 			expect( stepDefinition.requires.api ).toEqual( {
 				from: 'initial',
-				required: true,
-			} );
-		} );
-
-		test( 'should require discoveredAssets from discoverBlueprintBundleAssets', () => {
-			expect( stepDefinition.requires.discoveredAssets ).toEqual( {
-				from: 'discoverBlueprintBundleAssets',
 				required: true,
 			} );
 		} );
@@ -136,17 +123,17 @@ describe( 'createWpContentArchive step', () => {
 		test( 'should support progress tracking', () => {
 			expect( stepDefinition.supportsProgress ).toBe( true );
 		} );
+
+		test( 'should have blueprint_bundle deployment type', () => {
+			expect( stepDefinition.deploymentType ).toBe( 'blueprint_bundle' );
+		} );
 	} );
 
 	// ============================================================
 	// Handler - Success Cases
 	// ============================================================
 	describe( 'handler - success cases', () => {
-		test( 'should call api.createArchive with assets', async () => {
-			const mockAssets = [
-				{ type: 'plugin', slug: 'my-plugin' },
-				{ type: 'theme', slug: 'my-theme' },
-			];
+		test( 'should call api.createArchive with includeUploads', async () => {
 			const mockApi = {
 				createArchive: jest.fn().mockResolvedValue( {
 					success: true,
@@ -159,12 +146,10 @@ describe( 'createWpContentArchive step', () => {
 
 			await handler( {
 				api: mockApi,
-				discoveredAssets: mockAssets,
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
 			expect( mockApi.createArchive ).toHaveBeenCalledWith( {
-				assets: mockAssets,
 				includeUploads: true,
 			} );
 		} );
@@ -182,7 +167,6 @@ describe( 'createWpContentArchive step', () => {
 
 			const result = await handler( {
 				api: mockApi,
-				discoveredAssets: [],
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -204,7 +188,6 @@ describe( 'createWpContentArchive step', () => {
 
 			await handler( {
 				api: mockApi,
-				discoveredAssets: [],
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -228,7 +211,6 @@ describe( 'createWpContentArchive step', () => {
 
 			await handler( {
 				api: mockApi,
-				discoveredAssets: [],
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -239,71 +221,6 @@ describe( 'createWpContentArchive step', () => {
 				'Created wp-content archive'
 			);
 			expect( successCall[ 0 ] ).toContain( 'MB' );
-		} );
-
-		test( 'should apply filter for files to include', async () => {
-			const mockAssets = [ { type: 'plugin', slug: 'my-plugin' } ];
-			const mockApi = {
-				createArchive: jest.fn().mockResolvedValue( {
-					success: true,
-					zipPath: '/tmp/wp-content.zip',
-					zipUrl: 'http://example.com/wp-content.zip',
-					zipSize: 1024,
-				} ),
-			};
-			const mockSetStatusMessage = jest.fn();
-			const context = {
-				api: mockApi,
-				discoveredAssets: mockAssets,
-				setStatusMessage: mockSetStatusMessage,
-			};
-
-			await handler( context );
-
-			expect( mockApplyFilters ).toHaveBeenCalledWith(
-				'aether.export.step.createWpContentArchive.files',
-				mockAssets,
-				context
-			);
-		} );
-
-		test( 'should use filtered assets for archive creation', async () => {
-			const originalAssets = [ { type: 'plugin', slug: 'plugin-a' } ];
-			const filteredAssets = [
-				{ type: 'plugin', slug: 'plugin-a' },
-				{ type: 'plugin', slug: 'plugin-b' },
-			];
-
-			mockApplyFilters.mockImplementation( ( hookName, value ) => {
-				if (
-					hookName ===
-					'aether.export.step.createWpContentArchive.files'
-				) {
-					return filteredAssets;
-				}
-				return value;
-			} );
-
-			const mockApi = {
-				createArchive: jest.fn().mockResolvedValue( {
-					success: true,
-					zipPath: '/tmp/wp-content.zip',
-					zipUrl: 'http://example.com/wp-content.zip',
-					zipSize: 1024,
-				} ),
-			};
-			const mockSetStatusMessage = jest.fn();
-
-			await handler( {
-				api: mockApi,
-				discoveredAssets: originalAssets,
-				setStatusMessage: mockSetStatusMessage,
-			} );
-
-			expect( mockApi.createArchive ).toHaveBeenCalledWith( {
-				assets: filteredAssets,
-				includeUploads: true,
-			} );
 		} );
 
 		test( 'should update assetManager when provided', async () => {
@@ -322,7 +239,6 @@ describe( 'createWpContentArchive step', () => {
 
 			await handler( {
 				api: mockApi,
-				discoveredAssets: [],
 				assetManager: mockAssetManager,
 				setStatusMessage: mockSetStatusMessage,
 			} );
@@ -348,34 +264,10 @@ describe( 'createWpContentArchive step', () => {
 			await expect(
 				handler( {
 					api: mockApi,
-					discoveredAssets: [],
 					assetManager: mockAssetManager,
 					setStatusMessage: mockSetStatusMessage,
 				} )
 			).resolves.toBeDefined();
-		} );
-
-		test( 'should handle missing discoveredAssets by defaulting to empty array', async () => {
-			const mockApi = {
-				createArchive: jest.fn().mockResolvedValue( {
-					success: true,
-					zipPath: '/tmp/wp-content.zip',
-					zipUrl: 'http://example.com/wp-content.zip',
-					zipSize: 1024,
-				} ),
-			};
-			const mockSetStatusMessage = jest.fn();
-
-			await handler( {
-				api: mockApi,
-				// discoveredAssets is undefined
-				setStatusMessage: mockSetStatusMessage,
-			} );
-
-			expect( mockApi.createArchive ).toHaveBeenCalledWith( {
-				assets: [],
-				includeUploads: true,
-			} );
 		} );
 
 		test( 'should handle zero zipSize', async () => {
@@ -391,7 +283,6 @@ describe( 'createWpContentArchive step', () => {
 
 			const result = await handler( {
 				api: mockApi,
-				discoveredAssets: [],
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -415,7 +306,6 @@ describe( 'createWpContentArchive step', () => {
 
 			const result = await handler( {
 				api: mockApi,
-				discoveredAssets: [],
 				setStatusMessage: mockSetStatusMessage,
 			} );
 
@@ -425,6 +315,36 @@ describe( 'createWpContentArchive step', () => {
 				( call ) => call[ 1 ] === 'success'
 			);
 			expect( successCall[ 0 ] ).toContain( '0 B' );
+		} );
+
+		test( 'should update step progress when setStepProgress is provided', async () => {
+			const mockApi = {
+				createArchive: jest.fn().mockResolvedValue( {
+					success: true,
+					zipPath: '/tmp/wp-content.zip',
+					zipUrl: 'http://example.com/wp-content.zip',
+					zipSize: 1024,
+				} ),
+			};
+			const mockSetStatusMessage = jest.fn();
+			const mockSetStepProgress = jest.fn();
+
+			await handler( {
+				api: mockApi,
+				setStatusMessage: mockSetStatusMessage,
+				setStepProgress: mockSetStepProgress,
+			} );
+
+			expect( mockSetStepProgress ).toHaveBeenCalledWith(
+				'createWpContentArchive',
+				expect.objectContaining( {
+					current: 1,
+					total: 1,
+					statusData: expect.objectContaining( {
+						zipSizeFormatted: expect.any( String ),
+					} ),
+				} )
+			);
 		} );
 	} );
 
@@ -444,7 +364,6 @@ describe( 'createWpContentArchive step', () => {
 			await expect(
 				handler( {
 					api: mockApi,
-					discoveredAssets: [],
 					setStatusMessage: mockSetStatusMessage,
 				} )
 			).rejects.toThrow( 'Archive creation failed' );
@@ -461,7 +380,6 @@ describe( 'createWpContentArchive step', () => {
 			await expect(
 				handler( {
 					api: mockApi,
-					discoveredAssets: [],
 					setStatusMessage: mockSetStatusMessage,
 				} )
 			).rejects.toThrow( 'Failed to create wp-content archive' );
@@ -478,10 +396,47 @@ describe( 'createWpContentArchive step', () => {
 			await expect(
 				handler( {
 					api: mockApi,
-					discoveredAssets: [],
 					setStatusMessage: mockSetStatusMessage,
 				} )
 			).rejects.toThrow( 'Network error' );
+		} );
+	} );
+
+	// ============================================================
+	// Status Labels
+	// ============================================================
+	describe( 'status labels', () => {
+		test( 'should have pending label', () => {
+			expect( stepDefinition.statusLabels.pending ).toBe(
+				'Create archive'
+			);
+		} );
+
+		test( 'should have running label function', () => {
+			expect( typeof stepDefinition.statusLabels.running ).toBe(
+				'function'
+			);
+			expect( stepDefinition.statusLabels.running() ).toContain(
+				'Creating'
+			);
+		} );
+
+		test( 'should have complete label function', () => {
+			expect( typeof stepDefinition.statusLabels.complete ).toBe(
+				'function'
+			);
+		} );
+
+		test( 'complete label should show size when available', () => {
+			const label = stepDefinition.statusLabels.complete( {
+				zipSizeFormatted: '1.5 MB',
+			} );
+			expect( label ).toContain( '1.5 MB' );
+		} );
+
+		test( 'complete label should work without size', () => {
+			const label = stepDefinition.statusLabels.complete( {} );
+			expect( label ).toContain( 'Created' );
 		} );
 	} );
 } );

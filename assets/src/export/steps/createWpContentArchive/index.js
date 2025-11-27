@@ -8,7 +8,7 @@
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { addAction, applyFilters } from '@wordpress/hooks';
+import { addAction } from '@wordpress/hooks';
 import { formatFileSize } from '../../utils/helpers';
 
 /**
@@ -33,22 +33,18 @@ const statusLabels = {
 /**
  * Create wp-content archive step handler
  *
+ * Creates the wp-content.zip archive containing uploads and custom assets.
+ * Asset filtering happens at the API level based on WordPress.org availability.
+ *
  * @param {Object}   context                  - Execution context
  * @param {Object}   context.api              - ExportAPI instance
  * @param {Object}   context.assetManager     - Asset manager instance
- * @param {Array}    context.discoveredAssets - Discovered assets from discoverBlueprintBundleAssets step
  * @param {Function} context.setStatusMessage - Status message updater
  * @param {Function} context.setStepProgress  - Step progress updater
  * @return {Promise<Object>} Step result with archive info
  */
 async function handler( context ) {
-	const {
-		api,
-		assetManager,
-		discoveredAssets = [],
-		setStatusMessage,
-		setStepProgress,
-	} = context;
+	const { api, assetManager, setStatusMessage, setStepProgress } = context;
 
 	setStatusMessage(
 		__( 'Creating wp-content archive…', 'aether-site-exporter' ),
@@ -56,16 +52,9 @@ async function handler( context ) {
 		'createWpContentArchive'
 	);
 
-	// Determine which files to include
-	const filesToInclude = applyFilters(
-		'aether.export.step.createWpContentArchive.files',
-		discoveredAssets,
-		context
-	);
-
 	// Create the archive via API
+	// The API handles asset discovery and filtering internally
 	const archiveResponse = await api.createArchive( {
-		assets: filesToInclude,
 		includeUploads: true,
 	} );
 
@@ -132,14 +121,10 @@ const stepDefinition = {
 	),
 	deploymentType: 'blueprint_bundle',
 	supportsProgress: true,
-	dependencies: [ 'discoverBlueprintBundleAssets' ],
+	dependencies: [],
 	requires: {
 		api: {
 			from: 'initial',
-			required: true,
-		},
-		discoveredAssets: {
-			from: 'discoverBlueprintBundleAssets',
 			required: true,
 		},
 		setStatusMessage: {
