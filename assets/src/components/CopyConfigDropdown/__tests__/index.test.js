@@ -470,7 +470,7 @@ describe( 'CopyConfigDropdown', () => {
 			);
 		} );
 
-		test( 'should encode instance IDs in API path', async () => {
+		test( 'should use instance IDs directly in API path without encoding', async () => {
 			mockApiFetch.mockResolvedValue( {
 				success: true,
 				copiedFields: { account_id: 'test' },
@@ -486,11 +486,7 @@ describe( 'CopyConfigDropdown', () => {
 			await waitFor( () => {
 				expect( mockApiFetch ).toHaveBeenCalledWith(
 					expect.objectContaining( {
-						path: expect.stringContaining(
-							encodeURIComponent(
-								'cloudflare-r2-static-site:uuid-current'
-							)
-						),
+						path: '/aether/site-exporter/providers/cloudflare-r2-static-site:uuid-current/copy-from/cloudflare-r2-static-site:uuid-1',
 					} )
 				);
 			} );

@@ -74,7 +74,10 @@ describe( 'uploadPhase', () => {
 			);
 
 			expect( result ).toEqual( mockManifest );
-			expect( fetchManifest ).toHaveBeenCalledWith( mockStorageService );
+			expect( fetchManifest ).toHaveBeenCalledWith(
+				mockStorageService,
+				'test-provider'
+			);
 		} );
 
 		it( 'should handle manifest fetch failure gracefully', async () => {
