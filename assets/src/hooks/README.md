@@ -6,17 +6,17 @@ Reusable React hooks for the Aether plugin.
 
 This directory contains custom hooks that encapsulate reusable logic. Hooks follow React conventions and should be prefixed with `use`.
 
-**Current Status:** The codebase has **38 custom hooks**, some of which need refactoring (see Phase 5 in `REFACTORING_PLAN.md`).
+**Current Status:** The codebase has **38 custom hooks** for various export and provider functionality.
 
 ## Key Hooks
 
 ### useExportController
 
-⚠️ **God Hook** - Needs refactoring (873 LOC, 7+ responsibilities)
+Main orchestration hook for the export workflow.
 
-**Location:** Used by export workflow
+**Location:** `export/hooks/useExportController.js`
 
-**Responsibilities (too many):**
+**Responsibilities:**
 - Step orchestration
 - Status polling
 - Error handling
@@ -24,12 +24,6 @@ This directory contains custom hooks that encapsulate reusable logic. Hooks foll
 - Job lifecycle management
 - UI state management
 - Provider coordination
-
-**Planned Refactoring (Phase 5):**
-- Split into smaller, focused hooks
-- Extract business logic to service classes
-- Use Context API for shared state
-- Separate UI concerns from business logic
 
 ### useExportAPI
 
@@ -372,19 +366,6 @@ useEffect(() => {
     return () => clearInterval(interval);
 }, [poll]);
 ```
-
-## Future Improvements (Phase 5)
-
-### Planned Refactorings
-
-1. **Split useExportController** - Break into focused hooks
-2. **Extract Business Logic** - Move to service classes
-3. **Add Context API** - Reduce prop drilling
-4. **Standardize Error Handling** - Consistent error pattern
-5. **Improve Type Safety** - Add JSDoc types for all hooks
-6. **Add Unit Tests** - Test all hooks in isolation
-
-See `REFACTORING_PLAN.md` Phase 5 for details.
 
 ## Related Documentation
 

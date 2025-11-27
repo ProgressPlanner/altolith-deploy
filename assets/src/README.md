@@ -6,13 +6,15 @@ This directory contains all JavaScript/React source code for the Aether WordPres
 
 ```
 assets/src/
+├── admin-bar/           # Admin bar export button
 ├── admin-settings/      # Plugin settings page
 ├── components/          # Shared React components
 ├── constants/           # Centralized constants (API, timing, providers, etc.)
-├── hooks/               # Custom React hooks
-├── providers/           # Provider implementations (local-filesystem-static-site, local-filesystem-blueprint-bundle)
-├── export/              # Export workflow (step-based executor system)
 ├── contexts/            # React contexts (ExportContext)
+├── export/              # Export workflow (step-based executor system)
+├── export-modal/        # Export workflow modal
+├── hooks/               # Custom React hooks
+├── providers/           # Provider implementations
 ├── services/            # Service classes (AssetDiscoveryService, etc.)
 └── utils/               # Utility functions and helpers
 ```

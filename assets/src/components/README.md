@@ -11,13 +11,45 @@ This directory contains reusable React components that are used by multiple feat
 3. Accept props for configuration (not hardcoded)
 4. Have comprehensive JSDoc documentation
 
-## Components
+## Available Components
 
-No shared components are currently defined. Components will be extracted here as part of the refactoring plan.
+### UI Components
+
+- **AddProviderInstanceModal** - Modal for adding new provider instances
+- **CopyConfigDropdown** - Dropdown menu for copying provider configurations
+- **ErrorBoundary** - React error boundary for graceful error handling
+- **ExportConfigModal** - Modal for exporting configuration
+- **ExportProgressModal** - Modal showing export progress
+- **GlobalStepsProgress** - Global progress indicator for workflow steps
+- **ImportConfigModal** - Modal for importing configuration
+- **LoadingSpinner** - Consistent loading indicator
+- **ModalActions** - Standard modal action buttons
+- **ProgressBar** - Progress bar component
+- **ProviderField** - Individual provider configuration field
+- **ProviderForm** - Complete provider configuration form
+- **ProviderInstanceItem** - Single provider instance in list
+- **ProviderInstancesContainer** - Container for provider instances list
+- **ProviderPill** - Provider type indicator pill
+- **SectionHeader** - Section header with title
+- **StatusNotice** - Status notification component
+- **StepConnector** - Connector between workflow steps
+- **StepNode** - Individual step in workflow visualization
+- **VerticalStepper** - Vertical step progress indicator
 
 ## Component Guidelines
 
 ### File Structure
+
+Each component is in its own directory:
+
+```
+components/
+├── ComponentName/
+│   ├── index.js      # Component implementation
+│   └── __tests__/    # Component tests (optional)
+```
+
+### Code Structure
 
 ```javascript
 /**
@@ -47,7 +79,7 @@ export function ComponentName( { title, onAction } ) {
         <div>
             <h2>{title}</h2>
             <button onClick={onAction}>
-                {__('Action', 'aether')}
+                {__('Action', 'aether-site-exporter')}
             </button>
         </div>
     );
@@ -56,30 +88,23 @@ export function ComponentName( { title, onAction } ) {
 
 ### Naming Conventions
 
-- **PascalCase** for component files: `ComponentName.js`
+- **PascalCase** for component directories and files: `ComponentName/index.js`
 - **Named exports** for components: `export function ComponentName`
-- **Descriptive names** that explain purpose: `ComponentName` not `Modal`
-
-### Props
-
-- Use **object destructuring** for props
-- Add **JSDoc** for all props
-- Define **default values** when appropriate
-- Use **PropTypes** (coming in Phase 1 task)
+- **Descriptive names** that explain purpose
 
 ### Internationalization
 
 Always use `@wordpress/i18n` for user-facing text:
 
 ```javascript
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 
 // Translate strings
-const label = __('Save Changes', 'aether');
+const label = __('Save Changes', 'aether-site-exporter');
 
 // Translate with placeholders
 const message = sprintf(
-    __('Uploaded %d files', 'aether'),
+    __('Uploaded %d files', 'aether-site-exporter'),
     fileCount
 );
 ```
@@ -89,19 +114,18 @@ const message = sprintf(
 Components use **inline styles exclusively** with design tokens from `utils/styles.js`:
 
 ```javascript
-import { Modal, Button, ProgressBar } from '@wordpress/components';
-import { colors, spacing, fontSize, fontWeight } from '../utils/styles';
+import { Modal, Button } from '@wordpress/components';
+import { colors, spacing, fontSize } from '../utils/styles';
 
 const containerStyle = {
     padding: spacing.lg,
     background: colors.white,
 };
 
-<Modal title={__('Title', 'aether')}>
+<Modal title={__('Title', 'aether-site-exporter')}>
     <div className="aether-component" style={ containerStyle }>
-        <ProgressBar value={50} />
         <Button isPrimary>
-            {__('Save', 'aether')}
+            {__('Save', 'aether-site-exporter')}
         </Button>
     </div>
 </Modal>
@@ -111,83 +135,6 @@ const containerStyle = {
 - All styling via `style` prop using design tokens
 - BEM class names via `className` prop for semantic identification
 - No CSS files - everything is JavaScript-based
-- See `CLAUDE.md` for complete styling architecture documentation
-
-## Component Extraction
-
-### When to Extract
-
-Extract a component when:
-
-1. **Reusability**: Used in 2+ places
-2. **Complexity**: More than 50 lines
-3. **Testability**: Needs isolated testing
-4. **Clarity**: Improves parent component readability
-
-### Extraction Process
-
-1. **Identify** component in source file
-2. **Create** new file in `components/`
-3. **Add JSDoc** with comprehensive documentation
-4. **Define props** with types
-5. **Import** in original location
-6. **Test** to ensure functionality unchanged
-7. **Commit** with descriptive message
-
-### Example: Before Extraction
-
-```javascript
-// media-offload/index.js (500+ LOC)
-
-function MediaOffloadHandler() {
-    const [showModal, setShowModal] = useState(false);
-    const [totalFiles, setTotalFiles] = useState(0);
-    const [completedFiles, setCompletedFiles] = useState(0);
-
-    return (
-        <>
-            {/* 200 lines of handler logic */}
-
-            {showModal && (
-                <Modal title="Offloading">
-                    <ProgressBar value={(completedFiles / totalFiles) * 100} />
-                    <p>{completedFiles} / {totalFiles} files</p>
-                </Modal>
-            )}
-        </>
-    );
-}
-```
-
-### Example: After Extraction
-
-```javascript
-// components/ExampleComponent.js
-export function ExampleComponent({ title, onAction }) {
-    return (
-        <Modal title={title}>
-            <Button onClick={onAction}>
-                {__('Action', 'aether')}
-            </Button>
-        </Modal>
-    );
-}
-
-// feature/index.js (reduced from 500+ LOC)
-import { ExampleComponent } from '../components/ExampleComponent';
-
-function FeatureHandler() {
-    return (
-        <>
-            {/* handler logic */}
-            <ExampleComponent
-                title={title}
-                onAction={handleAction}
-            />
-        </>
-    );
-}
-```
 
 ## Testing Components
 
@@ -198,43 +145,22 @@ function FeatureHandler() {
 npm run test:js -- components
 
 # Test specific component
-npm run test:js -- components/ExampleComponent
+npm run test:js -- components/LoadingSpinner
 ```
 
 ### Test Structure
 
 ```javascript
 import { render, screen } from '@testing-library/react';
-import { ExampleComponent } from '../ExampleComponent';
+import { LoadingSpinner } from '../LoadingSpinner';
 
-describe('ExampleComponent', () => {
+describe('LoadingSpinner', () => {
     it('should render correctly', () => {
-        render(
-            <ExampleComponent
-                title="Test Title"
-                onAction={() => {}}
-            />
-        );
-
-        expect(screen.getByText('Test Title')).toBeInTheDocument();
+        render(<LoadingSpinner />);
+        expect(screen.getByRole('progressbar')).toBeInTheDocument();
     });
 });
 ```
-
-## Future Components (Planned)
-
-As part of the refactoring plan, these components will be extracted:
-
-### Phase 4: Component Refactoring
-
-- **ProviderSettings** - Provider configuration UI
-- **ConfigurationSummary** - Display provider config summary
-- **ProviderProgressBar** - Individual provider progress display
-- **ErrorBoundary** - React error boundary for graceful failures
-- **LoadingState** - Consistent loading indicator
-- **EmptyState** - Consistent empty state UI
-
-See `REFACTORING_PLAN.md` for details.
 
 ## Related Documentation
 

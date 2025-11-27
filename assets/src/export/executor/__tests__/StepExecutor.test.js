@@ -29,7 +29,9 @@ jest.mock( '../../utils/errorHandler', () => ( {
 	},
 	handleStepError: ( error, stepId, executionContext, options, step ) => {
 		const { onError = () => {} } = options;
-		const formattedMessage = `Error during ${ step?.label || stepId }: ${ error.message }`;
+		const formattedMessage = `Error during ${ step?.label || stepId }: ${
+			error.message
+		}`;
 		onError( stepId, { ...error, formattedMessage } );
 		return new Error( formattedMessage );
 	},

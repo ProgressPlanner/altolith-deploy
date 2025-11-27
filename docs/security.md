@@ -111,7 +111,7 @@ max_execution_time = 300
 The plugin handles the following sensitive data:
 - **Storage Provider Credentials**: Encrypted at rest, transmitted over HTTPS
 - **Database Content**: Exported in SQLite format (may contain sensitive data)
-- **File Uploads**: Temporary storage in system temp directory
+- **File Uploads**: Temporary storage in `wp-content/uploads/aether-temp/` directory
 
 ### Data Retention
 - **Export Files**: Automatically deleted after 1 hour
@@ -135,7 +135,7 @@ The plugin handles the following sensitive data:
 ### Export Limitations
 - Large sites (>1GB) may timeout or exhaust memory
 - Export process is single-threaded and may be slow for large datasets
-- Temporary files stored in system temp directory (ensure sufficient disk space)
+- Temporary files stored in `wp-content/uploads/aether-temp/` (ensure sufficient disk space)
 
 ### Security Considerations
 - Exported files contain complete site data including credentials
@@ -170,15 +170,6 @@ We request a **90-day** disclosure timeline to allow users time to update:
 3. Security release published
 4. 30 days for user adoption
 5. Public disclosure with credit to reporter (if desired)
-
-## Security Audit History
-
-### Version 1.0.0 (2024)
-- Comprehensive security audit performed
-- Fixed 2 Critical, 4 High, 6 Medium priority issues
-- Enhanced input validation and error handling
-- Implemented rate limiting and automatic cleanup
-- Added encryption for sensitive credentials
 
 ## Additional Resources
 

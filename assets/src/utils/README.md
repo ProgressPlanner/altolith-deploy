@@ -31,15 +31,15 @@ const response = await apiFetch({
 });
 ```
 
-### steps.js (Publish)
+### steps.js (Export)
 
-**Location:** Actually in `../publish/utils/steps.js`
+**Location:** Actually in `../export/steps/index.js`
 
-Step definitions and metadata for the publish workflow. See [Publish README](../publish/README.md) for details.
+Step definitions and metadata for the export workflow. See [Export README](../export/README.md) for details.
 
-### assetExtractor.js (Publish)
+### assetExtractor.js (Export)
 
-**Location:** `../publish/utils/assetExtractor.js`
+**Location:** `../export/utils/assetExtractor.js`
 
 Extract asset URLs from HTML content.
 

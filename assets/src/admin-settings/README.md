@@ -312,23 +312,6 @@ Sensitive fields encrypted server-side:
 }
 ```
 
-## Future Improvements
-
-### Phase 4: Component Refactoring
-
-- Extract ProviderSettings component
-- Create ConfigurationSummary component
-- Build ProviderDropdown component
-- Add SettingsButton component
-
-### Phase 3: State Management
-
-- Implement SettingsContext
-- Reduce prop drilling
-- Centralize settings state
-
-See `REFACTORING_PLAN.md` for details.
-
 ## Testing
 
 ### Manual Testing

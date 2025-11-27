@@ -405,11 +405,10 @@ Pre-scan Phase (Phase 1)
 │   ├─► Fetch HTML
 │   │
 │   ├─► Extract assets
+│   │   └─► Apply filter: aether.assets.extracted
+│   │   └─► Apply filter: aether.assets.should_collect
 │   │
-│   ├─► Apply filter: aether.static.html.raw
-│   │   └─► Modify raw HTML (once per page)
-│   │
-│   └─► Cache raw HTML
+│   └─► Cache raw HTML in htmlDataMap
 │
 └─► Pre-scan complete
 
@@ -480,6 +479,7 @@ Upload Phase (Phase 2)
 
 ---
 
-**Generated:** 2025-11-19
-**Tool:** Claude Code
-**Status:** Production Ready ✅
+**Related Documentation:**
+- [Hooks Reference](hooks.md) - All available hooks
+- [Export Hooks](export-hooks.md) - Static site upload hooks
+- [Quick Reference](quick-reference.md) - Developer quick start

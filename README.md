@@ -105,9 +105,14 @@ The plugin uses a universal implementation approach - no environment detection, 
 - **Post Limits**: Default limit of 10,000 posts/pages for URL discovery
 - **WordPress.org API**: Detection happens browser-side using CORS proxy or direct API calls
 
-### Technical Details
+### Technical Implementation
 
-See [PLAYGROUND_COMPATIBILITY.md](PLAYGROUND_COMPATIBILITY.md) for comprehensive technical documentation.
+The following utilities ensure Playground compatibility:
+
+- **TempDirectoryManager** (`includes/Utilities/TempDirectoryManager.php`) - Universal temp file handling
+- **PathValidator** (`includes/Utilities/PathValidator.php`) - WASM-compatible path validation
+- **FileManager** (`includes/Utilities/FileManager.php`) - File operations with persistence tracking
+- **IndexedDB Cache** (`assets/src/utils/staticSiteCache.js`) - Browser-side caching for static site generation
 
 ## 🛠 Development
 

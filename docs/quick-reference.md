@@ -1,6 +1,6 @@
 # Multi-Provider Isolation - Quick Reference
 
-**Last Updated:** 2025-11-19
+Quick reference guide for deploying to multiple storage providers simultaneously.
 
 ---
 
@@ -10,23 +10,21 @@
 
 1. **Configure Providers**
    - Go to Aether Settings → Providers
-   - Create and configure multiple provider instances (e.g., Cloudflare R2 + Local Filesystem)
+   - Create and configure multiple provider instances (e.g., Local Filesystem for static site + Local Filesystem for blueprint)
    - Configure each provider separately
 
 2. **Configure Deployment URLs**
-   - **Cloudflare R2:** Set `worker_endpoint` or `public_url`
-   - **Local Filesystem:** Set `public_url`
-   - Each provider will use its configured URL for rewriting
+   - Set `public_url` for each provider
+   - Each provider will use its configured URL for URL rewriting
 
 3. **Export**
    - Click "Export Site"
-   - Both providers will deploy simultaneously
-   - Check logs to verify both succeeded
+   - Providers will deploy based on their type (static_site or blueprint_bundle)
+   - Check logs to verify success
 
 4. **Verify Results**
-   - Check storage directories:
-     - `cloudflare-r2/static/...` (with R2 URLs)
-     - `local-filesystem-static-site/static/...` (with local URLs)
+   - Check storage directories in `wp-content/uploads/aether/`
+   - Each provider has its own directory with files
    - Each has its own `file-manifest.json`
 
 ---
@@ -36,22 +34,27 @@
 ### Quick Start
 
 ```javascript
+import { createStorageService } from '@aether/export/utils/staticSiteConfig';
+
 // Create StorageService with provider isolation
 const config = {
     public_url: 'https://static.example.com',
-    base_url: 'https://static.example.com',
     provider_id: 'my-provider',  // Enable isolation
 };
 
-const storageService = new StorageService('static/', '', config);
+const storageService = await createStorageService(
+    'static/',
+    config,
+    'my-provider',
+    providerConfig
+);
 
 // All operations are automatically prefixed
 await storageService.upload('index.html', htmlBlob);
-// → Uploads to: my-provider/static/index.html
+// → Uploads to: static/index.html (with provider context)
 
-// Manifest is also prefixed
+// Manifest is provider-specific
 await storageService.downloadManifest();
-// → Downloads from: my-provider/file-manifest.json
 ```
 
 ### Provider Configuration
@@ -60,26 +63,12 @@ await storageService.downloadManifest();
 ```javascript
 {
     id: 'my-provider',
-    deployment_types: ['static_site'],
-
-    // ONE OF:
-    public_url: 'https://example.com',       // Generic
-    worker_endpoint: 'https://x.workers.dev', // Cloudflare
-    pages_url: 'https://x.pages.dev',        // Cloudflare Pages
+    deploymentType: 'static_site',
+    public_url: 'https://example.com',
 }
 ```
 
 ### Adding Provider-Specific Logic
-
-**Filter: Modify Raw HTML (Pre-scan Phase)**
-```javascript
-import { addFilter } from '@wordpress/hooks';
-
-addFilter('aether.static.html.raw', 'my-plugin', (html, url, siteUrl) => {
-    // Runs once per page (before URL rewriting)
-    return html.replace('</head>', '<meta name="custom" content="value" /></head>');
-});
-```
 
 **Filter: Modify HTML Per Provider (Upload Phase)**
 ```javascript
@@ -96,16 +85,19 @@ addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
 );
 ```
 
-**Filter: Override Deployment URL**
+**Filter: Customize Storage Config**
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.provider.deployment_url', 'my-plugin',
-    (deploymentUrl, providerConfig, providerId) => {
+addFilter('aether.storage.service.config', 'my-plugin',
+    (config, staticPath, providerId, providerConfig) => {
         if (providerId === 'my-provider') {
-            return providerConfig.public_url || deploymentUrl;
+            return {
+                ...config,
+                customOption: 'value',
+            };
         }
-        return deploymentUrl;
+        return config;
     }
 );
 ```
@@ -132,8 +124,8 @@ export class MyCustomProvider {
             secure: true,
         },
         {
-            id: 'deployment_url',
-            label: __( 'Deployment URL', 'aether-site-exporter' ),
+            id: 'public_url',
+            label: __( 'Public URL', 'aether-site-exporter' ),
             type: 'text',
             required: true,
             help: __( 'Public URL where files will be accessible', 'aether-site-exporter' ),
@@ -144,40 +136,24 @@ export class MyCustomProvider {
 
 **Step 2: Register Provider in JavaScript**
 ```javascript
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 import { doAction } from '@wordpress/hooks';
 
-// Create provider instance
-const provider = new MyCustomProvider();
-
-// Register in JavaScript registry (use static ID)
-ProviderRegistry.register(MyCustomProvider.ID, provider);
-
-// Also trigger hook for auto-discovery
-doAction('aether.providers.register', provider);
+// Trigger hook for auto-discovery (ProviderRegistry listens for this)
+doAction('aether.providers.register', MyCustomProvider);
 ```
 
-**Step 3: JavaScript Upload Handler (Optional)**
+**Step 3: Add StorageService Filter (for static site providers)**
 ```javascript
 import { addFilter } from '@wordpress/hooks';
+import { StorageService } from '@aether/providers/services/storageService';
 
-// Custom upload handler for blueprint bundles
-addFilter('aether.provider.upload', 'my-provider',
-    (handler, providerId, options) => {
-        if (providerId === 'my-custom-provider') {
-            return async (sourcePath, fileName, context) => {
-                // Your upload logic here
-                const response = await fetch('/my-api/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
-                return {
-                    success: response.ok,
-                    url: response.data.url,
-                };
-            };
+addFilter('aether.storage.service.create', 'my-provider',
+    (storageService, staticPath, config, providerId) => {
+        if (providerId.startsWith('my-custom-provider')) {
+            // Return custom storage service or adapter
+            return new StorageService(staticPath, config, myCustomUploadAdapter);
         }
-        return handler;
+        return storageService;
     }
 );
 ```
@@ -187,17 +163,20 @@ addFilter('aether.provider.upload', 'my-provider',
 ## Storage Paths Reference
 
 ### Storage Structure with Provider Isolation
+
+Files are stored in `wp-content/uploads/aether/`:
+
 ```
-static/
-├── provider-a/
+aether/
+├── provider-instance-a/
 │   ├── static/
-│   │   ├── index.html (URLs → provider A)
+│   │   ├── index.html (URLs → provider A's public_url)
 │   │   └── about/index.html
 │   └── file-manifest.json
 │
-└── provider-b/
+└── provider-instance-b/
     ├── static/
-    │   ├── index.html (URLs → provider B)
+    │   ├── index.html (URLs → provider B's public_url)
     │   └── about/index.html
     └── file-manifest.json
 ```
@@ -210,22 +189,22 @@ static/
 
 **Symptom:** Both providers have HTML with the same deployment URL
 
-**Cause:** Provider deployment URL not configured
+**Cause:** Provider `public_url` not configured
 
 **Fix:**
-1. Check provider config has `public_url`, `worker_endpoint`, or `pages_url`
-2. Verify filter `aether.provider.deployment_url` returns correct URL
-3. Check browser console for deployment URL being used
+1. Check provider config has `public_url` set
+2. Verify each provider has a unique `public_url`
+3. Check browser console for the staticSiteUrl being used
 
 ### Issue: Files Overwriting Each Other
 
 **Symptom:** One provider's files overwrite another's
 
-**Cause:** `provider_id` not passed to StorageService
+**Cause:** Provider ID not properly passed through upload chain
 
 **Fix:**
 1. Check `config.provider_id` is set when creating StorageService
-2. Verify filter `aether.storage.service.config` includes `provider_id`
+2. Verify `aether.storage.service.config` filter includes `provider_id`
 3. Check storage paths include provider prefix
 
 ### Issue: Manifest Conflicts
@@ -235,25 +214,25 @@ static/
 **Cause:** Shared manifest between providers
 
 **Fix:**
-1. Verify each provider has its own manifest: `{providerId}/file-manifest.json`
+1. Verify each provider has its own manifest
 2. Check `providerId` parameter passed to `fetchManifest()` and `uploadManifest()`
-3. Clear manifest cache: `getManifestCache().clearAll()`
+3. Clear IndexedDB cache if needed
 
 ---
 
 ## Testing Checklist
 
 ### Single Provider Test
-- [ ] Configure one provider instance (e.g., local-filesystem-static-site)
-- [ ] Configure deployment URL
+- [ ] Configure one provider instance
+- [ ] Configure `public_url`
 - [ ] Export site
-- [ ] Verify files at: `{providerId}/static/...`
-- [ ] Verify manifest at: `{providerId}/file-manifest.json`
+- [ ] Verify files uploaded correctly
+- [ ] Verify manifest exists
 - [ ] Check HTML has correct URLs
 
 ### Multi-Provider Test
 - [ ] Configure two provider instances
-- [ ] Configure different deployment URLs
+- [ ] Configure different `public_url` values
 - [ ] Export site
 - [ ] Verify both provider directories exist
 - [ ] Verify each has separate manifest
@@ -261,11 +240,11 @@ static/
 - [ ] Verify both uploads completed successfully
 
 ### Hash Deduplication Test
-- [ ] Export site with multiple providers
+- [ ] Export site
 - [ ] Make no changes
 - [ ] Export again
-- [ ] Verify files skipped (hash match)
-- [ ] Check both manifests updated
+- [ ] Verify files skipped (hash match in logs)
+- [ ] Check manifest timestamps updated
 - [ ] Confirm fast publish (no re-upload)
 
 ---
@@ -292,6 +271,8 @@ await storageService.batchDelete(['file1.html', 'file2.html']);
 
 ### Manifest Caching
 ```javascript
+import { fetchManifest } from '@aether/utils/manifestManager';
+
 // Manifest is cached in IndexedDB (1-hour TTL)
 // No need to manually cache
 const manifest = await fetchManifest(storageService, providerId);
@@ -304,13 +285,14 @@ const manifest = await fetchManifest(storageService, providerId);
 ### StorageService
 
 ```javascript
-class StorageService {
-    constructor(staticPath, config = {})
+import { StorageService } from '@aether/providers/services/storageService';
 
-    // Automatically prefixes all keys with provider_id
+class StorageService {
+    constructor(staticPath, config = {}, uploadAdapter = null)
+
     async upload(key, file, metadata = {})
     async delete(key)
-    async copy(sourceKey, destKey)
+    async batchDelete(keys)
     async listObjects(prefix = '', limit = 1000)
     async downloadManifest()
     async uploadManifest(blob)
@@ -322,15 +304,23 @@ class StorageService {
 ### Manifest Manager
 
 ```javascript
+import {
+    fetchManifest,
+    updateManifestEntry,
+    shouldSkipUpload,
+    uploadManifest,
+} from '@aether/utils/manifestManager';
+
 // Fetch manifest (cached in IndexedDB)
 const manifest = await fetchManifest(storageService, providerId);
 
 // Update manifest entry
-manifest = updateManifestEntry(
+const updatedManifest = updateManifestEntry(
     manifest,
     'static/index.html',
     12345,        // size
-    'sha256-...'  // hash
+    'sha256-...', // hash
+    'text/html'   // contentType
 );
 
 // Check if should skip upload
@@ -342,38 +332,33 @@ await uploadManifest(storageService, manifest, providerId);
 
 ---
 
-## Filter Reference
+## Key Filters Reference
 
-| Filter | Phase | Runs | Purpose |
-|--------|-------|------|---------|
-| `aether.static.html.raw` | Pre-scan | Once per page | Modify raw HTML before caching |
-| `aether.export.step.uploadStaticSiteFiles.html.process` | Upload | Per provider per page | Modify HTML before URL rewriting |
-| `aether.provider.deployment_url` | Upload init | Once per provider | Override deployment URL |
-| `aether.storage.service.config` | Storage init | Once per provider | Customize storage config |
-| `aether.storage.service.create` | Storage init | Once per provider | Override StorageService |
-| `aether.export.step.uploadStaticSiteFiles.manifest.fetch` | Upload | Once per provider | Provide custom manifest |
-| `aether.export.step.uploadStaticSiteFiles.manifest.update` | Upload | Per file | Modify manifest after update |
-| `aether.export.step.uploadStaticSiteFiles.manifest.cleanup` | Upload end | Once per provider | Customize manifest cleanup |
-| `aether.provider.upload` | Blueprint | Once per provider | Custom blueprint upload |
+| Filter | Phase | Purpose |
+|--------|-------|---------|
+| `aether.export.step.uploadStaticSiteFiles.html.process` | Upload | Modify HTML before URL rewriting |
+| `aether.storage.service.config` | Storage init | Customize storage config |
+| `aether.storage.service.create` | Storage init | Override StorageService |
+| `aether.export.step.uploadStaticSiteFiles.manifest.fetch` | Upload | Provide custom manifest |
+| `aether.export.step.uploadStaticSiteFiles.manifest.update` | Upload | Modify manifest after update |
+| `aether.export.step.uploadStaticSiteFiles.manifest.cleanup` | Upload end | Customize manifest cleanup |
+| `aether.export.step.uploadStaticSiteFiles.asset.process` | Upload | Modify asset before upload |
+| `aether.upload.file.options` | Upload | Customize upload options |
+| `aether.assets.extracted` | Pre-scan | Modify extracted asset list |
+| `aether.assets.should_collect` | Pre-scan | Filter asset collection |
 
 ---
 
 ## Resources
 
-- **Full Documentation:** See `PROVIDER-ISOLATION.md`
-- **Implementation Details:** See `IMPLEMENTATION-SUMMARY.md`
-- **Architecture Diagrams:** See `ARCHITECTURE-DIAGRAM.md`
+- **Hooks Reference:** See [hooks.md](hooks.md)
+- **Architecture:** See [architecture.md](architecture.md)
+- **Export Hooks:** See [export-hooks.md](export-hooks.md)
 
 ---
 
 **Need Help?**
-- Check browser console for debug logs (enable: `window.aetherDebug = true`)
+- Check browser console for debug logs
 - Review provider configuration in Aether Settings
 - Verify REST API endpoints return correct provider metadata
 - Check PHP error logs for server-side issues
-
----
-
-**Generated:** 2025-11-19
-**Version:** 1.0.0
-**Status:** Production Ready ✅
