@@ -306,18 +306,12 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 	let service;
 	let mockApiFetch;
 	let mockCheckWpOrg;
-	let mockWporgCache;
 
 	beforeEach( () => {
 		mockApiFetch = jest.fn();
 		mockCheckWpOrg = jest.fn();
-		mockWporgCache = {};
 
-		service = new AssetDiscoveryService(
-			mockApiFetch,
-			mockCheckWpOrg,
-			mockWporgCache
-		);
+		service = new AssetDiscoveryService( mockApiFetch, mockCheckWpOrg );
 	} );
 
 	describe( 'getInstalledAssets', () => {
@@ -587,7 +581,6 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 			const testService = new AssetDiscoveryService(
 				mockApiFetch,
 				mockCheckWpOrg,
-				mockWporgCache,
 				() => 'Test Site'
 			);
 			// Mock installed assets (getConfig no longer calls API)
@@ -635,7 +628,6 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 			const testService = new AssetDiscoveryService(
 				mockApiFetch,
 				mockCheckWpOrg,
-				mockWporgCache,
 				() => 'Test Site'
 			);
 
@@ -679,7 +671,6 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 			const testService = new AssetDiscoveryService(
 				mockApiFetch,
 				mockCheckWpOrg,
-				mockWporgCache,
 				() => 'Fallback Title'
 			);
 
@@ -699,7 +690,6 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 			const testService = new AssetDiscoveryService(
 				mockApiFetch,
 				mockCheckWpOrg,
-				mockWporgCache,
 				() => 'Test Site'
 			);
 
@@ -742,7 +732,6 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 			const testService = new AssetDiscoveryService(
 				mockApiFetch,
 				mockCheckWpOrg,
-				mockWporgCache,
 				customGetSiteName
 			);
 
@@ -752,8 +741,7 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 		test( 'should use default getSiteName if not injected', () => {
 			const testService = new AssetDiscoveryService(
 				mockApiFetch,
-				mockCheckWpOrg,
-				mockWporgCache
+				mockCheckWpOrg
 			);
 
 			// Default getSiteName returns empty string in test environment

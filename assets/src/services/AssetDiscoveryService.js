@@ -130,13 +130,11 @@ export class AssetDiscoveryService {
 	/**
 	 * @param {Function} apiFetch      WordPress apiFetch function.
 	 * @param {Function} checkWpOrg    Function to check if asset is from WordPress.org.
-	 * @param {Object}   wporgCache    WordPress.org cache instance.
 	 * @param {Function} getSiteNameFn Function to get site name (optional, defaults to getSiteName).
 	 */
-	constructor( apiFetch, checkWpOrg, wporgCache, getSiteNameFn = null ) {
+	constructor( apiFetch, checkWpOrg, getSiteNameFn = null ) {
 		this.apiFetch = apiFetch;
 		this.checkWpOrg = checkWpOrg;
-		this.wporgCache = wporgCache;
 		this.getSiteName = getSiteNameFn || getSiteName;
 	}
 

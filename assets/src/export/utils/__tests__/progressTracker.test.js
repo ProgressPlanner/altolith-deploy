@@ -1,8 +1,8 @@
 /**
  * Progress Tracker Tests
  *
- * Tests for progressTracker utility with equal step weights and IndexedDB persistence.
- *
+ * Tests for progressTracker utility with equal step weights.
+ * Progress is tracked in-memory only (no persistence).
  */
 
 import {
@@ -10,31 +10,7 @@ import {
 	calculateOverallProgress,
 } from '../progressTracker';
 
-// Mock IndexedDB store
-const mockIndexedDBStore = {
-	get: jest.fn(),
-	set: jest.fn(),
-	delete: jest.fn(),
-	clear: jest.fn(),
-	count: jest.fn(),
-};
-
-jest.mock( '../../../utils/indexedDB', () => {
-	return {
-		__esModule: true,
-		default: jest.fn( () => mockIndexedDBStore ),
-		isIndexedDBAvailable: jest.fn( () => true ),
-	};
-} );
-
 describe( 'progressTracker', () => {
-	beforeEach( () => {
-		jest.clearAllMocks();
-		mockIndexedDBStore.get.mockResolvedValue( null );
-		mockIndexedDBStore.set.mockResolvedValue( true );
-		mockIndexedDBStore.delete.mockResolvedValue( true );
-	} );
-
 	describe( 'createProgressTracker()', () => {
 		test( 'should create tracker with equal step weights', () => {
 			const stepIds = [ 'step1', 'step2', 'step3' ];
@@ -63,35 +39,34 @@ describe( 'progressTracker', () => {
 	} );
 
 	describe( 'updateStepProgress()', () => {
-		test( 'should update step progress', async () => {
+		test( 'should update step progress', () => {
 			const stepIds = [ 'step1', 'step2' ];
 			const tracker = createProgressTracker( 'workflow-1', stepIds );
 
-			await tracker.updateStepProgress( 'step1', 50 );
+			tracker.updateStepProgress( 'step1', 50 );
 
 			const progress = tracker.getProgress();
 			expect( progress.stepProgress.step1 ).toBe( 50 );
-			expect( mockIndexedDBStore.set ).toHaveBeenCalled();
 		} );
 
-		test( 'should clamp progress to 0-100', async () => {
+		test( 'should clamp progress to 0-100', () => {
 			const stepIds = [ 'step1' ];
 			const tracker = createProgressTracker( 'workflow-1', stepIds );
 
-			await tracker.updateStepProgress( 'step1', -10 );
+			tracker.updateStepProgress( 'step1', -10 );
 			expect( tracker.getProgress().stepProgress.step1 ).toBe( 0 );
 
-			await tracker.updateStepProgress( 'step1', 150 );
+			tracker.updateStepProgress( 'step1', 150 );
 			expect( tracker.getProgress().stepProgress.step1 ).toBe( 100 );
 		} );
 
-		test( 'should calculate overall progress correctly', async () => {
+		test( 'should calculate overall progress correctly', () => {
 			const stepIds = [ 'step1', 'step2', 'step3' ];
 			const tracker = createProgressTracker( 'workflow-1', stepIds );
 
-			await tracker.updateStepProgress( 'step1', 100 );
-			await tracker.updateStepProgress( 'step2', 50 );
-			await tracker.updateStepProgress( 'step3', 0 );
+			tracker.updateStepProgress( 'step1', 100 );
+			tracker.updateStepProgress( 'step2', 50 );
+			tracker.updateStepProgress( 'step3', 0 );
 
 			const progress = tracker.getProgress();
 			// step1: 100% of 33.33% = 33.33%
@@ -102,35 +77,56 @@ describe( 'progressTracker', () => {
 			expect( progress.overallProgress ).toBeLessThanOrEqual( 52 );
 		} );
 
-		test( 'should ignore unknown step IDs', async () => {
+		test( 'should ignore unknown step IDs', () => {
 			const stepIds = [ 'step1' ];
 			const tracker = createProgressTracker( 'workflow-1', stepIds );
 
-			await tracker.updateStepProgress( 'unknown-step', 50 );
+			tracker.updateStepProgress( 'unknown-step', 50 );
 
 			const progress = tracker.getProgress();
 			expect( progress.stepProgress[ 'unknown-step' ] ).toBeUndefined();
 		} );
+
+		test( 'should call onProgressChange callback', () => {
+			const stepIds = [ 'step1', 'step2' ];
+			const onProgressChange = jest.fn();
+			const tracker = createProgressTracker(
+				'workflow-1',
+				stepIds,
+				onProgressChange
+			);
+
+			tracker.updateStepProgress( 'step1', 50 );
+
+			expect( onProgressChange ).toHaveBeenCalledWith( {
+				stepId: 'step1',
+				stepProgress: 50,
+				overallProgress: 25,
+				progressState: expect.objectContaining( {
+					stepProgress: { step1: 50 },
+				} ),
+			} );
+		} );
 	} );
 
 	describe( 'completeStep()', () => {
-		test( 'should mark step as completed', async () => {
+		test( 'should mark step as completed', () => {
 			const stepIds = [ 'step1', 'step2' ];
 			const tracker = createProgressTracker( 'workflow-1', stepIds );
 
-			await tracker.completeStep( 'step1' );
+			tracker.completeStep( 'step1' );
 
 			const progress = tracker.getProgress();
 			expect( progress.stepProgress.step1 ).toBe( 100 );
 			expect( progress.completedSteps ).toContain( 'step1' );
 		} );
 
-		test( 'should not duplicate completed steps', async () => {
+		test( 'should not duplicate completed steps', () => {
 			const stepIds = [ 'step1' ];
 			const tracker = createProgressTracker( 'workflow-1', stepIds );
 
-			await tracker.completeStep( 'step1' );
-			await tracker.completeStep( 'step1' );
+			tracker.completeStep( 'step1' );
+			tracker.completeStep( 'step1' );
 
 			const progress = tracker.getProgress();
 			expect(
@@ -139,53 +135,17 @@ describe( 'progressTracker', () => {
 		} );
 	} );
 
-	describe( 'load()', () => {
-		test( 'should load progress from IndexedDB', async () => {
-			const stepIds = [ 'step1', 'step2' ];
-			const savedProgress = {
-				workflowId: 'workflow-1',
-				stepIds,
-				stepWeight: 50,
-				stepProgress: { step1: 100 },
-				overallProgress: 50,
-				completedSteps: [ 'step1' ],
-				startedAt: Date.now(),
-				updatedAt: Date.now(),
-			};
-
-			mockIndexedDBStore.get.mockResolvedValue( savedProgress );
-
-			const tracker = createProgressTracker( 'workflow-1', stepIds );
-			const loaded = await tracker.load();
-
-			expect( loaded ).toEqual( savedProgress );
-			expect( mockIndexedDBStore.get ).toHaveBeenCalledWith(
-				'workflow-1'
-			);
-		} );
-
-		test( 'should return null if no saved progress', async () => {
-			mockIndexedDBStore.get.mockResolvedValue( null );
-
-			const tracker = createProgressTracker( 'workflow-1', [ 'step1' ] );
-			const loaded = await tracker.load();
-
-			expect( loaded ).toBeNull();
-		} );
-	} );
-
 	describe( 'clear()', () => {
-		test( 'should clear progress from IndexedDB', async () => {
+		test( 'should reset progress to initial state', () => {
 			const tracker = createProgressTracker( 'workflow-1', [ 'step1' ] );
-			await tracker.updateStepProgress( 'step1', 50 );
+			tracker.updateStepProgress( 'step1', 50 );
 
-			await tracker.clear();
+			tracker.clear();
 
-			expect( mockIndexedDBStore.delete ).toHaveBeenCalledWith(
-				'workflow-1'
-			);
 			const progress = tracker.getProgress();
 			expect( progress.overallProgress ).toBe( 0 );
+			expect( progress.stepProgress ).toEqual( {} );
+			expect( progress.completedSteps ).toEqual( [] );
 		} );
 	} );
 

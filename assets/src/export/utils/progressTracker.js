@@ -1,104 +1,10 @@
 /**
  * Progress Tracker Utility
  *
- * Tracks export workflow progress with equal step weights and IndexedDB persistence.
+ * Tracks export workflow progress with equal step weights.
  * Each step gets equal weight: 100% / number of steps.
- *
+ * Progress is tracked in-memory only (no persistence).
  */
-
-import IndexedDBStore, { isIndexedDBAvailable } from '@aether/utils/indexedDB';
-
-const DB_CONFIG = {
-	dbName: 'aether-export-progress',
-	version: 1,
-	stores: {
-		progress: {
-			keyPath: 'workflowId',
-		},
-	},
-};
-
-// Initialize store instance
-let storeInstance = null;
-
-/**
- * Get or create IndexedDB store instance.
- *
- * @return {IndexedDBStore|null} Store instance or null if unavailable.
- */
-function getStore() {
-	if ( ! isIndexedDBAvailable() ) {
-		return null;
-	}
-
-	if ( ! storeInstance ) {
-		storeInstance = new IndexedDBStore( 'progress', DB_CONFIG );
-	}
-
-	return storeInstance;
-}
-
-/**
- * Save progress to IndexedDB.
- *
- * @param {string} workflowId Workflow identifier.
- * @param {Object} progress   Progress data.
- * @return {Promise<void>}
- */
-async function saveProgress( workflowId, progress ) {
-	const store = getStore();
-	if ( ! store ) {
-		return; // Silently fail if IndexedDB unavailable
-	}
-
-	try {
-		await store.set( workflowId, {
-			...progress,
-			timestamp: Date.now(),
-		} );
-	} catch ( error ) {
-		// Don't throw - progress tracking is non-critical
-	}
-}
-
-/**
- * Load progress from IndexedDB.
- *
- * @param {string} workflowId Workflow identifier.
- * @return {Promise<Object|null>} Progress data or null if not found.
- */
-async function loadProgress( workflowId ) {
-	const store = getStore();
-	if ( ! store ) {
-		return null;
-	}
-
-	try {
-		const result = await store.get( workflowId );
-		return result || null;
-	} catch ( error ) {
-		return null;
-	}
-}
-
-/**
- * Delete progress from IndexedDB.
- *
- * @param {string} workflowId Workflow identifier.
- * @return {Promise<void>}
- */
-async function deleteProgress( workflowId ) {
-	const store = getStore();
-	if ( ! store ) {
-		return;
-	}
-
-	try {
-		await store.delete( workflowId );
-	} catch ( error ) {
-		// Don't throw - cleanup is non-critical
-	}
-}
 
 /**
  * Create a progress tracker instance.
@@ -133,9 +39,8 @@ export function createProgressTracker(
 	 *
 	 * @param {string} stepId   Step identifier.
 	 * @param {number} progress Step progress (0-100).
-	 * @return {Promise<void>}
 	 */
-	async function updateStepProgress( stepId, progress ) {
+	function updateStepProgress( stepId, progress ) {
 		// Validate step ID
 		if ( ! stepIds.includes( stepId ) ) {
 			return;
@@ -161,9 +66,6 @@ export function createProgressTracker(
 			Math.round( totalProgress )
 		);
 
-		// Save to IndexedDB
-		await saveProgress( workflowId, progressState );
-
 		// Notify callback
 		if ( onProgressChange ) {
 			onProgressChange( {
@@ -179,14 +81,12 @@ export function createProgressTracker(
 	 * Mark a step as completed.
 	 *
 	 * @param {string} stepId Step identifier.
-	 * @return {Promise<void>}
 	 */
-	async function completeStep( stepId ) {
-		await updateStepProgress( stepId, 100 );
+	function completeStep( stepId ) {
+		updateStepProgress( stepId, 100 );
 
 		if ( ! progressState.completedSteps.includes( stepId ) ) {
 			progressState.completedSteps.push( stepId );
-			await saveProgress( workflowId, progressState );
 		}
 	}
 
@@ -200,29 +100,9 @@ export function createProgressTracker(
 	}
 
 	/**
-	 * Load progress from IndexedDB.
-	 *
-	 * @return {Promise<Object|null>} Progress state or null.
+	 * Clear progress and reset to initial state.
 	 */
-	async function load() {
-		const saved = await loadProgress( workflowId );
-		if ( saved ) {
-			progressState = {
-				...progressState,
-				...saved,
-			};
-			return progressState;
-		}
-		return null;
-	}
-
-	/**
-	 * Clear progress from IndexedDB.
-	 *
-	 * @return {Promise<void>}
-	 */
-	async function clear() {
-		await deleteProgress( workflowId );
+	function clear() {
 		progressState = {
 			workflowId,
 			stepIds,
@@ -239,7 +119,6 @@ export function createProgressTracker(
 		updateStepProgress,
 		completeStep,
 		getProgress,
-		load,
 		clear,
 	};
 }

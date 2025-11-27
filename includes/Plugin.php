@@ -337,6 +337,7 @@ class Plugin
 		$localStorageController = new REST\LocalStorageController();
 		$urlDiscoveryController = new REST\URLDiscoveryController();
 		$adminBarDependenciesController = new REST\AdminBarDependenciesController();
+		$wpOrgCacheController = new REST\WpOrgCacheController();
 
 		// Initialize export controllers.
 		$exportStepsController = new REST\Export\ExportStepsController($this);
@@ -348,6 +349,7 @@ class Plugin
 		$localStorageController->registerRoutes();
 		$urlDiscoveryController->registerRoutes();
 		$adminBarDependenciesController->registerRoutes();
+		$wpOrgCacheController->registerRoutes();
 
 		// Register export routes.
 		$exportStepsController->registerRoutes();

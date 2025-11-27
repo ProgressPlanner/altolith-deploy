@@ -42,20 +42,11 @@ jest.mock( '../DataValidator', () => ( {
 // Mock progressTracker
 jest.mock( '../../utils/progressTracker', () => ( {
 	createProgressTracker: () => ( {
-		load: () => Promise.resolve( null ),
-		updateStepProgress: () => Promise.resolve(),
-		completeStep: () => Promise.resolve(),
-		clear: () => Promise.resolve(),
+		updateStepProgress: jest.fn(),
+		completeStep: jest.fn(),
+		getProgress: () => ( {} ),
+		clear: jest.fn(),
 	} ),
-} ) );
-
-// Mock stateManager
-jest.mock( '../../utils/stateManager', () => ( {
-	createStateManager: () => ( {
-		clear: () => Promise.resolve(),
-	} ),
-	saveExecutionContext: () => Promise.resolve(),
-	restoreExecutionContext: () => Promise.resolve( null ),
 } ) );
 
 describe( 'StepExecutor', () => {

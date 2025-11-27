@@ -3,7 +3,6 @@
  *
  * Executes export workflow steps with automatic dependency resolution
  * and parallel execution support.
- *
  */
 
 import { doAction, applyFilters } from '@wordpress/hooks';
@@ -16,11 +15,6 @@ import {
 	ERROR_SEVERITY,
 } from '../utils/errorHandler';
 import { createProgressTracker } from '../utils/progressTracker';
-import {
-	createStateManager,
-	saveExecutionContext,
-	restoreExecutionContext,
-} from '../utils/stateManager';
 import DataValidator from './DataValidator';
 
 /**
@@ -64,31 +58,14 @@ export async function executeSteps( steps, context, options = {} ) {
 	// Create progress tracker with equal step weights
 	const progressTracker = createProgressTracker( workflowId, stepIds );
 
-	// Create state manager
-	const stateManager = createStateManager( workflowId );
-
-	// Try to restore previous state (for resume capability)
-	let restoredState = null;
-	try {
-		const savedProgress = await progressTracker.load();
-		if ( savedProgress ) {
-		}
-
-		// Try to restore execution context
-		restoredState = await restoreExecutionContext( stateManager, context );
-		if ( restoredState && restoredState.completedSteps?.length > 0 ) {
-		}
-	} catch ( error ) {}
-
-	// Create execution context (use restored state if available)
+	// Create execution context
 	const executionContext = {
-		...( restoredState || context ),
+		...context,
 		workflowId,
 		progressTracker,
-		stateManager,
-		completedSteps: restoredState?.completedSteps || [],
-		skippedSteps: restoredState?.skippedSteps || [],
-		state: restoredState?.state || {},
+		completedSteps: [],
+		skippedSteps: [],
+		state: {},
 	};
 
 	// Fire workflow start action
@@ -103,19 +80,12 @@ export async function executeSteps( steps, context, options = {} ) {
 		// True dependency-based execution: start all steps simultaneously,
 		// each step waits only for its specific dependencies to complete
 		const stepPromises = steps.map( ( step ) =>
-			executeStepWhenReady(
-				step,
-				steps,
-				executionContext,
-				tracker,
-				stateManager,
-				{
-					onStepStart,
-					onStepComplete,
-					onStepSkipped,
-					onError,
-				}
-			)
+			executeStepWhenReady( step, steps, executionContext, tracker, {
+				onStepStart,
+				onStepComplete,
+				onStepSkipped,
+				onError,
+			} )
 		);
 
 		// Wait for all steps to complete
@@ -138,9 +108,8 @@ export async function executeSteps( steps, context, options = {} ) {
 			executionContext.currentProviderInstance || null
 		);
 
-		// Clear progress tracker and state on successful completion
-		await progressTracker.clear();
-		await stateManager.clear();
+		// Clear progress tracker on successful completion
+		progressTracker.clear();
 
 		return executionContext.state;
 	} catch ( error ) {
@@ -150,7 +119,6 @@ export async function executeSteps( steps, context, options = {} ) {
 			executionContext,
 			executionContext.currentProviderInstance || null
 		);
-		// Don't clear progress on error - allows for resume
 		throw error;
 	}
 }
@@ -162,7 +130,6 @@ export async function executeSteps( steps, context, options = {} ) {
  * @param {Array}  allSteps         All step definitions.
  * @param {Object} executionContext Current execution context.
  * @param {Object} tracker          Dependency tracker.
- * @param {Object} stateManager     State manager for persistence.
  * @param {Object} options          Execution options with callbacks.
  * @return {Promise<Object|undefined>} Step result or undefined if skipped/failed dependency.
  */
@@ -171,7 +138,6 @@ async function executeStepWhenReady(
 	allSteps,
 	executionContext,
 	tracker,
-	stateManager,
 	options
 ) {
 	const { onStepStart, onStepComplete, onStepSkipped, onError } = options;
@@ -235,13 +201,6 @@ async function executeStepWhenReady(
 		executionContext.completedSteps.push( step.id );
 		tracker.complete( step.id, result );
 
-		// Save state incrementally after each step
-		try {
-			await saveExecutionContext( stateManager, executionContext );
-		} catch ( saveError ) {
-			// Non-critical - continue execution
-		}
-
 		return { success: true, result };
 	} catch ( error ) {
 		tracker.fail( step.id, error );
@@ -274,7 +233,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 	// Initialize step progress to 0
 	if ( executionContext.progressTracker ) {
-		await executionContext.progressTracker.updateStepProgress( stepId, 0 );
+		executionContext.progressTracker.updateStepProgress( stepId, 0 );
 	}
 
 	try {
@@ -322,7 +281,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 		// Mark step as completed in progress tracker
 		if ( executionContext.progressTracker ) {
-			await executionContext.progressTracker.completeStep( stepId );
+			executionContext.progressTracker.completeStep( stepId );
 		}
 
 		// Fire after hook
