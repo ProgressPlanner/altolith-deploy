@@ -59,10 +59,12 @@ export class HtmlFetchStrategyManager {
 	 * @param {number} config.maxUrlRetries            Max retries per URL before using JS (default: 2)
 	 */
 	constructor( config = {} ) {
-		this.totalAttempts = 0;
-		this.totalSuccesses = 0;
-		this.consecutiveFailures = 0;
-		this.failedUrls = new Map();
+		this.stats = {
+			totalAttempts: 0,
+			totalSuccesses: 0,
+			consecutiveFailures: 0,
+			failedUrls: new Map(),
+		};
 		this.strategy = STRATEGY.PHP_FIRST;
 
 		this.config = {
@@ -79,19 +81,19 @@ export class HtmlFetchStrategyManager {
 	 * @param {string|null} errorType Type of error if failed (from ERROR_TYPE)
 	 */
 	recordResult( url, success, errorType = null ) {
-		this.totalAttempts++;
+		this.stats.totalAttempts++;
 
 		if ( success ) {
-			this.totalSuccesses++;
-			this.consecutiveFailures = 0;
-			this.failedUrls.delete( url );
+			this.stats.totalSuccesses++;
+			this.stats.consecutiveFailures = 0;
+			this.stats.failedUrls.delete( url );
 		} else {
-			this.consecutiveFailures++;
+			this.stats.consecutiveFailures++;
 
-			const urlData = this.failedUrls.get( url ) || { attempts: 0 };
+			const urlData = this.stats.failedUrls.get( url ) || { attempts: 0 };
 			urlData.attempts++;
 			urlData.lastError = errorType;
-			this.failedUrls.set( url, urlData );
+			this.stats.failedUrls.set( url, urlData );
 
 			this.evaluateStrategy( errorType );
 		}
@@ -110,14 +112,14 @@ export class HtmlFetchStrategyManager {
 		}
 
 		// Too many consecutive failures
-		if ( this.consecutiveFailures >= this.config.maxConsecutiveFailures ) {
+		if ( this.stats.consecutiveFailures >= this.config.maxConsecutiveFailures ) {
 			this.strategy = STRATEGY.JS_ONLY;
 			return;
 		}
 
 		// Check success rate after minimum attempts
-		if ( this.totalAttempts >= this.config.minAttemptsForEvaluation ) {
-			const rate = this.totalSuccesses / this.totalAttempts;
+		if ( this.stats.totalAttempts >= this.config.minAttemptsForEvaluation ) {
+			const rate = this.stats.totalSuccesses / this.stats.totalAttempts;
 			if ( rate < this.config.minSuccessRate ) {
 				this.strategy = STRATEGY.JS_ONLY;
 			}
@@ -135,7 +137,7 @@ export class HtmlFetchStrategyManager {
 			return false;
 		}
 
-		const urlData = this.failedUrls.get( url );
+		const urlData = this.stats.failedUrls.get( url );
 		if ( urlData && urlData.attempts >= this.config.maxUrlRetries ) {
 			return false; // Too many failures for this URL
 		}
@@ -150,9 +152,9 @@ export class HtmlFetchStrategyManager {
 	 */
 	getStatus() {
 		let successRate;
-		if ( this.totalAttempts > 0 ) {
+		if ( this.stats.totalAttempts > 0 ) {
 			const rate = (
-				( this.totalSuccesses / this.totalAttempts ) *
+				( this.stats.totalSuccesses / this.stats.totalAttempts ) *
 				100
 			).toFixed( 1 );
 			successRate = `${ rate }%`;
@@ -162,11 +164,11 @@ export class HtmlFetchStrategyManager {
 
 		return {
 			strategy: this.strategy,
-			totalAttempts: this.totalAttempts,
-			totalSuccesses: this.totalSuccesses,
+			totalAttempts: this.stats.totalAttempts,
+			totalSuccesses: this.stats.totalSuccesses,
 			successRate,
-			consecutiveFailures: this.consecutiveFailures,
-			failedUrlCount: this.failedUrls.size,
+			consecutiveFailures: this.stats.consecutiveFailures,
+			failedUrlCount: this.stats.failedUrls.size,
 			isUsingFallback: this.strategy === STRATEGY.JS_ONLY,
 		};
 	}
@@ -175,10 +177,10 @@ export class HtmlFetchStrategyManager {
 	 * Reset the strategy manager to initial state
 	 */
 	reset() {
-		this.totalAttempts = 0;
-		this.totalSuccesses = 0;
-		this.consecutiveFailures = 0;
-		this.failedUrls.clear();
+		this.stats.totalAttempts = 0;
+		this.stats.totalSuccesses = 0;
+		this.stats.consecutiveFailures = 0;
+		this.stats.failedUrls.clear();
 		this.strategy = STRATEGY.PHP_FIRST;
 	}
 }
