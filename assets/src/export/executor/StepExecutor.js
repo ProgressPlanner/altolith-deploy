@@ -10,9 +10,7 @@ import { buildParallelPlan, validateDependencies } from './DependencyResolver';
 import { createDependencyTracker } from './DependencyTracker';
 import {
 	errorHandler,
-	formatErrorMessage,
-	determineSeverity,
-	ERROR_SEVERITY,
+	handleStepError,
 } from '../utils/errorHandler';
 import { createProgressTracker } from '../utils/progressTracker';
 import DataValidator from './DataValidator';
@@ -294,55 +292,16 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 		return filteredResult;
 	} catch ( error ) {
-		if ( typeof window !== 'undefined' && window.console ) {
-			// eslint-disable-next-line no-console
-			console.error(
-				`[Aether] StepExecutor - Step "${ stepId }" failed:`,
-				error
-			);
-			// eslint-disable-next-line no-console
-			console.error( '[Aether] Error details:', {
-				message: error.message,
-				stack: error.stack,
-				stepId,
-				providerInstance:
-					executionContext.currentProviderInstance?.id || 'N/A',
-			} );
-		}
-
-		// Categorize and format error
-		const category = errorHandler.categorize( error );
-		const severity = determineSeverity( category, { stepId } );
-		const formattedMessage = formatErrorMessage( error, {
+		const enhancedError = handleStepError(
+			error,
 			stepId,
-			operation: step.label || stepId,
-		} );
-
-		// Create enhanced error object
-		const enhancedError = {
-			...error,
-			category,
-			severity,
-			stepId,
-			formattedMessage,
-			originalMessage: error.message,
-		};
-
-		onError( stepId, enhancedError );
-		doAction(
-			`aether.export.step.${ stepId }.error`,
-			enhancedError,
 			executionContext,
-			executionContext.currentProviderInstance || null
+			{ onError },
+			step
 		);
 
-		// For critical errors, stop workflow immediately
-		if ( severity === ERROR_SEVERITY.CRITICAL ) {
-			throw new Error( formattedMessage );
-		}
-
-		// For other errors, wrap with step context
-		throw new Error( formattedMessage );
+		// Throw enhanced error to propagate to caller
+		throw enhancedError;
 	}
 }
 

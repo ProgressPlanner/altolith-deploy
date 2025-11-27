@@ -7,6 +7,7 @@
  */
 
 import { __, sprintf } from '@wordpress/i18n';
+import { doAction } from '@wordpress/hooks';
 
 /**
  * Error categories for error handling strategies.
@@ -388,6 +389,87 @@ export function createErrorHandler( config = {} ) {
 			return formatErrorMessage( error, context );
 		},
 	};
+}
+
+/**
+ * Handle step execution error with full context.
+ *
+ * Centralizes error handling logic for step execution, including:
+ * - Console logging
+ * - Error categorization and enhancement
+ * - Callback and action hooks
+ * - Severity-based error handling
+ *
+ * @param {Error}              error            Error that occurred.
+ * @param {string}             stepId           Step ID where error occurred.
+ * @param {Object}             executionContext Execution context.
+ * @param {Object}             options          Error handling options.
+ * @param {Function}           options.onError  Error callback.
+ * @param {Object}             step             Step definition (optional).
+ * @return {Error} Enhanced error object.
+ */
+export function handleStepError(
+	error,
+	stepId,
+	executionContext,
+	options = {},
+	step = null
+) {
+	const { onError = () => {} } = options;
+
+	// Log error to console in development
+	if ( typeof window !== 'undefined' && window.console ) {
+		// eslint-disable-next-line no-console
+		console.error(
+			`[Aether] StepExecutor - Step "${ stepId }" failed:`,
+			error
+		);
+		// eslint-disable-next-line no-console
+		console.error( '[Aether] Error details:', {
+			message: error.message,
+			stack: error.stack,
+			stepId,
+			providerInstance:
+				executionContext.currentProviderInstance?.id || 'N/A',
+		} );
+	}
+
+	// Categorize and format error
+	const category = categorizeError( error );
+	const severity = determineSeverity( category );
+	const formattedMessage = formatErrorMessage( error, {
+		stepId,
+		operation: step?.label || stepId,
+	} );
+
+	// Create enhanced error object
+	const enhancedError = {
+		...error,
+		category,
+		severity,
+		stepId,
+		formattedMessage,
+		originalMessage: error.message,
+	};
+
+	// Call error callback
+	onError( stepId, enhancedError );
+
+	// Fire error action hook
+	doAction(
+		`aether.export.step.${ stepId }.error`,
+		enhancedError,
+		executionContext,
+		executionContext.currentProviderInstance || null
+	);
+
+	// For critical errors, create throwable error
+	if ( severity === ERROR_SEVERITY.CRITICAL ) {
+		return new Error( formattedMessage );
+	}
+
+	// For other errors, wrap with step context
+	return new Error( formattedMessage );
 }
 
 /**
