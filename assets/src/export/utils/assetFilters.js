@@ -6,7 +6,7 @@
  */
 
 import { applyFilters } from '@wordpress/hooks';
-import { isExternal } from './urlRewriter';
+import { isExternal } from './urlUtils';
 import {
 	isExcludedUrl,
 	isSkippedExtension,

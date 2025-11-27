@@ -29,15 +29,6 @@ import {
 	rewriteImportMaps,
 } from './htmlRewriting';
 
-// Re-export URL utilities for backwards compatibility
-export {
-	resolveRelative,
-	isExternal,
-	forceHttps,
-	stripPlaygroundScope,
-	normalize,
-};
-
 /**
  * Create URL rewriter instance.
  *

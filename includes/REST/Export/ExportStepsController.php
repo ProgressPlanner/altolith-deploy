@@ -16,7 +16,6 @@ use Aether\SiteExporter\REST\RESTHelpersTrait;
 use Aether\SiteExporter\Plugin;
 use Aether\SiteExporter\Services\ExportService;
 use Aether\SiteExporter\Services\BlueprintBundleGenerator;
-use Aether\SiteExporter\Utilities\HTTPClient;
 use WP_REST_Request;
 use WP_Error;
 

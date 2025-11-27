@@ -8,40 +8,6 @@
  */
 
 import { VerticalStepper } from '@aether/components/VerticalStepper';
-import { isThreadStep } from '@aether/export/executor/DataValidator';
-
-/**
- * Check if all steps are complete
- *
- * @param {Array} steps - Array of step objects with id and status
- * @return {boolean} True if all steps are complete
- */
-export function areAllStepsComplete( steps ) {
-	if ( ! steps || steps.length === 0 ) {
-		return false;
-	}
-	return steps.every( ( step ) => step.status === 'complete' );
-}
-
-/**
- * Check if all global (non-thread) steps are complete
- *
- * Global steps run once before per-provider thread steps.
- * This is used to determine when to show the provider progress list.
- *
- * @param {Array} steps - Array of step objects with id, status, and requires
- * @return {boolean} True if all global steps are complete
- */
-export function areGlobalStepsComplete( steps ) {
-	if ( ! steps || steps.length === 0 ) {
-		return false;
-	}
-	const globalSteps = steps.filter( ( step ) => ! isThreadStep( step ) );
-	if ( globalSteps.length === 0 ) {
-		return false;
-	}
-	return globalSteps.every( ( step ) => step.status === 'complete' );
-}
 
 /**
  * Steps Progress Component

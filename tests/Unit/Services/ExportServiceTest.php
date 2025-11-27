@@ -20,7 +20,6 @@ namespace Aether\SiteExporter\Tests\Unit\Services;
 use Aether\SiteExporter\Tests\Helpers\TestCase;
 use Aether\SiteExporter\Services\ExportService;
 use Aether\SiteExporter\Plugin;
-use Aether\SiteExporter\Sync\JobStateManager;
 
 /**
  * Export service test case.
@@ -179,96 +178,4 @@ class ExportServiceTest extends TestCase {
 		$this->assertFalse( $result, 'Should return false when database not found' );
 	}
 
-	// ========================================================================
-	// initArchive() Tests
-	// ========================================================================
-
-	// ========================================================================
-	// Security Tests - Path Traversal Prevention
-	// ========================================================================
-
-	/**
-	 * Test exportCompleteSite prevents path traversal in export path.
-	 *
-	 * Purpose: Verify critical security check prevents directory traversal
-	 * Security: CRITICAL - Prevents arbitrary file write
-	 * Attack Vector: ../../etc/cron.d/malicious
-	 */
-	public function test_exportCompleteSite_prevents_path_traversal_in_export_path() {
-		$this->markTestIncomplete( 'Integration test - requires full WordPress environment' );
-	}
-
-	/**
-	 * Test exportCompleteSite prevents null byte injection in export path.
-	 *
-	 * Purpose: Verify null byte prevention
-	 * Security: CRITICAL
-	 * Attack Vector: path\0.php
-	 */
-	public function test_exportCompleteSite_prevents_null_byte_injection() {
-		$this->markTestIncomplete( 'Integration test - requires full WordPress environment' );
-	}
-
-	/**
-	 * Test exportCompleteSite validates slugs prevent path traversal.
-	 *
-	 * Purpose: Verify plugin/theme slug validation
-	 * Security: CRITICAL
-	 * Attack Vector: ../../../etc in slug array
-	 */
-	public function test_exportCompleteSite_validates_custom_asset_slugs() {
-		$this->markTestIncomplete( 'Integration test - requires full WordPress environment' );
-	}
-
-	// ========================================================================
-	// Integration Tests - Full Export Workflow
-	// ========================================================================
-
-	/**
-	 * Test complete export workflow.
-	 *
-	 * Purpose: Verify end-to-end export process
-	 * Note: This is a complex integration test
-	 */
-	public function test_complete_export_workflow() {
-		$this->markTestIncomplete( 'Complex integration test - requires full WordPress environment with test data' );
-	}
-
-	/**
-	 * Test export with custom asset slugs.
-	 *
-	 * Purpose: Verify browser-based WordPress.org detection integration
-	 */
-	public function test_export_with_custom_asset_slugs() {
-		$this->markTestIncomplete( 'Integration test - requires test plugins/themes' );
-	}
-
-	/**
-	 * Test export excludes WordPress.org plugins.
-	 *
-	 * Purpose: Verify WordPress.org plugins are excluded from zip
-	 * Reason: Playground downloads them from API
-	 */
-	public function test_export_excludes_wordpress_org_plugins() {
-		$this->markTestIncomplete( 'Integration test - requires asset discovery mock' );
-	}
-
-	/**
-	 * Test export handles large file counts without timeout.
-	 *
-	 * Purpose: Verify browser-based processing prevents PHP timeouts
-	 */
-	public function test_export_handles_large_file_counts() {
-		$this->markTestIncomplete( 'Performance test - requires large test dataset' );
-	}
-
-	/**
-	 * Test export handles offloaded files correctly.
-	 *
-	 * Purpose: Verify integration with external storage plugins
-	 * Edge Case: WP Offload Media, etc.
-	 */
-	public function test_export_excludes_offloaded_files() {
-		$this->markTestIncomplete( 'Integration test - requires offload plugin mock' );
-	}
 }

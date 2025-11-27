@@ -122,26 +122,3 @@ export function createProgressTracker(
 		clear,
 	};
 }
-
-/**
- * Calculate overall progress with equal step weights.
- *
- * @param {Array<string>} stepIds      Array of step IDs.
- * @param {Object}        stepProgress Object mapping step IDs to progress (0-100).
- * @return {number} Overall progress (0-100).
- */
-export function calculateOverallProgress( stepIds, stepProgress ) {
-	if ( stepIds.length === 0 ) {
-		return 0;
-	}
-
-	const stepWeight = 100 / stepIds.length;
-	let totalProgress = 0;
-
-	for ( const stepId of stepIds ) {
-		const progress = stepProgress[ stepId ] || 0;
-		totalProgress += ( stepWeight * progress ) / 100;
-	}
-
-	return Math.min( 100, Math.round( totalProgress ) );
-}

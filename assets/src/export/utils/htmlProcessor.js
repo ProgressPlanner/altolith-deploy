@@ -6,7 +6,8 @@
  *
  */
 
-import { createUrlRewriter, stripPlaygroundScope } from './urlRewriter';
+import { createUrlRewriter } from './urlRewriter';
+import { stripPlaygroundScope } from './urlUtils';
 
 /**
  * Process HTML for static site.

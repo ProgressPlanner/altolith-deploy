@@ -5,7 +5,7 @@
  *
  */
 
-import { resolveRelative, stripPlaygroundScope } from './urlRewriter';
+import { resolveRelative, stripPlaygroundScope } from './urlUtils';
 import { isWebpackModuleId } from './assetExclusions';
 import { applyFilters } from '@wordpress/hooks';
 import { shouldCollectAsset } from './assetFilters';

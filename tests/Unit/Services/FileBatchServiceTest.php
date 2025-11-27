@@ -528,36 +528,6 @@ class FileBatchServiceTest extends TestCase {
 		wp_delete_attachment( $attachment_id, true );
 	}
 
-	/**
-	 * Test getOffloadedFilePaths includes image sizes.
-	 *
-	 * Purpose: Verify all image variants are detected
-	 * Reason: Offloaded images have multiple sizes (thumbnail, medium, large)
-	 */
-	public function test_getOffloadedFilePaths_includes_image_sizes() {
-		$this->markTestIncomplete( 'Requires image upload and size generation' );
-
-		// Would test:
-		// 1. Upload image
-		// 2. Mark as offloaded
-		// 3. Verify all size variants are in offloaded paths
-	}
-
-	/**
-	 * Test getOffloadedFilePaths normalizes paths with realpath.
-	 *
-	 * Purpose: Verify path normalization for exact matching
-	 * Reason: Paths must be normalized to match during filtering
-	 */
-	public function test_getOffloadedFilePaths_normalizes_paths() {
-		$this->markTestIncomplete( 'Requires attachment creation' );
-
-		// Implementation check:
-		// Lines 249-251 of FileBatchService.php:
-		// $normalizedPath = realpath($filePath);
-		// This ensures paths are normalized for exact comparison
-	}
-
 	// ========================================================================
 	// getExclusionPatterns() Tests
 	// ========================================================================

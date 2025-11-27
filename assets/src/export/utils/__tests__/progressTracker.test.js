@@ -5,10 +5,7 @@
  * Progress is tracked in-memory only (no persistence).
  */
 
-import {
-	createProgressTracker,
-	calculateOverallProgress,
-} from '../progressTracker';
+import { createProgressTracker } from '../progressTracker';
 
 describe( 'progressTracker', () => {
 	describe( 'createProgressTracker()', () => {
@@ -149,33 +146,4 @@ describe( 'progressTracker', () => {
 		} );
 	} );
 
-	describe( 'calculateOverallProgress()', () => {
-		test( 'should calculate progress with equal weights', () => {
-			const stepIds = [ 'step1', 'step2', 'step3' ];
-			const stepProgress = {
-				step1: 100,
-				step2: 50,
-				step3: 0,
-			};
-
-			const overall = calculateOverallProgress( stepIds, stepProgress );
-			expect( overall ).toBeGreaterThanOrEqual( 48 );
-			expect( overall ).toBeLessThanOrEqual( 52 );
-		} );
-
-		test( 'should return 0 for empty step list', () => {
-			const overall = calculateOverallProgress( [], {} );
-			expect( overall ).toBe( 0 );
-		} );
-
-		test( 'should handle missing step progress', () => {
-			const stepIds = [ 'step1', 'step2' ];
-			const stepProgress = {
-				step1: 100,
-			};
-
-			const overall = calculateOverallProgress( stepIds, stepProgress );
-			expect( overall ).toBe( 50 ); // step1: 100% of 50% = 50%
-		} );
-	} );
 } );

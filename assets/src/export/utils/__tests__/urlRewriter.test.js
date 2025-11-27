@@ -9,12 +9,8 @@
  *
  */
 
-import {
-	createUrlRewriter,
-	normalize,
-	isExternal,
-	forceHttps,
-} from '../urlRewriter';
+import { createUrlRewriter } from '../urlRewriter';
+import { normalize, isExternal, forceHttps } from '../urlUtils';
 
 // Mock @wordpress/hooks
 jest.mock( '@wordpress/hooks', () => ( {

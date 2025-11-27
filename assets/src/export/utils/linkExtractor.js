@@ -230,25 +230,3 @@ function isAssetUrl( url ) {
 		return false;
 	}
 }
-
-/**
- * Check if a URL is likely a page URL (not an asset).
- * Exported for use by other modules.
- *
- * @param {string} url URL to check.
- * @return {boolean} True if URL is likely a page.
- */
-export function isLikelyPageUrl( url ) {
-	return ! isAssetUrl( url );
-}
-
-/**
- * Check if a URL should be excluded from crawling.
- * Exported for use by other modules.
- *
- * @param {string} url URL to check.
- * @return {boolean} True if URL should be excluded.
- */
-export function isExcludedFromCrawl( url ) {
-	return isExcludedLink( url );
-}
