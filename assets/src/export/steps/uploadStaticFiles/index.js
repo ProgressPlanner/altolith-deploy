@@ -97,7 +97,7 @@ async function handler( context ) {
 	if ( ! urls || ! Array.isArray( urls ) ) {
 		throw new Error(
 			__(
-				'URLs not found. Please run getStaticSiteUrls first.',
+				'URLs not found. Please run discoverAndScanSite first.',
 				'aether-site-exporter'
 			)
 		);
@@ -146,7 +146,7 @@ async function handler( context ) {
 
 	// Fetch provider config to get provider-specific public_url
 	// This ensures each provider uses its own staticSiteUrl (e.g., http://localhost:10003/static3)
-	// instead of the global one from getStaticSiteUrls
+	// instead of the global one from discoverAndScanSite
 	let providerSpecificStaticSiteUrl = staticSiteUrl;
 	try {
 		const providerConfig = await fetchProviderConfig( providerId );
@@ -264,7 +264,7 @@ const stepDefinition = {
 		'aether-site-exporter'
 	),
 	supportsProgress: true,
-	dependencies: [ 'preScanStaticSite' ],
+	dependencies: [ 'discoverAndScanSite' ],
 	skip: shouldSkip,
 	requires: {
 		currentProviderInstance: {
@@ -272,15 +272,15 @@ const stepDefinition = {
 			required: true,
 		},
 		urls: {
-			from: 'preScanStaticSite',
+			from: 'discoverAndScanSite',
 			required: true,
 		},
 		htmlDataMap: {
-			from: 'preScanStaticSite',
+			from: 'discoverAndScanSite',
 			required: true,
 		},
 		staticSiteUrl: {
-			from: 'getStaticSiteUrls',
+			from: 'discoverAndScanSite',
 			required: true,
 		},
 		siteUrl: {

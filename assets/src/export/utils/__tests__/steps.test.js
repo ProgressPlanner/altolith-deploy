@@ -11,7 +11,7 @@ describe( 'steps', () => {
 			const steps = getRegisteredSteps();
 			const stepIds = steps.map( ( step ) => step.id );
 
-			expect( stepIds ).toContain( 'getStaticSiteUrls' );
+			expect( stepIds ).toContain( 'discoverAndScanSite' );
 			expect( stepIds ).toContain( 'createBlueprintBundle' );
 			expect( stepIds ).toContain( 'createWpContentArchive' );
 			expect( stepIds ).toContain( 'uploadStaticFiles' );
@@ -37,7 +37,7 @@ describe( 'steps', () => {
 				( s ) => ! s.supportsProgress
 			);
 
-			// Upload and create steps support progress
+			// Upload, create, and discover steps support progress
 			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
 				'uploadStaticFiles'
 			);
@@ -47,11 +47,11 @@ describe( 'steps', () => {
 			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
 				'createWpContentArchive'
 			);
-
-			// Discovery and bundle creation steps don't support progress
-			expect( noProgressSteps.map( ( s ) => s.id ) ).toContain(
-				'getStaticSiteUrls'
+			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
+				'discoverAndScanSite'
 			);
+
+			// Bundle creation step doesn't support progress
 			expect( noProgressSteps.map( ( s ) => s.id ) ).toContain(
 				'createBlueprintBundle'
 			);

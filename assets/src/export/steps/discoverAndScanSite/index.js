@@ -1,8 +1,8 @@
 /**
- * Pre-Scan Static Site Step
+ * Discover and Scan Site Step
  *
- * Fetches HTML pages, extracts assets (CSS, JS, images), and discovers
- * internal links for crawl-based URL discovery.
+ * Unified step that discovers URLs from WordPress and crawls pages
+ * to extract assets (CSS, JS, images) and discover internal links.
  *
  * @since 1.0.0
  */
@@ -17,20 +17,16 @@ import { normalize } from '@aether/export/utils/urlUtils';
  * Status labels for the step
  */
 const statusLabels = {
-	pending: __( 'Scan site', 'aether-site-exporter' ),
+	pending: __( 'Discover site', 'aether-site-exporter' ),
 	running: ( data ) => {
-		const { pagesScanned = 0, pagesDiscovered = 0, assetsFound = 0 } = data;
+		const { pagesScanned = 0, assetsFound = 0 } = data;
 		if ( pagesScanned === 0 ) {
-			return __( 'Starting site scan…', 'aether-site-exporter' );
+			return __( 'Fetching URLs from WordPress…', 'aether-site-exporter' );
 		}
 		return sprintf(
-			/* translators: %1$d: Pages scanned, %2$d: Pages discovered, %3$d: Assets found */
-			__(
-				'Scanning… %1$d pages scanned, %2$d discovered, %3$d assets',
-				'aether-site-exporter'
-			),
+			/* translators: %1$d: Pages scanned, %2$d: Assets found */
+			__( 'Scanning… %1$d pages, %2$d assets', 'aether-site-exporter' ),
 			pagesScanned,
-			pagesDiscovered,
 			assetsFound
 		);
 	},
@@ -48,7 +44,7 @@ const statusLabels = {
 		);
 		return sprintf(
 			/* translators: %1$s: Pages text, %2$s: Assets text */
-			__( 'Scanned %1$s, found %2$s', 'aether-site-exporter' ),
+			__( 'Discovered %1$s with %2$s', 'aether-site-exporter' ),
 			pagesText,
 			assetsText
 		);
@@ -56,68 +52,66 @@ const statusLabels = {
 };
 
 /**
- * Pre-scan static site step handler
+ * Discover and scan site step handler
  *
- * Uses crawl-based discovery to find all pages and assets.
- * Starts with seed URLs from PHP, then discovers additional URLs
- * by extracting internal links from each scanned page.
+ * Combines URL discovery from WordPress API with crawl-based page scanning
+ * and asset extraction into a single unified step.
  *
  * @param {Object}   context                  - Execution context
- * @param {Array}    context.urls             - Seed URLs from getStaticSiteUrls
+ * @param {Object}   context.api              - PublishAPI instance
  * @param {string}   context.siteUrl          - WordPress site URL
  * @param {Function} context.setStatusMessage - Status message updater
  * @param {Function} context.setStepProgress  - Step progress updater
- * @return {Promise<Object>} Step result with expanded URL list including assets
+ * @return {Promise<Object>} Step result with URLs, HTML data, and counts
  */
 async function handler( context ) {
-	const { urls, siteUrl, setStatusMessage, setStepProgress } = context;
+	const { api, siteUrl, setStatusMessage, setStepProgress } = context;
 
-	if ( ! urls || ! Array.isArray( urls ) ) {
+	// Phase 1: Get seed URLs from WordPress API
+	setStatusMessage(
+		__( 'Fetching URLs from WordPress…', 'aether-site-exporter' ),
+		'progress',
+		'discoverAndScanSite'
+	);
+
+	const urlResponse = await api.discoverUrls( ( progress ) => {
+		if ( progress.status === 'fetching' ) {
+			setStatusMessage(
+				sprintf(
+					/* translators: %s: Type being fetched (posts, terms, etc.) */
+					__( 'Fetching %s…', 'aether-site-exporter' ),
+					progress.type
+				),
+				'progress',
+				'discoverAndScanSite'
+			);
+		}
+	} );
+
+	if ( ! urlResponse.success ) {
 		throw new Error(
-			__(
-				'URLs not found. Please run getStaticSiteUrls first.',
-				'aether-site-exporter'
-			)
+			urlResponse.message ||
+				__( 'Failed to discover URLs', 'aether-site-exporter' )
 		);
 	}
 
-	// Debug: Log input
-	console.log(
-		'[Aether] preScanStaticSite: Starting with',
-		urls.length,
-		'URLs'
-	);
-	console.log( '[Aether] preScanStaticSite: siteUrl =', siteUrl );
-	console.log(
-		'[Aether] preScanStaticSite: First 3 URLs:',
-		urls.slice( 0, 3 )
-	);
+	const seedUrls = urlResponse.urls || [];
+	const staticSiteUrl = urlResponse.staticSiteUrl || siteUrl;
 
+	// Phase 2: Crawl and discover pages + assets
 	setStatusMessage(
-		__( 'Scanning pages and discovering links…', 'aether-site-exporter' ),
+		__( 'Scanning pages and discovering assets…', 'aether-site-exporter' ),
 		'progress',
-		'preScanStaticSite'
+		'discoverAndScanSite'
 	);
 
-	// Build htmlDataMap during crawl (passed through step context for thread isolation)
 	const htmlDataMap = new Map();
-
-	// Track all URLs
 	const discoveredUrls = new Set(
-		urls.map( ( u ) => normalize( u, siteUrl ) )
+		seedUrls.map( ( u ) => normalize( u, siteUrl ) )
 	);
 	const processedUrls = new Set();
-	const pendingUrls = [ ...urls ];
+	const pendingUrls = [ ...seedUrls ];
 	const allAssets = new Set();
-
-	console.log(
-		'[Aether] preScanStaticSite: pendingUrls.length =',
-		pendingUrls.length
-	);
-	console.log(
-		'[Aether] preScanStaticSite: discoveredUrls.size =',
-		discoveredUrls.size
-	);
 
 	let processedCount = 0;
 
@@ -136,7 +130,7 @@ async function handler( context ) {
 
 		// Update progress with statusData for dynamic label
 		if ( setStepProgress ) {
-			setStepProgress( 'preScanStaticSite', {
+			setStepProgress( 'discoverAndScanSite', {
 				current: processedCount,
 				total: discoveredUrls.size,
 				statusData: {
@@ -160,7 +154,7 @@ async function handler( context ) {
 					discoveredUrls.size
 				),
 				'progress',
-				'preScanStaticSite'
+				'discoverAndScanSite'
 			);
 		}
 
@@ -191,14 +185,13 @@ async function handler( context ) {
 				allAssets.add( asset );
 			}
 
-			// Store HTML and assets in Map (deep cloned per-thread via step context)
+			// Store HTML and assets in Map
 			htmlDataMap.set( normalizedUrl, {
 				rawHtml: html,
 				assetUrls: assets,
 			} );
 
 			// Extract internal links for crawl-based discovery
-			// This also captures pagination links (/page/2/, /page/3/, etc.)
 			const internalLinks = await extractInternalLinks(
 				html,
 				url,
@@ -218,7 +211,7 @@ async function handler( context ) {
 		} catch ( error ) {
 			// Log error for debugging, then continue
 			console.error(
-				`[Aether] preScanStaticSite: Failed to process ${ url }:`,
+				`[Aether] discoverAndScanSite: Failed to process ${ url }:`,
 				error.message
 			);
 		}
@@ -229,7 +222,7 @@ async function handler( context ) {
 
 	// Final progress update with complete statusData
 	if ( setStepProgress ) {
-		setStepProgress( 'preScanStaticSite', {
+		setStepProgress( 'discoverAndScanSite', {
 			current: processedUrls.size,
 			total: processedUrls.size,
 			statusData: {
@@ -247,7 +240,7 @@ async function handler( context ) {
 			allAssets.size
 		),
 		'success',
-		'preScanStaticSite'
+		'discoverAndScanSite'
 	);
 
 	return {
@@ -255,6 +248,7 @@ async function handler( context ) {
 		htmlDataMap,
 		htmlCount: processedUrls.size,
 		assetCount: allAssets.size,
+		staticSiteUrl,
 	};
 }
 
@@ -262,17 +256,17 @@ async function handler( context ) {
  * Step definition
  */
 const stepDefinition = {
-	id: 'preScanStaticSite',
-	label: __( 'Scan for Assets', 'aether-site-exporter' ),
+	id: 'discoverAndScanSite',
+	label: __( 'Discover Site', 'aether-site-exporter' ),
 	description: __(
-		'Discover pages, CSS, JS, and image assets',
+		'Find all pages and assets for export',
 		'aether-site-exporter'
 	),
 	supportsProgress: true,
-	dependencies: [ 'getStaticSiteUrls' ],
+	dependencies: [],
 	requires: {
-		urls: {
-			from: 'getStaticSiteUrls',
+		api: {
+			from: 'initial',
 			required: true,
 		},
 		siteUrl: {
@@ -305,6 +299,10 @@ const stepDefinition = {
 			type: 'number',
 			scope: 'global',
 		},
+		staticSiteUrl: {
+			type: 'string',
+			scope: 'global',
+		},
 	},
 	statusLabels,
 	handler,
@@ -315,7 +313,7 @@ const stepDefinition = {
  */
 addAction(
 	'aether.export.register_steps',
-	'aether/step-preScanStaticSite',
+	'aether/step-discoverAndScanSite',
 	( registry ) => {
 		registry.register( stepDefinition );
 	},

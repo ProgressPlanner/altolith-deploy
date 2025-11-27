@@ -94,9 +94,9 @@ describe( 'uploadStaticFiles step', () => {
 			expect( stepDefinition.label ).toBe( 'Upload Static Files' );
 		} );
 
-		test( 'should depend on preScanStaticSite', () => {
+		test( 'should depend on discoverAndScanSite', () => {
 			expect( stepDefinition.dependencies ).toContain(
-				'preScanStaticSite'
+				'discoverAndScanSite'
 			);
 		} );
 
@@ -107,16 +107,16 @@ describe( 'uploadStaticFiles step', () => {
 			} );
 		} );
 
-		test( 'should require urls from preScanStaticSite', () => {
+		test( 'should require urls from discoverAndScanSite', () => {
 			expect( stepDefinition.requires.urls ).toEqual( {
-				from: 'preScanStaticSite',
+				from: 'discoverAndScanSite',
 				required: true,
 			} );
 		} );
 
-		test( 'should require staticSiteUrl from getStaticSiteUrls', () => {
+		test( 'should require staticSiteUrl from discoverAndScanSite', () => {
 			expect( stepDefinition.requires.staticSiteUrl ).toEqual( {
-				from: 'getStaticSiteUrls',
+				from: 'discoverAndScanSite',
 				required: true,
 			} );
 		} );

@@ -11,8 +11,7 @@ import { doAction } from '@wordpress/hooks';
 import StepRegistry from '../registry/StepRegistry';
 
 // Import step files to ensure they register themselves
-import './getStaticSiteUrls';
-import './preScanStaticSite';
+import './discoverAndScanSite';
 import './createWpContentArchive';
 import './createBlueprintBundle';
 import './uploadBlueprintBundle';
@@ -72,7 +71,7 @@ export function getActiveSteps( context ) {
 
 		// Skip static site steps if no static site provider INSTANCES
 		if (
-			step.id === 'preScanStaticSite' ||
+			step.id === 'discoverAndScanSite' ||
 			step.id === 'uploadStaticFiles'
 		) {
 			return staticSiteProviderInstances.length > 0;
