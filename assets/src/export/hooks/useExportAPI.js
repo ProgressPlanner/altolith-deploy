@@ -62,6 +62,20 @@ export function useExportAPI() {
 		[ service ]
 	);
 
+	const fetchHtml = useCallback(
+		async ( url ) => {
+			return await service.fetchHtml( url );
+		},
+		[ service ]
+	);
+
+	const fetchHtmlBatch = useCallback(
+		async ( urls ) => {
+			return await service.fetchHtmlBatch( urls );
+		},
+		[ service ]
+	);
+
 	return {
 		discoverBlueprintBundleAssets,
 		getAssetStatus,
@@ -70,5 +84,7 @@ export function useExportAPI() {
 		createArchive,
 		generateBlueprint,
 		createBlueprintBundle,
+		fetchHtml,
+		fetchHtmlBatch,
 	};
 }
