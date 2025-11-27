@@ -128,88 +128,15 @@ class ExportService
 		// WordPress.org plugins are excluded from the blueprint as they'll be downloaded
 		// from the WordPress.org API when Playground loads the blueprint.
 		// This dramatically reduces zip size (potentially GB → MB).
-		if (null !== $customAssetSlugs) {
-			// Use provided custom asset slugs (from browser-based WordPress.org detection).
-			foreach ($customAssetSlugs as $slug) {
-				// Skip 'aether' plugin - it's added separately in blueprint from aether.zip URL.
-				if ('aether' === $slug) {
-					continue;
-				}
-
-				// Security: Type check first
-				if (!\is_string($slug)) {
-					continue;
-				}
-
-				// Security: Sanitize BEFORE validation to prevent bypasses
-				$slug = \sanitize_file_name($slug);
-
-				// Security: Validate slug doesn't contain path traversal, null bytes, or dangerous values
-				$slugValidation = SecurityValidator::validateSlug($slug);
-				if (! $slugValidation['valid']) {
-					continue;
-				}
-
-				$pluginDir = WP_PLUGIN_DIR . '/' . $slug;
-				if (\is_dir($pluginDir)) {
-					$this->zipService->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $slug, '', null, null);
-				}
-			}
-		} else {
-			// Use PHP-based detection to get all custom assets (includes all active plugins).
-			$customAssets = $this->plugin->getAssetDiscovery()->getAllCustomAssets();
-			foreach ($customAssets as $asset) {
-				if ('plugin' === $asset['type']) {
-					// Skip 'aether' plugin - it's added separately in blueprint from aether.zip URL.
-					if ('aether' === $asset['slug']) {
-						continue;
-					}
-					$pluginDir = WP_PLUGIN_DIR . '/' . $asset['slug'];
-					if (\is_dir($pluginDir)) {
-						$this->zipService->addDirectoryToZip($zip, $pluginDir, 'wp-content/plugins/' . $asset['slug'], '', null, null);
-					}
-				}
-			}
-		}
+		$this->addAssetsToZip($zip, 'plugin', $customAssetSlugs);
 
 		// 4. Add custom themes only (non-wordpress.org themes).
 		// Same exclusion strategy as plugins - wordpress.org themes are downloaded
 		// from the API, only custom themes need to be included in the zip.
-		if (null !== $customAssetSlugs) {
-			// Use provided custom asset slugs (from browser-based WordPress.org detection).
-			// Note: We need to detect which slugs are themes vs plugins.
-			// For now, check if directory exists in themes directory.
-			foreach ($customAssetSlugs as $slug) {
-				// Security: Type check first
-				if (!\is_string($slug)) {
-					continue;
-				}
-
-				// Security: Sanitize BEFORE validation to prevent bypasses
-				$slug = \sanitize_file_name($slug);
-
-				// Security: Validate slug doesn't contain path traversal, null bytes, or dangerous values
-				$slugValidation = SecurityValidator::validateSlug($slug);
-				if (! $slugValidation['valid']) {
-					continue;
-				}
-
-				$themeDir = \get_theme_root() . '/' . $slug;
-				if (\is_dir($themeDir)) {
-					$this->zipService->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $slug, '', null, null);
-				}
-			}
-		} else {
-			// Use PHP-based detection to get all custom themes (includes all active themes).
-			foreach ($customAssets as $asset) {
-				if ('theme' === $asset['type']) {
-					$themeDir = \get_theme_root() . '/' . $asset['slug'];
-					if (\is_dir($themeDir)) {
-						$this->zipService->addDirectoryToZip($zip, $themeDir, 'wp-content/themes/' . $asset['slug'], '', null, null);
-					}
-				}
-			}
-		}
+		$customAssets = (null === $customAssetSlugs)
+			? $this->plugin->getAssetDiscovery()->getAllCustomAssets()
+			: null;
+		$this->addAssetsToZip($zip, 'theme', $customAssetSlugs, $customAssets);
 
 		// 5. Add mu-plugins directory (must-use plugins).
 		// MU-plugins are always custom and must be included in full.
@@ -279,5 +206,74 @@ class ExportService
 		}
 
 		return false;
+	}
+
+	/**
+	 * Add custom assets (plugins or themes) to zip archive.
+	 *
+	 * @param \ZipArchive $zip              Zip archive instance.
+	 * @param string      $assetType       Asset type: 'plugin' or 'theme'.
+	 * @param array|null  $customAssetSlugs Optional array of asset slugs from browser detection.
+	 * @param array|null  $customAssets     Optional array of custom assets from PHP detection.
+	 * @return void
+	 */
+	private function addAssetsToZip(
+		\ZipArchive $zip,
+		string $assetType,
+		?array $customAssetSlugs,
+		?array $customAssets = null
+	): void {
+		// Determine base directory and zip prefix based on asset type
+		$baseDir = ('plugin' === $assetType) ? WP_PLUGIN_DIR : \get_theme_root();
+		$zipPrefix = ('plugin' === $assetType) ? 'wp-content/plugins/' : 'wp-content/themes/';
+		$skipSlug = ('plugin' === $assetType) ? 'aether' : null;
+
+		if (null !== $customAssetSlugs) {
+			// Use provided custom asset slugs (from browser-based WordPress.org detection)
+			foreach ($customAssetSlugs as $slug) {
+				// Skip 'aether' plugin if processing plugins
+				if (null !== $skipSlug && $skipSlug === $slug) {
+					continue;
+				}
+
+				// Security: Type check first
+				if (!\is_string($slug)) {
+					continue;
+				}
+
+				// Security: Sanitize BEFORE validation to prevent bypasses
+				$slug = \sanitize_file_name($slug);
+
+				// Security: Validate slug doesn't contain path traversal, null bytes, or dangerous values
+				$slugValidation = SecurityValidator::validateSlug($slug);
+				if (! $slugValidation['valid']) {
+					continue;
+				}
+
+				$assetDir = $baseDir . '/' . $slug;
+				if (\is_dir($assetDir)) {
+					$this->zipService->addDirectoryToZip($zip, $assetDir, $zipPrefix . $slug, '', null, null);
+				}
+			}
+		} else {
+			// Use PHP-based detection (customAssets must be provided)
+			if (null === $customAssets) {
+				$customAssets = $this->plugin->getAssetDiscovery()->getAllCustomAssets();
+			}
+
+			foreach ($customAssets as $asset) {
+				if ($assetType === $asset['type']) {
+					// Skip 'aether' plugin if processing plugins
+					if (null !== $skipSlug && $skipSlug === $asset['slug']) {
+						continue;
+					}
+
+					$assetDir = $baseDir . '/' . $asset['slug'];
+					if (\is_dir($assetDir)) {
+						$this->zipService->addDirectoryToZip($zip, $assetDir, $zipPrefix . $asset['slug'], '', null, null);
+					}
+				}
+			}
+		}
 	}
 }
