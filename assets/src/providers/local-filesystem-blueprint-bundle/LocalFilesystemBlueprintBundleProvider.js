@@ -23,6 +23,13 @@ export class LocalFilesystemBlueprintBundleProvider {
 	static ID = 'local-filesystem-blueprint-bundle';
 
 	/**
+	 * Provider family for config copying compatibility.
+	 *
+	 * @type {string}
+	 */
+	static FAMILY = 'local-filesystem';
+
+	/**
 	 * Provider name.
 	 *
 	 * @type {string}

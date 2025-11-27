@@ -361,34 +361,8 @@ class ProviderConfigController
 			);
 		}
 
-		// Check provider family compatibility.
-		$targetParsed = $this->parseInstanceId($targetId);
-		$sourceParsed = $this->parseInstanceId($sourceId);
-
-		if (! $targetParsed || ! $sourceParsed) {
-			return new WP_Error(
-				'invalid_instance_format',
-				\__('Could not parse instance IDs.', 'aether-site-exporter'),
-				[ 'status' => 400 ]
-			);
-		}
-
-		$targetFamily = $this->getProviderFamily($targetParsed['provider_type']);
-		$sourceFamily = $this->getProviderFamily($sourceParsed['provider_type']);
-
-		if ($targetFamily !== $sourceFamily) {
-			return new WP_Error(
-				'incompatible_providers',
-				/* translators: 1: Target provider family, 2: Source provider family */
-				\sprintf(
-					/* translators: 1: Target provider family, 2: Source provider family */
-					\__('Cannot copy configuration between incompatible provider families: %1$s and %2$s', 'aether-site-exporter'),
-					$targetFamily,
-					$sourceFamily
-				),
-				[ 'status' => 400 ]
-			);
-		}
+		// Note: Provider family compatibility is handled by JavaScript.
+		// The CopyConfigDropdown only shows compatible instances to copy from.
 
 		// Get source config from database.
 		$settings = \get_option('aether_site_exporter_settings', []);
@@ -449,30 +423,6 @@ class ProviderConfigController
 			],
 			200
 		);
-	}
-
-	/**
-	 * Extract provider family from provider type.
-	 *
-	 * Provider families are determined by removing known deployment type suffixes.
-	 * Examples:
-	 * - 'cloudflare-r2-static-site' → 'cloudflare-r2'
-	 * - 'local-filesystem-blueprint-bundle' → 'local-filesystem'
-	 *
-	 * @param string $providerType Provider type identifier.
-	 * @return string Provider family.
-	 */
-	private function getProviderFamily(string $providerType): string
-	{
-		$suffixes = ['-static-site', '-blueprint-bundle'];
-
-		foreach ($suffixes as $suffix) {
-			if (\str_ends_with($providerType, $suffix)) {
-				return \substr($providerType, 0, -\strlen($suffix));
-			}
-		}
-
-		return $providerType;
 	}
 
 	/**

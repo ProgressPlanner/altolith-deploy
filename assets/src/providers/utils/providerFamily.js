@@ -3,40 +3,49 @@
  *
  * Functions for determining provider compatibility based on family groupings.
  * Provider families share common configuration fields (e.g., cloudflare-r2-static-site
- * and cloudflare-r2-blueprint-bundle both use the same credentials).
+ * and cloudflare-r2-media-offload both use the same R2 credentials).
+ *
+ * Family is determined by the static FAMILY property on provider classes.
  */
 
-/**
- * Known deployment type suffixes that identify variants within a provider family.
- *
- * @type {string[]}
- */
-const DEPLOYMENT_SUFFIXES = [ '-static-site', '-blueprint-bundle' ];
+import ProviderRegistry from '../registry/ProviderRegistry';
 
 /**
- * Extract provider family from provider type ID.
+ * Extract provider family from provider type ID or provider class.
  *
- * Provider families are determined by removing known deployment type suffixes.
+ * Provider families are determined by the static FAMILY property on provider classes.
+ * If a provider class is passed directly, reads FAMILY from it.
+ * If a string (provider type ID) is passed, looks up the class from the registry.
+ * Falls back to the provider type ID if no FAMILY is defined.
+ *
  * Examples:
- * - 'cloudflare-r2-static-site' → 'cloudflare-r2'
- * - 'local-filesystem-blueprint-bundle' → 'local-filesystem'
- * - 'simple-provider' → 'simple-provider' (no suffix, returns as-is)
+ * - CloudflareR2StaticSiteProvider (with FAMILY = 'cloudflare-r2') → 'cloudflare-r2'
+ * - 'cloudflare-r2-static-site' (looked up, has FAMILY) → 'cloudflare-r2'
+ * - 'unknown-provider' (no FAMILY defined) → 'unknown-provider'
  *
- * @param {string} providerType Provider type identifier (e.g., 'cloudflare-r2-static-site').
- * @return {string} Provider family (e.g., 'cloudflare-r2').
+ * @param {string|Function} providerTypeOrClass Provider type ID or provider class.
+ * @return {string} Provider family.
  */
-export function getProviderFamily( providerType ) {
-	if ( ! providerType || typeof providerType !== 'string' ) {
-		return '';
+export function getProviderFamily( providerTypeOrClass ) {
+	// If it's a provider class with FAMILY property, use it directly.
+	if (
+		typeof providerTypeOrClass === 'function' &&
+		providerTypeOrClass.FAMILY
+	) {
+		return providerTypeOrClass.FAMILY;
 	}
 
-	for ( const suffix of DEPLOYMENT_SUFFIXES ) {
-		if ( providerType.endsWith( suffix ) ) {
-			return providerType.slice( 0, -suffix.length );
+	// If it's a string (provider type ID), look up the class from registry.
+	if ( typeof providerTypeOrClass === 'string' ) {
+		const ProviderClass = ProviderRegistry.get( providerTypeOrClass );
+		if ( ProviderClass?.FAMILY ) {
+			return ProviderClass.FAMILY;
 		}
+		// Fallback: use ID as family (for providers without FAMILY property).
+		return providerTypeOrClass;
 	}
 
-	return providerType;
+	return '';
 }
 
 /**

@@ -10,25 +10,55 @@ import {
 	getCompatibleInstances,
 	isSameProviderFamily,
 } from '../providerFamily';
+import ProviderRegistry from '../../registry/ProviderRegistry';
+
+// Mock the ProviderRegistry
+jest.mock( '../../registry/ProviderRegistry', () => ( {
+	get: jest.fn(),
+} ) );
 
 describe( 'providerFamily', () => {
+	beforeEach( () => {
+		jest.clearAllMocks();
+	} );
+
 	// ============================================================
 	// getProviderFamily
 	// ============================================================
 	describe( 'getProviderFamily', () => {
-		test( 'should extract family from static-site suffix', () => {
+		test( 'should read FAMILY from provider class when passed directly', () => {
+			const MockProvider = class {
+				static FAMILY = 'cloudflare-r2';
+			};
+
+			expect( getProviderFamily( MockProvider ) ).toBe( 'cloudflare-r2' );
+		} );
+
+		test( 'should look up provider class from registry and read FAMILY', () => {
+			ProviderRegistry.get.mockReturnValue(
+				class {
+					static FAMILY = 'cloudflare-r2';
+				}
+			);
+
 			expect( getProviderFamily( 'cloudflare-r2-static-site' ) ).toBe(
 				'cloudflare-r2'
 			);
+			expect( ProviderRegistry.get ).toHaveBeenCalledWith(
+				'cloudflare-r2-static-site'
+			);
 		} );
 
-		test( 'should extract family from blueprint-bundle suffix', () => {
-			expect(
-				getProviderFamily( 'cloudflare-r2-blueprint-bundle' )
-			).toBe( 'cloudflare-r2' );
-		} );
+		test( 'should handle local-filesystem provider family', () => {
+			ProviderRegistry.get.mockImplementation( ( providerType ) => {
+				if ( providerType.startsWith( 'local-filesystem' ) ) {
+					return class {
+						static FAMILY = 'local-filesystem';
+					};
+				}
+				return null;
+			} );
 
-		test( 'should handle local-filesystem provider', () => {
 			expect( getProviderFamily( 'local-filesystem-static-site' ) ).toBe(
 				'local-filesystem'
 			);
@@ -37,19 +67,29 @@ describe( 'providerFamily', () => {
 			).toBe( 'local-filesystem' );
 		} );
 
-		test( 'should return provider type as-is if no known suffix', () => {
+		test( 'should return provider type as-is if provider not in registry', () => {
+			ProviderRegistry.get.mockReturnValue( null );
+
 			expect( getProviderFamily( 'simple-provider' ) ).toBe(
 				'simple-provider'
 			);
 		} );
 
-		test( 'should handle provider with hyphens in name', () => {
-			expect(
-				getProviderFamily( 'my-custom-provider-static-site' )
-			).toBe( 'my-custom-provider' );
+		test( 'should return provider type as-is if provider has no FAMILY property', () => {
+			ProviderRegistry.get.mockReturnValue(
+				class {
+					static ID = 'old-provider';
+				}
+			);
+
+			expect( getProviderFamily( 'old-provider' ) ).toBe(
+				'old-provider'
+			);
 		} );
 
 		test( 'should handle empty string', () => {
+			ProviderRegistry.get.mockReturnValue( null );
+
 			expect( getProviderFamily( '' ) ).toBe( '' );
 		} );
 
@@ -61,7 +101,7 @@ describe( 'providerFamily', () => {
 			expect( getProviderFamily( undefined ) ).toBe( '' );
 		} );
 
-		test( 'should handle non-string input', () => {
+		test( 'should handle non-string, non-function input', () => {
 			expect( getProviderFamily( 123 ) ).toBe( '' );
 			expect( getProviderFamily( {} ) ).toBe( '' );
 			expect( getProviderFamily( [] ) ).toBe( '' );
@@ -72,6 +112,23 @@ describe( 'providerFamily', () => {
 	// getCompatibleInstances
 	// ============================================================
 	describe( 'getCompatibleInstances', () => {
+		beforeEach( () => {
+			// Set up registry mock to return providers with FAMILY
+			ProviderRegistry.get.mockImplementation( ( providerType ) => {
+				if ( providerType.startsWith( 'cloudflare-r2' ) ) {
+					return class {
+						static FAMILY = 'cloudflare-r2';
+					};
+				}
+				if ( providerType.startsWith( 'local-filesystem' ) ) {
+					return class {
+						static FAMILY = 'local-filesystem';
+					};
+				}
+				return null;
+			} );
+		} );
+
 		const mockInstances = [
 			{
 				instanceId: 'cloudflare-r2-static-site:uuid-1',
@@ -173,7 +230,7 @@ describe( 'providerFamily', () => {
 			expect( result ).toHaveLength( 0 );
 		} );
 
-		test( 'should handle empty instances array', () => {
+		test( 'should return empty array for empty instances array', () => {
 			const result = getCompatibleInstances(
 				'cloudflare-r2-static-site:uuid-1',
 				[]
@@ -182,13 +239,13 @@ describe( 'providerFamily', () => {
 			expect( result ).toHaveLength( 0 );
 		} );
 
-		test( 'should handle null target instance ID', () => {
+		test( 'should return empty array for null target instance ID', () => {
 			const result = getCompatibleInstances( null, mockInstances );
 
 			expect( result ).toHaveLength( 0 );
 		} );
 
-		test( 'should handle null instances array', () => {
+		test( 'should return empty array for null instances array', () => {
 			const result = getCompatibleInstances(
 				'cloudflare-r2-static-site:uuid-1',
 				null
@@ -246,12 +303,74 @@ describe( 'providerFamily', () => {
 				'cloudflare-r2-static-site:uuid-2'
 			);
 		} );
+
+		test( 'should include media-offload provider in R2 family', () => {
+			// Add media-offload to the registry mock
+			ProviderRegistry.get.mockImplementation( ( providerType ) => {
+				if ( providerType.startsWith( 'cloudflare-r2' ) ) {
+					return class {
+						static FAMILY = 'cloudflare-r2';
+					};
+				}
+				if ( providerType.startsWith( 'local-filesystem' ) ) {
+					return class {
+						static FAMILY = 'local-filesystem';
+					};
+				}
+				return null;
+			} );
+
+			const instancesWithMediaOffload = [
+				...mockInstances,
+				{
+					instanceId: 'cloudflare-r2-media-offload:uuid-5',
+					config: {
+						provider_type: 'cloudflare-r2-media-offload',
+						instance_name: 'R2 Media',
+					},
+				},
+			];
+
+			const result = getCompatibleInstances(
+				'cloudflare-r2-media-offload:uuid-5',
+				instancesWithMediaOffload
+			);
+
+			// Should include all R2 instances except itself
+			expect( result ).toHaveLength( 3 );
+			expect( result.map( ( i ) => i.instanceId ) ).toContain(
+				'cloudflare-r2-static-site:uuid-1'
+			);
+			expect( result.map( ( i ) => i.instanceId ) ).toContain(
+				'cloudflare-r2-static-site:uuid-2'
+			);
+			expect( result.map( ( i ) => i.instanceId ) ).toContain(
+				'cloudflare-r2-blueprint-bundle:uuid-3'
+			);
+		} );
 	} );
 
 	// ============================================================
 	// isSameProviderFamily
 	// ============================================================
 	describe( 'isSameProviderFamily', () => {
+		beforeEach( () => {
+			// Set up registry mock
+			ProviderRegistry.get.mockImplementation( ( providerType ) => {
+				if ( providerType.startsWith( 'cloudflare-r2' ) ) {
+					return class {
+						static FAMILY = 'cloudflare-r2';
+					};
+				}
+				if ( providerType.startsWith( 'local-filesystem' ) ) {
+					return class {
+						static FAMILY = 'local-filesystem';
+					};
+				}
+				return null;
+			} );
+		} );
+
 		test( 'should return true for same family with different suffixes', () => {
 			expect(
 				isSameProviderFamily(
@@ -279,15 +398,24 @@ describe( 'providerFamily', () => {
 			).toBe( false );
 		} );
 
-		test( 'should return false for providers without suffixes', () => {
+		test( 'should return false for providers without FAMILY property', () => {
 			expect( isSameProviderFamily( 'provider-a', 'provider-b' ) ).toBe(
 				false
 			);
 		} );
 
-		test( 'should return true for same provider without suffix', () => {
+		test( 'should return true for same provider without FAMILY (uses ID as family)', () => {
 			expect(
 				isSameProviderFamily( 'simple-provider', 'simple-provider' )
+			).toBe( true );
+		} );
+
+		test( 'should return true for media-offload and static-site in same family', () => {
+			expect(
+				isSameProviderFamily(
+					'cloudflare-r2-static-site',
+					'cloudflare-r2-media-offload'
+				)
 			).toBe( true );
 		} );
 

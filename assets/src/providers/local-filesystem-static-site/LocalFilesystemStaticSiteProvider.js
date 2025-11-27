@@ -23,6 +23,13 @@ export class LocalFilesystemStaticSiteProvider {
 	static ID = 'local-filesystem-static-site';
 
 	/**
+	 * Provider family for config copying compatibility.
+	 *
+	 * @type {string}
+	 */
+	static FAMILY = 'local-filesystem';
+
+	/**
 	 * Provider name.
 	 *
 	 * @type {string}
