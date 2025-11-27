@@ -63,25 +63,35 @@ const response = await fetchWithRetry(url, options, {
 - `RETRY_INITIAL_DELAY` - Initial retry delay in milliseconds (1000ms)
 - `RETRY_MAX_DELAY` - Maximum retry delay in milliseconds (30000ms)
 
-### deploymentTypes.js
+### deploymentTypes.js (Removed)
 
-Deployment type constants and labels.
+**This file has been removed.** Deployment types are now filterable via WordPress hooks.
+
+For deployment type functionality, see `utils/deploymentTypes.js`:
 
 ```javascript
-import { DEPLOYMENT_TYPES, DEPLOYMENT_TYPE_LABELS } from '../constants';
+import { getDeploymentTypes, getDeploymentTypeLabel } from '../utils/deploymentTypes';
 
-// Check deployment type
-if (provider.DEPLOYMENT_TYPE === DEPLOYMENT_TYPES.STATIC_SITE) {
-    // Handle static site deployment
-}
+// Get all deployment types (filterable via aether.deploymentTypes hook)
+const types = getDeploymentTypes();
+// Returns: { static_site: { label: 'Static Site' }, blueprint_bundle: { label: 'Blueprint Bundle' } }
 
 // Get human-readable label
-const label = DEPLOYMENT_TYPE_LABELS[DEPLOYMENT_TYPES.STATIC_SITE];
+const label = getDeploymentTypeLabel('static_site'); // 'Static Site'
+
+// Provider deployment type uses string literals
+static DEPLOYMENT_TYPE = 'static_site'; // or 'blueprint_bundle'
 ```
 
-**Contents:**
-- `DEPLOYMENT_TYPES` - Deployment type identifiers (STATIC_SITE, BLUEPRINT_BUNDLE, EDGE_FUNCTIONS)
-- `DEPLOYMENT_TYPE_LABELS` - Human-readable labels for deployment types
+Third-party plugins can add custom deployment types:
+```javascript
+import { addFilter } from '@wordpress/hooks';
+
+addFilter('aether.deploymentTypes', 'my-plugin', (types) => ({
+    ...types,
+    my_custom_type: { label: 'My Custom Type' },
+}));
+```
 
 ### steps.js (Removed)
 
@@ -100,7 +110,7 @@ Central export file. Import constants from here:
 
 ```javascript
 // ✅ Import from constants directory
-import { ENDPOINTS, POLLING_INTERVAL, DEPLOYMENT_TYPES } from '../constants';
+import { ENDPOINTS, POLLING_INTERVAL } from '../constants';
 
 // ❌ Don't import from individual files
 import { ENDPOINTS } from '../constants/api'; // Avoid this
@@ -119,7 +129,7 @@ Add a constant when you find yourself:
 
 ### Naming Conventions
 
-- **ALL_CAPS** for simple constants: `POLLING_INTERVAL`, `DEPLOYMENT_TYPES`
+- **ALL_CAPS** for simple constants: `POLLING_INTERVAL`, `MAX_RETRIES`
 - **NAMESPACED** objects for grouped constants: `ENDPOINTS.EXPORT_WORKFLOW.START`
 - **camelCase** for helper functions: `isGitProvider()`, `calculateProgress()`
 - **Descriptive names** that explain purpose: `RETRY_INITIAL_DELAY` not `DELAY_1`
@@ -130,14 +140,12 @@ Add a constant when you find yourself:
 // ❌ Before: Magic values scattered throughout code
 setTimeout(checkStatus, 500);
 fetch('/wp-json/aether/site-exporter/export/createArchive');
-if (providerId === 'local-filesystem') { }
 
 // ✅ After: Using constants
-import { POLLING_INTERVAL, ENDPOINTS, DEPLOYMENT_TYPES } from '../constants';
+import { POLLING_INTERVAL, ENDPOINTS } from '../constants';
 
 setTimeout(checkStatus, POLLING_INTERVAL);
 fetch(ENDPOINTS.EXPORT_WORKFLOW.START);
-if (provider.DEPLOYMENT_TYPE === DEPLOYMENT_TYPES.STATIC_SITE) { }
 ```
 
 ## Benefits

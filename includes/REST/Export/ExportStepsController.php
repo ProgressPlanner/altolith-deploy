@@ -352,7 +352,6 @@ class ExportStepsController
 		$deploymentTypePatterns = [
 			'static_site' => 'static-site',
 			'blueprint_bundle' => 'blueprint-bundle',
-			'edge_functions' => 'edge-functions',
 		];
 
 		$pattern = $deploymentTypePatterns[$deploymentType] ?? $deploymentType;

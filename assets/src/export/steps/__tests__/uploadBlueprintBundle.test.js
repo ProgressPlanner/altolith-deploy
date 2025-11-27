@@ -48,14 +48,6 @@ jest.mock( '../../utils/staticSiteConfig', () => ( {
 	buildStorageConfig: ( ...args ) => mockBuildStorageConfig( ...args ),
 } ) );
 
-// Mock deployment types
-jest.mock( '@aether/constants/deploymentTypes', () => ( {
-	DEPLOYMENT_TYPES: {
-		STATIC_SITE: 'static-site',
-		BLUEPRINT_BUNDLE: 'blueprint-bundle',
-	},
-} ) );
-
 // Mock ProviderRegistry
 const mockProviderRegistry = {
 	get: jest.fn(),
@@ -163,9 +155,9 @@ describe( 'uploadBlueprintBundle step', () => {
 			expect( shouldSkip( context ) ).toBe( false );
 		} );
 
-		test( 'should skip for static-site deployment type', () => {
+		test( 'should skip for static_site deployment type', () => {
 			mockProviderRegistry.get.mockReturnValue( {
-				DEPLOYMENT_TYPE: 'static-site',
+				DEPLOYMENT_TYPE: 'static_site',
 			} );
 
 			const context = {
@@ -176,9 +168,9 @@ describe( 'uploadBlueprintBundle step', () => {
 			expect( shouldSkip( context ) ).toBe( true );
 		} );
 
-		test( 'should not skip for blueprint-bundle deployment type', () => {
+		test( 'should not skip for blueprint_bundle deployment type', () => {
 			mockProviderRegistry.get.mockReturnValue( {
-				DEPLOYMENT_TYPE: 'blueprint-bundle',
+				DEPLOYMENT_TYPE: 'blueprint_bundle',
 			} );
 
 			const context = {
@@ -190,15 +182,15 @@ describe( 'uploadBlueprintBundle step', () => {
 		} );
 
 		test( 'should use instance deploymentType if present', () => {
-			// Provider class says static-site, but instance overrides to blueprint-bundle
+			// Provider class says static_site, but instance overrides to blueprint_bundle
 			mockProviderRegistry.get.mockReturnValue( {
-				DEPLOYMENT_TYPE: 'static-site',
+				DEPLOYMENT_TYPE: 'static_site',
 			} );
 
 			const context = {
 				currentProviderInstance: {
 					id: 'mixed-provider:abc123',
-					deploymentType: 'blueprint-bundle',
+					deploymentType: 'blueprint_bundle',
 				},
 			};
 			expect( shouldSkip( context ) ).toBe( false );
@@ -212,7 +204,7 @@ describe( 'uploadBlueprintBundle step', () => {
 					id: 'unknown-provider:abc123',
 				},
 			};
-			// Without a deployment type, it's not blueprint-bundle, so skip
+			// Without a deployment type, it's not blueprint_bundle, so skip
 			expect( shouldSkip( context ) ).toBe( true );
 		} );
 	} );

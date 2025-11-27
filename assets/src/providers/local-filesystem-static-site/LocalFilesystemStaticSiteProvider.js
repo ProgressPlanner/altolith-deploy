@@ -7,7 +7,6 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 
 /**
  * LocalFilesystemStaticSiteProvider class
@@ -59,7 +58,7 @@ export class LocalFilesystemStaticSiteProvider {
 	 *
 	 * @type {string}
 	 */
-	static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.STATIC_SITE;
+	static DEPLOYMENT_TYPE = 'static_site';
 
 	/**
 	 * Whether this provider supports parallel execution with other instances.

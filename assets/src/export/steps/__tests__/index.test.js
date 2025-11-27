@@ -6,11 +6,12 @@
 
 import StepRegistry from '../../registry/StepRegistry';
 
-// Mock steps data for registration - 5 steps total
+// Mock steps data for registration - 5 steps total with deploymentType
 const mockSteps = [
 	{
 		id: 'discoverAndScanSite',
 		label: 'Discover Site',
+		deploymentType: 'static_site',
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
@@ -18,6 +19,7 @@ const mockSteps = [
 	{
 		id: 'uploadStaticFiles',
 		label: 'Upload Static',
+		deploymentType: 'static_site',
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
@@ -25,6 +27,7 @@ const mockSteps = [
 	{
 		id: 'createWpContentArchive',
 		label: 'Create Archive',
+		deploymentType: 'blueprint_bundle',
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
@@ -32,6 +35,7 @@ const mockSteps = [
 	{
 		id: 'createBlueprintBundle',
 		label: 'Create Bundle',
+		deploymentType: 'blueprint_bundle',
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
@@ -39,6 +43,7 @@ const mockSteps = [
 	{
 		id: 'uploadBlueprintBundle',
 		label: 'Upload Bundle',
+		deploymentType: 'blueprint_bundle',
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
@@ -141,8 +146,10 @@ describe( 'Steps Index', () => {
 
 		test( 'should include all steps when both provider types have instances', () => {
 			const context = {
-				staticSiteProviderInstances: [ { id: 'static-1' } ],
-				blueprintBundleProviderInstances: [ { id: 'bundle-1' } ],
+				providerInstancesByType: {
+					static_site: [ { id: 'static-1' } ],
+					blueprint_bundle: [ { id: 'bundle-1' } ],
+				},
 			};
 
 			const steps = getActiveSteps( context );
@@ -152,8 +159,10 @@ describe( 'Steps Index', () => {
 
 		test( 'should exclude static site steps when no static providers', () => {
 			const context = {
-				staticSiteProviderInstances: [],
-				blueprintBundleProviderInstances: [ { id: 'bundle-1' } ],
+				providerInstancesByType: {
+					static_site: [],
+					blueprint_bundle: [ { id: 'bundle-1' } ],
+				},
 			};
 
 			const steps = getActiveSteps( context );
@@ -167,8 +176,10 @@ describe( 'Steps Index', () => {
 
 		test( 'should exclude blueprint steps when no blueprint providers', () => {
 			const context = {
-				staticSiteProviderInstances: [ { id: 'static-1' } ],
-				blueprintBundleProviderInstances: [],
+				providerInstancesByType: {
+					static_site: [ { id: 'static-1' } ],
+					blueprint_bundle: [],
+				},
 			};
 
 			const steps = getActiveSteps( context );
@@ -181,7 +192,7 @@ describe( 'Steps Index', () => {
 			expect( stepIds ).toContain( 'discoverAndScanSite' );
 		} );
 
-		test( 'should handle missing provider arrays in context', () => {
+		test( 'should handle missing providerInstancesByType in context', () => {
 			const context = {};
 
 			const steps = getActiveSteps( context );
@@ -197,8 +208,10 @@ describe( 'Steps Index', () => {
 			// Test the shouldSkip logic directly by getting steps and verifying
 			// a step with shouldSkip returning true would be filtered out
 			const context = {
-				staticSiteProviderInstances: [ { id: 'static-1' } ],
-				blueprintBundleProviderInstances: [ { id: 'bundle-1' } ],
+				providerInstancesByType: {
+					static_site: [ { id: 'static-1' } ],
+					blueprint_bundle: [ { id: 'bundle-1' } ],
+				},
 			};
 
 			const steps = getActiveSteps( context );
@@ -233,8 +246,10 @@ describe( 'Steps Index', () => {
 
 		test( 'should include step when shouldSkip returns false', () => {
 			const context = {
-				staticSiteProviderInstances: [ { id: 'static-1' } ],
-				blueprintBundleProviderInstances: [ { id: 'bundle-1' } ],
+				providerInstancesByType: {
+					static_site: [ { id: 'static-1' } ],
+					blueprint_bundle: [ { id: 'bundle-1' } ],
+				},
 			};
 
 			// Test the shouldSkip filter logic manually

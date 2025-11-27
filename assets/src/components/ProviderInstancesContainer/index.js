@@ -16,7 +16,7 @@ import {
 } from '@aether/utils/styles';
 import ProviderInstanceItem from '@aether/components/ProviderInstanceItem';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
-import { DEPLOYMENT_TYPE_LABELS } from '@aether/constants/deploymentTypes';
+import { getDeploymentTypeLabel } from '@aether/utils/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const wrapperStyle = {
@@ -77,10 +77,9 @@ export default function ProviderInstancesContainer( {
 		// Get deployment type from provider class
 		const ProviderClass = ProviderRegistry.get( providerType );
 		const deploymentType = ProviderClass?.DEPLOYMENT_TYPE || null;
-		const deploymentTypeLabel =
-			deploymentType && DEPLOYMENT_TYPE_LABELS[ deploymentType ]
-				? DEPLOYMENT_TYPE_LABELS[ deploymentType ]
-				: deploymentType || '';
+		const deploymentTypeLabel = deploymentType
+			? getDeploymentTypeLabel( deploymentType )
+			: '';
 
 		const providerName =
 			fullProvider?.name || fullProvider?.id || providerType;

@@ -22,7 +22,6 @@ import {
 	borderRadius,
 	createFlexStyle,
 } from '@aether/utils/styles';
-import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const tableCellStyle = {
@@ -76,12 +75,10 @@ const tagBaseStyle = {
  */
 const getDeploymentTypeColor = ( deploymentType ) => {
 	switch ( deploymentType ) {
-		case DEPLOYMENT_TYPES.STATIC_SITE:
+		case 'static_site':
 			return colors.deploymentStaticSite;
-		case DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE:
+		case 'blueprint_bundle':
 			return colors.deploymentBlueprintBundle;
-		case DEPLOYMENT_TYPES.EDGE_FUNCTIONS:
-			return colors.deploymentEdgeFunctions;
 		default:
 			return colors.primary;
 	}

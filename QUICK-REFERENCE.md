@@ -115,7 +115,6 @@ addFilter('aether.provider.deployment_url', 'my-plugin',
 **Step 1: Create Provider Class (JavaScript)**
 ```javascript
 import { __ } from '@wordpress/i18n';
-import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 
 export class MyCustomProvider {
     static ID = 'my-custom-provider';
@@ -123,7 +122,7 @@ export class MyCustomProvider {
     static TYPE = 'storage';
     static DESCRIPTION = __( 'Provider description', 'aether-site-exporter' );
     static ICON = '📦';
-    static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.STATIC_SITE;
+    static DEPLOYMENT_TYPE = 'static_site'; // or 'blueprint_bundle'
     static CONFIG_FIELDS = [
         {
             id: 'api_key',

@@ -7,7 +7,6 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 
 /**
  * LocalFilesystemBlueprintBundleProvider class
@@ -59,7 +58,7 @@ export class LocalFilesystemBlueprintBundleProvider {
 	 *
 	 * @type {string}
 	 */
-	static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE;
+	static DEPLOYMENT_TYPE = 'blueprint_bundle';
 
 	/**
 	 * Whether this provider supports parallel execution with other instances.

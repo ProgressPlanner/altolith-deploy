@@ -34,11 +34,14 @@ jest.mock( 'uuid', () => ( {
 	v4: () => mockUuid(),
 } ) );
 
-// Mock deployment type constants
-jest.mock( '@aether/constants/deploymentTypes', () => ( {
-	DEPLOYMENT_TYPE_LABELS: {
-		static_site: 'Static Site',
-		blueprint_bundle: 'Blueprint Bundle',
+// Mock deploymentTypes utilities
+jest.mock( '@aether/utils/deploymentTypes', () => ( {
+	getDeploymentTypeLabel: ( typeId ) => {
+		const labels = {
+			static_site: 'Static Site',
+			blueprint_bundle: 'Blueprint Bundle',
+		};
+		return labels[ typeId ] || typeId;
 	},
 } ) );
 

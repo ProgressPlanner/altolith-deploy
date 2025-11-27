@@ -18,7 +18,7 @@ import LoadingSpinner from '@aether/components/LoadingSpinner';
 import { colors, spacing, fontSize, commonStyles } from '@aether/utils/styles';
 import { useProviderSettings } from '@aether/hooks/useProviderSettings';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
-import { DEPLOYMENT_TYPE_LABELS } from '@aether/constants/deploymentTypes';
+import { getDeploymentTypeLabel } from '@aether/utils/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const emptyStateStyle = {
@@ -505,8 +505,7 @@ export default function ProviderSettings( {
 										'Add %s Provider',
 										'aether-site-exporter'
 									),
-									DEPLOYMENT_TYPE_LABELS[ deploymentType ] ||
-										deploymentType
+									getDeploymentTypeLabel( deploymentType )
 								) }
 							</Button>
 						) ) }

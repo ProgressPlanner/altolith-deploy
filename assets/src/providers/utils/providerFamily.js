@@ -11,11 +11,7 @@
  *
  * @type {string[]}
  */
-const DEPLOYMENT_SUFFIXES = [
-	'-static-site',
-	'-blueprint-bundle',
-	'-edge-functions',
-];
+const DEPLOYMENT_SUFFIXES = [ '-static-site', '-blueprint-bundle' ];
 
 /**
  * Extract provider family from provider type ID.

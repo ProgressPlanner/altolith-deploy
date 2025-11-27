@@ -130,6 +130,7 @@ const stepDefinition = {
 		'Package custom plugins, themes, and uploads',
 		'aether-site-exporter'
 	),
+	deploymentType: 'blueprint_bundle',
 	supportsProgress: true,
 	dependencies: [ 'discoverBlueprintBundleAssets' ],
 	requires: {

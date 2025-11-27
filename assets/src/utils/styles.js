@@ -33,7 +33,6 @@ export const colors = {
 	// Deployment type colors
 	deploymentStaticSite: '#2271b1',
 	deploymentBlueprintBundle: '#00a32a',
-	deploymentEdgeFunctions: '#986800',
 	// Overlay/shadow colors
 	overlayDark: 'rgba(0, 0, 0, 0.7)',
 	shadowLight: 'rgba(0, 0, 0, 0.04)',

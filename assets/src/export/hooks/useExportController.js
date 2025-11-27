@@ -11,13 +11,11 @@ import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
 import { useBlueprintGenerator } from './useBlueprintGenerator';
 import apiFetch from '@aether/utils/api';
-import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 import { executeThreadedWorkflow } from '@aether/export/executor/ThreadOrchestrator';
 import { getActiveSteps, getRegisteredSteps } from '@aether/export/steps';
 import {
 	prepareExportConfiguration,
-	determineProvidersByDeploymentType,
-	buildProviderInstances,
+	buildProviderInstancesByType,
 	buildWorkflowContext,
 } from '@aether/export/utils/exportConfiguration';
 
@@ -161,61 +159,33 @@ export function useExportController( exportState ) {
 			// Get current site URL for static site generation (use pure function)
 			const siteUrl = window.location.origin;
 
-			// Get arrays of instance IDs for each deployment type (use pure function)
-			const providersByType = determineProvidersByDeploymentType(
-				exportConfig.providerConfigs,
-				[
-					DEPLOYMENT_TYPES.STATIC_SITE,
-					DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE,
-					DEPLOYMENT_TYPES.EDGE_FUNCTIONS,
-				]
+			// Build provider instances by deployment type (automatically uses all registered types)
+			const providerInstancesByType = buildProviderInstancesByType(
+				exportConfig.providerConfigs
 			);
 
-			const staticSiteProviders =
-				providersByType[ DEPLOYMENT_TYPES.STATIC_SITE ];
-			const blueprintBundleProviders =
-				providersByType[ DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE ];
-			const edgeFunctionProviders =
-				providersByType[ DEPLOYMENT_TYPES.EDGE_FUNCTIONS ];
-
-			// Build provider instance objects for threading
-			const staticSiteProviderInstances = buildProviderInstances(
-				exportConfig.providerConfigs,
-				DEPLOYMENT_TYPES.STATIC_SITE
-			);
-			const blueprintBundleProviderInstances = buildProviderInstances(
-				exportConfig.providerConfigs,
-				DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE
-			);
-			const edgeFunctionProviderInstances = buildProviderInstances(
-				exportConfig.providerConfigs,
-				DEPLOYMENT_TYPES.EDGE_FUNCTIONS
-			);
-
-			// Store provider arrays in global state for UI access
-			setProviders( staticSiteProviders, blueprintBundleProviders );
-
-			// Determine provider instances for threading
-			// Use all provider instances across all deployment types
-			const allProviderInstances = [
-				...staticSiteProviderInstances,
-				...blueprintBundleProviderInstances,
-				...edgeFunctionProviderInstances,
-			];
+			// Flatten all provider instances for threading
+			const allProviderInstances = Object.values(
+				providerInstancesByType
+			).flat();
 
 			// Store provider instances in context for UI access (includes labels)
 			setProviderInstances( allProviderInstances );
+
+			// Store provider IDs for UI (backwards compatibility for setProviders)
+			const staticSiteProviderIds = (
+				providerInstancesByType.static_site || []
+			).map( ( p ) => p.id );
+			const blueprintBundleProviderIds = (
+				providerInstancesByType.blueprint_bundle || []
+			).map( ( p ) => p.id );
+			setProviders( staticSiteProviderIds, blueprintBundleProviderIds );
 
 			// Build context object with all dependencies for step handlers (use pure function)
 			const workflowContext = buildWorkflowContext(
 				{
 					siteUrl,
-					staticSiteProviders,
-					blueprintBundleProviders,
-					edgeFunctionProviders,
-					staticSiteProviderInstances,
-					blueprintBundleProviderInstances,
-					edgeFunctionProviderInstances,
+					providerInstancesByType,
 				},
 				{
 					api,

@@ -126,7 +126,6 @@ jest.mock( '@aether/utils/styles', () => ( {
 		backgroundLighter: '#f9f9f9',
 		deploymentStaticSite: '#2271b1',
 		deploymentBlueprintBundle: '#9c27b0',
-		deploymentEdgeFunctions: '#ff9800',
 	},
 	spacing: { xs: '4px', sm: '8px', md: '12px', lg: '16px' },
 	fontWeight: { medium: '500', semibold: '600' },
@@ -139,13 +138,7 @@ jest.mock( '@aether/utils/styles', () => ( {
 	} ),
 } ) );
 
-jest.mock( '@aether/constants/deploymentTypes', () => ( {
-	DEPLOYMENT_TYPES: {
-		STATIC_SITE: 'static-site',
-		BLUEPRINT_BUNDLE: 'blueprint-bundle',
-		EDGE_FUNCTIONS: 'edge-functions',
-	},
-} ) );
+// No deployment types mock needed - component now uses string literals
 
 import ProviderInstanceItem from '../index';
 import { hasRequiredFields } from '@aether/providers/utils/configValidation';
@@ -184,7 +177,7 @@ describe( 'ProviderInstanceItem', () => {
 	const defaultProps = {
 		instance: mockInstance,
 		provider: mockProvider,
-		deploymentType: 'static-site',
+		deploymentType: 'static_site',
 		deploymentTypeLabel: 'Static Site',
 		onDelete: jest.fn(),
 		onRename: jest.fn(),
@@ -831,13 +824,13 @@ describe( 'ProviderInstanceItem', () => {
 	// Deployment Type Colors
 	// ============================================================
 	describe( 'deployment type colors', () => {
-		test( 'should apply static-site color for static site deployment', () => {
+		test( 'should apply static_site color for static site deployment', () => {
 			const { container } = render(
 				<table>
 					<tbody>
 						<ProviderInstanceItem
 							{ ...defaultProps }
-							deploymentType="static-site"
+							deploymentType="static_site"
 						/>
 					</tbody>
 				</table>
@@ -847,13 +840,13 @@ describe( 'ProviderInstanceItem', () => {
 			expect( tag ).toHaveStyle( { backgroundColor: '#2271b1' } );
 		} );
 
-		test( 'should apply blueprint-bundle color for blueprint deployment', () => {
+		test( 'should apply blueprint_bundle color for blueprint deployment', () => {
 			const { container } = render(
 				<table>
 					<tbody>
 						<ProviderInstanceItem
 							{ ...defaultProps }
-							deploymentType="blueprint-bundle"
+							deploymentType="blueprint_bundle"
 							deploymentTypeLabel="Blueprint Bundle"
 						/>
 					</tbody>
@@ -862,23 +855,6 @@ describe( 'ProviderInstanceItem', () => {
 
 			const tag = container.querySelector( 'span' );
 			expect( tag ).toHaveStyle( { backgroundColor: '#9c27b0' } );
-		} );
-
-		test( 'should apply edge-functions color for edge functions deployment', () => {
-			const { container } = render(
-				<table>
-					<tbody>
-						<ProviderInstanceItem
-							{ ...defaultProps }
-							deploymentType="edge-functions"
-							deploymentTypeLabel="Edge Functions"
-						/>
-					</tbody>
-				</table>
-			);
-
-			const tag = container.querySelector( 'span' );
-			expect( tag ).toHaveStyle( { backgroundColor: '#ff9800' } );
 		} );
 
 		test( 'should apply primary color for unknown deployment type', () => {
@@ -904,7 +880,7 @@ describe( 'ProviderInstanceItem', () => {
 					<tbody>
 						<ProviderInstanceItem
 							{ ...defaultProps }
-							deploymentType="static-site"
+							deploymentType="static_site"
 							deploymentTypeLabel={ null }
 						/>
 					</tbody>

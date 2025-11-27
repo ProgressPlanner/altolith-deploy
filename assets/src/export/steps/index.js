@@ -39,17 +39,15 @@ export function getRegisteredSteps() {
 /**
  * Get steps filtered by which providers are enabled
  *
- * Uses provider INSTANCE arrays (not ID arrays) to ensure validation.
- * This prevents steps from executing when all provider instances are disabled/invalid.
+ * Uses providerInstancesByType map to filter steps based on their deploymentType.
+ * Steps are skipped when no provider instances exist for their deployment type.
  *
- * @param {Object} context - Execution context with provider instance arrays
+ * @param {Object} context                          - Execution context
+ * @param {Object} context.providerInstancesByType  - Map of deployment type to provider instances
  * @return {Array<Object>} Filtered steps based on enabled provider instances
  */
 export function getActiveSteps( context ) {
-	const {
-		staticSiteProviderInstances = [],
-		blueprintBundleProviderInstances = [],
-	} = context;
+	const { providerInstancesByType = {} } = context;
 
 	const steps = getRegisteredSteps();
 
@@ -60,21 +58,11 @@ export function getActiveSteps( context ) {
 			return ! step.shouldSkip( context );
 		}
 
-		// Skip blueprint-related steps if no blueprint bundle provider INSTANCES
-		if (
-			step.id === 'createWpContentArchive' ||
-			step.id === 'createBlueprintBundle' ||
-			step.id === 'uploadBlueprintBundle'
-		) {
-			return blueprintBundleProviderInstances.length > 0;
-		}
-
-		// Skip static site steps if no static site provider INSTANCES
-		if (
-			step.id === 'discoverAndScanSite' ||
-			step.id === 'uploadStaticFiles'
-		) {
-			return staticSiteProviderInstances.length > 0;
+		// Skip steps when no provider instances exist for their deployment type
+		if ( step.deploymentType ) {
+			const instances =
+				providerInstancesByType[ step.deploymentType ] || [];
+			return instances.length > 0;
 		}
 
 		return true;

@@ -10,7 +10,6 @@
  * IMPORTANT: This controller provides essential endpoints still used by React:
  * - /providers/{id}/config - GET/POST/DELETE (configStorage.js, credentialManager.js)
  * - /providers/{id}/status - GET (useProviderStatus.js, usePublishReadiness.js)
- * - /providers/{id}/edge/worker-script/{type} - GET (edgeService.js, useEdgeService.js)
  * - /providers/{id}/settings - GET/POST (useProviderSettings.js)
  *
  * @package Aether\REST
@@ -465,7 +464,7 @@ class ProviderConfigController
 	 */
 	private function getProviderFamily(string $providerType): string
 	{
-		$suffixes = ['-static-site', '-blueprint-bundle', '-edge-functions'];
+		$suffixes = ['-static-site', '-blueprint-bundle'];
 
 		foreach ($suffixes as $suffix) {
 			if (\str_ends_with($providerType, $suffix)) {

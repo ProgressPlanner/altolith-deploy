@@ -15,7 +15,6 @@ import {
 	fetchProviderConfig,
 	buildStorageConfig,
 } from '../../utils/staticSiteConfig';
-import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 /**
@@ -53,7 +52,7 @@ function shouldSkip( context ) {
 		ProviderClass?.DEPLOYMENT_TYPE;
 
 	// Skip if provider doesn't handle blueprint bundles
-	return providerDeploymentType !== DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE;
+	return providerDeploymentType !== 'blueprint_bundle';
 }
 
 /**
@@ -220,6 +219,7 @@ const stepDefinition = {
 		'Upload blueprint-bundle.zip to providers',
 		'aether-site-exporter'
 	),
+	deploymentType: 'blueprint_bundle',
 	supportsProgress: true,
 	dependencies: [ 'createBlueprintBundle' ],
 	skip: shouldSkip,

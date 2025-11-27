@@ -150,7 +150,7 @@ export class MyProvider {
     static TYPE = 'storage';
     static DESCRIPTION = __( 'Provider description', 'aether-site-exporter' );
     static ICON = '📦';
-    static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.STATIC_SITE;
+    static DEPLOYMENT_TYPE = 'static_site'; // or 'blueprint_bundle'
     static CONFIG_FIELDS = [
         { id: 'api_key', label: 'API Key', type: 'text', required: true }
     ];
@@ -167,7 +167,6 @@ Providers are pure static classes with no instance methods. All operations are h
 
 ```javascript
 import { __ } from '@wordpress/i18n';
-import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 import { ConfigStorage } from '../utils/configStorage';
 import { validateAllFields, hasRequiredFields } from '../utils/configValidation';
 import { sanitizeAllFields } from '../utils/configSanitization';
@@ -178,7 +177,7 @@ export class MyProvider {
     static TYPE = 'storage';
     static DESCRIPTION = __( 'Provider description', 'aether-site-exporter' );
     static ICON = '📦';
-    static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.STATIC_SITE;
+    static DEPLOYMENT_TYPE = 'static_site'; // or 'blueprint_bundle'
     static CONFIG_FIELDS = [
         { id: 'api_key', label: 'API Key', type: 'text', required: true }
     ];

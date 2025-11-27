@@ -276,6 +276,7 @@ const stepDefinition = {
 		'Discover assets and create blueprint-bundle.zip',
 		'aether-site-exporter'
 	),
+	deploymentType: 'blueprint_bundle',
 	supportsProgress: false,
 	dependencies: [ 'createWpContentArchive' ],
 	requires: {

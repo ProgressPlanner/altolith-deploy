@@ -10,7 +10,6 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { addAction, applyFilters } from '@wordpress/hooks';
 import { fetchProviderConfig } from '@aether/export/utils/staticSiteConfig';
-import { DEPLOYMENT_TYPES } from '@aether/constants/deploymentTypes';
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
 
 /**
@@ -49,7 +48,7 @@ function shouldSkip( context ) {
 		ProviderClass?.DEPLOYMENT_TYPE;
 
 	// Skip if provider doesn't handle static sites
-	return providerDeploymentType !== DEPLOYMENT_TYPES.STATIC_SITE;
+	return providerDeploymentType !== 'static_site';
 }
 
 /**
@@ -263,6 +262,7 @@ const stepDefinition = {
 		'Generate and upload static HTML files',
 		'aether-site-exporter'
 	),
+	deploymentType: 'static_site',
 	supportsProgress: true,
 	dependencies: [ 'discoverAndScanSite' ],
 	skip: shouldSkip,

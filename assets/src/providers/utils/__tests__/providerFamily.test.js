@@ -28,12 +28,6 @@ describe( 'providerFamily', () => {
 			).toBe( 'cloudflare-r2' );
 		} );
 
-		test( 'should extract family from edge-functions suffix', () => {
-			expect( getProviderFamily( 'cloudflare-r2-edge-functions' ) ).toBe(
-				'cloudflare-r2'
-			);
-		} );
-
 		test( 'should handle local-filesystem provider', () => {
 			expect( getProviderFamily( 'local-filesystem-static-site' ) ).toBe(
 				'local-filesystem'

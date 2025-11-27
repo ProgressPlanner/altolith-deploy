@@ -265,6 +265,7 @@ const stepDefinition = {
 		'Find all pages and assets for export',
 		'aether-site-exporter'
 	),
+	deploymentType: 'static_site',
 	supportsProgress: true,
 	dependencies: [],
 	requires: {

@@ -13,7 +13,7 @@ import { Modal, TextControl, SelectControl } from '@wordpress/components';
 import { v4 as uuidv4 } from 'uuid';
 import ModalActions from '../ModalActions';
 import { spacing } from '@aether/utils/styles';
-import { DEPLOYMENT_TYPE_LABELS } from '@aether/constants/deploymentTypes';
+import { getDeploymentTypeLabel } from '@aether/utils/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const formStyle = {
@@ -119,7 +119,7 @@ export default function AddProviderInstanceModal( {
 		? sprintf(
 				/* translators: %s: deployment type label */
 				__( 'Add %s Provider', 'aether-site-exporter' ),
-				DEPLOYMENT_TYPE_LABELS[ deploymentType ] || deploymentType
+				getDeploymentTypeLabel( deploymentType )
 		  )
 		: __( 'Add Provider Instance', 'aether-site-exporter' );
 

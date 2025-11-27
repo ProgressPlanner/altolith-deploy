@@ -33,14 +33,6 @@ jest.mock( '@aether/export/utils/staticSiteConfig', () => ( {
 	fetchProviderConfig: ( ...args ) => mockFetchProviderConfig( ...args ),
 } ) );
 
-// Mock deployment types
-jest.mock( '@aether/constants/deploymentTypes', () => ( {
-	DEPLOYMENT_TYPES: {
-		STATIC_SITE: 'static-site',
-		BLUEPRINT_BUNDLE: 'blueprint-bundle',
-	},
-} ) );
-
 // Mock ProviderRegistry
 const mockProviderRegistry = {
 	get: jest.fn(),
@@ -160,9 +152,9 @@ describe( 'uploadStaticFiles step', () => {
 			expect( shouldSkip( context ) ).toBe( false );
 		} );
 
-		test( 'should skip for blueprint-bundle deployment type', () => {
+		test( 'should skip for blueprint_bundle deployment type', () => {
 			mockProviderRegistry.get.mockReturnValue( {
-				DEPLOYMENT_TYPE: 'blueprint-bundle',
+				DEPLOYMENT_TYPE: 'blueprint_bundle',
 			} );
 
 			const context = {
@@ -173,9 +165,9 @@ describe( 'uploadStaticFiles step', () => {
 			expect( shouldSkip( context ) ).toBe( true );
 		} );
 
-		test( 'should not skip for static-site deployment type', () => {
+		test( 'should not skip for static_site deployment type', () => {
 			mockProviderRegistry.get.mockReturnValue( {
-				DEPLOYMENT_TYPE: 'static-site',
+				DEPLOYMENT_TYPE: 'static_site',
 			} );
 
 			const context = {
@@ -187,15 +179,15 @@ describe( 'uploadStaticFiles step', () => {
 		} );
 
 		test( 'should use instance deploymentType if present', () => {
-			// Provider class says blueprint-bundle, but instance overrides to static-site
+			// Provider class says blueprint_bundle, but instance overrides to static_site
 			mockProviderRegistry.get.mockReturnValue( {
-				DEPLOYMENT_TYPE: 'blueprint-bundle',
+				DEPLOYMENT_TYPE: 'blueprint_bundle',
 			} );
 
 			const context = {
 				currentProviderInstance: {
 					id: 'mixed-provider:abc123',
-					deploymentType: 'static-site',
+					deploymentType: 'static_site',
 				},
 			};
 			expect( shouldSkip( context ) ).toBe( false );

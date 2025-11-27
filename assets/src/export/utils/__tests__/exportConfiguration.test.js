@@ -12,7 +12,6 @@ import {
 	determineProvidersByDeploymentType,
 	buildWorkflowContext,
 } from '../exportConfiguration';
-import { DEPLOYMENT_TYPES } from '../../../constants/deploymentTypes';
 
 // Mock ProviderRegistry - define before jest.mock
 jest.mock( '../../../providers/registry/ProviderRegistry', () => ( {
@@ -20,6 +19,14 @@ jest.mock( '../../../providers/registry/ProviderRegistry', () => ( {
 	default: {
 		get: jest.fn(),
 	},
+} ) );
+
+// Mock getDeploymentTypes
+jest.mock( '../../../utils/deploymentTypes', () => ( {
+	getDeploymentTypes: jest.fn( () => ( {
+		static_site: { label: 'Static Site' },
+		blueprint_bundle: { label: 'Blueprint Bundle' },
+	} ) ),
 } ) );
 
 // Import the mocked registry to access the mock functions
@@ -268,7 +275,7 @@ describe( 'exportConfiguration', () => {
 			jest.clearAllMocks();
 		} );
 
-		test( 'should group providers by deployment type', () => {
+		test( 'should group providers by deployment type automatically from getDeploymentTypes', () => {
 			const providerConfigs = {
 				'local-filesystem-static-site:1': {
 					provider_type: 'local-filesystem-static-site',
@@ -297,12 +304,8 @@ describe( 'exportConfiguration', () => {
 				return null;
 			} );
 
-			const deploymentTypes = [ 'static_site', 'blueprint_bundle' ];
-
-			const result = determineProvidersByDeploymentType(
-				providerConfigs,
-				deploymentTypes
-			);
+			// Now only takes providerConfigs - deployment types come from getDeploymentTypes()
+			const result = determineProvidersByDeploymentType( providerConfigs );
 
 			expect( result ).toEqual( {
 				static_site: [
@@ -311,21 +314,6 @@ describe( 'exportConfiguration', () => {
 				],
 				blueprint_bundle: [ 'local-filesystem-blueprint-bundle:1' ],
 			} );
-		} );
-
-		test( 'should handle empty deployment types array', () => {
-			const providerConfigs = {
-				'local-filesystem-static-site:1': {
-					provider_type: 'local-filesystem-static-site',
-				},
-			};
-
-			const result = determineProvidersByDeploymentType(
-				providerConfigs,
-				[]
-			);
-
-			expect( result ).toEqual( {} );
 		} );
 
 		test( 'should return empty arrays for deployment types with no providers', () => {
@@ -340,70 +328,30 @@ describe( 'exportConfiguration', () => {
 			}
 			mockProviderRegistry.get.mockReturnValue( MockProvider );
 
-			const deploymentTypes = [ 'static_site', 'blueprint_bundle' ];
-
-			const result = determineProvidersByDeploymentType(
-				providerConfigs,
-				deploymentTypes
-			);
+			const result = determineProvidersByDeploymentType( providerConfigs );
 
 			expect( result ).toEqual( {
 				static_site: [ 'local-filesystem-static-site:1' ],
 				blueprint_bundle: [],
 			} );
 		} );
-
-		test( 'should work with DEPLOYMENT_TYPES constants', () => {
-			const providerConfigs = {
-				'local-filesystem-static-site:1': {
-					provider_type: 'local-filesystem-static-site',
-				},
-				'local-filesystem-blueprint-bundle:1': {
-					provider_type: 'local-filesystem-blueprint-bundle',
-				},
-			};
-
-			mockProviderRegistry.get.mockImplementation( ( providerType ) => {
-				if ( providerType === 'local-filesystem-static-site' ) {
-					return class {
-						static DEPLOYMENT_TYPE = DEPLOYMENT_TYPES.STATIC_SITE;
-					};
-				}
-				if ( providerType === 'local-filesystem-blueprint-bundle' ) {
-					return class {
-						static DEPLOYMENT_TYPE =
-							DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE;
-					};
-				}
-				return null;
-			} );
-
-			const deploymentTypes = [
-				DEPLOYMENT_TYPES.STATIC_SITE,
-				DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE,
-			];
-
-			const result = determineProvidersByDeploymentType(
-				providerConfigs,
-				deploymentTypes
-			);
-
-			expect( result[ DEPLOYMENT_TYPES.STATIC_SITE ] ).toEqual( [
-				'local-filesystem-static-site:1',
-			] );
-			expect( result[ DEPLOYMENT_TYPES.BLUEPRINT_BUNDLE ] ).toEqual( [
-				'local-filesystem-blueprint-bundle:1',
-			] );
-		} );
 	} );
 
 	describe( 'buildWorkflowContext()', () => {
 		test( 'should build complete workflow context', () => {
+			const providerInstancesByType = {
+				static_site: [
+					{ id: 'cloudflare:1', label: 'Cloudflare 1' },
+					{ id: 'cloudflare:2', label: 'Cloudflare 2' },
+				],
+				blueprint_bundle: [
+					{ id: 'local-filesystem:123', label: 'Local' },
+				],
+			};
+
 			const config = {
 				siteUrl: 'https://example.com',
-				staticSiteProviders: [ 'cloudflare:1', 'cloudflare:2' ],
-				blueprintBundleProviders: [ 'local-filesystem:123' ],
-				edgeFunctionProviders: [],
+				providerInstancesByType,
 			};
 
 			const mockApi = {};
@@ -413,6 +361,7 @@ describe( 'exportConfiguration', () => {
 			const mockAssetManager = {};
 			const mockSetStatus = jest.fn();
 			const mockSetProgress = jest.fn();
+			const mockSetProviderProgress = jest.fn();
 
 			const dependencies = {
 				api: mockApi,
@@ -422,6 +371,7 @@ describe( 'exportConfiguration', () => {
 				assetManager: mockAssetManager,
 				setStatusMessage: mockSetStatus,
 				setStepProgress: mockSetProgress,
+				setProviderProgress: mockSetProviderProgress,
 			};
 
 			const result = buildWorkflowContext( config, dependencies );
@@ -431,14 +381,13 @@ describe( 'exportConfiguration', () => {
 				api: mockApi,
 				siteUrl: 'https://example.com',
 
-				// Provider arrays
-				staticSiteProviders: [ 'cloudflare:1', 'cloudflare:2' ],
-				blueprintBundleProviders: [ 'local-filesystem:123' ],
-				edgeFunctionProviders: [],
+				// Provider instances by type
+				providerInstancesByType,
 
 				// Provider instance references (for future parallel execution)
 				providerInstances: [],
 				currentProviderInstance: null,
+
 				// Hooks and utilities
 				processStaticSiteUrls: mockProcessUrls,
 				generateBlueprintJson: mockGenerateBlueprint,
@@ -448,6 +397,7 @@ describe( 'exportConfiguration', () => {
 				// State setters
 				setStatusMessage: mockSetStatus,
 				setStepProgress: mockSetProgress,
+				setProviderProgress: mockSetProviderProgress,
 
 				// Discovered assets
 				discoveredAssets: null,
@@ -457,9 +407,7 @@ describe( 'exportConfiguration', () => {
 		test( 'should handle minimal config and dependencies', () => {
 			const config = {
 				siteUrl: 'https://example.com',
-				staticSiteProviders: [],
-				blueprintBundleProviders: [],
-				edgeFunctionProviders: [],
+				providerInstancesByType: {},
 			};
 
 			const dependencies = {
@@ -470,7 +418,7 @@ describe( 'exportConfiguration', () => {
 				assetManager: null,
 				setStatusMessage: null,
 				setStepProgress: null,
-				handleSiteArchiveUpload: null,
+				setProviderProgress: null,
 			};
 
 			const result = buildWorkflowContext( config, dependencies );

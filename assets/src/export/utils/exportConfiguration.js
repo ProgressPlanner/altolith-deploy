@@ -7,6 +7,7 @@
  */
 
 import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import { getDeploymentTypes } from '@aether/utils/deploymentTypes';
 
 /**
  * Prepare export configuration from settings response
@@ -144,23 +145,44 @@ export function buildProviderInstances( providerConfigs, deploymentType ) {
  *
  * Pure function that takes provider configs and returns
  * arrays of instance IDs for each deployment type.
+ * Automatically gets deployment types from filterable registry.
  *
- * @param {Object}        providerConfigs - All provider configurations
- * @param {Array<string>} deploymentTypes - Array of deployment type constants
+ * @param {Object} providerConfigs - All provider configurations
  * @return {Object} Object with arrays of instance IDs keyed by deployment type
  */
-export function determineProvidersByDeploymentType(
-	providerConfigs,
-	deploymentTypes
-) {
+export function determineProvidersByDeploymentType( providerConfigs ) {
+	const deploymentTypes = getDeploymentTypes();
 	const result = {};
 
-	deploymentTypes.forEach( ( deploymentType ) => {
+	Object.keys( deploymentTypes ).forEach( ( deploymentType ) => {
 		const instances = getEnabledInstancesForDeploymentType(
 			providerConfigs,
 			deploymentType
 		);
 		result[ deploymentType ] = instances;
+	} );
+
+	return result;
+}
+
+/**
+ * Build provider instances by deployment type
+ *
+ * Creates a map of deployment type to provider instance arrays.
+ * Used for step filtering and context building.
+ *
+ * @param {Object} providerConfigs - All provider configurations
+ * @return {Object} Object with arrays of provider instances keyed by deployment type
+ */
+export function buildProviderInstancesByType( providerConfigs ) {
+	const deploymentTypes = getDeploymentTypes();
+	const result = {};
+
+	Object.keys( deploymentTypes ).forEach( ( deploymentType ) => {
+		result[ deploymentType ] = buildProviderInstances(
+			providerConfigs,
+			deploymentType
+		);
 	} );
 
 	return result;
@@ -177,15 +199,7 @@ export function determineProvidersByDeploymentType(
  * @return {Object} Workflow context
  */
 export function buildWorkflowContext( config, dependencies ) {
-	const {
-		siteUrl,
-		staticSiteProviders,
-		blueprintBundleProviders,
-		edgeFunctionProviders,
-		staticSiteProviderInstances,
-		blueprintBundleProviderInstances,
-		edgeFunctionProviderInstances,
-	} = config;
+	const { siteUrl, providerInstancesByType } = config;
 
 	const {
 		api,
@@ -203,15 +217,8 @@ export function buildWorkflowContext( config, dependencies ) {
 		api,
 		siteUrl,
 
-		// Provider arrays by deployment type (from PHP registry via REST API)
-		staticSiteProviders,
-		blueprintBundleProviders,
-		edgeFunctionProviders,
-
-		// Provider instance arrays for threading (with full config objects)
-		staticSiteProviderInstances,
-		blueprintBundleProviderInstances,
-		edgeFunctionProviderInstances,
+		// Provider instances by deployment type (for step filtering)
+		providerInstancesByType,
 
 		// Provider instance references (for thread context)
 		providerInstances: config.providerInstances || [],
