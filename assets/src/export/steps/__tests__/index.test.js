@@ -30,13 +30,6 @@ const mockSteps = [
 		provides: {},
 	},
 	{
-		id: 'discoverBlueprintBundleAssets',
-		label: 'Discover Bundle Assets',
-		handler: jest.fn(),
-		requires: {},
-		provides: {},
-	},
-	{
 		id: 'createWpContentArchive',
 		label: 'Create Archive',
 		handler: jest.fn(),
@@ -89,7 +82,6 @@ jest.mock( '@wordpress/i18n', () => ( {
 } ) );
 
 // Mock step modules - they self-register via addAction
-jest.mock( '../discoverBlueprintBundleAssets', () => {} );
 jest.mock( '../getStaticSiteUrls', () => {} );
 jest.mock( '../preScanStaticSite', () => {} );
 jest.mock( '../createWpContentArchive', () => {} );
@@ -114,8 +106,8 @@ describe( 'Steps Index', () => {
 		test( 'should return array of steps', () => {
 			const steps = getRegisteredSteps();
 			expect( Array.isArray( steps ) ).toBe( true );
-			// doAction mock populates with 7 steps
-			expect( steps.length ).toBe( 7 );
+			// doAction mock populates with 6 steps
+			expect( steps.length ).toBe( 6 );
 		} );
 
 		test( 'should call doAction with registration hook', () => {
@@ -144,8 +136,8 @@ describe( 'Steps Index', () => {
 			// Call getRegisteredSteps - should clear first then repopulate via doAction
 			const steps = getRegisteredSteps();
 
-			// Registry should have the 7 mock steps, not the 'testStep' we added manually
-			expect( steps ).toHaveLength( 7 );
+			// Registry should have the 6 mock steps, not the 'testStep' we added manually
+			expect( steps ).toHaveLength( 6 );
 			expect(
 				steps.find( ( s ) => s.id === 'testStep' )
 			).toBeUndefined();
@@ -163,7 +155,7 @@ describe( 'Steps Index', () => {
 
 			const steps = getActiveSteps( context );
 
-			expect( steps ).toHaveLength( 7 );
+			expect( steps ).toHaveLength( 6 );
 		} );
 
 		test( 'should exclude static site steps when no static providers', () => {
@@ -178,7 +170,7 @@ describe( 'Steps Index', () => {
 			const stepIds = steps.map( ( s ) => s.id );
 			expect( stepIds ).not.toContain( 'preScanStaticSite' );
 			expect( stepIds ).not.toContain( 'uploadStaticFiles' );
-			expect( stepIds ).toContain( 'discoverBlueprintBundleAssets' );
+			expect( stepIds ).toContain( 'createBlueprintBundle' );
 		} );
 
 		test( 'should exclude blueprint steps when no blueprint providers', () => {
@@ -191,7 +183,6 @@ describe( 'Steps Index', () => {
 
 			// Should exclude all blueprint steps
 			const stepIds = steps.map( ( s ) => s.id );
-			expect( stepIds ).not.toContain( 'discoverBlueprintBundleAssets' );
 			expect( stepIds ).not.toContain( 'createWpContentArchive' );
 			expect( stepIds ).not.toContain( 'createBlueprintBundle' );
 			expect( stepIds ).not.toContain( 'uploadBlueprintBundle' );
@@ -207,7 +198,7 @@ describe( 'Steps Index', () => {
 			const stepIds = steps.map( ( s ) => s.id );
 			expect( stepIds ).toContain( 'getStaticSiteUrls' );
 			expect( stepIds ).not.toContain( 'preScanStaticSite' );
-			expect( stepIds ).not.toContain( 'discoverBlueprintBundleAssets' );
+			expect( stepIds ).not.toContain( 'createBlueprintBundle' );
 		} );
 
 		test( 'should call shouldSkip function when present', () => {
@@ -222,7 +213,7 @@ describe( 'Steps Index', () => {
 
 			// The mock steps don't have shouldSkip, so we verify the filter logic
 			// works by checking all steps are included
-			expect( steps ).toHaveLength( 7 );
+			expect( steps ).toHaveLength( 6 );
 
 			// Test the shouldSkip filter logic manually on a step array
 			const stepsWithSkip = [

@@ -11,7 +11,6 @@ import { doAction } from '@wordpress/hooks';
 import StepRegistry from '../registry/StepRegistry';
 
 // Import step files to ensure they register themselves
-import './discoverBlueprintBundleAssets';
 import './getStaticSiteUrls';
 import './preScanStaticSite';
 import './createWpContentArchive';
@@ -64,7 +63,6 @@ export function getActiveSteps( context ) {
 
 		// Skip blueprint-related steps if no blueprint bundle provider INSTANCES
 		if (
-			step.id === 'discoverBlueprintBundleAssets' ||
 			step.id === 'createWpContentArchive' ||
 			step.id === 'createBlueprintBundle' ||
 			step.id === 'uploadBlueprintBundle'
