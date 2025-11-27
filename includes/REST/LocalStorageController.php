@@ -52,6 +52,17 @@ class LocalStorageController
 			]
 		);
 
+		// Batch delete files from local storage.
+		\register_rest_route(
+			$this->getNamespace(),
+			'/local-storage/batch-delete',
+			[
+				'methods'             => 'DELETE',
+				'callback'            => [ $this, 'batchDeleteFiles' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
 		// Download file from local storage.
 		\register_rest_route(
 			$this->getNamespace(),
@@ -438,6 +449,112 @@ class LocalStorageController
 				'message' => \__('File deleted successfully.', 'aether-site-exporter'),
 			],
 			200
+		);
+	}
+
+	/**
+	 * Batch delete files from local filesystem.
+	 *
+	 * @param WP_REST_Request $request Request object.
+	 * @return WP_REST_Response|WP_Error Response or error.
+	 */
+	public function batchDeleteFiles(WP_REST_Request $request)
+	{
+		// CSRF protection: Verify nonce for state-changing operation
+		$nonceCheck = $this->verifyNonce($request);
+		if (\is_wp_error($nonceCheck)) {
+			return $nonceCheck;
+		}
+
+		$keys = $request->get_param('keys');
+		$staticPath = $request->get_param('static_path') ?? 'static/';
+
+		if (empty($keys) || !\is_array($keys)) {
+			return new WP_Error(
+				'missing_keys',
+				\__('File keys array is required.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		// Sanitize static path
+		$staticPath = \trim($staticPath, '/');
+		if (empty($staticPath)) {
+			$staticPath = 'static';
+		}
+
+		// Security: Validate static_path to prevent path traversal.
+		if (!PathValidator::isSafePath($staticPath)) {
+			return new WP_Error(
+				'invalid_static_path',
+				\__('Invalid static path: path traversal not allowed.', 'aether-site-exporter'),
+				[ 'status' => 400 ]
+			);
+		}
+
+		$uploadDir = \rtrim(ABSPATH, '/') . '/' . $staticPath;
+		$deleted = [];
+		$errors = [];
+
+		foreach ($keys as $key) {
+			if (empty($key) || !\is_string($key)) {
+				continue;
+			}
+
+			// Security: Validate key to prevent path traversal attacks.
+			if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $key) || \preg_match('#^[/\\\\]#', $key)) {
+				$errors[] = [
+					'key'   => $key,
+					'error' => \__('Invalid file key: path traversal not allowed.', 'aether-site-exporter'),
+				];
+				continue;
+			}
+
+			$fullPath = $uploadDir . '/' . \ltrim($key, '/');
+
+			// Security: Validate path using universal PathValidator
+			$validation = PathValidator::validatePath($fullPath, ABSPATH, false);
+			if (!$validation['valid']) {
+				$errors[] = [
+					'key'   => $key,
+					'error' => $validation['error'],
+				];
+				continue;
+			}
+
+			// Check if file exists
+			if (!FileManager::verifyFileExists($fullPath, 'batch-delete')) {
+				// File doesn't exist - not an error for batch delete (may already be deleted)
+				$deleted[] = $key;
+				continue;
+			}
+
+			// Delete file using FileManager
+			if (FileManager::deleteFile($fullPath)) {
+				$deleted[] = $key;
+			} else {
+				$errors[] = [
+					'key'   => $key,
+					'error' => \__('Failed to delete file.', 'aether-site-exporter'),
+				];
+			}
+		}
+
+		return new WP_REST_Response(
+			[
+				'success' => empty($errors),
+				'deleted' => $deleted,
+				'errors'  => $errors,
+				'message' => empty($errors)
+					? \__('All files deleted successfully.', 'aether-site-exporter')
+					: \sprintf(
+						/* translators: %1$d: number of deleted files, %2$d: number of errors */
+						\__('Deleted %1$d files with %2$d errors.', 'aether-site-exporter'),
+						\count($deleted),
+						\count($errors)
+					),
+			],
+			empty($errors) ? 200 : 207 // 207 Multi-Status for partial success
 		);
 	}
 

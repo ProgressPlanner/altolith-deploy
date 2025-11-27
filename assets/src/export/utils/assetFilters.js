@@ -76,10 +76,10 @@ export function shouldCollectAsset( url, siteUrl, source = 'css' ) {
 		return false;
 	}
 
-	// FILTER 4: Skip HTML page URLs (no extension) when found in HTML
-	// These are internal page links, not assets - they should NOT be collected
-	// as assets because they would be uploaded without URL rewriting
-	if ( source === 'html' && ! extension ) {
+	// FILTER 4: Skip URLs without file extensions (not real assets)
+	// These are likely module names (e.g., 'jquery' instead of 'jquery.min.js')
+	// or page links, not actual files - they should NOT be collected
+	if ( ! extension ) {
 		try {
 			const urlObj = new URL( url );
 			const pathname = urlObj.pathname;
