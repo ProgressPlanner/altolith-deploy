@@ -13,6 +13,7 @@ namespace Aether\SiteExporter\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
+use WP_Error;
 use WP_Scripts;
 use WP_Styles;
 
@@ -70,7 +71,7 @@ class AdminBarDependenciesController
 	 * Returns script and style handles, IDs, URLs, and versions for dynamic loading.
 	 *
 	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response Response with scripts and styles arrays.
+	 * @return WP_REST_Response|WP_Error Response with scripts and styles arrays, or WP_Error on failure.
 	 */
 	public function getDependencies(WP_REST_Request $request) // phpcs:ignore VariableAnalysis
 	{
@@ -87,10 +88,11 @@ class AdminBarDependenciesController
 			// Sanitize exception message to prevent information disclosure.
 			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
 
-			return new WP_REST_Response([
-				'success' => false,
-				'error'   => $sanitizedMessage,
-			], 500);
+			return new WP_Error(
+				'dependencies_fetch_failed',
+				$sanitizedMessage,
+				['status' => 500]
+			);
 		}
 	}
 

@@ -12,6 +12,7 @@ namespace Aether\SiteExporter\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
+use WP_Error;
 use Aether\SiteExporter\Sync\AssetDiscoveryService;
 
 /**
@@ -61,7 +62,7 @@ class AssetsController
 	 * The JavaScript code will determine which are from WordPress.org.
 	 *
 	 * @param WP_REST_Request $request Request object.
-	 * @return WP_REST_Response Response with plugins and themes arrays.
+	 * @return WP_REST_Response|WP_Error Response with plugins and themes arrays, or WP_Error on failure.
 	 */
 	public function getAssets(WP_REST_Request $request) // phpcs:ignore VariableAnalysis
 	{
@@ -81,12 +82,10 @@ class AssetsController
 			// Sanitize exception message to prevent information disclosure
 			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
 
-			return new WP_REST_Response(
-				[
-					'success' => false,
-					'error'   => $sanitizedMessage,
-				],
-				500
+			return new WP_Error(
+				'asset_discovery_failed',
+				$sanitizedMessage,
+				['status' => 500]
 			);
 		}
 	}
