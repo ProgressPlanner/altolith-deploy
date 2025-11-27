@@ -7,7 +7,7 @@
  */
 
 import apiFetch from '@aether/utils/api';
-import { validateFile } from '@aether/utils/fileValidation';
+import { validateFile } from './fileValidation';
 
 /**
  * Create a success response.
