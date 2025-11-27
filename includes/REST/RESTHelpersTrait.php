@@ -98,6 +98,53 @@ trait RESTHelpersTrait
 	}
 
 	/**
+	 * Validate that a required parameter is not empty.
+	 *
+	 * Returns a WP_Error if the value is empty, null otherwise.
+	 * This centralizes common validation error handling patterns.
+	 *
+	 * @param mixed  $value     Value to validate.
+	 * @param string $paramName Parameter name for error messages.
+	 * @return \WP_Error|null WP_Error if validation fails, null if valid.
+	 */
+	protected function validateRequiredParam($value, string $paramName): ?\WP_Error
+	{
+		if (empty($value)) {
+			return new \WP_Error(
+				"missing_{$paramName}",
+				/* translators: %s: Parameter name */
+				\sprintf(\__('%s is required', 'aether-site-exporter'), $paramName),
+				['status' => 400]
+			);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Validate that a required array parameter is not empty and is an array.
+	 *
+	 * Returns a WP_Error if the value is empty or not an array, null otherwise.
+	 *
+	 * @param mixed  $value     Value to validate.
+	 * @param string $paramName Parameter name for error messages.
+	 * @return \WP_Error|null WP_Error if validation fails, null if valid.
+	 */
+	protected function validateRequiredArray($value, string $paramName): ?\WP_Error
+	{
+		if (empty($value) || !\is_array($value)) {
+			return new \WP_Error(
+				"missing_{$paramName}",
+				/* translators: %s: Parameter name */
+				\sprintf(\__('%s array is required', 'aether-site-exporter'), $paramName),
+				['status' => 400]
+			);
+		}
+
+		return null;
+	}
+
+	/**
 	 * Validate array complexity to prevent DoS attacks.
 	 *
 	 * Checks array depth and total element count to prevent:

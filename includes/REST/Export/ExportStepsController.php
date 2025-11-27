@@ -178,12 +178,9 @@ class ExportStepsController
 		$archiveResult = $params['archiveResult'] ?? [];
 
 		// Validate inputs
-		if (empty($blueprintData)) {
-			return new WP_Error(
-				'missing_blueprint_data',
-				\__('Blueprint data is required', 'aether-site-exporter'),
-				['status' => 400]
-			);
+		$validationError = $this->validateRequiredParam($blueprintData, 'blueprint_data');
+		if ($validationError) {
+			return $validationError;
 		}
 
 		// Validate blueprint schema to prevent malformed data
@@ -204,12 +201,9 @@ class ExportStepsController
 			);
 		}
 
-		if (empty($archiveResult['zipPath'])) {
-			return new WP_Error(
-				'missing_archive_path',
-				\__('Archive path is required', 'aether-site-exporter'),
-				['status' => 400]
-			);
+		$validationError = $this->validateRequiredParam($archiveResult['zipPath'] ?? null, 'archive_path');
+		if ($validationError) {
+			return $validationError;
 		}
 
 		$zipPath = $archiveResult['zipPath'];

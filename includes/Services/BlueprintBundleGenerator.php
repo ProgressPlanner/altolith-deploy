@@ -120,7 +120,7 @@ class BlueprintBundleGenerator
 		// Validate file size before adding to prevent memory exhaustion
 		// Set limit to 512MB to prevent timeout/memory issues
 		$wpContentSize = \filesize($realWpContentPath);
-		$maxSize = 512 * 1024 * 1024; // 512MB limit
+		$maxSize = \Aether\SiteExporter\Constants\ExportLimits::MAX_FILE_SIZE;
 
 		if (false === $wpContentSize || $wpContentSize > $maxSize) {
 			$zip->close();

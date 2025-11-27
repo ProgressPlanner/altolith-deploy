@@ -21,11 +21,6 @@ class URLDiscoveryController
 	use RESTHelpersTrait;
 
 	/**
-	 * Number of items per page.
-	 */
-	private const PER_PAGE = 500;
-
-	/**
 	 * Register REST routes.
 	 *
 	 * @return void
@@ -87,7 +82,7 @@ class URLDiscoveryController
 	{
 		$page = $request->get_param('page') ?? 1;
 		$types = $request->get_param('types') ?? [ 'posts', 'terms', 'authors', 'archives', 'pagination' ];
-		$offset = ($page - 1) * self::PER_PAGE;
+		$offset = ($page - 1) * \Aether\SiteExporter\Constants\ExportLimits::PER_PAGE;
 
 		$allUrls = [];
 		$totals = [];
@@ -125,7 +120,7 @@ class URLDiscoveryController
 
 		// Calculate if there are more results
 		$totalItems = \array_sum($totals);
-		$hasMore = ($offset + self::PER_PAGE) < $totalItems;
+		$hasMore = ($offset + \Aether\SiteExporter\Constants\ExportLimits::PER_PAGE) < $totalItems;
 
 		// Deduplicate URLs
 		$uniqueUrls = \array_values(\array_unique($allUrls));
@@ -153,7 +148,7 @@ class URLDiscoveryController
 		$posts = \get_posts([
 			'post_type'      => $postTypesArray,
 			'post_status'    => 'publish',
-			'posts_per_page' => self::PER_PAGE,
+			'posts_per_page' => \Aether\SiteExporter\Constants\ExportLimits::PER_PAGE,
 			'offset'         => $offset,
 			'fields'         => 'ids',
 			'orderby'        => 'ID',
@@ -210,7 +205,7 @@ class URLDiscoveryController
 		$terms = \get_terms([
 			'taxonomy'   => $taxonomiesArray,
 			'hide_empty' => true,
-			'number'     => self::PER_PAGE,
+			'number'     => \Aether\SiteExporter\Constants\ExportLimits::PER_PAGE,
 			'offset'     => $offset,
 			'orderby'    => 'term_id',
 			'order'      => 'ASC',
@@ -258,7 +253,7 @@ class URLDiscoveryController
 	{
 		$authors = \get_users([
 			'capability' => 'edit_posts',
-			'number'     => self::PER_PAGE,
+			'number'     => \Aether\SiteExporter\Constants\ExportLimits::PER_PAGE,
 			'offset'     => $offset,
 			'orderby'    => 'ID',
 			'order'      => 'ASC',

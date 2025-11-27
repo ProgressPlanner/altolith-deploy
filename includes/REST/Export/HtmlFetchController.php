@@ -65,12 +65,9 @@ class HtmlFetchController
 		$params = $request->get_json_params();
 		$url = $params['url'] ?? '';
 
-		if (empty($url)) {
-			return new WP_Error(
-				'missing_url',
-				\__('URL is required', 'aether-site-exporter'),
-				['status' => 400]
-			);
+		$validationError = $this->validateRequiredParam($url, 'url');
+		if ($validationError) {
+			return $validationError;
 		}
 
 		$result = $this->fetchUrlAsAnonymous($url);
@@ -99,16 +96,13 @@ class HtmlFetchController
 		$params = $request->get_json_params();
 		$urls = $params['urls'] ?? [];
 
-		if (empty($urls) || !\is_array($urls)) {
-			return new WP_Error(
-				'missing_urls',
-				\__('URLs array is required', 'aether-site-exporter'),
-				['status' => 400]
-			);
+		$validationError = $this->validateRequiredArray($urls, 'urls');
+		if ($validationError) {
+			return $validationError;
 		}
 
 		// Limit batch size to prevent server overload.
-		$maxBatchSize = 10;
+		$maxBatchSize = \Aether\SiteExporter\Constants\ExportLimits::MAX_BATCH_SIZE;
 		if (\count($urls) > $maxBatchSize) {
 			return new WP_Error(
 				'batch_too_large',
