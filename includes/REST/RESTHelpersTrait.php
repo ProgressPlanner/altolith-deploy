@@ -208,6 +208,77 @@ trait RESTHelpersTrait
 	}
 
 	/**
+	 * Get default value for a configuration key.
+	 *
+	 * Centralizes default value logic for special configuration fields.
+	 *
+	 * @param string $key Configuration key.
+	 * @return string|null Default value if key has a default, null otherwise.
+	 */
+	private function getDefaultForConfigKey(string $key): ?string
+	{
+		$defaults = [
+			'static_files_path' => 'static/',
+			'export_path' => 'blueprint-bundle/bundle.zip',
+		];
+
+		return $defaults[ $key ] ?? null;
+	}
+
+	/**
+	 * Sanitize a single configuration value based on its type.
+	 *
+	 * @param mixed  $value Value to sanitize.
+	 * @param string $key   Configuration key (for context).
+	 * @param int    $depth Current recursion depth.
+	 * @return mixed Sanitized value.
+	 */
+	private function sanitizeConfigValue($value, string $key, int $depth)
+	{
+		if (\is_array($value)) {
+			return $this->sanitizeConfig($value, $depth + 1);
+		}
+
+		if (\is_bool($value)) {
+			return (bool) $value;
+		}
+
+		if (\is_numeric($value)) {
+			return $value;
+		}
+
+		if (\is_string($value)) {
+			// Sanitize URLs
+			if (\preg_match('/^https?:\/\//i', $value)) {
+				return \esc_url_raw($value);
+			}
+
+			// Apply default if value is empty and key has a default
+			$default = $this->getDefaultForConfigKey($key);
+			if (null !== $default) {
+				$trimmed = \trim($value);
+
+				// Special handling for export_path - must end with .zip
+				if ('export_path' === $key && !empty($trimmed) && !\preg_match('/\.zip$/i', $trimmed)) {
+					return $default;
+				}
+
+				// Use default if value is empty
+				if (empty($trimmed)) {
+					return $default;
+				}
+
+				return $trimmed;
+			}
+
+			return \sanitize_text_field($value);
+		}
+
+		// Fallback for other types
+		return \sanitize_text_field((string) $value);
+	}
+
+	/**
 	 * Sanitize configuration array recursively with depth limit.
 	 *
 	 * Preserves snake_case keys (unlike sanitize_key which converts to lowercase).
@@ -236,33 +307,7 @@ trait RESTHelpersTrait
 				continue;
 			}
 
-			if (\is_array($value)) {
-				$sanitized[ $sanitizedKey ] = $this->sanitizeConfig($value, $depth + 1);
-			} elseif (\is_bool($value)) {
-				$sanitized[ $sanitizedKey ] = (bool) $value;
-			} elseif (\is_numeric($value)) {
-				$sanitized[ $sanitizedKey ] = $value;
-			} elseif (\is_string($value) && \preg_match('/^https?:\/\//i', $value)) {
-				$sanitized[ $sanitizedKey ] = \esc_url_raw($value);
-			} else {
-				$sanitized[ $sanitizedKey ] = \sanitize_text_field($value);
-			}
-
-			// Special validation for static_files_path - default to 'static/' if empty
-			if ($sanitizedKey === 'static_files_path' && \is_string($sanitized[ $sanitizedKey ])) {
-				$sanitized[ $sanitizedKey ] = \trim($sanitized[ $sanitizedKey ]);
-				if (empty($sanitized[ $sanitizedKey ])) {
-					$sanitized[ $sanitizedKey ] = 'static/';
-				}
-			}
-
-			// Special validation for export_path - default to 'blueprint-bundle/bundle.zip' if empty
-			if ($sanitizedKey === 'export_path' && \is_string($sanitized[ $sanitizedKey ])) {
-				$sanitized[ $sanitizedKey ] = \trim($sanitized[ $sanitizedKey ]);
-				if (empty($sanitized[ $sanitizedKey ]) || !\preg_match('/\.zip$/i', $sanitized[ $sanitizedKey ])) {
-					$sanitized[ $sanitizedKey ] = 'blueprint-bundle/bundle.zip';
-				}
-			}
+			$sanitized[ $sanitizedKey ] = $this->sanitizeConfigValue($value, $sanitizedKey, $depth);
 		}
 
 		/**
