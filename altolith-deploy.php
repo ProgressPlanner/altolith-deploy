@@ -5,8 +5,8 @@
  * Plugin URI: https://github.com/aristath/altolith-deploy
  * Description: Export WordPress sites as static HTML or WordPress Playground blueprint bundles
  * Version: 1.0.0
- * Requires at least: 6.0
- * Requires PHP: 7.4
+ * Requires at least: 6.8
+ * Requires PHP: 8.1
  * Tested up to: 6.7
  * Author: Ari Stathopoulos
  * License: GPL v2 or later
