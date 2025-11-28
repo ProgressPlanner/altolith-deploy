@@ -13,8 +13,7 @@ describe( 'steps', () => {
 
 			expect( stepIds ).toContain( 'discoverAndScanSite' );
 			expect( stepIds ).toContain( 'createBlueprintBundle' );
-			expect( stepIds ).toContain( 'uploadStaticFiles' );
-			expect( stepIds ).toContain( 'uploadBlueprintBundle' );
+			expect( stepIds ).toContain( 'upload' );
 		} );
 
 		test( 'each step has required properties', () => {
@@ -37,12 +36,7 @@ describe( 'steps', () => {
 			);
 
 			// Upload and discover steps support progress
-			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
-				'uploadStaticFiles'
-			);
-			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
-				'uploadBlueprintBundle'
-			);
+			expect( progressSteps.map( ( s ) => s.id ) ).toContain( 'upload' );
 			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
 				'discoverAndScanSite'
 			);

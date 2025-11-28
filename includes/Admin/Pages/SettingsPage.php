@@ -49,10 +49,9 @@ class SettingsPage extends BaseAdminPage
 			'version'      => \time(),
 		];
 
-		// Enqueue local-filesystem provider scripts separately (must load before admin-settings)
+		// Enqueue local-filesystem provider script (must load before admin-settings)
 		$plugin = \Altolith\Deploy\Plugin::getInstance();
-		$plugin->enqueueProviderScript('local-filesystem-static-site');
-		$plugin->enqueueProviderScript('local-filesystem-blueprint-bundle');
+		$plugin->enqueueProviderScript('local-filesystem');
 
 		// Enqueue the main script
 		// Provider scripts from altolith-deploy-providers are enqueued at priority 5,

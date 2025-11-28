@@ -32,12 +32,20 @@ import {
 /**
  * Create URL rewriter instance.
  *
- * @param {string}                 siteUrl   Site URL.
- * @param {string|null}            staticUrl Static site URL (where it will be deployed).
- * @param {Object<string, string>} urlMap    Optional URL mapping cache.
+ * @param {string}                 siteUrl        Site URL.
+ * @param {string|null}            staticUrl      Static site URL (where it will be deployed).
+ * @param {string}                 providerId     Provider instance ID.
+ * @param {Object}                 providerConfig Provider configuration object.
+ * @param {Object<string, string>} urlMap         Optional URL mapping cache.
  * @return {Object} URL rewriter instance.
  */
-export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
+export function createUrlRewriter(
+	siteUrl,
+	staticUrl = null,
+	providerId = '',
+	providerConfig = {},
+	urlMap = {}
+) {
 	// Force HTTPS for site URL to avoid mixed content issues.
 	const normalizedSiteUrl = forceHttps( siteUrl );
 
@@ -199,14 +207,17 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 			rewrittenUrl = staticPath;
 		}
 
-		return applyFilters(
-			'altolith.url.rewrite',
-			rewrittenUrl,
-			url,
+		// Apply filter to allow providers to modify the rewritten URL
+		// This enables provider-specific URL transformations (e.g., path prefix)
+		return applyFilters( 'altolith.url.rewrite', rewrittenUrl, {
+			originalUrl: url,
+			staticPath,
+			providerId,
+			providerConfig,
 			contextUrl,
-			normalizedSiteUrl,
-			normalizedStaticUrl
-		);
+			siteUrl: normalizedSiteUrl,
+			staticSiteUrl: normalizedStaticUrl,
+		} );
 	}
 
 	/**

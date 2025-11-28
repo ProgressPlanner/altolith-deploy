@@ -41,9 +41,20 @@ export function useExportAPI() {
 		return await service.discoverUrls();
 	}, [ service ] );
 
-	const createArchive = useCallback(
-		async ( options ) => {
-			return await service.createArchive( options );
+	const exportCoreContent = useCallback( async () => {
+		return await service.exportCoreContent();
+	}, [ service ] );
+
+	const exportPlugin = useCallback(
+		async ( slug ) => {
+			return await service.exportPlugin( slug );
+		},
+		[ service ]
+	);
+
+	const exportTheme = useCallback(
+		async ( slug ) => {
+			return await service.exportTheme( slug );
 		},
 		[ service ]
 	);
@@ -51,13 +62,6 @@ export function useExportAPI() {
 	const generateBlueprint = useCallback(
 		async ( options ) => {
 			return await service.generateBlueprint( options );
-		},
-		[ service ]
-	);
-
-	const createBlueprintBundle = useCallback(
-		async ( options ) => {
-			return await service.createBlueprintBundle( options );
 		},
 		[ service ]
 	);
@@ -81,9 +85,10 @@ export function useExportAPI() {
 		getAssetStatus,
 		markAssetChanged,
 		discoverUrls,
-		createArchive,
+		exportCoreContent,
+		exportPlugin,
+		exportTheme,
 		generateBlueprint,
-		createBlueprintBundle,
 		fetchHtml,
 		fetchHtmlBatch,
 	};

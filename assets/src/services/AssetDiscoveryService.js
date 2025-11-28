@@ -237,12 +237,12 @@ export class AssetDiscoveryService {
 	}
 
 	/**
-	 * Get WordPress.org assets for blueprint generation.
+	 * Get WordPress.org and custom assets for blueprint generation.
 	 *
-	 * Returns only active plugins/themes from WordPress.org.
-	 * Custom assets will be included in wp-content.zip.
+	 * Returns both WordPress.org assets (for installPlugin/installTheme steps from wp.org)
+	 * and custom assets (for bundled installPlugin/installTheme steps).
 	 *
-	 * @return {Promise<Object>} Object with plugins and themes arrays.
+	 * @return {Promise<Object>} Object with plugins, themes, customPlugins, customThemes arrays.
 	 */
 	async getBlueprintAssets() {
 		const config = await this.getConfig();
@@ -255,6 +255,7 @@ export class AssetDiscoveryService {
 		const items = combineAssetsWithType( activePlugins, activeThemes );
 		const allAssets = await this.checkAssetsAgainstWpOrg( items, config );
 
+		// WordPress.org assets (will be installed from wp.org).
 		const wporgAssets = filterByWpOrgStatus( allAssets, true );
 
 		const wporgPlugins = wporgAssets
@@ -268,9 +269,25 @@ export class AssetDiscoveryService {
 			.filter( ( asset ) => asset.assetType === 'theme' )
 			.map( toBlueprintSlugFormat );
 
+		// Custom assets (will be bundled as separate zips).
+		const customAssets = filterByWpOrgStatus( allAssets, false );
+
+		const customPlugins = customAssets
+			.filter( ( asset ) => asset.assetType === 'plugin' )
+			.filter(
+				( plugin ) => filterBuiltInPlugins( [ plugin ] ).length > 0
+			)
+			.map( toBlueprintSlugFormat );
+
+		const customThemes = customAssets
+			.filter( ( asset ) => asset.assetType === 'theme' )
+			.map( toBlueprintSlugFormat );
+
 		return {
 			plugins: wporgPlugins,
 			themes: wporgThemes,
+			customPlugins,
+			customThemes,
 			siteName: this.getSiteName(),
 		};
 	}

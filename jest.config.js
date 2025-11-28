@@ -38,6 +38,8 @@ module.exports = {
 		'^@altolith/export$': '<rootDir>/assets/src/export',
 		'^@altolith/admin/(.*)$': '<rootDir>/assets/src/admin-settings/$1',
 		'^@altolith/admin$': '<rootDir>/assets/src/admin-settings',
+		'^@altolith/profiles/(.*)$': '<rootDir>/assets/src/profiles/$1',
+		'^@altolith/profiles$': '<rootDir>/assets/src/profiles',
 	},
 	transform: {
 		'^.+\\.(js|jsx)$': [

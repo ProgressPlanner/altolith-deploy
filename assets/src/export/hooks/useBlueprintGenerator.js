@@ -26,39 +26,53 @@ export function useBlueprintGenerator() {
 		/**
 		 * Generate blueprint JSON.
 		 *
-		 * @param {Object}   [options]          Optional options object.
-		 * @param {Function} [setStatusMessage] Optional status message callback.
-		 * @return {Promise<Object>} Blueprint JSON object.
+		 * @param {Object}   [options]           Optional options object.
+		 * @param {string}   [options.baseUrl]   Base URL for URL-based resources (e.g., 'https://example.com').
+		 * @param {string}   [options.subfolder] Subfolder path for blueprint files (e.g., 'playground').
+		 * @param {Function} [setStatusMessage]  Optional status message callback.
+		 * @return {Promise<Object>} Blueprint JSON object with customPlugins and customThemes arrays.
 		 */
 		async ( options = null, setStatusMessage = null ) => {
 			// Handle case where first argument is setStatusMessage (backwards compatibility).
 			let actualSetStatusMessage;
+			let actualOptions = {};
 			if ( typeof options === 'function' ) {
 				actualSetStatusMessage = options;
 			} else {
 				actualSetStatusMessage = setStatusMessage;
+				actualOptions = options || {};
 			}
-			// Fetch WordPress.org plugin/theme slugs and site name using browser-based discovery.
+
+			// Extract URL options for resource generation
+			const { baseUrl, subfolder } = actualOptions;
+			// Fetch WordPress.org and custom plugin/theme slugs using browser-based discovery.
 			if ( actualSetStatusMessage ) {
 				actualSetStatusMessage(
-					'Detecting WordPress.org plugins and themes…',
+					'Detecting plugins and themes…',
 					'progress',
-					'detectWporgAssets'
+					'detectAssets'
 				);
 			}
 			const assetsResponse = await assetDiscovery.getBlueprintAssets();
 
-			let { plugins: wporgPlugins, themes: wporgThemes } = assetsResponse;
+			let {
+				plugins: wporgPlugins,
+				themes: wporgThemes,
+				customPlugins,
+				customThemes,
+			} = assetsResponse;
 
 			/**
-			 * Filter discovered WordPress.org assets.
+			 * Filter discovered assets.
 			 *
 			 * Allows modification of detected plugins and themes before blueprint generation.
 			 *
-			 * @param {Object}        assets         Discovered assets object.
-			 * @param {Array<string>} assets.plugins WordPress.org plugin slugs.
-			 * @param {Array<string>} assets.themes  WordPress.org theme slugs.
-			 * @param {Object}        assetsResponse Full asset discovery response.
+			 * @param {Object}        assets               Discovered assets object.
+			 * @param {Array<string>} assets.plugins       WordPress.org plugin slugs.
+			 * @param {Array<string>} assets.themes        WordPress.org theme slugs.
+			 * @param {Array<string>} assets.customPlugins Custom plugin slugs.
+			 * @param {Array<string>} assets.customThemes  Custom theme slugs.
+			 * @param {Object}        assetsResponse       Full asset discovery response.
 			 *
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
@@ -75,12 +89,19 @@ export function useBlueprintGenerator() {
 			 */
 			const filteredAssets = applyFilters(
 				'altolith.export.step.createBlueprintBundle.assets',
-				{ plugins: wporgPlugins, themes: wporgThemes },
+				{
+					plugins: wporgPlugins,
+					themes: wporgThemes,
+					customPlugins,
+					customThemes,
+				},
 				assetsResponse
 			);
 
 			wporgPlugins = filteredAssets.plugins || [];
 			wporgThemes = filteredAssets.themes || [];
+			customPlugins = filteredAssets.customPlugins || [];
+			customThemes = filteredAssets.customThemes || [];
 
 			// Start configuring Playground settings
 			if ( actualSetStatusMessage ) {
@@ -91,10 +112,15 @@ export function useBlueprintGenerator() {
 				);
 			}
 
-			// Build blueprint steps array with bundled wp-content resources.
+			// Build blueprint steps array.
+			// If baseUrl is provided, uses URL-based resources; otherwise uses bundled resources.
 			const steps = buildBlueprintSteps( {
 				wporgPlugins,
 				wporgThemes,
+				customPlugins,
+				customThemes,
+				baseUrl,
+				subfolder,
 			} );
 
 			// Construct blueprint JSON.
@@ -108,9 +134,9 @@ export function useBlueprintGenerator() {
 				);
 				// Update detection message to success
 				actualSetStatusMessage(
-					'Detected WordPress.org plugins and themes',
+					'Detected plugins and themes',
 					'success',
-					'detectWporgAssets'
+					'detectAssets'
 				);
 				// Update configuration message to success
 				actualSetStatusMessage(
@@ -118,36 +144,44 @@ export function useBlueprintGenerator() {
 					'success',
 					'configurePlayground'
 				);
-				// Update plugin/theme messages to success
-				// Keep original message text, just update type to success
+				// WordPress.org plugins
 				if ( wporgPlugins.length > 0 ) {
-					const pluginNames = wporgPlugins.join( ', ' );
 					actualSetStatusMessage(
 						`Adding ${ wporgPlugins.length } WordPress.org plugin${
 							wporgPlugins.length !== 1 ? 's' : ''
-						} to blueprint`,
+						}: ${ wporgPlugins.join( ', ' ) }`,
 						'success',
-						'addPluginsToBlueprint'
-					);
-					actualSetStatusMessage(
-						`Plugins: ${ pluginNames }`,
-						'success',
-						'pluginsList'
+						'addWporgPluginsToBlueprint'
 					);
 				}
+				// Custom plugins
+				if ( customPlugins.length > 0 ) {
+					actualSetStatusMessage(
+						`Adding ${ customPlugins.length } custom plugin${
+							customPlugins.length !== 1 ? 's' : ''
+						}: ${ customPlugins.join( ', ' ) }`,
+						'success',
+						'addCustomPluginsToBlueprint'
+					);
+				}
+				// WordPress.org themes
 				if ( wporgThemes.length > 0 ) {
-					const themeNames = wporgThemes.join( ', ' );
 					actualSetStatusMessage(
 						`Adding ${ wporgThemes.length } WordPress.org theme${
 							wporgThemes.length !== 1 ? 's' : ''
-						} to blueprint`,
+						}: ${ wporgThemes.join( ', ' ) }`,
 						'success',
-						'addThemesToBlueprint'
+						'addWporgThemesToBlueprint'
 					);
+				}
+				// Custom themes
+				if ( customThemes.length > 0 ) {
 					actualSetStatusMessage(
-						`Themes: ${ themeNames }`,
+						`Adding ${ customThemes.length } custom theme${
+							customThemes.length !== 1 ? 's' : ''
+						}: ${ customThemes.join( ', ' ) }`,
 						'success',
-						'themesList'
+						'addCustomThemesToBlueprint'
 					);
 				}
 			}
@@ -157,9 +191,11 @@ export function useBlueprintGenerator() {
 			 *
 			 * Allows final modification of blueprint before it's used for deployment.
 			 *
-			 * @param {Object}        blueprint    Complete blueprint JSON object.
-			 * @param {Array<string>} wporgPlugins WordPress.org plugin slugs.
-			 * @param {Array<string>} wporgThemes  WordPress.org theme slugs.
+			 * @param {Object}        blueprint     Complete blueprint JSON object.
+			 * @param {Array<string>} wporgPlugins  WordPress.org plugin slugs.
+			 * @param {Array<string>} wporgThemes   WordPress.org theme slugs.
+			 * @param {Array<string>} customPlugins Custom plugin slugs.
+			 * @param {Array<string>} customThemes  Custom theme slugs.
 			 *
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
@@ -175,10 +211,17 @@ export function useBlueprintGenerator() {
 				'altolith.export.step.createBlueprintBundle.generated',
 				blueprint,
 				wporgPlugins,
-				wporgThemes
+				wporgThemes,
+				customPlugins,
+				customThemes
 			);
 
-			return blueprint;
+			// Return blueprint with asset lists for bundle generation.
+			return {
+				blueprint,
+				customPlugins,
+				customThemes,
+			};
 		},
 		[ assetDiscovery ]
 	);

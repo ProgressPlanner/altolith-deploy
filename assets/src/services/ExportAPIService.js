@@ -188,48 +188,114 @@ export class ExportAPIService {
 	}
 
 	/**
-	 * Create site archive
+	 * Export core WordPress content (database, uploads, mu-plugins).
 	 *
-	 * Creates wp-content.zip containing custom plugins, themes, and uploads.
+	 * Creates wp-content.zip containing only core content, excluding
+	 * custom plugins and themes which are exported separately.
 	 *
-	 * @param {Object}  options                Archive creation options.
-	 * @param {Array}   options.assets         Array of asset objects to include.
-	 * @param {boolean} options.includeUploads Whether to include uploads directory.
 	 * @return {Promise<Object>} Response with zipPath, zipUrl, and zipSize
 	 */
-	async createArchive( { assets = [], includeUploads = true } = {} ) {
+	async exportCoreContent() {
 		try {
-			// Extract slugs from assets array
-			const customAssets = assets.map( ( asset ) => asset.slug || asset );
-
 			const response = await this.apiFetch( {
-				path: ENDPOINTS.EXPORT_WORKFLOW.CREATE_ARCHIVE,
+				path: ENDPOINTS.EXPORT_WORKFLOW.CORE_CONTENT,
 				method: 'POST',
-				data: {
-					custom_assets: customAssets,
-					include_uploads: includeUploads,
-				},
 			} );
 
 			if ( response.success && response.data ) {
-				// The PHP endpoint returns data in a 'data' property
-				const archiveData = response.data;
+				const data = response.data;
 				return {
 					success: true,
-					zipPath: archiveData.zipPath || null,
-					zipUrl: archiveData.zipUrl || null,
-					zipSize: archiveData.zipSize || 0,
+					zipPath: data.zipPath || null,
+					zipUrl: data.zipUrl || null,
+					zipSize: data.zipSize || 0,
 				};
 			}
 
 			return {
 				success: false,
-				message: response.message || 'Failed to create archive',
+				message: response.message || 'Failed to export core content',
 			};
 		} catch ( error ) {
 			return {
 				success: false,
-				message: error.message || 'Failed to create archive',
+				message: error.message || 'Failed to export core content',
+			};
+		}
+	}
+
+	/**
+	 * Export a single plugin as a zip file.
+	 *
+	 * @param {string} slug Plugin slug (directory name).
+	 * @return {Promise<Object>} Response with zipPath, zipUrl, zipSize, and slug
+	 */
+	async exportPlugin( slug ) {
+		try {
+			const response = await this.apiFetch( {
+				path: ENDPOINTS.EXPORT_WORKFLOW.EXPORT_PLUGIN,
+				method: 'POST',
+				data: { slug },
+			} );
+
+			if ( response.success && response.data ) {
+				const data = response.data;
+				return {
+					success: true,
+					zipPath: data.zipPath || null,
+					zipUrl: data.zipUrl || null,
+					zipSize: data.zipSize || 0,
+					slug: data.slug || slug,
+				};
+			}
+
+			return {
+				success: false,
+				message:
+					response.message || `Failed to export plugin: ${ slug }`,
+			};
+		} catch ( error ) {
+			return {
+				success: false,
+				message: error.message || `Failed to export plugin: ${ slug }`,
+			};
+		}
+	}
+
+	/**
+	 * Export a single theme as a zip file.
+	 *
+	 * @param {string} slug Theme slug (directory name).
+	 * @return {Promise<Object>} Response with zipPath, zipUrl, zipSize, and slug
+	 */
+	async exportTheme( slug ) {
+		try {
+			const response = await this.apiFetch( {
+				path: ENDPOINTS.EXPORT_WORKFLOW.EXPORT_THEME,
+				method: 'POST',
+				data: { slug },
+			} );
+
+			if ( response.success && response.data ) {
+				const data = response.data;
+				return {
+					success: true,
+					zipPath: data.zipPath || null,
+					zipUrl: data.zipUrl || null,
+					zipSize: data.zipSize || 0,
+					slug: data.slug || slug,
+				};
+			}
+
+			return {
+				success: false,
+				message:
+					response.message || `Failed to export theme: ${ slug }`,
+			};
+		} catch ( error ) {
+			return {
+				success: false,
+				message: error.message || `Failed to export theme: ${ slug }`,
 			};
 		}
 	}
@@ -301,67 +367,6 @@ export class ExportAPIService {
 				success: false,
 				error: error.message || 'Failed to fetch HTML batch via PHP',
 				results: {},
-			};
-		}
-	}
-
-	/**
-	 * Create blueprint bundle
-	 *
-	 * Creates blueprint-bundle.zip containing blueprint.json and wp-content.zip.
-	 *
-	 * @param {Object} options                  Bundle creation options.
-	 * @param {Object} options.blueprint        Blueprint JSON data.
-	 * @param {string} options.wpContentZipPath Path to wp-content.zip.
-	 * @return {Promise<Object>} Response with bundlePath, bundleUrl, and bundleSize
-	 */
-	async createBlueprintBundle( { blueprint, wpContentZipPath } = {} ) {
-		try {
-			if ( ! blueprint ) {
-				return {
-					success: false,
-					message: 'Blueprint data is required',
-				};
-			}
-
-			if ( ! wpContentZipPath ) {
-				return {
-					success: false,
-					message: 'Archive path is required',
-				};
-			}
-
-			const response = await this.apiFetch( {
-				path: ENDPOINTS.EXPORT_WORKFLOW.GENERATE_BLUEPRINT_BUNDLE,
-				method: 'POST',
-				data: {
-					blueprintData: blueprint,
-					archiveResult: {
-						zipPath: wpContentZipPath,
-					},
-				},
-			} );
-
-			if ( response.success && response.data ) {
-				// The PHP endpoint returns data in a 'data' property
-				const bundleData = response.data;
-				return {
-					success: true,
-					bundlePath: bundleData.bundlePath || null,
-					bundleUrl: bundleData.bundleUrl || null,
-					bundleSize: bundleData.bundleSize || 0,
-				};
-			}
-
-			return {
-				success: false,
-				message:
-					response.message || 'Failed to create blueprint bundle',
-			};
-		} catch ( error ) {
-			return {
-				success: false,
-				message: error.message || 'Failed to create blueprint bundle',
 			};
 		}
 	}

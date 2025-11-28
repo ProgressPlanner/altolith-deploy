@@ -25,24 +25,6 @@ export function getProviderMetadata() {
 }
 
 /**
- * Get providers by deployment type.
- *
- * @param {string} deploymentType Deployment type
- * @return {Array<Object>} Array of provider metadata objects
- */
-export function getProvidersByDeploymentType( deploymentType ) {
-	const providers = ProviderRegistry.getByDeploymentType( deploymentType );
-	return providers.map( ( ProviderClass ) => {
-		return {
-			id: ProviderClass.ID,
-			name: ProviderClass.NAME || '',
-			description: ProviderClass.DESCRIPTION || '',
-			type: ProviderClass.TYPE || 'generic',
-		};
-	} );
-}
-
-/**
  * Get specific provider metadata.
  *
  * @param {string} providerId Provider ID

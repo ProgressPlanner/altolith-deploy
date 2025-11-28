@@ -92,8 +92,8 @@ export default function ProviderField( {
 		</>
 	);
 
-	// Handle checkbox fields
-	if ( type === 'checkbox' ) {
+	// Handle checkbox/toggle fields
+	if ( type === 'checkbox' || type === 'toggle' ) {
 		return renderWithHooks(
 			<div
 				className={ `altolith-provider-field altolith-provider-field--${ type } ${

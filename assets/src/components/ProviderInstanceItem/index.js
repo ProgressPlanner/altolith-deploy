@@ -68,19 +68,40 @@ const tagBaseStyle = {
 };
 
 /**
- * Get deployment type tag color
+ * Get output type tag color
  *
- * @param {string|null} deploymentType Deployment type identifier.
+ * @param {string} outputType Output type identifier.
  * @return {string} Background color for the tag.
  */
-const getDeploymentTypeColor = ( deploymentType ) => {
-	switch ( deploymentType ) {
+const getOutputTypeColor = ( outputType ) => {
+	switch ( outputType ) {
 		case 'static_site':
-			return colors.deploymentStaticSite;
-		case 'blueprint_bundle':
-			return colors.deploymentBlueprintBundle;
+			return colors.deploymentStaticSite || colors.primary;
+		case 'blueprint':
+			return (
+				colors.deploymentBlueprintBundle ||
+				colors.secondary ||
+				colors.primary
+			);
 		default:
 			return colors.primary;
+	}
+};
+
+/**
+ * Get output type display label
+ *
+ * @param {string} outputType Output type identifier.
+ * @return {string} Human-readable label for the output type.
+ */
+const getOutputTypeLabel = ( outputType ) => {
+	switch ( outputType ) {
+		case 'static_site':
+			return __( 'Static', 'altolith-deploy' );
+		case 'blueprint':
+			return __( 'Blueprint', 'altolith-deploy' );
+		default:
+			return outputType;
 	}
 };
 
@@ -98,22 +119,20 @@ const actionsCellStyle = {
 /**
  * Provider Instance Item Component
  *
- * @param {Object}   props                     Component props.
- * @param {Object}   props.instance            Instance data with instanceId and config.
- * @param {Object}   props.provider            Provider metadata.
- * @param {string}   props.deploymentType      Deployment type identifier.
- * @param {string}   props.deploymentTypeLabel Deployment type label.
- * @param {Array}    props.allInstances        All provider instances for copy config feature.
- * @param {Function} props.onDelete            Callback to delete instance.
- * @param {Function} props.onRename            Callback to rename instance.
- * @param {Function} props.onSave              Callback to save config changes.
+ * @param {Object}   props                    Component props.
+ * @param {Object}   props.instance           Instance data with instanceId and config.
+ * @param {Object}   props.provider           Provider metadata.
+ * @param {Array}    props.enabledOutputTypes Array of enabled output type IDs.
+ * @param {Array}    props.allInstances       All provider instances for copy config feature.
+ * @param {Function} props.onDelete           Callback to delete instance.
+ * @param {Function} props.onRename           Callback to rename instance.
+ * @param {Function} props.onSave             Callback to save config changes.
  * @return {JSX.Element} Rendered component.
  */
 export default function ProviderInstanceItem( {
 	instance,
 	provider,
-	deploymentType,
-	deploymentTypeLabel,
+	enabledOutputTypes = [],
 	allInstances,
 	onDelete,
 	onRename,
@@ -305,21 +324,41 @@ export default function ProviderInstanceItem( {
 				{ providerMetadata.name || provider?.id || providerType }
 			</td>
 
-			{ /* Deployment Type */ }
+			{ /* Output Types */ }
 			<td
-				className="altolith-provider-instance-item__deployment-cell"
+				className="altolith-provider-instance-item__output-types-cell"
 				style={ tableCellStyleWithoutHorizontalBorder }
 			>
-				{ deploymentTypeLabel && (
-					<span
-						className={ `altolith-provider-instance-item__deployment-tag altolith-provider-instance-item__deployment-tag--${ deploymentType }` }
+				{ enabledOutputTypes.length > 0 ? (
+					<div
 						style={ {
-							...tagBaseStyle,
-							backgroundColor:
-								getDeploymentTypeColor( deploymentType ),
+							display: 'flex',
+							gap: spacing.xs,
+							flexWrap: 'wrap',
 						} }
 					>
-						{ deploymentTypeLabel }
+						{ enabledOutputTypes.map( ( outputType ) => (
+							<span
+								key={ outputType }
+								className={ `altolith-provider-instance-item__output-type-tag altolith-provider-instance-item__output-type-tag--${ outputType }` }
+								style={ {
+									...tagBaseStyle,
+									backgroundColor:
+										getOutputTypeColor( outputType ),
+								} }
+							>
+								{ getOutputTypeLabel( outputType ) }
+							</span>
+						) ) }
+					</div>
+				) : (
+					<span
+						style={ {
+							color: colors.textMuted,
+							fontSize: fontSize.sm,
+						} }
+					>
+						{ __( 'None configured', 'altolith-deploy' ) }
 					</span>
 				) }
 			</td>

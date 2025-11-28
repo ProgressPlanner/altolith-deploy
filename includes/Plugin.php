@@ -348,7 +348,7 @@ class Plugin
 		$adminBarDependenciesController = new REST\AdminBarDependenciesController();
 
 		// Initialize export controllers.
-		$exportStepsController = new REST\Export\ExportStepsController($this);
+		$exportStepsController = new REST\Export\ExportStepsController();
 		$htmlFetchController = new REST\Export\HtmlFetchController();
 
 		// Register routes from each controller.

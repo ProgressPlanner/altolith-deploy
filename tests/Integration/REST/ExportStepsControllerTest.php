@@ -19,7 +19,6 @@ namespace Altolith\Deploy\Tests\Integration\REST;
 
 use Altolith\Deploy\Tests\Helpers\TestCase;
 use Altolith\Deploy\REST\Export\ExportStepsController;
-use Altolith\Deploy\Plugin;
 use WP_REST_Request;
 
 /**
@@ -62,8 +61,7 @@ class ExportStepsControllerTest extends TestCase {
 		$wp_rest_server = new \WP_REST_Server();
 
 		// Initialize controller and register routes via rest_api_init hook.
-		$plugin = Plugin::getInstance();
-		$this->controller = new ExportStepsController( $plugin );
+		$this->controller = new ExportStepsController();
 		add_action( 'rest_api_init', [ $this->controller, 'registerRoutes' ] );
 		do_action( 'rest_api_init', $wp_rest_server );
 	}

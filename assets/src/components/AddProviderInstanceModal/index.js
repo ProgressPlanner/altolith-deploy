@@ -13,7 +13,6 @@ import { Modal, TextControl, SelectControl } from '@wordpress/components';
 import { v4 as uuidv4 } from 'uuid';
 import ModalActions from '../ModalActions';
 import { spacing } from '@altolith/utils/styles';
-import { getDeploymentTypeLabel } from '@altolith/utils/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const formStyle = {
@@ -25,19 +24,17 @@ const formStyle = {
 /**
  * Add Provider Instance Modal Component.
  *
- * @param {Object}   props                Component props.
- * @param {boolean}  props.isOpen         Whether modal is open.
- * @param {Function} props.onClose        Callback to close modal.
- * @param {Array}    props.providers      Array of available provider types.
- * @param {string}   props.deploymentType Optional deployment type to filter providers.
- * @param {Function} props.onCreate       Callback to create instance (instanceId, providerType, instanceName).
+ * @param {Object}   props           Component props.
+ * @param {boolean}  props.isOpen    Whether modal is open.
+ * @param {Function} props.onClose   Callback to close modal.
+ * @param {Array}    props.providers Array of available provider types.
+ * @param {Function} props.onCreate  Callback to create instance (instanceId, providerType, instanceName).
  * @return {JSX.Element|null} Rendered component.
  */
 export default function AddProviderInstanceModal( {
 	isOpen,
 	onClose,
 	providers,
-	deploymentType = null,
 	onCreate,
 } ) {
 	const [ selectedProviderType, setSelectedProviderType ] = useState( '' );
@@ -114,14 +111,7 @@ export default function AddProviderInstanceModal( {
 		( p ) => p.id === selectedProviderType
 	);
 
-	// Generate modal title based on deployment type
-	const modalTitle = deploymentType
-		? sprintf(
-				/* translators: %s: deployment type label */
-				__( 'Add %s Provider', 'altolith-deploy' ),
-				getDeploymentTypeLabel( deploymentType )
-		  )
-		: __( 'Add Provider Instance', 'altolith-deploy' );
+	const modalTitle = __( 'Add Provider Instance', 'altolith-deploy' );
 
 	// Always show provider selection if there are any providers
 	const showProviderSelection = providers.length > 0;

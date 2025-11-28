@@ -96,15 +96,15 @@ export function useExportController( exportState ) {
 						  };
 
 				// Update step progress (overall progress bar)
-				setStepProgress( 'uploadStaticFiles', progress );
+				setStepProgress( 'upload', progress );
 
 				// Update provider-specific progress for the progress bars
 				// This is critical because processStaticSiteUrls bypasses ThreadOrchestrator's
 				// wrapped setStepProgress that normally calls setProviderProgress
 				if ( currentProviderId ) {
 					setProviderProgress( currentProviderId, {
-						stepId: 'uploadStaticFiles',
-						stepLabel: 'Upload Static Files',
+						stepId: 'upload',
+						stepLabel: 'Upload Files',
 						progress: {
 							current: uploadedFiles,
 							total: totalFiles,
@@ -186,6 +186,7 @@ export function useExportController( exportState ) {
 				{
 					siteUrl,
 					providerInstancesByType,
+					providerInstances: allProviderInstances,
 				},
 				{
 					api,

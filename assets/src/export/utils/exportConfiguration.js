@@ -7,7 +7,10 @@
  */
 
 import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
-import { getDeploymentTypes } from '@altolith/utils/deploymentTypes';
+import {
+	getEnabledOutputTypes,
+	getOutputTypes,
+} from '@altolith/utils/outputTypes';
 
 /**
  * Prepare export configuration from settings response
@@ -30,19 +33,16 @@ export function prepareExportConfiguration( settingsResponse ) {
 }
 
 /**
- * Get provider instances for a specific deployment type
+ * Get provider instances that have a specific output type enabled.
  *
- * Filters provider configurations to find instances
- * that support the specified deployment type based on their provider type.
+ * In the new architecture, providers are generic storage backends.
+ * Output types (static_site, blueprint, etc.) are enabled per-instance via config toggles.
  *
  * @param {Object} providerConfigs - All provider configurations
- * @param {string} deploymentType  - Deployment type to filter by
- * @return {Array<string>} Array of instance IDs
+ * @param {string} outputType      - Output type to filter by (e.g., 'static_site', 'blueprint')
+ * @return {Array<string>} Array of instance IDs that have this output type enabled
  */
-export function getInstancesForDeploymentType(
-	providerConfigs,
-	deploymentType
-) {
+export function getInstancesForOutputType( providerConfigs, outputType ) {
 	try {
 		if ( ! providerConfigs || typeof providerConfigs !== 'object' ) {
 			return [];
@@ -54,27 +54,47 @@ export function getInstancesForDeploymentType(
 					return false;
 				}
 
-				// Check if provider type supports this deployment type
+				// Check if provider type is registered
 				const providerType = instanceConfig.provider_type;
 				if ( ! providerType ) {
 					return false;
 				}
 
-				// Get provider class from registry and check if it supports the deployment type
 				const ProviderClass = ProviderRegistry.get( providerType );
 				if ( ! ProviderClass ) {
 					return false;
 				}
 
-				const supportsType =
-					ProviderClass.DEPLOYMENT_TYPE === deploymentType;
-
-				return supportsType;
+				// Check if this output type is enabled in instance config
+				const enabledTypes = getEnabledOutputTypes( instanceConfig );
+				return enabledTypes.includes( outputType );
 			} )
 			.map( ( [ id ] ) => id );
 	} catch ( error ) {
 		return [];
 	}
+}
+
+/**
+ * Get provider instances for a specific deployment type (legacy compatibility).
+ *
+ * @deprecated Use getInstancesForOutputType instead.
+ * @param {Object} providerConfigs - All provider configurations
+ * @param {string} deploymentType  - Deployment type to filter by
+ * @return {Array<string>} Array of instance IDs
+ */
+export function getInstancesForDeploymentType(
+	providerConfigs,
+	deploymentType
+) {
+	// Map legacy deployment types to output types
+	const outputTypeMapping = {
+		static_site: 'static_site',
+		blueprint_bundle: 'blueprint',
+	};
+
+	const outputType = outputTypeMapping[ deploymentType ] || deploymentType;
+	return getInstancesForOutputType( providerConfigs, outputType );
 }
 
 /**
@@ -106,20 +126,23 @@ function isValidProviderInstance( instanceId, config ) {
 }
 
 /**
- * Build provider instance objects from configurations
+ * Build provider instance objects from configurations for a specific output type.
  *
  * Creates array of provider instances with full config for threading.
  * Each instance has id, label, and complete configuration.
  * Validates each instance to ensure it's properly configured.
  *
  * @param {Object} providerConfigs - All provider configurations
- * @param {string} deploymentType  - Deployment type to filter by
+ * @param {string} outputType      - Output type to filter by (e.g., 'static_site', 'blueprint')
  * @return {Array<Object>} Valid provider instance objects with { id, label, config }
  */
-export function buildProviderInstances( providerConfigs, deploymentType ) {
-	const instanceIds = getInstancesForDeploymentType(
+export function buildProviderInstancesForOutputType(
+	providerConfigs,
+	outputType
+) {
+	const instanceIds = getInstancesForOutputType(
 		providerConfigs,
-		deploymentType
+		outputType
 	);
 
 	return (
@@ -141,51 +164,92 @@ export function buildProviderInstances( providerConfigs, deploymentType ) {
 }
 
 /**
- * Determine providers for all deployment types
+ * Build provider instance objects from configurations (legacy compatibility).
+ *
+ * @deprecated Use buildProviderInstancesForOutputType instead.
+ * @param {Object} providerConfigs - All provider configurations
+ * @param {string} deploymentType  - Deployment type to filter by
+ * @return {Array<Object>} Valid provider instance objects with { id, label, config }
+ */
+export function buildProviderInstances( providerConfigs, deploymentType ) {
+	// Map legacy deployment types to output types
+	const outputTypeMapping = {
+		static_site: 'static_site',
+		blueprint_bundle: 'blueprint',
+	};
+
+	const outputType = outputTypeMapping[ deploymentType ] || deploymentType;
+	return buildProviderInstancesForOutputType( providerConfigs, outputType );
+}
+
+/**
+ * Determine providers for all output types.
  *
  * Pure function that takes provider configs and returns
- * arrays of instance IDs for each deployment type.
- * Automatically gets deployment types from filterable registry.
+ * arrays of instance IDs for each output type.
+ * Automatically gets output types from filterable registry.
  *
  * @param {Object} providerConfigs - All provider configurations
- * @return {Object} Object with arrays of instance IDs keyed by deployment type
+ * @return {Object} Object with arrays of instance IDs keyed by output type
  */
-export function determineProvidersByDeploymentType( providerConfigs ) {
-	const deploymentTypes = getDeploymentTypes();
+export function determineProvidersByOutputType( providerConfigs ) {
+	const outputTypes = getOutputTypes();
 	const result = {};
 
-	Object.keys( deploymentTypes ).forEach( ( deploymentType ) => {
-		const instances = getInstancesForDeploymentType(
+	outputTypes.forEach( ( outputType ) => {
+		const instances = getInstancesForOutputType(
 			providerConfigs,
-			deploymentType
+			outputType.id
 		);
-		result[ deploymentType ] = instances;
+		result[ outputType.id ] = instances;
 	} );
 
 	return result;
 }
 
 /**
- * Build provider instances by deployment type
+ * Determine providers for all deployment types (legacy compatibility).
  *
- * Creates a map of deployment type to provider instance arrays.
+ * @deprecated Use determineProvidersByOutputType instead.
+ * @param {Object} providerConfigs - All provider configurations
+ * @return {Object} Object with arrays of instance IDs keyed by deployment type
+ */
+export function determineProvidersByDeploymentType( providerConfigs ) {
+	return determineProvidersByOutputType( providerConfigs );
+}
+
+/**
+ * Build provider instances by output type.
+ *
+ * Creates a map of output type to provider instance arrays.
  * Used for step filtering and context building.
  *
  * @param {Object} providerConfigs - All provider configurations
- * @return {Object} Object with arrays of provider instances keyed by deployment type
+ * @return {Object} Object with arrays of provider instances keyed by output type
  */
-export function buildProviderInstancesByType( providerConfigs ) {
-	const deploymentTypes = getDeploymentTypes();
+export function buildProviderInstancesByOutputType( providerConfigs ) {
+	const outputTypes = getOutputTypes();
 	const result = {};
 
-	Object.keys( deploymentTypes ).forEach( ( deploymentType ) => {
-		result[ deploymentType ] = buildProviderInstances(
+	outputTypes.forEach( ( outputType ) => {
+		result[ outputType.id ] = buildProviderInstancesForOutputType(
 			providerConfigs,
-			deploymentType
+			outputType.id
 		);
 	} );
 
 	return result;
+}
+
+/**
+ * Build provider instances by deployment type (legacy compatibility).
+ *
+ * @deprecated Use buildProviderInstancesByOutputType instead.
+ * @param {Object} providerConfigs - All provider configurations
+ * @return {Object} Object with arrays of provider instances keyed by deployment type
+ */
+export function buildProviderInstancesByType( providerConfigs ) {
+	return buildProviderInstancesByOutputType( providerConfigs );
 }
 
 /**

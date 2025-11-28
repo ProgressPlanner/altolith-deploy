@@ -6,20 +6,11 @@
 
 import StepRegistry from '../../registry/StepRegistry';
 
-// Mock steps data for registration - 4 steps total with deploymentType
+// Mock steps data for registration - 3 steps total (unified upload step)
 const mockSteps = [
 	{
 		id: 'discoverAndScanSite',
 		label: 'Discover Site',
-		deploymentType: 'static_site',
-		handler: jest.fn(),
-		requires: {},
-		provides: {},
-	},
-	{
-		id: 'uploadStaticFiles',
-		label: 'Upload Static',
-		deploymentType: 'static_site',
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
@@ -27,15 +18,13 @@ const mockSteps = [
 	{
 		id: 'createBlueprintBundle',
 		label: 'Create Bundle',
-		deploymentType: 'blueprint_bundle',
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
 	},
 	{
-		id: 'uploadBlueprintBundle',
-		label: 'Upload Bundle',
-		deploymentType: 'blueprint_bundle',
+		id: 'upload',
+		label: 'Upload Files',
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
@@ -74,8 +63,7 @@ jest.mock( '@wordpress/i18n', () => ( {
 // Mock step modules - they self-register via addAction
 jest.mock( '../discoverAndScanSite', () => {} );
 jest.mock( '../createBlueprintBundle', () => {} );
-jest.mock( '../uploadBlueprintBundle', () => {} );
-jest.mock( '../uploadStaticFiles', () => {} );
+jest.mock( '../upload', () => {} );
 
 // Import after mocks are set up
 import { getRegisteredSteps, getActiveSteps } from '../index';
@@ -94,8 +82,8 @@ describe( 'Steps Index', () => {
 		test( 'should return array of steps', () => {
 			const steps = getRegisteredSteps();
 			expect( Array.isArray( steps ) ).toBe( true );
-			// doAction mock populates with 4 steps
-			expect( steps.length ).toBe( 4 );
+			// doAction mock populates with 3 steps (unified upload)
+			expect( steps.length ).toBe( 3 );
 		} );
 
 		test( 'should call doAction with registration hook', () => {
@@ -124,8 +112,8 @@ describe( 'Steps Index', () => {
 			// Call getRegisteredSteps - should clear first then repopulate via doAction
 			const steps = getRegisteredSteps();
 
-			// Registry should have the 4 mock steps, not the 'testStep' we added manually
-			expect( steps ).toHaveLength( 4 );
+			// Registry should have the 3 mock steps, not the 'testStep' we added manually
+			expect( steps ).toHaveLength( 3 );
 			expect(
 				steps.find( ( s ) => s.id === 'testStep' )
 			).toBeUndefined();
@@ -134,81 +122,26 @@ describe( 'Steps Index', () => {
 
 	describe( 'getActiveSteps', () => {
 		// Steps are registered via the mocked doAction hook
+		// Note: With unified provider architecture, steps no longer have deploymentType
+		// and instead use shouldSkip functions based on output type config
 
-		test( 'should include all steps when both provider types have instances', () => {
-			const context = {
-				providerInstancesByType: {
-					static_site: [ { id: 'static-1' } ],
-					blueprint_bundle: [ { id: 'bundle-1' } ],
-				},
-			};
-
-			const steps = getActiveSteps( context );
-
-			expect( steps ).toHaveLength( 4 );
-		} );
-
-		test( 'should exclude static site steps when no static providers', () => {
-			const context = {
-				providerInstancesByType: {
-					static_site: [],
-					blueprint_bundle: [ { id: 'bundle-1' } ],
-				},
-			};
-
-			const steps = getActiveSteps( context );
-
-			// Should exclude discoverAndScanSite and uploadStaticFiles
-			const stepIds = steps.map( ( s ) => s.id );
-			expect( stepIds ).not.toContain( 'discoverAndScanSite' );
-			expect( stepIds ).not.toContain( 'uploadStaticFiles' );
-			expect( stepIds ).toContain( 'createBlueprintBundle' );
-		} );
-
-		test( 'should exclude blueprint steps when no blueprint providers', () => {
-			const context = {
-				providerInstancesByType: {
-					static_site: [ { id: 'static-1' } ],
-					blueprint_bundle: [],
-				},
-			};
-
-			const steps = getActiveSteps( context );
-
-			// Should exclude all blueprint steps
-			const stepIds = steps.map( ( s ) => s.id );
-			expect( stepIds ).not.toContain( 'createBlueprintBundle' );
-			expect( stepIds ).not.toContain( 'uploadBlueprintBundle' );
-			expect( stepIds ).toContain( 'discoverAndScanSite' );
-		} );
-
-		test( 'should handle missing providerInstancesByType in context', () => {
+		test( 'should include all steps when no shouldSkip filter rejects them', () => {
 			const context = {};
 
 			const steps = getActiveSteps( context );
 
-			// With no providers, should exclude all provider-dependent steps
-			const stepIds = steps.map( ( s ) => s.id );
-			expect( stepIds ).not.toContain( 'discoverAndScanSite' );
-			expect( stepIds ).not.toContain( 'uploadStaticFiles' );
-			expect( stepIds ).not.toContain( 'createBlueprintBundle' );
+			// Mock steps don't have deploymentType or shouldSkip, so all should be included
+			expect( steps ).toHaveLength( 3 );
 		} );
 
 		test( 'should call shouldSkip function when present', () => {
-			// Test the shouldSkip logic directly by getting steps and verifying
-			// a step with shouldSkip returning true would be filtered out
-			const context = {
-				providerInstancesByType: {
-					static_site: [ { id: 'static-1' } ],
-					blueprint_bundle: [ { id: 'bundle-1' } ],
-				},
-			};
+			const context = {};
 
 			const steps = getActiveSteps( context );
 
 			// The mock steps don't have shouldSkip, so we verify the filter logic
 			// works by checking all steps are included
-			expect( steps ).toHaveLength( 4 );
+			expect( steps ).toHaveLength( 3 );
 
 			// Test the shouldSkip filter logic manually on a step array
 			const stepsWithSkip = [
@@ -235,12 +168,7 @@ describe( 'Steps Index', () => {
 		} );
 
 		test( 'should include step when shouldSkip returns false', () => {
-			const context = {
-				providerInstancesByType: {
-					static_site: [ { id: 'static-1' } ],
-					blueprint_bundle: [ { id: 'bundle-1' } ],
-				},
-			};
+			const context = {};
 
 			// Test the shouldSkip filter logic manually
 			const stepsWithSkip = [

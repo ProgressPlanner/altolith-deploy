@@ -10,7 +10,6 @@
 
 namespace Altolith\Deploy\Services;
 
-use Altolith\Deploy\Plugin;
 use Altolith\Deploy\Utilities\TempDirectoryManager;
 use Altolith\Deploy\Utilities\SecurityValidator;
 use Altolith\Deploy\Services\ZipService;
@@ -19,17 +18,10 @@ use Altolith\Deploy\Services\FileBatchService;
 \defined('ABSPATH') || exit;
 
 /**
- * Service for exporting complete site.
+ * Service for exporting site content.
  */
 class ExportService
 {
-	/**
-	 * Plugin instance.
-	 *
-	 * @var Plugin
-	 */
-	private Plugin $plugin;
-
 	/**
 	 * ZIP service instance.
 	 *
@@ -46,41 +38,31 @@ class ExportService
 
 	/**
 	 * Constructor.
-	 *
-	 * @param Plugin $plugin Plugin instance.
 	 */
-	public function __construct(Plugin $plugin)
+	public function __construct()
 	{
-		$this->plugin = $plugin;
 		$this->fileBatchService = new FileBatchService();
 		$this->zipService = new ZipService($this->fileBatchService);
 	}
 
 	/**
-	 * Export complete site as single zip file.
+	 * Export core site content as single zip file.
 	 *
 	 * Creates wp-content.zip containing:
 	 * - Database (SQLite)
 	 * - Uploads directory
-	 * - Custom plugins
-	 * - Custom themes
 	 * - MU-plugins directory
 	 *
-	 * @param string             $progressId       Progress ID for tracking (unused).
-	 * @param array<string>|null $customAssetSlugs Optional array of custom plugin/theme slugs to include in zip.
-	 *                                             If provided, only these assets are added. If null, all custom assets are added.
+	 * Note: Custom plugins and themes are exported separately via exportPlugin() and exportTheme().
+	 *
 	 * @return array<string, mixed>|\WP_Error Result array with zipPath and zipSize, or WP_Error on failure.
 	 */
-	public function exportCompleteSite(string $progressId = '', ?array $customAssetSlugs = null)
+	public function exportCoreContent()
 	{
-		// Note: WordPress Playground requires SQLite database.
-		// This method assumes SQLite is being used.
-
 		// WordPress Playground Compatibility:
 		// Use TempDirectoryManager instead of sys_get_temp_dir() because
 		// WordPress Playground's WASM environment may not have /tmp access.
-		// This uses wp-content/uploads/altolith-temp instead.
-		$tempZipPath = TempDirectoryManager::getTempFilePath('wp-content-complete-', '.zip');
+		$tempZipPath = TempDirectoryManager::getTempFilePath('wp-content-core-', '.zip');
 
 		if (false === $tempZipPath) {
 			return new \WP_Error(
@@ -90,14 +72,6 @@ class ExportService
 			);
 		}
 
-		// Create wp-content.zip in temp location.
-		// Each provider instance will handle moving it to their export_path.
-		$zipPath = $tempZipPath;
-
-		// Initialize zip archive with CREATE and OVERWRITE flags.
-		// CREATE: Create archive if it doesn't exist.
-		// OVERWRITE: Replace existing archive if it exists.
-		// Create in temp directory - each provider instance will handle moving it to their export_path.
 		$zip = new \ZipArchive();
 		if (true !== $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
 			return new \WP_Error(
@@ -107,9 +81,7 @@ class ExportService
 			);
 		}
 
-		// 1. Add database file first (most critical for site restoration).
-		// Database is stored in wp-content/database/ subdirectory in the zip.
-		// This maintains WordPress Playground's expected structure.
+		// 1. Add database file (most critical for site restoration).
 		$dbPath = $this->getDatabasePath();
 		if (false !== $dbPath && \file_exists($dbPath)) {
 			$dbRelativePath = 'wp-content/database/' . \basename($dbPath);
@@ -117,65 +89,134 @@ class ExportService
 		}
 
 		// 2. Add uploads directory (user media files).
-		// Skips files already offloaded to external storage (external storage).
-		// This prevents duplicate uploads and reduces zip size.
 		$uploadsDir = WP_CONTENT_DIR . '/uploads';
 		if (\is_dir($uploadsDir)) {
 			$this->zipService->addDirectoryToZip($zip, $uploadsDir, 'wp-content/uploads');
 		}
 
-		// 3. Add custom plugins only (non-wordpress.org plugins).
-		// WordPress.org plugins are excluded from the blueprint as they'll be downloaded
-		// from the WordPress.org API when Playground loads the blueprint.
-		// This dramatically reduces zip size (potentially GB → MB).
-		$this->addAssetsToZip($zip, 'plugin', $customAssetSlugs);
-
-		// 4. Add custom themes only (non-wordpress.org themes).
-		// Same exclusion strategy as plugins - wordpress.org themes are downloaded
-		// from the API, only custom themes need to be included in the zip.
-		$customAssets = (null === $customAssetSlugs)
-			? $this->plugin->getAssetDiscovery()->getAllCustomAssets()
-			: null;
-		$this->addAssetsToZip($zip, 'theme', $customAssetSlugs, $customAssets);
-
-		// 5. Add mu-plugins directory (must-use plugins).
-		// MU-plugins are always custom and must be included in full.
-		// No wordpress.org equivalent exists for mu-plugins.
+		// 3. Add mu-plugins directory (must-use plugins).
 		$mupluginsDir = WP_CONTENT_DIR . '/mu-plugins';
 		if (\is_dir($mupluginsDir)) {
 			$this->zipService->addDirectoryToZip($zip, $mupluginsDir, 'wp-content/mu-plugins', '', null, null);
 		}
 
-		// Final progress update (100%).
-
-		// Close zip archive to finalize writing.
 		$zip->close();
 
-		// Get final file size for response (used for progress tracking in UI).
-		$zipSize = \filesize($zipPath);
-
-		// Generate URL for temp file.
-		// Note: Temp directory has .htaccess protection, so files aren't directly web-accessible.
-		// The URL is used for metadata/reference; actual file access is via PHP file operations.
-		// Convert absolute path to URL using content_url().
-		$relativePath = \str_replace(WP_CONTENT_DIR, '', $zipPath);
+		$zipSize = \filesize($tempZipPath);
+		$relativePath = \str_replace(WP_CONTENT_DIR, '', $tempZipPath);
 		$zipUrl = \content_url($relativePath);
 
 		$result = [
 			'success'  => true,
-			'zipPath' => $zipPath,
+			'zipPath' => $tempZipPath,
 			'zipUrl'  => $zipUrl,
 			'zipSize' => $zipSize,
 		];
 
-		/**
-		 * Filter the export complete site result.
-		 *
-		 * Allows tests to override the result.
-		 *
-		 * @param array<string, mixed>|\WP_Error $result Export result.
-		 */
-		return \apply_filters('altolith_deploy_export_complete_site', $result);
+		/** @var array<string, mixed>|\WP_Error */
+		return \apply_filters('altolith_deploy_export_core_content', $result);
+	}
+
+	/**
+	 * Export a single plugin as a zip file.
+	 *
+	 * Creates a zip with plugin files directly at root (not in a subdirectory).
+	 * This matches WordPress Playground's expected format for installPlugin steps.
+	 *
+	 * @param string $slug Plugin slug (directory name).
+	 * @return array<string, mixed>|\WP_Error Result array with zipPath and zipSize, or WP_Error on failure.
+	 */
+	public function exportPlugin(string $slug)
+	{
+		return $this->exportDirectory(WP_PLUGIN_DIR, $slug, 'plugin');
+	}
+
+	/**
+	 * Export a single theme as a zip file.
+	 *
+	 * Creates a zip with theme files directly at root (not in a subdirectory).
+	 * This matches WordPress Playground's expected format for installTheme steps.
+	 *
+	 * @param string $slug Theme slug (directory name).
+	 * @return array<string, mixed>|\WP_Error Result array with zipPath and zipSize, or WP_Error on failure.
+	 */
+	public function exportTheme(string $slug)
+	{
+		return $this->exportDirectory(\get_theme_root(), $slug, 'theme');
+	}
+
+	/**
+	 * Export a directory as a zip file with files at root.
+	 *
+	 * @param string $baseDir Base directory containing the target directory.
+	 * @param string $slug    Directory name to export.
+	 * @param string $type    Type identifier for error messages ('plugin' or 'theme').
+	 * @return array<string, mixed>|\WP_Error Result array with zipPath and zipSize, or WP_Error on failure.
+	 */
+	private function exportDirectory(string $baseDir, string $slug, string $type)
+	{
+		$validatedSlug = $this->validateAndSanitizeSlug($slug);
+		if (null === $validatedSlug) {
+			return new \WP_Error(
+				'invalid_slug',
+				/* translators: %s: Asset type (plugin or theme) */
+				\sprintf(\__('Invalid %s slug provided.', 'altolith-deploy'), $type),
+				['status' => 400]
+			);
+		}
+
+		$targetDir = $baseDir . '/' . $validatedSlug;
+
+		if (! \is_dir($targetDir)) {
+			return new \WP_Error(
+				$type . '_not_found',
+				/* translators: %1$s: Asset type, %2$s: Asset slug */
+				\sprintf(\__('%1$s not found: %2$s', 'altolith-deploy'), \ucfirst($type), $validatedSlug),
+				['status' => 404]
+			);
+		}
+
+		$tempZipPath = TempDirectoryManager::getTempFilePath($validatedSlug . '-', '.zip');
+
+		if (false === $tempZipPath) {
+			return new \WP_Error(
+				'temp_directory_unavailable',
+				\__('Could not create temporary directory for export.', 'altolith-deploy'),
+				['status' => 500]
+			);
+		}
+
+		$zip = new \ZipArchive();
+		if (true !== $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
+			return new \WP_Error(
+				'zip_create_failed',
+				/* translators: %s: Asset type (plugin or theme) */
+				\sprintf(\__('Failed to create %s export zip', 'altolith-deploy'), $type),
+				['status' => 500]
+			);
+		}
+
+		// Get exclusion patterns for dev files (node_modules, .git, vendor, tests, etc.)
+		// This is critical to avoid 100MB+ plugin zips
+		$excludePatterns = $this->fileBatchService->getExclusionPatterns($targetDir, true);
+
+		// Add files directly at zip root (not in a subdirectory).
+		// WordPress Playground expects plugin/theme files at root of the zip.
+		$this->zipService->addDirectoryToZip($zip, $targetDir, '', '', $excludePatterns, null);
+
+		$zip->close();
+
+		$zipSize = \filesize($tempZipPath);
+		$relativePath = \str_replace(WP_CONTENT_DIR, '', $tempZipPath);
+		$zipUrl = \content_url($relativePath);
+
+		return [
+			'success' => true,
+			'zipPath' => $tempZipPath,
+			'zipUrl'  => $zipUrl,
+			'zipSize' => $zipSize,
+			'slug'    => $validatedSlug,
+		];
 	}
 
 	/**
@@ -233,66 +274,5 @@ class ExportService
 		}
 
 		return $slug;
-	}
-
-	/**
-	 * Add custom assets (plugins or themes) to zip archive.
-	 *
-	 * @param \ZipArchive               $zip              Zip archive instance.
-	 * @param string                    $assetType        Asset type: 'plugin' or 'theme'.
-	 * @param array<int, string>|null   $customAssetSlugs Optional array of asset slugs from browser detection.
-	 * @param array<int, array<string, string>>|null $customAssets Optional array of custom assets from PHP detection.
-	 * @return void
-	 */
-	private function addAssetsToZip(
-		\ZipArchive $zip,
-		string $assetType,
-		?array $customAssetSlugs,
-		?array $customAssets = null
-	): void {
-		// Determine base directory and zip prefix based on asset type
-		$baseDir = ('plugin' === $assetType) ? WP_PLUGIN_DIR : \get_theme_root();
-		$zipPrefix = ('plugin' === $assetType) ? 'wp-content/plugins/' : 'wp-content/themes/';
-		$skipSlug = ('plugin' === $assetType) ? 'altolith' : null;
-
-		if (null !== $customAssetSlugs) {
-			// Use provided custom asset slugs (from browser-based WordPress.org detection)
-			foreach ($customAssetSlugs as $slug) {
-				// Skip 'altolith' plugin if processing plugins
-				if (null !== $skipSlug && $skipSlug === $slug) {
-					continue;
-				}
-
-				// Validate and sanitize slug
-				$validatedSlug = $this->validateAndSanitizeSlug($slug);
-				if (null === $validatedSlug) {
-					continue;
-				}
-
-				$assetDir = $baseDir . '/' . $validatedSlug;
-				if (\is_dir($assetDir)) {
-					$this->zipService->addDirectoryToZip($zip, $assetDir, $zipPrefix . $validatedSlug, '', null, null);
-				}
-			}
-		} else {
-			// Use PHP-based detection (customAssets must be provided)
-			if (null === $customAssets) {
-				$customAssets = $this->plugin->getAssetDiscovery()->getAllCustomAssets();
-			}
-
-			foreach ($customAssets as $asset) {
-				if ($assetType === $asset['type']) {
-					// Skip 'altolith' plugin if processing plugins
-					if (null !== $skipSlug && $skipSlug === $asset['slug']) {
-						continue;
-					}
-
-					$assetDir = $baseDir . '/' . $asset['slug'];
-					if (\is_dir($assetDir)) {
-						$this->zipService->addDirectoryToZip($zip, $assetDir, $zipPrefix . $asset['slug'], '', null, null);
-					}
-				}
-			}
-		}
 	}
 }

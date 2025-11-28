@@ -8,22 +8,18 @@
 
 import {
 	getProviderMetadata,
-	getProvidersByDeploymentType,
 	getProviderById,
 	clearMetadataCache,
 } from '../providerMetadata';
-import ProviderRegistry from '../../registry/ProviderRegistry';
 
 // Mock ProviderRegistry
 const mockGetAll = jest.fn();
-const mockGetByDeploymentType = jest.fn();
 const mockGet = jest.fn();
 
 jest.mock( '../../registry/ProviderRegistry', () => ( {
 	__esModule: true,
 	default: {
 		getAll: () => mockGetAll(),
-		getByDeploymentType: ( type ) => mockGetByDeploymentType( type ),
 		get: ( id ) => mockGet( id ),
 	},
 } ) );
@@ -96,38 +92,6 @@ describe( 'providerMetadata', () => {
 			mockGetAll.mockReturnValue( [] );
 
 			const result = getProviderMetadata();
-
-			expect( result ).toEqual( [] );
-		} );
-	} );
-
-	describe( 'getProvidersByDeploymentType()', () => {
-		test( 'should get providers for deployment type', () => {
-			// Mock provider class with static properties
-			const mockProviders = [
-				class {
-					static ID = 'provider-1';
-					static NAME = 'Provider 1';
-					static DESCRIPTION = 'Description 1';
-					static TYPE = 'type-1';
-					static DEPLOYMENT_TYPE = 'static_site';
-				},
-			];
-			mockGetByDeploymentType.mockReturnValue( mockProviders );
-
-			const result = getProvidersByDeploymentType( 'static_site' );
-
-			expect( mockGetByDeploymentType ).toHaveBeenCalledWith(
-				'static_site'
-			);
-			expect( result ).toHaveLength( 1 );
-			expect( result[ 0 ].id ).toBe( 'provider-1' );
-		} );
-
-		test( 'should return empty array when no providers for type', () => {
-			mockGetByDeploymentType.mockReturnValue( [] );
-
-			const result = getProvidersByDeploymentType( 'blueprint_bundle' );
 
 			expect( result ).toEqual( [] );
 		} );

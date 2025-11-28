@@ -299,6 +299,7 @@ export async function processAssets( {
  * @param {string}   options.siteUrl          WordPress site URL.
  * @param {string}   options.staticSiteUrl    Target static site URL.
  * @param {string}   options.providerId       Provider ID.
+ * @param {Object}   options.providerConfig   Provider configuration.
  * @param {Object}   options.storageService   Storage service instance.
  * @param {Object}   options.manifest         Manifest object.
  * @param {Function} options.setStatusMessage Status message updater.
@@ -310,6 +311,7 @@ export async function uploadHtmlFile( {
 	siteUrl,
 	staticSiteUrl,
 	providerId,
+	providerConfig = {},
 	storageService,
 	manifest,
 	setStatusMessage,
@@ -325,7 +327,14 @@ export async function uploadHtmlFile( {
 	);
 
 	// Process HTML with URL rewriting
-	processedHtml = processHtml( processedHtml, url, siteUrl, staticSiteUrl );
+	processedHtml = processHtml(
+		processedHtml,
+		url,
+		siteUrl,
+		staticSiteUrl,
+		providerId,
+		providerConfig
+	);
 
 	const htmlPath = getStaticFilePath( url );
 	const htmlKey = htmlPath;

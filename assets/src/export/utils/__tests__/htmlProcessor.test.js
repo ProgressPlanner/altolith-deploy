@@ -324,7 +324,9 @@ describe( 'htmlProcessor', () => {
 
 				expect( createUrlRewriter ).toHaveBeenCalledWith(
 					siteUrl,
-					staticSiteUrl
+					staticSiteUrl,
+					'', // providerId (default)
+					{} // providerConfig (default)
 				);
 				expect( mockRewriter.rewriteHtml ).toHaveBeenCalledWith(
 					expect.any( String ),
@@ -349,7 +351,9 @@ describe( 'htmlProcessor', () => {
 
 				expect( createUrlRewriter ).toHaveBeenCalledWith(
 					'http://example.com',
-					null
+					null,
+					'', // providerId (default)
+					{} // providerConfig (default)
 				);
 			} );
 		} );

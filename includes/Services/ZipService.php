@@ -82,6 +82,16 @@ class ZipService
 			false !== \strpos($zipPath, 'wp-content/mu-plugins')
 		);
 
+		// Define upload-specific exclusion patterns.
+		// These exclude temp directories from blueprint bundles to prevent recursive growth.
+		$uploadExclusionPatterns = $isUploadsDir ? [
+			// Temp directories (contain previous exports, causing recursive growth)
+			'/altolith-temp/',
+			'/altolith-temp/',
+			// SQLite database copies (already exported separately in database/.ht.sqlite)
+			'/altolith-sqlite/',
+		] : [];
+
 		// Lazy-load offloaded files list (only on first call, not on recursive calls).
 		// Query database once and pass result through recursion for performance.
 		// Check: null (not set) + isUploadsDir + empty relativePath (first call).
@@ -99,6 +109,11 @@ class ZipService
 				? $this->fileBatchService->getExclusionPatterns($sourceDir, true)
 				: []
 		);
+
+		// Merge upload-specific exclusions (temp directories, etc.)
+		if ('' === $relativePath && ! empty($uploadExclusionPatterns)) {
+			$excludePatterns = \array_merge($excludePatterns, $uploadExclusionPatterns);
+		}
 
 		// Read directory contents (files + subdirectories).
 		$files = \scandir($fullPath);

@@ -5,7 +5,12 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ProviderForm from '../index';
+
+// Mock ProfileSelector component before importing ProviderForm
+jest.mock( '../../../profiles/components/ProfileSelector', () => ( {
+	__esModule: true,
+	default: () => <div data-testid="profile-selector">ProfileSelector</div>,
+} ) );
 
 // Mock WordPress dependencies
 jest.mock( '@wordpress/i18n', () => ( {
@@ -148,6 +153,9 @@ jest.mock( '@altolith/utils/styles', () => ( {
 	},
 	createFlexStyle: jest.fn( () => ( {} ) ),
 } ) );
+
+// Import after mocks are set up
+import ProviderForm from '../index';
 
 describe( 'ProviderForm', () => {
 	const mockFields = [

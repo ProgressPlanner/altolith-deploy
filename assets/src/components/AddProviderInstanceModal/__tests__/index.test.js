@@ -34,17 +34,6 @@ jest.mock( 'uuid', () => ( {
 	v4: () => mockUuid(),
 } ) );
 
-// Mock deploymentTypes utilities
-jest.mock( '@altolith/utils/deploymentTypes', () => ( {
-	getDeploymentTypeLabel: ( typeId ) => {
-		const labels = {
-			static_site: 'Static Site',
-			blueprint_bundle: 'Blueprint Bundle',
-		};
-		return labels[ typeId ] || typeId;
-	},
-} ) );
-
 // Mock styles
 jest.mock( '@altolith/utils/styles', () => ( {
 	spacing: { lg: '16px' },
@@ -202,19 +191,6 @@ describe( 'AddProviderInstanceModal', () => {
 
 			expect(
 				screen.getByText( 'Add Provider Instance' )
-			).toBeInTheDocument();
-		} );
-
-		test( 'should show deployment type in title when provided', () => {
-			render(
-				<AddProviderInstanceModal
-					{ ...defaultProps }
-					deploymentType="static_site"
-				/>
-			);
-
-			expect(
-				screen.getByText( 'Add Static Site Provider' )
 			).toBeInTheDocument();
 		} );
 
@@ -709,20 +685,6 @@ describe( 'AddProviderInstanceModal', () => {
 			// Instance name input should still be there (auto-selected the remaining provider)
 			expect(
 				screen.getByTestId( 'instance-name-input' )
-			).toBeInTheDocument();
-		} );
-
-		test( 'should handle deployment type with no label', () => {
-			render(
-				<AddProviderInstanceModal
-					{ ...defaultProps }
-					deploymentType="unknown_type"
-				/>
-			);
-
-			// Should use the raw deployment type as fallback
-			expect(
-				screen.getByText( 'Add unknown_type Provider' )
 			).toBeInTheDocument();
 		} );
 	} );

@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
-import { __, sprintf } from '@wordpress/i18n';
+import { __ } from '@wordpress/i18n';
 import { Button, ButtonGroup } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
 import ProviderInstancesContainer from '@altolith/components/ProviderInstancesContainer';
@@ -23,7 +23,6 @@ import {
 } from '@altolith/utils/styles';
 import { useProviderSettings } from '@altolith/hooks/useProviderSettings';
 import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
-import { getDeploymentTypeLabel } from '@altolith/utils/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const emptyStateStyle = {
@@ -50,8 +49,7 @@ export default function ProviderSettings( {
 	onNotice,
 } ) {
 	const [ providers, setProviders ] = useState( [] );
-	const [ selectedDeploymentType, setSelectedDeploymentType ] =
-		useState( null );
+	const [ isAddModalOpen, setIsAddModalOpen ] = useState( false );
 	const [ isExportModalOpen, setIsExportModalOpen ] = useState( false );
 	const [ isImportModalOpen, setIsImportModalOpen ] = useState( false );
 
@@ -113,12 +111,19 @@ export default function ProviderSettings( {
 
 		const processProviders = ( allProviders ) => {
 			const providerMetadata = allProviders.map( ( ProviderClass ) => {
+				// Use getConfigFields() if available (includes output type fields)
+				// Fall back to CONFIG_FIELDS for backwards compatibility
+				const configFields =
+					typeof ProviderClass.getConfigFields === 'function'
+						? ProviderClass.getConfigFields()
+						: ProviderClass.CONFIG_FIELDS || [];
+
 				return {
 					id: ProviderClass.ID,
 					name: ProviderClass.NAME || '',
 					description: ProviderClass.DESCRIPTION || '',
 					type: ProviderClass.TYPE || 'generic',
-					settings_fields: ProviderClass.CONFIG_FIELDS || [],
+					settings_fields: configFields,
 				};
 			} );
 
@@ -147,37 +152,6 @@ export default function ProviderSettings( {
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [ onConfigsUpdate, configs ] );
-
-	// Group providers by deployment type
-	const providersByDeploymentType = useMemo( () => {
-		const allProviderClasses = ProviderRegistry.getAll();
-		const grouped = {};
-
-		allProviderClasses.forEach( ( ProviderClass ) => {
-			const deploymentType = ProviderClass.DEPLOYMENT_TYPE;
-			if ( deploymentType ) {
-				if ( ! grouped[ deploymentType ] ) {
-					grouped[ deploymentType ] = [];
-				}
-				// Add provider metadata (matching the structure in providers state)
-				const providerMetadata = providers.find(
-					( p ) => p.id === ProviderClass.ID
-				);
-				if ( providerMetadata ) {
-					grouped[ deploymentType ].push( providerMetadata );
-				}
-			}
-		} );
-
-		return grouped;
-	}, [ providers ] );
-
-	// Get unique deployment types that have at least one provider
-	const availableDeploymentTypes = useMemo( () => {
-		return Object.keys( providersByDeploymentType ).filter(
-			( type ) => providersByDeploymentType[ type ].length > 0
-		);
-	}, [ providersByDeploymentType ] );
 
 	// Create flat list of all instances with provider metadata
 	// Filter out instances whose provider type is not registered (e.g., removed providers)
@@ -495,22 +469,13 @@ export default function ProviderSettings( {
 				</div>
 				<div className="altolith-section-header__actions">
 					<ButtonGroup>
-						{ availableDeploymentTypes.map( ( deploymentType ) => (
-							<Button
-								key={ deploymentType }
-								className="altolith-provider-settings__add-button"
-								variant="tertiary"
-								onClick={ () =>
-									setSelectedDeploymentType( deploymentType )
-								}
-							>
-								{ sprintf(
-									/* translators: %s: deployment type label */
-									__( 'Add %s Provider', 'altolith-deploy' ),
-									getDeploymentTypeLabel( deploymentType )
-								) }
-							</Button>
-						) ) }
+						<Button
+							className="altolith-provider-settings__add-button"
+							variant="tertiary"
+							onClick={ () => setIsAddModalOpen( true ) }
+						>
+							{ __( 'Add Provider', 'altolith-deploy' ) }
+						</Button>
 					</ButtonGroup>
 					<ButtonGroup style={ { marginLeft: spacing.md } }>
 						<Button
@@ -555,15 +520,9 @@ export default function ProviderSettings( {
 
 			{ /* Add Instance Modal */ }
 			<AddProviderInstanceModal
-				isOpen={ selectedDeploymentType !== null }
-				onClose={ () => setSelectedDeploymentType( null ) }
-				providers={
-					selectedDeploymentType
-						? providersByDeploymentType[ selectedDeploymentType ] ||
-						  []
-						: providers
-				}
-				deploymentType={ selectedDeploymentType }
+				isOpen={ isAddModalOpen }
+				onClose={ () => setIsAddModalOpen( false ) }
+				providers={ providers }
 				onCreate={ handleCreateInstanceConfirm }
 			/>
 

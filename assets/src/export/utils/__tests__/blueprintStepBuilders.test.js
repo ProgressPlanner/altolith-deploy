@@ -9,6 +9,10 @@ import {
 	buildImportFilesStep,
 	buildPluginInstallSteps,
 	buildThemeInstallSteps,
+	buildCustomPluginStep,
+	buildCustomThemeStep,
+	buildCustomPluginSteps,
+	buildCustomThemeSteps,
 	buildBlueprintSteps,
 	buildBlueprintJson,
 } from '../blueprintStepBuilders';
@@ -21,7 +25,7 @@ jest.mock( '@wordpress/hooks', () => ( {
 
 describe( 'blueprintStepBuilders', () => {
 	describe( 'buildImportFilesStep', () => {
-		it( 'should create importWordPressFiles step with bundled resource', () => {
+		it( 'should create importWordPressFiles step with bundled resource (default)', () => {
 			// Act
 			const step = buildImportFilesStep();
 
@@ -29,6 +33,33 @@ describe( 'blueprintStepBuilders', () => {
 			expect( step.step ).toBe( 'importWordPressFiles' );
 			expect( step.wordPressFilesZip.resource ).toBe( 'bundled' );
 			expect( step.wordPressFilesZip.path ).toBe( '/wp-content.zip' );
+		} );
+
+		it( 'should create importWordPressFiles step with URL resource when baseUrl provided', () => {
+			// Act
+			const step = buildImportFilesStep( {
+				baseUrl: 'https://cdn.example.com',
+			} );
+
+			// Assert - INTENDED: Must use URL resource
+			expect( step.step ).toBe( 'importWordPressFiles' );
+			expect( step.wordPressFilesZip.resource ).toBe( 'url' );
+			expect( step.wordPressFilesZip.url ).toBe(
+				'https://cdn.example.com/wp-content.zip'
+			);
+		} );
+
+		it( 'should include subfolder in URL when provided', () => {
+			// Act
+			const step = buildImportFilesStep( {
+				baseUrl: 'https://cdn.example.com',
+				subfolder: 'playground',
+			} );
+
+			// Assert - INTENDED: Must include subfolder in URL
+			expect( step.wordPressFilesZip.url ).toBe(
+				'https://cdn.example.com/playground/wp-content.zip'
+			);
 		} );
 	} );
 
@@ -122,6 +153,126 @@ describe( 'blueprintStepBuilders', () => {
 		} );
 	} );
 
+	describe( 'buildCustomPluginStep', () => {
+		it( 'should create bundled plugin step by default', () => {
+			// Act
+			const step = buildCustomPluginStep( 'my-custom-plugin' );
+
+			// Assert
+			expect( step.step ).toBe( 'installPlugin' );
+			expect( step.pluginData.resource ).toBe( 'bundled' );
+			expect( step.pluginData.path ).toBe(
+				'/plugins/my-custom-plugin.zip'
+			);
+		} );
+
+		it( 'should create URL plugin step when baseUrl provided', () => {
+			// Act
+			const step = buildCustomPluginStep( 'my-custom-plugin', {
+				baseUrl: 'https://cdn.example.com',
+			} );
+
+			// Assert
+			expect( step.step ).toBe( 'installPlugin' );
+			expect( step.pluginData.resource ).toBe( 'url' );
+			expect( step.pluginData.url ).toBe(
+				'https://cdn.example.com/plugins/my-custom-plugin.zip'
+			);
+		} );
+
+		it( 'should include subfolder in plugin URL', () => {
+			// Act
+			const step = buildCustomPluginStep( 'my-custom-plugin', {
+				baseUrl: 'https://cdn.example.com',
+				subfolder: 'playground',
+			} );
+
+			// Assert
+			expect( step.pluginData.url ).toBe(
+				'https://cdn.example.com/playground/plugins/my-custom-plugin.zip'
+			);
+		} );
+	} );
+
+	describe( 'buildCustomThemeStep', () => {
+		it( 'should create bundled theme step by default', () => {
+			// Act
+			const step = buildCustomThemeStep( 'my-custom-theme' );
+
+			// Assert
+			expect( step.step ).toBe( 'installTheme' );
+			expect( step.themeData.resource ).toBe( 'bundled' );
+			expect( step.themeData.path ).toBe( '/themes/my-custom-theme.zip' );
+		} );
+
+		it( 'should create URL theme step when baseUrl provided', () => {
+			// Act
+			const step = buildCustomThemeStep( 'my-custom-theme', {
+				baseUrl: 'https://cdn.example.com',
+			} );
+
+			// Assert
+			expect( step.step ).toBe( 'installTheme' );
+			expect( step.themeData.resource ).toBe( 'url' );
+			expect( step.themeData.url ).toBe(
+				'https://cdn.example.com/themes/my-custom-theme.zip'
+			);
+		} );
+
+		it( 'should include subfolder in theme URL', () => {
+			// Act
+			const step = buildCustomThemeStep( 'my-custom-theme', {
+				baseUrl: 'https://cdn.example.com',
+				subfolder: 'playground',
+			} );
+
+			// Assert
+			expect( step.themeData.url ).toBe(
+				'https://cdn.example.com/playground/themes/my-custom-theme.zip'
+			);
+		} );
+	} );
+
+	describe( 'buildCustomPluginSteps', () => {
+		it( 'should create steps with URL resources when baseUrl provided', () => {
+			// Act
+			const steps = buildCustomPluginSteps( [ 'plugin-a', 'plugin-b' ], {
+				baseUrl: 'https://cdn.example.com',
+				subfolder: 'playground',
+			} );
+
+			// Assert
+			expect( steps ).toHaveLength( 2 );
+			expect( steps[ 0 ].pluginData.resource ).toBe( 'url' );
+			expect( steps[ 0 ].pluginData.url ).toBe(
+				'https://cdn.example.com/playground/plugins/plugin-a.zip'
+			);
+			expect( steps[ 1 ].pluginData.url ).toBe(
+				'https://cdn.example.com/playground/plugins/plugin-b.zip'
+			);
+		} );
+	} );
+
+	describe( 'buildCustomThemeSteps', () => {
+		it( 'should create steps with URL resources when baseUrl provided', () => {
+			// Act
+			const steps = buildCustomThemeSteps( [ 'theme-a', 'theme-b' ], {
+				baseUrl: 'https://cdn.example.com',
+				subfolder: 'playground',
+			} );
+
+			// Assert
+			expect( steps ).toHaveLength( 2 );
+			expect( steps[ 0 ].themeData.resource ).toBe( 'url' );
+			expect( steps[ 0 ].themeData.url ).toBe(
+				'https://cdn.example.com/playground/themes/theme-a.zip'
+			);
+			expect( steps[ 1 ].themeData.url ).toBe(
+				'https://cdn.example.com/playground/themes/theme-b.zip'
+			);
+		} );
+	} );
+
 	describe( 'buildBlueprintSteps', () => {
 		it( 'should build complete steps array in correct order', () => {
 			// Arrange
@@ -200,6 +351,44 @@ describe( 'blueprintStepBuilders', () => {
 			// Assert - INTENDED: Should not fail with undefined themes
 			expect( steps ).toHaveLength( 1 ); // Only importWordPressFiles
 			expect( steps[ 0 ].step ).toBe( 'importWordPressFiles' );
+		} );
+
+		it( 'should use URL resources when baseUrl is provided', () => {
+			// Arrange
+			const config = {
+				wporgPlugins: [ 'akismet' ],
+				customPlugins: [ 'my-plugin' ],
+				customThemes: [ 'my-theme' ],
+				baseUrl: 'https://cdn.example.com',
+				subfolder: 'playground',
+			};
+
+			// Act
+			const steps = buildBlueprintSteps( config );
+
+			// Assert - INTENDED: Custom resources should use URL
+			// Step 0: importWordPressFiles with URL
+			expect( steps[ 0 ].wordPressFilesZip.resource ).toBe( 'url' );
+			expect( steps[ 0 ].wordPressFilesZip.url ).toBe(
+				'https://cdn.example.com/playground/wp-content.zip'
+			);
+
+			// Step 1: WordPress.org plugin (still uses wordpress.org)
+			expect( steps[ 1 ].pluginData.resource ).toBe(
+				'wordpress.org/plugins'
+			);
+
+			// Step 2: Custom plugin with URL
+			expect( steps[ 2 ].pluginData.resource ).toBe( 'url' );
+			expect( steps[ 2 ].pluginData.url ).toBe(
+				'https://cdn.example.com/playground/plugins/my-plugin.zip'
+			);
+
+			// Step 3: Custom theme with URL
+			expect( steps[ 3 ].themeData.resource ).toBe( 'url' );
+			expect( steps[ 3 ].themeData.url ).toBe(
+				'https://cdn.example.com/playground/themes/my-theme.zip'
+			);
 		} );
 	} );
 

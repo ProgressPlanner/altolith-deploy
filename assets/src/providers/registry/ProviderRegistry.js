@@ -94,49 +94,6 @@ class ProviderRegistry {
 	}
 
 	/**
-	 * Get providers that support a specific deployment type.
-	 *
-	 * @param {string} deploymentType Deployment type (e.g., 'static_site', 'blueprint_bundle')
-	 * @return {Array<Function>} Array of provider classes that support the deployment type
-	 */
-	getByDeploymentType( deploymentType ) {
-		return this.getAll().filter( ( ProviderClass ) => {
-			return ProviderClass.DEPLOYMENT_TYPE === deploymentType;
-		} );
-	}
-
-	/**
-	 * Get default provider.
-	 *
-	 * Returns the first provider that supports static_site deployment,
-	 * or the first registered provider if none found.
-	 *
-	 * @return {Function|null} Default provider class or null if none registered
-	 */
-	getDefault() {
-		const staticSiteProviders = this.getByDeploymentType( 'static_site' );
-		if ( staticSiteProviders.length > 0 ) {
-			return staticSiteProviders[ 0 ];
-		}
-
-		const allProviders = this.getAll();
-		return allProviders.length > 0 ? allProviders[ 0 ] : null;
-	}
-
-	/**
-	 * Get provider for a specific deployment type.
-	 *
-	 * Returns the first provider that supports the deployment type.
-	 *
-	 * @param {string} deploymentType Deployment type
-	 * @return {Function|null} Provider class or null if not found
-	 */
-	getForDeploymentType( deploymentType ) {
-		const matchingProviders = this.getByDeploymentType( deploymentType );
-		return matchingProviders.length > 0 ? matchingProviders[ 0 ] : null;
-	}
-
-	/**
 	 * Check if a provider is registered.
 	 *
 	 * @param {string} providerId Provider ID

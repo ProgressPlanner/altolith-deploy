@@ -50,10 +50,10 @@ describe( 'DataValidator', () => {
 
 		test( 'should return true for step requiring thread data', () => {
 			const step = {
-				id: 'uploadStaticFiles',
+				id: 'upload',
 				requires: {
 					currentProviderInstance: { from: 'thread', required: true },
-					urls: { from: 'preScanStaticSite', required: true },
+					urls: { from: 'discoverAndScanSite', required: true },
 				},
 			};
 			expect( isThreadStep( step ) ).toBe( true );
@@ -253,9 +253,9 @@ describe( 'DataValidator', () => {
 
 		test( 'should throw error when required data is missing', () => {
 			const step = {
-				id: 'uploadStaticFiles',
+				id: 'upload',
 				requires: {
-					urls: { from: 'preScanStaticSite', required: true },
+					urls: { from: 'discoverAndScanSite', required: true },
 					siteUrl: { from: 'initial', required: true },
 				},
 			};
@@ -363,20 +363,20 @@ describe( 'DataValidator', () => {
 
 		test( 'should throw error when declared output is missing', () => {
 			const step = {
-				id: 'uploadStaticFiles',
+				id: 'upload',
 				provides: {
-					staticUploadResults: { type: 'object', scope: 'thread' },
+					uploadResults: { type: 'object', scope: 'thread' },
 				},
 			};
 			const result = {
-				// staticUploadResults is missing
+				// uploadResults is missing
 				someOtherData: 'value',
 			};
 			expect( () => validateOutput( step, result ) ).toThrow(
 				/did not provide/i
 			);
 			expect( () => validateOutput( step, result ) ).toThrow(
-				/staticUploadResults/i
+				/uploadResults/i
 			);
 		} );
 

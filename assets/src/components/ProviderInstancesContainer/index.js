@@ -15,8 +15,7 @@ import {
 	borderRadius,
 } from '@altolith/utils/styles';
 import ProviderInstanceItem from '@altolith/components/ProviderInstanceItem';
-import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
-import { getDeploymentTypeLabel } from '@altolith/utils/deploymentTypes';
+import { getEnabledOutputTypes } from '@altolith/utils/outputTypes';
 
 // Styles - extracted to module level for performance
 const wrapperStyle = {
@@ -74,12 +73,8 @@ export default function ProviderInstancesContainer( {
 			instance.instanceId.split( ':' )[ 0 ];
 		const fullProvider = providers.find( ( p ) => p.id === providerType );
 
-		// Get deployment type from provider class
-		const ProviderClass = ProviderRegistry.get( providerType );
-		const deploymentType = ProviderClass?.DEPLOYMENT_TYPE || null;
-		const deploymentTypeLabel = deploymentType
-			? getDeploymentTypeLabel( deploymentType )
-			: '';
+		// Get enabled output types from instance config
+		const enabledOutputTypes = getEnabledOutputTypes( instance.config );
 
 		const providerName =
 			fullProvider?.name || fullProvider?.id || providerType;
@@ -88,8 +83,7 @@ export default function ProviderInstancesContainer( {
 			instance,
 			providerType,
 			fullProvider,
-			deploymentType,
-			deploymentTypeLabel,
+			enabledOutputTypes,
 			providerName,
 			providerData: {
 				id: fullProvider?.id || providerType,
@@ -126,7 +120,7 @@ export default function ProviderInstancesContainer( {
 							{ __( 'Provider Type', 'altolith-deploy' ) }
 						</th>
 						<th style={ tableHeaderCellStyleWithBorder }>
-							{ __( 'Deployment Type', 'altolith-deploy' ) }
+							{ __( 'Output Types', 'altolith-deploy' ) }
 						</th>
 						<th
 							style={ {
@@ -148,18 +142,12 @@ export default function ProviderInstancesContainer( {
 				</thead>
 				<tbody>
 					{ preparedInstances.map(
-						( {
-							instance,
-							providerData,
-							deploymentType,
-							deploymentTypeLabel,
-						} ) => (
+						( { instance, providerData, enabledOutputTypes } ) => (
 							<ProviderInstanceItem
 								key={ instance.instanceId }
 								instance={ instance }
 								provider={ providerData }
-								deploymentType={ deploymentType }
-								deploymentTypeLabel={ deploymentTypeLabel }
+								enabledOutputTypes={ enabledOutputTypes }
 								allInstances={ instances }
 								onDelete={ () =>
 									onDelete( instance.instanceId )

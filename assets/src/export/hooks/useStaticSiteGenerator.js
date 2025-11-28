@@ -178,6 +178,7 @@ export function useStaticSiteGenerator( onProgress ) {
 						siteUrl,
 						staticSiteUrl,
 						providerId: staticSiteProviderId,
+						providerConfig,
 						storageService,
 						manifest,
 						setStatusMessage,

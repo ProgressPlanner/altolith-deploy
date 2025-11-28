@@ -125,6 +125,12 @@ jest.mock( '@wordpress/hooks', () => ( {
 	applyFilters: jest.fn( ( hook, value ) => value ),
 } ) );
 
+// Mock ProfileSelector component
+jest.mock( '../../../profiles/components/ProfileSelector', () => ( {
+	__esModule: true,
+	default: () => <div data-testid="profile-selector">ProfileSelector</div>,
+} ) );
+
 import ProviderField from '../index';
 import { applyFilters } from '@wordpress/hooks';
 
