@@ -123,7 +123,7 @@ export async function fetchProviderConfig( staticSiteProviderId ) {
  * Create and configure storage service.
  *
  * Uses the StorageService adapter pattern for provider instance isolation.
- * Each provider type registers a filter on 'aether.storage.service.create' to
+ * Each provider type registers a filter on 'altolith.storage.service.create' to
  * inject its own StorageService with a provider-specific upload adapter.
  *
  * @param {string} staticPath     Static files path.
@@ -140,7 +140,7 @@ export async function createStorageService(
 ) {
 	// Filter configuration
 	const filteredConfig = applyFilters(
-		'aether.storage.service.config',
+		'altolith.storage.service.config',
 		config,
 		staticPath,
 		providerId,
@@ -151,7 +151,7 @@ export async function createStorageService(
 	// Pass providerConfig as 5th parameter so providers can use it
 	// (WordPress filters are synchronous, so config must be pre-loaded)
 	let storageService = applyFilters(
-		'aether.storage.service.create',
+		'altolith.storage.service.create',
 		null,
 		staticPath,
 		filteredConfig,

@@ -6,10 +6,10 @@
  * Handles WordPress authentication cookie configuration with SameSite attributes.
  * Required for WordPress Playground which runs in an iframe.
  *
- * @package Aether\Utilities
+ * @package Altolith\Utilities
  */
 
-namespace Aether\SiteExporter\Utilities;
+namespace Altolith\Deploy\Utilities;
 
 \defined('ABSPATH') || exit;
 

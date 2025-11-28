@@ -9,7 +9,7 @@ Quick reference guide for deploying to multiple storage providers simultaneously
 ### How to Deploy to Multiple Providers
 
 1. **Configure Providers**
-   - Go to Aether Settings → Providers
+   - Go to Altolith Settings → Providers
    - Create and configure multiple provider instances (e.g., Local Filesystem for static site + Local Filesystem for blueprint)
    - Configure each provider separately
 
@@ -23,7 +23,7 @@ Quick reference guide for deploying to multiple storage providers simultaneously
    - Check logs to verify success
 
 4. **Verify Results**
-   - Check storage directories in `wp-content/uploads/aether/`
+   - Check storage directories in `wp-content/uploads/altolith/`
    - Each provider has its own directory with files
    - Each has its own `file-manifest.json`
 
@@ -34,7 +34,7 @@ Quick reference guide for deploying to multiple storage providers simultaneously
 ### Quick Start
 
 ```javascript
-import { createStorageService } from '@aether/export/utils/staticSiteConfig';
+import { createStorageService } from '@altolith/export/utils/staticSiteConfig';
 
 // Create StorageService with provider isolation
 const config = {
@@ -74,7 +74,7 @@ await storageService.downloadManifest();
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
+addFilter('altolith.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
     (html, url, siteUrl, staticSiteUrl, providerId) => {
         // Runs once per provider per page
         if (providerId === 'my-provider') {
@@ -89,7 +89,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.storage.service.config', 'my-plugin',
+addFilter('altolith.storage.service.config', 'my-plugin',
     (config, staticPath, providerId, providerConfig) => {
         if (providerId === 'my-provider') {
             return {
@@ -110,25 +110,25 @@ import { __ } from '@wordpress/i18n';
 
 export class MyCustomProvider {
     static ID = 'my-custom-provider';
-    static NAME = __( 'My Custom Provider', 'aether-site-exporter' );
+    static NAME = __( 'My Custom Provider', 'altolith-deploy' );
     static TYPE = 'storage';
-    static DESCRIPTION = __( 'Provider description', 'aether-site-exporter' );
+    static DESCRIPTION = __( 'Provider description', 'altolith-deploy' );
     static ICON = '📦';
     static DEPLOYMENT_TYPE = 'static_site'; // or 'blueprint_bundle'
     static CONFIG_FIELDS = [
         {
             id: 'api_key',
-            label: __( 'API Key', 'aether-site-exporter' ),
+            label: __( 'API Key', 'altolith-deploy' ),
             type: 'text',
             required: true,
             secure: true,
         },
         {
             id: 'public_url',
-            label: __( 'Public URL', 'aether-site-exporter' ),
+            label: __( 'Public URL', 'altolith-deploy' ),
             type: 'text',
             required: true,
-            help: __( 'Public URL where files will be accessible', 'aether-site-exporter' ),
+            help: __( 'Public URL where files will be accessible', 'altolith-deploy' ),
         },
     ];
 }
@@ -139,15 +139,15 @@ export class MyCustomProvider {
 import { doAction } from '@wordpress/hooks';
 
 // Trigger hook for auto-discovery (ProviderRegistry listens for this)
-doAction('aether.providers.register', MyCustomProvider);
+doAction('altolith.providers.register', MyCustomProvider);
 ```
 
 **Step 3: Add StorageService Filter (for static site providers)**
 ```javascript
 import { addFilter } from '@wordpress/hooks';
-import { StorageService } from '@aether/providers/services/storageService';
+import { StorageService } from '@altolith/providers/services/storageService';
 
-addFilter('aether.storage.service.create', 'my-provider',
+addFilter('altolith.storage.service.create', 'my-provider',
     (storageService, staticPath, config, providerId) => {
         if (providerId.startsWith('my-custom-provider')) {
             // Return custom storage service or adapter
@@ -164,10 +164,10 @@ addFilter('aether.storage.service.create', 'my-provider',
 
 ### Storage Structure with Provider Isolation
 
-Files are stored in `wp-content/uploads/aether/`:
+Files are stored in `wp-content/uploads/altolith/`:
 
 ```
-aether/
+altolith/
 ├── provider-instance-a/
 │   ├── static/
 │   │   ├── index.html (URLs → provider A's public_url)
@@ -204,7 +204,7 @@ aether/
 
 **Fix:**
 1. Check `config.provider_id` is set when creating StorageService
-2. Verify `aether.storage.service.config` filter includes `provider_id`
+2. Verify `altolith.storage.service.config` filter includes `provider_id`
 3. Check storage paths include provider prefix
 
 ### Issue: Manifest Conflicts
@@ -256,7 +256,7 @@ aether/
 // Cache expensive operations outside the filter
 const compiledTemplate = compileTemplate();
 
-addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin', (html) => {
+addFilter('altolith.export.step.uploadStaticSiteFiles.html.process', 'my-plugin', (html) => {
     // Fast operation using pre-compiled template
     return compiledTemplate.apply(html);
 });
@@ -271,7 +271,7 @@ await storageService.batchDelete(['file1.html', 'file2.html']);
 
 ### Manifest Caching
 ```javascript
-import { fetchManifest } from '@aether/utils/manifestManager';
+import { fetchManifest } from '@altolith/utils/manifestManager';
 
 // Manifest is cached in IndexedDB (1-hour TTL)
 // No need to manually cache
@@ -285,7 +285,7 @@ const manifest = await fetchManifest(storageService, providerId);
 ### StorageService
 
 ```javascript
-import { StorageService } from '@aether/providers/services/storageService';
+import { StorageService } from '@altolith/providers/services/storageService';
 
 class StorageService {
     constructor(staticPath, config = {}, uploadAdapter = null)
@@ -309,7 +309,7 @@ import {
     updateManifestEntry,
     shouldSkipUpload,
     uploadManifest,
-} from '@aether/utils/manifestManager';
+} from '@altolith/utils/manifestManager';
 
 // Fetch manifest (cached in IndexedDB)
 const manifest = await fetchManifest(storageService, providerId);
@@ -336,16 +336,16 @@ await uploadManifest(storageService, manifest, providerId);
 
 | Filter | Phase | Purpose |
 |--------|-------|---------|
-| `aether.export.step.uploadStaticSiteFiles.html.process` | Upload | Modify HTML before URL rewriting |
-| `aether.storage.service.config` | Storage init | Customize storage config |
-| `aether.storage.service.create` | Storage init | Override StorageService |
-| `aether.export.step.uploadStaticSiteFiles.manifest.fetch` | Upload | Provide custom manifest |
-| `aether.export.step.uploadStaticSiteFiles.manifest.update` | Upload | Modify manifest after update |
-| `aether.export.step.uploadStaticSiteFiles.manifest.cleanup` | Upload end | Customize manifest cleanup |
-| `aether.export.step.uploadStaticSiteFiles.asset.process` | Upload | Modify asset before upload |
-| `aether.upload.file.options` | Upload | Customize upload options |
-| `aether.assets.extracted` | Pre-scan | Modify extracted asset list |
-| `aether.assets.should_collect` | Pre-scan | Filter asset collection |
+| `altolith.export.step.uploadStaticSiteFiles.html.process` | Upload | Modify HTML before URL rewriting |
+| `altolith.storage.service.config` | Storage init | Customize storage config |
+| `altolith.storage.service.create` | Storage init | Override StorageService |
+| `altolith.export.step.uploadStaticSiteFiles.manifest.fetch` | Upload | Provide custom manifest |
+| `altolith.export.step.uploadStaticSiteFiles.manifest.update` | Upload | Modify manifest after update |
+| `altolith.export.step.uploadStaticSiteFiles.manifest.cleanup` | Upload end | Customize manifest cleanup |
+| `altolith.export.step.uploadStaticSiteFiles.asset.process` | Upload | Modify asset before upload |
+| `altolith.upload.file.options` | Upload | Customize upload options |
+| `altolith.assets.extracted` | Pre-scan | Modify extracted asset list |
+| `altolith.assets.should_collect` | Pre-scan | Filter asset collection |
 
 ---
 
@@ -359,6 +359,6 @@ await uploadManifest(storageService, manifest, providerId);
 
 **Need Help?**
 - Check browser console for debug logs
-- Review provider configuration in Aether Settings
+- Review provider configuration in Altolith Settings
 - Verify REST API endpoints return correct provider metadata
 - Check PHP error logs for server-side issues

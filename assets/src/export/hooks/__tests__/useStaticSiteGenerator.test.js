@@ -13,22 +13,22 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useStaticSiteGenerator } from '../useStaticSiteGenerator';
-import { createAssetTracker } from '@aether/export/utils/assetTracker';
+import { createAssetTracker } from '@altolith/export/utils/assetTracker';
 import {
 	fetchProviderConfig,
 	createStorageService,
 	createFailureTracker,
 	buildUploadResult,
 	buildStorageConfig,
-} from '@aether/export/utils/staticSiteConfig';
-import { executePreScan } from '@aether/export/utils/preScanPhase';
+} from '@altolith/export/utils/staticSiteConfig';
+import { executePreScan } from '@altolith/export/utils/preScanPhase';
 import {
 	prepareManifest,
 	processAssets,
 	uploadHtmlFile,
 	finalizeManifest,
-} from '@aether/export/utils/uploadPhase';
-import { uploadManifest } from '@aether/utils/manifestManager';
+} from '@altolith/export/utils/uploadPhase';
+import { uploadManifest } from '@altolith/utils/manifestManager';
 import { doAction, applyFilters } from '@wordpress/hooks';
 
 // Mock all dependencies
@@ -37,11 +37,11 @@ jest.mock( '@wordpress/hooks', () => ( {
 	applyFilters: jest.fn( ( hook, value ) => value ),
 } ) );
 
-jest.mock( '@aether/export/utils/assetTracker', () => ( {
+jest.mock( '@altolith/export/utils/assetTracker', () => ( {
 	createAssetTracker: jest.fn(),
 } ) );
 
-jest.mock( '@aether/export/utils/staticSiteConfig', () => ( {
+jest.mock( '@altolith/export/utils/staticSiteConfig', () => ( {
 	buildStorageConfig: jest.fn(),
 	buildUploadResult: jest.fn(),
 	createFailureTracker: jest.fn(),
@@ -49,18 +49,18 @@ jest.mock( '@aether/export/utils/staticSiteConfig', () => ( {
 	createStorageService: jest.fn(),
 } ) );
 
-jest.mock( '@aether/export/utils/preScanPhase', () => ( {
+jest.mock( '@altolith/export/utils/preScanPhase', () => ( {
 	executePreScan: jest.fn(),
 } ) );
 
-jest.mock( '@aether/export/utils/uploadPhase', () => ( {
+jest.mock( '@altolith/export/utils/uploadPhase', () => ( {
 	prepareManifest: jest.fn(),
 	processAssets: jest.fn(),
 	uploadHtmlFile: jest.fn(),
 	finalizeManifest: jest.fn(),
 } ) );
 
-jest.mock( '@aether/utils/manifestManager', () => ( {
+jest.mock( '@altolith/utils/manifestManager', () => ( {
 	updateManifestEntry: jest.fn( ( manifest ) => manifest ),
 	uploadManifest: jest.fn(),
 } ) );
@@ -812,7 +812,7 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 
 			expect( doAction ).toHaveBeenCalledWith(
-				'aether.export.step.uploadStaticSiteFiles.upload.before',
+				'altolith.export.step.uploadStaticSiteFiles.upload.before',
 				[ 'https://example.com' ],
 				1,
 				'provider-id'
@@ -842,7 +842,7 @@ describe( 'useStaticSiteGenerator', () => {
 			} );
 
 			expect( doAction ).toHaveBeenCalledWith(
-				'aether.export.step.uploadStaticSiteFiles.upload.after',
+				'altolith.export.step.uploadStaticSiteFiles.upload.after',
 				expect.objectContaining( {
 					filesUploaded: expect.any( Number ),
 					filesSkipped: expect.any( Number ),

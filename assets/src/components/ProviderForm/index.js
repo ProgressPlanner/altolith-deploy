@@ -23,11 +23,11 @@ import {
 import { __ } from '@wordpress/i18n';
 import { applyFilters } from '@wordpress/hooks';
 import StatusNotice from '../StatusNotice';
-import apiFetch from '@aether/utils/api';
+import apiFetch from '@altolith/utils/api';
 import { validateConfig } from './utils/validation';
 import ProviderField from '../ProviderField';
-import { useSuccessTimeout } from '@aether/hooks/useSuccessTimeout';
-import { colors, spacing, createFlexStyle } from '@aether/utils/styles';
+import { useSuccessTimeout } from '@altolith/hooks/useSuccessTimeout';
+import { colors, spacing, createFlexStyle } from '@altolith/utils/styles';
 
 // Styles - extracted to module level for performance
 const formStyle = {
@@ -195,10 +195,10 @@ function ProviderForm( {
 			if ( onSubmit ) {
 				await onSubmit( completeValues );
 			} else {
-				// Default: save to settings using /aether/site-exporter/settings endpoint
+				// Default: save to settings using /altolith/deploy/settings endpoint
 				// Get current providers settings
 				const settingsResponse = await apiFetch( {
-					path: '/aether/site-exporter/settings?key=providers',
+					path: '/altolith/deploy/settings?key=providers',
 				} );
 
 				if ( ! settingsResponse.success ) {
@@ -214,7 +214,7 @@ function ProviderForm( {
 
 				// Save updated providers object
 				const saveResponse = await apiFetch( {
-					path: '/aether/site-exporter/settings',
+					path: '/altolith/deploy/settings',
 					method: 'POST',
 					data: {
 						key: 'providers',
@@ -236,7 +236,7 @@ function ProviderForm( {
 		} catch ( err ) {
 			setError(
 				err.message ||
-					__( 'Failed to save settings', 'aether-site-exporter' )
+					__( 'Failed to save settings', 'altolith-deploy' )
 			);
 		} finally {
 			setSaving( false );
@@ -245,7 +245,7 @@ function ProviderForm( {
 
 	return (
 		<form
-			className="aether-provider-form"
+			className="altolith-provider-form"
 			onSubmit={ handleSubmit }
 			style={ formStyle }
 		>
@@ -255,7 +255,7 @@ function ProviderForm( {
 					message={ error }
 					isDismissible
 					onRemove={ () => setError( null ) }
-					className="aether-provider-form__notice"
+					className="altolith-provider-form__notice"
 				/>
 			) }
 
@@ -264,16 +264,16 @@ function ProviderForm( {
 					status="success"
 					message={ __(
 						'Settings saved successfully!',
-						'aether-site-exporter'
+						'altolith-deploy'
 					) }
 					isDismissible
 					onRemove={ () => setSuccess( false ) }
-					className="aether-provider-form__notice"
+					className="altolith-provider-form__notice"
 				/>
 			) }
 
 			{ /* Provider-specific modal header content via filter */ }
-			{ applyFilters( 'aether.admin.provider.modal.header', null, {
+			{ applyFilters( 'altolith.admin.provider.modal.header', null, {
 				providerId,
 				formValues: values,
 			} ) }
@@ -374,10 +374,10 @@ function ProviderForm( {
 						{ /* Render advanced fields in ToolsPanel */ }
 						{ advancedFields.length > 0 && (
 							<ToolsPanel
-								className="aether-provider-form__tools-panel"
+								className="altolith-provider-form__tools-panel"
 								label={ __(
 									'Advanced settings',
-									'aether-site-exporter'
+									'altolith-deploy'
 								) }
 								resetAll={ null }
 							>
@@ -386,7 +386,7 @@ function ProviderForm( {
 									return (
 										<ToolsPanelItem
 											key={ field.id }
-											className="aether-provider-form__tools-panel-item"
+											className="altolith-provider-form__tools-panel-item"
 											hasValue={ () =>
 												hasFieldValue( field )
 											}
@@ -417,19 +417,19 @@ function ProviderForm( {
 			} )() }
 
 			<div
-				className="aether-provider-form__actions"
+				className="altolith-provider-form__actions"
 				style={ actionsStyle }
 			>
 				<Button
-					className="aether-provider-form__submit-button"
+					className="altolith-provider-form__submit-button"
 					type="submit"
 					variant="primary"
 					isBusy={ saving }
 					disabled={ saving }
 				>
 					{ saving
-						? __( 'Saving…', 'aether-site-exporter' )
-						: __( 'Save Settings', 'aether-site-exporter' ) }
+						? __( 'Saving…', 'altolith-deploy' )
+						: __( 'Save Settings', 'altolith-deploy' ) }
 				</Button>
 			</div>
 		</form>

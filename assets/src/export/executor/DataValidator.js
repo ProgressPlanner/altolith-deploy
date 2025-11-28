@@ -178,7 +178,7 @@ export function validateOutput( step, result ) {
  */
 export function getRequirementsSummary( step ) {
 	if ( ! step.requires ) {
-		return __( 'No data requirements', 'aether-site-exporter' );
+		return __( 'No data requirements', 'altolith-deploy' );
 	}
 
 	const requirements = Object.entries( step.requires ).map(
@@ -202,7 +202,7 @@ export function getRequirementsSummary( step ) {
  */
 export function getProvidesSummary( step ) {
 	if ( ! step.provides ) {
-		return __( 'No data provided', 'aether-site-exporter' );
+		return __( 'No data provided', 'altolith-deploy' );
 	}
 
 	const provides = Object.entries( step.provides ).map(

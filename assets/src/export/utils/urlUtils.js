@@ -47,7 +47,7 @@ export function resolveRelative( url, baseUrl ) {
 	);
 	const resolvedUrl = base.origin + baseDir + '/' + url;
 
-	return applyFilters( 'aether.url.resolve', resolvedUrl, url, baseUrl );
+	return applyFilters( 'altolith.url.resolve', resolvedUrl, url, baseUrl );
 }
 
 /**
@@ -91,7 +91,7 @@ export function isExternal( url, siteUrl ) {
 	}
 
 	return applyFilters(
-		'aether.url.is_external',
+		'altolith.url.is_external',
 		isExternalUrl,
 		url,
 		siteUrl
@@ -180,7 +180,7 @@ export function normalize( url, siteUrl ) {
 	// Remove trailing slash.
 	url = url.replace( /\/$/, '' );
 
-	return applyFilters( 'aether.url.normalize', url, siteUrl );
+	return applyFilters( 'altolith.url.normalize', url, siteUrl );
 }
 
 /**

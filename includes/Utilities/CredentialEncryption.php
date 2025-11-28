@@ -5,10 +5,10 @@
  *
  * Handles secure encryption and decryption of sensitive credentials.
  *
- * @package Aether\Utilities
+ * @package Altolith\Utilities
  */
 
-namespace Aether\SiteExporter\Utilities;
+namespace Altolith\Deploy\Utilities;
 
 \defined('ABSPATH') || exit;
 
@@ -39,7 +39,7 @@ class CredentialEncryption
 	 */
 	private static function getEncryptionKey(): string
 	{
-		$optionName = 'aether_site_exporter_encryption_key';
+		$optionName = 'altolith_deploy_encryption_key';
 		$storedKey = \get_option($optionName);
 
 		// If key exists and is valid length, use it.
@@ -203,7 +203,7 @@ class CredentialEncryption
 		// rather than silently using empty credentials which could cause confusing failures
 		if (false === $decrypted) {
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log('Aether: Decryption failed for data (possible tampering detected)');
+				\error_log('Altolith: Decryption failed for data (possible tampering detected)');
 			}
 			// Return false to indicate decryption failure
 			// Calling code should check for false and handle appropriately
@@ -248,7 +248,7 @@ class CredentialEncryption
 	 * USAGE:
 	 * This method should be called via WP-CLI or custom admin interface.
 	 * Example WP-CLI command:
-	 *     wp eval "Aether\SiteExporter\Utilities\CredentialEncryption::rotateEncryptionKey();"
+	 *     wp eval "Altolith\Deploy\Utilities\CredentialEncryption::rotateEncryptionKey();"
 	 *
 	 * WARNING:
 	 * - This operation CANNOT be undone
@@ -261,12 +261,12 @@ class CredentialEncryption
 	public static function rotateEncryptionKey(): array
 	{
 		// Step 1: Get all settings that may contain encrypted credentials
-		$settings = \get_option('aether_site_exporter_settings', []);
+		$settings = \get_option('altolith_deploy_settings', []);
 
 		if (empty($settings['providers']) || ! \is_array($settings['providers'])) {
 			return [
 				'success'           => true,
-				'message'           => \__('No provider credentials to rotate.', 'aether-site-exporter'),
+				'message'           => \__('No provider credentials to rotate.', 'altolith-deploy'),
 				'providers_rotated' => 0,
 			];
 		}
@@ -291,7 +291,7 @@ class CredentialEncryption
 							'success'           => false,
 							'message'           => \sprintf(
 								/* translators: %s: Provider ID */
-								\__('Failed to decrypt credentials for provider: %s. Aborting key rotation.', 'aether-site-exporter'),
+								\__('Failed to decrypt credentials for provider: %s. Aborting key rotation.', 'altolith-deploy'),
 								$providerId
 							),
 							'providers_rotated' => 0,
@@ -307,7 +307,7 @@ class CredentialEncryption
 		}
 
 		// Step 3: Delete old encryption key to force generation of new one
-		\delete_option('aether_site_exporter_encryption_key');
+		\delete_option('altolith_deploy_encryption_key');
 
 		// Step 4: Re-encrypt all credentials with new key
 		$reencryptedProviders = [];
@@ -330,7 +330,7 @@ class CredentialEncryption
 							'success'           => false,
 							'message'           => \sprintf(
 								/* translators: %s: Provider ID */
-								\__('CRITICAL: Failed to re-encrypt credentials for provider: %s. Old key deleted. Manual recovery required.', 'aether-site-exporter'),
+								\__('CRITICAL: Failed to re-encrypt credentials for provider: %s. Old key deleted. Manual recovery required.', 'altolith-deploy'),
 								$providerId
 							),
 							'providers_rotated' => 0,
@@ -347,12 +347,12 @@ class CredentialEncryption
 
 		// Step 5: Save re-encrypted credentials
 		$settings['providers'] = $reencryptedProviders;
-		$updated = \update_option('aether_site_exporter_settings', $settings);
+		$updated = \update_option('altolith_deploy_settings', $settings);
 
 		if (! $updated) {
 			return [
 				'success'           => false,
-				'message'           => \__('Failed to save re-encrypted credentials to database.', 'aether-site-exporter'),
+				'message'           => \__('Failed to save re-encrypted credentials to database.', 'altolith-deploy'),
 				'providers_rotated' => 0,
 			];
 		}
@@ -361,7 +361,7 @@ class CredentialEncryption
 			'success'           => true,
 			'message'           => \sprintf(
 				/* translators: %d: Number of providers */
-				\__('Successfully rotated encryption key and re-encrypted credentials for %d provider(s).', 'aether-site-exporter'),
+				\__('Successfully rotated encryption key and re-encrypted credentials for %d provider(s).', 'altolith-deploy'),
 				\count($reencryptedProviders)
 			),
 			'providers_rotated' => \count($reencryptedProviders),

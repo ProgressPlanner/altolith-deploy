@@ -12,9 +12,9 @@
 
 import { __, sprintf } from '@wordpress/i18n';
 import { doAction, applyFilters } from '@wordpress/hooks';
-import { createConcurrencyLimiter } from '@aether/utils/concurrencyLimiter';
-import { calculateFileHash } from '@aether/utils/fileHash';
-import { shouldSkipUpload } from '@aether/utils/manifestManager';
+import { createConcurrencyLimiter } from '@altolith/utils/concurrencyLimiter';
+import { calculateFileHash } from '@altolith/utils/fileHash';
+import { shouldSkipUpload } from '@altolith/utils/manifestManager';
 import { formatFileSize } from './helpers';
 import { errorHandler } from './errorHandler';
 
@@ -110,11 +110,11 @@ export async function uploadFilesWithProgress( {
 				 * @example
 				 * import { addAction } from '@wordpress/hooks';
 				 *
-				 * addAction('aether.upload.file.before', 'my-provider', (fileData) => {
+				 * addAction('altolith.upload.file.before', 'my-provider', (fileData) => {
 				 *   console.log('About to upload:', fileData.key);
 				 * });
 				 */
-				doAction( 'aether.upload.file.before', {
+				doAction( 'altolith.upload.file.before', {
 					key,
 					blob,
 					contentType,
@@ -142,7 +142,7 @@ export async function uploadFilesWithProgress( {
 							 * @example
 							 * import { addFilter } from '@wordpress/hooks';
 							 *
-							 * addFilter('aether.upload.hash.calculate', 'my-provider', (hash, blob, key, manifest) => {
+							 * addFilter('altolith.upload.hash.calculate', 'my-provider', (hash, blob, key, manifest) => {
 							 *   // Return pre-calculated hash or null to use default
 							 *   if (key.startsWith('custom/')) {
 							 *     return 'pre-calculated-hash';
@@ -151,7 +151,7 @@ export async function uploadFilesWithProgress( {
 							 * });
 							 */
 							const filteredHash = applyFilters(
-								'aether.upload.hash.calculate',
+								'altolith.upload.hash.calculate',
 								null,
 								blob,
 								key,
@@ -194,7 +194,7 @@ export async function uploadFilesWithProgress( {
 								/* translators: %1$s: File name, %2$s: File size */
 								__(
 									'Skipped unchanged file %1$s (%2$s)',
-									'aether-site-exporter'
+									'altolith-deploy'
 								),
 								displayName,
 								sizeStr
@@ -237,7 +237,7 @@ export async function uploadFilesWithProgress( {
 						 * @param {Object}      manifest Manifest object.
 						 */
 						const filteredHash = applyFilters(
-							'aether.upload.hash.calculate',
+							'altolith.upload.hash.calculate',
 							null,
 							blob,
 							key,
@@ -258,10 +258,7 @@ export async function uploadFilesWithProgress( {
 					setStatusMessage(
 						sprintf(
 							/* translators: %1$s: File name, %2$s: File size */
-							__(
-								'Uploading %1$s (%2$s)',
-								'aether-site-exporter'
-							),
+							__( 'Uploading %1$s (%2$s)', 'altolith-deploy' ),
 							displayName,
 							sizeStr
 						),
@@ -290,7 +287,7 @@ export async function uploadFilesWithProgress( {
 									/* translators: %1$s: File name, %2$s: File size */
 									__(
 										'Uploading %1$s (%2$s)',
-										'aether-site-exporter'
+										'altolith-deploy'
 									),
 									displayName,
 									sizeStr
@@ -322,7 +319,7 @@ export async function uploadFilesWithProgress( {
 				 * @example
 				 * import { addFilter } from '@wordpress/hooks';
 				 *
-				 * addFilter('aether.upload.file.options', 'my-provider', (options, key, blob, contentType, metadata) => {
+				 * addFilter('altolith.upload.file.options', 'my-provider', (options, key, blob, contentType, metadata) => {
 				 *   return {
 				 *     ...options,
 				 *     cacheControl: 'public, max-age=86400',
@@ -331,7 +328,7 @@ export async function uploadFilesWithProgress( {
 				 * });
 				 */
 				uploadOptions = applyFilters(
-					'aether.upload.file.options',
+					'altolith.upload.file.options',
 					uploadOptions,
 					key,
 					blob,
@@ -371,7 +368,7 @@ export async function uploadFilesWithProgress( {
 											/* translators: %1$s: File name, %2$s: File size, %3$d: Attempt number, %4$d: Max retries */
 											__(
 												'Retrying %1$s (%2$s) - attempt %3$d/%4$d',
-												'aether-site-exporter'
+												'altolith-deploy'
 											),
 											displayName,
 											sizeStr,
@@ -406,10 +403,7 @@ export async function uploadFilesWithProgress( {
 						setStatusMessage(
 							sprintf(
 								/* translators: %1$s: File name, %2$s: File size */
-								__(
-									'Uploaded %1$s (%2$s)',
-									'aether-site-exporter'
-								),
+								__( 'Uploaded %1$s (%2$s)', 'altolith-deploy' ),
 								displayName,
 								sizeStr
 							),
@@ -447,12 +441,12 @@ export async function uploadFilesWithProgress( {
 					 * @example
 					 * import { addAction } from '@wordpress/hooks';
 					 *
-					 * addAction('aether.upload.file.after', 'my-provider', (result, displayName) => {
+					 * addAction('altolith.upload.file.after', 'my-provider', (result, displayName) => {
 					 *   console.log('File uploaded:', result.key, result.url);
 					 * });
 					 */
 					doAction(
-						'aether.upload.file.after',
+						'altolith.upload.file.after',
 						uploadResultData,
 						displayName
 					);
@@ -469,10 +463,7 @@ export async function uploadFilesWithProgress( {
 						setStatusMessage(
 							sprintf(
 								/* translators: %s: File name */
-								__(
-									'Failed to upload %s',
-									'aether-site-exporter'
-								),
+								__( 'Failed to upload %s', 'altolith-deploy' ),
 								displayName
 							),
 							'error',
@@ -497,7 +488,7 @@ export async function uploadFilesWithProgress( {
 					setStatusMessage(
 						sprintf(
 							/* translators: %s: File name */
-							__( 'Failed to upload %s', 'aether-site-exporter' ),
+							__( 'Failed to upload %s', 'altolith-deploy' ),
 							displayName
 						),
 						'error',
@@ -606,7 +597,7 @@ export async function uploadSingleFileWithProgress( {
 						/* translators: %1$s: File name, %2$s: File size in MB */
 						__(
 							'%1$s unchanged (%2$s MB) - skipping upload',
-							'aether-site-exporter'
+							'altolith-deploy'
 						),
 						displayName,
 						fileSizeMB
@@ -641,7 +632,7 @@ export async function uploadSingleFileWithProgress( {
 			setStatusMessage(
 				sprintf(
 					/* translators: %s: File name */
-					__( 'Uploading %s', 'aether-site-exporter' ),
+					__( 'Uploading %s', 'altolith-deploy' ),
 					displayName
 				),
 				'progress',
@@ -665,7 +656,7 @@ export async function uploadSingleFileWithProgress( {
 					setStatusMessage(
 						sprintf(
 							/* translators: %s: File name */
-							__( 'Uploading %s', 'aether-site-exporter' ),
+							__( 'Uploading %s', 'altolith-deploy' ),
 							displayName
 						),
 						'progress',
@@ -691,7 +682,7 @@ export async function uploadSingleFileWithProgress( {
 				setStatusMessage(
 					sprintf(
 						/* translators: %s: File name */
-						__( 'Uploaded %s', 'aether-site-exporter' ),
+						__( 'Uploaded %s', 'altolith-deploy' ),
 						displayName
 					),
 					'success',
@@ -714,7 +705,7 @@ export async function uploadSingleFileWithProgress( {
 			setStatusMessage(
 				sprintf(
 					/* translators: %s: File name */
-					__( 'Failed to upload %s', 'aether-site-exporter' ),
+					__( 'Failed to upload %s', 'altolith-deploy' ),
 					displayName
 				),
 				'error',
@@ -728,8 +719,7 @@ export async function uploadSingleFileWithProgress( {
 			url: null,
 			skipped: false,
 			error:
-				uploadResult.error ||
-				__( 'Upload failed', 'aether-site-exporter' ),
+				uploadResult.error || __( 'Upload failed', 'altolith-deploy' ),
 			hash: fileHash,
 		};
 	} catch ( error ) {
@@ -737,7 +727,7 @@ export async function uploadSingleFileWithProgress( {
 			setStatusMessage(
 				sprintf(
 					/* translators: %s: File name */
-					__( 'Failed to upload %s', 'aether-site-exporter' ),
+					__( 'Failed to upload %s', 'altolith-deploy' ),
 					displayName
 				),
 				'error',

@@ -11,14 +11,14 @@
  * - Must test double-encryption prevention
  * - Must fail if sensitive fields are not encrypted
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Utilities;
+namespace Altolith\Deploy\Tests\Unit\Utilities;
 
-use Aether\SiteExporter\Utilities\EncryptionHelper;
-use Aether\SiteExporter\Utilities\CredentialEncryption;
-use Aether\SiteExporter\Tests\Helpers\TestCase;
+use Altolith\Deploy\Utilities\EncryptionHelper;
+use Altolith\Deploy\Utilities\CredentialEncryption;
+use Altolith\Deploy\Tests\Helpers\TestCase;
 
 /**
  * Test class that uses the EncryptionHelper trait.

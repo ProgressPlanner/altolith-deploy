@@ -40,7 +40,7 @@ export async function executePreScan( {
 
 	// Fire pre-scan start action
 	doAction(
-		'aether.export.step.uploadStaticSiteFiles.pre_scan.before',
+		'altolith.export.step.uploadStaticSiteFiles.pre_scan.before',
 		urls,
 		providerId,
 		providerConfig
@@ -48,7 +48,7 @@ export async function executePreScan( {
 
 	if ( setStatusMessage ) {
 		setStatusMessage(
-			__( 'Scanning files to upload…', 'aether-site-exporter' ),
+			__( 'Scanning files to upload…', 'altolith-deploy' ),
 			'progress',
 			'scanFiles'
 		);
@@ -94,7 +94,7 @@ export async function executePreScan( {
 				method: 'GET',
 				credentials: 'omit',
 				headers: {
-					'User-Agent': 'Aether Static Site Generator',
+					'User-Agent': 'Altolith Static Site Generator',
 				},
 			} );
 
@@ -142,7 +142,7 @@ export async function executePreScan( {
 
 	// Fire completion action
 	doAction(
-		'aether.export.step.uploadStaticSiteFiles.pre_scan.after',
+		'altolith.export.step.uploadStaticSiteFiles.pre_scan.after',
 		{
 			urlsScanned: urls.length,
 			urlsSuccessful: successfulUrls,
@@ -158,7 +158,7 @@ export async function executePreScan( {
 				/* translators: %1$d: Number of HTML files, %2$d: Number of assets */
 				__(
 					'Pre-scan complete: %1$d HTML files, %2$d assets',
-					'aether-site-exporter'
+					'altolith-deploy'
 				),
 				successfulUrls,
 				allUniqueAssets.size

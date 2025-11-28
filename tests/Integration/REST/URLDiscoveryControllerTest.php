@@ -6,13 +6,13 @@
  * Tests URL discovery for posts, terms, authors, and archives with
  * pagination, filtering, and data integrity.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Integration\REST;
+namespace Altolith\Deploy\Tests\Integration\REST;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\REST\URLDiscoveryController;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\REST\URLDiscoveryController;
 use WP_REST_Request;
 
 /**
@@ -51,7 +51,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get posts returns success response.
 	 */
 	public function test_get_posts_returns_success() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/posts' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/posts' );
 
 		$response = $this->controller->getPosts( $request );
 
@@ -65,7 +65,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get posts returns required fields.
 	 */
 	public function test_get_posts_returns_required_fields() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/posts' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/posts' );
 
 		$response = $this->controller->getPosts( $request );
 		$data = $response->get_data();
@@ -89,7 +89,7 @@ class URLDiscoveryControllerTest extends TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/posts' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/posts' );
 
 		$response = $this->controller->getPosts( $request );
 		$data = $response->get_data();
@@ -108,7 +108,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get posts pagination.
 	 */
 	public function test_get_posts_pagination() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/posts' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/posts' );
 		$request->set_param( 'page', 1 );
 
 		$response = $this->controller->getPosts( $request );
@@ -128,7 +128,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get posts page 2.
 	 */
 	public function test_get_posts_page_2() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/posts' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/posts' );
 		$request->set_param( 'page', 2 );
 
 		$response = $this->controller->getPosts( $request );
@@ -158,7 +158,7 @@ class URLDiscoveryControllerTest extends TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/posts' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/posts' );
 
 		$response = $this->controller->getPosts( $request );
 		$data = $response->get_data();
@@ -181,7 +181,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get terms returns success response.
 	 */
 	public function test_get_terms_returns_success() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/terms' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/terms' );
 
 		$response = $this->controller->getTerms( $request );
 
@@ -195,7 +195,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get terms returns required fields.
 	 */
 	public function test_get_terms_returns_required_fields() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/terms' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/terms' );
 
 		$response = $this->controller->getTerms( $request );
 		$data = $response->get_data();
@@ -227,7 +227,7 @@ class URLDiscoveryControllerTest extends TestCase {
 		);
 		wp_set_post_terms( $post_id, [ $term ], 'category' );
 
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/terms' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/terms' );
 
 		$response = $this->controller->getTerms( $request );
 		$data = $response->get_data();
@@ -245,7 +245,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get terms pagination.
 	 */
 	public function test_get_terms_pagination() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/terms' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/terms' );
 		$request->set_param( 'page', 1 );
 
 		$response = $this->controller->getTerms( $request );
@@ -288,7 +288,7 @@ class URLDiscoveryControllerTest extends TestCase {
 		);
 		wp_set_post_terms( $post_id, [ $term ], 'category' );
 
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/terms' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/terms' );
 
 		$response = $this->controller->getTerms( $request );
 		$data = $response->get_data();
@@ -315,7 +315,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get authors returns success response.
 	 */
 	public function test_get_authors_returns_success() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/authors' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/authors' );
 
 		$response = $this->controller->getAuthors( $request );
 
@@ -329,7 +329,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get authors returns required fields.
 	 */
 	public function test_get_authors_returns_required_fields() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/authors' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/authors' );
 
 		$response = $this->controller->getAuthors( $request );
 		$data = $response->get_data();
@@ -346,7 +346,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 */
 	public function test_get_authors_returns_array_of_urls() {
 		// Admin user has edit_posts capability.
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/authors' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/authors' );
 
 		$response = $this->controller->getAuthors( $request );
 		$data = $response->get_data();
@@ -365,7 +365,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get authors pagination.
 	 */
 	public function test_get_authors_pagination() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/authors' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/authors' );
 		$request->set_param( 'page', 1 );
 
 		$response = $this->controller->getAuthors( $request );
@@ -385,7 +385,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get authors includes admin user.
 	 */
 	public function test_get_authors_includes_admin() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/authors' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/authors' );
 
 		$response = $this->controller->getAuthors( $request );
 		$data = $response->get_data();
@@ -406,7 +406,7 @@ class URLDiscoveryControllerTest extends TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/authors' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/authors' );
 
 		$response = $this->controller->getAuthors( $request );
 		$data = $response->get_data();
@@ -424,7 +424,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get archives returns success response.
 	 */
 	public function test_get_archives_returns_success() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/archives' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/archives' );
 
 		$response = $this->controller->getArchives( $request );
 
@@ -438,7 +438,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get archives returns required fields.
 	 */
 	public function test_get_archives_returns_required_fields() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/archives' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/archives' );
 
 		$response = $this->controller->getArchives( $request );
 		$data = $response->get_data();
@@ -454,7 +454,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get archives includes homepage.
 	 */
 	public function test_get_archives_includes_homepage() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/archives' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/archives' );
 
 		$response = $this->controller->getArchives( $request );
 		$data = $response->get_data();
@@ -466,7 +466,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get archives is not paginated.
 	 */
 	public function test_get_archives_not_paginated() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/archives' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/archives' );
 
 		$response = $this->controller->getArchives( $request );
 		$data = $response->get_data();
@@ -479,7 +479,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get archives total matches URL count.
 	 */
 	public function test_get_archives_total_matches_count() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/archives' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/archives' );
 
 		$response = $this->controller->getArchives( $request );
 		$data = $response->get_data();
@@ -491,7 +491,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test get archives returns array of URLs.
 	 */
 	public function test_get_archives_returns_array_of_urls() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/archives' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/archives' );
 
 		$response = $this->controller->getArchives( $request );
 		$data = $response->get_data();
@@ -522,7 +522,7 @@ class URLDiscoveryControllerTest extends TestCase {
 		];
 
 		foreach ( $endpoints as $endpoint ) {
-			$request = new WP_REST_Request( 'GET', '/aether/v1/urls/' . strtolower( str_replace( 'get', '', $endpoint['method'] ) ) );
+			$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/' . strtolower( str_replace( 'get', '', $endpoint['method'] ) ) );
 
 			$method = $endpoint['method'];
 			$response = $this->controller->$method( $request );
@@ -543,7 +543,7 @@ class URLDiscoveryControllerTest extends TestCase {
 		// Create a post to ensure we have URLs to test.
 		$this->factory->post->create( [ 'post_status' => 'publish' ] );
 
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/posts' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/posts' );
 
 		$response = $this->controller->getPosts( $request );
 		$data = $response->get_data();
@@ -561,7 +561,7 @@ class URLDiscoveryControllerTest extends TestCase {
 		$endpoints = [ 'getPosts', 'getTerms', 'getAuthors', 'getArchives' ];
 
 		foreach ( $endpoints as $method ) {
-			$request = new WP_REST_Request( 'GET', '/aether/v1/urls/' . strtolower( str_replace( 'get', '', $method ) ) );
+			$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/' . strtolower( str_replace( 'get', '', $method ) ) );
 
 			$response = $this->controller->$method( $request );
 			$data = $response->get_data();
@@ -578,7 +578,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test nextPage is null when hasMore is false.
 	 */
 	public function test_next_page_null_when_no_more() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/posts' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/posts' );
 
 		$response = $this->controller->getPosts( $request );
 		$data = $response->get_data();
@@ -595,7 +595,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test nextPage is page + 1 when hasMore is true.
 	 */
 	public function test_next_page_increments_when_has_more() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/posts' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/posts' );
 		$request->set_param( 'page', 1 );
 
 		$response = $this->controller->getPosts( $request );
@@ -614,7 +614,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test page parameter defaults to 1.
 	 */
 	public function test_page_defaults_to_one() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/posts' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/posts' );
 		// No page parameter.
 
 		$response = $this->controller->getPosts( $request );
@@ -630,7 +630,7 @@ class URLDiscoveryControllerTest extends TestCase {
 	 * Test URLs start with home URL.
 	 */
 	public function test_urls_start_with_home_url() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/urls/archives' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/archives' );
 
 		$response = $this->controller->getArchives( $request );
 		$data = $response->get_data();
@@ -647,7 +647,7 @@ class URLDiscoveryControllerTest extends TestCase {
 		$endpoints = [ 'getPosts', 'getTerms', 'getAuthors', 'getArchives' ];
 
 		foreach ( $endpoints as $method ) {
-			$request = new WP_REST_Request( 'GET', '/aether/v1/urls/' . strtolower( str_replace( 'get', '', $method ) ) );
+			$request = new WP_REST_Request( 'GET', '/altolith/v1/urls/' . strtolower( str_replace( 'get', '', $method ) ) );
 
 			$response = $this->controller->$method( $request );
 			$data = $response->get_data();

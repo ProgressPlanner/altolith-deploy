@@ -182,13 +182,13 @@ describe( 'ProviderRegistry', () => {
 			expect( ProviderRegistry.count() ).toBe( 1 );
 		} );
 
-		it( 'should fire aether.providers.registered action after registration', () => {
+		it( 'should fire altolith.providers.registered action after registration', () => {
 			const provider = createMockProvider( 'test-provider', 'Test' );
 
 			ProviderRegistry.register( 'test-provider', provider );
 
 			expect( doAction ).toHaveBeenCalledWith(
-				'aether.providers.registered',
+				'altolith.providers.registered',
 				'test-provider',
 				provider
 			);

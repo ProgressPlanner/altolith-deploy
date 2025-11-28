@@ -29,7 +29,7 @@ jest.mock( '@wordpress/i18n', () => ( {
 
 // Mock staticSiteConfig utilities
 const mockFetchProviderConfig = jest.fn();
-jest.mock( '@aether/export/utils/staticSiteConfig', () => ( {
+jest.mock( '@altolith/export/utils/staticSiteConfig', () => ( {
 	fetchProviderConfig: ( ...args ) => mockFetchProviderConfig( ...args ),
 } ) );
 
@@ -38,7 +38,7 @@ const mockProviderRegistry = {
 	get: jest.fn(),
 };
 jest.mock(
-	'@aether/providers/registry/ProviderRegistry',
+	'@altolith/providers/registry/ProviderRegistry',
 	() => mockProviderRegistry
 );
 
@@ -54,7 +54,7 @@ describe( 'uploadStaticFiles step', () => {
 
 		// Extract the step definition from the mock call
 		const registerCall = mockAddAction.mock.calls.find(
-			( call ) => call[ 0 ] === 'aether.export.register_steps'
+			( call ) => call[ 0 ] === 'altolith.export.register_steps'
 		);
 		expect( registerCall ).toBeDefined();
 
@@ -364,7 +364,7 @@ describe( 'uploadStaticFiles step', () => {
 			} );
 
 			expect( mockApplyFilters ).toHaveBeenCalledWith(
-				'aether.export.step.uploadStaticSiteFiles.urls',
+				'altolith.export.step.uploadStaticSiteFiles.urls',
 				originalUrls,
 				[ 'test-provider:123' ],
 				expect.objectContaining( {
@@ -500,7 +500,7 @@ describe( 'uploadStaticFiles step', () => {
 			} );
 
 			expect( mockApplyFilters ).toHaveBeenCalledWith(
-				'aether.export.step.uploadStaticSiteFiles.result',
+				'altolith.export.step.uploadStaticSiteFiles.result',
 				expect.objectContaining( {
 					staticUploadResults: expect.any( Object ),
 				} ),

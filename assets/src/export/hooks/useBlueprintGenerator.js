@@ -8,11 +8,11 @@
 
 import { useCallback } from '@wordpress/element';
 import { applyFilters } from '@wordpress/hooks';
-import useAssetDiscovery from '@aether/utils/useAssetDiscovery';
+import useAssetDiscovery from '@altolith/utils/useAssetDiscovery';
 import {
 	buildBlueprintSteps,
 	buildBlueprintJson,
-} from '@aether/export/utils/blueprintStepBuilders';
+} from '@altolith/export/utils/blueprintStepBuilders';
 
 /**
  * Hook for generating WordPress Playground blueprint JSON.
@@ -63,7 +63,7 @@ export function useBlueprintGenerator() {
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
 			 *
-			 * addFilter('aether.export.step.createBlueprintBundle.assets', 'my-plugin', (assets) => {
+			 * addFilter('altolith.export.step.createBlueprintBundle.assets', 'my-plugin', (assets) => {
 			 *     // Exclude specific plugins
 			 *     assets.plugins = assets.plugins.filter(slug => slug !== 'unwanted-plugin');
 			 *
@@ -74,7 +74,7 @@ export function useBlueprintGenerator() {
 			 * });
 			 */
 			const filteredAssets = applyFilters(
-				'aether.export.step.createBlueprintBundle.assets',
+				'altolith.export.step.createBlueprintBundle.assets',
 				{ plugins: wporgPlugins, themes: wporgThemes },
 				assetsResponse
 			);
@@ -164,7 +164,7 @@ export function useBlueprintGenerator() {
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
 			 *
-			 * addFilter('aether.export.step.createBlueprintBundle.generated', 'my-plugin', (blueprint) => {
+			 * addFilter('altolith.export.step.createBlueprintBundle.generated', 'my-plugin', (blueprint) => {
 			 *     // Add custom metadata
 			 *     blueprint.description = 'My custom WordPress site';
 			 *
@@ -172,7 +172,7 @@ export function useBlueprintGenerator() {
 			 * });
 			 */
 			blueprint = applyFilters(
-				'aether.export.step.createBlueprintBundle.generated',
+				'altolith.export.step.createBlueprintBundle.generated',
 				blueprint,
 				wporgPlugins,
 				wporgThemes

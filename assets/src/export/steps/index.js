@@ -30,7 +30,7 @@ export function getRegisteredSteps() {
 	registry.clear();
 
 	// Trigger registration hook - steps self-register
-	doAction( 'aether.export.register_steps', registry );
+	doAction( 'altolith.export.register_steps', registry );
 
 	return registry.getSteps();
 }

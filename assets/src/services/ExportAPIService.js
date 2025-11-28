@@ -6,9 +6,9 @@
  *
  */
 
-import { ENDPOINTS } from '@aether/constants';
+import { ENDPOINTS } from '@altolith/constants';
 
-const CHANGED_ASSETS_KEY = 'aether_changed_assets';
+const CHANGED_ASSETS_KEY = 'altolith_changed_assets';
 
 /**
  * Publish API Service Class

@@ -18,10 +18,10 @@
  * - Static site HTML fetching (PublishStepsController.php)
  * - URL discovery (URLDiscoveryService.php)
  *
- * @package Aether\Utilities
+ * @package Altolith\Utilities
  */
 
-namespace Aether\SiteExporter\Utilities;
+namespace Altolith\Deploy\Utilities;
 
 \defined('ABSPATH') || exit;
 

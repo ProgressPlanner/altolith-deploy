@@ -37,7 +37,7 @@
       "step": "installPlugin",
       "pluginData": {
         "resource": "url",
-        "url": "http://localhost:PLUGIN_ZIP_PORT/aether-plugin.zip"
+        "url": "http://localhost:PLUGIN_ZIP_PORT/altolith-plugin.zip"
       },
       "options": {
         "activate": true
@@ -45,7 +45,7 @@
     },
     {
       "step": "runPHP",
-      "code": "<?php\nrequire_once '/wordpress/wp-load.php';\n\n// Ensure admin user exists with known credentials\nif (!username_exists('admin')) {\n    $user_id = wp_create_user('admin', 'password', 'admin@example.com');\n    if (!is_wp_error($user_id)) {\n        $user = get_user_by('id', $user_id);\n        $user->remove_role('subscriber');\n        $user->add_role('administrator');\n    }\n}\n\n// Initialize plugin settings\nupdate_option('aether_settings', [\n    'version' => '1.0.0',\n    'providers' => [],\n    'provider_types' => [],\n]);\n\n// Create test post for E2E tests\nif (!get_page_by_title('Test Post', OBJECT, 'post')) {\n    wp_insert_post([\n        'post_title' => 'Test Post',\n        'post_content' => 'This is a test post for E2E testing.',\n        'post_status' => 'publish',\n        'post_author' => 1,\n        'post_type' => 'post',\n    ]);\n}\n\n// Create test page\nif (!get_page_by_title('Test Page', OBJECT, 'page')) {\n    wp_insert_post([\n        'post_title' => 'Test Page',\n        'post_content' => 'This is a test page for E2E testing.',\n        'post_status' => 'publish',\n        'post_author' => 1,\n        'post_type' => 'page',\n    ]);\n}\n\necho 'WordPress Playground environment configured for Aether E2E testing';"
+      "code": "<?php\nrequire_once '/wordpress/wp-load.php';\n\n// Ensure admin user exists with known credentials\nif (!username_exists('admin')) {\n    $user_id = wp_create_user('admin', 'password', 'admin@example.com');\n    if (!is_wp_error($user_id)) {\n        $user = get_user_by('id', $user_id);\n        $user->remove_role('subscriber');\n        $user->add_role('administrator');\n    }\n}\n\n// Initialize plugin settings\nupdate_option('altolith_settings', [\n    'version' => '1.0.0',\n    'providers' => [],\n    'provider_types' => [],\n]);\n\n// Create test post for E2E tests\nif (!get_page_by_title('Test Post', OBJECT, 'post')) {\n    wp_insert_post([\n        'post_title' => 'Test Post',\n        'post_content' => 'This is a test post for E2E testing.',\n        'post_status' => 'publish',\n        'post_author' => 1,\n        'post_type' => 'post',\n    ]);\n}\n\n// Create test page\nif (!get_page_by_title('Test Page', OBJECT, 'page')) {\n    wp_insert_post([\n        'post_title' => 'Test Page',\n        'post_content' => 'This is a test page for E2E testing.',\n        'post_status' => 'publish',\n        'post_author' => 1,\n        'post_type' => 'page',\n    ]);\n}\n\necho 'WordPress Playground environment configured for Altolith E2E testing';"
     },
     {
       "step": "login",

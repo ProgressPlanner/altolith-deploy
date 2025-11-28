@@ -53,7 +53,7 @@ const mockProviderRegistry = {
 	get: jest.fn(),
 };
 jest.mock(
-	'@aether/providers/registry/ProviderRegistry',
+	'@altolith/providers/registry/ProviderRegistry',
 	() => mockProviderRegistry
 );
 
@@ -69,7 +69,7 @@ describe( 'uploadBlueprintBundle step', () => {
 
 		// Extract the step definition from the mock call
 		const registerCall = mockAddAction.mock.calls.find(
-			( call ) => call[ 0 ] === 'aether.export.register_steps'
+			( call ) => call[ 0 ] === 'altolith.export.register_steps'
 		);
 		expect( registerCall ).toBeDefined();
 

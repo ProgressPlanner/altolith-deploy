@@ -10,10 +10,10 @@ import { useState, useRef, useEffect } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Button, Modal, Icon } from '@wordpress/components';
 import { settings, trash, check, close } from '@wordpress/icons';
-import ProviderForm from '@aether/components/ProviderForm';
-import StatusNotice from '@aether/components/StatusNotice';
-import CopyConfigDropdown from '@aether/components/CopyConfigDropdown';
-import { hasRequiredFields } from '@aether/providers/utils/configValidation';
+import ProviderForm from '@altolith/components/ProviderForm';
+import StatusNotice from '@altolith/components/StatusNotice';
+import CopyConfigDropdown from '@altolith/components/CopyConfigDropdown';
+import { hasRequiredFields } from '@altolith/providers/utils/configValidation';
 import {
 	colors,
 	spacing,
@@ -21,7 +21,7 @@ import {
 	fontSize,
 	borderRadius,
 	createFlexStyle,
-} from '@aether/utils/styles';
+} from '@altolith/utils/styles';
 
 // Styles - extracted to module level for performance
 const tableCellStyle = {
@@ -189,7 +189,7 @@ export default function ProviderInstanceItem( {
 		} catch ( error ) {
 			setSaveError(
 				error.message ||
-					__( 'Failed to save settings', 'aether-site-exporter' )
+					__( 'Failed to save settings', 'altolith-deploy' )
 			);
 			throw error;
 		}
@@ -202,7 +202,7 @@ export default function ProviderInstanceItem( {
 				/* translators: %s: instance name */
 				__(
 					'Are you sure you want to delete the instance "%s"? This cannot be undone.',
-					'aether-site-exporter'
+					'altolith-deploy'
 				),
 				instanceConfig.instance_name
 			)
@@ -284,10 +284,7 @@ export default function ProviderInstanceItem( {
 						} }
 						role="button"
 						tabIndex={ 0 }
-						title={ __(
-							'Click to edit name',
-							'aether-site-exporter'
-						) }
+						title={ __( 'Click to edit name', 'altolith-deploy' ) }
 					>
 						{ instanceConfig.instance_name || '' }
 					</div>
@@ -333,12 +330,9 @@ export default function ProviderInstanceItem( {
 						allRequiredFilled
 							? __(
 									'All required fields filled',
-									'aether-site-exporter'
+									'altolith-deploy'
 							  )
-							: __(
-									'Required fields missing',
-									'aether-site-exporter'
-							  )
+							: __( 'Required fields missing', 'altolith-deploy' )
 					}
 				/>
 			</td>
@@ -357,7 +351,7 @@ export default function ProviderInstanceItem( {
 							icon={ settings }
 							onClick={ () => setIsModalOpen( true ) }
 						>
-							{ __( 'Settings', 'aether-site-exporter' ) }
+							{ __( 'Settings', 'altolith-deploy' ) }
 						</Button>
 						<Button
 							variant="secondary"
@@ -365,22 +359,19 @@ export default function ProviderInstanceItem( {
 							icon={ trash }
 							onClick={ handleDelete }
 						>
-							{ __( 'Delete', 'aether-site-exporter' ) }
+							{ __( 'Delete', 'altolith-deploy' ) }
 						</Button>
 					</div>
 
 					{ /* Settings Modal */ }
 					{ isModalOpen && (
 						<Modal
-							className="aether-provider-instance-settings-modal"
+							className="altolith-provider-instance-settings-modal"
 							title={ sprintf(
 								/* translators: %s: instance name */
-								__( 'Settings: %s', 'aether-site-exporter' ),
+								__( 'Settings: %s', 'altolith-deploy' ),
 								instanceConfig.instance_name ||
-									__(
-										'Provider Instance',
-										'aether-site-exporter'
-									)
+									__( 'Provider Instance', 'altolith-deploy' )
 							) }
 							onRequestClose={ () => setIsModalOpen( false ) }
 							size="medium"

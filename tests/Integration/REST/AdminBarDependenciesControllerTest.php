@@ -11,13 +11,13 @@
  * - Must test permission checks work
  * - Must fail if dependencies are missing or malformed
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Integration\REST;
+namespace Altolith\Deploy\Tests\Integration\REST;
 
-use Aether\SiteExporter\REST\AdminBarDependenciesController;
-use Aether\SiteExporter\Tests\Helpers\TestCase;
+use Altolith\Deploy\REST\AdminBarDependenciesController;
+use Altolith\Deploy\Tests\Helpers\TestCase;
 use WP_REST_Request;
 
 class AdminBarDependenciesControllerTest extends TestCase
@@ -34,7 +34,7 @@ class AdminBarDependenciesControllerTest extends TestCase
 	 *
 	 * @var string
 	 */
-	private string $namespace = 'aether/site-exporter';
+	private string $namespace = 'altolith/deploy';
 
 	/**
 	 * Set up test environment.

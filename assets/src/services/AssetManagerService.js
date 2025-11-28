@@ -6,7 +6,7 @@
  *
  */
 
-const STORAGE_KEY = 'aetherAssets';
+const STORAGE_KEY = 'altolithAssets';
 
 /**
  * Normalize asset data from server

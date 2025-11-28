@@ -58,7 +58,7 @@ export function filterByWpOrgStatus( assets, fromWpOrg ) {
  * @return {Array<Object>} Plugins excluding built-in ones.
  */
 export function filterBuiltInPlugins( plugins ) {
-	const builtInSlugs = [ 'aether', 'sqlite-database-integration' ];
+	const builtInSlugs = [ 'altolith', 'sqlite-database-integration' ];
 	return plugins.filter(
 		( plugin ) =>
 			! builtInSlugs.includes( normalizePluginSlug( plugin.slug ) )
@@ -146,7 +146,7 @@ export class AssetDiscoveryService {
 	async getInstalledAssets() {
 		try {
 			const response = await this.apiFetch( {
-				path: '/aether/site-exporter/assets',
+				path: '/altolith/deploy/assets',
 				method: 'GET',
 			} );
 
@@ -167,26 +167,26 @@ export class AssetDiscoveryService {
 	}
 
 	/**
-	 * Get plugin configuration from window.aetherData.
+	 * Get plugin configuration from window.altolithData.
 	 *
 	 * Configuration was previously fetched from REST API endpoint /config,
-	 * but that endpoint was removed in favor of reading from window.aetherData
+	 * but that endpoint was removed in favor of reading from window.altolithData
 	 * which is injected by PHP.
 	 *
 	 * @return {Promise<Object>} Configuration object.
 	 */
 	async getConfig() {
-		// Read config from window.aetherData (injected by PHP).
-		if ( typeof window !== 'undefined' && window.aetherData ) {
+		// Read config from window.altolithData (injected by PHP).
+		if ( typeof window !== 'undefined' && window.altolithData ) {
 			return {
-				publicUrl: window.aetherData.publicUrl || '',
-				adminUrl: window.aetherData.adminUrl || '',
+				publicUrl: window.altolithData.publicUrl || '',
+				adminUrl: window.altolithData.adminUrl || '',
 				// Note: wporgCheckMethod and corsProxyUrl are not needed
 				// because the JS code uses hardcoded defaults ('cors-proxy' with fallback to 'direct')
 			};
 		}
 
-		// Fallback if window.aetherData is not available.
+		// Fallback if window.altolithData is not available.
 		return {
 			publicUrl: '',
 			adminUrl: '',

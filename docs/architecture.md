@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Aether Site Exporter                         │
+│                    Altolith Deploy                         │
 │                   Multi-Provider Workflow                       │
 └─────────────────────────────────────────────────────────────────┘
 
@@ -100,7 +100,7 @@ WordPress Root
 │
 └── wp-content/
     └── uploads/
-        └── aether-exports/
+        └── altolith-exports/
             │
             ├── cloudflare-r2/                    ◄─── Provider A
             │   ├── static/
@@ -405,8 +405,8 @@ Pre-scan Phase (Phase 1)
 │   ├─► Fetch HTML
 │   │
 │   ├─► Extract assets
-│   │   └─► Apply filter: aether.assets.extracted
-│   │   └─► Apply filter: aether.assets.should_collect
+│   │   └─► Apply filter: altolith.assets.extracted
+│   │   └─► Apply filter: altolith.assets.should_collect
 │   │
 │   └─► Cache raw HTML in htmlDataMap
 │
@@ -420,7 +420,7 @@ Upload Phase (Phase 2)
 │   │   │
 │   │   ├─► Load raw HTML from cache
 │   │   │
-│   │   ├─► Apply filter: aether.export.step.uploadStaticSiteFiles.html.process
+│   │   ├─► Apply filter: altolith.export.step.uploadStaticSiteFiles.html.process
 │   │   │   └─► Modify HTML (once per provider per page)
 │   │   │
 │   │   ├─► processHtml() - URL rewriting
@@ -436,7 +436,7 @@ Upload Phase (Phase 2)
     │   │
     │   ├─► Load raw HTML from cache (same as Provider A)
     │   │
-    │   ├─► Apply filter: aether.export.step.uploadStaticSiteFiles.html.process
+    │   ├─► Apply filter: altolith.export.step.uploadStaticSiteFiles.html.process
     │   │   └─► Modify HTML (different provider context!)
     │   │
     │   ├─► processHtml() - URL rewriting

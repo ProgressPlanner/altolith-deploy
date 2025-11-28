@@ -74,7 +74,7 @@ export class ProviderSettingsAPI {
 	 */
 	async fetchAll() {
 		const response = await this.apiFetch( {
-			path: '/aether/site-exporter/settings?key=providers',
+			path: '/altolith/deploy/settings?key=providers',
 		} );
 
 		if ( ! response.success ) {
@@ -92,7 +92,7 @@ export class ProviderSettingsAPI {
 	 */
 	async save( providers ) {
 		const response = await this.apiFetch( {
-			path: '/aether/site-exporter/settings',
+			path: '/altolith/deploy/settings',
 			method: 'POST',
 			data: {
 				key: 'providers',
@@ -165,7 +165,7 @@ export class ProviderSettingsAPI {
 	 */
 	async createInstance( instanceId, providerType, instanceName ) {
 		const response = await this.apiFetch( {
-			path: `/aether/site-exporter/providers/${ providerType }/instances`,
+			path: `/altolith/deploy/providers/${ providerType }/instances`,
 			method: 'POST',
 			data: {
 				instance_id: instanceId,
@@ -202,7 +202,7 @@ export class ProviderSettingsAPI {
 	async deleteInstance( instanceId ) {
 		// Delete via REST API
 		await this.apiFetch( {
-			path: `/aether/site-exporter/providers/${ instanceId }/config`,
+			path: `/altolith/deploy/providers/${ instanceId }/config`,
 			method: 'DELETE',
 		} );
 

@@ -5,13 +5,13 @@
  * Tests for the HtmlFetchController that fetches HTML as anonymous user.
  * This is critical for static site generation in WordPress Playground.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Integration\REST;
+namespace Altolith\Deploy\Tests\Integration\REST;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\REST\Export\HtmlFetchController;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\REST\Export\HtmlFetchController;
 use WP_REST_Request;
 use WP_REST_Response;
 
@@ -39,7 +39,7 @@ class HtmlFetchControllerTest extends TestCase {
 	 *
 	 * @var string
 	 */
-	private $namespace = 'aether/site-exporter';
+	private $namespace = 'altolith/deploy';
 
 	/**
 	 * Set up test environment.

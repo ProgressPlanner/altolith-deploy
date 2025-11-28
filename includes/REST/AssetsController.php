@@ -5,15 +5,15 @@
  *
  * Provides installed plugin and theme data for blueprint generation.
  *
- * @package Aether\REST
+ * @package Altolith\REST
  */
 
-namespace Aether\SiteExporter\REST;
+namespace Altolith\Deploy\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
-use Aether\SiteExporter\Sync\AssetDiscoveryService;
+use Altolith\Deploy\Sync\AssetDiscoveryService;
 
 /**
  * Assets REST endpoints.

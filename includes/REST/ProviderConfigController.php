@@ -12,16 +12,16 @@
  * - /providers/{id}/status - GET (useProviderStatus.js, usePublishReadiness.js)
  * - /providers/{id}/settings - GET/POST (useProviderSettings.js)
  *
- * @package Aether\REST
+ * @package Altolith\REST
  */
 
-namespace Aether\SiteExporter\REST;
+namespace Altolith\Deploy\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
-use Aether\SiteExporter\Utilities\CredentialEncryption;
-use Aether\SiteExporter\Utilities\EncryptionHelper;
+use Altolith\Deploy\Utilities\CredentialEncryption;
+use Altolith\Deploy\Utilities\EncryptionHelper;
 
 /**
  * Provider configuration REST endpoints.
@@ -111,13 +111,13 @@ class ProviderConfigController
 			return new WP_Error(
 				'invalid_instance_id',
 				/* translators: %s: Provider instance ID */
-				\sprintf(\__('Invalid instance ID format: %s. Expected format: provider_type:uuid', 'aether-site-exporter'), $instanceId),
+				\sprintf(\__('Invalid instance ID format: %s. Expected format: provider_type:uuid', 'altolith-deploy'), $instanceId),
 				[ 'status' => 400 ]
 			);
 		}
 
 		// Get config from database.
-		$settings = \get_option('aether_site_exporter_settings', []);
+		$settings = \get_option('altolith_deploy_settings', []);
 		$config = $settings['providers'][$instanceId] ?? [];
 
 		// Decrypt sensitive fields for client.
@@ -130,14 +130,14 @@ class ProviderConfigController
 		 * @param string $instanceId  The instance ID.
 		 *
 		 * @example
-		 * add_filter('aether_provider_config_load', function($config, $instanceId) {
+		 * add_filter('altolith_provider_config_load', function($config, $instanceId) {
 		 *     if (str_starts_with($instanceId, 'my-provider:')) {
 		 *         $config['custom_field'] = 'custom value';
 		 *     }
 		 *     return $config;
 		 * }, 10, 2);
 		 */
-		$config = \apply_filters('aether_provider_config_load', $config, $instanceId);
+		$config = \apply_filters('altolith_provider_config_load', $config, $instanceId);
 
 		/**
 		 * Action fired after provider configuration is loaded.
@@ -145,7 +145,7 @@ class ProviderConfigController
 		 * @param string $instanceId The instance ID.
 		 * @param array  $config     The loaded configuration.
 		 */
-		\do_action('aether_provider_config_loaded', $instanceId, $config);
+		\do_action('altolith_provider_config_loaded', $instanceId, $config);
 
 		return new WP_REST_Response(
 			[
@@ -168,7 +168,7 @@ class ProviderConfigController
 		$config     = $request->get_param('config');
 
 		if (! \is_array($config)) {
-			return new WP_Error('invalid_config', \__('Config must be an object.', 'aether-site-exporter'), [ 'status' => 400 ]);
+			return new WP_Error('invalid_config', \__('Config must be an object.', 'altolith-deploy'), [ 'status' => 400 ]);
 		}
 
 		// Validate instance ID format: {provider_type}:{uuid}
@@ -176,7 +176,7 @@ class ProviderConfigController
 			return new WP_Error(
 				'invalid_instance_id',
 				/* translators: %s: Provider instance ID */
-				\sprintf(\__('Invalid instance ID format: %s. Expected format: provider_type:uuid', 'aether-site-exporter'), $instanceId),
+				\sprintf(\__('Invalid instance ID format: %s. Expected format: provider_type:uuid', 'altolith-deploy'), $instanceId),
 				[ 'status' => 400 ]
 			);
 		}
@@ -194,26 +194,26 @@ class ProviderConfigController
 		 * @param string $instanceId  The instance ID.
 		 *
 		 * @example
-		 * add_filter('aether_provider_config_save', function($config, $instanceId) {
+		 * add_filter('altolith_provider_config_save', function($config, $instanceId) {
 		 *     if (str_starts_with($instanceId, 'my-provider:')) {
 		 *         $config['custom_field'] = 'processed value';
 		 *     }
 		 *     return $config;
 		 * }, 10, 2);
 		 */
-		$config = \apply_filters('aether_provider_config_save', $config, $instanceId);
+		$config = \apply_filters('altolith_provider_config_save', $config, $instanceId);
 
 		// Sanitize config recursively.
 		$sanitized = $this->sanitizeConfig($config);
 
 		// Encrypt sensitive fields and save to options.
 		$encrypted = $this->encryptSensitiveFields($sanitized);
-		$settingsOption = \get_option('aether_site_exporter_settings', []);
+		$settingsOption = \get_option('altolith_deploy_settings', []);
 		if (! isset($settingsOption['providers']) || ! \is_array($settingsOption['providers'])) {
 			$settingsOption['providers'] = [];
 		}
 		$settingsOption['providers'][$instanceId] = $encrypted;
-		\update_option('aether_site_exporter_settings', $settingsOption);
+		\update_option('altolith_deploy_settings', $settingsOption);
 
 		/**
 		 * Action fired after provider configuration is saved.
@@ -222,16 +222,16 @@ class ProviderConfigController
 		 * @param array  $config     The saved configuration (decrypted for hook access).
 		 *
 		 * @example
-		 * add_action('aether_provider_config_saved', function($instanceId, $config) {
+		 * add_action('altolith_provider_config_saved', function($instanceId, $config) {
 		 *     error_log("Instance {$instanceId} configuration updated");
 		 * }, 10, 2);
 		 */
-		\do_action('aether_provider_config_saved', $instanceId, $sanitized);
+		\do_action('altolith_provider_config_saved', $instanceId, $sanitized);
 
 		return new WP_REST_Response(
 			[
 				'success' => true,
-				'message' => \__('Provider configuration saved successfully.', 'aether-site-exporter'),
+				'message' => \__('Provider configuration saved successfully.', 'altolith-deploy'),
 			],
 			200
 		);
@@ -255,18 +255,18 @@ class ProviderConfigController
 		 * @param string $instanceId The instance ID being deleted.
 		 *
 		 * @example
-		 * add_action('aether_provider_config_before_delete', function($instanceId) {
+		 * add_action('altolith_provider_config_before_delete', function($instanceId) {
 		 *     // Clean up associated resources
 		 *     delete_option("my_provider_{$instanceId}_cache");
 		 * });
 		 */
-		\do_action('aether_provider_config_before_delete', $instanceId);
+		\do_action('altolith_provider_config_before_delete', $instanceId);
 
-		// Delete from aether_settings['providers'][instanceId]
-		$settings = \get_option('aether_site_exporter_settings', []);
+		// Delete from altolith_settings['providers'][instanceId]
+		$settings = \get_option('altolith_deploy_settings', []);
 		if (isset($settings['providers'][$instanceId])) {
 			unset($settings['providers'][$instanceId]);
-			\update_option('aether_site_exporter_settings', $settings);
+			\update_option('altolith_deploy_settings', $settings);
 		}
 
 		/**
@@ -275,16 +275,16 @@ class ProviderConfigController
 		 * @param string $instanceId The instance ID that was deleted.
 		 *
 		 * @example
-		 * add_action('aether_provider_config_deleted', function($instanceId) {
+		 * add_action('altolith_provider_config_deleted', function($instanceId) {
 		 *     error_log("Instance {$instanceId} configuration removed");
 		 * });
 		 */
-		\do_action('aether_provider_config_deleted', $instanceId);
+		\do_action('altolith_provider_config_deleted', $instanceId);
 
 		return new WP_REST_Response(
 			[
 				'success' => true,
-				'message' => \__('Provider configuration deleted successfully.', 'aether-site-exporter'),
+				'message' => \__('Provider configuration deleted successfully.', 'altolith-deploy'),
 			],
 			200
 		);
@@ -300,8 +300,8 @@ class ProviderConfigController
 	{
 		$instanceId = $request->get_param('instance_id');
 
-		// Check provider config in aether_settings (where settings are actually stored)
-		$settings = \get_option('aether_site_exporter_settings', []);
+		// Check provider config in altolith_settings (where settings are actually stored)
+		$settings = \get_option('altolith_deploy_settings', []);
 		$providers = $settings['providers'] ?? [];
 		$config = $providers[ $instanceId ] ?? [];
 
@@ -338,7 +338,7 @@ class ProviderConfigController
 			return new WP_Error(
 				'invalid_target_id',
 				/* translators: %s: Provider instance ID */
-				\sprintf(\__('Invalid target instance ID format: %s', 'aether-site-exporter'), $targetId),
+				\sprintf(\__('Invalid target instance ID format: %s', 'altolith-deploy'), $targetId),
 				[ 'status' => 400 ]
 			);
 		}
@@ -347,7 +347,7 @@ class ProviderConfigController
 			return new WP_Error(
 				'invalid_source_id',
 				/* translators: %s: Provider instance ID */
-				\sprintf(\__('Invalid source instance ID format: %s', 'aether-site-exporter'), $sourceId),
+				\sprintf(\__('Invalid source instance ID format: %s', 'altolith-deploy'), $sourceId),
 				[ 'status' => 400 ]
 			);
 		}
@@ -356,7 +356,7 @@ class ProviderConfigController
 		if ($targetId === $sourceId) {
 			return new WP_Error(
 				'same_instance',
-				\__('Cannot copy configuration to the same instance.', 'aether-site-exporter'),
+				\__('Cannot copy configuration to the same instance.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -365,14 +365,14 @@ class ProviderConfigController
 		// The CopyConfigDropdown only shows compatible instances to copy from.
 
 		// Get source config from database.
-		$settings = \get_option('aether_site_exporter_settings', []);
+		$settings = \get_option('altolith_deploy_settings', []);
 		$sourceConfig = $settings['providers'][$sourceId] ?? [];
 
 		if (empty($sourceConfig)) {
 			return new WP_Error(
 				'source_not_found',
 				/* translators: %s: Source instance ID */
-				\sprintf(\__('Source instance not found: %s', 'aether-site-exporter'), $sourceId),
+				\sprintf(\__('Source instance not found: %s', 'altolith-deploy'), $sourceId),
 				[ 'status' => 404 ]
 			);
 		}
@@ -408,7 +408,7 @@ class ProviderConfigController
 		 * @param array  $targetFields  Target provider's field IDs.
 		 */
 		$copiedFields = \apply_filters(
-			'aether_provider_config_copy',
+			'altolith_provider_config_copy',
 			$copiedFields,
 			$sourceId,
 			$targetId,

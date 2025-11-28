@@ -22,7 +22,7 @@ This document provides a comprehensive reference for all hooks in the `uploadSta
 
 These hooks are fired by the `StepExecutor` for any step. For the static site upload step, the step ID is `uploadStaticFiles`.
 
-### `aether.export.step.{stepId}.skip`
+### `altolith.export.step.{stepId}.skip`
 
 **Type**: Filter
 **Location**: [StepExecutor.js:162-167](../assets/src/export/executor/StepExecutor.js#L162-L167)
@@ -38,7 +38,7 @@ These hooks are fired by the `StepExecutor` for any step. For the static site up
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.step.uploadStaticFiles.skip', 'my-plugin', (shouldSkip, context, provider) => {
+addFilter('altolith.export.step.uploadStaticFiles.skip', 'my-plugin', (shouldSkip, context, provider) => {
     // Force skip for specific provider
     if (provider?.id === 'my-provider') {
         return true;
@@ -47,7 +47,7 @@ addFilter('aether.export.step.uploadStaticFiles.skip', 'my-plugin', (shouldSkip,
 });
 ```
 
-### `aether.export.step.{stepId}.skipped`
+### `altolith.export.step.{stepId}.skipped`
 
 **Type**: Action
 **Location**: [StepExecutor.js:172-176](../assets/src/export/executor/StepExecutor.js#L172-L176)
@@ -56,7 +56,7 @@ addFilter('aether.export.step.uploadStaticFiles.skip', 'my-plugin', (shouldSkip,
 - `context` (Object) - Execution context
 - `providerInstance` (Object|null) - Current provider instance
 
-### `aether.export.step.{stepId}.before`
+### `altolith.export.step.{stepId}.before`
 
 **Type**: Action
 **Location**: [StepExecutor.js:221-225](../assets/src/export/executor/StepExecutor.js#L221-L225)
@@ -69,12 +69,12 @@ addFilter('aether.export.step.uploadStaticFiles.skip', 'my-plugin', (shouldSkip,
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.step.uploadStaticFiles.before', 'my-plugin', (context, provider) => {
+addAction('altolith.export.step.uploadStaticFiles.before', 'my-plugin', (context, provider) => {
     console.log('Starting upload for provider:', provider?.id);
 });
 ```
 
-### `aether.export.step.{stepId}.retry`
+### `altolith.export.step.{stepId}.retry`
 
 **Type**: Action
 **Location**: [StepExecutor.js:252-259](../assets/src/export/executor/StepExecutor.js#L252-L259)
@@ -86,7 +86,7 @@ addAction('aether.export.step.uploadStaticFiles.before', 'my-plugin', (context, 
 - `context` (Object) - Execution context
 - `providerInstance` (Object|null) - Current provider instance
 
-### `aether.export.step.{stepId}.result`
+### `altolith.export.step.{stepId}.result`
 
 **Type**: Filter
 **Location**: [StepExecutor.js:268-273](../assets/src/export/executor/StepExecutor.js#L268-L273)
@@ -98,7 +98,7 @@ addAction('aether.export.step.uploadStaticFiles.before', 'my-plugin', (context, 
 
 **Returns**: Modified result object
 
-### `aether.export.step.{stepId}.after`
+### `altolith.export.step.{stepId}.after`
 
 **Type**: Action
 **Location**: [StepExecutor.js:283-288](../assets/src/export/executor/StepExecutor.js#L283-L288)
@@ -108,7 +108,7 @@ addAction('aether.export.step.uploadStaticFiles.before', 'my-plugin', (context, 
 - `context` (Object) - Execution context
 - `providerInstance` (Object|null) - Current provider instance
 
-### `aether.export.step.{stepId}.error`
+### `altolith.export.step.{stepId}.error`
 
 **Type**: Action
 **Location**: [errorHandler.js:460](../assets/src/export/utils/errorHandler.js#L460)
@@ -122,7 +122,7 @@ addAction('aether.export.step.uploadStaticFiles.before', 'my-plugin', (context, 
 
 ## URL Processing Hooks
 
-### `aether.export.step.uploadStaticSiteFiles.urls`
+### `altolith.export.step.uploadStaticSiteFiles.urls`
 
 **Type**: Filter
 **Location**: [uploadStaticFiles/index.js:161-171](../assets/src/export/steps/uploadStaticFiles/index.js#L161-L171)
@@ -138,13 +138,13 @@ addAction('aether.export.step.uploadStaticFiles.before', 'my-plugin', (context, 
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls, providers, context) => {
+addFilter('altolith.export.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls, providers, context) => {
     // Add a custom URL to the list
     return [...urls, '/custom-page/'];
 });
 ```
 
-### `aether.export.step.uploadStaticSiteFiles.result`
+### `altolith.export.step.uploadStaticSiteFiles.result`
 
 **Type**: Filter
 **Location**: [uploadStaticFiles/index.js:232-252](../assets/src/export/steps/uploadStaticFiles/index.js#L232-L252)
@@ -160,7 +160,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls, p
 
 ## Pre-Scan Phase Hooks
 
-### `aether.export.step.uploadStaticSiteFiles.pre_scan.before`
+### `altolith.export.step.uploadStaticSiteFiles.pre_scan.before`
 
 **Type**: Action
 **Location**: [preScanPhase.js:42-47](../assets/src/export/utils/preScanPhase.js#L42-L47)
@@ -174,12 +174,12 @@ addFilter('aether.export.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls, p
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.step.uploadStaticSiteFiles.pre_scan.before', 'my-plugin', (urls, providerId, config) => {
+addAction('altolith.export.step.uploadStaticSiteFiles.pre_scan.before', 'my-plugin', (urls, providerId, config) => {
     console.log('Pre-scanning', urls.length, 'URLs for provider:', providerId);
 });
 ```
 
-### `aether.export.step.uploadStaticSiteFiles.pre_scan.after`
+### `altolith.export.step.uploadStaticSiteFiles.pre_scan.after`
 
 **Type**: Action
 **Location**: [preScanPhase.js:144-153](../assets/src/export/utils/preScanPhase.js#L144-L153)
@@ -196,7 +196,7 @@ addAction('aether.export.step.uploadStaticSiteFiles.pre_scan.before', 'my-plugin
 
 ## Upload Phase Hooks
 
-### `aether.export.step.uploadStaticSiteFiles.upload.before`
+### `altolith.export.step.uploadStaticSiteFiles.upload.before`
 
 **Type**: Action
 **Location**: [useStaticSiteGenerator.js:131-136](../assets/src/export/hooks/useStaticSiteGenerator.js#L131-L136)
@@ -210,12 +210,12 @@ addAction('aether.export.step.uploadStaticSiteFiles.pre_scan.before', 'my-plugin
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.export.step.uploadStaticSiteFiles.upload.before', 'my-plugin', (urls, totalFiles, providerId) => {
+addAction('altolith.export.step.uploadStaticSiteFiles.upload.before', 'my-plugin', (urls, totalFiles, providerId) => {
     console.log('Starting upload:', totalFiles, 'files for', providerId);
 });
 ```
 
-### `aether.export.step.uploadStaticSiteFiles.upload.after`
+### `altolith.export.step.uploadStaticSiteFiles.upload.after`
 
 **Type**: Action
 **Location**: [useStaticSiteGenerator.js:277-287](../assets/src/export/hooks/useStaticSiteGenerator.js#L277-L287)
@@ -233,7 +233,7 @@ addAction('aether.export.step.uploadStaticSiteFiles.upload.before', 'my-plugin',
 
 ## HTML Processing Hooks
 
-### `aether.export.step.uploadStaticSiteFiles.html.process`
+### `altolith.export.step.uploadStaticSiteFiles.html.process`
 
 **Type**: Filter
 **Location**: [uploadPhase.js:318-325](../assets/src/export/utils/uploadPhase.js#L318-L325)
@@ -251,10 +251,10 @@ addAction('aether.export.step.uploadStaticSiteFiles.upload.before', 'my-plugin',
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
+addFilter('altolith.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
     (html, url, siteUrl, staticSiteUrl, providerId) => {
         // Add custom meta tag before processing
-        return html.replace('</head>', '<meta name="generator" content="Aether" /></head>');
+        return html.replace('</head>', '<meta name="generator" content="Altolith" /></head>');
     }
 );
 ```
@@ -263,7 +263,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
 
 ## Asset Processing Hooks
 
-### `aether.export.step.uploadStaticSiteFiles.asset.process`
+### `altolith.export.step.uploadStaticSiteFiles.asset.process`
 
 **Type**: Filter
 **Location**: [uploadPhase.js:157-167](../assets/src/export/utils/uploadPhase.js#L157-L167)
@@ -283,7 +283,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.step.uploadStaticSiteFiles.asset.process', 'my-plugin', (assetData, providerId) => {
+addFilter('altolith.export.step.uploadStaticSiteFiles.asset.process', 'my-plugin', (assetData, providerId) => {
     // Convert images to WebP (example)
     if (assetData.contentType.startsWith('image/')) {
         return {
@@ -301,7 +301,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.asset.process', 'my-plugin',
 
 ## Manifest Hooks
 
-### `aether.export.step.uploadStaticSiteFiles.manifest.fetch`
+### `altolith.export.step.uploadStaticSiteFiles.manifest.fetch`
 
 **Type**: Filter
 **Location**: [uploadPhase.js:47-52](../assets/src/export/utils/uploadPhase.js#L47-L52)
@@ -317,7 +317,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.asset.process', 'my-plugin',
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.step.uploadStaticSiteFiles.manifest.fetch', 'my-plugin',
+addFilter('altolith.export.step.uploadStaticSiteFiles.manifest.fetch', 'my-plugin',
     (manifest, storageService, providerId) => {
         // Return custom manifest for specific provider
         if (providerId === 'my-provider') {
@@ -328,7 +328,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.manifest.fetch', 'my-plugin'
 );
 ```
 
-### `aether.export.step.uploadStaticSiteFiles.manifest.update`
+### `altolith.export.step.uploadStaticSiteFiles.manifest.update`
 
 **Type**: Filter
 **Location**: [useStaticSiteGenerator.js:210-215](../assets/src/export/hooks/useStaticSiteGenerator.js#L210-L215), [uploadPhase.js:269-274](../assets/src/export/utils/uploadPhase.js#L269-L274)
@@ -340,7 +340,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.manifest.fetch', 'my-plugin'
 
 **Returns**: Modified manifest object
 
-### `aether.export.step.uploadStaticSiteFiles.manifest.cleanup`
+### `altolith.export.step.uploadStaticSiteFiles.manifest.cleanup`
 
 **Type**: Filter
 **Location**: [uploadPhase.js:509-514](../assets/src/export/utils/uploadPhase.js#L509-L514)
@@ -358,7 +358,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.manifest.fetch', 'my-plugin'
 
 These hooks are in `fileUploadManager.js` and apply to all file uploads.
 
-### `aether.upload.file.before`
+### `altolith.upload.file.before`
 
 **Type**: Action
 **Location**: [fileUploadManager.js:117-122](../assets/src/export/utils/fileUploadManager.js#L117-L122)
@@ -374,12 +374,12 @@ These hooks are in `fileUploadManager.js` and apply to all file uploads.
 ```javascript
 import { addAction } from '@wordpress/hooks';
 
-addAction('aether.upload.file.before', 'my-plugin', (fileData) => {
+addAction('altolith.upload.file.before', 'my-plugin', (fileData) => {
     console.log('Uploading:', fileData.key, 'Size:', fileData.blob.size);
 });
 ```
 
-### `aether.upload.hash.calculate`
+### `altolith.upload.hash.calculate`
 
 **Type**: Filter
 **Location**: [fileUploadManager.js:153-159](../assets/src/export/utils/fileUploadManager.js#L153-L159), [fileUploadManager.js:239-245](../assets/src/export/utils/fileUploadManager.js#L239-L245)
@@ -392,7 +392,7 @@ addAction('aether.upload.file.before', 'my-plugin', (fileData) => {
 
 **Returns**: Hash string or null to use default calculation
 
-### `aether.upload.file.options`
+### `altolith.upload.file.options`
 
 **Type**: Filter
 **Location**: [fileUploadManager.js:333-340](../assets/src/export/utils/fileUploadManager.js#L333-L340)
@@ -410,7 +410,7 @@ addAction('aether.upload.file.before', 'my-plugin', (fileData) => {
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.upload.file.options', 'my-plugin', (options, key, blob, contentType, metadata) => {
+addFilter('altolith.upload.file.options', 'my-plugin', (options, key, blob, contentType, metadata) => {
     return {
         ...options,
         cacheControl: 'public, max-age=86400',
@@ -418,7 +418,7 @@ addFilter('aether.upload.file.options', 'my-plugin', (options, key, blob, conten
 });
 ```
 
-### `aether.upload.file.after`
+### `altolith.upload.file.after`
 
 **Type**: Action
 **Location**: [fileUploadManager.js:454-458](../assets/src/export/utils/fileUploadManager.js#L454-L458)
@@ -439,7 +439,7 @@ addFilter('aether.upload.file.options', 'my-plugin', (options, key, blob, conten
 
 These hooks are in `assetExtractor.js` and `assetFilters.js`.
 
-### `aether.assets.extracted`
+### `altolith.assets.extracted`
 
 **Type**: Filter
 **Location**: [assetExtractor.js:117-124](../assets/src/export/utils/assetExtractor.js#L117-L124)
@@ -456,14 +456,14 @@ These hooks are in `assetExtractor.js` and `assetFilters.js`.
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.assets.extracted', 'my-plugin', (assets, html, pageUrl, siteUrl) => {
+addFilter('altolith.assets.extracted', 'my-plugin', (assets, html, pageUrl, siteUrl) => {
     // Add a required asset that wasn't detected
     assets.push(`${siteUrl}/wp-content/themes/my-theme/required-asset.js`);
     return assets;
 });
 ```
 
-### `aether.assets.should_collect`
+### `altolith.assets.should_collect`
 
 **Type**: Filter
 **Location**: [assetFilters.js:108-115](../assets/src/export/utils/assetFilters.js#L108-L115)
@@ -481,7 +481,7 @@ addFilter('aether.assets.extracted', 'my-plugin', (assets, html, pageUrl, siteUr
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.assets.should_collect', 'my-plugin', (shouldCollect, url, siteUrl, source, extension) => {
+addFilter('altolith.assets.should_collect', 'my-plugin', (shouldCollect, url, siteUrl, source, extension) => {
     // Always collect WebP images
     if (extension === 'webp') {
         return true;
@@ -498,7 +498,7 @@ addFilter('aether.assets.should_collect', 'my-plugin', (shouldCollect, url, site
 
 ## Storage Service Hooks
 
-### `aether.storage.service.config`
+### `altolith.storage.service.config`
 
 **Type**: Filter
 **Location**: [staticSiteConfig.js:142-148](../assets/src/export/utils/staticSiteConfig.js#L142-L148)
@@ -511,7 +511,7 @@ addFilter('aether.assets.should_collect', 'my-plugin', (shouldCollect, url, site
 
 **Returns**: Modified configuration object
 
-### `aether.storage.service.create`
+### `altolith.storage.service.create`
 
 **Type**: Filter
 **Location**: [staticSiteConfig.js:153-159](../assets/src/export/utils/staticSiteConfig.js#L153-L159)
@@ -529,55 +529,55 @@ addFilter('aether.assets.should_collect', 'my-plugin', (shouldCollect, url, site
 ## Hook Execution Order
 
 ```
-1. aether.export.step.uploadStaticFiles.skip (filter)
-   └─ If skip=true: aether.export.step.uploadStaticFiles.skipped (action)
+1. altolith.export.step.uploadStaticFiles.skip (filter)
+   └─ If skip=true: altolith.export.step.uploadStaticFiles.skipped (action)
 
-2. aether.export.step.uploadStaticFiles.before (action)
+2. altolith.export.step.uploadStaticFiles.before (action)
 
-3. aether.export.step.uploadStaticSiteFiles.urls (filter)
+3. altolith.export.step.uploadStaticSiteFiles.urls (filter)
 
 4. Storage Service Creation:
-   └─ aether.storage.service.config (filter)
-   └─ aether.storage.service.create (filter)
+   └─ altolith.storage.service.config (filter)
+   └─ altolith.storage.service.create (filter)
 
 5. Pre-Scan Phase:
-   └─ aether.export.step.uploadStaticSiteFiles.pre_scan.before (action)
+   └─ altolith.export.step.uploadStaticSiteFiles.pre_scan.before (action)
    └─ For each URL:
-      └─ aether.assets.extracted (filter) - during HTML parsing
-      └─ aether.assets.should_collect (filter) - per asset
-   └─ aether.export.step.uploadStaticSiteFiles.pre_scan.after (action)
+      └─ altolith.assets.extracted (filter) - during HTML parsing
+      └─ altolith.assets.should_collect (filter) - per asset
+   └─ altolith.export.step.uploadStaticSiteFiles.pre_scan.after (action)
 
 6. Manifest Fetch:
-   └─ aether.export.step.uploadStaticSiteFiles.manifest.fetch (filter)
+   └─ altolith.export.step.uploadStaticSiteFiles.manifest.fetch (filter)
 
 7. Upload Phase:
-   └─ aether.export.step.uploadStaticSiteFiles.upload.before (action)
+   └─ altolith.export.step.uploadStaticSiteFiles.upload.before (action)
    └─ For each HTML file:
-      └─ aether.export.step.uploadStaticSiteFiles.html.process (filter)
-      └─ aether.upload.file.before (action)
-      └─ aether.upload.hash.calculate (filter)
-      └─ aether.upload.file.options (filter)
-      └─ aether.upload.file.after (action)
-      └─ aether.export.step.uploadStaticSiteFiles.manifest.update (filter)
+      └─ altolith.export.step.uploadStaticSiteFiles.html.process (filter)
+      └─ altolith.upload.file.before (action)
+      └─ altolith.upload.hash.calculate (filter)
+      └─ altolith.upload.file.options (filter)
+      └─ altolith.upload.file.after (action)
+      └─ altolith.export.step.uploadStaticSiteFiles.manifest.update (filter)
    └─ For each asset:
-      └─ aether.export.step.uploadStaticSiteFiles.asset.process (filter)
-      └─ aether.upload.file.before (action)
-      └─ aether.upload.hash.calculate (filter)
-      └─ aether.upload.file.options (filter)
-      └─ aether.upload.file.after (action)
-      └─ aether.export.step.uploadStaticSiteFiles.manifest.update (filter)
-   └─ aether.export.step.uploadStaticSiteFiles.upload.after (action)
+      └─ altolith.export.step.uploadStaticSiteFiles.asset.process (filter)
+      └─ altolith.upload.file.before (action)
+      └─ altolith.upload.hash.calculate (filter)
+      └─ altolith.upload.file.options (filter)
+      └─ altolith.upload.file.after (action)
+      └─ altolith.export.step.uploadStaticSiteFiles.manifest.update (filter)
+   └─ altolith.export.step.uploadStaticSiteFiles.upload.after (action)
 
 8. Manifest Cleanup:
-   └─ aether.export.step.uploadStaticSiteFiles.manifest.cleanup (filter)
+   └─ altolith.export.step.uploadStaticSiteFiles.manifest.cleanup (filter)
 
-9. aether.export.step.uploadStaticFiles.result (filter)
+9. altolith.export.step.uploadStaticFiles.result (filter)
 
-10. aether.export.step.uploadStaticFiles.after (action)
+10. altolith.export.step.uploadStaticFiles.after (action)
 
 On Error:
-└─ aether.export.step.uploadStaticFiles.retry (action) - if retryable
-└─ aether.export.step.uploadStaticFiles.error (action) - if failed
+└─ altolith.export.step.uploadStaticFiles.retry (action) - if retryable
+└─ altolith.export.step.uploadStaticFiles.error (action) - if failed
 ```
 
 ---
@@ -588,17 +588,17 @@ On Error:
 import { addFilter, addAction } from '@wordpress/hooks';
 
 // Monitor upload progress
-addAction('aether.export.step.uploadStaticFiles.before', 'my-monitoring', (context, provider) => {
+addAction('altolith.export.step.uploadStaticFiles.before', 'my-monitoring', (context, provider) => {
     console.log('Starting static site upload for:', provider?.id);
 });
 
 // Add custom URL to export
-addFilter('aether.export.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls) => {
+addFilter('altolith.export.step.uploadStaticSiteFiles.urls', 'my-plugin', (urls) => {
     return [...urls, '/sitemap.xml'];
 });
 
 // Inject analytics into HTML
-addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-analytics',
+addFilter('altolith.export.step.uploadStaticSiteFiles.html.process', 'my-analytics',
     (html, url, siteUrl, staticSiteUrl, providerId) => {
         const analyticsScript = '<script src="/analytics.js"></script>';
         return html.replace('</body>', `${analyticsScript}</body>`);
@@ -606,7 +606,7 @@ addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-analytics
 );
 
 // Set custom cache headers
-addFilter('aether.upload.file.options', 'my-caching', (options, key, blob, contentType) => {
+addFilter('altolith.upload.file.options', 'my-caching', (options, key, blob, contentType) => {
     // Long cache for assets, short for HTML
     const isHtml = contentType === 'text/html';
     return {
@@ -618,7 +618,7 @@ addFilter('aether.upload.file.options', 'my-caching', (options, key, blob, conte
 });
 
 // Log completion
-addAction('aether.export.step.uploadStaticSiteFiles.upload.after', 'my-monitoring', (result, providerId) => {
+addAction('altolith.export.step.uploadStaticSiteFiles.upload.after', 'my-monitoring', (result, providerId) => {
     console.log(`Upload complete: ${result.filesUploaded} files to ${providerId}`);
 });
 ```

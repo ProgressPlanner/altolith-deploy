@@ -6,10 +6,10 @@
  * Centralizes all magic numbers and limits used throughout the export system.
  * This makes it easier to maintain and adjust limits consistently.
  *
- * @package Aether\Constants
+ * @package Altolith\Constants
  */
 
-namespace Aether\SiteExporter\Constants;
+namespace Altolith\Deploy\Constants;
 
 \defined('ABSPATH') || exit;
 

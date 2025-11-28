@@ -11,9 +11,9 @@
 ( function () {
 	'use strict';
 
-	// Get plugin URL from window.aetherData (injected by PHP).
+	// Get plugin URL from window.altolithData (injected by PHP).
 	const pluginUrl =
-		( window.aetherData && window.aetherData.pluginUrl ) || '';
+		( window.altolithData && window.altolithData.pluginUrl ) || '';
 	if ( ! pluginUrl ) {
 		return; // Exit if no plugin URL.
 	}
@@ -23,7 +23,7 @@
 	 */
 	document.addEventListener( 'click', function ( e ) {
 		const trigger = e.target.closest(
-			'[data-aether-export="true"], #wp-admin-bar-aether-export'
+			'[data-altolith-export="true"], #wp-admin-bar-altolith-export'
 		);
 		if ( trigger ) {
 			e.preventDefault();
@@ -36,11 +36,11 @@
 	 */
 	function loadExportModal() {
 		// Prevent duplicate loading.
-		if ( window.aetherExportLoading || window.aetherExportLoaded ) {
+		if ( window.altolithExportLoading || window.altolithExportLoaded ) {
 			return;
 		}
 
-		window.aetherExportLoading = true;
+		window.altolithExportLoading = true;
 
 		// Show simple loading overlay (vanilla JS).
 		showLoadingOverlay();
@@ -54,12 +54,12 @@
 				: pluginUrl + '/assets/build/export-modal.js';
 			script.src = scriptUrl;
 			script.onload = function () {
-				window.aetherExportLoading = false;
-				window.aetherExportLoaded = true;
+				window.altolithExportLoading = false;
+				window.altolithExportLoaded = true;
 				hideLoadingOverlay();
 			};
 			script.onerror = function () {
-				window.aetherExportLoading = false;
+				window.altolithExportLoading = false;
 				hideLoadingOverlay();
 				alert(
 					'Failed to load export modal. Please refresh the page.'
@@ -76,11 +76,12 @@
 	 */
 	function loadRequiredDependencies( callback ) {
 		const restUrl =
-			( window.aetherData && window.aetherData.restUrl ) || '';
+			( window.altolithData && window.altolithData.restUrl ) || '';
 		const namespace =
-			( window.aetherData && window.aetherData.restNamespace ) ||
-			'aether/site-exporter/';
-		const nonce = ( window.aetherData && window.aetherData.nonce ) || '';
+			( window.altolithData && window.altolithData.restNamespace ) ||
+			'altolith/deploy/';
+		const nonce =
+			( window.altolithData && window.altolithData.nonce ) || '';
 		if ( ! restUrl ) {
 			// No REST URL available, try to load modal anyway.
 			callback();
@@ -322,13 +323,13 @@
 	 */
 	function showLoadingOverlay() {
 		// Check if overlay already exists.
-		if ( document.getElementById( 'aether-export-loading' ) ) {
+		if ( document.getElementById( 'altolith-export-loading' ) ) {
 			return;
 		}
 
 		// Create minimal loading overlay with vanilla DOM.
 		const overlay = document.createElement( 'div' );
-		overlay.id = 'aether-export-loading';
+		overlay.id = 'altolith-export-loading';
 		overlay.style.cssText =
 			'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:999999;display:flex;align-items:center;justify-content:center;';
 		const spinner = document.createElement( 'div' );
@@ -342,7 +343,7 @@
 	 * Hide loading overlay.
 	 */
 	function hideLoadingOverlay() {
-		const overlay = document.getElementById( 'aether-export-loading' );
+		const overlay = document.getElementById( 'altolith-export-loading' );
 		if ( overlay ) {
 			overlay.remove();
 		}

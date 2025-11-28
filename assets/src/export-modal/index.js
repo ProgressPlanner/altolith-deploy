@@ -13,10 +13,10 @@
 if ( typeof __webpack_public_path__ !== 'undefined' ) {
 	if (
 		typeof window !== 'undefined' &&
-		window.aetherData &&
-		window.aetherData.pluginUrl
+		window.altolithData &&
+		window.altolithData.pluginUrl
 	) {
-		const pluginUrl = window.aetherData.pluginUrl;
+		const pluginUrl = window.altolithData.pluginUrl;
 		// Ensure plugin URL ends with slash
 		const publicPath = pluginUrl.endsWith( '/' )
 			? pluginUrl + 'assets/build/'
@@ -42,24 +42,24 @@ initializeErrorHandlers();
  */
 function initExportModal() {
 	// Create or get root container
-	let container = document.getElementById( 'aether-export-modal-root' );
+	let container = document.getElementById( 'altolith-export-modal-root' );
 	if ( ! container ) {
 		container = document.createElement( 'div' );
-		container.id = 'aether-export-modal-root';
+		container.id = 'altolith-export-modal-root';
 		document.body.appendChild( container );
 	}
 
 	// Handle modal close
 	const handleClose = () => {
 		const containerEl = document.getElementById(
-			'aether-export-modal-root'
+			'altolith-export-modal-root'
 		);
 		if ( containerEl ) {
 			render( null, containerEl );
 		}
 		// Reset loading flag after delay to allow modal to close
 		setTimeout( () => {
-			window.aetherExportLoaded = false;
+			window.altolithExportLoaded = false;
 		}, 300 );
 	};
 
@@ -77,7 +77,7 @@ function initExportModal() {
 		);
 	} catch ( error ) {
 		// eslint-disable-line no-console
-		console.error( 'Aether: Error rendering export modal:', error );
+		console.error( 'Altolith: Error rendering export modal:', error );
 	}
 }
 

@@ -20,7 +20,7 @@ export async function validateFieldValue( value, field, config ) {
 	if ( field.required && ! value ) {
 		return sprintf(
 			/* translators: %s: Field label */
-			__( '%s is required.', 'aether-site-exporter' ),
+			__( '%s is required.', 'altolith-deploy' ),
 			field.label
 		);
 	}
@@ -43,7 +43,7 @@ export async function validateFieldValue( value, field, config ) {
 				}
 				return sprintf(
 					/* translators: %s: Field label */
-					__( '%s format is invalid.', 'aether-site-exporter' ),
+					__( '%s format is invalid.', 'altolith-deploy' ),
 					field.label
 				);
 			}
@@ -58,7 +58,7 @@ export async function validateFieldValue( value, field, config ) {
 				/* translators: 1: Field label, 2: Minimum length */
 				__(
 					'%1$s must be at least %2$d characters.',
-					'aether-site-exporter'
+					'altolith-deploy'
 				),
 				field.label,
 				validation.minLength
@@ -74,7 +74,7 @@ export async function validateFieldValue( value, field, config ) {
 				/* translators: 1: Field label, 2: Maximum length */
 				__(
 					'%1$s must be no more than %2$d characters.',
-					'aether-site-exporter'
+					'altolith-deploy'
 				),
 				field.label,
 				validation.maxLength

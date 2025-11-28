@@ -10,7 +10,7 @@
  */
 
 import { addFilter, doAction } from '@wordpress/hooks';
-import apiFetch from '@aether/utils/api';
+import apiFetch from '@altolith/utils/api';
 import { StorageService } from '../services/storageService';
 import { LocalFilesystemBlueprintBundleProvider } from './LocalFilesystemBlueprintBundleProvider';
 import ProviderRegistry from '../registry/ProviderRegistry';
@@ -22,7 +22,10 @@ ProviderRegistry.register(
 );
 
 // Also trigger the hook for any listeners
-doAction( 'aether.providers.register', LocalFilesystemBlueprintBundleProvider );
+doAction(
+	'altolith.providers.register',
+	LocalFilesystemBlueprintBundleProvider
+);
 
 /**
  * Create upload adapter for blueprint bundle.
@@ -63,7 +66,7 @@ function createUploadAdapter( staticPath, providerId ) {
 			try {
 				// Trigger PHP action hook for blueprint bundle upload
 				const response = await apiFetch( {
-					path: '/aether/site-exporter/local-storage/trigger-blueprint-bundle-upload',
+					path: '/altolith/deploy/local-storage/trigger-blueprint-bundle-upload',
 					method: 'POST',
 					data: {
 						instance_id: providerId,
@@ -101,8 +104,8 @@ function createUploadAdapter( staticPath, providerId ) {
  * configured for its specific settings, achieving true instance isolation.
  */
 addFilter(
-	'aether.storage.service.create',
-	'aether/local-filesystem-blueprint-bundle',
+	'altolith.storage.service.create',
+	'altolith/local-filesystem-blueprint-bundle',
 	( service, staticPath, config, providerId ) => {
 		// Only handle this provider type
 		if ( ! providerId?.startsWith( 'local-filesystem-blueprint-bundle' ) ) {

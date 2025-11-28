@@ -5,12 +5,12 @@
  *
  * Adds export functionality to the WordPress admin bar.
  *
- * @package Aether\Admin
+ * @package Altolith\Admin
  */
 
-namespace Aether\SiteExporter\Admin;
+namespace Altolith\Deploy\Admin;
 
-use Aether\SiteExporter\Plugin;
+use Altolith\Deploy\Plugin;
 
 /**
  * Class AdminBar
@@ -73,14 +73,14 @@ class AdminBar
 		$iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="vertical-align:middle;margin-right:4px;"><path d="M17.3 10.1C17.3 7.60001 15.2 5.70001 12.5 5.70001C10.3 5.70001 8.4 7.10001 7.9 9.00001H7.7C5.7 9.00001 4 10.7 4 12.8C4 14.9 5.7 16.6 7.7 16.6H9.5V15.2H7.7C6.5 15.2 5.5 14.1 5.5 12.9C5.5 11.7 6.5 10.5 7.7 10.5H9L9.3 9.40001C9.7 8.10001 11 7.20001 12.5 7.20001C14.3 7.20001 15.8 8.50001 15.8 10.1V11.4L17.1 11.6C17.9 11.7 18.5 12.5 18.5 13.4C18.5 14.4 17.7 15.2 16.8 15.2H14.5V16.6H16.7C18.5 16.6 19.9 15.1 19.9 13.3C20 11.7 18.8 10.4 17.3 10.1Z M14.1245 14.2426L15.1852 13.182L12.0032 10L8.82007 13.1831L9.88072 14.2438L11.25 12.8745V18H12.75V12.8681L14.1245 14.2426Z" fill="#fff" /></svg>';
 
 		$wp_admin_bar->add_node([ // phpcs:ignore Squiz.NamingConventions.ValidVariableName.NotCamelCaps -- WordPress core parameter.
-			'id' => 'aether-export',
+			'id' => 'altolith-export',
 			'parent' => 'top-secondary', // Right side of admin bar.
 			'title' => $iconSvg, // SVG icon as title.
 			'href' => '#',
 			'meta' => [
-				'title' => \__('Export Site', 'aether-site-exporter'), // Hover text.
-				'aria-label' => \__('Export Site', 'aether-site-exporter'), // Accessibility.
-				'class' => 'aether-export-trigger',
+				'title' => \__('Export Site', 'altolith-deploy'), // Hover text.
+				'aria-label' => \__('Export Site', 'altolith-deploy'), // Accessibility.
+				'class' => 'altolith-export-trigger',
 			],
 		]);
 	}
@@ -99,19 +99,19 @@ class AdminBar
 			return;
 		}
 
-		$scriptUrl = AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin-bar-export.js';
-		$scriptPath = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-bar-export.js';
+		$scriptUrl = ALTOLITH_DEPLOY_PLUGIN_URL . 'assets/build/admin-bar-export.js';
+		$scriptPath = ALTOLITH_DEPLOY_PLUGIN_DIR . 'assets/build/admin-bar-export.js';
 
 		// Get plugin version from file header.
 		$pluginData = \get_file_data(
-			AETHER_SITE_EXPORTER_PLUGIN_FILE,
+			ALTOLITH_DEPLOY_PLUGIN_FILE,
 			[ 'Version' => 'Version' ]
 		);
 		$fileTime = \file_exists($scriptPath) ? \filemtime($scriptPath) : false;
 		$version = $pluginData['Version'] ?? ( $fileTime !== false ? (string) $fileTime : false );
 
 		\wp_enqueue_script(
-			'aether-admin-bar-export',
+			'altolith-admin-bar-export',
 			$scriptUrl,
 			[], // No dependencies.
 			$version,
@@ -119,20 +119,20 @@ class AdminBar
 		);
 
 		// Add REST API config inline (needed for modal when it loads).
-		$this->plugin->addAPIConfigScript('aether-admin-bar-export');
+		$this->plugin->addAPIConfigScript('altolith-admin-bar-export');
 
 		// Add inline script to set data attribute on the admin bar item.
 		// WordPress admin bar API doesn't support custom data attributes directly,
 		// so we add it via JavaScript after the admin bar is rendered.
 		\wp_add_inline_script(
-			'aether-admin-bar-export',
+			'altolith-admin-bar-export',
 			'(function() {
 				document.addEventListener("DOMContentLoaded", function() {
-					const exportItem = document.getElementById("wp-admin-bar-aether-export");
+					const exportItem = document.getElementById("wp-admin-bar-altolith-export");
 					if (exportItem) {
 						const link = exportItem.querySelector("a");
 						if (link) {
-							link.setAttribute("data-aether-export", "true");
+							link.setAttribute("data-altolith-export", "true");
 						}
 					}
 				});

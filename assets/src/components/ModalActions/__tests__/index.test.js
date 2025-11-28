@@ -25,7 +25,7 @@ jest.mock( '@wordpress/components', () => ( {
 } ) );
 
 // Mock styles
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	spacing: { sm: '8px', lg: '16px' },
 } ) );
 
@@ -60,7 +60,7 @@ describe( 'ModalActions', () => {
 			);
 
 			expect(
-				container.querySelector( '.aether-modal-actions' )
+				container.querySelector( '.altolith-modal-actions' )
 			).toBeInTheDocument();
 		} );
 
@@ -237,7 +237,7 @@ describe( 'ModalActions', () => {
 
 			// Verify order: children should come before buttons
 			const actionsContainer = container.querySelector(
-				'.aether-modal-actions'
+				'.altolith-modal-actions'
 			);
 			const children = Array.from( actionsContainer.children );
 			expect( children[ 0 ].getAttribute( 'data-testid' ) ).toBe(
@@ -271,7 +271,7 @@ describe( 'ModalActions', () => {
 			);
 
 			const actionsDiv = container.querySelector(
-				'.aether-modal-actions'
+				'.altolith-modal-actions'
 			);
 			expect( actionsDiv.className ).toContain( 'my-custom-actions' );
 		} );

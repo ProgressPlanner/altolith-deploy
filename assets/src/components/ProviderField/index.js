@@ -76,7 +76,7 @@ export default function ProviderField( {
 
 	// Get content to render after the field via filter (allows returning React components)
 	const afterContent = applyFilters(
-		'aether.admin.provider.field.after',
+		'altolith.admin.provider.field.after',
 		null,
 		fieldContext
 	);
@@ -84,7 +84,7 @@ export default function ProviderField( {
 	// Helper to render field with before/after hooks
 	const renderWithHooks = ( fieldElement ) => (
 		<>
-			{ doAction( 'aether.admin.provider.field.before', fieldContext ) }
+			{ doAction( 'altolith.admin.provider.field.before', fieldContext ) }
 			{ fieldElement }
 			{ afterContent }
 		</>
@@ -94,8 +94,8 @@ export default function ProviderField( {
 	if ( type === 'checkbox' ) {
 		return renderWithHooks(
 			<div
-				className={ `aether-provider-field aether-provider-field--${ type } ${
-					error ? 'aether-provider-field--error' : ''
+				className={ `altolith-provider-field altolith-provider-field--${ type } ${
+					error ? 'altolith-provider-field--error' : ''
 				}` }
 				style={ fieldWrapperStyle }
 			>
@@ -125,34 +125,34 @@ export default function ProviderField( {
 
 		return renderWithHooks(
 			<div
-				className={ `aether-provider-field aether-provider-field--${ type } ${
-					error ? 'aether-provider-field--error' : ''
+				className={ `altolith-provider-field altolith-provider-field--${ type } ${
+					error ? 'altolith-provider-field--error' : ''
 				}` }
 				style={ fieldWrapperStyle }
 			>
 				{ label && (
-					<div className="aether-provider-field__label components-base-control__label">
-						<strong className="aether-provider-field__label-text">
+					<div className="altolith-provider-field__label components-base-control__label">
+						<strong className="altolith-provider-field__label-text">
 							{ label }
 						</strong>
 						{ required && (
-							<span className="aether-provider-field__label-required components-base-control__label__required">
+							<span className="altolith-provider-field__label-required components-base-control__label__required">
 								*
 							</span>
 						) }
 					</div>
 				) }
 				{ help && (
-					<p className="aether-provider-field__help components-base-control__help">
+					<p className="altolith-provider-field__help components-base-control__help">
 						{ help }
 					</p>
 				) }
 				{ error && (
-					<p className="aether-provider-field__error aether-provider-field__error--message components-base-control__help components-base-control__help--error">
+					<p className="altolith-provider-field__error altolith-provider-field__error--message components-base-control__help components-base-control__help--error">
 						{ error }
 					</p>
 				) }
-				<div className="aether-provider-field__checkbox-group aether-checkbox-group">
+				<div className="altolith-provider-field__checkbox-group altolith-checkbox-group">
 					{ options.map( ( option ) => {
 						const optionValue = option.value;
 						const optionLabel = option.label || option.value;
@@ -161,7 +161,7 @@ export default function ProviderField( {
 						return (
 							<CheckboxControl
 								key={ optionValue }
-								className="aether-provider-field__checkbox-option"
+								className="altolith-provider-field__checkbox-option"
 								label={ optionLabel }
 								checked={ isSelected }
 								onChange={ ( checked ) => {
@@ -209,8 +209,8 @@ export default function ProviderField( {
 
 		return renderWithHooks(
 			<div
-				className={ `aether-provider-field aether-provider-field--${ type } ${
-					error ? 'aether-provider-field--error' : ''
+				className={ `altolith-provider-field altolith-provider-field--${ type } ${
+					error ? 'altolith-provider-field--error' : ''
 				}` }
 				style={ fieldWrapperStyle }
 			>
@@ -232,8 +232,8 @@ export default function ProviderField( {
 	if ( type === 'textarea' ) {
 		return renderWithHooks(
 			<div
-				className={ `aether-provider-field aether-provider-field--${ type } ${
-					error ? 'aether-provider-field--error' : ''
+				className={ `altolith-provider-field altolith-provider-field--${ type } ${
+					error ? 'altolith-provider-field--error' : ''
 				}` }
 				style={ fieldWrapperStyle }
 			>
@@ -254,8 +254,8 @@ export default function ProviderField( {
 	if ( type === 'url' ) {
 		return renderWithHooks(
 			<div
-				className={ `aether-provider-field aether-provider-field--${ type } ${
-					error ? 'aether-provider-field--error' : ''
+				className={ `altolith-provider-field altolith-provider-field--${ type } ${
+					error ? 'altolith-provider-field--error' : ''
 				}` }
 				style={ fieldWrapperStyle }
 			>
@@ -279,8 +279,8 @@ export default function ProviderField( {
 	if ( type === 'email' ) {
 		return renderWithHooks(
 			<div
-				className={ `aether-provider-field aether-provider-field--${ type } ${
-					error ? 'aether-provider-field--error' : ''
+				className={ `altolith-provider-field altolith-provider-field--${ type } ${
+					error ? 'altolith-provider-field--error' : ''
 				}` }
 				style={ fieldWrapperStyle }
 			>
@@ -304,8 +304,8 @@ export default function ProviderField( {
 	if ( type === 'number' ) {
 		return renderWithHooks(
 			<div
-				className={ `aether-provider-field aether-provider-field--${ type } ${
-					error ? 'aether-provider-field--error' : ''
+				className={ `altolith-provider-field altolith-provider-field--${ type } ${
+					error ? 'altolith-provider-field--error' : ''
 				}` }
 				style={ fieldWrapperStyle }
 			>
@@ -328,8 +328,8 @@ export default function ProviderField( {
 	// Default: text field
 	return renderWithHooks(
 		<div
-			className={ `aether-provider-field aether-provider-field--${ type } ${
-				error ? 'aether-provider-field--error' : ''
+			className={ `altolith-provider-field altolith-provider-field--${ type } ${
+				error ? 'altolith-provider-field--error' : ''
 			}` }
 			style={ fieldWrapperStyle }
 		>

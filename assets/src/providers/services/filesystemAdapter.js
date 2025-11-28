@@ -6,7 +6,7 @@
  *
  */
 
-import apiFetch from '@aether/utils/api';
+import apiFetch from '@altolith/utils/api';
 import { validateFile } from './fileValidation';
 
 /**
@@ -95,7 +95,7 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 		let response;
 		try {
 			response = await apiFetch( {
-				path: '/aether/site-exporter/local-storage/upload',
+				path: '/altolith/deploy/local-storage/upload',
 				method: 'POST',
 				body: formData,
 			} );
@@ -175,7 +175,7 @@ export async function uploadFile( staticPath, key, file, options = {} ) {
 export async function deleteFile( staticPath, key ) {
 	try {
 		const response = await apiFetch( {
-			path: '/aether/site-exporter/local-storage/delete',
+			path: '/altolith/deploy/local-storage/delete',
 			method: 'DELETE',
 			data: {
 				key,
@@ -225,7 +225,7 @@ export async function listObjects() {
 export async function batchDelete( staticPath, keys ) {
 	try {
 		const response = await apiFetch( {
-			path: '/aether/site-exporter/local-storage/batch-delete',
+			path: '/altolith/deploy/local-storage/batch-delete',
 			method: 'DELETE',
 			data: {
 				keys,
@@ -255,7 +255,7 @@ export async function batchDelete( staticPath, keys ) {
 export async function downloadFile( staticPath, key ) {
 	try {
 		const response = await apiFetch( {
-			path: `/aether/site-exporter/local-storage/download?key=${ encodeURIComponent(
+			path: `/altolith/deploy/local-storage/download?key=${ encodeURIComponent(
 				key
 			) }&static_path=${ encodeURIComponent( staticPath ) }`,
 			method: 'GET',

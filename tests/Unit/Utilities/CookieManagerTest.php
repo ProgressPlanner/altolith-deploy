@@ -11,13 +11,13 @@
  * - Must test all cookie types (auth, logged_in)
  * - Must fail if SameSite=None is used without Secure flag
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Utilities;
+namespace Altolith\Deploy\Tests\Unit\Utilities;
 
-use Aether\SiteExporter\Utilities\CookieManager;
-use Aether\SiteExporter\Tests\Helpers\TestCase;
+use Altolith\Deploy\Utilities\CookieManager;
+use Altolith\Deploy\Tests\Helpers\TestCase;
 
 class CookieManagerTest extends TestCase
 {

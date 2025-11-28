@@ -6,10 +6,10 @@
  * Provides WordPress script and style dependencies for dynamic loading.
  * Returns both scripts and styles in a single API call for efficiency.
  *
- * @package Aether\REST
+ * @package Altolith\REST
  */
 
-namespace Aether\SiteExporter\REST;
+namespace Altolith\Deploy\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;

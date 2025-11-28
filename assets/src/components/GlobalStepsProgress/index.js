@@ -7,7 +7,7 @@
  * @since 1.0.0
  */
 
-import { VerticalStepper } from '@aether/components/VerticalStepper';
+import { VerticalStepper } from '@altolith/components/VerticalStepper';
 
 /**
  * Steps Progress Component

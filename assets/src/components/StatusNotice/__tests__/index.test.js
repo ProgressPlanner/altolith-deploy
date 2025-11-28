@@ -45,7 +45,7 @@ describe( 'StatusNotice', () => {
 			render( <StatusNotice message="Test" /> );
 
 			const notice = screen.getByTestId( 'notice' );
-			expect( notice.className ).toContain( 'aether-status-notice' );
+			expect( notice.className ).toContain( 'altolith-status-notice' );
 		} );
 
 		test( 'should pass status to Notice component', () => {
@@ -66,7 +66,7 @@ describe( 'StatusNotice', () => {
 			const notice = screen.getByTestId( 'notice' );
 			expect( notice ).toHaveAttribute( 'data-status', 'info' );
 			expect( notice.className ).toContain(
-				'aether-status-notice--info'
+				'altolith-status-notice--info'
 			);
 		} );
 
@@ -76,7 +76,7 @@ describe( 'StatusNotice', () => {
 			const notice = screen.getByTestId( 'notice' );
 			expect( notice ).toHaveAttribute( 'data-status', 'success' );
 			expect( notice.className ).toContain(
-				'aether-status-notice--success'
+				'altolith-status-notice--success'
 			);
 		} );
 
@@ -86,7 +86,7 @@ describe( 'StatusNotice', () => {
 			const notice = screen.getByTestId( 'notice' );
 			expect( notice ).toHaveAttribute( 'data-status', 'error' );
 			expect( notice.className ).toContain(
-				'aether-status-notice--error'
+				'altolith-status-notice--error'
 			);
 		} );
 
@@ -96,7 +96,7 @@ describe( 'StatusNotice', () => {
 			const notice = screen.getByTestId( 'notice' );
 			expect( notice ).toHaveAttribute( 'data-status', 'warning' );
 			expect( notice.className ).toContain(
-				'aether-status-notice--warning'
+				'altolith-status-notice--warning'
 			);
 		} );
 	} );
@@ -162,7 +162,7 @@ describe( 'StatusNotice', () => {
 			);
 
 			const notice = screen.getByTestId( 'notice' );
-			expect( notice.className ).toContain( 'aether-status-notice' );
+			expect( notice.className ).toContain( 'altolith-status-notice' );
 			expect( notice.className ).toContain( 'my-custom-class' );
 		} );
 
@@ -170,7 +170,7 @@ describe( 'StatusNotice', () => {
 			render( <StatusNotice message="Test" className="" /> );
 
 			const notice = screen.getByTestId( 'notice' );
-			expect( notice.className ).toContain( 'aether-status-notice' );
+			expect( notice.className ).toContain( 'altolith-status-notice' );
 		} );
 
 		test( 'should trim className correctly', () => {

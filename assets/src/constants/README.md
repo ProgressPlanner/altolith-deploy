@@ -1,6 +1,6 @@
 # Constants
 
-Centralized constants for the Aether plugin. All magic strings, numbers, and configuration values should be defined here.
+Centralized constants for the Altolith plugin. All magic strings, numbers, and configuration values should be defined here.
 
 ## Purpose
 
@@ -72,7 +72,7 @@ For deployment type functionality, see `utils/deploymentTypes.js`:
 ```javascript
 import { getDeploymentTypes, getDeploymentTypeLabel } from '../utils/deploymentTypes';
 
-// Get all deployment types (filterable via aether.deploymentTypes hook)
+// Get all deployment types (filterable via altolith.deploymentTypes hook)
 const types = getDeploymentTypes();
 // Returns: { static_site: { label: 'Static Site' }, blueprint_bundle: { label: 'Blueprint Bundle' } }
 
@@ -87,7 +87,7 @@ Third-party plugins can add custom deployment types:
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.deploymentTypes', 'my-plugin', (types) => ({
+addFilter('altolith.deploymentTypes', 'my-plugin', (types) => ({
     ...types,
     my_custom_type: { label: 'My Custom Type' },
 }));
@@ -139,7 +139,7 @@ Add a constant when you find yourself:
 ```javascript
 // ❌ Before: Magic values scattered throughout code
 setTimeout(checkStatus, 500);
-fetch('/wp-json/aether/site-exporter/export/createArchive');
+fetch('/wp-json/altolith/deploy/export/createArchive');
 
 // ✅ After: Using constants
 import { POLLING_INTERVAL, ENDPOINTS } from '../constants';

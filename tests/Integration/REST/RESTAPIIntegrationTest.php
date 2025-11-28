@@ -5,13 +5,13 @@
  * Tests REST endpoints with authentication, CORS, and error handling.
  * Validates that REST API works correctly in various scenarios.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Integration\REST;
+namespace Altolith\Deploy\Tests\Integration\REST;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\REST\SettingsController;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\REST\SettingsController;
 use WP_REST_Request;
 
 /**
@@ -57,7 +57,7 @@ class RESTAPIIntegrationTest extends TestCase {
 	 * Clean up after tests.
 	 */
 	public function tear_down() {
-		delete_option( 'aether_site_exporter_settings' );
+		delete_option( 'altolith_deploy_settings' );
 
 		parent::tear_down();
 	}
@@ -72,7 +72,7 @@ class RESTAPIIntegrationTest extends TestCase {
 	public function test_unauthorized_requests_rejected() {
 		wp_set_current_user( 0 );
 
-		$request  = new WP_REST_Request( 'GET', '/aether/site-exporter/settings' );
+		$request  = new WP_REST_Request( 'GET', '/altolith/deploy/settings' );
 		$response = rest_do_request( $request );
 
 		// Should return 401 or 403 for unauthenticated users.
@@ -89,7 +89,7 @@ class RESTAPIIntegrationTest extends TestCase {
 	public function test_non_admin_users_rejected() {
 		wp_set_current_user( $this->subscriber_user_id );
 
-		$request  = new WP_REST_Request( 'GET', '/aether/site-exporter/settings' );
+		$request  = new WP_REST_Request( 'GET', '/altolith/deploy/settings' );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals( 403, $response->get_status(), 'Non-admin users should be rejected' );
@@ -101,7 +101,7 @@ class RESTAPIIntegrationTest extends TestCase {
 	public function test_admin_users_can_access() {
 		wp_set_current_user( $this->admin_user_id );
 
-		$request  = new WP_REST_Request( 'GET', '/aether/site-exporter/settings' );
+		$request  = new WP_REST_Request( 'GET', '/altolith/deploy/settings' );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals( 200, $response->get_status(), 'Admin users should be able to access endpoints' );
@@ -119,13 +119,13 @@ class RESTAPIIntegrationTest extends TestCase {
 
 		// Set some test settings.
 		update_option(
-			'aether_site_exporter_settings',
+			'altolith_deploy_settings',
 			[
 				'test_setting' => 'test_value',
 			]
 		);
 
-		$request  = new WP_REST_Request( 'GET', '/aether/site-exporter/settings' );
+		$request  = new WP_REST_Request( 'GET', '/altolith/deploy/settings' );
 		$response = rest_do_request( $request );
 
 		$this->assertEquals( 200, $response->get_status() );
@@ -141,7 +141,7 @@ class RESTAPIIntegrationTest extends TestCase {
 		wp_set_current_user( $this->admin_user_id );
 
 		// SettingsController uses POST method with 'key' and 'value' parameters.
-		$request = new WP_REST_Request( 'POST', '/aether/site-exporter/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/deploy/settings' );
 		$request->set_param( 'key', 'test_setting' );
 		$request->set_param( 'value', 'updated_value' );
 
@@ -150,7 +150,7 @@ class RESTAPIIntegrationTest extends TestCase {
 		$this->assertEquals( 200, $response->get_status() );
 
 		// Verify setting was updated.
-		$settings = get_option( 'aether_site_exporter_settings', [] );
+		$settings = get_option( 'altolith_deploy_settings', [] );
 		$this->assertEquals( 'updated_value', $settings['test_setting'] );
 	}
 
@@ -165,7 +165,7 @@ class RESTAPIIntegrationTest extends TestCase {
 		wp_set_current_user( $this->admin_user_id );
 
 		// Test settings endpoint with invalid parameter.
-		$request = new WP_REST_Request( 'PUT', '/aether/site-exporter/settings' );
+		$request = new WP_REST_Request( 'PUT', '/altolith/deploy/settings' );
 		$request->set_param( 'settings', 'not-an-object' ); // Should be object.
 
 		$response = rest_do_request( $request );
@@ -181,7 +181,7 @@ class RESTAPIIntegrationTest extends TestCase {
 		wp_set_current_user( $this->admin_user_id );
 
 		// Settings endpoint requires 'settings' parameter.
-		$request  = new WP_REST_Request( 'PUT', '/aether/site-exporter/settings' );
+		$request  = new WP_REST_Request( 'PUT', '/altolith/deploy/settings' );
 		$response = rest_do_request( $request );
 
 		// Should return error.
@@ -198,7 +198,7 @@ class RESTAPIIntegrationTest extends TestCase {
 	public function test_error_responses_formatted() {
 		wp_set_current_user( 0 );
 
-		$request  = new WP_REST_Request( 'GET', '/aether/site-exporter/settings' );
+		$request  = new WP_REST_Request( 'GET', '/altolith/deploy/settings' );
 		$response = rest_do_request( $request );
 
 		// Error response should have proper structure.
@@ -225,7 +225,7 @@ class RESTAPIIntegrationTest extends TestCase {
 		// Add filter for CORS origins and verify it can modify the origins list.
 		$custom_origin = 'https://playground.wordpress.net';
 		add_filter(
-			'aether_site_exporter_cors_allowed_origins',
+			'altolith_deploy_cors_allowed_origins',
 			function ( $origins ) use ( $custom_origin ) {
 				$origins[] = $custom_origin;
 				return $origins;
@@ -233,7 +233,7 @@ class RESTAPIIntegrationTest extends TestCase {
 		);
 
 		// Apply the filter to verify it works.
-		$origins = apply_filters( 'aether_site_exporter_cors_allowed_origins', [] );
+		$origins = apply_filters( 'altolith_deploy_cors_allowed_origins', [] );
 
 		$this->assertContains( $custom_origin, $origins, 'CORS filter should allow adding custom origins' );
 	}
@@ -248,7 +248,7 @@ class RESTAPIIntegrationTest extends TestCase {
 	public function test_settings_endpoint_registered() {
 		$routes = rest_get_server()->get_routes();
 
-		$this->assertArrayHasKey( '/aether/site-exporter/settings', $routes );
+		$this->assertArrayHasKey( '/altolith/deploy/settings', $routes );
 	}
 
 	/**
@@ -260,7 +260,7 @@ class RESTAPIIntegrationTest extends TestCase {
 		// Check for provider config route pattern.
 		$found = false;
 		foreach ( $routes as $route => $handlers ) {
-			if ( strpos( $route, '/aether/site-exporter/providers/' ) !== false &&
+			if ( strpos( $route, '/altolith/deploy/providers/' ) !== false &&
 				 strpos( $route, '/config' ) !== false ) {
 				$found = true;
 				break;

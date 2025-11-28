@@ -13,10 +13,10 @@
 if ( typeof __webpack_public_path__ !== 'undefined' ) {
 	if (
 		typeof window !== 'undefined' &&
-		window.aetherData &&
-		window.aetherData.pluginUrl
+		window.altolithData &&
+		window.altolithData.pluginUrl
 	) {
-		const pluginUrl = window.aetherData.pluginUrl;
+		const pluginUrl = window.altolithData.pluginUrl;
 		// Ensure plugin URL ends with slash
 		const publicPath = pluginUrl.endsWith( '/' )
 			? pluginUrl + 'assets/build/'
@@ -35,8 +35,8 @@ import { initializeErrorHandlers } from '../utils/errorHandler';
 // Initialize global error handlers
 initializeErrorHandlers();
 
-// Providers are registered in JavaScript via aether.providers.register hooks.
-// JavaScript providers register implementation hooks (aether.provider.upload, aether.provider.test, etc.).
+// Providers are registered in JavaScript via altolith.providers.register hooks.
+// JavaScript providers register implementation hooks (altolith.provider.upload, altolith.provider.test, etc.).
 
 /**
  * Initialize admin settings page.
@@ -44,12 +44,12 @@ initializeErrorHandlers();
  * @return {void}
  */
 const init = () => {
-	const container = document.getElementById( 'aether-admin-settings' );
+	const container = document.getElementById( 'altolith-admin-settings' );
 
 	if ( ! container ) {
 		// eslint-disable-next-line no-console
 		console.error(
-			'Aether: Container element #aether-admin-settings not found'
+			'Altolith: Container element #altolith-admin-settings not found'
 		);
 		return;
 	}
@@ -65,7 +65,10 @@ const init = () => {
 		);
 	} catch ( error ) {
 		// eslint-disable-next-line no-console
-		console.error( 'Aether: Error rendering admin settings page:', error );
+		console.error(
+			'Altolith: Error rendering admin settings page:',
+			error
+		);
 	}
 };
 

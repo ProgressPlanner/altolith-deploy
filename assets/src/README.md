@@ -1,6 +1,6 @@
-# Aether Plugin - Source Code
+# Altolith Plugin - Source Code
 
-This directory contains all JavaScript/React source code for the Aether WordPress plugin.
+This directory contains all JavaScript/React source code for the Altolith WordPress plugin.
 
 ## Directory Structure
 
@@ -94,26 +94,26 @@ The build bundles all code into single entry files (no code splitting):
 
 ## Path Aliases
 
-The codebase uses path aliases for cleaner imports. Instead of deep relative paths, use the `@aether/*` aliases:
+The codebase uses path aliases for cleaner imports. Instead of deep relative paths, use the `@altolith/*` aliases:
 
 ### Available Aliases
 
-- `@aether/utils` → `assets/src/utils`
-- `@aether/components` → `assets/src/components`
-- `@aether/hooks` → `assets/src/hooks`
-- `@aether/constants` → `assets/src/constants`
-- `@aether/contexts` → `assets/src/contexts`
-- `@aether/services` → `assets/src/services`
-- `@aether/providers` → `assets/src/providers`
-- `@aether/export` → `assets/src/export`
-- `@aether/admin` → `assets/src/admin-settings`
+- `@altolith/utils` → `assets/src/utils`
+- `@altolith/components` → `assets/src/components`
+- `@altolith/hooks` → `assets/src/hooks`
+- `@altolith/constants` → `assets/src/constants`
+- `@altolith/contexts` → `assets/src/contexts`
+- `@altolith/services` → `assets/src/services`
+- `@altolith/providers` → `assets/src/providers`
+- `@altolith/export` → `assets/src/export`
+- `@altolith/admin` → `assets/src/admin-settings`
 
 ### Usage Examples
 
 ```javascript
 // ✅ Use path aliases
-import StaticSiteCache from '@aether/utils/staticSiteCache';
-import { executePreScan } from '@aether/export/utils/preScanPhase';
+import StaticSiteCache from '@altolith/utils/staticSiteCache';
+import { executePreScan } from '@altolith/export/utils/preScanPhase';
 ```
 
 ### Benefits
@@ -166,7 +166,7 @@ export function useCustomHook( param ) {
 
 ```javascript
 // ❌ Don't use magic strings/numbers
-path: '/wp-json/aether/site-exporter/export/createArchive'
+path: '/wp-json/altolith/deploy/export/createArchive'
 setTimeout( callback, 500 )
 
 // ✅ Use constants

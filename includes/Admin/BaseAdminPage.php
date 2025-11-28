@@ -6,12 +6,12 @@
  * Abstract base class for all admin pages in the plugin.
  * Provides common functionality and enforces consistent structure.
  *
- * @package Aether\Admin
+ * @package Altolith\Admin
  */
 
-namespace Aether\SiteExporter\Admin;
+namespace Altolith\Deploy\Admin;
 
-use Aether\SiteExporter\Admin\Settings;
+use Altolith\Deploy\Admin\Settings;
 
 /**
  * Abstract base class for admin pages.
@@ -158,8 +158,8 @@ abstract class BaseAdminPage
 		// Check user permissions.
 		if (! \current_user_can($this->capability)) {
 			\wp_die(
-				\esc_html__('You do not have sufficient permissions to access this page.', 'aether-site-exporter'),
-				\esc_html__('Permission Denied', 'aether-site-exporter'),
+				\esc_html__('You do not have sufficient permissions to access this page.', 'altolith-deploy'),
+				\esc_html__('Permission Denied', 'altolith-deploy'),
 				[ 'response' => 403 ]
 			);
 		}

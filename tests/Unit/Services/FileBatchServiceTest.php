@@ -12,13 +12,13 @@
  * - Must test offloaded file detection to prevent duplicate uploads
  * - Must fail if implementation allows ANY incorrect file counts or batching
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Services;
+namespace Altolith\Deploy\Tests\Unit\Services;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Services\FileBatchService;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Services\FileBatchService;
 
 /**
  * File Batch Service test case.
@@ -48,7 +48,7 @@ class FileBatchServiceTest extends TestCase {
 		$this->service = new FileBatchService();
 
 		// Create test directory
-		$this->test_dir = WP_CONTENT_DIR . '/aether-test-files-' . time();
+		$this->test_dir = WP_CONTENT_DIR . '/altolith-test-files-' . time();
 		wp_mkdir_p( $this->test_dir );
 	}
 
@@ -517,7 +517,7 @@ class FileBatchServiceTest extends TestCase {
 		$attachment_id = $this->factory->attachment->create_upload_object( __FILE__ );
 
 		// Mark as offloaded
-		update_post_meta( $attachment_id, '_aether_media_metadata', [ 'offloaded' => true ] );
+		update_post_meta( $attachment_id, '_altolith_media_metadata', [ 'offloaded' => true ] );
 
 		$paths = $this->service->getOffloadedFilePaths();
 

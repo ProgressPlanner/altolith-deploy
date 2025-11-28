@@ -16,24 +16,23 @@
 /* global MouseEvent */
 
 describe( 'Admin Bar Export Handler', () => {
-	let originalAetherData;
+	let originalAltolithData;
 	let originalFetch;
 
 	beforeEach( () => {
 		// Save originals
-		originalAetherData = window.aetherData;
+		originalAltolithData = window.altolithData;
 		originalFetch = global.fetch;
 
 		// Reset global state
-		delete window.aetherExportLoading;
-		delete window.aetherExportLoaded;
+		delete window.altolithExportLoading;
+		delete window.altolithExportLoaded;
 
-		// Setup window.aetherData
-		window.aetherData = {
-			pluginUrl:
-				'https://example.com/wp-content/plugins/aether-site-exporter',
+		// Setup window.altolithData
+		window.altolithData = {
+			pluginUrl: 'https://example.com/wp-content/plugins/altolith-deploy',
 			restUrl: 'https://example.com/wp-json/',
-			restNamespace: 'aether/site-exporter/',
+			restNamespace: 'altolith/deploy/',
 			nonce: 'test-nonce-123',
 		};
 
@@ -47,12 +46,12 @@ describe( 'Admin Bar Export Handler', () => {
 
 	afterEach( () => {
 		// Restore originals
-		window.aetherData = originalAetherData;
+		window.altolithData = originalAltolithData;
 		global.fetch = originalFetch;
 
 		// Clean up global flags
-		delete window.aetherExportLoading;
-		delete window.aetherExportLoaded;
+		delete window.altolithExportLoading;
+		delete window.altolithExportLoaded;
 
 		// Clean up DOM
 		document.head.innerHTML = '';
@@ -64,7 +63,7 @@ describe( 'Admin Bar Export Handler', () => {
 	describe( 'Initialization', () => {
 		it( 'should exit early if no plugin URL provided', () => {
 			// Remove plugin URL
-			delete window.aetherData;
+			delete window.altolithData;
 
 			// Re-execute the script by requiring it
 			// Since it's an IIFE, it won't expose anything to test
@@ -98,9 +97,9 @@ describe( 'Admin Bar Export Handler', () => {
 			// Since the IIFE code is not modular, we test the behavior
 		} );
 
-		it( 'should trigger on data-aether-export element click', () => {
+		it( 'should trigger on data-altolith-export element click', () => {
 			const button = document.createElement( 'button' );
-			button.setAttribute( 'data-aether-export', 'true' );
+			button.setAttribute( 'data-altolith-export', 'true' );
 			document.body.appendChild( button );
 
 			// Mock fetch to return dependencies
@@ -123,7 +122,7 @@ describe( 'Admin Bar Export Handler', () => {
 
 		it( 'should trigger on admin bar menu item click', () => {
 			const menuItem = document.createElement( 'li' );
-			menuItem.id = 'wp-admin-bar-aether-export';
+			menuItem.id = 'wp-admin-bar-altolith-export';
 			const link = document.createElement( 'a' );
 			link.href = '#';
 			menuItem.appendChild( link );
@@ -145,7 +144,7 @@ describe( 'Admin Bar Export Handler', () => {
 			} );
 
 			const button = document.createElement( 'button' );
-			button.setAttribute( 'data-aether-export', 'true' );
+			button.setAttribute( 'data-altolith-export', 'true' );
 			document.body.appendChild( button );
 
 			const clickEvent = new MouseEvent( 'click', {
@@ -162,7 +161,9 @@ describe( 'Admin Bar Export Handler', () => {
 			button.dispatchEvent( clickEvent );
 
 			// Event handler is called asynchronously, so we just verify setup
-			expect( button.hasAttribute( 'data-aether-export' ) ).toBe( true );
+			expect( button.hasAttribute( 'data-altolith-export' ) ).toBe(
+				true
+			);
 		} );
 	} );
 
@@ -173,7 +174,7 @@ describe( 'Admin Bar Export Handler', () => {
 
 			// Simulate overlay creation
 			const overlay = document.createElement( 'div' );
-			overlay.id = 'aether-export-loading';
+			overlay.id = 'altolith-export-loading';
 			overlay.style.cssText =
 				'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:999999;display:flex;align-items:center;justify-content:center;';
 			const spinner = document.createElement( 'div' );
@@ -183,7 +184,7 @@ describe( 'Admin Bar Export Handler', () => {
 			document.body.appendChild( overlay );
 
 			const loadingOverlay = document.getElementById(
-				'aether-export-loading'
+				'altolith-export-loading'
 			);
 			expect( loadingOverlay ).toBeTruthy();
 			expect( loadingOverlay.textContent ).toBe( 'Loading...' );
@@ -192,28 +193,28 @@ describe( 'Admin Bar Export Handler', () => {
 		it( 'should not create duplicate overlay', () => {
 			// Create overlay
 			const overlay = document.createElement( 'div' );
-			overlay.id = 'aether-export-loading';
+			overlay.id = 'altolith-export-loading';
 			document.body.appendChild( overlay );
 
 			// Verify only one exists
 			const overlays = document.querySelectorAll(
-				'#aether-export-loading'
+				'#altolith-export-loading'
 			);
 			expect( overlays.length ).toBe( 1 );
 
 			// Attempting to create another should be prevented
 			// (the actual function checks for existing overlay)
 			const existingOverlay = document.getElementById(
-				'aether-export-loading'
+				'altolith-export-loading'
 			);
 			if ( ! existingOverlay ) {
 				const newOverlay = document.createElement( 'div' );
-				newOverlay.id = 'aether-export-loading';
+				newOverlay.id = 'altolith-export-loading';
 				document.body.appendChild( newOverlay );
 			}
 
 			const finalOverlays = document.querySelectorAll(
-				'#aether-export-loading'
+				'#altolith-export-loading'
 			);
 			expect( finalOverlays.length ).toBe( 1 );
 		} );
@@ -221,36 +222,38 @@ describe( 'Admin Bar Export Handler', () => {
 		it( 'should remove loading overlay when hiding', () => {
 			// Create overlay
 			const overlay = document.createElement( 'div' );
-			overlay.id = 'aether-export-loading';
+			overlay.id = 'altolith-export-loading';
 			document.body.appendChild( overlay );
 
 			expect(
-				document.getElementById( 'aether-export-loading' )
+				document.getElementById( 'altolith-export-loading' )
 			).toBeTruthy();
 
 			// Simulate hiding (remove)
 			const overlayToRemove = document.getElementById(
-				'aether-export-loading'
+				'altolith-export-loading'
 			);
 			if ( overlayToRemove ) {
 				overlayToRemove.remove();
 			}
 
 			expect(
-				document.getElementById( 'aether-export-loading' )
+				document.getElementById( 'altolith-export-loading' )
 			).toBeNull();
 		} );
 
 		it( 'should handle hiding non-existent overlay', () => {
 			// Should not throw when trying to remove non-existent overlay
-			const overlay = document.getElementById( 'aether-export-loading' );
+			const overlay = document.getElementById(
+				'altolith-export-loading'
+			);
 			if ( overlay ) {
 				overlay.remove();
 			}
 
 			// Should complete without error
 			expect(
-				document.getElementById( 'aether-export-loading' )
+				document.getElementById( 'altolith-export-loading' )
 			).toBeNull();
 		} );
 	} );
@@ -303,23 +306,23 @@ describe( 'Admin Bar Export Handler', () => {
 
 		it( 'should build correct script URL with trailing slash', () => {
 			const pluginUrl =
-				'https://example.com/wp-content/plugins/aether-site-exporter/';
+				'https://example.com/wp-content/plugins/altolith-deploy/';
 			const scriptUrl = pluginUrl + 'assets/build/export-modal.js';
 
 			expect( scriptUrl ).toBe(
-				'https://example.com/wp-content/plugins/aether-site-exporter/assets/build/export-modal.js'
+				'https://example.com/wp-content/plugins/altolith-deploy/assets/build/export-modal.js'
 			);
 		} );
 
 		it( 'should build correct script URL without trailing slash', () => {
 			const pluginUrl =
-				'https://example.com/wp-content/plugins/aether-site-exporter';
+				'https://example.com/wp-content/plugins/altolith-deploy';
 			const scriptUrl = pluginUrl.endsWith( '/' )
 				? pluginUrl + 'assets/build/export-modal.js'
 				: pluginUrl + '/assets/build/export-modal.js';
 
 			expect( scriptUrl ).toBe(
-				'https://example.com/wp-content/plugins/aether-site-exporter/assets/build/export-modal.js'
+				'https://example.com/wp-content/plugins/altolith-deploy/assets/build/export-modal.js'
 			);
 		} );
 	} );
@@ -404,7 +407,7 @@ describe( 'Admin Bar Export Handler', () => {
 			} );
 
 			const response = await fetch(
-				'https://example.com/wp-json/aether/site-exporter/admin-bar-dependencies',
+				'https://example.com/wp-json/altolith/deploy/admin-bar-dependencies',
 				{
 					method: 'GET',
 					credentials: 'same-origin',
@@ -437,7 +440,7 @@ describe( 'Admin Bar Export Handler', () => {
 				'Content-Type': 'application/json',
 			};
 
-			const nonce = window.aetherData.nonce;
+			const nonce = window.altolithData.nonce;
 			if ( nonce ) {
 				headers[ 'X-WP-Nonce' ] = nonce;
 			}
@@ -695,57 +698,57 @@ describe( 'Admin Bar Export Handler', () => {
 	} );
 
 	describe( 'Loading State Flags', () => {
-		it( 'should set aetherExportLoading when loading starts', () => {
-			window.aetherExportLoading = true;
+		it( 'should set altolithExportLoading when loading starts', () => {
+			window.altolithExportLoading = true;
 
-			expect( window.aetherExportLoading ).toBe( true );
+			expect( window.altolithExportLoading ).toBe( true );
 		} );
 
-		it( 'should set aetherExportLoaded when loading completes', () => {
-			window.aetherExportLoaded = true;
+		it( 'should set altolithExportLoaded when loading completes', () => {
+			window.altolithExportLoaded = true;
 
-			expect( window.aetherExportLoaded ).toBe( true );
+			expect( window.altolithExportLoaded ).toBe( true );
 		} );
 
-		it( 'should prevent duplicate loading when aetherExportLoading is true', () => {
-			window.aetherExportLoading = true;
+		it( 'should prevent duplicate loading when altolithExportLoading is true', () => {
+			window.altolithExportLoading = true;
 
 			// Simulate check
-			if ( window.aetherExportLoading || window.aetherExportLoaded ) {
+			if ( window.altolithExportLoading || window.altolithExportLoaded ) {
 				// Should return early
-				expect( window.aetherExportLoading ).toBe( true );
+				expect( window.altolithExportLoading ).toBe( true );
 			}
 		} );
 
-		it( 'should prevent duplicate loading when aetherExportLoaded is true', () => {
-			window.aetherExportLoaded = true;
+		it( 'should prevent duplicate loading when altolithExportLoaded is true', () => {
+			window.altolithExportLoaded = true;
 
 			// Simulate check
-			if ( window.aetherExportLoading || window.aetherExportLoaded ) {
+			if ( window.altolithExportLoading || window.altolithExportLoaded ) {
 				// Should return early
-				expect( window.aetherExportLoaded ).toBe( true );
+				expect( window.altolithExportLoaded ).toBe( true );
 			}
 		} );
 
-		it( 'should clear aetherExportLoading on success', () => {
-			window.aetherExportLoading = true;
+		it( 'should clear altolithExportLoading on success', () => {
+			window.altolithExportLoading = true;
 
 			// Simulate successful load
-			window.aetherExportLoading = false;
-			window.aetherExportLoaded = true;
+			window.altolithExportLoading = false;
+			window.altolithExportLoaded = true;
 
-			expect( window.aetherExportLoading ).toBe( false );
-			expect( window.aetherExportLoaded ).toBe( true );
+			expect( window.altolithExportLoading ).toBe( false );
+			expect( window.altolithExportLoaded ).toBe( true );
 		} );
 
-		it( 'should clear aetherExportLoading on error', () => {
-			window.aetherExportLoading = true;
+		it( 'should clear altolithExportLoading on error', () => {
+			window.altolithExportLoading = true;
 
 			// Simulate error
-			window.aetherExportLoading = false;
+			window.altolithExportLoading = false;
 
-			expect( window.aetherExportLoading ).toBe( false );
-			expect( window.aetherExportLoaded ).toBeFalsy();
+			expect( window.altolithExportLoading ).toBe( false );
+			expect( window.altolithExportLoaded ).toBeFalsy();
 		} );
 	} );
 
@@ -779,7 +782,7 @@ describe( 'Admin Bar Export Handler', () => {
 			// Simulate script error
 			const script = document.createElement( 'script' );
 			script.onerror = () => {
-				window.aetherExportLoading = false;
+				window.altolithExportLoading = false;
 				alert(
 					'Failed to load export modal. Please refresh the page.'
 				);
@@ -790,7 +793,7 @@ describe( 'Admin Bar Export Handler', () => {
 			expect( alertSpy ).toHaveBeenCalledWith(
 				'Failed to load export modal. Please refresh the page.'
 			);
-			expect( window.aetherExportLoading ).toBe( false );
+			expect( window.altolithExportLoading ).toBe( false );
 
 			alertSpy.mockRestore();
 		} );

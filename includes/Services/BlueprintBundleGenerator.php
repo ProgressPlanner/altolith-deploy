@@ -7,10 +7,10 @@
  * - blueprint.json (at root)
  * - wp-content.zip (at root)
  *
- * @package Aether\SiteExporter\Services
+ * @package Altolith\Deploy\Services
  */
 
-namespace Aether\SiteExporter\Services;
+namespace Altolith\Deploy\Services;
 
 use ZipArchive;
 
@@ -120,7 +120,7 @@ class BlueprintBundleGenerator
 		// Validate file size before adding to prevent memory exhaustion
 		// Set limit to 512MB to prevent timeout/memory issues
 		$wpContentSize = \filesize($realWpContentPath);
-		$maxSize = \Aether\SiteExporter\Constants\ExportLimits::MAX_FILE_SIZE;
+		$maxSize = \Altolith\Deploy\Constants\ExportLimits::MAX_FILE_SIZE;
 
 		if (false === $wpContentSize || $wpContentSize > $maxSize) {
 			$zip->close();

@@ -11,13 +11,13 @@
  * - Must test menu manager integration
  * - Must fail if unsanitized data is stored
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Admin;
+namespace Altolith\Deploy\Tests\Unit\Admin;
 
-use Aether\SiteExporter\Admin\Settings;
-use Aether\SiteExporter\Tests\Helpers\TestCase;
+use Altolith\Deploy\Admin\Settings;
+use Altolith\Deploy\Tests\Helpers\TestCase;
 
 class SettingsTest extends TestCase
 {
@@ -38,7 +38,7 @@ class SettingsTest extends TestCase
 		$this->settings = new Settings();
 
 		// Clear any existing settings
-		delete_option( 'aether_site_exporter_settings' );
+		delete_option( 'altolith_deploy_settings' );
 	}
 
 	/**
@@ -46,7 +46,7 @@ class SettingsTest extends TestCase
 	 */
 	public function tearDown(): void
 	{
-		delete_option( 'aether_site_exporter_settings' );
+		delete_option( 'altolith_deploy_settings' );
 
 		parent::tearDown();
 	}
@@ -71,7 +71,7 @@ class SettingsTest extends TestCase
 
 		$this->settings->registerSettings();
 
-		$this->assertArrayHasKey( 'aether_site_exporter_settings', $wp_registered_settings );
+		$this->assertArrayHasKey( 'altolith_deploy_settings', $wp_registered_settings );
 	}
 
 	/**
@@ -142,7 +142,7 @@ class SettingsTest extends TestCase
 			'include_uploads' => true,
 		];
 
-		update_option( 'aether_site_exporter_settings', $testSettings );
+		update_option( 'altolith_deploy_settings', $testSettings );
 
 		$result = $this->settings->get();
 
@@ -175,7 +175,7 @@ class SettingsTest extends TestCase
 		$this->assertTrue( $result );
 
 		// Verify settings were saved
-		$saved = get_option( 'aether_site_exporter_settings' );
+		$saved = get_option( 'altolith_deploy_settings' );
 		$this->assertSame( $newSettings, $saved );
 	}
 
@@ -194,12 +194,12 @@ class SettingsTest extends TestCase
 	 */
 	public function test_update_overwrites_existing_settings(): void
 	{
-		update_option( 'aether_site_exporter_settings', [ 'old' => 'value' ] );
+		update_option( 'altolith_deploy_settings', [ 'old' => 'value' ] );
 
 		$newSettings = [ 'new' => 'value' ];
 		$this->settings->update( $newSettings );
 
-		$saved = get_option( 'aether_site_exporter_settings' );
+		$saved = get_option( 'altolith_deploy_settings' );
 
 		$this->assertArrayNotHasKey( 'old', $saved );
 		$this->assertArrayHasKey( 'new', $saved );
@@ -214,7 +214,7 @@ class SettingsTest extends TestCase
 
 		$this->assertTrue( $result );
 
-		$saved = get_option( 'aether_site_exporter_settings' );
+		$saved = get_option( 'altolith_deploy_settings' );
 		$this->assertSame( [], $saved );
 	}
 
@@ -233,7 +233,7 @@ class SettingsTest extends TestCase
 
 		$this->settings->update( $nestedSettings );
 
-		$saved = get_option( 'aether_site_exporter_settings' );
+		$saved = get_option( 'altolith_deploy_settings' );
 		$this->assertSame( $nestedSettings, $saved );
 	}
 
@@ -242,7 +242,7 @@ class SettingsTest extends TestCase
 	 */
 	public function test_get_uses_settings_repository(): void
 	{
-		update_option( 'aether_site_exporter_settings', [ 'test' => 'value' ] );
+		update_option( 'altolith_deploy_settings', [ 'test' => 'value' ] );
 
 		$result = $this->settings->get();
 
@@ -316,7 +316,7 @@ class SettingsTest extends TestCase
 
 		$this->assertTrue( $result );
 
-		$saved = get_option( 'aether_site_exporter_settings' );
+		$saved = get_option( 'altolith_deploy_settings' );
 		$this->assertCount( 100, $saved );
 	}
 

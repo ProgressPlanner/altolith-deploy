@@ -4,7 +4,7 @@
  * Handles provider configuration persistence with REST API backend storage.
  */
 
-import apiFetch from '@aether/utils/api';
+import apiFetch from '@altolith/utils/api';
 import { applyFilters, doAction } from '@wordpress/hooks';
 
 /**
@@ -40,7 +40,7 @@ export class ConfigStorage {
 	async load() {
 		try {
 			const response = await apiFetch( {
-				path: `/aether/site-exporter/providers/${ this.providerId }/config`,
+				path: `/altolith/deploy/providers/${ this.providerId }/config`,
 				method: 'GET',
 			} );
 
@@ -57,7 +57,7 @@ export class ConfigStorage {
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
 			 *
-			 * addFilter('aether.storage.config.load', 'my-plugin', (config, providerId) => {
+			 * addFilter('altolith.storage.config.load', 'my-plugin', (config, providerId) => {
 			 *     if (providerId === 'my-provider') {
 			 *         config.autoLoaded = Date.now();
 			 *     }
@@ -65,7 +65,7 @@ export class ConfigStorage {
 			 * });
 			 */
 			config = applyFilters(
-				'aether.storage.config.load',
+				'altolith.storage.config.load',
 				config,
 				this.providerId
 			);
@@ -79,11 +79,15 @@ export class ConfigStorage {
 			 * @example
 			 * import { addAction } from '@wordpress/hooks';
 			 *
-			 * addAction('aether.storage.config.loaded', 'my-plugin', (config, providerId) => {
+			 * addAction('altolith.storage.config.loaded', 'my-plugin', (config, providerId) => {
 			 *     console.log(`Configuration loaded for ${providerId}`);
 			 * });
 			 */
-			doAction( 'aether.storage.config.loaded', config, this.providerId );
+			doAction(
+				'altolith.storage.config.loaded',
+				config,
+				this.providerId
+			);
 
 			return config;
 		} catch ( error ) {
@@ -118,7 +122,7 @@ export class ConfigStorage {
 		 * @example
 		 * import { addFilter } from '@wordpress/hooks';
 		 *
-		 * addFilter('aether.storage.config.before_save', 'my-plugin', (config, providerId) => {
+		 * addFilter('altolith.storage.config.before_save', 'my-plugin', (config, providerId) => {
 		 *     if (providerId === 'my-provider') {
 		 *         config.lastSaved = Date.now();
 		 *     }
@@ -126,14 +130,14 @@ export class ConfigStorage {
 		 * });
 		 */
 		config = applyFilters(
-			'aether.storage.config.before_save',
+			'altolith.storage.config.before_save',
 			config,
 			this.providerId
 		);
 
 		try {
 			await apiFetch( {
-				path: `/aether/site-exporter/providers/${ this.providerId }/config`,
+				path: `/altolith/deploy/providers/${ this.providerId }/config`,
 				method: 'POST',
 				data: { config },
 			} );
@@ -147,11 +151,15 @@ export class ConfigStorage {
 			 * @example
 			 * import { addAction } from '@wordpress/hooks';
 			 *
-			 * addAction('aether.storage.config.saved', 'my-plugin', (config, providerId) => {
+			 * addAction('altolith.storage.config.saved', 'my-plugin', (config, providerId) => {
 			 *     console.log(`Configuration saved for ${providerId}`);
 			 * });
 			 */
-			doAction( 'aether.storage.config.saved', config, this.providerId );
+			doAction(
+				'altolith.storage.config.saved',
+				config,
+				this.providerId
+			);
 
 			return true;
 		} catch ( error ) {
@@ -173,15 +181,15 @@ export class ConfigStorage {
 		 * @example
 		 * import { addAction } from '@wordpress/hooks';
 		 *
-		 * addAction('aether.storage.config.before_delete', 'my-plugin', (providerId) => {
+		 * addAction('altolith.storage.config.before_delete', 'my-plugin', (providerId) => {
 		 *     console.log(`Deleting configuration for ${providerId}`);
 		 * });
 		 */
-		doAction( 'aether.storage.config.before_delete', this.providerId );
+		doAction( 'altolith.storage.config.before_delete', this.providerId );
 
 		try {
 			await apiFetch( {
-				path: `/aether/site-exporter/providers/${ this.providerId }/config`,
+				path: `/altolith/deploy/providers/${ this.providerId }/config`,
 				method: 'DELETE',
 			} );
 
@@ -193,11 +201,11 @@ export class ConfigStorage {
 			 * @example
 			 * import { addAction } from '@wordpress/hooks';
 			 *
-			 * addAction('aether.storage.config.deleted', 'my-plugin', (providerId) => {
+			 * addAction('altolith.storage.config.deleted', 'my-plugin', (providerId) => {
 			 *     console.log(`Configuration deleted for ${providerId}`);
 			 * });
 			 */
-			doAction( 'aether.storage.config.deleted', this.providerId );
+			doAction( 'altolith.storage.config.deleted', this.providerId );
 
 			return true;
 		} catch ( error ) {

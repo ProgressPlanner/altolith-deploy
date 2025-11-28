@@ -11,14 +11,14 @@
  * - Must test exclusion patterns work correctly
  * - Must fail if implementation allows directory escaping
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Services;
+namespace Altolith\Deploy\Tests\Unit\Services;
 
-use Aether\SiteExporter\Services\ZipService;
-use Aether\SiteExporter\Services\FileBatchService;
-use Aether\SiteExporter\Tests\Helpers\TestCase;
+use Altolith\Deploy\Services\ZipService;
+use Altolith\Deploy\Services\FileBatchService;
+use Altolith\Deploy\Tests\Helpers\TestCase;
 
 class ZipServiceTest extends TestCase
 {
@@ -62,7 +62,7 @@ class ZipServiceTest extends TestCase
 		$this->service = new ZipService( $this->mockFileBatchService );
 
 		// Create test directory structure
-		$this->testDir = sys_get_temp_dir() . '/aether-zip-test-' . wp_generate_password( 8, false );
+		$this->testDir = sys_get_temp_dir() . '/altolith-zip-test-' . wp_generate_password( 8, false );
 		wp_mkdir_p( $this->testDir );
 
 		// Create test files

@@ -35,7 +35,7 @@ jest.mock( 'uuid', () => ( {
 } ) );
 
 // Mock deploymentTypes utilities
-jest.mock( '@aether/utils/deploymentTypes', () => ( {
+jest.mock( '@altolith/utils/deploymentTypes', () => ( {
 	getDeploymentTypeLabel: ( typeId ) => {
 		const labels = {
 			static_site: 'Static Site',
@@ -46,7 +46,7 @@ jest.mock( '@aether/utils/deploymentTypes', () => ( {
 } ) );
 
 // Mock styles
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	spacing: { lg: '16px' },
 } ) );
 

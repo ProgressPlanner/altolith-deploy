@@ -12,7 +12,7 @@ import { __ } from '@wordpress/i18n';
  * LocalFilesystemBlueprintBundleProvider class
  *
  * Handles local file storage for blueprint bundles only.
- * Files are stored in wp-content/aether-exports/.
+ * Files are stored in wp-content/altolith-exports/.
  */
 export class LocalFilesystemBlueprintBundleProvider {
 	/**
@@ -34,7 +34,7 @@ export class LocalFilesystemBlueprintBundleProvider {
 	 *
 	 * @type {string}
 	 */
-	static NAME = __( 'Local Filesystem', 'aether-site-exporter' );
+	static NAME = __( 'Local Filesystem', 'altolith-deploy' );
 
 	/**
 	 * Provider type.
@@ -50,7 +50,7 @@ export class LocalFilesystemBlueprintBundleProvider {
 	 */
 	static DESCRIPTION = __(
 		'Store blueprint bundle ZIP files locally in the WordPress uploads directory. No cloud deployment required.',
-		'aether'
+		'altolith'
 	);
 
 	/**
@@ -85,20 +85,20 @@ export class LocalFilesystemBlueprintBundleProvider {
 	static CONFIG_FIELDS = [
 		{
 			id: 'export_path',
-			label: __( 'Blueprint-bundle file path', 'aether-site-exporter' ),
+			label: __( 'Blueprint-bundle file path', 'altolith-deploy' ),
 			type: 'text',
 			required: true,
 			secure: false,
 			placeholder: 'blueprint-bundle/bundle.zip',
 			help: __(
 				'Full path to the blueprint bundle ZIP file (relative to WordPress root), including filename.',
-				'aether'
+				'altolith'
 			),
 			validation: {
 				pattern: /^[a-zA-Z0-9/_.-]+\.zip$/,
 				message: __(
 					'Blueprint bundle path must end with .zip and contain only letters, numbers, slashes, hyphens, underscores, and dots.',
-					'aether'
+					'altolith'
 				),
 			},
 		},

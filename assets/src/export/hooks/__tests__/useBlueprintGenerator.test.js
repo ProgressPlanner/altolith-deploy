@@ -188,7 +188,7 @@ describe( 'useBlueprintGenerator', () => {
 			expect( pluginSlugs ).not.toContain( 'my-custom-plugin' );
 		} );
 
-		it( 'should exclude built-in aether plugin from installPlugin steps', async () => {
+		it( 'should exclude built-in altolith plugin from installPlugin steps', async () => {
 			// Arrange
 			mockGetBlueprintAssets.mockResolvedValue(
 				mockAssetDiscovery.withBuiltInPlugins
@@ -205,7 +205,7 @@ describe( 'useBlueprintGenerator', () => {
 			// Assert - INTENDED: Built-in plugins must NOT be in WordPress.org install steps
 			// Note: getBlueprintAssets() should already filter these out
 			const pluginSlugs = extractPluginSlugs( blueprint.steps );
-			expect( pluginSlugs ).not.toContain( 'aether' );
+			expect( pluginSlugs ).not.toContain( 'altolith' );
 			expect( pluginSlugs ).not.toContain(
 				'sqlite-database-integration'
 			);

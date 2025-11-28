@@ -5,13 +5,13 @@
  * Tests for credential encryption and security functions.
  * These tests are critical for preventing credential leaks.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Utilities;
+namespace Altolith\Deploy\Tests\Unit\Utilities;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Utilities\CredentialEncryption;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Utilities\CredentialEncryption;
 
 /**
  * CredentialEncryption test case.
@@ -180,7 +180,7 @@ class CredentialEncryptionTest extends TestCase {
 	 */
 	public function test_key_persisted_across_calls() {
 		// Clear any existing key.
-		delete_option( 'aether_site_exporter_encryption_key' );
+		delete_option( 'altolith_deploy_encryption_key' );
 
 		$plaintext = 'test-secret';
 
@@ -195,7 +195,7 @@ class CredentialEncryptionTest extends TestCase {
 		$this->assertEquals( 'another-secret', CredentialEncryption::decrypt( $encrypted2 ) );
 
 		// Key should exist in database.
-		$stored_key = get_option( 'aether_site_exporter_encryption_key' );
+		$stored_key = get_option( 'altolith_deploy_encryption_key' );
 		$this->assertNotEmpty( $stored_key );
 		$this->assertEquals( 64, strlen( $stored_key ), 'Stored key should be 64 hex characters (32 bytes)' );
 	}
@@ -219,7 +219,7 @@ class CredentialEncryptionTest extends TestCase {
 			],
 		];
 
-		update_option( 'aether_site_exporter_settings', $test_settings );
+		update_option( 'altolith_deploy_settings', $test_settings );
 
 		// Perform key rotation.
 		$result = CredentialEncryption::rotateEncryptionKey();
@@ -228,7 +228,7 @@ class CredentialEncryptionTest extends TestCase {
 		$this->assertEquals( 2, $result['providers_rotated'], 'Should rotate 2 providers' );
 
 		// Verify credentials can still be decrypted.
-		$rotated_settings = get_option( 'aether_site_exporter_settings' );
+		$rotated_settings = get_option( 'altolith_deploy_settings' );
 
 		$decrypted1 = CredentialEncryption::decrypt( $rotated_settings['providers']['provider1']['api_key'] );
 		$this->assertEquals( 'secret-key-1', $decrypted1, 'Rotated credentials should decrypt correctly' );
@@ -241,7 +241,7 @@ class CredentialEncryptionTest extends TestCase {
 	 * Test key rotation with no providers.
 	 */
 	public function test_key_rotation_with_no_providers() {
-		update_option( 'aether_site_exporter_settings', [] );
+		update_option( 'altolith_deploy_settings', [] );
 
 		$result = CredentialEncryption::rotateEncryptionKey();
 

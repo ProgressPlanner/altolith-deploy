@@ -42,7 +42,7 @@ export default function AdminSettings() {
 		const loadConfigs = async () => {
 			try {
 				const configsResponse = await apiFetch( {
-					path: '/aether/site-exporter/settings?key=providers',
+					path: '/altolith/deploy/settings?key=providers',
 				} );
 
 				if ( configsResponse.success && configsResponse.value ) {
@@ -87,41 +87,41 @@ export default function AdminSettings() {
 	};
 
 	return (
-		<div className="aether-admin-settings" style={ containerStyle }>
+		<div className="altolith-admin-settings" style={ containerStyle }>
 			<div
-				className="aether-admin-settings__header"
+				className="altolith-admin-settings__header"
 				style={ headerStyle }
 			>
 				<h1
-					className="aether-admin-settings__heading"
+					className="altolith-admin-settings__heading"
 					style={ headingStyle }
 				>
 					{ __(
-						'Aether Site Exporter Settings',
-						'aether-site-exporter'
+						'Altolith Site Exporter Settings',
+						'altolith-deploy'
 					) }
 				</h1>
 				<Button
-					className="aether-admin-settings__export-button"
+					className="altolith-admin-settings__export-button"
 					variant="primary"
 					onClick={ () => setIsExportModalOpen( true ) }
 				>
-					{ __( 'Export Site', 'aether-site-exporter' ) }
+					{ __( 'Export Site', 'altolith-deploy' ) }
 				</Button>
 			</div>
 
 			<div
-				className="aether-admin-settings__sections"
+				className="altolith-admin-settings__sections"
 				style={ sectionsStyle }
 			>
 				<StatusNotice
 					status="info"
 					message={ __(
-						'Aether Site Exporter allows you to export your WordPress site as a complete package.',
-						'aether-site-exporter'
+						'Altolith Site Exporter allows you to export your WordPress site as a complete package.',
+						'altolith-deploy'
 					) }
 					isDismissible={ false }
-					className="aether-admin-settings__notice"
+					className="altolith-admin-settings__notice"
 				/>
 
 				{ /* Dynamic notices */ }
@@ -132,7 +132,7 @@ export default function AdminSettings() {
 						message={ notice.message }
 						isDismissible={ notice.isDismissible }
 						onRemove={ () => removeNotice( notice.id ) }
-						className="aether-admin-settings__notice"
+						className="altolith-admin-settings__notice"
 					/>
 				) ) }
 

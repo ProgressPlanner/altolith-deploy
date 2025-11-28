@@ -34,7 +34,7 @@ function buildAssetDescription( customPlugins, customThemes ) {
 					'%d custom plugin',
 					'%d custom plugins',
 					customPlugins,
-					'aether-site-exporter'
+					'altolith-deploy'
 				),
 				customPlugins
 			)
@@ -49,7 +49,7 @@ function buildAssetDescription( customPlugins, customThemes ) {
 					'%d custom theme',
 					'%d custom themes',
 					customThemes,
-					'aether-site-exporter'
+					'altolith-deploy'
 				),
 				customThemes
 			)
@@ -57,18 +57,18 @@ function buildAssetDescription( customPlugins, customThemes ) {
 	}
 
 	if ( parts.length === 0 ) {
-		return __( 'no custom assets', 'aether-site-exporter' );
+		return __( 'no custom assets', 'altolith-deploy' );
 	}
 
-	return parts.join( __( ' and ', 'aether-site-exporter' ) );
+	return parts.join( __( ' and ', 'altolith-deploy' ) );
 }
 
 /**
  * Status labels for the step
  */
 const statusLabels = {
-	pending: __( 'Create blueprint', 'aether-site-exporter' ),
-	running: () => __( 'Creating blueprint bundle…', 'aether-site-exporter' ),
+	pending: __( 'Create blueprint', 'altolith-deploy' ),
+	running: () => __( 'Creating blueprint bundle…', 'altolith-deploy' ),
 	complete: ( data ) => {
 		const {
 			bundleSizeFormatted = '',
@@ -81,14 +81,13 @@ const statusLabels = {
 				: '';
 		if ( ! bundleSizeFormatted ) {
 			return (
-				__( 'Created blueprint bundle', 'aether-site-exporter' ) +
-				assetInfo
+				__( 'Created blueprint bundle', 'altolith-deploy' ) + assetInfo
 			);
 		}
 		return (
 			sprintf(
 				/* translators: %s: File size */
-				__( 'Created blueprint (%s)', 'aether-site-exporter' ),
+				__( 'Created blueprint (%s)', 'altolith-deploy' ),
 				bundleSizeFormatted
 			) + assetInfo
 		);
@@ -117,7 +116,7 @@ async function handler( context ) {
 
 	// --- Phase 1: Create wp-content archive ---
 	setStatusMessage(
-		__( 'Creating wp-content archive…', 'aether-site-exporter' ),
+		__( 'Creating wp-content archive…', 'altolith-deploy' ),
 		'progress',
 		'createBlueprintBundle'
 	);
@@ -129,10 +128,7 @@ async function handler( context ) {
 	if ( ! archiveResponse.success ) {
 		throw new Error(
 			archiveResponse.message ||
-				__(
-					'Failed to create wp-content archive',
-					'aether-site-exporter'
-				)
+				__( 'Failed to create wp-content archive', 'altolith-deploy' )
 		);
 	}
 
@@ -140,7 +136,7 @@ async function handler( context ) {
 
 	// --- Phase 2: Discover assets ---
 	setStatusMessage(
-		__( 'Discovering plugins and themes…', 'aether-site-exporter' ),
+		__( 'Discovering plugins and themes…', 'altolith-deploy' ),
 		'progress',
 		'createBlueprintBundle'
 	);
@@ -150,7 +146,7 @@ async function handler( context ) {
 	if ( ! discoveryResponse.success ) {
 		throw new Error(
 			discoveryResponse.message ||
-				__( 'Failed to discover assets', 'aether-site-exporter' )
+				__( 'Failed to discover assets', 'altolith-deploy' )
 		);
 	}
 
@@ -165,13 +161,10 @@ async function handler( context ) {
 	);
 	const discoveryMessage =
 		plugins.length === 0 && themes.length === 0
-			? __(
-					'No custom plugins or themes to include',
-					'aether-site-exporter'
-			  )
+			? __( 'No custom plugins or themes to include', 'altolith-deploy' )
 			: sprintf(
 					/* translators: %s: Discovered assets description */
-					__( 'Discovered %s', 'aether-site-exporter' ),
+					__( 'Discovered %s', 'altolith-deploy' ),
 					assetDescription
 			  );
 
@@ -179,7 +172,7 @@ async function handler( context ) {
 
 	// --- Phase 3: Generate blueprint JSON ---
 	setStatusMessage(
-		__( 'Generating blueprint…', 'aether-site-exporter' ),
+		__( 'Generating blueprint…', 'altolith-deploy' ),
 		'progress',
 		'createBlueprintBundle'
 	);
@@ -203,7 +196,7 @@ async function handler( context ) {
 		if ( ! blueprintResponse.success ) {
 			throw new Error(
 				blueprintResponse.message ||
-					__( 'Failed to generate blueprint', 'aether-site-exporter' )
+					__( 'Failed to generate blueprint', 'altolith-deploy' )
 			);
 		}
 		blueprintData = blueprintResponse.blueprint;
@@ -211,14 +204,14 @@ async function handler( context ) {
 
 	// Allow filtering of blueprint data (JSON only)
 	const filteredBlueprint = applyFilters(
-		'aether.export.step.createBlueprintBundle.blueprintData',
+		'altolith.export.step.createBlueprintBundle.blueprintData',
 		blueprintData,
 		context
 	);
 
 	// --- Phase 4: Create bundle ZIP ---
 	setStatusMessage(
-		__( 'Creating blueprint bundle…', 'aether-site-exporter' ),
+		__( 'Creating blueprint bundle…', 'altolith-deploy' ),
 		'progress',
 		'createBlueprintBundle'
 	);
@@ -231,10 +224,7 @@ async function handler( context ) {
 	if ( ! bundleResponse.success ) {
 		throw new Error(
 			bundleResponse.message ||
-				__(
-					'Failed to create blueprint bundle',
-					'aether-site-exporter'
-				)
+				__( 'Failed to create blueprint bundle', 'altolith-deploy' )
 		);
 	}
 
@@ -257,7 +247,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %s: File size */
-			__( 'Created blueprint bundle (%s)', 'aether-site-exporter' ),
+			__( 'Created blueprint bundle (%s)', 'altolith-deploy' ),
 			sizeFormatted
 		),
 		'success',
@@ -286,10 +276,10 @@ async function handler( context ) {
  */
 const stepDefinition = {
 	id: 'createBlueprintBundle',
-	label: __( 'Create Blueprint Bundle', 'aether-site-exporter' ),
+	label: __( 'Create Blueprint Bundle', 'altolith-deploy' ),
 	description: __(
 		'Create wp-content archive and blueprint-bundle.zip',
-		'aether-site-exporter'
+		'altolith-deploy'
 	),
 	deploymentType: 'blueprint_bundle',
 	supportsProgress: false,
@@ -346,8 +336,8 @@ const stepDefinition = {
  * Register step via WordPress hooks
  */
 addAction(
-	'aether.export.register_steps',
-	'aether/step-createBlueprintBundle',
+	'altolith.export.register_steps',
+	'altolith/step-createBlueprintBundle',
 	( registry ) => {
 		registry.register( stepDefinition );
 	},

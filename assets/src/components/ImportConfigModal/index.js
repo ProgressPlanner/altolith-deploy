@@ -9,7 +9,7 @@ import { useState, useEffect, useMemo, useRef } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Modal, TextareaControl, Button, Notice } from '@wordpress/components';
 import ModalActions from '../ModalActions';
-import { colors, spacing, fontSize } from '@aether/utils/styles';
+import { colors, spacing, fontSize } from '@altolith/utils/styles';
 
 // Styles
 const formStyle = {
@@ -76,7 +76,7 @@ function validateImportJson( jsonString ) {
 		return {
 			valid: false,
 			data: null,
-			error: __( 'Invalid JSON format', 'aether-site-exporter' ),
+			error: __( 'Invalid JSON format', 'altolith-deploy' ),
 		};
 	}
 
@@ -84,7 +84,7 @@ function validateImportJson( jsonString ) {
 		return {
 			valid: false,
 			data: null,
-			error: __( 'Missing version field', 'aether-site-exporter' ),
+			error: __( 'Missing version field', 'altolith-deploy' ),
 		};
 	}
 
@@ -94,7 +94,7 @@ function validateImportJson( jsonString ) {
 			data: null,
 			error: __(
 				'Missing or invalid instances field',
-				'aether-site-exporter'
+				'altolith-deploy'
 			),
 		};
 	}
@@ -111,7 +111,7 @@ function validateImportJson( jsonString ) {
 					/* translators: %s: instance ID */
 					__(
 						'Instance "%s" is missing provider_type',
-						'aether-site-exporter'
+						'altolith-deploy'
 					),
 					id
 				),
@@ -123,7 +123,7 @@ function validateImportJson( jsonString ) {
 		return {
 			valid: false,
 			data: null,
-			error: __( 'No instances to import', 'aether-site-exporter' ),
+			error: __( 'No instances to import', 'altolith-deploy' ),
 		};
 	}
 
@@ -189,9 +189,7 @@ export default function ImportConfigModal( {
 			setImportError( null );
 		};
 		reader.onerror = () => {
-			setImportError(
-				__( 'Failed to read file', 'aether-site-exporter' )
-			);
+			setImportError( __( 'Failed to read file', 'altolith-deploy' ) );
 		};
 		reader.readAsText( file );
 
@@ -219,7 +217,7 @@ export default function ImportConfigModal( {
 			onClose();
 		} catch ( error ) {
 			setImportError(
-				error.message || __( 'Import failed', 'aether-site-exporter' )
+				error.message || __( 'Import failed', 'altolith-deploy' )
 			);
 		} finally {
 			setIsImporting( false );
@@ -242,21 +240,18 @@ export default function ImportConfigModal( {
 
 	return (
 		<Modal
-			className="aether-import-config-modal"
-			title={ __(
-				'Import Provider Configuration',
-				'aether-site-exporter'
-			) }
+			className="altolith-import-config-modal"
+			title={ __( 'Import Provider Configuration', 'altolith-deploy' ) }
 			onRequestClose={ handleClose }
 			size="large"
 		>
 			<div
-				className="aether-import-config-modal__form"
+				className="altolith-import-config-modal__form"
 				style={ formStyle }
 			>
 				{ /* File upload section */ }
 				<div
-					className="aether-import-config-modal__upload"
+					className="altolith-import-config-modal__upload"
 					style={ uploadSectionStyle }
 				>
 					<input
@@ -268,21 +263,21 @@ export default function ImportConfigModal( {
 						data-testid="file-input"
 					/>
 					<Button
-						className="aether-import-config-modal__upload-button"
+						className="altolith-import-config-modal__upload-button"
 						variant="secondary"
 						onClick={ () => fileInputRef.current?.click() }
 					>
-						{ __( 'Choose File…', 'aether-site-exporter' ) }
+						{ __( 'Choose File…', 'altolith-deploy' ) }
 					</Button>
 					<span style={ helpTextStyle }>
-						{ __( 'or paste JSON below', 'aether-site-exporter' ) }
+						{ __( 'or paste JSON below', 'altolith-deploy' ) }
 					</span>
 				</div>
 
 				{ /* JSON textarea */ }
 				<TextareaControl
-					className="aether-import-config-modal__json-input"
-					label={ __( 'JSON Configuration', 'aether-site-exporter' ) }
+					className="altolith-import-config-modal__json-input"
+					label={ __( 'JSON Configuration', 'altolith-deploy' ) }
 					value={ jsonInput }
 					onChange={ ( value ) => {
 						setJsonInput( value );
@@ -291,7 +286,7 @@ export default function ImportConfigModal( {
 					rows={ 12 }
 					placeholder={ __(
 						'Paste exported JSON here…',
-						'aether-site-exporter'
+						'altolith-deploy'
 					) }
 					__nextHasNoMarginBottom
 					style={ jsonTextareaStyle }
@@ -300,7 +295,7 @@ export default function ImportConfigModal( {
 				{ /* Validation feedback */ }
 				{ validation.error && (
 					<div
-						className="aether-import-config-modal__validation-error"
+						className="altolith-import-config-modal__validation-error"
 						style={ validationErrorStyle }
 						data-testid="validation-error"
 					>
@@ -309,7 +304,7 @@ export default function ImportConfigModal( {
 				) }
 
 				{ validation.valid && (
-					<div className="aether-import-config-modal__validation-success">
+					<div className="altolith-import-config-modal__validation-success">
 						<div
 							style={ validationSuccessStyle }
 							data-testid="validation-success"
@@ -318,7 +313,7 @@ export default function ImportConfigModal( {
 								/* translators: %d: number of instances */
 								__(
 									'✓ Valid configuration with %d instance(s)',
-									'aether-site-exporter'
+									'altolith-deploy'
 								),
 								instanceCount
 							) }
@@ -326,7 +321,7 @@ export default function ImportConfigModal( {
 
 						{ conflicts.length > 0 && (
 							<div
-								className="aether-import-config-modal__conflicts"
+								className="altolith-import-config-modal__conflicts"
 								style={ conflictWarningStyle }
 								data-testid="conflict-warning"
 							>
@@ -334,7 +329,7 @@ export default function ImportConfigModal( {
 									/* translators: %d: number of conflicts */
 									__(
 										'%d existing instance(s) will be overwritten:',
-										'aether-site-exporter'
+										'altolith-deploy'
 									),
 									conflicts.length
 								) }
@@ -354,7 +349,7 @@ export default function ImportConfigModal( {
 				{ /* Import error */ }
 				{ importError && (
 					<Notice
-						className="aether-import-config-modal__error"
+						className="altolith-import-config-modal__error"
 						status="error"
 						isDismissible={ false }
 					>
@@ -365,11 +360,11 @@ export default function ImportConfigModal( {
 				<ModalActions
 					onCancel={ handleClose }
 					onSubmit={ handleImport }
-					cancelLabel={ __( 'Cancel', 'aether-site-exporter' ) }
-					submitLabel={ __( 'Import', 'aether-site-exporter' ) }
+					cancelLabel={ __( 'Cancel', 'altolith-deploy' ) }
+					submitLabel={ __( 'Import', 'altolith-deploy' ) }
 					isSubmitting={ isImporting }
 					submitDisabled={ ! validation.valid || isImporting }
-					className="aether-import-config-modal__actions"
+					className="altolith-import-config-modal__actions"
 				/>
 			</div>
 		</Modal>

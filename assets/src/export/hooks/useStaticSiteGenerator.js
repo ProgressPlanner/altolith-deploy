@@ -9,11 +9,11 @@
 
 import { useCallback } from '@wordpress/element';
 import { doAction, applyFilters } from '@wordpress/hooks';
-import { createAssetTracker } from '@aether/export/utils/assetTracker';
+import { createAssetTracker } from '@altolith/export/utils/assetTracker';
 import {
 	updateManifestEntry,
 	uploadManifest,
-} from '@aether/utils/manifestManager';
+} from '@altolith/utils/manifestManager';
 
 // Extracted modules
 import {
@@ -22,14 +22,14 @@ import {
 	createFailureTracker,
 	fetchProviderConfig,
 	createStorageService,
-} from '@aether/export/utils/staticSiteConfig';
-import { executePreScan } from '@aether/export/utils/preScanPhase';
+} from '@altolith/export/utils/staticSiteConfig';
+import { executePreScan } from '@altolith/export/utils/preScanPhase';
 import {
 	prepareManifest,
 	processAssets,
 	uploadHtmlFile,
 	finalizeManifest,
-} from '@aether/export/utils/uploadPhase';
+} from '@altolith/export/utils/uploadPhase';
 
 /**
  * Process URLs and upload static site files.
@@ -129,7 +129,7 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			// Fire upload start action
 			doAction(
-				'aether.export.step.uploadStaticSiteFiles.upload.before',
+				'altolith.export.step.uploadStaticSiteFiles.upload.before',
 				fetchedUrls,
 				totalFilesToUpload,
 				staticSiteProviderId
@@ -208,7 +208,7 @@ export function useStaticSiteGenerator( onProgress ) {
 						);
 
 						manifest = applyFilters(
-							'aether.export.step.uploadStaticSiteFiles.manifest.update',
+							'altolith.export.step.uploadStaticSiteFiles.manifest.update',
 							manifest,
 							htmlResult.htmlKey,
 							staticSiteProviderId
@@ -275,7 +275,7 @@ export function useStaticSiteGenerator( onProgress ) {
 
 			// Fire completion action
 			doAction(
-				'aether.export.step.uploadStaticSiteFiles.upload.after',
+				'altolith.export.step.uploadStaticSiteFiles.upload.after',
 				{
 					filesUploaded,
 					filesSkipped,

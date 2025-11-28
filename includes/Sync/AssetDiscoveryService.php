@@ -14,10 +14,10 @@
  * - Internal WordPress requests work (HTTPClient for same-site requests)
  * - External API calls fail (wordpress.org, api.example.com) - use browser fetch()
  *
- * @package Aether\Sync
+ * @package Altolith\Sync
  */
 
-namespace Aether\SiteExporter\Sync;
+namespace Altolith\Deploy\Sync;
 
 /**
  * Service class for discovering installed WordPress assets.
@@ -129,8 +129,8 @@ class AssetDiscoveryService
 				continue;
 			}
 
-			// Skip aether plugin - it's managed separately.
-			if ('aether' === $pluginSlug) {
+			// Skip altolith plugin - it's managed separately.
+			if ('altolith' === $pluginSlug) {
 				continue;
 			}
 

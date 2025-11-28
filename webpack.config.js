@@ -114,30 +114,30 @@ module.exports = {
 		alias: {
 			...defaultConfig.resolve?.alias,
 			// Path aliases for cleaner imports
-			'@aether/utils': path.resolve( __dirname, 'assets/src/utils' ),
-			'@aether/components': path.resolve(
+			'@altolith/utils': path.resolve( __dirname, 'assets/src/utils' ),
+			'@altolith/components': path.resolve(
 				__dirname,
 				'assets/src/components'
 			),
-			'@aether/hooks': path.resolve( __dirname, 'assets/src/hooks' ),
-			'@aether/constants': path.resolve(
+			'@altolith/hooks': path.resolve( __dirname, 'assets/src/hooks' ),
+			'@altolith/constants': path.resolve(
 				__dirname,
 				'assets/src/constants'
 			),
-			'@aether/contexts': path.resolve(
+			'@altolith/contexts': path.resolve(
 				__dirname,
 				'assets/src/contexts'
 			),
-			'@aether/services': path.resolve(
+			'@altolith/services': path.resolve(
 				__dirname,
 				'assets/src/services'
 			),
-			'@aether/providers': path.resolve(
+			'@altolith/providers': path.resolve(
 				__dirname,
 				'assets/src/providers'
 			),
-			'@aether/export': path.resolve( __dirname, 'assets/src/export' ),
-			'@aether/admin': path.resolve(
+			'@altolith/export': path.resolve( __dirname, 'assets/src/export' ),
+			'@altolith/admin': path.resolve(
 				__dirname,
 				'assets/src/admin-settings'
 			),

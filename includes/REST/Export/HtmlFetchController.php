@@ -7,12 +7,12 @@
  * Provides PHP-based fetching that guarantees anonymous user context
  * via wp_set_current_user(0), working reliably in WordPress Playground.
  *
- * @package Aether\REST\Export
+ * @package Altolith\REST\Export
  */
 
-namespace Aether\SiteExporter\REST\Export;
+namespace Altolith\Deploy\REST\Export;
 
-use Aether\SiteExporter\REST\RESTHelpersTrait;
+use Altolith\Deploy\REST\RESTHelpersTrait;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -102,13 +102,13 @@ class HtmlFetchController
 		}
 
 		// Limit batch size to prevent server overload.
-		$maxBatchSize = \Aether\SiteExporter\Constants\ExportLimits::MAX_BATCH_SIZE;
+		$maxBatchSize = \Altolith\Deploy\Constants\ExportLimits::MAX_BATCH_SIZE;
 		if (\count($urls) > $maxBatchSize) {
 			return new WP_Error(
 				'batch_too_large',
 				\sprintf(
 					/* translators: %d: maximum batch size */
-					\__('Batch size exceeds maximum of %d URLs', 'aether-site-exporter'),
+					\__('Batch size exceeds maximum of %d URLs', 'altolith-deploy'),
 					$maxBatchSize
 				),
 				['status' => 400]
@@ -121,7 +121,7 @@ class HtmlFetchController
 			if (!\is_string($url)) {
 				$results[$url] = [
 					'success' => false,
-					'error'   => \__('Invalid URL format', 'aether-site-exporter'),
+					'error'   => \__('Invalid URL format', 'altolith-deploy'),
 				];
 				continue;
 			}
@@ -163,7 +163,7 @@ class HtmlFetchController
 		if (!$this->isSameSiteUrl($url)) {
 			return new WP_Error(
 				'external_url',
-				\__('Only same-site URLs can be fetched', 'aether-site-exporter'),
+				\__('Only same-site URLs can be fetched', 'altolith-deploy'),
 				['status' => 403]
 			);
 		}
@@ -181,8 +181,8 @@ class HtmlFetchController
 				'sslverify' => false, // Internal request, SSL verification not needed.
 				'cookies'   => [],    // No cookies = anonymous.
 				'headers'   => [
-					'User-Agent'        => 'Aether Static Site Generator',
-					'X-Aether-Anonymous' => 'true',
+					'User-Agent'        => 'Altolith Static Site Generator',
+					'X-Altolith-Anonymous' => 'true',
 				],
 			]);
 
@@ -200,7 +200,7 @@ class HtmlFetchController
 			if (\strpos($contentTypeStr, 'text/html') === false) {
 				return new WP_Error(
 					'not_html',
-					\__('Response is not HTML', 'aether-site-exporter'),
+					\__('Response is not HTML', 'altolith-deploy'),
 					['status' => 415]
 				);
 			}

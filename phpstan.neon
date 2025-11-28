@@ -2,9 +2,9 @@ parameters:
     level: 8
     paths:
         - includes/
-        - aether-site-exporter.php
+        - altolith-deploy.php
     bootstrapFiles:
-        - aether-site-exporter.php
+        - altolith-deploy.php
         - phpstan-stubs.php
     excludePaths:
         - vendor/

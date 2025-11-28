@@ -13,8 +13,8 @@
  */
 
 import { prepareManifest, processAssets } from '../uploadPhase';
-import { fetchManifest } from '@aether/utils/manifestManager';
-import { calculateFileHash } from '@aether/utils/fileHash';
+import { fetchManifest } from '@altolith/utils/manifestManager';
+import { calculateFileHash } from '@altolith/utils/fileHash';
 
 jest.mock( '@wordpress/i18n', () => ( {
 	__: ( text ) => text,
@@ -25,7 +25,7 @@ jest.mock( '@wordpress/hooks', () => ( {
 	applyFilters: jest.fn( ( hook, defaultValue ) => defaultValue ),
 } ) );
 
-jest.mock( '@aether/utils/manifestManager', () => ( {
+jest.mock( '@altolith/utils/manifestManager', () => ( {
 	fetchManifest: jest.fn(),
 	updateManifestEntry: jest.fn(),
 	shouldSkipUpload: jest.fn(),
@@ -33,7 +33,7 @@ jest.mock( '@aether/utils/manifestManager', () => ( {
 	cleanupManifest: jest.fn(),
 } ) );
 
-jest.mock( '@aether/utils/fileHash', () => ( {
+jest.mock( '@altolith/utils/fileHash', () => ( {
 	calculateFileHash: jest.fn(),
 } ) );
 

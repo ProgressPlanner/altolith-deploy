@@ -65,7 +65,7 @@ jest.mock( '@wordpress/icons', () => ( {
 	close: { name: 'close' },
 } ) );
 
-jest.mock( '@aether/components/ProviderForm', () => ( {
+jest.mock( '@altolith/components/ProviderForm', () => ( {
 	__esModule: true,
 	default: ( { providerId, fields, initialValues, onChange, onSubmit } ) => (
 		<form
@@ -97,7 +97,7 @@ jest.mock( '@aether/components/ProviderForm', () => ( {
 	),
 } ) );
 
-jest.mock( '@aether/components/StatusNotice', () => ( {
+jest.mock( '@altolith/components/StatusNotice', () => ( {
 	__esModule: true,
 	default: ( { status, message, isDismissible, onRemove } ) => (
 		<div data-testid="status-notice" data-status={ status }>
@@ -111,11 +111,11 @@ jest.mock( '@aether/components/StatusNotice', () => ( {
 	),
 } ) );
 
-jest.mock( '@aether/providers/utils/configValidation', () => ( {
+jest.mock( '@altolith/providers/utils/configValidation', () => ( {
 	hasRequiredFields: jest.fn( () => true ),
 } ) );
 
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	colors: {
 		text: '#333',
 		white: '#fff',
@@ -141,7 +141,7 @@ jest.mock( '@aether/utils/styles', () => ( {
 // No deployment types mock needed - component now uses string literals
 
 import ProviderInstanceItem from '../index';
-import { hasRequiredFields } from '@aether/providers/utils/configValidation';
+import { hasRequiredFields } from '@altolith/providers/utils/configValidation';
 
 describe( 'ProviderInstanceItem', () => {
 	const mockInstance = {

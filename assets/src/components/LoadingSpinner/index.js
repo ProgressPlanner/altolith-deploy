@@ -7,7 +7,7 @@
  */
 
 import { Spinner } from '@wordpress/components';
-import { colors, spacing, fontSize } from '@aether/utils/styles';
+import { colors, spacing, fontSize } from '@altolith/utils/styles';
 
 // Styles - extracted to module level for performance
 const containerStyle = {
@@ -39,17 +39,17 @@ export default function LoadingSpinner( {
 	className = '',
 	style = {},
 } ) {
-	const containerClassName = `aether-loading-spinner ${ className }`.trim();
+	const containerClassName = `altolith-loading-spinner ${ className }`.trim();
 
 	return (
 		<div
 			className={ containerClassName }
 			style={ { ...containerStyle, ...style } }
 		>
-			<Spinner className="aether-loading-spinner__spinner" />
+			<Spinner className="altolith-loading-spinner__spinner" />
 			{ message && (
 				<p
-					className="aether-loading-spinner__message"
+					className="altolith-loading-spinner__message"
 					style={ messageStyle }
 				>
 					{ message }

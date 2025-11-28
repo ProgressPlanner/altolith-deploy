@@ -6,13 +6,13 @@
  */
 
 /**
- * WordPress REST API namespace for Aether plugin
+ * WordPress REST API namespace for Altolith plugin
  * @constant {string}
  */
-export const API_NAMESPACE = 'aether/site-exporter';
+export const API_NAMESPACE = 'altolith/deploy';
 
 /**
- * Base path for all Aether REST API endpoints
+ * Base path for all Altolith REST API endpoints
  * Note: Does not include /wp-json/ prefix as that's handled by apiFetch root URL middleware
  * @constant {string}
  */

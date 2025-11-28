@@ -8,9 +8,14 @@
 import { useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { SelectControl, Notice, Spinner } from '@wordpress/components';
-import apiFetch from '@aether/utils/api';
-import { getCompatibleInstances } from '@aether/providers/utils/providerFamily';
-import { colors, spacing, fontSize, borderRadius } from '@aether/utils/styles';
+import apiFetch from '@altolith/utils/api';
+import { getCompatibleInstances } from '@altolith/providers/utils/providerFamily';
+import {
+	colors,
+	spacing,
+	fontSize,
+	borderRadius,
+} from '@altolith/utils/styles';
 
 const containerStyle = {
 	marginBottom: spacing.lg,
@@ -82,7 +87,7 @@ export default function CopyConfigDropdown( {
 
 		try {
 			const response = await apiFetch( {
-				path: `/aether/site-exporter/providers/${ currentInstanceId }/copy-from/${ sourceId }`,
+				path: `/altolith/deploy/providers/${ currentInstanceId }/copy-from/${ sourceId }`,
 				method: 'POST',
 				data: {
 					target_fields: targetFields,
@@ -100,7 +105,7 @@ export default function CopyConfigDropdown( {
 							/* translators: %d: number of fields copied */
 							__(
 								'Copied %d field(s) successfully.',
-								'aether-site-exporter'
+								'altolith-deploy'
 							),
 							copiedCount
 						),
@@ -110,7 +115,7 @@ export default function CopyConfigDropdown( {
 						type: 'warning',
 						message: __(
 							'No compatible fields found to copy.',
-							'aether-site-exporter'
+							'altolith-deploy'
 						),
 					} );
 				}
@@ -120,10 +125,7 @@ export default function CopyConfigDropdown( {
 				type: 'error',
 				message:
 					error.message ||
-					__(
-						'Failed to copy configuration.',
-						'aether-site-exporter'
-					),
+					__( 'Failed to copy configuration.', 'altolith-deploy' ),
 			} );
 		} finally {
 			setIsCopying( false );
@@ -135,7 +137,7 @@ export default function CopyConfigDropdown( {
 	// Build dropdown options.
 	const options = [
 		{
-			label: __( 'Copy from…', 'aether-site-exporter' ),
+			label: __( 'Copy from…', 'altolith-deploy' ),
 			value: '',
 		},
 		...compatibleInstances.map( ( inst ) => ( {
@@ -146,21 +148,18 @@ export default function CopyConfigDropdown( {
 	];
 
 	return (
-		<div className="aether-copy-config-dropdown" style={ containerStyle }>
+		<div className="altolith-copy-config-dropdown" style={ containerStyle }>
 			<span style={ labelStyle }>
 				{ __(
 					'Copy settings from another instance',
-					'aether-site-exporter'
+					'altolith-deploy'
 				) }
 			</span>
 
 			<div style={ selectWrapperStyle }>
 				<SelectControl
-					className="aether-copy-config-dropdown__select"
-					label={ __(
-						'Select source instance',
-						'aether-site-exporter'
-					) }
+					className="altolith-copy-config-dropdown__select"
+					label={ __( 'Select source instance', 'altolith-deploy' ) }
 					hideLabelFromVision
 					value={ selectedSource }
 					onChange={ handleSourceChange }
@@ -173,7 +172,7 @@ export default function CopyConfigDropdown( {
 
 			{ copyResult && (
 				<Notice
-					className="aether-copy-config-dropdown__notice"
+					className="altolith-copy-config-dropdown__notice"
 					status={ copyResult.type }
 					isDismissible={ false }
 					style={ noticeStyle }

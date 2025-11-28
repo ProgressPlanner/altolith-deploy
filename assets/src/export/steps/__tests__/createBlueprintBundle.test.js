@@ -88,7 +88,7 @@ describe( 'createBlueprintBundle step', () => {
 
 		// Extract the step definition from the mock call
 		const registerCall = mockAddAction.mock.calls.find(
-			( call ) => call[ 0 ] === 'aether.export.register_steps'
+			( call ) => call[ 0 ] === 'altolith.export.register_steps'
 		);
 		expect( registerCall ).toBeDefined();
 
@@ -590,7 +590,7 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( context );
 
 			expect( mockApplyFilters ).toHaveBeenCalledWith(
-				'aether.export.step.createBlueprintBundle.blueprintData',
+				'altolith.export.step.createBlueprintBundle.blueprintData',
 				mockBlueprintData,
 				context
 			);

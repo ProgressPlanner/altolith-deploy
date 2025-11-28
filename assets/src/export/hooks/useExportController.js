@@ -10,14 +10,14 @@ import { useExportAPI } from './useExportAPI';
 import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
 import { useBlueprintGenerator } from './useBlueprintGenerator';
-import apiFetch from '@aether/utils/api';
-import { executeThreadedWorkflow } from '@aether/export/executor/ThreadOrchestrator';
-import { getActiveSteps, getRegisteredSteps } from '@aether/export/steps';
+import apiFetch from '@altolith/utils/api';
+import { executeThreadedWorkflow } from '@altolith/export/executor/ThreadOrchestrator';
+import { getActiveSteps, getRegisteredSteps } from '@altolith/export/steps';
 import {
 	prepareExportConfiguration,
 	buildProviderInstancesByType,
 	buildWorkflowContext,
-} from '@aether/export/utils/exportConfiguration';
+} from '@altolith/export/utils/exportConfiguration';
 
 export function useExportController( exportState ) {
 	const {
@@ -129,7 +129,7 @@ export function useExportController( exportState ) {
 
 			// Fetch settings to get storage provider ID before starting
 			const settingsResponse = await apiFetch( {
-				path: '/aether/site-exporter/settings',
+				path: '/altolith/deploy/settings',
 			} );
 
 			// Use pure function to extract configuration

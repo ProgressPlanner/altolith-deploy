@@ -19,7 +19,7 @@ jest.mock( '@wordpress/components', () => ( {
 } ) );
 
 // Mock styles
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	colors: { textSecondary: '#666' },
 	spacing: { md: '12px', xl: '24px' },
 	fontSize: { base: '14px' },
@@ -42,7 +42,7 @@ describe( 'LoadingSpinner', () => {
 			const { container } = render( <LoadingSpinner /> );
 
 			expect(
-				container.querySelector( '.aether-loading-spinner' )
+				container.querySelector( '.altolith-loading-spinner' )
 			).toBeInTheDocument();
 		} );
 
@@ -51,7 +51,7 @@ describe( 'LoadingSpinner', () => {
 
 			const spinner = screen.getByTestId( 'spinner' );
 			expect( spinner.className ).toContain(
-				'aether-loading-spinner__spinner'
+				'altolith-loading-spinner__spinner'
 			);
 		} );
 	} );
@@ -64,7 +64,7 @@ describe( 'LoadingSpinner', () => {
 			const { container } = render( <LoadingSpinner /> );
 
 			expect(
-				container.querySelector( '.aether-loading-spinner__message' )
+				container.querySelector( '.altolith-loading-spinner__message' )
 			).not.toBeInTheDocument();
 		} );
 
@@ -80,7 +80,7 @@ describe( 'LoadingSpinner', () => {
 			);
 
 			const messageElement = container.querySelector(
-				'.aether-loading-spinner__message'
+				'.altolith-loading-spinner__message'
 			);
 			expect( messageElement ).toBeInTheDocument();
 		} );
@@ -89,7 +89,7 @@ describe( 'LoadingSpinner', () => {
 			const { container } = render( <LoadingSpinner message="" /> );
 
 			expect(
-				container.querySelector( '.aether-loading-spinner__message' )
+				container.querySelector( '.altolith-loading-spinner__message' )
 			).not.toBeInTheDocument();
 		} );
 	} );
@@ -104,7 +104,7 @@ describe( 'LoadingSpinner', () => {
 			);
 
 			const spinnerContainer = container.querySelector(
-				'.aether-loading-spinner'
+				'.altolith-loading-spinner'
 			);
 			expect( spinnerContainer.className ).toContain(
 				'my-custom-spinner'
@@ -115,7 +115,7 @@ describe( 'LoadingSpinner', () => {
 			const { container } = render( <LoadingSpinner className="" /> );
 
 			const spinnerContainer = container.querySelector(
-				'.aether-loading-spinner'
+				'.altolith-loading-spinner'
 			);
 			expect( spinnerContainer ).toBeInTheDocument();
 		} );
@@ -124,7 +124,7 @@ describe( 'LoadingSpinner', () => {
 			const { container } = render( <LoadingSpinner /> );
 
 			const spinnerContainer = container.querySelector(
-				'.aether-loading-spinner'
+				'.altolith-loading-spinner'
 			);
 			// Should not have trailing spaces
 			expect( spinnerContainer.className.trim() ).toBe(
@@ -144,7 +144,7 @@ describe( 'LoadingSpinner', () => {
 			);
 
 			const spinnerContainer = container.querySelector(
-				'.aether-loading-spinner'
+				'.altolith-loading-spinner'
 			);
 			expect( spinnerContainer ).toHaveStyle( {
 				backgroundColor: 'red',
@@ -158,7 +158,7 @@ describe( 'LoadingSpinner', () => {
 			);
 
 			const spinnerContainer = container.querySelector(
-				'.aether-loading-spinner'
+				'.altolith-loading-spinner'
 			);
 			// Should have both custom and default styles
 			expect( spinnerContainer ).toHaveStyle( { padding: '50px' } );
@@ -171,7 +171,7 @@ describe( 'LoadingSpinner', () => {
 			);
 
 			const spinnerContainer = container.querySelector(
-				'.aether-loading-spinner'
+				'.altolith-loading-spinner'
 			);
 			expect( spinnerContainer ).toHaveStyle( { display: 'block' } );
 		} );
@@ -187,7 +187,7 @@ describe( 'LoadingSpinner', () => {
 			);
 
 			expect(
-				container.querySelector( '.aether-loading-spinner__message' )
+				container.querySelector( '.altolith-loading-spinner__message' )
 			).not.toBeInTheDocument();
 		} );
 
@@ -198,7 +198,7 @@ describe( 'LoadingSpinner', () => {
 			);
 
 			const messageEl = container.querySelector(
-				'.aether-loading-spinner__message'
+				'.altolith-loading-spinner__message'
 			);
 			expect( messageEl ).toBeInTheDocument();
 			expect( messageEl.textContent ).toContain( 'Loading' );
@@ -208,7 +208,7 @@ describe( 'LoadingSpinner', () => {
 			const { container } = render( <LoadingSpinner style={ {} } /> );
 
 			const spinnerContainer = container.querySelector(
-				'.aether-loading-spinner'
+				'.altolith-loading-spinner'
 			);
 			expect( spinnerContainer ).toBeInTheDocument();
 			// Should still have default styles
@@ -219,7 +219,7 @@ describe( 'LoadingSpinner', () => {
 			const { container } = render( <LoadingSpinner /> );
 
 			expect(
-				container.querySelector( '.aether-loading-spinner' )
+				container.querySelector( '.altolith-loading-spinner' )
 			).toBeInTheDocument();
 			expect( screen.getByTestId( 'spinner' ) ).toBeInTheDocument();
 		} );

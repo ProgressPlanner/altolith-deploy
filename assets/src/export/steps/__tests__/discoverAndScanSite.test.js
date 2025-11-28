@@ -31,17 +31,17 @@ jest.mock( '@wordpress/i18n', () => ( {
 } ) );
 
 // Mock asset extractor
-jest.mock( '@aether/export/utils/assetExtractor', () => ( {
+jest.mock( '@altolith/export/utils/assetExtractor', () => ( {
 	extractAssetsFromHtml: jest.fn(),
 } ) );
 
 // Mock link extractor (async)
-jest.mock( '@aether/export/utils/linkExtractor', () => ( {
+jest.mock( '@altolith/export/utils/linkExtractor', () => ( {
 	extractInternalLinks: jest.fn( async () => [] ),
 } ) );
 
 // Mock URL utils
-jest.mock( '@aether/export/utils/urlUtils', () => ( {
+jest.mock( '@altolith/export/utils/urlUtils', () => ( {
 	normalize: jest.fn( ( url ) => {
 		try {
 			const urlObj = new URL( url );
@@ -58,7 +58,7 @@ jest.mock( '@aether/export/utils/urlUtils', () => ( {
 } ) );
 
 // Import after mocks
-import { extractAssetsFromHtml } from '@aether/export/utils/assetExtractor';
+import { extractAssetsFromHtml } from '@altolith/export/utils/assetExtractor';
 
 // We need to access the handler from the module
 let stepHandler;
@@ -67,7 +67,7 @@ let stepDefinition;
 // Capture the step definition when addAction is called
 const { addAction } = require( '@wordpress/hooks' );
 addAction.mockImplementation( ( hookName, namespace, callback ) => {
-	if ( hookName === 'aether.export.register_steps' ) {
+	if ( hookName === 'altolith.export.register_steps' ) {
 		const mockRegistry = {
 			register: ( step ) => {
 				stepDefinition = step;

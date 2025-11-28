@@ -233,7 +233,7 @@ export function validateBlueprintSteps( steps, expectedStepConfig ) {
 			}
 			// Check that built-in plugins are NOT included
 			if (
-				[ 'aether', 'sqlite-database-integration' ].includes(
+				[ 'altolith', 'sqlite-database-integration' ].includes(
 					step.pluginData.slug
 				)
 			) {

@@ -6,7 +6,7 @@
  *
  * Supports adapter pattern for provider-specific upload implementations.
  * Each provider instance can inject its own upload adapter via the
- * 'aether.storage.service.create' filter, achieving true provider instance isolation.
+ * 'altolith.storage.service.create' filter, achieving true provider instance isolation.
  *
  */
 

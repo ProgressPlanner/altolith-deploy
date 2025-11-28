@@ -8,9 +8,9 @@
  */
 
 import { __ } from '@wordpress/i18n';
-import { spacing, borderRadius } from '@aether/utils/styles';
-import { StepNode } from '@aether/components/StepNode';
-import { StepConnector } from '@aether/components/StepConnector';
+import { spacing, borderRadius } from '@altolith/utils/styles';
+import { StepNode } from '@altolith/components/StepNode';
+import { StepConnector } from '@altolith/components/StepConnector';
 
 const containerStyle = {
 	display: 'flex',
@@ -36,10 +36,10 @@ export function VerticalStepper( {
 } ) {
 	return (
 		<div
-			className="aether-vertical-stepper"
+			className="altolith-vertical-stepper"
 			style={ containerStyle }
 			role="list"
-			aria-label={ __( 'Export progress', 'aether-site-exporter' ) }
+			aria-label={ __( 'Export progress', 'altolith-deploy' ) }
 		>
 			{ steps.map( ( step, index ) => {
 				const isLastStep = index === steps.length - 1;

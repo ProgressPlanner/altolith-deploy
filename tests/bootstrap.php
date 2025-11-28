@@ -4,7 +4,7 @@
  *
  * Loads the WordPress testing environment and initializes the plugin for testing.
  *
- * @package Aether\SiteExporter
+ * @package Altolith\Deploy
  */
 
 // Require Composer autoloader.
@@ -40,7 +40,7 @@ require_once WP_TESTS_DIR . '/includes/functions.php';
  * Manually load the plugin being tested.
  */
 function _manually_load_plugin() {
-	require dirname( __DIR__ ) . '/aether-site-exporter.php';
+	require dirname( __DIR__ ) . '/altolith-deploy.php';
 }
 
 tests_add_filter( 'muplugins_loaded', '_manually_load_plugin' );

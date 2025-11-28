@@ -10,13 +10,13 @@
  * - Must test handling of corrupted/invalid data
  * - Must test default values
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Core;
+namespace Altolith\Deploy\Tests\Unit\Core;
 
-use Aether\SiteExporter\Core\SettingsRepository;
-use Aether\SiteExporter\Tests\Helpers\TestCase;
+use Altolith\Deploy\Core\SettingsRepository;
+use Altolith\Deploy\Tests\Helpers\TestCase;
 
 class SettingsRepositoryTest extends TestCase
 {
@@ -37,7 +37,7 @@ class SettingsRepositoryTest extends TestCase
 		$this->repository = new SettingsRepository();
 
 		// Clear any existing settings
-		delete_option( 'aether_site_exporter_settings' );
+		delete_option( 'altolith_deploy_settings' );
 	}
 
 	/**
@@ -45,7 +45,7 @@ class SettingsRepositoryTest extends TestCase
 	 */
 	public function tearDown(): void
 	{
-		delete_option( 'aether_site_exporter_settings' );
+		delete_option( 'altolith_deploy_settings' );
 
 		parent::tearDown();
 	}
@@ -76,7 +76,7 @@ class SettingsRepositoryTest extends TestCase
 			],
 		];
 
-		update_option( 'aether_site_exporter_settings', $settings );
+		update_option( 'altolith_deploy_settings', $settings );
 
 		$result = $this->repository->getAll();
 
@@ -89,7 +89,7 @@ class SettingsRepositoryTest extends TestCase
 	public function test_getAll_handles_corrupted_settings(): void
 	{
 		// Store non-array value (corrupted data)
-		update_option( 'aether_site_exporter_settings', 'not-an-array' );
+		update_option( 'altolith_deploy_settings', 'not-an-array' );
 
 		$result = $this->repository->getAll();
 
@@ -103,7 +103,7 @@ class SettingsRepositoryTest extends TestCase
 	 */
 	public function test_getAll_handles_null_value(): void
 	{
-		update_option( 'aether_site_exporter_settings', null );
+		update_option( 'altolith_deploy_settings', null );
 
 		$result = $this->repository->getAll();
 
@@ -116,7 +116,7 @@ class SettingsRepositoryTest extends TestCase
 	 */
 	public function test_getAll_handles_boolean_value(): void
 	{
-		update_option( 'aether_site_exporter_settings', false );
+		update_option( 'altolith_deploy_settings', false );
 
 		$result = $this->repository->getAll();
 
@@ -137,7 +137,7 @@ class SettingsRepositoryTest extends TestCase
 			],
 		];
 
-		update_option( 'aether_site_exporter_settings', $settings );
+		update_option( 'altolith_deploy_settings', $settings );
 
 		$result = $this->repository->getAll();
 
@@ -160,7 +160,7 @@ class SettingsRepositoryTest extends TestCase
 			'array_value' => [ 1, 2, 3 ],
 		];
 
-		update_option( 'aether_site_exporter_settings', $settings );
+		update_option( 'altolith_deploy_settings', $settings );
 
 		$result = $this->repository->getAll();
 
@@ -179,14 +179,14 @@ class SettingsRepositoryTest extends TestCase
 	public function test_getAll_returns_fresh_data(): void
 	{
 		$settings1 = [ 'version' => 1 ];
-		update_option( 'aether_site_exporter_settings', $settings1 );
+		update_option( 'altolith_deploy_settings', $settings1 );
 
 		$result1 = $this->repository->getAll();
 		$this->assertSame( 1, $result1['version'] );
 
 		// Update settings
 		$settings2 = [ 'version' => 2 ];
-		update_option( 'aether_site_exporter_settings', $settings2 );
+		update_option( 'altolith_deploy_settings', $settings2 );
 
 		// Should return updated data (no caching)
 		$result2 = $this->repository->getAll();
@@ -204,7 +204,7 @@ class SettingsRepositoryTest extends TestCase
 			$settings[ "key_$i" ] = "value_$i";
 		}
 
-		update_option( 'aether_site_exporter_settings', $settings );
+		update_option( 'altolith_deploy_settings', $settings );
 
 		$result = $this->repository->getAll();
 
@@ -225,7 +225,7 @@ class SettingsRepositoryTest extends TestCase
 			'special_chars' => '<>&"\'',
 		];
 
-		update_option( 'aether_site_exporter_settings', $settings );
+		update_option( 'altolith_deploy_settings', $settings );
 
 		$result = $this->repository->getAll();
 

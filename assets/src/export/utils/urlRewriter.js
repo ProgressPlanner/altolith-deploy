@@ -200,7 +200,7 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 		}
 
 		return applyFilters(
-			'aether.url.rewrite',
+			'altolith.url.rewrite',
 			rewrittenUrl,
 			url,
 			contextUrl,
@@ -254,7 +254,7 @@ export function createUrlRewriter( siteUrl, staticUrl = null, urlMap = {} ) {
 		result = restoreScriptContent( result, placeholders );
 
 		return applyFilters(
-			'aether.url.rewrite_html',
+			'altolith.url.rewrite_html',
 			result,
 			contextUrl,
 			normalizedSiteUrl,

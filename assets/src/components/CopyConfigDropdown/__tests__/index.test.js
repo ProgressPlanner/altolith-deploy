@@ -55,18 +55,18 @@ jest.mock( '@wordpress/components', () => ( {
 
 // Mock apiFetch.
 const mockApiFetch = jest.fn();
-jest.mock( '@aether/utils/api', () => ( {
+jest.mock( '@altolith/utils/api', () => ( {
 	__esModule: true,
 	default: ( ...args ) => mockApiFetch( ...args ),
 } ) );
 
 // Mock providerFamily utility.
-jest.mock( '@aether/providers/utils/providerFamily', () => ( {
+jest.mock( '@altolith/providers/utils/providerFamily', () => ( {
 	getCompatibleInstances: jest.fn(),
 } ) );
 
 // Mock styles.
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	colors: {
 		text: '#333',
 		borderLight: '#e0e0e0',
@@ -78,7 +78,7 @@ jest.mock( '@aether/utils/styles', () => ( {
 } ) );
 
 import CopyConfigDropdown from '../index';
-import { getCompatibleInstances } from '@aether/providers/utils/providerFamily';
+import { getCompatibleInstances } from '@altolith/providers/utils/providerFamily';
 
 describe( 'CopyConfigDropdown', () => {
 	const mockInstances = [
@@ -486,7 +486,7 @@ describe( 'CopyConfigDropdown', () => {
 			await waitFor( () => {
 				expect( mockApiFetch ).toHaveBeenCalledWith(
 					expect.objectContaining( {
-						path: '/aether/site-exporter/providers/cloudflare-r2-static-site:uuid-current/copy-from/cloudflare-r2-static-site:uuid-1',
+						path: '/altolith/deploy/providers/cloudflare-r2-static-site:uuid-current/copy-from/cloudflare-r2-static-site:uuid-1',
 					} )
 				);
 			} );

@@ -5,14 +5,14 @@
  * Tests the complete provider configuration workflow via REST API.
  * Validates encryption, persistence, and provider integration.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Integration\REST;
+namespace Altolith\Deploy\Tests\Integration\REST;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\REST\ProviderConfigController;
-use Aether\SiteExporter\Utilities\CredentialEncryption;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\REST\ProviderConfigController;
+use Altolith\Deploy\Utilities\CredentialEncryption;
 use WP_REST_Request;
 
 /**
@@ -59,7 +59,7 @@ class ProviderConfigControllerTest extends TestCase {
 	 */
 	public function tear_down() {
 		// Clean up settings.
-		delete_option( 'aether_site_exporter_settings' );
+		delete_option( 'altolith_deploy_settings' );
 
 		parent::tear_down();
 	}
@@ -79,14 +79,14 @@ class ProviderConfigControllerTest extends TestCase {
 		];
 
 		// Save config.
-		$save_request = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$save_request = new WP_REST_Request( 'POST', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$save_request->set_param( 'config', $config );
 
 		$save_response = rest_do_request( $save_request );
 		$this->assertEquals( 200, $save_response->get_status() );
 
 		// Retrieve config.
-		$get_request  = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$get_request  = new WP_REST_Request( 'GET', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$get_response = rest_do_request( $get_request );
 
 		$this->assertEquals( 200, $get_response->get_status() );
@@ -111,14 +111,14 @@ class ProviderConfigControllerTest extends TestCase {
 		];
 
 		// Save config.
-		$request = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$request = new WP_REST_Request( 'POST', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$request->set_param( 'config', $config );
 
 		$response = rest_do_request( $request );
 		$this->assertEquals( 200, $response->get_status() );
 
 		// Check database - credentials should be encrypted.
-		$settings      = get_option( 'aether_site_exporter_settings', [] );
+		$settings      = get_option( 'altolith_deploy_settings', [] );
 		$stored_config = $settings['providers'][ $instance_id ] ?? [];
 
 		$this->assertArrayHasKey( 'api_key', $stored_config, 'Config should have api_key' );
@@ -144,12 +144,12 @@ class ProviderConfigControllerTest extends TestCase {
 		];
 
 		// Save config.
-		$save_request = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$save_request = new WP_REST_Request( 'POST', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$save_request->set_param( 'config', $config );
 		rest_do_request( $save_request );
 
 		// Retrieve config.
-		$get_request  = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$get_request  = new WP_REST_Request( 'GET', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$get_response = rest_do_request( $get_request );
 
 		$response_data = $get_response->get_data();
@@ -172,7 +172,7 @@ class ProviderConfigControllerTest extends TestCase {
 			'custom_field'     => 'preserved',
 		];
 
-		$save_request = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$save_request = new WP_REST_Request( 'POST', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$save_request->set_param( 'config', $initial_config );
 		rest_do_request( $save_request );
 
@@ -183,12 +183,12 @@ class ProviderConfigControllerTest extends TestCase {
 			'custom_field'     => 'preserved',
 		];
 
-		$update_request = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$update_request = new WP_REST_Request( 'POST', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$update_request->set_param( 'config', $update_config );
 		rest_do_request( $update_request );
 
 		// Retrieve and verify.
-		$get_request  = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$get_request  = new WP_REST_Request( 'GET', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$get_response = rest_do_request( $get_request );
 		$response_data = $get_response->get_data();
 		$retrieved     = $response_data['config'];
@@ -212,18 +212,18 @@ class ProviderConfigControllerTest extends TestCase {
 		];
 
 		// Save config.
-		$save_request = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$save_request = new WP_REST_Request( 'POST', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$save_request->set_param( 'config', $config );
 		rest_do_request( $save_request );
 
 		// Delete config.
-		$delete_request  = new WP_REST_Request( 'DELETE', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$delete_request  = new WP_REST_Request( 'DELETE', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$delete_response = rest_do_request( $delete_request );
 
 		$this->assertEquals( 200, $delete_response->get_status() );
 
 		// Verify deletion.
-		$settings = get_option( 'aether_site_exporter_settings', [] );
+		$settings = get_option( 'altolith_deploy_settings', [] );
 		$this->assertArrayNotHasKey( $instance_id, $settings['providers'] ?? [] );
 	}
 
@@ -246,17 +246,17 @@ class ProviderConfigControllerTest extends TestCase {
 		];
 
 		// Save both configs.
-		$req1 = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance1 . '/config' );
+		$req1 = new WP_REST_Request( 'POST', '/altolith/deploy/providers/' . $instance1 . '/config' );
 		$req1->set_param( 'config', $config1 );
 		rest_do_request( $req1 );
 
-		$req2 = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance2 . '/config' );
+		$req2 = new WP_REST_Request( 'POST', '/altolith/deploy/providers/' . $instance2 . '/config' );
 		$req2->set_param( 'config', $config2 );
 		rest_do_request( $req2 );
 
 		// Retrieve both.
-		$get1 = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance1 . '/config' );
-		$get2 = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance2 . '/config' );
+		$get1 = new WP_REST_Request( 'GET', '/altolith/deploy/providers/' . $instance1 . '/config' );
+		$get2 = new WP_REST_Request( 'GET', '/altolith/deploy/providers/' . $instance2 . '/config' );
 
 		$response1 = rest_do_request( $get1 );
 		$response2 = rest_do_request( $get2 );
@@ -276,14 +276,14 @@ class ProviderConfigControllerTest extends TestCase {
 		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
 
 		// Status before config.
-		$status_request = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/status' );
+		$status_request = new WP_REST_Request( 'GET', '/altolith/deploy/providers/' . $instance_id . '/status' );
 		$status_response = rest_do_request( $status_request );
 
 		$status = $status_response->get_data();
 		$this->assertFalse( $status['configured'] ?? true );
 
 		// Save config.
-		$config_request = new WP_REST_Request( 'POST', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$config_request = new WP_REST_Request( 'POST', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$config_request->set_param(
 			'config',
 			[
@@ -309,7 +309,7 @@ class ProviderConfigControllerTest extends TestCase {
 	public function test_invalid_instance_id_rejected() {
 		$invalid_id = 'invalid-format-no-colon';
 
-		$request = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $invalid_id . '/config' );
+		$request = new WP_REST_Request( 'GET', '/altolith/deploy/providers/' . $invalid_id . '/config' );
 		$response = rest_do_request( $request );
 
 		// Should return error (400 for invalid format).
@@ -329,7 +329,7 @@ class ProviderConfigControllerTest extends TestCase {
 		wp_set_current_user( $subscriber_id );
 
 		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
-		$request     = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$request     = new WP_REST_Request( 'GET', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$response    = rest_do_request( $request );
 
 		$this->assertEquals( 403, $response->get_status() );
@@ -342,7 +342,7 @@ class ProviderConfigControllerTest extends TestCase {
 		wp_set_current_user( 0 );
 
 		$instance_id = 'local-filesystem-static-site:a3f2c1b0-4e5d-4789-abcd-ef1234567890';
-		$request     = new WP_REST_Request( 'GET', '/aether/site-exporter/providers/' . $instance_id . '/config' );
+		$request     = new WP_REST_Request( 'GET', '/altolith/deploy/providers/' . $instance_id . '/config' );
 		$response    = rest_do_request( $request );
 
 		// WordPress REST API returns 401 for unauthenticated requests.

@@ -5,13 +5,13 @@
  * Tests for path validation and security functions.
  * These tests are critical for preventing path traversal attacks.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Utilities;
+namespace Altolith\Deploy\Tests\Unit\Utilities;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Utilities\PathValidator;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Utilities\PathValidator;
 
 /**
  * PathValidator test case.
@@ -31,7 +31,7 @@ class PathValidatorTest extends TestCase {
 		parent::set_up();
 
 		// Create a test base directory.
-		$this->test_base_dir = sys_get_temp_dir() . '/aether-path-tests';
+		$this->test_base_dir = sys_get_temp_dir() . '/altolith-path-tests';
 		if ( ! file_exists( $this->test_base_dir ) ) {
 			mkdir( $this->test_base_dir, 0777, true );
 		}

@@ -89,7 +89,7 @@ jest.mock(
 		)
 );
 
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	colors: { success: 'green', error: 'red', textMuted: '#666' },
 	spacing: { xs: '4px', sm: '8px', md: '12px', lg: '16px' },
 	fontSize: { sm: '12px' },

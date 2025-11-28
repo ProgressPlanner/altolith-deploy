@@ -46,7 +46,7 @@ const mockSteps = [
 jest.mock( '@wordpress/hooks', () => ( {
 	doAction: jest.fn( ( hookName, registry ) => {
 		// When the registration hook is called, populate the registry
-		if ( hookName === 'aether.export.register_steps' && registry ) {
+		if ( hookName === 'altolith.export.register_steps' && registry ) {
 			mockSteps.forEach( ( step ) => {
 				try {
 					registry.register( step );
@@ -104,7 +104,7 @@ describe( 'Steps Index', () => {
 			getRegisteredSteps();
 
 			expect( doAction ).toHaveBeenCalledWith(
-				'aether.export.register_steps',
+				'altolith.export.register_steps',
 				expect.any( Object )
 			);
 		} );

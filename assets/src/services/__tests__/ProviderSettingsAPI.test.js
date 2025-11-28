@@ -147,7 +147,7 @@ describe( 'ProviderSettingsAPI', () => {
 				const result = await api.fetchAll();
 
 				expect( mockApiFetch ).toHaveBeenCalledWith( {
-					path: '/aether/site-exporter/settings?key=providers',
+					path: '/altolith/deploy/settings?key=providers',
 				} );
 				expect( result ).toEqual( mockProviders );
 			} );
@@ -186,7 +186,7 @@ describe( 'ProviderSettingsAPI', () => {
 				const result = await api.save( providers );
 
 				expect( mockApiFetch ).toHaveBeenCalledWith( {
-					path: '/aether/site-exporter/settings',
+					path: '/altolith/deploy/settings',
 					method: 'POST',
 					data: {
 						key: 'providers',
@@ -277,7 +277,7 @@ describe( 'ProviderSettingsAPI', () => {
 				);
 
 				expect( mockApiFetch ).toHaveBeenCalledWith( {
-					path: '/aether/site-exporter/providers/local-filesystem/instances',
+					path: '/altolith/deploy/providers/local-filesystem/instances',
 					method: 'POST',
 					data: {
 						instance_id: 'local-filesystem:123',
@@ -341,7 +341,7 @@ describe( 'ProviderSettingsAPI', () => {
 				const result = await api.deleteInstance( 'provider-1' );
 
 				expect( mockApiFetch ).toHaveBeenCalledWith( {
-					path: '/aether/site-exporter/providers/provider-1/config',
+					path: '/altolith/deploy/providers/provider-1/config',
 					method: 'DELETE',
 				} );
 				expect( result ).toEqual( updatedProviders );

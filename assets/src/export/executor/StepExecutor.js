@@ -65,7 +65,7 @@ export async function executeSteps( steps, context, options = {} ) {
 
 	// Fire workflow start action
 	doAction(
-		'aether.export.workflow.before',
+		'altolith.export.workflow.before',
 		executionContext,
 		steps,
 		executionContext.currentProviderInstance || null
@@ -97,7 +97,7 @@ export async function executeSteps( steps, context, options = {} ) {
 
 		// Fire workflow complete action
 		doAction(
-			'aether.export.workflow.after',
+			'altolith.export.workflow.after',
 			executionContext.state,
 			executionContext,
 			executionContext.currentProviderInstance || null
@@ -109,7 +109,7 @@ export async function executeSteps( steps, context, options = {} ) {
 		return executionContext.state;
 	} catch ( error ) {
 		doAction(
-			'aether.export.workflow.error',
+			'altolith.export.workflow.error',
 			error,
 			executionContext,
 			executionContext.currentProviderInstance || null
@@ -160,7 +160,7 @@ async function executeStepWhenReady(
 
 	// Check skip condition
 	const shouldSkip = applyFilters(
-		`aether.export.step.${ step.id }.skip`,
+		`altolith.export.step.${ step.id }.skip`,
 		step.skip ? step.skip( executionContext ) : false,
 		executionContext,
 		executionContext.currentProviderInstance || null
@@ -170,7 +170,7 @@ async function executeStepWhenReady(
 		executionContext.skippedSteps.push( step.id );
 		onStepSkipped( step.id );
 		doAction(
-			`aether.export.step.${ step.id }.skipped`,
+			`altolith.export.step.${ step.id }.skipped`,
 			executionContext,
 			executionContext.currentProviderInstance || null
 		);
@@ -219,7 +219,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 	// Fire before hook
 	doAction(
-		`aether.export.step.${ stepId }.before`,
+		`altolith.export.step.${ stepId }.before`,
 		executionContext,
 		executionContext.currentProviderInstance || null
 	);
@@ -250,7 +250,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 				onRetry: ( error, attempt, delay ) => {
 					// Fire retry action
 					doAction(
-						`aether.export.step.${ stepId }.retry`,
+						`altolith.export.step.${ stepId }.retry`,
 						error,
 						attempt,
 						delay,
@@ -266,7 +266,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 		// Apply result filter
 		const filteredResult = applyFilters(
-			`aether.export.step.${ stepId }.result`,
+			`altolith.export.step.${ stepId }.result`,
 			result || {},
 			executionContext,
 			executionContext.currentProviderInstance || null
@@ -281,7 +281,7 @@ async function executeStep( stepId, allSteps, executionContext, options ) {
 
 		// Fire after hook
 		doAction(
-			`aether.export.step.${ stepId }.after`,
+			`altolith.export.step.${ stepId }.after`,
 			filteredResult,
 			executionContext,
 			executionContext.currentProviderInstance || null

@@ -1,6 +1,6 @@
 # Admin Settings
 
-WordPress admin settings page for the Aether plugin.
+WordPress admin settings page for the Altolith plugin.
 
 ## Overview
 
@@ -12,7 +12,7 @@ The admin settings page allows users to configure cloud providers, manage deploy
 
 **PHP Integration:**
 - Enqueued by `SettingsPage.php`
-- Mounted at `admin.php?page=aether-settings`
+- Mounted at `admin.php?page=altolith-settings`
 - Requires `manage_options` capability
 
 ## Directory Structure
@@ -211,7 +211,7 @@ const sectionStyle = {
     padding: spacing.lg,
 };
 
-<div className="aether-admin-settings" style={ sectionStyle }>
+<div className="altolith-admin-settings" style={ sectionStyle }>
     {/* Content */}
 </div>
 ```
@@ -230,10 +230,10 @@ All user-facing text is translatable:
 ```javascript
 import { __, sprintf } from '@wordpress/i18n';
 
-<h2>{__('Provider Settings', 'aether')}</h2>
+<h2>{__('Provider Settings', 'altolith')}</h2>
 <p>
     {sprintf(
-        __('Configure your %s provider', 'aether'),
+        __('Configure your %s provider', 'altolith'),
         provider.getName()
     )}
 </p>
@@ -247,7 +247,7 @@ import { __, sprintf } from '@wordpress/i18n';
 if (error) {
     return (
         <Notice status="error" isDismissible={false}>
-            {__('Failed to load settings. Please try again.', 'aether')}
+            {__('Failed to load settings. Please try again.', 'altolith')}
         </Notice>
     );
 }
@@ -258,14 +258,14 @@ if (error) {
 ```javascript
 try {
     await saveConfig(config);
-    showSuccessNotice(__('Settings saved successfully', 'aether'));
+    showSuccessNotice(__('Settings saved successfully', 'altolith'));
 } catch (error) {
     if (error.code === 'invalid_credentials') {
-        showErrorNotice(__('Invalid credentials. Please check your API key.', 'aether'));
+        showErrorNotice(__('Invalid credentials. Please check your API key.', 'altolith'));
     } else if (error.code === 'network_error') {
-        showErrorNotice(__('Network error. Please check your connection.', 'aether'));
+        showErrorNotice(__('Network error. Please check your connection.', 'altolith'));
     } else {
-        showErrorNotice(__('An error occurred. Please try again.', 'aether'));
+        showErrorNotice(__('An error occurred. Please try again.', 'altolith'));
     }
 }
 ```
@@ -292,7 +292,7 @@ import apiFetch from '../utils/api';
 
 // Nonce automatically included
 await apiFetch({
-    path: '/wp-json/aether/site-exporter/providers/{providerId}/config',
+    path: '/wp-json/altolith/deploy/providers/{providerId}/config',
     method: 'POST',
     data: config,
 });
@@ -316,7 +316,7 @@ Sensitive fields encrypted server-side:
 
 ### Manual Testing
 
-1. Navigate to Settings > Aether
+1. Navigate to Settings > Altolith
 2. Add new provider
 3. Fill in configuration fields
 4. Test connection

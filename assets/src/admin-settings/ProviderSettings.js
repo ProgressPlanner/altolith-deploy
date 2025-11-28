@@ -10,15 +10,20 @@ import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
 import { Button, ButtonGroup } from '@wordpress/components';
 import apiFetch from '@wordpress/api-fetch';
-import ProviderInstancesContainer from '@aether/components/ProviderInstancesContainer';
-import AddProviderInstanceModal from '@aether/components/AddProviderInstanceModal';
-import ExportConfigModal from '@aether/components/ExportConfigModal';
-import ImportConfigModal from '@aether/components/ImportConfigModal';
-import LoadingSpinner from '@aether/components/LoadingSpinner';
-import { colors, spacing, fontSize, commonStyles } from '@aether/utils/styles';
-import { useProviderSettings } from '@aether/hooks/useProviderSettings';
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
-import { getDeploymentTypeLabel } from '@aether/utils/deploymentTypes';
+import ProviderInstancesContainer from '@altolith/components/ProviderInstancesContainer';
+import AddProviderInstanceModal from '@altolith/components/AddProviderInstanceModal';
+import ExportConfigModal from '@altolith/components/ExportConfigModal';
+import ImportConfigModal from '@altolith/components/ImportConfigModal';
+import LoadingSpinner from '@altolith/components/LoadingSpinner';
+import {
+	colors,
+	spacing,
+	fontSize,
+	commonStyles,
+} from '@altolith/utils/styles';
+import { useProviderSettings } from '@altolith/hooks/useProviderSettings';
+import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
+import { getDeploymentTypeLabel } from '@altolith/utils/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const emptyStateStyle = {
@@ -126,7 +131,7 @@ export default function ProviderSettings( {
 		// If parent hasn't loaded them yet, trigger initial load
 		if ( onConfigsUpdate && Object.keys( configs ).length === 0 ) {
 			apiFetch( {
-				path: '/aether/site-exporter/settings?key=providers',
+				path: '/altolith/deploy/settings?key=providers',
 			} )
 				.then( ( configsResponse ) => {
 					if ( configsResponse.success && configsResponse.value ) {
@@ -361,7 +366,7 @@ export default function ProviderSettings( {
 			try {
 				// Save to API
 				const saveResponse = await apiFetch( {
-					path: '/aether/site-exporter/settings',
+					path: '/altolith/deploy/settings',
 					method: 'POST',
 					data: {
 						key: 'providers',
@@ -404,7 +409,7 @@ export default function ProviderSettings( {
 		async ( mergedConfigs ) => {
 			try {
 				const response = await apiFetch( {
-					path: '/aether/site-exporter/settings',
+					path: '/altolith/deploy/settings',
 					method: 'POST',
 					data: { key: 'providers', value: mergedConfigs },
 				} );
@@ -424,7 +429,7 @@ export default function ProviderSettings( {
 					onNotice(
 						__(
 							'Configuration imported successfully',
-							'aether-site-exporter'
+							'altolith-deploy'
 						),
 						'success'
 					);
@@ -439,7 +444,7 @@ export default function ProviderSettings( {
 
 	if ( providers.length === 0 ) {
 		return (
-			<div className="aether-provider-settings aether-provider-settings--loading">
+			<div className="altolith-provider-settings altolith-provider-settings--loading">
 				<LoadingSpinner />
 			</div>
 		);
@@ -466,34 +471,34 @@ export default function ProviderSettings( {
 	};
 
 	return (
-		<div className="aether-provider-settings">
+		<div className="altolith-provider-settings">
 			<div
-				className="aether-section-header aether-provider-settings__header"
+				className="altolith-section-header altolith-provider-settings__header"
 				style={ sectionHeaderStyle }
 			>
-				<div className="aether-section-header__content">
+				<div className="altolith-section-header__content">
 					<h2
-						className="aether-section-header__title"
+						className="altolith-section-header__title"
 						style={ headerTitleStyle }
 					>
-						{ __( 'Provider Instances', 'aether-site-exporter' ) }
+						{ __( 'Provider Instances', 'altolith-deploy' ) }
 					</h2>
 					<p
-						className="aether-section-header__description"
+						className="altolith-section-header__description"
 						style={ headerDescriptionStyle }
 					>
 						{ __(
 							'Create and manage multiple instances of each provider type. Each instance can have its own configuration and deployment settings.',
-							'aether-site-exporter'
+							'altolith-deploy'
 						) }
 					</p>
 				</div>
-				<div className="aether-section-header__actions">
+				<div className="altolith-section-header__actions">
 					<ButtonGroup>
 						{ availableDeploymentTypes.map( ( deploymentType ) => (
 							<Button
 								key={ deploymentType }
-								className="aether-provider-settings__add-button"
+								className="altolith-provider-settings__add-button"
 								variant="tertiary"
 								onClick={ () =>
 									setSelectedDeploymentType( deploymentType )
@@ -501,10 +506,7 @@ export default function ProviderSettings( {
 							>
 								{ sprintf(
 									/* translators: %s: deployment type label */
-									__(
-										'Add %s Provider',
-										'aether-site-exporter'
-									),
+									__( 'Add %s Provider', 'altolith-deploy' ),
 									getDeploymentTypeLabel( deploymentType )
 								) }
 							</Button>
@@ -512,19 +514,19 @@ export default function ProviderSettings( {
 					</ButtonGroup>
 					<ButtonGroup style={ { marginLeft: spacing.md } }>
 						<Button
-							className="aether-provider-settings__export-button"
+							className="altolith-provider-settings__export-button"
 							variant="tertiary"
 							onClick={ () => setIsExportModalOpen( true ) }
 							disabled={ Object.keys( configs ).length === 0 }
 						>
-							{ __( 'Export Config', 'aether-site-exporter' ) }
+							{ __( 'Export Config', 'altolith-deploy' ) }
 						</Button>
 						<Button
-							className="aether-provider-settings__import-button"
+							className="altolith-provider-settings__import-button"
 							variant="tertiary"
 							onClick={ () => setIsImportModalOpen( true ) }
 						>
-							{ __( 'Import Config', 'aether-site-exporter' ) }
+							{ __( 'Import Config', 'altolith-deploy' ) }
 						</Button>
 					</ButtonGroup>
 				</div>
@@ -541,12 +543,12 @@ export default function ProviderSettings( {
 				/>
 			) : (
 				<div
-					className="aether-provider-settings__empty-state"
+					className="altolith-provider-settings__empty-state"
 					style={ emptyStateStyle }
 				>
 					{ __(
 						'No provider instances configured. Use the buttons above to create one.',
-						'aether-site-exporter'
+						'altolith-deploy'
 					) }
 				</div>
 			) }

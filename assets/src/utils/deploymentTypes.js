@@ -3,7 +3,7 @@
  *
  * Provides filterable deployment types for the export system.
  * 3rd-party plugins can add custom deployment types via the
- * 'aether.deploymentTypes' filter.
+ * 'altolith.deploymentTypes' filter.
  *
  * @since 1.0.0
  */
@@ -17,12 +17,12 @@ import { applyFilters } from '@wordpress/hooks';
  * @return {Object} Deployment types keyed by type ID with label property.
  */
 export function getDeploymentTypes() {
-	return applyFilters( 'aether.deploymentTypes', {
+	return applyFilters( 'altolith.deploymentTypes', {
 		static_site: {
-			label: __( 'Static Site', 'aether-site-exporter' ),
+			label: __( 'Static Site', 'altolith-deploy' ),
 		},
 		blueprint_bundle: {
-			label: __( 'Blueprint Bundle', 'aether-site-exporter' ),
+			label: __( 'Blueprint Bundle', 'altolith-deploy' ),
 		},
 	} );
 }

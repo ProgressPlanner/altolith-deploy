@@ -7,10 +7,10 @@
 
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { useAPIData } from '@aether/hooks/useAPIData';
+import { useAPIData } from '@altolith/hooks/useAPIData';
 
 const PROVIDER_LABELS = {
-	'local-filesystem': __( 'Local Filesystem', 'aether-site-exporter' ),
+	'local-filesystem': __( 'Local Filesystem', 'altolith-deploy' ),
 };
 
 /**
@@ -21,7 +21,7 @@ const PROVIDER_LABELS = {
  */
 function getProviderLabel( providerId ) {
 	if ( ! providerId ) {
-		return __( 'Not configured', 'aether-site-exporter' );
+		return __( 'Not configured', 'altolith-deploy' );
 	}
 	return PROVIDER_LABELS[ providerId ] || providerId;
 }
@@ -33,7 +33,7 @@ function getProviderLabel( providerId ) {
  */
 export function useUsageSummary() {
 	const { data: settingsData, loading } = useAPIData( {
-		path: '/aether/site-exporter/settings',
+		path: '/altolith/deploy/settings',
 		transform: ( response ) => {
 			if ( ! response.success ) {
 				return null;
@@ -47,15 +47,15 @@ export function useUsageSummary() {
 		if ( ! settingsData ) {
 			return {
 				blueprint: {
-					label: __( 'Not configured', 'aether-site-exporter' ),
+					label: __( 'Not configured', 'altolith-deploy' ),
 					provider: null,
 				},
 				staticSite: {
-					label: __( 'Not configured', 'aether-site-exporter' ),
+					label: __( 'Not configured', 'altolith-deploy' ),
 					provider: null,
 				},
 				media: {
-					label: __( 'Not configured', 'aether-site-exporter' ),
+					label: __( 'Not configured', 'altolith-deploy' ),
 					provider: null,
 				},
 				staticEnabled: false, // No provider configured

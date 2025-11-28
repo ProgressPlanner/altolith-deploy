@@ -6,7 +6,12 @@
  */
 
 import { Spinner } from '@wordpress/components';
-import { colors, fontSize, spacing, borderRadius } from '@aether/utils/styles';
+import {
+	colors,
+	fontSize,
+	spacing,
+	borderRadius,
+} from '@altolith/utils/styles';
 
 /**
  * Get pill styles based on status

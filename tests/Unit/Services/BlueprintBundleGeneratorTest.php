@@ -12,13 +12,13 @@
  * - Must verify proper cleanup on failures
  * - Must fail if implementation allows ANY security bypass or file corruption
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Services;
+namespace Altolith\Deploy\Tests\Unit\Services;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Services\BlueprintBundleGenerator;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Services\BlueprintBundleGenerator;
 
 /**
  * Blueprint Bundle Generator test case.
@@ -48,7 +48,7 @@ class BlueprintBundleGeneratorTest extends TestCase {
 		$this->generator = new BlueprintBundleGenerator();
 
 		// Create test output directory within WordPress
-		$this->test_output_dir = WP_CONTENT_DIR . '/aether-test-blueprints-' . time();
+		$this->test_output_dir = WP_CONTENT_DIR . '/altolith-test-blueprints-' . time();
 		wp_mkdir_p( $this->test_output_dir );
 	}
 
@@ -80,7 +80,7 @@ class BlueprintBundleGeneratorTest extends TestCase {
 		// Also clean up any test wp-content.zip files
 		$patterns = [
 			WP_CONTENT_DIR . '/test-wp-content*.zip',
-			WP_CONTENT_DIR . '/uploads/aether-temp/test-*.zip',
+			WP_CONTENT_DIR . '/uploads/altolith-temp/test-*.zip',
 		];
 
 		foreach ( $patterns as $pattern ) {

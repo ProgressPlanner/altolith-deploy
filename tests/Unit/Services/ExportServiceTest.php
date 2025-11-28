@@ -12,14 +12,14 @@
  * - Must test progress tracking accuracy
  * - Must fail if implementation allows ANY security bypass or data corruption
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Services;
+namespace Altolith\Deploy\Tests\Unit\Services;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Services\ExportService;
-use Aether\SiteExporter\Plugin;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Services\ExportService;
+use Altolith\Deploy\Plugin;
 
 /**
  * Export service test case.
@@ -53,7 +53,7 @@ class ExportServiceTest extends TestCase {
 		$this->service = new ExportService( $this->plugin_mock );
 
 		// Ensure temp directory exists
-		$temp_dir = WP_CONTENT_DIR . '/uploads/aether-temp';
+		$temp_dir = WP_CONTENT_DIR . '/uploads/altolith-temp';
 		if ( ! is_dir( $temp_dir ) ) {
 			wp_mkdir_p( $temp_dir );
 		}
@@ -78,7 +78,7 @@ class ExportServiceTest extends TestCase {
 		// Clean up test zip files from temp directory
 		// ExportService now always uses temp location for wp-content.zip
 		$patterns = [
-			WP_CONTENT_DIR . '/uploads/aether-temp/wp-content-complete-*.zip',
+			WP_CONTENT_DIR . '/uploads/altolith-temp/wp-content-complete-*.zip',
 		];
 
 		foreach ( $patterns as $pattern ) {

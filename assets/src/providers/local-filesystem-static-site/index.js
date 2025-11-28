@@ -4,7 +4,7 @@
  * Handles static file uploads (HTML, CSS, JS) to local filesystem.
  * Uses the StorageService adapter pattern for true provider instance isolation.
  *
- * Each provider instance gets its own StorageService via the 'aether.storage.service.create'
+ * Each provider instance gets its own StorageService via the 'altolith.storage.service.create'
  * filter, ensuring complete isolation between instances (even of the same provider type).
  *
  */
@@ -22,7 +22,7 @@ ProviderRegistry.register(
 );
 
 // Also trigger the hook for any listeners
-doAction( 'aether.providers.register', LocalFilesystemStaticSiteProvider );
+doAction( 'altolith.providers.register', LocalFilesystemStaticSiteProvider );
 
 /**
  * Create upload adapter for local filesystem static site.
@@ -60,8 +60,8 @@ function createUploadAdapter( staticPath ) {
  * allowing it to configure instance-specific settings.
  */
 addFilter(
-	'aether.storage.service.create',
-	'aether/local-filesystem-static-site',
+	'altolith.storage.service.create',
+	'altolith/local-filesystem-static-site',
 	( service, staticPath, config, providerId ) => {
 		// Only handle this provider type
 		if ( ! providerId?.startsWith( 'local-filesystem-static-site' ) ) {

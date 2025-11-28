@@ -6,12 +6,12 @@
  * Centralizes security validation patterns to prevent common vulnerabilities
  * like path traversal, null byte injection, and unauthorized path access.
  *
- * @package Aether\Utilities
+ * @package Altolith\Utilities
  */
 
-namespace Aether\SiteExporter\Utilities;
+namespace Altolith\Deploy\Utilities;
 
-use Aether\SiteExporter\Utilities\PathValidator;
+use Altolith\Deploy\Utilities\PathValidator;
 
 \defined('ABSPATH') || exit;
 

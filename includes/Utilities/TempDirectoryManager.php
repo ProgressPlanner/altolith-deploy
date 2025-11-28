@@ -7,10 +7,10 @@
  * may not return an accessible directory. This class provides a reliable
  * temporary directory using WordPress uploads folder.
  *
- * @package Aether\SiteExporter
+ * @package Altolith\Deploy
  */
 
-namespace Aether\SiteExporter\Utilities;
+namespace Altolith\Deploy\Utilities;
 
 /**
  * Class TempDirectoryManager
@@ -40,8 +40,8 @@ class TempDirectoryManager
 		 * @param string $temp_dir Default temp directory path
 		 */
 		$tempDir = \apply_filters(
-			'aether_site_exporter_temp_directory',
-			WP_CONTENT_DIR . '/uploads/aether-temp'
+			'altolith_deploy_temp_directory',
+			WP_CONTENT_DIR . '/uploads/altolith-temp'
 		);
 
 		return $tempDir;
@@ -66,14 +66,14 @@ class TempDirectoryManager
 		// Attempt to create directory
 		if (! \file_exists($tempDir)) {
 			if (! \wp_mkdir_p($tempDir)) {
-				\error_log('Aether Site Exporter: Failed to create temp directory: ' . $tempDir);
+				\error_log('Altolith Site Exporter: Failed to create temp directory: ' . $tempDir);
 				return false;
 			}
 		}
 
 		// Verify writability
 		if (! \is_writable($tempDir)) {
-			\error_log('Aether Site Exporter: Temp directory is not writable: ' . $tempDir);
+			\error_log('Altolith Site Exporter: Temp directory is not writable: ' . $tempDir);
 			return false;
 		}
 
@@ -98,14 +98,14 @@ class TempDirectoryManager
 			return true;
 		}
 
-		$htaccessContent = "# Aether Site Exporter - Deny direct access\n";
+		$htaccessContent = "# Altolith Site Exporter - Deny direct access\n";
 		$htaccessContent .= "Order deny,allow\n";
 		$htaccessContent .= "Deny from all\n";
 
 		$result = \file_put_contents($htaccessFile, $htaccessContent);
 
 		if (false === $result) {
-			\error_log('Aether Site Exporter: Failed to create .htaccess in temp directory');
+			\error_log('Altolith Site Exporter: Failed to create .htaccess in temp directory');
 			return false;
 		}
 
@@ -121,7 +121,7 @@ class TempDirectoryManager
 	 * @param string $extension File extension (default: empty)
 	 * @return string|false Full path to temp file, or false on failure
 	 */
-	public static function getTempFilePath($prefix = 'aether-', $extension = '')
+	public static function getTempFilePath($prefix = 'altolith-', $extension = '')
 	{
 		if (! self::ensureTempDirectoryExists()) {
 			return false;
@@ -151,7 +151,7 @@ class TempDirectoryManager
 		}
 
 		if (\file_exists($fullPath)) {
-			\error_log('Aether Site Exporter: Could not generate unique temp file path');
+			\error_log('Altolith Site Exporter: Could not generate unique temp file path');
 			return false;
 		}
 
@@ -196,7 +196,7 @@ class TempDirectoryManager
 						if (@\unlink($filePath)) {
 							$deletedCount++;
 						} else {
-							\error_log('Aether Site Exporter: Failed to delete expired temp file: ' . $filePath);
+							\error_log('Altolith Site Exporter: Failed to delete expired temp file: ' . $filePath);
 						}
 					} elseif ($file->isDir()) {
 						// Recursively delete directory
@@ -207,7 +207,7 @@ class TempDirectoryManager
 				}
 			}
 		} catch (\Exception $e) {
-			\error_log('Aether Site Exporter: Error during temp file cleanup: ' . $e->getMessage());
+			\error_log('Altolith Site Exporter: Error during temp file cleanup: ' . $e->getMessage());
 		}
 
 		return $deletedCount;
@@ -241,7 +241,7 @@ class TempDirectoryManager
 
 			return @\rmdir($directory);
 		} catch (\Exception $e) {
-			\error_log('Aether Site Exporter: Error deleting directory: ' . $e->getMessage());
+			\error_log('Altolith Site Exporter: Error deleting directory: ' . $e->getMessage());
 			return false;
 		}
 	}
@@ -266,13 +266,13 @@ class TempDirectoryManager
 			$filePath = \wp_normalize_path($filePath);
 
 			if (\strpos($filePath, $tempDir) !== 0) {
-				\error_log('Aether Site Exporter: Attempted to delete file outside temp directory: ' . $filePath);
+				\error_log('Altolith Site Exporter: Attempted to delete file outside temp directory: ' . $filePath);
 				return false;
 			}
 		} else {
 			// Use realpath comparison
 			if (\strpos($realFilePath, $realTempDir) !== 0) {
-				\error_log('Aether Site Exporter: Attempted to delete file outside temp directory: ' . $filePath);
+				\error_log('Altolith Site Exporter: Attempted to delete file outside temp directory: ' . $filePath);
 				return false;
 			}
 		}
@@ -313,7 +313,7 @@ class TempDirectoryManager
 				}
 			}
 		} catch (\Exception $e) {
-			\error_log('Aether Site Exporter: Error calculating temp directory size: ' . $e->getMessage());
+			\error_log('Altolith Site Exporter: Error calculating temp directory size: ' . $e->getMessage());
 		}
 
 		return $totalSize;

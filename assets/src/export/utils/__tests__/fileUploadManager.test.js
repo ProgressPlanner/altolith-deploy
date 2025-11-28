@@ -17,8 +17,8 @@ import {
 	uploadFilesWithProgress,
 	sanitizeKeyForStatus,
 } from '../fileUploadManager';
-import { calculateFileHash } from '@aether/utils/fileHash';
-import { shouldSkipUpload } from '@aether/utils/manifestManager';
+import { calculateFileHash } from '@altolith/utils/fileHash';
+import { shouldSkipUpload } from '@altolith/utils/manifestManager';
 import { formatFileSize } from '../helpers';
 import { errorHandler } from '../errorHandler';
 
@@ -37,18 +37,18 @@ jest.mock( '@wordpress/hooks', () => ( {
 	applyFilters: jest.fn( ( hook, defaultValue ) => defaultValue ),
 } ) );
 
-jest.mock( '@aether/utils/concurrencyLimiter', () => ( {
+jest.mock( '@altolith/utils/concurrencyLimiter', () => ( {
 	createConcurrencyLimiter: jest.fn( ( limit ) => {
 		// Simple mock that doesn't limit concurrency for testing
 		return ( fn ) => fn();
 	} ),
 } ) );
 
-jest.mock( '@aether/utils/fileHash', () => ( {
+jest.mock( '@altolith/utils/fileHash', () => ( {
 	calculateFileHash: jest.fn(),
 } ) );
 
-jest.mock( '@aether/utils/manifestManager', () => ( {
+jest.mock( '@altolith/utils/manifestManager', () => ( {
 	shouldSkipUpload: jest.fn(),
 } ) );
 
@@ -805,7 +805,7 @@ describe( 'fileUploadManager', () => {
 			// Concurrency limiter should have been called
 			const {
 				createConcurrencyLimiter,
-			} = require( '@aether/utils/concurrencyLimiter' );
+			} = require( '@altolith/utils/concurrencyLimiter' );
 			expect( createConcurrencyLimiter ).toHaveBeenCalledWith( 3 );
 		} );
 	} );

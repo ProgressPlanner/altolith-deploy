@@ -12,7 +12,7 @@ import { __ } from '@wordpress/i18n';
  * LocalFilesystemStaticSiteProvider class
  *
  * Handles local file storage for static sites only.
- * Files are stored in wp-content/aether-exports/.
+ * Files are stored in wp-content/altolith-exports/.
  */
 export class LocalFilesystemStaticSiteProvider {
 	/**
@@ -34,7 +34,7 @@ export class LocalFilesystemStaticSiteProvider {
 	 *
 	 * @type {string}
 	 */
-	static NAME = __( 'Local Filesystem', 'aether-site-exporter' );
+	static NAME = __( 'Local Filesystem', 'altolith-deploy' );
 
 	/**
 	 * Provider type.
@@ -50,7 +50,7 @@ export class LocalFilesystemStaticSiteProvider {
 	 */
 	static DESCRIPTION = __(
 		'Store static site files (HTML, CSS, JS) locally in the WordPress uploads directory. No cloud deployment required.',
-		'aether'
+		'altolith'
 	);
 
 	/**
@@ -85,39 +85,39 @@ export class LocalFilesystemStaticSiteProvider {
 	static CONFIG_FIELDS = [
 		{
 			id: 'public_url',
-			label: __( 'Public URL', 'aether-site-exporter' ),
+			label: __( 'Public URL', 'altolith-deploy' ),
 			type: 'text',
 			required: false,
 			secure: false,
 			placeholder: 'https://example.com',
 			help: __(
 				'URL where exported files will be publicly accessible. Used for URL replacements in exported HTML. Leave empty to use WordPress home URL.',
-				'aether'
+				'altolith'
 			),
 			validation: {
 				pattern: /^https?:\/\/.+/,
 				message: __(
 					'Public URL must be a valid HTTP or HTTPS URL',
-					'aether'
+					'altolith'
 				),
 			},
 		},
 		{
 			id: 'static_files_path',
-			label: __( 'Static Files Directory', 'aether-site-exporter' ),
+			label: __( 'Static Files Directory', 'altolith-deploy' ),
 			type: 'text',
 			required: true,
 			secure: false,
 			placeholder: 'static/',
 			help: __(
 				'Directory where static site files will be written (relative to WordPress root). Each export overwrites the previous one.',
-				'aether'
+				'altolith'
 			),
 			validation: {
 				pattern: /^[a-zA-Z0-9/_.-]+$/,
 				message: __(
 					'Static files path must contain only letters, numbers, slashes, hyphens, underscores, and dots. Cannot be empty.',
-					'aether'
+					'altolith'
 				),
 			},
 		},

@@ -3,15 +3,15 @@
 /**
  * Settings Page
  *
- * Main admin settings page for Aether configuration.
+ * Main admin settings page for Altolith configuration.
  *
- * @package Aether\Admin\Pages
+ * @package Altolith\Admin\Pages
  */
 
-namespace Aether\SiteExporter\Admin\Pages;
+namespace Altolith\Deploy\Admin\Pages;
 
-use Aether\SiteExporter\Admin\BaseAdminPage;
-use Aether\SiteExporter\Admin\Settings;
+use Altolith\Deploy\Admin\BaseAdminPage;
+use Altolith\Deploy\Admin\Settings;
 
 /**
  * Settings page class.
@@ -27,9 +27,9 @@ class SettingsPage extends BaseAdminPage
 	{
 		parent::__construct($settings);
 
-		$this->pageSlug     = 'aether';
-		$this->pageTitle    = \__('Aether Settings', 'aether-site-exporter');
-		$this->menuTitle    = \__('Aether', 'aether-site-exporter');
+		$this->pageSlug     = 'altolith';
+		$this->pageTitle    = \__('Altolith Settings', 'altolith-deploy');
+		$this->menuTitle    = \__('Altolith', 'altolith-deploy');
 		$this->iconUrl      = 'dashicons-cloud';
 		$this->menuPosition = 30;
 	}
@@ -43,31 +43,31 @@ class SettingsPage extends BaseAdminPage
 		\wp_enqueue_style('wp-components');
 
 		// Enqueue React build.
-		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/admin-settings.asset.php';
+		$assetFile = ALTOLITH_DEPLOY_PLUGIN_DIR . 'assets/build/admin-settings.asset.php';
 		$asset     = \file_exists($assetFile) ? require $assetFile : [
 			'dependencies' => [ 'wp-element', 'wp-components', 'wp-api-fetch', 'wp-i18n' ],
 			'version'      => \time(),
 		];
 
 		// Enqueue local-filesystem provider scripts separately (must load before admin-settings)
-		$plugin = \Aether\SiteExporter\Plugin::getInstance();
+		$plugin = \Altolith\Deploy\Plugin::getInstance();
 		$plugin->enqueueProviderScript('local-filesystem-static-site');
 		$plugin->enqueueProviderScript('local-filesystem-blueprint-bundle');
 
 		// Enqueue the main script
-		// Provider scripts from aether-site-exporter-providers are enqueued at priority 5,
+		// Provider scripts from altolith-deploy-providers are enqueued at priority 5,
 		// so they should load before this script (which runs at default priority 10).
 		// The JavaScript code will wait for providers to register before querying the registry.
 		\wp_enqueue_script(
-			'aether-admin-settings',
-			AETHER_SITE_EXPORTER_PLUGIN_URL . 'assets/build/admin-settings.js',
+			'altolith-admin-settings',
+			ALTOLITH_DEPLOY_PLUGIN_URL . 'assets/build/admin-settings.js',
 			$asset['dependencies'],
 			$asset['version'],
 			true
 		);
 
 		// Add REST API configuration data via inline script.
-		$plugin->addAPIConfigScript('aether-admin-settings');
+		$plugin->addAPIConfigScript('altolith-admin-settings');
 	}
 
 
@@ -76,7 +76,7 @@ class SettingsPage extends BaseAdminPage
 	 */
 	protected function render(): void
 	{
-		$viewPath = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'views/admin/pages/settings.php';
+		$viewPath = ALTOLITH_DEPLOY_PLUGIN_DIR . 'views/admin/pages/settings.php';
 		if (\file_exists($viewPath)) {
 			include $viewPath;
 		}

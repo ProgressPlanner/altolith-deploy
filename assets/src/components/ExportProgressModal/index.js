@@ -8,9 +8,9 @@
 import { useEffect, useCallback } from '@wordpress/element';
 import { Modal, Spinner } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { useExportState } from '@aether/export/hooks/useExportState';
-import { useExportController } from '@aether/export/hooks/useExportController';
-import { colors, spacing, noticeStyles } from '@aether/utils/styles';
+import { useExportState } from '@altolith/export/hooks/useExportState';
+import { useExportController } from '@altolith/export/hooks/useExportController';
+import { colors, spacing, noticeStyles } from '@altolith/utils/styles';
 import GlobalStepsProgress from '../GlobalStepsProgress';
 
 // Styles - extracted to module level for performance
@@ -114,17 +114,17 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 
 	const getModalTitle = () => {
 		if ( error ) {
-			return __( 'Publish Failed', 'aether-site-exporter' );
+			return __( 'Publish Failed', 'altolith-deploy' );
 		}
 		if ( finalStatus ) {
-			return __( 'Site Published Successfully!', 'aether-site-exporter' );
+			return __( 'Site Published Successfully!', 'altolith-deploy' );
 		}
-		return __( 'Exporting Site', 'aether-site-exporter' );
+		return __( 'Exporting Site', 'altolith-deploy' );
 	};
 
 	return (
 		<Modal
-			className="aether-export-progress-modal"
+			className="altolith-export-progress-modal"
 			title={ getModalTitle() }
 			onRequestClose={ handleClose }
 			isFullScreen={ false }
@@ -134,16 +134,16 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 			style={ { width: 'min(90vw, 40rem)' } }
 		>
 			<div
-				className="aether-export-progress-modal__content"
+				className="altolith-export-progress-modal__content"
 				style={ modalContentStyle }
 			>
 				{ error && (
 					<div
-						className="aether-export-progress-modal__notice aether-export-progress-modal__notice--error"
+						className="altolith-export-progress-modal__notice altolith-export-progress-modal__notice--error"
 						style={ noticeErrorStyle }
 					>
 						<p
-							className="aether-export-progress-modal__notice-text"
+							className="altolith-export-progress-modal__notice-text"
 							style={ { margin: 0 } }
 						>
 							{ error }
@@ -153,31 +153,31 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 
 				{ finalStatus && (
 					<div
-						className="aether-export-progress-modal__notice aether-export-progress-modal__notice--success"
+						className="altolith-export-progress-modal__notice altolith-export-progress-modal__notice--success"
 						style={ noticeSuccessStyle }
 					>
 						<p
-							className="aether-export-progress-modal__notice-text"
+							className="altolith-export-progress-modal__notice-text"
 							style={ noticeParagraphStyle }
 						>
 							{ __(
 								'Your site has been exported successfully!',
-								'aether'
+								'altolith'
 							) }
 						</p>
 						{ finalStatus.deploymentUrl && (
 							<p
-								className="aether-export-progress-modal__deployment"
+								className="altolith-export-progress-modal__deployment"
 								style={ { margin: 0 } }
 							>
-								<strong className="aether-export-progress-modal__deployment-label">
+								<strong className="altolith-export-progress-modal__deployment-label">
 									{ __(
 										'View your published site:',
-										'aether'
+										'altolith'
 									) }
 								</strong>{ ' ' }
 								<a
-									className="aether-export-progress-modal__deployment-link"
+									className="altolith-export-progress-modal__deployment-link"
 									href={ finalStatus.deploymentUrl }
 									target="_blank"
 									rel="noopener noreferrer"
@@ -199,17 +199,17 @@ export default function ExportProgressModal( { isOpen, onClose, onComplete } ) {
 
 				{ steps.length === 0 && ! error && (
 					<div
-						className="aether-export-progress-modal__loading"
+						className="altolith-export-progress-modal__loading"
 						style={ loadingStyle }
 					>
-						<Spinner className="aether-export-progress-modal__spinner" />
+						<Spinner className="altolith-export-progress-modal__spinner" />
 						<p
-							className="aether-export-progress-modal__loading-text"
+							className="altolith-export-progress-modal__loading-text"
 							style={ loadingParagraphStyle }
 						>
 							{ __(
 								'Initializing export process…',
-								'aether-site-exporter'
+								'altolith-deploy'
 							) }
 						</p>
 					</div>

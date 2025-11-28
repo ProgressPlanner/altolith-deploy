@@ -13,10 +13,10 @@ import {
 	fontWeight,
 	fontSize,
 	borderRadius,
-} from '@aether/utils/styles';
-import ProviderInstanceItem from '@aether/components/ProviderInstanceItem';
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
-import { getDeploymentTypeLabel } from '@aether/utils/deploymentTypes';
+} from '@altolith/utils/styles';
+import ProviderInstanceItem from '@altolith/components/ProviderInstanceItem';
+import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
+import { getDeploymentTypeLabel } from '@altolith/utils/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const wrapperStyle = {
@@ -114,19 +114,19 @@ export default function ProviderInstancesContainer( {
 				role="table"
 				aria-label={ __(
 					'Provider instances table',
-					'aether-site-exporter'
+					'altolith-deploy'
 				) }
 			>
 				<thead style={ tableHeaderStyle }>
 					<tr>
 						<th style={ tableHeaderCellStyleWithBorder }>
-							{ __( 'Instance Name', 'aether-site-exporter' ) }
+							{ __( 'Instance Name', 'altolith-deploy' ) }
 						</th>
 						<th style={ tableHeaderCellStyleWithBorder }>
-							{ __( 'Provider Type', 'aether-site-exporter' ) }
+							{ __( 'Provider Type', 'altolith-deploy' ) }
 						</th>
 						<th style={ tableHeaderCellStyleWithBorder }>
-							{ __( 'Deployment Type', 'aether-site-exporter' ) }
+							{ __( 'Deployment Type', 'altolith-deploy' ) }
 						</th>
 						<th
 							style={ {
@@ -134,7 +134,7 @@ export default function ProviderInstancesContainer( {
 								textAlign: 'center',
 							} }
 						>
-							{ __( 'Settings', 'aether-site-exporter' ) }
+							{ __( 'Settings', 'altolith-deploy' ) }
 						</th>
 						<th
 							style={ {
@@ -142,7 +142,7 @@ export default function ProviderInstancesContainer( {
 								textAlign: 'right',
 							} }
 						>
-							{ __( 'Actions', 'aether-site-exporter' ) }
+							{ __( 'Actions', 'altolith-deploy' ) }
 						</th>
 					</tr>
 				</thead>

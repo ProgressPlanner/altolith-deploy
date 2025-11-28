@@ -12,13 +12,13 @@
  * - Must test edge cases
  * - Must fail if implementation allows ANY attack
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Utilities;
+namespace Altolith\Deploy\Tests\Unit\Utilities;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Utilities\SecurityValidator;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Utilities\SecurityValidator;
 
 /**
  * Security validator test case.

@@ -140,8 +140,8 @@ describe( 'AssetDiscoveryService - Pure Functions', () => {
 	} );
 
 	describe( 'filterBuiltInPlugins', () => {
-		test( 'should filter out aether plugin', () => {
-			const plugins = [ { slug: 'aether' }, { slug: 'custom-plugin' } ];
+		test( 'should filter out altolith plugin', () => {
+			const plugins = [ { slug: 'altolith' }, { slug: 'custom-plugin' } ];
 
 			const result = filterBuiltInPlugins( plugins );
 
@@ -161,7 +161,7 @@ describe( 'AssetDiscoveryService - Pure Functions', () => {
 
 		test( 'should filter out both built-in plugins', () => {
 			const plugins = [
-				{ slug: 'aether' },
+				{ slug: 'altolith' },
 				{ slug: 'sqlite-database-integration' },
 				{ slug: 'custom-plugin' },
 			];
@@ -173,7 +173,7 @@ describe( 'AssetDiscoveryService - Pure Functions', () => {
 
 		test( 'should handle normalized plugin slugs', () => {
 			const plugins = [
-				{ slug: 'aether/aether.php' },
+				{ slug: 'altolith/altolith.php' },
 				{ slug: 'custom-plugin' },
 			];
 
@@ -184,7 +184,7 @@ describe( 'AssetDiscoveryService - Pure Functions', () => {
 
 		test( 'should return empty array if all built-in', () => {
 			const plugins = [
-				{ slug: 'aether' },
+				{ slug: 'altolith' },
 				{ slug: 'sqlite-database-integration' },
 			];
 
@@ -328,7 +328,7 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 			const result = await service.getInstalledAssets();
 
 			expect( mockApiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/site-exporter/assets',
+				path: '/altolith/deploy/assets',
 				method: 'GET',
 			} );
 			expect( result ).toEqual( {
@@ -380,29 +380,29 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 	} );
 
 	describe( 'getConfig', () => {
-		let originalAetherData;
+		let originalAltolithData;
 
 		beforeEach( () => {
-			originalAetherData = global.window.aetherData;
+			originalAltolithData = global.window.altolithData;
 		} );
 
 		afterEach( () => {
-			if ( originalAetherData ) {
-				global.window.aetherData = originalAetherData;
+			if ( originalAltolithData ) {
+				global.window.altolithData = originalAltolithData;
 			} else {
-				delete global.window.aetherData;
+				delete global.window.altolithData;
 			}
 		} );
 
-		test( 'should read config from window.aetherData', async () => {
-			global.window.aetherData = {
+		test( 'should read config from window.altolithData', async () => {
+			global.window.altolithData = {
 				publicUrl: 'https://example.com',
 				adminUrl: 'https://example.com/wp-admin',
 			};
 
 			const result = await service.getConfig();
 
-			// Should NOT call API - reads from window.aetherData
+			// Should NOT call API - reads from window.altolithData
 			expect( mockApiFetch ).not.toHaveBeenCalled();
 			expect( result ).toEqual( {
 				publicUrl: 'https://example.com',
@@ -410,8 +410,8 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 			} );
 		} );
 
-		test( 'should return default values when window.aetherData is missing', async () => {
-			delete global.window.aetherData;
+		test( 'should return default values when window.altolithData is missing', async () => {
+			delete global.window.altolithData;
 
 			const result = await service.getConfig();
 
@@ -636,8 +636,8 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 				success: true,
 				plugins: [
 					{
-						slug: 'aether',
-						name: 'Aether',
+						slug: 'altolith',
+						name: 'Altolith',
 						version: '1.0',
 						is_active: true,
 					},
@@ -658,7 +658,7 @@ describe( 'AssetDiscoveryService - Service Methods', () => {
 			} );
 
 			mockCheckWpOrg
-				.mockResolvedValueOnce( true ) // aether
+				.mockResolvedValueOnce( true ) // altolith
 				.mockResolvedValueOnce( true ) // sqlite
 				.mockResolvedValueOnce( true ); // akismet
 

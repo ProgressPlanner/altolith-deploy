@@ -268,14 +268,13 @@ export function formatErrorMessage( error, context = {} ) {
 	const { stepId, operation } = context;
 
 	let message =
-		error.message ||
-		__( 'An unknown error occurred', 'aether-site-exporter' );
+		error.message || __( 'An unknown error occurred', 'altolith-deploy' );
 
 	// Add context information
 	if ( stepId ) {
 		message = sprintf(
 			/* translators: 1: Step ID, 2: Error message */
-			__( 'Error in step "%1$s": %2$s', 'aether-site-exporter' ),
+			__( 'Error in step "%1$s": %2$s', 'altolith-deploy' ),
 			stepId,
 			message
 		);
@@ -284,7 +283,7 @@ export function formatErrorMessage( error, context = {} ) {
 	if ( operation ) {
 		message = sprintf(
 			/* translators: 1: Operation name, 2: Error message */
-			__( 'Error during %1$s: %2$s', 'aether-site-exporter' ),
+			__( 'Error during %1$s: %2$s', 'altolith-deploy' ),
 			operation,
 			message
 		);
@@ -297,7 +296,7 @@ export function formatErrorMessage( error, context = {} ) {
 				' ' +
 				__(
 					'Please check your internet connection and try again.',
-					'aether-site-exporter'
+					'altolith-deploy'
 				);
 			break;
 		case ERROR_CATEGORIES.TIMEOUT:
@@ -305,7 +304,7 @@ export function formatErrorMessage( error, context = {} ) {
 				' ' +
 				__(
 					'The operation took too long. Please try again.',
-					'aether-site-exporter'
+					'altolith-deploy'
 				);
 			break;
 		case ERROR_CATEGORIES.RATE_LIMIT:
@@ -313,7 +312,7 @@ export function formatErrorMessage( error, context = {} ) {
 				' ' +
 				__(
 					'Too many requests. Please wait a moment and try again.',
-					'aether-site-exporter'
+					'altolith-deploy'
 				);
 			break;
 		case ERROR_CATEGORIES.QUOTA_EXCEEDED:
@@ -321,7 +320,7 @@ export function formatErrorMessage( error, context = {} ) {
 				' ' +
 				__(
 					'Storage quota exceeded. Please free up space and try again.',
-					'aether-site-exporter'
+					'altolith-deploy'
 				);
 			break;
 		case ERROR_CATEGORIES.PERMISSION:
@@ -329,7 +328,7 @@ export function formatErrorMessage( error, context = {} ) {
 				' ' +
 				__(
 					'Permission denied. Please check your access rights.',
-					'aether-site-exporter'
+					'altolith-deploy'
 				);
 			break;
 	}
@@ -421,11 +420,11 @@ export function handleStepError(
 	if ( typeof window !== 'undefined' && window.console ) {
 		// eslint-disable-next-line no-console
 		console.error(
-			`[Aether] StepExecutor - Step "${ stepId }" failed:`,
+			`[Altolith] StepExecutor - Step "${ stepId }" failed:`,
 			error
 		);
 		// eslint-disable-next-line no-console
-		console.error( '[Aether] Error details:', {
+		console.error( '[Altolith] Error details:', {
 			message: error.message,
 			stack: error.stack,
 			stepId,
@@ -457,7 +456,7 @@ export function handleStepError(
 
 	// Fire error action hook
 	doAction(
-		`aether.export.step.${ stepId }.error`,
+		`altolith.export.step.${ stepId }.error`,
 		enhancedError,
 		executionContext,
 		executionContext.currentProviderInstance || null

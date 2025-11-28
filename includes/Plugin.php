@@ -3,18 +3,18 @@
 /**
  * Main Plugin Class
  *
- * @package Aether
+ * @package Altolith
  */
 
-namespace Aether\SiteExporter;
+namespace Altolith\Deploy;
 
 \defined('ABSPATH') || exit;
-use Aether\SiteExporter\Sync\AssetDiscoveryService;
-use Aether\SiteExporter\Utilities\TempDirectoryManager;
-use Aether\SiteExporter\Utilities\CorsHandler;
-use Aether\SiteExporter\Utilities\CookieManager;
-use Aether\SiteExporter\Utilities\SecurityValidator;
-use Aether\SiteExporter\Utilities\FileManager;
+use Altolith\Deploy\Sync\AssetDiscoveryService;
+use Altolith\Deploy\Utilities\TempDirectoryManager;
+use Altolith\Deploy\Utilities\CorsHandler;
+use Altolith\Deploy\Utilities\CookieManager;
+use Altolith\Deploy\Utilities\SecurityValidator;
+use Altolith\Deploy\Utilities\FileManager;
 
 /**
  * Main plugin orchestrator class.
@@ -134,9 +134,9 @@ class Plugin
 	public function loadTextdomain(): void
 	{
 		\load_plugin_textdomain(
-			'aether',
+			'altolith',
 			false,
-			\dirname(\plugin_basename(AETHER_SITE_EXPORTER_PLUGIN_FILE)) . '/languages'
+			\dirname(\plugin_basename(ALTOLITH_DEPLOY_PLUGIN_FILE)) . '/languages'
 		);
 	}
 
@@ -195,7 +195,7 @@ class Plugin
 	 * Add inline script with REST API configuration data.
 	 *
 	 * Shared helper method used by multiple classes.
-	 * Adds configuration data to window.aetherData for JavaScript access.
+	 * Adds configuration data to window.altolithData for JavaScript access.
 	 *
 	 * @param string $scriptHandle Script handle to attach inline script to.
 	 * @return void
@@ -204,14 +204,14 @@ class Plugin
 	{
 		// Base REST API URL (without namespace) - paths will include full namespace.
 		$restUrl = \rest_url();
-		$namespace = 'aether/site-exporter/';
+		$namespace = 'altolith/deploy/';
 		$nonce   = \wp_create_nonce('wp_rest');
-		$pluginUrl = (string) AETHER_SITE_EXPORTER_PLUGIN_URL;
+		$pluginUrl = (string) ALTOLITH_DEPLOY_PLUGIN_URL;
 		$publicUrl = \home_url();
 		$adminUrl = \admin_url();
 
 		$script = \sprintf(
-			'window.aetherData = window.aetherData || {}; window.aetherData.restUrl = %s; window.aetherData.restNamespace = %s; window.aetherData.nonce = %s; window.aetherData.pluginUrl = %s; window.aetherData.publicUrl = %s; window.aetherData.adminUrl = %s;',
+			'window.altolithData = window.altolithData || {}; window.altolithData.restUrl = %s; window.altolithData.restNamespace = %s; window.altolithData.nonce = %s; window.altolithData.pluginUrl = %s; window.altolithData.publicUrl = %s; window.altolithData.adminUrl = %s;',
 			\wp_json_encode($restUrl),
 			\wp_json_encode($namespace),
 			\wp_json_encode($nonce),
@@ -257,17 +257,17 @@ class Plugin
 	 */
 	public function enqueueProviderScript(string $providerId): void
 	{
-		$handle = 'aether-provider-' . $providerId;
+		$handle = 'altolith-provider-' . $providerId;
 
 		// Only enqueue if not already enqueued
 		if (\wp_script_is($handle, 'enqueued')) {
 			return;
 		}
 
-		$pluginUrl = AETHER_SITE_EXPORTER_PLUGIN_URL;
+		$pluginUrl = ALTOLITH_DEPLOY_PLUGIN_URL;
 
 		// Load dependencies from asset file if it exists
-		$assetFile = AETHER_SITE_EXPORTER_PLUGIN_DIR . 'assets/build/provider-' . $providerId . '.asset.php';
+		$assetFile = ALTOLITH_DEPLOY_PLUGIN_DIR . 'assets/build/provider-' . $providerId . '.asset.php';
 		$asset = \file_exists($assetFile) ? require $assetFile : [
 			'dependencies' => [],
 			'version' => \time(),
@@ -294,10 +294,10 @@ class Plugin
 	 */
 	public function addProviderScriptAttribute(string $tag, string $scriptHandle): string
 	{
-		// Check if this is a provider script (handle format: aether-provider-{providerId})
-		if (\strpos($scriptHandle, 'aether-provider-') === 0) {
+		// Check if this is a provider script (handle format: altolith-provider-{providerId})
+		if (\strpos($scriptHandle, 'altolith-provider-') === 0) {
 			// Extract provider ID from handle
-			$providerId = \str_replace('aether-provider-', '', $scriptHandle);
+			$providerId = \str_replace('altolith-provider-', '', $scriptHandle);
 
 			// Add data-provider-id attribute to script tag
 			$tag = \str_replace(
@@ -355,7 +355,7 @@ class Plugin
 	/**
 	 * Force anonymous user context for static site generation requests.
 	 *
-	 * Detects requests from the Aether Static Site Generator (via User-Agent header)
+	 * Detects requests from the Altolith Static Site Generator (via User-Agent header)
 	 * and forces anonymous user context, ensuring fetched content matches what
 	 * anonymous visitors see, regardless of cookies or PHP sessions.
 	 *
@@ -366,18 +366,18 @@ class Plugin
 	 */
 	public function forceAnonymousUser(): void
 	{
-		// Check User-Agent header for Aether Static Site Generator identifier.
+		// Check User-Agent header for Altolith Static Site Generator identifier.
 		$userAgent = isset($_SERVER['HTTP_USER_AGENT']) ? \sanitize_text_field(\wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
 
 		// Also check for custom header as alternative detection method.
-		$customHeader = isset($_SERVER['HTTP_X_AETHER_SITE_EXPORTER_ANONYMOUS']) ? \sanitize_text_field(\wp_unslash($_SERVER['HTTP_X_AETHER_SITE_EXPORTER_ANONYMOUS'])) : '';
+		$customHeader = isset($_SERVER['HTTP_X_ALTOLITH_DEPLOY_ANONYMOUS']) ? \sanitize_text_field(\wp_unslash($_SERVER['HTTP_X_ALTOLITH_DEPLOY_ANONYMOUS'])) : '';
 
 		// Check for query parameter as another alternative.
-		$queryParam = isset($_GET['aether_site_exporter_anonymous']) ? \sanitize_text_field(\wp_unslash($_GET['aether_site_exporter_anonymous'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$queryParam = isset($_GET['altolith_deploy_anonymous']) ? \sanitize_text_field(\wp_unslash($_GET['altolith_deploy_anonymous'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
 		// If any indicator is present, force anonymous user context.
 		if (
-			'Aether Static Site Generator' === $userAgent ||
+			'Altolith Static Site Generator' === $userAgent ||
 			'true' === $customHeader ||
 			'1' === $queryParam
 		) {
@@ -450,20 +450,20 @@ class Plugin
 		 * @param string $destinationPath Destination path (instance's export_path).
 		 * @param array  $context         Additional context data.
 		 */
-		\add_action('aether_blueprint_bundle_upload', function ($instanceId, $sourcePath, $destinationPath, $context = []) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
+		\add_action('altolith_blueprint_bundle_upload', function ($instanceId, $sourcePath, $destinationPath, $context = []) { // phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable
 			// Only handle local-filesystem provider instances (including new split providers).
 			if (!\is_string($instanceId) || \strpos($instanceId, 'local-filesystem') !== 0) {
 				return;
 			}
 
 			// Validate instance exists.
-			$settings = \get_option('aether_site_exporter_settings', []);
+			$settings = \get_option('altolith_deploy_settings', []);
 			$instanceConfig = $settings['providers'][$instanceId] ?? null;
 
 			if (!$instanceConfig) {
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
 					\error_log(\sprintf(
-						'Aether: Local-filesystem instance not found: %s',
+						'Altolith: Local-filesystem instance not found: %s',
 						$instanceId
 					));
 				}
@@ -479,7 +479,7 @@ class Plugin
 			if (empty($exportPath)) {
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
 					\error_log(\sprintf(
-						'Aether: No export_path configured for instance: %s',
+						'Altolith: No export_path configured for instance: %s',
 						$instanceId
 					));
 				}
@@ -493,7 +493,7 @@ class Plugin
 				// Log error if copy failed (the REST endpoint will verify and return error)
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
 					\error_log(\sprintf(
-						'Aether: Failed to copy blueprint bundle for instance %s from %s to %s',
+						'Altolith: Failed to copy blueprint bundle for instance %s from %s to %s',
 						$instanceId,
 						$sourcePath,
 						$exportPath
@@ -530,18 +530,18 @@ class Plugin
 		$destinationFullPath = \rtrim(ABSPATH, '/') . '/' . \ltrim($destinationPath, '/');
 
 		// Validate paths using PathValidator.
-		$sourceValidation = \Aether\SiteExporter\Utilities\PathValidator::validatePath($sourceFullPath, ABSPATH, false);
+		$sourceValidation = \Altolith\Deploy\Utilities\PathValidator::validatePath($sourceFullPath, ABSPATH, false);
 		if (!$sourceValidation['valid']) {
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf('Aether: Invalid source path: %s', $sourceValidation['error']));
+				\error_log(\sprintf('Altolith: Invalid source path: %s', $sourceValidation['error']));
 			}
 			return false;
 		}
 
-		$destinationValidation = \Aether\SiteExporter\Utilities\PathValidator::validatePath($destinationFullPath, ABSPATH, false);
+		$destinationValidation = \Altolith\Deploy\Utilities\PathValidator::validatePath($destinationFullPath, ABSPATH, false);
 		if (!$destinationValidation['valid']) {
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf('Aether: Invalid destination path: %s', $destinationValidation['error']));
+				\error_log(\sprintf('Altolith: Invalid destination path: %s', $destinationValidation['error']));
 			}
 			return false;
 		}
@@ -549,7 +549,7 @@ class Plugin
 		// Verify source file exists.
 		if (!\file_exists($sourceFullPath) || !\is_file($sourceFullPath)) {
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
-				\error_log(\sprintf('Aether: Source file not found: %s', $sourcePath));
+				\error_log(\sprintf('Altolith: Source file not found: %s', $sourcePath));
 			}
 			return false;
 		}

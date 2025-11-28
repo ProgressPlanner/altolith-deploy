@@ -9,14 +9,14 @@
 
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { addAction } from '@wordpress/hooks';
-import { extractAssetsFromHtml } from '@aether/export/utils/assetExtractor';
-import { extractInternalLinks } from '@aether/export/utils/linkExtractor';
-import { normalize } from '@aether/export/utils/urlUtils';
+import { extractAssetsFromHtml } from '@altolith/export/utils/assetExtractor';
+import { extractInternalLinks } from '@altolith/export/utils/linkExtractor';
+import { normalize } from '@altolith/export/utils/urlUtils';
 import {
 	HtmlFetchStrategyManager,
 	categorizeError,
 	STRATEGY,
-} from '@aether/export/utils/htmlFetchStrategy';
+} from '@altolith/export/utils/htmlFetchStrategy';
 
 /**
  * Batch size for PHP endpoint requests
@@ -35,7 +35,7 @@ async function fetchWithJsFallback( url ) {
 			method: 'GET',
 			credentials: 'omit',
 			headers: {
-				'User-Agent': 'Aether Static Site Generator',
+				'User-Agent': 'Altolith Static Site Generator',
 			},
 		} );
 
@@ -110,18 +110,15 @@ async function processHtmlResult(
  * Status labels for the step
  */
 const statusLabels = {
-	pending: __( 'Discover site', 'aether-site-exporter' ),
+	pending: __( 'Discover site', 'altolith-deploy' ),
 	running: ( data ) => {
 		const { pagesScanned = 0, assetsFound = 0 } = data;
 		if ( pagesScanned === 0 ) {
-			return __(
-				'Fetching URLs from WordPress…',
-				'aether-site-exporter'
-			);
+			return __( 'Fetching URLs from WordPress…', 'altolith-deploy' );
 		}
 		return sprintf(
 			/* translators: %1$d: Pages scanned, %2$d: Assets found */
-			__( 'Scanning… %1$d pages, %2$d assets', 'aether-site-exporter' ),
+			__( 'Scanning… %1$d pages, %2$d assets', 'altolith-deploy' ),
 			pagesScanned,
 			assetsFound
 		);
@@ -130,17 +127,17 @@ const statusLabels = {
 		const { htmlCount = 0, assetCount = 0 } = data;
 		const pagesText = sprintf(
 			/* translators: %d: Number of pages */
-			_n( '%d page', '%d pages', htmlCount, 'aether-site-exporter' ),
+			_n( '%d page', '%d pages', htmlCount, 'altolith-deploy' ),
 			htmlCount
 		);
 		const assetsText = sprintf(
 			/* translators: %d: Number of assets */
-			_n( '%d asset', '%d assets', assetCount, 'aether-site-exporter' ),
+			_n( '%d asset', '%d assets', assetCount, 'altolith-deploy' ),
 			assetCount
 		);
 		return sprintf(
 			/* translators: %1$s: Pages text, %2$s: Assets text */
-			__( 'Discovered %1$s with %2$s', 'aether-site-exporter' ),
+			__( 'Discovered %1$s with %2$s', 'altolith-deploy' ),
 			pagesText,
 			assetsText
 		);
@@ -165,7 +162,7 @@ async function handler( context ) {
 
 	// Phase 1: Get seed URLs from WordPress API
 	setStatusMessage(
-		__( 'Fetching URLs from WordPress…', 'aether-site-exporter' ),
+		__( 'Fetching URLs from WordPress…', 'altolith-deploy' ),
 		'progress',
 		'discoverAndScanSite'
 	);
@@ -175,7 +172,7 @@ async function handler( context ) {
 			setStatusMessage(
 				sprintf(
 					/* translators: %s: Type being fetched (posts, terms, etc.) */
-					__( 'Fetching %s…', 'aether-site-exporter' ),
+					__( 'Fetching %s…', 'altolith-deploy' ),
 					progress.type
 				),
 				'progress',
@@ -187,7 +184,7 @@ async function handler( context ) {
 	if ( ! urlResponse.success ) {
 		throw new Error(
 			urlResponse.message ||
-				__( 'Failed to discover URLs', 'aether-site-exporter' )
+				__( 'Failed to discover URLs', 'altolith-deploy' )
 		);
 	}
 
@@ -196,7 +193,7 @@ async function handler( context ) {
 
 	// Phase 2: Crawl and discover pages + assets
 	setStatusMessage(
-		__( 'Scanning pages and discovering assets…', 'aether-site-exporter' ),
+		__( 'Scanning pages and discovering assets…', 'altolith-deploy' ),
 		'progress',
 		'discoverAndScanSite'
 	);
@@ -275,7 +272,7 @@ async function handler( context ) {
 								);
 							} catch ( error ) {
 								console.error(
-									`[Aether] Failed to process HTML for ${ url }:`,
+									`[Altolith] Failed to process HTML for ${ url }:`,
 									error.message
 								);
 							}
@@ -340,7 +337,7 @@ async function handler( context ) {
 			} catch ( error ) {
 				processedCount++;
 				console.error(
-					`[Aether] discoverAndScanSite: Failed to process ${ url }:`,
+					`[Altolith] discoverAndScanSite: Failed to process ${ url }:`,
 					error.message
 				);
 			}
@@ -367,14 +364,14 @@ async function handler( context ) {
 		const status = strategyManager.getStatus();
 		const modeText =
 			status.strategy === STRATEGY.JS_ONLY
-				? __( ' (fallback mode)', 'aether-site-exporter' )
+				? __( ' (fallback mode)', 'altolith-deploy' )
 				: '';
 		setStatusMessage(
 			sprintf(
 				/* translators: %1$d: Pages scanned, %2$d: Total discovered */
 				__(
 					'Scanned %1$d pages, discovered %2$d URLs…',
-					'aether-site-exporter'
+					'altolith-deploy'
 				),
 				processedCount,
 				discoveredUrls.size
@@ -388,7 +385,7 @@ async function handler( context ) {
 	const finalStatus = strategyManager.getStatus();
 	if ( finalStatus.isUsingFallback ) {
 		console.info(
-			`[Aether] HTML fetch completed in fallback mode. ` +
+			`[Altolith] HTML fetch completed in fallback mode. ` +
 				`PHP: ${ phpFetchCount }, JS: ${ jsFallbackCount }, ` +
 				`Success rate: ${ finalStatus.successRate }`
 		);
@@ -412,7 +409,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %1$d: Number of pages, %2$d: Number of assets */
-			__( 'Found %1$d pages and %2$d assets', 'aether-site-exporter' ),
+			__( 'Found %1$d pages and %2$d assets', 'altolith-deploy' ),
 			processedUrls.size,
 			allAssets.size
 		),
@@ -434,10 +431,10 @@ async function handler( context ) {
  */
 const stepDefinition = {
 	id: 'discoverAndScanSite',
-	label: __( 'Discover Site', 'aether-site-exporter' ),
+	label: __( 'Discover Site', 'altolith-deploy' ),
 	description: __(
 		'Find all pages and assets for export',
-		'aether-site-exporter'
+		'altolith-deploy'
 	),
 	deploymentType: 'static_site',
 	supportsProgress: true,
@@ -490,8 +487,8 @@ const stepDefinition = {
  * Register step via WordPress hooks
  */
 addAction(
-	'aether.export.register_steps',
-	'aether/step-discoverAndScanSite',
+	'altolith.export.register_steps',
+	'altolith/step-discoverAndScanSite',
 	( registry ) => {
 		registry.register( stepDefinition );
 	},

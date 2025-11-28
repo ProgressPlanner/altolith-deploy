@@ -1,5 +1,5 @@
 {
-    "name": "aristath/aether-site-exporter",
+    "name": "aristath/altolith-deploy",
     "description": "Export WordPress sites as static HTML or WordPress Playground blueprint bundles",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
@@ -22,12 +22,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Aether\\SiteExporter\\": "includes/"
+            "Altolith\\Deploy\\": "includes/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Aether\\SiteExporter\\Tests\\": "tests/"
+            "Altolith\\Deploy\\Tests\\": "tests/"
         }
     },
     "scripts": {

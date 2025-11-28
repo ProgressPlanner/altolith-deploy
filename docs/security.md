@@ -1,6 +1,6 @@
 # Security Best Practices
 
-This document outlines security considerations and best practices for deploying and using the Aether Site Exporter plugin.
+This document outlines security considerations and best practices for deploying and using the Altolith Deploy plugin.
 
 ## System Requirements
 
@@ -81,7 +81,7 @@ chmod 600 /path/to/wordpress/wp-config.php
 
 ### CORS Security
 - **Restricted Origins**: Only WordPress Playground and same-origin requests allowed
-- **Debug Mode Restrictions**: Local development CORS requires explicit opt-in via `AETHER_ALLOW_LOCAL_CORS` constant
+- **Debug Mode Restrictions**: Local development CORS requires explicit opt-in via `ALTOLITH_ALLOW_LOCAL_CORS` constant
 - **Limited Ports**: Debug mode only allows common development ports (3000, 3001, 8000, 8080, 8888)
 
 ## Configuration Options
@@ -91,7 +91,7 @@ Add to `wp-config.php` for local development only:
 ```php
 // WARNING: Only enable on development sites, never in production
 if (defined('WP_DEBUG') && WP_DEBUG) {
-    define('AETHER_ALLOW_LOCAL_CORS', true);
+    define('ALTOLITH_ALLOW_LOCAL_CORS', true);
 }
 ```
 
@@ -111,7 +111,7 @@ max_execution_time = 300
 The plugin handles the following sensitive data:
 - **Storage Provider Credentials**: Encrypted at rest, transmitted over HTTPS
 - **Database Content**: Exported in SQLite format (may contain sensitive data)
-- **File Uploads**: Temporary storage in `wp-content/uploads/aether-temp/` directory
+- **File Uploads**: Temporary storage in `wp-content/uploads/altolith-temp/` directory
 
 ### Data Retention
 - **Export Files**: Automatically deleted after 1 hour
@@ -135,7 +135,7 @@ The plugin handles the following sensitive data:
 ### Export Limitations
 - Large sites (>1GB) may timeout or exhaust memory
 - Export process is single-threaded and may be slow for large datasets
-- Temporary files stored in `wp-content/uploads/aether-temp/` (ensure sufficient disk space)
+- Temporary files stored in `wp-content/uploads/altolith-temp/` (ensure sufficient disk space)
 
 ### Security Considerations
 - Exported files contain complete site data including credentials
@@ -180,4 +180,4 @@ We request a **90-day** disclosure timeline to allow users time to update:
 
 ## License
 
-This security documentation is part of the Aether Site Exporter plugin and is released under the GPL v2 or later license.
+This security documentation is part of the Altolith Deploy plugin and is released under the GPL v2 or later license.

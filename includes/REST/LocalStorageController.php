@@ -5,13 +5,13 @@
  *
  * Handles REST API endpoints for local filesystem storage operations.
  *
- * @package Aether\SiteExporter\REST
+ * @package Altolith\Deploy\REST
  */
 
-namespace Aether\SiteExporter\REST;
+namespace Altolith\Deploy\REST;
 
-use Aether\SiteExporter\Utilities\FileManager;
-use Aether\SiteExporter\Utilities\PathValidator;
+use Altolith\Deploy\Utilities\FileManager;
+use Altolith\Deploy\Utilities\PathValidator;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -120,7 +120,7 @@ class LocalStorageController
 		if (empty($files['file'])) {
 			return new WP_Error(
 				'missing_file',
-				\__('No file provided.', 'aether-site-exporter'),
+				\__('No file provided.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -132,7 +132,7 @@ class LocalStorageController
 		if (empty($key)) {
 			return new WP_Error(
 				'missing_key',
-				\__('File key is required.', 'aether-site-exporter'),
+				\__('File key is required.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -145,7 +145,7 @@ class LocalStorageController
 				'file_too_large',
 				\sprintf(
 					/* translators: %s: Maximum allowed file size */
-					\__('File size exceeds maximum allowed size of %s.', 'aether-site-exporter'),
+					\__('File size exceeds maximum allowed size of %s.', 'altolith-deploy'),
 					\size_format($maxFileSize)
 				),
 				[ 'status' => 400 ]
@@ -157,7 +157,7 @@ class LocalStorageController
 		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $key) || \preg_match('#^[/\\\\]#', $key)) {
 			return new WP_Error(
 				'invalid_key',
-				\__('Invalid file key: path traversal not allowed.', 'aether-site-exporter'),
+				\__('Invalid file key: path traversal not allowed.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -172,7 +172,7 @@ class LocalStorageController
 		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $staticPath) || \preg_match('#^[/\\\\]#', $staticPath)) {
 			return new WP_Error(
 				'invalid_static_path',
-				\__('Invalid static path: path traversal not allowed.', 'aether-site-exporter'),
+				\__('Invalid static path: path traversal not allowed.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -200,7 +200,7 @@ class LocalStorageController
 			return new WP_Error(
 				'invalid_path',
 				/* translators: %s: Validation error message */
-				\sprintf(\__('Invalid file path: %s', 'aether-site-exporter'), $validation['error']),
+				\sprintf(\__('Invalid file path: %s', 'altolith-deploy'), $validation['error']),
 				[ 'status' => 400 ]
 			);
 		}
@@ -210,7 +210,7 @@ class LocalStorageController
 			if (!\wp_mkdir_p($uploadDir)) {
 				return new WP_Error(
 					'directory_creation_failed',
-					\__('Failed to create upload directory.', 'aether-site-exporter'),
+					\__('Failed to create upload directory.', 'altolith-deploy'),
 					[ 'status' => 500 ]
 				);
 			}
@@ -220,7 +220,7 @@ class LocalStorageController
 			if (!\wp_mkdir_p($fileDir)) {
 				return new WP_Error(
 					'directory_creation_failed',
-					\__('Failed to create file directory.', 'aether-site-exporter'),
+					\__('Failed to create file directory.', 'altolith-deploy'),
 					[ 'status' => 500 ]
 				);
 			}
@@ -230,7 +230,7 @@ class LocalStorageController
 		if (!\is_dir($fileDir)) {
 			return new WP_Error(
 				'directory_missing',
-				\__('Upload directory does not exist.', 'aether-site-exporter'),
+				\__('Upload directory does not exist.', 'altolith-deploy'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -239,14 +239,14 @@ class LocalStorageController
 		if (!\is_writable($fileDir)) {
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
 				\error_log(\sprintf(
-					'Aether: Parent directory is not writable: %s',
+					'Altolith: Parent directory is not writable: %s',
 					$fileDir
 				));
 			}
 			return new WP_Error(
 				'directory_not_writable',
 				/* translators: %s: Directory path */
-				\sprintf(\__('Upload directory is not writable: %s', 'aether-site-exporter'), $fileDir),
+				\sprintf(\__('Upload directory is not writable: %s', 'altolith-deploy'), $fileDir),
 				[
 					'status' => 500,
 					'directory' => $fileDir,
@@ -260,7 +260,7 @@ class LocalStorageController
 			// Recursively remove the directory and its contents
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
 				\error_log(\sprintf(
-					'Aether: Removing directory at destination path to allow file upload: %s',
+					'Altolith: Removing directory at destination path to allow file upload: %s',
 					$fullPath
 				));
 			}
@@ -268,14 +268,14 @@ class LocalStorageController
 			if (!$this->removeDirectoryRecursively($fullPath)) {
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
 					\error_log(\sprintf(
-						'Aether: Failed to remove directory at destination path: %s',
+						'Altolith: Failed to remove directory at destination path: %s',
 						$fullPath
 					));
 				}
 				return new WP_Error(
 					'destination_is_directory',
 					/* translators: %s: File path */
-					\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'aether-site-exporter'), $fullPath),
+					\sprintf(\__('Destination path exists as directory and could not be removed: %s', 'altolith-deploy'), $fullPath),
 					[
 						'status' => 500,
 						'destination' => $fullPath,
@@ -287,7 +287,7 @@ class LocalStorageController
 			// Directory removed, continue with file upload
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
 				\error_log(\sprintf(
-					'Aether: Successfully removed directory at destination path: %s',
+					'Altolith: Successfully removed directory at destination path: %s',
 					$fullPath
 				));
 			}
@@ -299,7 +299,7 @@ class LocalStorageController
 			if (!\move_uploaded_file($file['tmp_name'], $fullPath)) {
 				// Capture system error details for better diagnostics
 				$lastError = \error_get_last();
-				$errorMessage = \__('Failed to move uploaded file.', 'aether-site-exporter');
+				$errorMessage = \__('Failed to move uploaded file.', 'altolith-deploy');
 				$errorDetails = [
 					'status' => 500,
 					'source' => $file['tmp_name'] ?? 'unknown',
@@ -310,7 +310,7 @@ class LocalStorageController
 				if ($lastError && \strpos($lastError['message'], 'move_uploaded_file') !== false) {
 					$errorMessage = \sprintf(
 						/* translators: %1$s: Original error, %2$s: Destination path */
-						\__('Failed to move uploaded file: %1$s (destination: %2$s)', 'aether-site-exporter'),
+						\__('Failed to move uploaded file: %1$s (destination: %2$s)', 'altolith-deploy'),
 						$lastError['message'],
 						$fullPath
 					);
@@ -321,7 +321,7 @@ class LocalStorageController
 					// Fallback: include paths in error message
 					$errorMessage = \sprintf(
 						/* translators: %1$s: Source path, %2$s: Destination path */
-						\__('Failed to move uploaded file from %1$s to %2$s', 'aether-site-exporter'),
+						\__('Failed to move uploaded file from %1$s to %2$s', 'altolith-deploy'),
 						$file['tmp_name'] ?? 'unknown',
 						$fullPath
 					);
@@ -329,7 +329,7 @@ class LocalStorageController
 
 				if (\defined('WP_DEBUG') && WP_DEBUG) {
 					\error_log(\sprintf(
-						'Aether: move_uploaded_file() failed. Source: %s, Destination: %s, System error: %s',
+						'Altolith: move_uploaded_file() failed. Source: %s, Destination: %s, System error: %s',
 						$file['tmp_name'] ?? 'unknown',
 						$fullPath,
 						$lastError['message'] ?? 'unknown'
@@ -345,7 +345,7 @@ class LocalStorageController
 		} else {
 			return new WP_Error(
 				'invalid_file',
-				\__('Invalid uploaded file.', 'aether-site-exporter'),
+				\__('Invalid uploaded file.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -353,7 +353,7 @@ class LocalStorageController
 		return new WP_REST_Response(
 			[
 				'success' => true,
-				'message' => \__('File uploaded successfully.', 'aether-site-exporter'),
+				'message' => \__('File uploaded successfully.', 'altolith-deploy'),
 				'path'    => $key,
 				'warning' => FileManager::getEphemeralStorageWarning('upload'),
 			],
@@ -381,7 +381,7 @@ class LocalStorageController
 		if (empty($key)) {
 			return new WP_Error(
 				'missing_key',
-				\__('File key is required.', 'aether-site-exporter'),
+				\__('File key is required.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -390,7 +390,7 @@ class LocalStorageController
 		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $key) || \preg_match('#^[/\\\\]#', $key)) {
 			return new WP_Error(
 				'invalid_key',
-				\__('Invalid file key: path traversal not allowed.', 'aether-site-exporter'),
+				\__('Invalid file key: path traversal not allowed.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -405,7 +405,7 @@ class LocalStorageController
 		if (!PathValidator::isSafePath($staticPath)) {
 			return new WP_Error(
 				'invalid_static_path',
-				\__('Invalid static path: path traversal not allowed.', 'aether-site-exporter'),
+				\__('Invalid static path: path traversal not allowed.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -420,7 +420,7 @@ class LocalStorageController
 			return new WP_Error(
 				'invalid_path',
 				/* translators: %s: Validation error message */
-				\sprintf(\__('Invalid file path: %s', 'aether-site-exporter'), $validation['error']),
+				\sprintf(\__('Invalid file path: %s', 'altolith-deploy'), $validation['error']),
 				[ 'status' => 400 ]
 			);
 		}
@@ -429,7 +429,7 @@ class LocalStorageController
 		if (!FileManager::verifyFileExists($fullPath, 'delete')) {
 			return new WP_Error(
 				'file_not_found',
-				\__('File not found.', 'aether-site-exporter'),
+				\__('File not found.', 'altolith-deploy'),
 				[ 'status' => 404 ]
 			);
 		}
@@ -438,7 +438,7 @@ class LocalStorageController
 		if (!FileManager::deleteFile($fullPath)) {
 			return new WP_Error(
 				'delete_failed',
-				\__('Failed to delete file.', 'aether-site-exporter'),
+				\__('Failed to delete file.', 'altolith-deploy'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -446,7 +446,7 @@ class LocalStorageController
 		return new WP_REST_Response(
 			[
 				'success' => true,
-				'message' => \__('File deleted successfully.', 'aether-site-exporter'),
+				'message' => \__('File deleted successfully.', 'altolith-deploy'),
 			],
 			200
 		);
@@ -472,7 +472,7 @@ class LocalStorageController
 		if (empty($keys) || !\is_array($keys)) {
 			return new WP_Error(
 				'missing_keys',
-				\__('File keys array is required.', 'aether-site-exporter'),
+				\__('File keys array is required.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -487,7 +487,7 @@ class LocalStorageController
 		if (!PathValidator::isSafePath($staticPath)) {
 			return new WP_Error(
 				'invalid_static_path',
-				\__('Invalid static path: path traversal not allowed.', 'aether-site-exporter'),
+				\__('Invalid static path: path traversal not allowed.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -505,7 +505,7 @@ class LocalStorageController
 			if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $key) || \preg_match('#^[/\\\\]#', $key)) {
 				$errors[] = [
 					'key'   => $key,
-					'error' => \__('Invalid file key: path traversal not allowed.', 'aether-site-exporter'),
+					'error' => \__('Invalid file key: path traversal not allowed.', 'altolith-deploy'),
 				];
 				continue;
 			}
@@ -535,7 +535,7 @@ class LocalStorageController
 			} else {
 				$errors[] = [
 					'key'   => $key,
-					'error' => \__('Failed to delete file.', 'aether-site-exporter'),
+					'error' => \__('Failed to delete file.', 'altolith-deploy'),
 				];
 			}
 		}
@@ -546,10 +546,10 @@ class LocalStorageController
 				'deleted' => $deleted,
 				'errors'  => $errors,
 				'message' => empty($errors)
-					? \__('All files deleted successfully.', 'aether-site-exporter')
+					? \__('All files deleted successfully.', 'altolith-deploy')
 					: \sprintf(
 						/* translators: %1$d: number of deleted files, %2$d: number of errors */
-						\__('Deleted %1$d files with %2$d errors.', 'aether-site-exporter'),
+						\__('Deleted %1$d files with %2$d errors.', 'altolith-deploy'),
 						\count($deleted),
 						\count($errors)
 					),
@@ -572,7 +572,7 @@ class LocalStorageController
 		if (empty($key)) {
 			return new WP_Error(
 				'missing_key',
-				\__('File key is required.', 'aether-site-exporter'),
+				\__('File key is required.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -581,7 +581,7 @@ class LocalStorageController
 		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $key) || \preg_match('#^[/\\\\]#', $key)) {
 			return new WP_Error(
 				'invalid_key',
-				\__('Invalid file key: path traversal not allowed.', 'aether-site-exporter'),
+				\__('Invalid file key: path traversal not allowed.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -596,7 +596,7 @@ class LocalStorageController
 		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $staticPath) || \preg_match('#^[/\\\\]#', $staticPath)) {
 			return new WP_Error(
 				'invalid_static_path',
-				\__('Invalid static path: path traversal not allowed.', 'aether-site-exporter'),
+				\__('Invalid static path: path traversal not allowed.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -611,7 +611,7 @@ class LocalStorageController
 			return new WP_Error(
 				'invalid_path',
 				/* translators: %s: Validation error message */
-				\sprintf(\__('Invalid file path: %s', 'aether-site-exporter'), $validation['error']),
+				\sprintf(\__('Invalid file path: %s', 'altolith-deploy'), $validation['error']),
 				[ 'status' => 400 ]
 			);
 		}
@@ -620,7 +620,7 @@ class LocalStorageController
 		if (!FileManager::verifyFileExists($fullPath, 'download')) {
 			return new WP_Error(
 				'file_not_found',
-				\__('File not found. It may have been cleaned up or not persisted across sessions.', 'aether-site-exporter'),
+				\__('File not found. It may have been cleaned up or not persisted across sessions.', 'altolith-deploy'),
 				[ 'status' => 404 ]
 			);
 		}
@@ -630,7 +630,7 @@ class LocalStorageController
 		if (false === $content) {
 			return new WP_Error(
 				'read_failed',
-				\__('Failed to read file. The file may be temporarily unavailable.', 'aether-site-exporter'),
+				\__('Failed to read file. The file may be temporarily unavailable.', 'altolith-deploy'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -647,7 +647,7 @@ class LocalStorageController
 	/**
 	 * Trigger blueprint bundle upload action.
 	 *
-	 * Fires the 'aether_blueprint_bundle_upload' action which allows provider instances
+	 * Fires the 'altolith_blueprint_bundle_upload' action which allows provider instances
 	 * to handle their own upload implementation.
 	 *
 	 * @param WP_REST_Request $request Request object.
@@ -669,7 +669,7 @@ class LocalStorageController
 		if (empty($instanceId)) {
 			return new WP_Error(
 				'missing_instance_id',
-				\__('Instance ID is required.', 'aether-site-exporter'),
+				\__('Instance ID is required.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -677,7 +677,7 @@ class LocalStorageController
 		if (empty($sourcePath)) {
 			return new WP_Error(
 				'missing_source_path',
-				\__('Source path is required.', 'aether-site-exporter'),
+				\__('Source path is required.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -685,7 +685,7 @@ class LocalStorageController
 		if (empty($destinationPath)) {
 			return new WP_Error(
 				'missing_destination_path',
-				\__('Destination path is required.', 'aether-site-exporter'),
+				\__('Destination path is required.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
@@ -702,7 +702,7 @@ class LocalStorageController
 		 * @param string $destinationPath Destination path (instance's export_path, relative to ABSPATH).
 		 * @param array  $context         Additional context data.
 		 */
-		\do_action('aether_blueprint_bundle_upload', $instanceId, $sourcePath, $destinationPath, $context);
+		\do_action('altolith_blueprint_bundle_upload', $instanceId, $sourcePath, $destinationPath, $context);
 
 		// Verify the upload succeeded by checking if destination file exists (for local-filesystem)
 		// This is a synchronous check since action hooks run synchronously
@@ -724,7 +724,7 @@ class LocalStorageController
 					'source_file_not_found',
 					\sprintf(
 						/* translators: %s: Source file path */
-						\__('Source file not found: %s', 'aether-site-exporter'),
+						\__('Source file not found: %s', 'altolith-deploy'),
 						$sourcePath
 					),
 					[ 'status' => 404 ]
@@ -736,7 +736,7 @@ class LocalStorageController
 				'upload_failed',
 				\sprintf(
 					/* translators: %1$s: instance ID, %2$s: destination path */
-					\__('Blueprint bundle upload failed for instance %1$s. Destination file not created at %2$s', 'aether-site-exporter'),
+					\__('Blueprint bundle upload failed for instance %1$s. Destination file not created at %2$s', 'altolith-deploy'),
 					$instanceId,
 					$destinationPath
 				),
@@ -747,7 +747,7 @@ class LocalStorageController
 		return new WP_REST_Response(
 			[
 				'success' => true,
-				'message' => \__('Blueprint bundle upload completed successfully.', 'aether-site-exporter'),
+				'message' => \__('Blueprint bundle upload completed successfully.', 'altolith-deploy'),
 				'instance_id'      => $instanceId,
 				'source_path'      => $sourcePath,
 				'destination_path' => $destinationPath,
@@ -776,7 +776,7 @@ class LocalStorageController
 		if (!$validation['valid']) {
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
 				\error_log(\sprintf(
-					'Aether: Cannot remove directory outside ABSPATH: %s',
+					'Altolith: Cannot remove directory outside ABSPATH: %s',
 					$dir
 				));
 			}
@@ -793,7 +793,7 @@ class LocalStorageController
 				if (!\rmdir($file->getPathname())) {
 					if (\defined('WP_DEBUG') && WP_DEBUG) {
 						\error_log(\sprintf(
-							'Aether: Failed to remove directory: %s',
+							'Altolith: Failed to remove directory: %s',
 							$file->getPathname()
 						));
 					}
@@ -803,7 +803,7 @@ class LocalStorageController
 				if (!\unlink($file->getPathname())) {
 					if (\defined('WP_DEBUG') && WP_DEBUG) {
 						\error_log(\sprintf(
-							'Aether: Failed to remove file: %s',
+							'Altolith: Failed to remove file: %s',
 							$file->getPathname()
 						));
 					}
@@ -816,7 +816,7 @@ class LocalStorageController
 		if (!\rmdir($dir)) {
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
 				\error_log(\sprintf(
-					'Aether: Failed to remove root directory: %s',
+					'Altolith: Failed to remove root directory: %s',
 					$dir
 				));
 			}

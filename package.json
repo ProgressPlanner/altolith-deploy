@@ -1,5 +1,5 @@
 {
-  "name": "aether-site-exporter",
+  "name": "altolith-deploy",
   "version": "1.0.0",
   "description": "Export WordPress sites as static HTML or WordPress Playground blueprint bundles",
   "main": "index.js",

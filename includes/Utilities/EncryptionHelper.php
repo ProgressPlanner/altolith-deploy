@@ -6,12 +6,12 @@
  * Provides methods for encrypting and decrypting sensitive fields in configuration arrays.
  * Consolidates encryption logic used across multiple controllers.
  *
- * @package Aether\Utilities
+ * @package Altolith\Utilities
  */
 
-namespace Aether\SiteExporter\Utilities;
+namespace Altolith\Deploy\Utilities;
 
-use Aether\SiteExporter\Utilities\CredentialEncryption;
+use Altolith\Deploy\Utilities\CredentialEncryption;
 
 /**
  * Trait for handling encryption/decryption of sensitive configuration fields.

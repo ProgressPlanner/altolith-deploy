@@ -4,10 +4,10 @@
  *
  * Provides common functionality for all tests in the suite.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Helpers;
+namespace Altolith\Deploy\Tests\Helpers;
 
 use WP_UnitTestCase;
 
@@ -37,8 +37,8 @@ class TestCase extends WP_UnitTestCase {
 	 * Clean up test options.
 	 */
 	protected function clean_up_test_options() {
-		delete_option( 'aether_site_exporter_settings' );
-		delete_option( 'aether_site_exporter_encryption_key' );
+		delete_option( 'altolith_deploy_settings' );
+		delete_option( 'altolith_deploy_encryption_key' );
 	}
 
 	/**
@@ -47,11 +47,11 @@ class TestCase extends WP_UnitTestCase {
 	protected function clean_up_test_transients() {
 		global $wpdb;
 
-		// Delete all aether transients.
+		// Delete all altolith transients.
 		$wpdb->query(
 			"DELETE FROM {$wpdb->options}
-			WHERE option_name LIKE '_transient_aether_%'
-			OR option_name LIKE '_transient_timeout_aether_%'"
+			WHERE option_name LIKE '_transient_altolith_%'
+			OR option_name LIKE '_transient_timeout_altolith_%'"
 		);
 	}
 
@@ -63,7 +63,7 @@ class TestCase extends WP_UnitTestCase {
 	 * @return string Full path to created file.
 	 */
 	protected function create_test_file( $filename, $content = 'test' ) {
-		$temp_dir = sys_get_temp_dir() . '/aether-tests';
+		$temp_dir = sys_get_temp_dir() . '/altolith-tests';
 
 		if ( ! file_exists( $temp_dir ) ) {
 			mkdir( $temp_dir, 0777, true );
@@ -79,7 +79,7 @@ class TestCase extends WP_UnitTestCase {
 	 * Clean up test files.
 	 */
 	protected function clean_up_test_files() {
-		$temp_dir = sys_get_temp_dir() . '/aether-tests';
+		$temp_dir = sys_get_temp_dir() . '/altolith-tests';
 
 		if ( ! file_exists( $temp_dir ) ) {
 			return;

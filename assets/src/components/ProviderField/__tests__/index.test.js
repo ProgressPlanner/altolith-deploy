@@ -663,7 +663,7 @@ describe( 'ProviderField', () => {
 			);
 
 			expect(
-				container.querySelector( '.aether-provider-field--error' )
+				container.querySelector( '.altolith-provider-field--error' )
 			).toBeInTheDocument();
 		} );
 	} );
@@ -684,7 +684,7 @@ describe( 'ProviderField', () => {
 			);
 
 			const fieldWrapper = container.querySelector(
-				'.aether-provider-field'
+				'.altolith-provider-field'
 			);
 			expect( fieldWrapper ).toHaveStyle( { display: 'none' } );
 		} );
@@ -701,7 +701,7 @@ describe( 'ProviderField', () => {
 			);
 
 			const fieldWrapper = container.querySelector(
-				'.aether-provider-field'
+				'.altolith-provider-field'
 			);
 			expect( fieldWrapper ).not.toHaveStyle( { display: 'none' } );
 		} );
@@ -713,7 +713,7 @@ describe( 'ProviderField', () => {
 	describe( 'hooks integration', () => {
 		test( 'should apply filter for after content', () => {
 			applyFilters.mockImplementation( ( hook, value, context ) => {
-				if ( hook === 'aether.admin.provider.field.after' ) {
+				if ( hook === 'altolith.admin.provider.field.after' ) {
 					return <span data-testid="after-content">After</span>;
 				}
 				return value;
@@ -744,7 +744,7 @@ describe( 'ProviderField', () => {
 			);
 
 			expect( applyFilters ).toHaveBeenCalledWith(
-				'aether.admin.provider.field.after',
+				'altolith.admin.provider.field.after',
 				null,
 				expect.objectContaining( {
 					field: baseField,

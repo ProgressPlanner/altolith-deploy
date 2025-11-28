@@ -156,7 +156,7 @@ export async function extractInternalLinks( html, pageUrl, siteUrl ) {
 	} );
 
 	return applyFilters(
-		'aether.links.extracted',
+		'altolith.links.extracted',
 		Array.from( links ),
 		html,
 		pageUrl,

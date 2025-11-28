@@ -4,7 +4,7 @@
  *
  * Template for the main admin settings page.
  *
- * @package Aether
+ * @package Altolith
  */
 
 if (! \defined('ABSPATH')) {
@@ -13,12 +13,12 @@ if (! \defined('ABSPATH')) {
 
 ?>
 
-<div class="wrap aether-admin-settings-wrap">
-	<div id="aether-admin-settings">
+<div class="wrap altolith-admin-settings-wrap">
+	<div id="altolith-admin-settings">
 		<!-- React will mount here -->
 		<noscript>
 			<div class="notice notice-error">
-				<p><?php \esc_html_e('JavaScript is required for the Aether settings page to function.', 'aether-site-exporter'); ?></p>
+				<p><?php \esc_html_e('JavaScript is required for the Altolith settings page to function.', 'altolith-deploy'); ?></p>
 			</div>
 		</noscript>
 	</div>

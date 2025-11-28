@@ -122,7 +122,7 @@ jest.mock( '../../StatusNotice', () => ( {
 } ) );
 
 // Mock utility modules
-jest.mock( '@aether/utils/api', () => ( {
+jest.mock( '@altolith/utils/api', () => ( {
 	__esModule: true,
 	default: jest.fn(),
 } ) );
@@ -131,14 +131,14 @@ jest.mock( '../utils/validation', () => ( {
 	validateConfig: jest.fn( () => ( {} ) ),
 } ) );
 
-jest.mock( '@aether/hooks/useSuccessTimeout', () => ( {
+jest.mock( '@altolith/hooks/useSuccessTimeout', () => ( {
 	useSuccessTimeout: jest.fn( () => ( {
 		showSuccess: jest.fn(),
 		clearSuccess: jest.fn(),
 	} ) ),
 } ) );
 
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	colors: {
 		borderLight: '#ccc',
 	},

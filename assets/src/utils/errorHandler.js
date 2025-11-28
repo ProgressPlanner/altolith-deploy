@@ -66,7 +66,7 @@ function showErrorNotification( message ) {
 				typeof createErrorNotice === 'function'
 			) {
 				createErrorNotice( message, {
-					id: 'aether-global-error',
+					id: 'altolith-global-error',
 					isDismissible: true,
 				} );
 				return;

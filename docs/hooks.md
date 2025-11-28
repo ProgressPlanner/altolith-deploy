@@ -1,6 +1,6 @@
-# Aether Site Exporter - Hooks Reference
+# Altolith Deploy - Hooks Reference
 
-This document provides a comprehensive reference for all WordPress hooks (filters and actions) available in the Aether Site Exporter plugin. These hooks allow third-party developers to extend and customize the plugin's behavior.
+This document provides a comprehensive reference for all WordPress hooks (filters and actions) available in the Altolith Deploy plugin. These hooks allow third-party developers to extend and customize the plugin's behavior.
 
 ## Table of Contents
 
@@ -36,7 +36,7 @@ import { addFilter, addAction } from '@wordpress/hooks';
 
 ### Provider System
 
-#### `aether.providers.register`
+#### `altolith.providers.register`
 
 **Type**: Action
 **Location**: `assets/src/providers/registry/ProviderRegistry.js`
@@ -49,13 +49,13 @@ Fires when a provider registers itself with the system. Providers call this acti
 **Example**:
 ```javascript
 import { doAction } from '@wordpress/hooks';
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
 
 // Register provider in JavaScript registry
 ProviderRegistry.register(MyProvider.ID, MyProvider);
 
 // Trigger the registration hook
-doAction('aether.providers.register', MyProvider);
+doAction('altolith.providers.register', MyProvider);
 ```
 
 ---
@@ -64,7 +64,7 @@ doAction('aether.providers.register', MyProvider);
 
 These hooks are in `assets/src/providers/utils/configStorage.js` and fire during provider configuration CRUD operations.
 
-#### `aether.storage.config.load`
+#### `altolith.storage.config.load`
 
 **Type**: Filter
 **Location**: `configStorage.js:67`
@@ -79,7 +79,7 @@ Filters configuration after loading from REST API.
 
 ---
 
-#### `aether.storage.config.loaded`
+#### `altolith.storage.config.loaded`
 
 **Type**: Action
 **Location**: `configStorage.js:86`
@@ -92,7 +92,7 @@ Fires after configuration is loaded from storage.
 
 ---
 
-#### `aether.storage.config.before_save`
+#### `altolith.storage.config.before_save`
 
 **Type**: Filter
 **Location**: `configStorage.js:128`
@@ -107,7 +107,7 @@ Filters configuration before saving to REST API.
 
 ---
 
-#### `aether.storage.config.saved`
+#### `altolith.storage.config.saved`
 
 **Type**: Action
 **Location**: `configStorage.js:154`
@@ -120,7 +120,7 @@ Fires after configuration is saved to storage.
 
 ---
 
-#### `aether.storage.config.before_delete`
+#### `altolith.storage.config.before_delete`
 
 **Type**: Action
 **Location**: `configStorage.js:180`
@@ -132,7 +132,7 @@ Fires before configuration is deleted from storage.
 
 ---
 
-#### `aether.storage.config.deleted`
+#### `altolith.storage.config.deleted`
 
 **Type**: Action
 **Location**: `configStorage.js:200`
@@ -146,7 +146,7 @@ Fires after configuration is deleted from storage.
 
 ### Admin UI
 
-#### `aether.admin.provider.field.before`
+#### `altolith.admin.provider.field.before`
 
 **Type**: Action
 **Location**: `assets/src/components/ProviderField/index.js:87`
@@ -158,7 +158,7 @@ Fires before a provider configuration field is rendered.
 
 ---
 
-#### `aether.admin.provider.field.after`
+#### `altolith.admin.provider.field.after`
 
 **Type**: Filter
 **Location**: `assets/src/components/ProviderField/index.js:78`
@@ -173,7 +173,7 @@ Filter to inject content after a provider configuration field.
 
 **Example**:
 ```javascript
-addFilter('aether.admin.provider.field.after', 'my-plugin', (content, context) => {
+addFilter('altolith.admin.provider.field.after', 'my-plugin', (content, context) => {
     if (context.fieldId === 'api_key') {
         return <MyCustomButton config={context.formValues} />;
     }
@@ -183,7 +183,7 @@ addFilter('aether.admin.provider.field.after', 'my-plugin', (content, context) =
 
 ---
 
-#### `aether.admin.provider.modal.header`
+#### `altolith.admin.provider.modal.header`
 
 **Type**: Filter
 **Location**: `assets/src/components/ProviderForm/index.js:276`
@@ -202,7 +202,7 @@ Filter to inject content into the provider modal header.
 
 These hooks are in `assets/src/export/executor/StepExecutor.js` and fire during workflow execution.
 
-#### `aether.export.workflow.before`
+#### `altolith.export.workflow.before`
 
 **Type**: Action
 **Location**: `StepExecutor.js:67`
@@ -216,7 +216,7 @@ Fires before the export workflow execution begins.
 
 ---
 
-#### `aether.export.workflow.after`
+#### `altolith.export.workflow.after`
 
 **Type**: Action
 **Location**: `StepExecutor.js:99`
@@ -230,7 +230,7 @@ Fires after the export workflow completes successfully.
 
 ---
 
-#### `aether.export.workflow.error`
+#### `altolith.export.workflow.error`
 
 **Type**: Action
 **Location**: `StepExecutor.js:111`
@@ -244,7 +244,7 @@ Fires when the export workflow encounters an error.
 
 ---
 
-#### `aether.export.step.{stepId}.before`
+#### `altolith.export.step.{stepId}.before`
 
 **Type**: Action
 **Location**: `StepExecutor.js:221`
@@ -257,7 +257,7 @@ Fires before a specific workflow step executes. Replace `{stepId}` with the actu
 
 ---
 
-#### `aether.export.step.{stepId}.after`
+#### `altolith.export.step.{stepId}.after`
 
 **Type**: Action
 **Location**: `StepExecutor.js:283`
@@ -271,7 +271,7 @@ Fires after a specific workflow step completes successfully.
 
 ---
 
-#### `aether.export.step.{stepId}.error`
+#### `altolith.export.step.{stepId}.error`
 
 **Type**: Action
 **Location**: `assets/src/export/utils/errorHandler.js:459`
@@ -285,7 +285,7 @@ Fires when a specific workflow step fails.
 
 ---
 
-#### `aether.export.step.{stepId}.skip`
+#### `altolith.export.step.{stepId}.skip`
 
 **Type**: Filter
 **Location**: `StepExecutor.js:162`
@@ -301,7 +301,7 @@ Determines whether a specific workflow step should be skipped.
 
 ---
 
-#### `aether.export.step.{stepId}.skipped`
+#### `altolith.export.step.{stepId}.skipped`
 
 **Type**: Action
 **Location**: `StepExecutor.js:172`
@@ -314,7 +314,7 @@ Fires when a specific workflow step is skipped.
 
 ---
 
-#### `aether.export.step.{stepId}.retry`
+#### `altolith.export.step.{stepId}.retry`
 
 **Type**: Action
 **Location**: `StepExecutor.js:252`
@@ -330,7 +330,7 @@ Fires when a specific workflow step retries after an error.
 
 ---
 
-#### `aether.export.step.{stepId}.result`
+#### `altolith.export.step.{stepId}.result`
 
 **Type**: Filter
 **Location**: `StepExecutor.js:268`
@@ -348,7 +348,7 @@ Filters the result of a specific workflow step before it's merged into the workf
 
 ### Step Registration
 
-#### `aether.export.register_steps`
+#### `altolith.export.register_steps`
 
 **Type**: Action
 **Location**: `assets/src/export/steps/index.js:33`
@@ -360,7 +360,7 @@ Fires when the workflow is collecting step registrations.
 
 **Example**:
 ```javascript
-addAction('aether.export.register_steps', 'my-plugin', (registry) => {
+addAction('altolith.export.register_steps', 'my-plugin', (registry) => {
     registry.register({
         id: 'myCustomStep',
         label: 'My Custom Step',
@@ -384,7 +384,7 @@ addAction('aether.export.register_steps', 'my-plugin', (registry) => {
 
 ### Static Site Generation
 
-#### `aether.export.step.uploadStaticSiteFiles.urls`
+#### `altolith.export.step.uploadStaticSiteFiles.urls`
 
 **Type**: Filter
 **Location**: `assets/src/export/steps/uploadStaticFiles/index.js:161`
@@ -400,7 +400,7 @@ Filters the URLs array before static site upload processing.
 
 ---
 
-#### `aether.export.step.uploadStaticSiteFiles.result`
+#### `altolith.export.step.uploadStaticSiteFiles.result`
 
 **Type**: Filter
 **Location**: `assets/src/export/steps/uploadStaticFiles/index.js:232`
@@ -416,7 +416,7 @@ Filters the final upload result.
 
 ---
 
-#### `aether.export.step.uploadStaticSiteFiles.pre_scan.before`
+#### `altolith.export.step.uploadStaticSiteFiles.pre_scan.before`
 
 **Type**: Action
 **Location**: `assets/src/export/utils/preScanPhase.js:42`
@@ -430,7 +430,7 @@ Fires before pre-scan phase starts.
 
 ---
 
-#### `aether.export.step.uploadStaticSiteFiles.pre_scan.after`
+#### `altolith.export.step.uploadStaticSiteFiles.pre_scan.after`
 
 **Type**: Action
 **Location**: `assets/src/export/utils/preScanPhase.js:144`
@@ -443,7 +443,7 @@ Fires after pre-scan phase completes.
 
 ---
 
-#### `aether.export.step.uploadStaticSiteFiles.upload.before`
+#### `altolith.export.step.uploadStaticSiteFiles.upload.before`
 
 **Type**: Action
 **Location**: `assets/src/export/hooks/useStaticSiteGenerator.js:131`
@@ -457,7 +457,7 @@ Fires before upload phase starts.
 
 ---
 
-#### `aether.export.step.uploadStaticSiteFiles.upload.after`
+#### `altolith.export.step.uploadStaticSiteFiles.upload.after`
 
 **Type**: Action
 **Location**: `assets/src/export/hooks/useStaticSiteGenerator.js:277`
@@ -470,7 +470,7 @@ Fires after upload phase completes.
 
 ---
 
-#### `aether.export.step.uploadStaticSiteFiles.html.process`
+#### `altolith.export.step.uploadStaticSiteFiles.html.process`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/uploadPhase.js:318`
@@ -488,7 +488,7 @@ Filters HTML before processing (URL rewriting, admin bar removal).
 
 ---
 
-#### `aether.export.step.uploadStaticSiteFiles.asset.process`
+#### `altolith.export.step.uploadStaticSiteFiles.asset.process`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/uploadPhase.js:157`
@@ -503,7 +503,7 @@ Filters asset data before upload.
 
 ---
 
-#### `aether.export.step.uploadStaticSiteFiles.manifest.fetch`
+#### `altolith.export.step.uploadStaticSiteFiles.manifest.fetch`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/uploadPhase.js:47`
@@ -519,7 +519,7 @@ Filters manifest fetching.
 
 ---
 
-#### `aether.export.step.uploadStaticSiteFiles.manifest.update`
+#### `altolith.export.step.uploadStaticSiteFiles.manifest.update`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/uploadPhase.js:269`, `useStaticSiteGenerator.js:210`
@@ -535,7 +535,7 @@ Filters manifest updates after a file is uploaded.
 
 ---
 
-#### `aether.export.step.uploadStaticSiteFiles.manifest.cleanup`
+#### `altolith.export.step.uploadStaticSiteFiles.manifest.cleanup`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/uploadPhase.js:509`
@@ -551,7 +551,7 @@ Filters manifest cleanup before final upload.
 
 ---
 
-#### `aether.storage.service.config`
+#### `altolith.storage.service.config`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/staticSiteConfig.js:142`
@@ -568,7 +568,7 @@ Filters storage service configuration before creation.
 
 ---
 
-#### `aether.storage.service.create`
+#### `altolith.storage.service.create`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/staticSiteConfig.js:153`
@@ -588,7 +588,7 @@ Allows providing a custom StorageService instance.
 
 ### Blueprint Generation
 
-#### `aether.export.step.createBlueprintBundle.assets`
+#### `altolith.export.step.createBlueprintBundle.assets`
 
 **Type**: Filter
 **Location**: `assets/src/export/hooks/useBlueprintGenerator.js:76`
@@ -603,7 +603,7 @@ Filters discovered WordPress.org assets before blueprint generation.
 
 ---
 
-#### `aether.export.step.createBlueprintBundle.generated`
+#### `altolith.export.step.createBlueprintBundle.generated`
 
 **Type**: Filter
 **Location**: `assets/src/export/hooks/useBlueprintGenerator.js:174`
@@ -619,7 +619,7 @@ Filters final generated blueprint before deployment.
 
 ---
 
-#### `aether.export.step.createBlueprintBundle.steps`
+#### `altolith.export.step.createBlueprintBundle.steps`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/blueprintStepBuilders.js:116`
@@ -634,7 +634,7 @@ Filters blueprint steps array before final JSON generation.
 
 ---
 
-#### `aether.export.step.createBlueprintBundle.json`
+#### `altolith.export.step.createBlueprintBundle.json`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/blueprintStepBuilders.js:170`
@@ -649,7 +649,7 @@ Filters complete blueprint JSON object.
 
 ---
 
-#### `aether.export.step.createBlueprintBundle.blueprintData`
+#### `altolith.export.step.createBlueprintBundle.blueprintData`
 
 **Type**: Filter
 **Location**: `assets/src/export/steps/createBlueprintBundle/index.js:213`
@@ -665,7 +665,7 @@ Filters blueprint data before returning from step.
 
 ### Asset Processing
 
-#### `aether.assets.extracted`
+#### `altolith.assets.extracted`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/assetExtractor.js:117`
@@ -682,7 +682,7 @@ Filters extracted assets from HTML.
 
 ---
 
-#### `aether.assets.should_collect`
+#### `altolith.assets.should_collect`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/assetFilters.js:108`
@@ -700,7 +700,7 @@ Filters whether a specific asset should be collected.
 
 ---
 
-#### `aether.links.extracted`
+#### `altolith.links.extracted`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/linkExtractor.js:158`
@@ -719,7 +719,7 @@ Filters extracted links from HTML.
 
 ### URL Processing
 
-#### `aether.url.resolve`
+#### `altolith.url.resolve`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/urlUtils.js:50`
@@ -735,7 +735,7 @@ Filters resolved URL after relative-to-absolute conversion.
 
 ---
 
-#### `aether.url.is_external`
+#### `altolith.url.is_external`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/urlUtils.js:93`
@@ -751,7 +751,7 @@ Filters external URL detection result.
 
 ---
 
-#### `aether.url.normalize`
+#### `altolith.url.normalize`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/urlUtils.js:183`
@@ -766,7 +766,7 @@ Filters normalized URL.
 
 ---
 
-#### `aether.url.rewrite`
+#### `altolith.url.rewrite`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/urlRewriter.js:202`
@@ -784,7 +784,7 @@ Filters rewritten URL after static site conversion.
 
 ---
 
-#### `aether.url.rewrite_html`
+#### `altolith.url.rewrite_html`
 
 **Type**: Filter
 **Location**: `assets/src/export/utils/urlRewriter.js:256`
@@ -805,7 +805,7 @@ Filters HTML after URL rewriting.
 
 These hooks are in `assets/src/export/utils/fileUploadManager.js`.
 
-#### `aether.upload.file.before`
+#### `altolith.upload.file.before`
 
 **Type**: Action
 **Location**: `fileUploadManager.js:117`
@@ -817,7 +817,7 @@ Fires before each file upload.
 
 ---
 
-#### `aether.upload.file.after`
+#### `altolith.upload.file.after`
 
 **Type**: Action
 **Location**: `fileUploadManager.js:454`
@@ -830,7 +830,7 @@ Fires after each file upload succeeds.
 
 ---
 
-#### `aether.upload.file.options`
+#### `altolith.upload.file.options`
 
 **Type**: Filter
 **Location**: `fileUploadManager.js:333`
@@ -848,7 +848,7 @@ Filters upload options before file upload.
 
 ---
 
-#### `aether.upload.hash.calculate`
+#### `altolith.upload.hash.calculate`
 
 **Type**: Filter
 **Location**: `fileUploadManager.js:153`, `fileUploadManager.js:239`
@@ -867,7 +867,7 @@ Filters hash calculation for skip checking and manifest.
 
 ### Utility Filters
 
-#### `aether.deploymentTypes`
+#### `altolith.deploymentTypes`
 
 **Type**: Filter
 **Location**: `assets/src/utils/deploymentTypes.js:20`
@@ -889,7 +889,7 @@ All PHP hooks use WordPress's native `add_filter()` and `add_action()` functions
 
 These hooks are in `includes/REST/ProviderConfigController.php`.
 
-#### `aether_provider_config_load`
+#### `altolith_provider_config_load`
 
 **Type**: Filter
 **Location**: `ProviderConfigController.php:140`
@@ -904,7 +904,7 @@ Filters provider configuration after loading from database.
 
 ---
 
-#### `aether_provider_config_loaded`
+#### `altolith_provider_config_loaded`
 
 **Type**: Action
 **Location**: `ProviderConfigController.php:148`
@@ -917,7 +917,7 @@ Fires after provider configuration is loaded.
 
 ---
 
-#### `aether_provider_config_save`
+#### `altolith_provider_config_save`
 
 **Type**: Filter
 **Location**: `ProviderConfigController.php:204`
@@ -932,7 +932,7 @@ Filters provider configuration before saving.
 
 ---
 
-#### `aether_provider_config_saved`
+#### `altolith_provider_config_saved`
 
 **Type**: Action
 **Location**: `ProviderConfigController.php:229`
@@ -945,7 +945,7 @@ Fires after provider configuration is saved.
 
 ---
 
-#### `aether_provider_config_before_delete`
+#### `altolith_provider_config_before_delete`
 
 **Type**: Action
 **Location**: `ProviderConfigController.php:263`
@@ -957,7 +957,7 @@ Fires before provider configuration is deleted.
 
 ---
 
-#### `aether_provider_config_deleted`
+#### `altolith_provider_config_deleted`
 
 **Type**: Action
 **Location**: `ProviderConfigController.php:282`
@@ -969,7 +969,7 @@ Fires after provider configuration is deleted.
 
 ---
 
-#### `aether_provider_config_sanitize`
+#### `altolith_provider_config_sanitize`
 
 **Type**: Filter
 **Location**: `includes/REST/RESTHelpersTrait.php:378`
@@ -989,7 +989,7 @@ Filters sanitized configuration values.
 
 These hooks are in `includes/REST/Export/ExportStepsController.php`.
 
-#### `aether_archive_before_create`
+#### `altolith_archive_before_create`
 
 **Type**: Action
 **Location**: `ExportStepsController.php:117`
@@ -1002,7 +1002,7 @@ Fires before wp-content archive creation.
 
 ---
 
-#### `aether_archive_result`
+#### `altolith_archive_result`
 
 **Type**: Filter
 **Location**: `ExportStepsController.php:144`
@@ -1017,7 +1017,7 @@ Filters archive creation result.
 
 ---
 
-#### `aether_archive_created`
+#### `altolith_archive_created`
 
 **Type**: Action
 **Location**: `ExportStepsController.php:157`
@@ -1032,7 +1032,7 @@ Fires after archive is created.
 
 ### Blueprint Generation (PHP)
 
-#### `aether_blueprint_data`
+#### `altolith_blueprint_data`
 
 **Type**: Filter
 **Location**: `ExportStepsController.php:249`
@@ -1047,7 +1047,7 @@ Filters blueprint data before generation.
 
 ---
 
-#### `aether_blueprint_before_generate`
+#### `altolith_blueprint_before_generate`
 
 **Type**: Action
 **Location**: `ExportStepsController.php:267`
@@ -1061,7 +1061,7 @@ Fires before blueprint bundle generation.
 
 ---
 
-#### `aether_blueprint_bundle_result`
+#### `altolith_blueprint_bundle_result`
 
 **Type**: Filter
 **Location**: `ExportStepsController.php:304`
@@ -1075,7 +1075,7 @@ Filters blueprint bundle result.
 
 ---
 
-#### `aether_blueprint_generated`
+#### `altolith_blueprint_generated`
 
 **Type**: Action
 **Location**: `ExportStepsController.php:316`
@@ -1087,7 +1087,7 @@ Fires after blueprint bundle is generated.
 
 ---
 
-#### `aether_blueprint_bundle_upload`
+#### `altolith_blueprint_bundle_upload`
 
 **Type**: Action
 **Location**: `includes/REST/LocalStorageController.php:705`
@@ -1104,7 +1104,7 @@ Fires when a blueprint bundle needs to be uploaded.
 
 ### Export Service
 
-#### `aether_site_exporter_export_complete_site`
+#### `altolith_deploy_export_complete_site`
 
 **Type**: Filter
 **Location**: `includes/Services/ExportService.php:178`
@@ -1120,7 +1120,7 @@ Filters complete site export result.
 
 ### CORS Configuration
 
-#### `aether_site_exporter_cors_allowed_origins`
+#### `altolith_deploy_cors_allowed_origins`
 
 **Type**: Filter
 **Location**: `includes/Utilities/CorsHandler.php:182`
@@ -1134,7 +1134,7 @@ Filters allowed CORS origins.
 
 **Example**:
 ```php
-add_filter('aether_site_exporter_cors_allowed_origins', function($origins) {
+add_filter('altolith_deploy_cors_allowed_origins', function($origins) {
     $origins[] = 'https://my-custom-playground.com';
     return $origins;
 });
@@ -1148,7 +1148,7 @@ add_filter('aether_site_exporter_cors_allowed_origins', function($origins) {
 
 ```javascript
 import { doAction } from '@wordpress/hooks';
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
 
 class MyCustomProvider {
     static ID = 'my-custom-provider';
@@ -1160,7 +1160,7 @@ class MyCustomProvider {
 }
 
 ProviderRegistry.register(MyCustomProvider.ID, MyCustomProvider);
-doAction('aether.providers.register', MyCustomProvider);
+doAction('altolith.providers.register', MyCustomProvider);
 ```
 
 ### Custom Asset Handling
@@ -1169,7 +1169,7 @@ doAction('aether.providers.register', MyCustomProvider);
 import { addFilter } from '@wordpress/hooks';
 
 // Exclude analytics scripts
-addFilter('aether.assets.should_collect', 'my-plugin', (shouldCollect, url) => {
+addFilter('altolith.assets.should_collect', 'my-plugin', (shouldCollect, url) => {
     if (url.includes('google-analytics.com')) {
         return false;
     }
@@ -1177,7 +1177,7 @@ addFilter('aether.assets.should_collect', 'my-plugin', (shouldCollect, url) => {
 });
 
 // Add custom assets
-addFilter('aether.assets.extracted', 'my-plugin', (assets) => {
+addFilter('altolith.assets.extracted', 'my-plugin', (assets) => {
     assets.push('https://fonts.googleapis.com/css2?family=Roboto');
     return assets;
 });
@@ -1188,7 +1188,7 @@ addFilter('aether.assets.extracted', 'my-plugin', (assets) => {
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.step.createBlueprintBundle.json', 'my-plugin', (blueprint) => {
+addFilter('altolith.export.step.createBlueprintBundle.json', 'my-plugin', (blueprint) => {
     blueprint.landingPage = '/wp-admin/';
     blueprint.preferredVersions.php = '8.2';
     return blueprint;
@@ -1200,10 +1200,10 @@ addFilter('aether.export.step.createBlueprintBundle.json', 'my-plugin', (bluepri
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
+addFilter('altolith.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
     (html, url, siteUrl, staticSiteUrl, providerId) => {
         // Add custom meta tag
-        return html.replace('</head>', '<meta name="generator" content="Aether" /></head>');
+        return html.replace('</head>', '<meta name="generator" content="Altolith" /></head>');
     }
 );
 ```
@@ -1212,8 +1212,8 @@ addFilter('aether.export.step.uploadStaticSiteFiles.html.process', 'my-plugin',
 
 ## Hook Naming Conventions
 
-- **JavaScript hooks**: `aether.{category}.{action}` (dot-separated)
-- **PHP hooks**: `aether_{category}_{action}` (underscore-separated)
+- **JavaScript hooks**: `altolith.{category}.{action}` (dot-separated)
+- **PHP hooks**: `altolith_{category}_{action}` (underscore-separated)
 
 ## Best Practices
 

@@ -6,10 +6,10 @@
  * Provides path validation that works in all environments including
  * WordPress Playground WASM where realpath() may not work as expected.
  *
- * @package Aether\SiteExporter
+ * @package Altolith\Deploy
  */
 
-namespace Aether\SiteExporter\Utilities;
+namespace Altolith\Deploy\Utilities;
 
 /**
  * Class PathValidator

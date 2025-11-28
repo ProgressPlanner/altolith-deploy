@@ -124,7 +124,7 @@ describe( 'errorHandler', () => {
 			expect( mockCreateErrorNotice ).toHaveBeenCalledWith(
 				expect.any( String ),
 				expect.objectContaining( {
-					id: 'aether-global-error',
+					id: 'altolith-global-error',
 					isDismissible: true,
 				} )
 			);

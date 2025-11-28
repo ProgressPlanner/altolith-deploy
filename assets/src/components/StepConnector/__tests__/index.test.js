@@ -10,7 +10,7 @@ import { render } from '@testing-library/react';
 import { StepConnector } from '..';
 
 // Mock styles
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	colors: {
 		success: '#00a32a',
 		borderLighter: '#e0e0e0',
@@ -34,7 +34,7 @@ describe( 'StepConnector', () => {
 			);
 
 			const connector = container.querySelector( 'span' );
-			expect( connector ).toHaveClass( 'aether-step-connector' );
+			expect( connector ).toHaveClass( 'altolith-step-connector' );
 		} );
 	} );
 

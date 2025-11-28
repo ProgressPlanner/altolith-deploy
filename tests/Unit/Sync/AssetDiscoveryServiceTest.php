@@ -11,13 +11,13 @@
  * - Must test theme parent chain resolution
  * - Must fail if active assets are missed
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Sync;
+namespace Altolith\Deploy\Tests\Unit\Sync;
 
-use Aether\SiteExporter\Sync\AssetDiscoveryService;
-use Aether\SiteExporter\Tests\Helpers\TestCase;
+use Altolith\Deploy\Sync\AssetDiscoveryService;
+use Altolith\Deploy\Tests\Helpers\TestCase;
 
 class AssetDiscoveryServiceTest extends TestCase
 {
@@ -244,9 +244,9 @@ class AssetDiscoveryServiceTest extends TestCase
 	}
 
 	/**
-	 * Test getAllCustomAssets excludes aether plugin.
+	 * Test getAllCustomAssets excludes altolith plugin.
 	 */
-	public function test_getAllCustomAssets_excludes_aether_plugin(): void
+	public function test_getAllCustomAssets_excludes_altolith_plugin(): void
 	{
 		$result = $this->service->getAllCustomAssets();
 
@@ -257,9 +257,9 @@ class AssetDiscoveryServiceTest extends TestCase
 		$pluginSlugs = array_column( $pluginAssets, 'slug' );
 
 		$this->assertNotContains(
-			'aether',
+			'altolith',
 			$pluginSlugs,
-			'Aether plugin should be excluded from custom assets'
+			'Altolith plugin should be excluded from custom assets'
 		);
 	}
 

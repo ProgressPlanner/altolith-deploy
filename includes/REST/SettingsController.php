@@ -5,15 +5,15 @@
  *
  * Handles REST API endpoints for plugin settings.
  *
- * @package Aether\REST
+ * @package Altolith\REST
  */
 
-namespace Aether\SiteExporter\REST;
+namespace Altolith\Deploy\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
-use Aether\SiteExporter\Utilities\EncryptionHelper;
+use Altolith\Deploy\Utilities\EncryptionHelper;
 
 /**
  * Handles REST API endpoints for settings operations.
@@ -42,7 +42,7 @@ class SettingsController
 					'key' => [
 						'required'          => false,
 						'type'              => 'string',
-						'description'       => \__('Setting key (top-level only, e.g., "providers")', 'aether-site-exporter'),
+						'description'       => \__('Setting key (top-level only, e.g., "providers")', 'altolith-deploy'),
 						'sanitize_callback' => 'sanitize_text_field',
 					],
 				],
@@ -61,12 +61,12 @@ class SettingsController
 					'key' => [
 						'required'          => true,
 						'type'              => 'string',
-						'description'       => \__('Setting key (top-level only, e.g., "providers")', 'aether-site-exporter'),
+						'description'       => \__('Setting key (top-level only, e.g., "providers")', 'altolith-deploy'),
 						'sanitize_callback' => 'sanitize_text_field',
 					],
 					'value' => [
 						'required'    => true,
-						'description' => \__('Setting value (can be nested array)', 'aether-site-exporter'),
+						'description' => \__('Setting value (can be nested array)', 'altolith-deploy'),
 					],
 				],
 			]
@@ -84,19 +84,19 @@ class SettingsController
 					'provider_type' => [
 						'required'          => true,
 						'type'              => 'string',
-						'description'       => \__('Provider type (e.g., "cloudflare-r2")', 'aether-site-exporter'),
+						'description'       => \__('Provider type (e.g., "cloudflare-r2")', 'altolith-deploy'),
 						'sanitize_callback' => 'sanitize_key',
 					],
 					'instance_id' => [
 						'required'          => true,
 						'type'              => 'string',
-						'description'       => \__('Instance ID (format: provider_type:uuid)', 'aether-site-exporter'),
+						'description'       => \__('Instance ID (format: provider_type:uuid)', 'altolith-deploy'),
 						'sanitize_callback' => 'sanitize_text_field',
 					],
 					'instance_name' => [
 						'required'          => true,
 						'type'              => 'string',
-						'description'       => \__('User-friendly instance name', 'aether-site-exporter'),
+						'description'       => \__('User-friendly instance name', 'altolith-deploy'),
 						'sanitize_callback' => 'sanitize_text_field',
 					],
 				],
@@ -115,7 +115,7 @@ class SettingsController
 	public function getSettings(WP_REST_Request $request)
 	{
 		$key = $request->get_param('key');
-		$settings = \get_option('aether_site_exporter_settings', []);
+		$settings = \get_option('altolith_deploy_settings', []);
 
 		// If no key specified, return all settings.
 		if (empty($key)) {
@@ -170,13 +170,13 @@ class SettingsController
 		if (empty($key)) {
 			return new WP_Error(
 				'missing_key',
-				\__('Setting key is required.', 'aether-site-exporter'),
+				\__('Setting key is required.', 'altolith-deploy'),
 				[ 'status' => 400 ]
 			);
 		}
 
 		// Get current settings.
-		$settings = \get_option('aether_site_exporter_settings', []);
+		$settings = \get_option('altolith_deploy_settings', []);
 
 		// If updating providers, merge with existing providers to preserve other provider configs
 		// This ensures that updating one provider doesn't remove
@@ -214,7 +214,7 @@ class SettingsController
 					'too_many_providers',
 					\sprintf(
 						/* translators: %d: Maximum number of providers */
-						\__('Too many provider configurations. Maximum allowed: %d', 'aether-site-exporter'),
+						\__('Too many provider configurations. Maximum allowed: %d', 'altolith-deploy'),
 						$maxProviders
 					),
 					['status' => 400]
@@ -228,7 +228,7 @@ class SettingsController
 						'provider_config_too_large',
 						\sprintf(
 							/* translators: 1: Provider ID, 2: Maximum number of fields */
-							\__('Provider configuration "%1$s" is too large. Maximum allowed fields: %2$d', 'aether-site-exporter'),
+							\__('Provider configuration "%1$s" is too large. Maximum allowed fields: %2$d', 'altolith-deploy'),
 							\sanitize_text_field((string) $providerId),
 							$maxConfigSize
 						),
@@ -251,7 +251,7 @@ class SettingsController
 				return new WP_Error(
 					'encryption_failed',
 					/* translators: %s: Error message */
-					\sprintf(\__('Failed to encrypt provider settings: %s', 'aether-site-exporter'), $sanitizedMessage),
+					\sprintf(\__('Failed to encrypt provider settings: %s', 'altolith-deploy'), $sanitizedMessage),
 					[ 'status' => 500 ]
 				);
 			}
@@ -261,13 +261,13 @@ class SettingsController
 		$settings[ $key ] = $value;
 
 		// Update settings.
-		$result = \update_option('aether_site_exporter_settings', $settings);
+		$result = \update_option('altolith_deploy_settings', $settings);
 
 		// update_option returns false if value hasn't changed, which is not an error
-		if ($result === false && \get_option('aether_site_exporter_settings') !== $settings) {
+		if ($result === false && \get_option('altolith_deploy_settings') !== $settings) {
 			return new WP_Error(
 				'settings_update_failed',
-				\__('Failed to update settings.', 'aether-site-exporter'),
+				\__('Failed to update settings.', 'altolith-deploy'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -281,7 +281,7 @@ class SettingsController
 		return new WP_REST_Response(
 			[
 				'success' => true,
-				'message' => \__('Setting updated successfully.', 'aether-site-exporter'),
+				'message' => \__('Setting updated successfully.', 'altolith-deploy'),
 				'key'     => $key,
 				'value'   => $updatedValue,
 			],
@@ -440,7 +440,7 @@ class SettingsController
 		if (empty($providerType) || empty($instanceId) || empty($instanceName)) {
 			return new WP_Error(
 				'missing_params',
-				\__('Provider type, instance ID, and instance name are required.', 'aether-site-exporter'),
+				\__('Provider type, instance ID, and instance name are required.', 'altolith-deploy'),
 				['status' => 400]
 			);
 		}
@@ -449,13 +449,13 @@ class SettingsController
 		if (!\preg_match('/^[a-z0-9_-]+:[a-z0-9-]+$/', $instanceId)) {
 			return new WP_Error(
 				'invalid_instance_id',
-				\__('Instance ID must be in format: provider_type:uuid', 'aether-site-exporter'),
+				\__('Instance ID must be in format: provider_type:uuid', 'altolith-deploy'),
 				['status' => 400]
 			);
 		}
 
 		// Get current settings
-		$settings = \get_option('aether_site_exporter_settings', []);
+		$settings = \get_option('altolith_deploy_settings', []);
 		$providers = $settings['providers'] ?? [];
 
 		// Decrypt existing providers if needed
@@ -472,7 +472,7 @@ class SettingsController
 		if (isset($providers[$instanceId])) {
 			return new WP_Error(
 				'instance_exists',
-				\__('Provider instance with this ID already exists.', 'aether-site-exporter'),
+				\__('Provider instance with this ID already exists.', 'altolith-deploy'),
 				['status' => 409]
 			);
 		}
@@ -487,13 +487,13 @@ class SettingsController
 		try {
 			$encryptedProviders = $this->encryptProviderSettings($providers);
 			$settings['providers'] = $encryptedProviders;
-			\update_option('aether_site_exporter_settings', $settings);
+			\update_option('altolith_deploy_settings', $settings);
 		} catch (\Exception $e) {
 			$sanitizedMessage = $this->sanitizeExceptionMessage($e->getMessage());
 			return new WP_Error(
 				'encryption_failed',
 				/* translators: %s: Error message */
-				\sprintf(\__('Failed to save provider instance: %s', 'aether-site-exporter'), $sanitizedMessage),
+				\sprintf(\__('Failed to save provider instance: %s', 'altolith-deploy'), $sanitizedMessage),
 				['status' => 500]
 			);
 		}
@@ -504,7 +504,7 @@ class SettingsController
 		return new WP_REST_Response(
 			[
 				'success'       => true,
-				'message'       => \__('Provider instance created successfully.', 'aether-site-exporter'),
+				'message'       => \__('Provider instance created successfully.', 'altolith-deploy'),
 				'instance_id'   => $instanceId,
 				'instance'      => $createdInstance,
 				'providers'     => $this->sanitizeSettingsForResponse($providers),

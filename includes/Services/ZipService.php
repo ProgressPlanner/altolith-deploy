@@ -5,10 +5,10 @@
  *
  * Handles ZIP archive operations for exports.
  *
- * @package Aether\Services
+ * @package Altolith\Services
  */
 
-namespace Aether\SiteExporter\Services;
+namespace Altolith\Deploy\Services;
 
 \defined('ABSPATH') || exit;
 

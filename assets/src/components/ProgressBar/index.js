@@ -7,7 +7,7 @@
  */
 
 import { __, sprintf } from '@wordpress/i18n';
-import { colors, spacing, fontSize } from '@aether/utils/styles';
+import { colors, spacing, fontSize } from '@altolith/utils/styles';
 
 /**
  * Progress Bar Component
@@ -48,7 +48,7 @@ export function ProgressBar( { progress, description, height } ) {
 	};
 
 	return (
-		<div style={ containerStyle } className="aether-progress-bar">
+		<div style={ containerStyle } className="altolith-progress-bar">
 			<progress
 				style={ progressStyle }
 				max={ progress.total }
@@ -60,7 +60,7 @@ export function ProgressBar( { progress, description, height } ) {
 					description ||
 					sprintf(
 						/* translators: %1$d: Progress percentage */
-						__( 'Progress: %1$d%%', 'aether-site-exporter' ),
+						__( 'Progress: %1$d%%', 'altolith-deploy' ),
 						percentage
 					)
 				}
@@ -68,7 +68,7 @@ export function ProgressBar( { progress, description, height } ) {
 			{ description && (
 				<p
 					style={ descriptionStyle }
-					className="aether-progress-bar__description"
+					className="altolith-progress-bar__description"
 				>
 					{ description }
 				</p>

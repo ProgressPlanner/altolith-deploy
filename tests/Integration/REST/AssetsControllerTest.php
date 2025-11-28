@@ -6,13 +6,13 @@
  * Tests asset discovery, plugin/theme listing, data structure validation,
  * and error handling.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Integration\REST;
+namespace Altolith\Deploy\Tests\Integration\REST;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\REST\AssetsController;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\REST\AssetsController;
 use WP_REST_Request;
 
 /**
@@ -51,7 +51,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test get assets returns success response.
 	 */
 	public function test_get_assets_returns_success() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 
@@ -65,7 +65,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test get assets returns plugins array.
 	 */
 	public function test_get_assets_returns_plugins_array() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -78,7 +78,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test get assets returns themes array.
 	 */
 	public function test_get_assets_returns_themes_array() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -91,7 +91,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test plugins have required fields.
 	 */
 	public function test_plugins_have_required_fields() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -119,7 +119,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test themes have required fields.
 	 */
 	public function test_themes_have_required_fields() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -146,7 +146,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test at least one theme is active.
 	 */
 	public function test_at_least_one_theme_is_active() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -171,7 +171,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test from_wporg field defaults to false.
 	 */
 	public function test_from_wporg_defaults_to_false() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -195,7 +195,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test plugin slug format.
 	 */
 	public function test_plugin_slug_format() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -212,7 +212,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test plugin file format.
 	 */
 	public function test_plugin_file_format() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -230,7 +230,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test plugin version is string.
 	 */
 	public function test_plugin_version_is_string() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -244,7 +244,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test plugin name is not empty.
 	 */
 	public function test_plugin_name_not_empty() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -263,7 +263,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test theme slug format.
 	 */
 	public function test_theme_slug_format() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -278,7 +278,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test theme version is string.
 	 */
 	public function test_theme_version_is_string() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -292,7 +292,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test theme name is not empty.
 	 */
 	public function test_theme_name_not_empty() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -307,7 +307,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test only one theme is active.
 	 */
 	public function test_only_one_theme_is_active() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -332,7 +332,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test response has correct structure.
 	 */
 	public function test_response_structure() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -348,7 +348,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test plugins array contains only plugin objects.
 	 */
 	public function test_plugins_array_consistency() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -363,7 +363,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test themes array contains only theme objects.
 	 */
 	public function test_themes_array_consistency() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -382,11 +382,11 @@ class AssetsControllerTest extends TestCase {
 	 * Test response is consistent across multiple calls.
 	 */
 	public function test_response_consistency() {
-		$request1 = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request1 = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 		$response1 = $this->controller->getAssets( $request1 );
 		$data1 = $response1->get_data();
 
-		$request2 = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request2 = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 		$response2 = $this->controller->getAssets( $request2 );
 		$data2 = $response2->get_data();
 
@@ -401,7 +401,7 @@ class AssetsControllerTest extends TestCase {
 	 * Note: In test environment, there might be no plugins installed.
 	 */
 	public function test_handles_empty_plugins_gracefully() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -413,16 +413,16 @@ class AssetsControllerTest extends TestCase {
 	/**
 	 * Test includes this plugin in results.
 	 */
-	public function test_includes_aether_plugin() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+	public function test_includes_altolith_plugin() {
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
 
-		// Find aether-site-exporter plugin.
+		// Find altolith-deploy plugin.
 		$found = false;
 		foreach ( $data['plugins'] as $plugin ) {
-			if ( 'aether-site-exporter' === $plugin['slug'] ) {
+			if ( 'altolith-deploy' === $plugin['slug'] ) {
 				$found = true;
 				// Note: In test environment, plugin may not be marked as "active"
 				// even though it's loaded via tests_add_filter.
@@ -432,7 +432,7 @@ class AssetsControllerTest extends TestCase {
 			}
 		}
 
-		$this->assertTrue( $found, 'aether-site-exporter plugin should be in results' );
+		$this->assertTrue( $found, 'altolith-deploy plugin should be in results' );
 	}
 
 	// ========================================================================
@@ -455,7 +455,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test successful response has 200 status code.
 	 */
 	public function test_success_status_code() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 
@@ -470,7 +470,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test no duplicate plugin slugs.
 	 */
 	public function test_no_duplicate_plugin_slugs() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -489,7 +489,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test no duplicate theme slugs.
 	 */
 	public function test_no_duplicate_theme_slugs() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();
@@ -508,7 +508,7 @@ class AssetsControllerTest extends TestCase {
 	 * Test plugin slugs match file paths.
 	 */
 	public function test_plugin_slugs_match_file_paths() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/assets' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/assets' );
 
 		$response = $this->controller->getAssets( $request );
 		$data = $response->get_data();

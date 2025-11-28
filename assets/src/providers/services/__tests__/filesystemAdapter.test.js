@@ -10,10 +10,10 @@ import {
 	downloadFile,
 	getObjectUrl,
 } from '../filesystemAdapter';
-import apiFetch from '@aether/utils/api';
+import apiFetch from '@altolith/utils/api';
 
 // Mock dependencies
-jest.mock( '@aether/utils/api' );
+jest.mock( '@altolith/utils/api' );
 
 describe( 'filesystemAdapter', () => {
 	beforeEach( () => {
@@ -34,7 +34,7 @@ describe( 'filesystemAdapter', () => {
 
 			expect( result.success ).toBe( true );
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/site-exporter/local-storage/upload',
+				path: '/altolith/deploy/local-storage/upload',
 				method: 'POST',
 				body: expect.any( FormData ),
 			} );
@@ -70,7 +70,7 @@ describe( 'filesystemAdapter', () => {
 
 			expect( result.success ).toBe( true );
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/site-exporter/local-storage/delete',
+				path: '/altolith/deploy/local-storage/delete',
 				method: 'DELETE',
 				data: {
 					key: 'test.txt',
@@ -103,7 +103,7 @@ describe( 'filesystemAdapter', () => {
 
 			expect( result.success ).toBe( true );
 			expect( apiFetch ).toHaveBeenCalledWith( {
-				path: '/aether/site-exporter/local-storage/batch-delete',
+				path: '/altolith/deploy/local-storage/batch-delete',
 				method: 'DELETE',
 				data: {
 					keys: [ 'file1.txt', 'file2.txt' ],

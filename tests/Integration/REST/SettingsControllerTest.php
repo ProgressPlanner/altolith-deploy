@@ -6,13 +6,13 @@
  * Tests settings retrieval, updates, encryption/decryption, deep merging,
  * security boundaries, and playground notice management.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Integration\REST;
+namespace Altolith\Deploy\Tests\Integration\REST;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\REST\SettingsController;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\REST\SettingsController;
 use WP_REST_Request;
 
 /**
@@ -43,8 +43,8 @@ class SettingsControllerTest extends TestCase {
 		$this->admin_user_id = $this->act_as_admin();
 
 		// Ensure clean state.
-		delete_option( 'aether_site_exporter_settings' );
-		delete_user_meta( $this->admin_user_id, 'aether_site_exporter_dismiss_playground_notice' );
+		delete_option( 'altolith_deploy_settings' );
+		delete_user_meta( $this->admin_user_id, 'altolith_deploy_dismiss_playground_notice' );
 	}
 
 	// ========================================================================
@@ -55,7 +55,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test getting all settings when empty.
 	 */
 	public function test_get_all_settings_when_empty() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$response = $this->controller->getSettings( $request );
 
 		$this->assertEquals( 200, $response->get_status() );
@@ -71,14 +71,14 @@ class SettingsControllerTest extends TestCase {
 	public function test_get_all_settings_with_data() {
 		// Set some test settings.
 		update_option(
-			'aether_site_exporter_settings',
+			'altolith_deploy_settings',
 			[
 				'test_key' => 'test_value',
 				'another_key' => [ 'nested' => 'value' ],
 			]
 		);
 
-		$request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$response = $this->controller->getSettings( $request );
 
 		$this->assertEquals( 200, $response->get_status() );
@@ -93,14 +93,14 @@ class SettingsControllerTest extends TestCase {
 	 */
 	public function test_get_specific_key() {
 		update_option(
-			'aether_site_exporter_settings',
+			'altolith_deploy_settings',
 			[
 				'test_key' => 'test_value',
 				'another_key' => 'another_value',
 			]
 		);
 
-		$request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'test_key' );
 		$response = $this->controller->getSettings( $request );
 
@@ -115,7 +115,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test getting non-existent key returns null.
 	 */
 	public function test_get_nonexistent_key_returns_null() {
-		$request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'nonexistent' );
 		$response = $this->controller->getSettings( $request );
 
@@ -130,7 +130,7 @@ class SettingsControllerTest extends TestCase {
 	 */
 	public function test_encrypted_values_removed_from_response() {
 		update_option(
-			'aether_site_exporter_settings',
+			'altolith_deploy_settings',
 			[
 				'normal_field' => 'visible',
 				'encrypted_field' => 'encrypted:some_encrypted_data',
@@ -141,7 +141,7 @@ class SettingsControllerTest extends TestCase {
 			]
 		);
 
-		$request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$response = $this->controller->getSettings( $request );
 
 		$data = $response->get_data();
@@ -164,7 +164,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test updating simple setting.
 	 */
 	public function test_update_simple_setting() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'test_key' );
 		$request->set_param( 'value', 'test_value' );
 
@@ -177,7 +177,7 @@ class SettingsControllerTest extends TestCase {
 		$this->assertEquals( 'test_value', $data['value'] );
 
 		// Verify saved to database.
-		$settings = get_option( 'aether_site_exporter_settings' );
+		$settings = get_option( 'altolith_deploy_settings' );
 		$this->assertEquals( 'test_value', $settings['test_key'] );
 	}
 
@@ -185,7 +185,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test updating setting with missing key returns error.
 	 */
 	public function test_update_setting_missing_key_returns_error() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'value', 'test_value' );
 
 		$response = $this->controller->updateSettings( $request );
@@ -198,7 +198,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test updating setting with empty key returns error.
 	 */
 	public function test_update_setting_empty_key_returns_error() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', '' );
 		$request->set_param( 'value', 'test_value' );
 
@@ -212,7 +212,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test updating array setting.
 	 */
 	public function test_update_array_setting() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'array_key' );
 		$request->set_param(
 			'value',
@@ -239,7 +239,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test provider settings are encrypted when saved.
 	 */
 	public function test_provider_settings_encrypted_when_saved() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'providers' );
 		$request->set_param(
 			'value',
@@ -256,13 +256,13 @@ class SettingsControllerTest extends TestCase {
 		$this->assertEquals( 200, $response->get_status() );
 
 		// Verify encryption in database.
-		$settings = get_option( 'aether_site_exporter_settings' );
+		$settings = get_option( 'altolith_deploy_settings' );
 		$this->assertIsArray( $settings['providers'] );
 		$this->assertIsArray( $settings['providers']['provider-1'] );
 
 		// Check that api_key is encrypted (should not match original value).
 		$this->assertNotEquals( 'secret_key', $settings['providers']['provider-1']['api_key'] );
-		$this->assertTrue( \Aether\SiteExporter\Utilities\CredentialEncryption::isEncrypted( $settings['providers']['provider-1']['api_key'] ) );
+		$this->assertTrue( \Altolith\Deploy\Utilities\CredentialEncryption::isEncrypted( $settings['providers']['provider-1']['api_key'] ) );
 
 		// Non-sensitive fields should remain unchanged.
 		$this->assertEquals( 'https://example.com', $settings['providers']['provider-1']['endpoint'] );
@@ -273,7 +273,7 @@ class SettingsControllerTest extends TestCase {
 	 */
 	public function test_provider_settings_decrypted_when_retrieved() {
 		// Save encrypted provider settings.
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'providers' );
 		$request->set_param(
 			'value',
@@ -287,7 +287,7 @@ class SettingsControllerTest extends TestCase {
 		$this->controller->updateSettings( $request );
 
 		// Retrieve and verify decryption.
-		$get_request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$get_request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$get_request->set_param( 'key', 'providers' );
 		$response = $this->controller->getSettings( $get_request );
 
@@ -304,7 +304,7 @@ class SettingsControllerTest extends TestCase {
 	 */
 	public function test_deep_merge_preserves_existing_provider_fields() {
 		// Set initial provider config.
-		$request1 = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request1 = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request1->set_param( 'key', 'providers' );
 		$request1->set_param(
 			'value',
@@ -319,7 +319,7 @@ class SettingsControllerTest extends TestCase {
 		$this->controller->updateSettings( $request1 );
 
 		// Update only one field.
-		$request2 = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request2 = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request2->set_param( 'key', 'providers' );
 		$request2->set_param(
 			'value',
@@ -332,7 +332,7 @@ class SettingsControllerTest extends TestCase {
 		$this->controller->updateSettings( $request2 );
 
 		// Verify other fields are preserved.
-		$get_request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$get_request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$get_request->set_param( 'key', 'providers' );
 		$response = $this->controller->getSettings( $get_request );
 
@@ -362,7 +362,7 @@ class SettingsControllerTest extends TestCase {
 			$providers[ "provider-$i" ] = [ 'api_key' => 'test-key-' . $i ];
 		}
 
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'providers' );
 		$request->set_param( 'value', $providers );
 
@@ -383,7 +383,7 @@ class SettingsControllerTest extends TestCase {
 			$config[ "field_$i" ] = "value_$i";
 		}
 
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'providers' );
 		$request->set_param(
 			'value',
@@ -409,7 +409,7 @@ class SettingsControllerTest extends TestCase {
 			$nested = [ 'level' => $nested ];
 		}
 
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'providers' );
 		$request->set_param(
 			'value',
@@ -426,7 +426,7 @@ class SettingsControllerTest extends TestCase {
 		$this->assertEquals( 200, $response->get_status() );
 
 		// Verify deep nesting was sanitized out.
-		$settings = get_option( 'aether_site_exporter_settings' );
+		$settings = get_option( 'altolith_deploy_settings' );
 		$this->assertIsArray( $settings['providers'] );
 	}
 
@@ -440,7 +440,7 @@ class SettingsControllerTest extends TestCase {
 			$providers[ "provider-$i" ] = [ 'api_key' => 'test-key-' . $i ];
 		}
 
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'providers' );
 		$request->set_param( 'value', $providers );
 
@@ -460,7 +460,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test static_files_path defaults to 'static/' when empty.
 	 */
 	public function test_static_files_path_defaults_when_empty() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'providers' );
 		$request->set_param(
 			'value',
@@ -475,7 +475,7 @@ class SettingsControllerTest extends TestCase {
 
 		$this->assertEquals( 200, $response->get_status() );
 
-		$get_request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$get_request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$get_request->set_param( 'key', 'providers' );
 		$get_response = $this->controller->getSettings( $get_request );
 
@@ -487,7 +487,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test export_path defaults when empty or invalid.
 	 */
 	public function test_export_path_defaults_when_empty() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'providers' );
 		$request->set_param(
 			'value',
@@ -502,7 +502,7 @@ class SettingsControllerTest extends TestCase {
 
 		$this->assertEquals( 200, $response->get_status() );
 
-		$get_request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$get_request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$get_request->set_param( 'key', 'providers' );
 		$get_response = $this->controller->getSettings( $get_request );
 
@@ -514,7 +514,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test export_path defaults when missing .zip extension.
 	 */
 	public function test_export_path_defaults_when_missing_zip_extension() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'providers' );
 		$request->set_param(
 			'value',
@@ -529,7 +529,7 @@ class SettingsControllerTest extends TestCase {
 
 		$this->assertEquals( 200, $response->get_status() );
 
-		$get_request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$get_request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$get_request->set_param( 'key', 'providers' );
 		$get_response = $this->controller->getSettings( $get_request );
 
@@ -541,7 +541,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test snake_case keys are preserved.
 	 */
 	public function test_snake_case_keys_preserved() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/settings' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/settings' );
 		$request->set_param( 'key', 'providers' );
 		$request->set_param(
 			'value',
@@ -558,7 +558,7 @@ class SettingsControllerTest extends TestCase {
 
 		$this->assertEquals( 200, $response->get_status() );
 
-		$get_request = new WP_REST_Request( 'GET', '/aether/v1/settings' );
+		$get_request = new WP_REST_Request( 'GET', '/altolith/v1/settings' );
 		$get_request->set_param( 'key', 'providers' );
 		$get_response = $this->controller->getSettings( $get_request );
 
@@ -579,7 +579,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test create provider instance successfully.
 	 */
 	public function test_create_provider_instance_successfully() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/providers/cloudflare-r2/instances' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/providers/cloudflare-r2/instances' );
 		$request->set_param( 'provider_type', 'cloudflare-r2' );
 		$request->set_param( 'instance_id', 'cloudflare-r2:abc123' );
 		$request->set_param( 'instance_name', 'My R2 Bucket' );
@@ -599,7 +599,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test create provider instance with missing parameters.
 	 */
 	public function test_create_provider_instance_missing_params() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/providers/cloudflare-r2/instances' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/providers/cloudflare-r2/instances' );
 		$request->set_param( 'provider_type', 'cloudflare-r2' );
 		// Missing instance_id and instance_name.
 
@@ -613,7 +613,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test create provider instance with invalid ID format.
 	 */
 	public function test_create_provider_instance_invalid_id_format() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/providers/cloudflare-r2/instances' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/providers/cloudflare-r2/instances' );
 		$request->set_param( 'provider_type', 'cloudflare-r2' );
 		$request->set_param( 'instance_id', 'invalid_format_without_colon' );
 		$request->set_param( 'instance_name', 'Test' );
@@ -629,7 +629,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test create provider instance with special characters in ID is rejected.
 	 */
 	public function test_create_provider_instance_special_chars_in_id_rejected() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/providers/cloudflare-r2/instances' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/providers/cloudflare-r2/instances' );
 		$request->set_param( 'provider_type', 'cloudflare-r2' );
 		$request->set_param( 'instance_id', 'provider:id with spaces' );
 		$request->set_param( 'instance_name', 'Test' );
@@ -645,14 +645,14 @@ class SettingsControllerTest extends TestCase {
 	 */
 	public function test_create_duplicate_provider_instance_returns_error() {
 		// Create first instance.
-		$request1 = new WP_REST_Request( 'POST', '/aether/v1/providers/cloudflare-r2/instances' );
+		$request1 = new WP_REST_Request( 'POST', '/altolith/v1/providers/cloudflare-r2/instances' );
 		$request1->set_param( 'provider_type', 'cloudflare-r2' );
 		$request1->set_param( 'instance_id', 'cloudflare-r2:abc123' );
 		$request1->set_param( 'instance_name', 'First Instance' );
 		$this->controller->createProviderInstance( $request1 );
 
 		// Try to create duplicate.
-		$request2 = new WP_REST_Request( 'POST', '/aether/v1/providers/cloudflare-r2/instances' );
+		$request2 = new WP_REST_Request( 'POST', '/altolith/v1/providers/cloudflare-r2/instances' );
 		$request2->set_param( 'provider_type', 'cloudflare-r2' );
 		$request2->set_param( 'instance_id', 'cloudflare-r2:abc123' );
 		$request2->set_param( 'instance_name', 'Duplicate Instance' );
@@ -668,7 +668,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test create provider instance encrypts settings.
 	 */
 	public function test_create_provider_instance_encrypts_settings() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/providers/cloudflare-r2/instances' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/providers/cloudflare-r2/instances' );
 		$request->set_param( 'provider_type', 'cloudflare-r2' );
 		$request->set_param( 'instance_id', 'cloudflare-r2:abc123' );
 		$request->set_param( 'instance_name', 'Test Instance' );
@@ -678,7 +678,7 @@ class SettingsControllerTest extends TestCase {
 		$this->assertEquals( 201, $response->get_status() );
 
 		// Verify encryption in database.
-		$settings = get_option( 'aether_site_exporter_settings' );
+		$settings = get_option( 'altolith_deploy_settings' );
 		$this->assertIsArray( $settings['providers'] );
 		$this->assertIsArray( $settings['providers']['cloudflare-r2:abc123'] );
 
@@ -693,7 +693,7 @@ class SettingsControllerTest extends TestCase {
 	 * Test create provider instance returns decrypted data in response.
 	 */
 	public function test_create_provider_instance_returns_decrypted_data() {
-		$request = new WP_REST_Request( 'POST', '/aether/v1/providers/cloudflare-r2/instances' );
+		$request = new WP_REST_Request( 'POST', '/altolith/v1/providers/cloudflare-r2/instances' );
 		$request->set_param( 'provider_type', 'cloudflare-r2' );
 		$request->set_param( 'instance_id', 'cloudflare-r2:abc123' );
 		$request->set_param( 'instance_name', 'Test Instance' );

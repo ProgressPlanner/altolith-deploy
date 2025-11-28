@@ -5,7 +5,7 @@ module.exports = {
 	globals: {
 		r2SyncAdmin: 'readonly',
 		r2SyncLogger: 'readonly',
-		aetherExport: 'readonly',
+		altolithExport: 'readonly',
 		localStorage: 'readonly',
 		confirm: 'readonly',
 		jQuery: 'readonly',
@@ -19,39 +19,39 @@ module.exports = {
 			alias: {
 				map: [
 					[
-						'@aether/utils',
+						'@altolith/utils',
 						path.resolve( __dirname, 'assets/src/utils' ),
 					],
 					[
-						'@aether/components',
+						'@altolith/components',
 						path.resolve( __dirname, 'assets/src/components' ),
 					],
 					[
-						'@aether/hooks',
+						'@altolith/hooks',
 						path.resolve( __dirname, 'assets/src/hooks' ),
 					],
 					[
-						'@aether/constants',
+						'@altolith/constants',
 						path.resolve( __dirname, 'assets/src/constants' ),
 					],
 					[
-						'@aether/contexts',
+						'@altolith/contexts',
 						path.resolve( __dirname, 'assets/src/contexts' ),
 					],
 					[
-						'@aether/services',
+						'@altolith/services',
 						path.resolve( __dirname, 'assets/src/services' ),
 					],
 					[
-						'@aether/providers',
+						'@altolith/providers',
 						path.resolve( __dirname, 'assets/src/providers' ),
 					],
 					[
-						'@aether/export',
+						'@altolith/export',
 						path.resolve( __dirname, 'assets/src/export' ),
 					],
 					[
-						'@aether/admin',
+						'@altolith/admin',
 						path.resolve( __dirname, 'assets/src/admin-settings' ),
 					],
 				],

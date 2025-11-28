@@ -5,10 +5,10 @@
  *
  * Provides a consolidated endpoint for discovering URLs for static site generation.
  *
- * @package Aether\REST
+ * @package Altolith\REST
  */
 
-namespace Aether\SiteExporter\REST;
+namespace Altolith\Deploy\REST;
 
 use WP_REST_Request;
 use WP_REST_Response;
@@ -82,7 +82,7 @@ class URLDiscoveryController
 	{
 		$page = $request->get_param('page') ?? 1;
 		$types = $request->get_param('types') ?? [ 'posts', 'terms', 'authors', 'archives', 'pagination' ];
-		$offset = ($page - 1) * \Aether\SiteExporter\Constants\ExportLimits::PER_PAGE;
+		$offset = ($page - 1) * \Altolith\Deploy\Constants\ExportLimits::PER_PAGE;
 
 		$allUrls = [];
 		$totals = [];
@@ -120,7 +120,7 @@ class URLDiscoveryController
 
 		// Calculate if there are more results
 		$totalItems = \array_sum($totals);
-		$hasMore = ($offset + \Aether\SiteExporter\Constants\ExportLimits::PER_PAGE) < $totalItems;
+		$hasMore = ($offset + \Altolith\Deploy\Constants\ExportLimits::PER_PAGE) < $totalItems;
 
 		// Deduplicate URLs
 		$uniqueUrls = \array_values(\array_unique($allUrls));
@@ -148,7 +148,7 @@ class URLDiscoveryController
 		$posts = \get_posts([
 			'post_type'      => $postTypesArray,
 			'post_status'    => 'publish',
-			'posts_per_page' => \Aether\SiteExporter\Constants\ExportLimits::PER_PAGE,
+			'posts_per_page' => \Altolith\Deploy\Constants\ExportLimits::PER_PAGE,
 			'offset'         => $offset,
 			'fields'         => 'ids',
 			'orderby'        => 'ID',
@@ -205,7 +205,7 @@ class URLDiscoveryController
 		$terms = \get_terms([
 			'taxonomy'   => $taxonomiesArray,
 			'hide_empty' => true,
-			'number'     => \Aether\SiteExporter\Constants\ExportLimits::PER_PAGE,
+			'number'     => \Altolith\Deploy\Constants\ExportLimits::PER_PAGE,
 			'offset'     => $offset,
 			'orderby'    => 'term_id',
 			'order'      => 'ASC',
@@ -253,7 +253,7 @@ class URLDiscoveryController
 	{
 		$authors = \get_users([
 			'capability' => 'edit_posts',
-			'number'     => \Aether\SiteExporter\Constants\ExportLimits::PER_PAGE,
+			'number'     => \Altolith\Deploy\Constants\ExportLimits::PER_PAGE,
 			'offset'     => $offset,
 			'orderby'    => 'ID',
 			'order'      => 'ASC',

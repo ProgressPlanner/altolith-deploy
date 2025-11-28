@@ -2,7 +2,7 @@
  * Provider Registry
  *
  * JavaScript-based provider registry that collects providers from
- * aether.providers.register hooks. This replaces the PHP ProviderRegistry.
+ * altolith.providers.register hooks. This replaces the PHP ProviderRegistry.
  *
  */
 
@@ -62,7 +62,7 @@ class ProviderRegistry {
 		 * @param {string}   providerId    Provider ID
 		 * @param {Function} ProviderClass Provider class
 		 */
-		doAction( 'aether.providers.registered', providerId, ProviderClass );
+		doAction( 'altolith.providers.registered', providerId, ProviderClass );
 	}
 
 	/**
@@ -237,14 +237,14 @@ class ProviderRegistry {
 const registry = new ProviderRegistry();
 
 /**
- * Hook into aether.providers.register to auto-register providers.
+ * Hook into altolith.providers.register to auto-register providers.
  *
- * When providers call doAction('aether.providers.register', ProviderClass),
+ * When providers call doAction('altolith.providers.register', ProviderClass),
  * this will automatically register them.
  */
 addAction(
-	'aether.providers.register',
-	'aether/provider-registry',
+	'altolith.providers.register',
+	'altolith/provider-registry',
 	( ProviderClass ) => {
 		if ( ! ProviderClass || typeof ProviderClass !== 'function' ) {
 			return;
@@ -266,13 +266,13 @@ addAction(
 let exportedRegistry = registry;
 
 if ( typeof window !== 'undefined' ) {
-	window.aether = window.aether || {};
+	window.altolith = window.altolith || {};
 	// Only create global registry if it doesn't exist (first bundle to load)
-	if ( ! window.aether.ProviderRegistry ) {
-		window.aether.ProviderRegistry = registry;
+	if ( ! window.altolith.ProviderRegistry ) {
+		window.altolith.ProviderRegistry = registry;
 	} else {
 		// If registry already exists, use the global one and sync providers
-		const globalRegistry = window.aether.ProviderRegistry;
+		const globalRegistry = window.altolith.ProviderRegistry;
 		// Copy any providers from this instance to the global one
 		const localProviders = Array.from( providers.values() );
 		localProviders.forEach( ( ProviderClass ) => {

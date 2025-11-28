@@ -4,7 +4,7 @@ Pluggable cloud provider architecture for deploying WordPress sites to various h
 
 ## Overview
 
-The provider system enables Aether Site Exporter to export to local filesystem through a modular, extensible architecture. Each provider is self-contained and handles all its own configuration, deployment, and operations.
+The provider system enables Altolith Site Exporter to export to local filesystem through a modular, extensible architecture. Each provider is self-contained and handles all its own configuration, deployment, and operations.
 
 ## Architecture
 
@@ -35,7 +35,7 @@ import { LocalFilesystemStaticSiteProvider } from './LocalFilesystemStaticSitePr
 ProviderRegistry.register(LocalFilesystemStaticSiteProvider.ID, LocalFilesystemStaticSiteProvider);
 
 // Also trigger the hook for any listeners
-doAction('aether.providers.register', LocalFilesystemStaticSiteProvider);
+doAction('altolith.providers.register', LocalFilesystemStaticSiteProvider);
 ```
 
 The `ProviderRegistry` singleton collects all registered providers and makes them available throughout the application.
@@ -75,7 +75,7 @@ import { LocalFilesystemStaticSiteProvider } from './LocalFilesystemStaticSitePr
 ProviderRegistry.register(LocalFilesystemStaticSiteProvider.ID, LocalFilesystemStaticSiteProvider);
 
 // Also trigger the hook for any listeners
-doAction('aether.providers.register', LocalFilesystemStaticSiteProvider);
+doAction('altolith.providers.register', LocalFilesystemStaticSiteProvider);
 ```
 
 ### 2. Discovery
@@ -83,12 +83,12 @@ doAction('aether.providers.register', LocalFilesystemStaticSiteProvider);
 Registry collects all providers and makes them available:
 
 ```javascript
-import { useProviderRegistry } from '@aether/providers/hooks/useProviderRegistry';
+import { useProviderRegistry } from '@altolith/providers/hooks/useProviderRegistry';
 
 const { providerIds, isLoading } = useProviderRegistry();
 
 // Or use useProviderMetadata for full provider objects
-import { useProviderMetadata } from '@aether/providers/hooks/useProviderRegistry';
+import { useProviderMetadata } from '@altolith/providers/hooks/useProviderRegistry';
 
 const { providers, isLoading } = useProviderMetadata();
 const localProvider = providers.find(p => p.id === 'local-filesystem');
@@ -146,9 +146,9 @@ All providers define static constants for metadata:
 ```javascript
 export class MyProvider {
     static ID = 'my-provider';
-    static NAME = __( 'My Provider', 'aether-site-exporter' );
+    static NAME = __( 'My Provider', 'altolith-deploy' );
     static TYPE = 'storage';
-    static DESCRIPTION = __( 'Provider description', 'aether-site-exporter' );
+    static DESCRIPTION = __( 'Provider description', 'altolith-deploy' );
     static ICON = '📦';
     static DEPLOYMENT_TYPE = 'static_site'; // or 'blueprint_bundle'
     static CONFIG_FIELDS = [
@@ -173,9 +173,9 @@ import { sanitizeAllFields } from '../utils/configSanitization';
 
 export class MyProvider {
     static ID = 'my-provider';
-    static NAME = __( 'My Provider', 'aether-site-exporter' );
+    static NAME = __( 'My Provider', 'altolith-deploy' );
     static TYPE = 'storage';
-    static DESCRIPTION = __( 'Provider description', 'aether-site-exporter' );
+    static DESCRIPTION = __( 'Provider description', 'altolith-deploy' );
     static ICON = '📦';
     static DEPLOYMENT_TYPE = 'static_site'; // or 'blueprint_bundle'
     static CONFIG_FIELDS = [
@@ -198,7 +198,7 @@ import { MyProvider } from './MyProvider';
 ProviderRegistry.register(MyProvider.ID, MyProvider);
 
 // Also trigger the hook for any listeners
-doAction('aether.providers.register', MyProvider);
+doAction('altolith.providers.register', MyProvider);
 ```
 
 ## Provider Hooks (React)
@@ -208,7 +208,7 @@ doAction('aether.providers.register', MyProvider);
 Providers are accessed via the ProviderRegistry:
 
 ```javascript
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
 
 // Get all providers
 const allProviders = ProviderRegistry.getAll();
@@ -270,9 +270,9 @@ Configuration is persisted via REST API:
 **Endpoint:** `ProviderConfigController.php`
 
 ```
-GET    /wp-json/aether/site-exporter/providers/{providerId}/config
-POST   /wp-json/aether/site-exporter/providers/{providerId}/config
-DELETE /wp-json/aether/site-exporter/providers/{providerId}/config
+GET    /wp-json/altolith/deploy/providers/{providerId}/config
+POST   /wp-json/altolith/deploy/providers/{providerId}/config
+DELETE /wp-json/altolith/deploy/providers/{providerId}/config
 ```
 
 Server-side encryption for sensitive fields (marked with `secure: true`).

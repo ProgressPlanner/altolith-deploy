@@ -82,11 +82,11 @@ describe( 'ExportAPIService', () => {
 			const result = service.markAssetChanged( 'theme', 'test-theme' );
 
 			expect( mockStorage.get ).toHaveBeenCalledWith(
-				'aether_changed_assets',
+				'altolith_changed_assets',
 				[]
 			);
 			expect( mockStorage.set ).toHaveBeenCalledWith(
-				'aether_changed_assets',
+				'altolith_changed_assets',
 				[ 'theme:test-theme' ]
 			);
 			expect( result ).toEqual( {
@@ -116,7 +116,7 @@ describe( 'ExportAPIService', () => {
 			service.markAssetChanged( 'theme', 'new-theme' );
 
 			expect( mockStorage.set ).toHaveBeenCalledWith(
-				'aether_changed_assets',
+				'altolith_changed_assets',
 				[
 					'theme:existing-theme',
 					'plugin:existing-plugin',

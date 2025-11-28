@@ -7,12 +7,12 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
-import { storage } from '@aether/utils/storage';
+import { storage } from '@altolith/utils/storage';
 import {
 	AssetManagerService,
 	filterChangedAssets,
 	clearAllUploadFlags,
-} from '@aether/services/AssetManagerService';
+} from '@altolith/services/AssetManagerService';
 
 export function useAssetManager() {
 	const [ assets, setAssets ] = useState( {} );

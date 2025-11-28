@@ -6,8 +6,8 @@
  *
  */
 
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
-import { getDeploymentTypes } from '@aether/utils/deploymentTypes';
+import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
+import { getDeploymentTypes } from '@altolith/utils/deploymentTypes';
 
 /**
  * Prepare export configuration from settings response

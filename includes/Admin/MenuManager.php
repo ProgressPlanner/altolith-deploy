@@ -5,10 +5,10 @@
  *
  * Manages the admin menu structure and page registration.
  *
- * @package Aether\Admin
+ * @package Altolith\Admin
  */
 
-namespace Aether\SiteExporter\Admin;
+namespace Altolith\Deploy\Admin;
 
 /**
  * Class MenuManager
@@ -29,7 +29,7 @@ class MenuManager
 	 *
 	 * @var string
 	 */
-	private string $mainMenuSlug = 'aether';
+	private string $mainMenuSlug = 'altolith';
 
 	/**
 	 * Initialize the menu manager.
@@ -89,12 +89,12 @@ class MenuManager
 	/**
 	 * Enqueue common admin assets.
 	 *
-	 * Assets that should be loaded on all Aether admin pages.
+	 * Assets that should be loaded on all Altolith admin pages.
 	 */
 	private function enqueueCommonAssets(): void
 	{
-		// Check if we're on any Aether admin page.
-		if (! $this->isAetherPage()) {
+		// Check if we're on any Altolith admin page.
+		if (! $this->isAltolithPage()) {
 			return;
 		}
 
@@ -102,11 +102,11 @@ class MenuManager
 	}
 
 	/**
-	 * Check if current page is an Aether admin page.
+	 * Check if current page is an Altolith admin page.
 	 *
 	 * @return bool
 	 */
-	private function isAetherPage(): bool
+	private function isAltolithPage(): bool
 	{
 		if (! isset($_GET['page'])) { // phpcs:ignore WordPress.Security.NonceVerification
 			return false;

@@ -6,10 +6,10 @@
  * Handles Cross-Origin Resource Sharing (CORS) headers for WordPress REST API endpoints.
  * Required for WordPress Playground which runs in an iframe.
  *
- * @package Aether\Utilities
+ * @package Altolith\Utilities
  */
 
-namespace Aether\SiteExporter\Utilities;
+namespace Altolith\Deploy\Utilities;
 
 \defined('ABSPATH') || exit;
 
@@ -31,13 +31,13 @@ class CorsHandler
 	 */
 	public function handlePreflight($result, \WP_REST_Server $server, \WP_REST_Request $request)
 	{
-		// Only handle OPTIONS requests for Aether endpoints.
+		// Only handle OPTIONS requests for Altolith endpoints.
 		if ($request->get_method() !== 'OPTIONS') {
 			return $result;
 		}
 
 		$route = $request->get_route();
-		if (! \str_starts_with($route, '/aether/')) {
+		if (! \str_starts_with($route, '/altolith/')) {
 			return $result;
 		}
 
@@ -59,10 +59,10 @@ class CorsHandler
 	 */
 	public function addHeadersFilter(bool $served, \WP_REST_Response $result, $request, \WP_REST_Server $server): bool // phpcs:ignore VariableAnalysis.CodeAnalysis
 	{
-		// Only add headers for Aether endpoints
+		// Only add headers for Altolith endpoints
 		if ($request instanceof \WP_REST_Request) {
 			$route = $request->get_route();
-			if (! \str_starts_with($route, '/aether/')) {
+			if (! \str_starts_with($route, '/altolith/')) {
 				return $served;
 			}
 		}
@@ -87,10 +87,10 @@ class CorsHandler
 			return;
 		}
 
-		// Check if this is an Aether endpoint by checking the request URI
+		// Check if this is an Altolith endpoint by checking the request URI
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- CORS headers don't need nonce
 		$requestUri = \sanitize_text_field(\wp_unslash($_SERVER['REQUEST_URI'] ?? ''));
-		if (! \str_contains($requestUri, '/wp-json/aether/')) {
+		if (! \str_contains($requestUri, '/wp-json/altolith/')) {
 			return;
 		}
 
@@ -130,7 +130,7 @@ class CorsHandler
 			// The browser will block the request
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
 				\error_log(\sprintf(
-					'Aether: Blocked CORS request from disallowed origin: %s',
+					'Altolith: Blocked CORS request from disallowed origin: %s',
 					$origin
 				));
 			}
@@ -163,8 +163,8 @@ class CorsHandler
 		}
 
 		// Allow local development origins (requires explicit opt-in for security)
-		// Define AETHER_ALLOW_LOCAL_CORS in wp-config.php to enable
-		if (\defined('WP_DEBUG') && WP_DEBUG && \defined('AETHER_ALLOW_LOCAL_CORS') && \constant('AETHER_ALLOW_LOCAL_CORS')) {
+		// Define ALTOLITH_ALLOW_LOCAL_CORS in wp-config.php to enable
+		if (\defined('WP_DEBUG') && WP_DEBUG && \defined('ALTOLITH_ALLOW_LOCAL_CORS') && \constant('ALTOLITH_ALLOW_LOCAL_CORS')) {
 			$allowedOrigins = \array_merge($allowedOrigins, $this->getLocalDevelopmentOrigins($origin));
 		}
 
@@ -179,7 +179,7 @@ class CorsHandler
 		}
 
 		// Apply filter to allow developers to add custom allowed origins
-		$allowedOrigins = \apply_filters('aether_site_exporter_cors_allowed_origins', $allowedOrigins);
+		$allowedOrigins = \apply_filters('altolith_deploy_cors_allowed_origins', $allowedOrigins);
 
 		return $allowedOrigins;
 	}

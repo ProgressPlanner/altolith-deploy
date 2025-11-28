@@ -15,7 +15,7 @@ import {
 	Notice,
 } from '@wordpress/components';
 import ModalActions from '../ModalActions';
-import { colors, spacing, fontSize } from '@aether/utils/styles';
+import { colors, spacing, fontSize } from '@altolith/utils/styles';
 
 // Styles
 const formStyle = {
@@ -155,7 +155,7 @@ export default function ExportConfigModal( {
 		const url = URL.createObjectURL( blob );
 		const a = document.createElement( 'a' );
 		a.href = url;
-		a.download = `aether-provider-config-${
+		a.download = `altolith-provider-config-${
 			new Date().toISOString().split( 'T' )[ 0 ]
 		}.json`;
 		document.body.appendChild( a );
@@ -174,26 +174,23 @@ export default function ExportConfigModal( {
 
 	return (
 		<Modal
-			className="aether-export-config-modal"
-			title={ __(
-				'Export Provider Configuration',
-				'aether-site-exporter'
-			) }
+			className="altolith-export-config-modal"
+			title={ __( 'Export Provider Configuration', 'altolith-deploy' ) }
 			onRequestClose={ onClose }
 			size="large"
 		>
 			<div
-				className="aether-export-config-modal__form"
+				className="altolith-export-config-modal__form"
 				style={ formStyle }
 			>
 				{ /* Warning about credentials */ }
 				<div
-					className="aether-export-config-modal__warning"
+					className="altolith-export-config-modal__warning"
 					style={ warningStyle }
 				>
 					{ __(
 						'Warning: Exported configuration includes credentials in plaintext. Handle with care.',
-						'aether-site-exporter'
+						'altolith-deploy'
 					) }
 				</div>
 
@@ -202,14 +199,14 @@ export default function ExportConfigModal( {
 					<Notice status="info" isDismissible={ false }>
 						{ __(
 							'No provider instances configured.',
-							'aether-site-exporter'
+							'altolith-deploy'
 						) }
 					</Notice>
 				) : (
-					<div className="aether-export-config-modal__selection">
+					<div className="altolith-export-config-modal__selection">
 						<CheckboxControl
-							className="aether-export-config-modal__select-all"
-							label={ __( 'Select All', 'aether-site-exporter' ) }
+							className="altolith-export-config-modal__select-all"
+							label={ __( 'Select All', 'altolith-deploy' ) }
 							checked={ isAllSelected }
 							indeterminate={ isIndeterminate }
 							onChange={ handleToggleAll }
@@ -226,7 +223,7 @@ export default function ExportConfigModal( {
 								return (
 									<CheckboxControl
 										key={ instanceId }
-										className="aether-export-config-modal__instance-checkbox"
+										className="altolith-export-config-modal__instance-checkbox"
 										label={ `${ instanceName } (${ getProviderName(
 											providerType
 										) })` }
@@ -246,12 +243,12 @@ export default function ExportConfigModal( {
 				{ /* Generate button */ }
 				{ instanceIds.length > 0 && (
 					<Button
-						className="aether-export-config-modal__generate-button"
+						className="altolith-export-config-modal__generate-button"
 						variant="secondary"
 						onClick={ handleGenerateJson }
 						disabled={ selectedIds.length === 0 }
 					>
-						{ __( 'Generate JSON', 'aether-site-exporter' ) }
+						{ __( 'Generate JSON', 'altolith-deploy' ) }
 					</Button>
 				) }
 
@@ -259,7 +256,7 @@ export default function ExportConfigModal( {
 				{ exportJson && (
 					<>
 						<TextareaControl
-							className="aether-export-config-modal__json-output"
+							className="altolith-export-config-modal__json-output"
 							value={ exportJson }
 							readOnly
 							rows={ 12 }
@@ -268,20 +265,14 @@ export default function ExportConfigModal( {
 						/>
 						<div style={ buttonRowStyle }>
 							<Button
-								className="aether-export-config-modal__copy-button"
+								className="altolith-export-config-modal__copy-button"
 								variant="secondary"
 								onClick={ handleCopy }
 							>
-								{ __(
-									'Copy to Clipboard',
-									'aether-site-exporter'
-								) }
+								{ __( 'Copy to Clipboard', 'altolith-deploy' ) }
 								{ copyStatus === 'copied' && (
 									<span style={ successBadgeStyle }>
-										{ __(
-											'✓ Copied!',
-											'aether-site-exporter'
-										) }
+										{ __( '✓ Copied!', 'altolith-deploy' ) }
 									</span>
 								) }
 								{ copyStatus === 'error' && (
@@ -291,22 +282,16 @@ export default function ExportConfigModal( {
 											color: colors.error,
 										} }
 									>
-										{ __(
-											'Failed',
-											'aether-site-exporter'
-										) }
+										{ __( 'Failed', 'altolith-deploy' ) }
 									</span>
 								) }
 							</Button>
 							<Button
-								className="aether-export-config-modal__download-button"
+								className="altolith-export-config-modal__download-button"
 								variant="secondary"
 								onClick={ handleDownload }
 							>
-								{ __(
-									'Download .json',
-									'aether-site-exporter'
-								) }
+								{ __( 'Download .json', 'altolith-deploy' ) }
 							</Button>
 						</div>
 					</>
@@ -314,8 +299,8 @@ export default function ExportConfigModal( {
 
 				<ModalActions
 					onCancel={ onClose }
-					cancelLabel={ __( 'Close', 'aether-site-exporter' ) }
-					className="aether-export-config-modal__actions"
+					cancelLabel={ __( 'Close', 'altolith-deploy' ) }
+					className="altolith-export-config-modal__actions"
 				/>
 			</div>
 		</Modal>

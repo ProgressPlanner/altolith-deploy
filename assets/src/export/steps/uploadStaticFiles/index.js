@@ -9,18 +9,18 @@
 
 import { __, sprintf } from '@wordpress/i18n';
 import { addAction, applyFilters } from '@wordpress/hooks';
-import { fetchProviderConfig } from '@aether/export/utils/staticSiteConfig';
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import { fetchProviderConfig } from '@altolith/export/utils/staticSiteConfig';
+import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
 
 /**
  * Status labels for the step
  */
 const statusLabels = {
-	pending: __( 'Upload static files', 'aether-site-exporter' ),
+	pending: __( 'Upload static files', 'altolith-deploy' ),
 	// Don't show per-file counters - they're misleading with multiple providers
 	// Per-provider progress is shown separately in the provider progress pills
-	running: () => __( 'Uploading static files…', 'aether-site-exporter' ),
-	complete: () => __( 'Static files uploaded', 'aether-site-exporter' ),
+	running: () => __( 'Uploading static files…', 'altolith-deploy' ),
+	complete: () => __( 'Static files uploaded', 'altolith-deploy' ),
 };
 
 /**
@@ -88,7 +88,7 @@ async function handler( context ) {
 		throw new Error(
 			__(
 				'Provider instance not found in thread context',
-				'aether-site-exporter'
+				'altolith-deploy'
 			)
 		);
 	}
@@ -97,20 +97,20 @@ async function handler( context ) {
 		throw new Error(
 			__(
 				'URLs not found. Please run discoverAndScanSite first.',
-				'aether-site-exporter'
+				'altolith-deploy'
 			)
 		);
 	}
 
 	if ( ! processStaticSiteUrls ) {
 		throw new Error(
-			__( 'Static site generator not available', 'aether-site-exporter' )
+			__( 'Static site generator not available', 'altolith-deploy' )
 		);
 	}
 
 	// Debug: Log htmlDataMap status
 	console.log(
-		'[Aether] uploadStaticFiles: htmlDataMap type:',
+		'[Altolith] uploadStaticFiles: htmlDataMap type:',
 		htmlDataMap instanceof Map ? 'Map' : typeof htmlDataMap,
 		'size:',
 		htmlDataMap instanceof Map ? htmlDataMap.size : 'N/A'
@@ -136,7 +136,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %s: Provider label */
-			__( 'Processing static site for %s…', 'aether-site-exporter' ),
+			__( 'Processing static site for %s…', 'altolith-deploy' ),
 			providerLabel
 		),
 		'progress',
@@ -159,7 +159,7 @@ async function handler( context ) {
 
 	// Filter URLs before processing
 	const filteredUrls = applyFilters(
-		'aether.export.step.uploadStaticSiteFiles.urls',
+		'altolith.export.step.uploadStaticSiteFiles.urls',
 		urls,
 		[ providerId ],
 		{
@@ -209,7 +209,7 @@ async function handler( context ) {
 		setStatusMessage(
 			sprintf(
 				/* translators: %1$s: Provider label, %2$d: Files uploaded */
-				__( 'Uploaded %2$d files to %1$s', 'aether-site-exporter' ),
+				__( 'Uploaded %2$d files to %1$s', 'altolith-deploy' ),
 				providerLabel,
 				filesUploaded
 			),
@@ -218,11 +218,11 @@ async function handler( context ) {
 		);
 	} else {
 		const errorMessage =
-			result.error || __( 'No files uploaded', 'aether-site-exporter' );
+			result.error || __( 'No files uploaded', 'altolith-deploy' );
 		throw new Error(
 			sprintf(
 				/* translators: %1$s: Provider label, %2$s: Error message */
-				__( 'Failed to upload to %1$s: %2$s', 'aether-site-exporter' ),
+				__( 'Failed to upload to %1$s: %2$s', 'altolith-deploy' ),
 				providerLabel,
 				errorMessage
 			)
@@ -230,7 +230,7 @@ async function handler( context ) {
 	}
 
 	return applyFilters(
-		'aether.export.step.uploadStaticSiteFiles.result',
+		'altolith.export.step.uploadStaticSiteFiles.result',
 		{
 			staticUploadResults: {
 				providerId,
@@ -257,10 +257,10 @@ async function handler( context ) {
  */
 const stepDefinition = {
 	id: 'uploadStaticFiles',
-	label: __( 'Upload Static Files', 'aether-site-exporter' ),
+	label: __( 'Upload Static Files', 'altolith-deploy' ),
 	description: __(
 		'Generate and upload static HTML files',
-		'aether-site-exporter'
+		'altolith-deploy'
 	),
 	deploymentType: 'static_site',
 	supportsProgress: true,
@@ -318,8 +318,8 @@ const stepDefinition = {
  * Register step via WordPress hooks
  */
 addAction(
-	'aether.export.register_steps',
-	'aether/step-uploadStaticFiles',
+	'altolith.export.register_steps',
+	'altolith/step-uploadStaticFiles',
 	( registry ) => {
 		registry.register( stepDefinition );
 	},

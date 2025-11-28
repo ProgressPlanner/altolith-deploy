@@ -5,16 +5,16 @@
  *
  * Handles site export operations (database + wp-content).
  *
- * @package Aether\Services
+ * @package Altolith\Services
  */
 
-namespace Aether\SiteExporter\Services;
+namespace Altolith\Deploy\Services;
 
-use Aether\SiteExporter\Plugin;
-use Aether\SiteExporter\Utilities\TempDirectoryManager;
-use Aether\SiteExporter\Utilities\SecurityValidator;
-use Aether\SiteExporter\Services\ZipService;
-use Aether\SiteExporter\Services\FileBatchService;
+use Altolith\Deploy\Plugin;
+use Altolith\Deploy\Utilities\TempDirectoryManager;
+use Altolith\Deploy\Utilities\SecurityValidator;
+use Altolith\Deploy\Services\ZipService;
+use Altolith\Deploy\Services\FileBatchService;
 
 \defined('ABSPATH') || exit;
 
@@ -79,13 +79,13 @@ class ExportService
 		// WordPress Playground Compatibility:
 		// Use TempDirectoryManager instead of sys_get_temp_dir() because
 		// WordPress Playground's WASM environment may not have /tmp access.
-		// This uses wp-content/uploads/aether-temp instead.
+		// This uses wp-content/uploads/altolith-temp instead.
 		$tempZipPath = TempDirectoryManager::getTempFilePath('wp-content-complete-', '.zip');
 
 		if (false === $tempZipPath) {
 			return new \WP_Error(
 				'temp_directory_unavailable',
-				\__('Could not create temporary directory for export. Please check file permissions.', 'aether-site-exporter'),
+				\__('Could not create temporary directory for export. Please check file permissions.', 'altolith-deploy'),
 				['status' => 500]
 			);
 		}
@@ -102,7 +102,7 @@ class ExportService
 		if (true !== $zip->open($tempZipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE)) {
 			return new \WP_Error(
 				'zip_create_failed',
-				\__('Failed to create site export zip', 'aether-site-exporter'),
+				\__('Failed to create site export zip', 'altolith-deploy'),
 				[ 'status' => 500 ]
 			);
 		}
@@ -175,7 +175,7 @@ class ExportService
 		 *
 		 * @param array<string, mixed>|\WP_Error $result Export result.
 		 */
-		return \apply_filters('aether_site_exporter_export_complete_site', $result);
+		return \apply_filters('altolith_deploy_export_complete_site', $result);
 	}
 
 	/**
@@ -253,12 +253,12 @@ class ExportService
 		// Determine base directory and zip prefix based on asset type
 		$baseDir = ('plugin' === $assetType) ? WP_PLUGIN_DIR : \get_theme_root();
 		$zipPrefix = ('plugin' === $assetType) ? 'wp-content/plugins/' : 'wp-content/themes/';
-		$skipSlug = ('plugin' === $assetType) ? 'aether' : null;
+		$skipSlug = ('plugin' === $assetType) ? 'altolith' : null;
 
 		if (null !== $customAssetSlugs) {
 			// Use provided custom asset slugs (from browser-based WordPress.org detection)
 			foreach ($customAssetSlugs as $slug) {
-				// Skip 'aether' plugin if processing plugins
+				// Skip 'altolith' plugin if processing plugins
 				if (null !== $skipSlug && $skipSlug === $slug) {
 					continue;
 				}
@@ -282,7 +282,7 @@ class ExportService
 
 			foreach ($customAssets as $asset) {
 				if ($assetType === $asset['type']) {
-					// Skip 'aether' plugin if processing plugins
+					// Skip 'altolith' plugin if processing plugins
 					if (null !== $skipSlug && $skipSlug === $asset['slug']) {
 						continue;
 					}

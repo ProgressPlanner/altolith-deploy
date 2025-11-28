@@ -14,16 +14,16 @@ jest.mock( '@wordpress/element', () => ( {
 } ) );
 
 // Mock API fetch
-jest.mock( '@aether/utils/api', () => jest.fn() );
+jest.mock( '@altolith/utils/api', () => jest.fn() );
 
 // Mock asset discovery
-jest.mock( '@aether/utils/useAssetDiscovery', () => ( {
+jest.mock( '@altolith/utils/useAssetDiscovery', () => ( {
 	__esModule: true,
 	default: jest.fn(),
 } ) );
 
 // Mock storage
-jest.mock( '@aether/utils/storage', () => ( {
+jest.mock( '@altolith/utils/storage', () => ( {
 	storage: {
 		get: jest.fn(),
 		set: jest.fn(),
@@ -31,7 +31,7 @@ jest.mock( '@aether/utils/storage', () => ( {
 } ) );
 
 // Mock ExportAPIService
-jest.mock( '@aether/services/ExportAPIService', () => ( {
+jest.mock( '@altolith/services/ExportAPIService', () => ( {
 	ExportAPIService: jest.fn().mockImplementation( () => ( {
 		discoverBlueprintBundleAssets: jest.fn(),
 		markAssetChanged: jest.fn(),
@@ -42,10 +42,10 @@ jest.mock( '@aether/services/ExportAPIService', () => ( {
 	} ) ),
 } ) );
 
-import apiFetch from '@aether/utils/api';
-import useAssetDiscovery from '@aether/utils/useAssetDiscovery';
-import { storage } from '@aether/utils/storage';
-import { ExportAPIService } from '@aether/services/ExportAPIService';
+import apiFetch from '@altolith/utils/api';
+import useAssetDiscovery from '@altolith/utils/useAssetDiscovery';
+import { storage } from '@altolith/utils/storage';
+import { ExportAPIService } from '@altolith/services/ExportAPIService';
 
 describe( 'useExportAPI', () => {
 	let mockServiceInstance;

@@ -129,7 +129,7 @@ test('processes data', () => {
 - Providers MUST be completely isolated to their own files
 - NO provider-specific logic in core architecture or abstractions
 - Core code should only interact with provider interface via JavaScript ProviderRegistry
-- Providers register via `aether.providers.register` JavaScript hook for 3rd-party extensibility
+- Providers register via `altolith.providers.register` JavaScript hook for 3rd-party extensibility
 - Each provider is self-contained: all logic, configuration, validation within JavaScript provider class
 - 3rd-party plugins can hook in and add their own providers in JavaScript
 - Example: `LocalFilesystemProvider` (JavaScript) contains ALL local filesystem logic - nothing in core
@@ -141,22 +141,22 @@ test('processes data', () => {
 - Each instance has its own configuration stored in settings
 - `ProviderRegistry` manages both provider types AND instances
 - Users can configure multiple instances (e.g., multiple S3 buckets, multiple local paths)
-- Instance configs stored in `aether_site_exporter_settings['providers']` array
+- Instance configs stored in `altolith_deploy_settings['providers']` array
 
 **Provider Extension Pattern for 3rd-Party Plugins**
 
 - 3rd-party providers extend `AbstractProvider` in JavaScript
 - JavaScript providers implement the provider interface and are dynamically loaded
-- Register via `aether.providers.register` JavaScript hook or directly with `ProviderRegistry.register()`
+- Register via `altolith.providers.register` JavaScript hook or directly with `ProviderRegistry.register()`
 
-### Aether Ecosystem Integration
+### Altolith Ecosystem Integration
 
-**This plugin is part of the Aether ecosystem (all plugins with `aether` prefix).**
+**This plugin is part of the Altolith ecosystem (all plugins with `altolith` prefix).**
 
-- Designed to work together with other Aether plugins
+- Designed to work together with other Altolith plugins
 - Consider cross-plugin compatibility when making architectural changes
-- Shared conventions across Aether plugins should be maintained
-- Other Aether plugins may extend or integrate with this plugin's provider system
+- Shared conventions across Altolith plugins should be maintained
+- Other Altolith plugins may extend or integrate with this plugin's provider system
 
 ## Development Commands
 
@@ -229,7 +229,7 @@ composer check
 
 ### Overview
 
-Aether Site Exporter is a WordPress plugin that exports WordPress sites as static HTML or WordPress Playground blueprint bundles. The plugin uses a **universal compatibility** design - it works identically in both traditional hosting environments and WordPress Playground's browser-based WASM environment.
+Altolith Deploy is a WordPress plugin that exports WordPress sites as static HTML or WordPress Playground blueprint bundles. The plugin uses a **universal compatibility** design - it works identically in both traditional hosting environments and WordPress Playground's browser-based WASM environment.
 
 ### Universal Compatibility Design
 
@@ -238,16 +238,16 @@ Aether Site Exporter is a WordPress plugin that exports WordPress sites as stati
 Key principles:
 
 - **No environment detection** - code works identically everywhere
-- **Never use `sys_get_temp_dir()`** - ALWAYS use `TempDirectoryManager::getTempFilePath()` which uses `wp-content/uploads/aether-temp`
+- **Never use `sys_get_temp_dir()`** - ALWAYS use `TempDirectoryManager::getTempFilePath()` which uses `wp-content/uploads/altolith-temp`
 - **Never use `realpath()` directly** - ALWAYS use `PathValidator` which has WASM-compatible fallbacks
 - **Never make external HTTP calls from PHP** - use filter-based architecture for WordPress.org API checks
 - **Browser-based static site generation** - prevents PHP timeouts
 
 ### PHP Architecture (Thin REST API Layer)
 
-**Namespace:** `Aether\SiteExporter`
+**Namespace:** `Altolith\Deploy`
 
-**Entry Point:** `aether-site-exporter.php` → `Plugin::getInstance()`
+**Entry Point:** `altolith-deploy.php` → `Plugin::getInstance()`
 
 **Core Components:**
 
@@ -262,13 +262,13 @@ Key principles:
    - Provider classes are static (no base class needed)
    - `LocalFilesystemStaticSiteProvider` (JavaScript) - Stores static site files locally
    - `LocalFilesystemBlueprintBundleProvider` (JavaScript) - Stores blueprint bundles locally
-   - Providers register via `aether.providers.register` JavaScript hook
+   - Providers register via `altolith.providers.register` JavaScript hook
    - Instance IDs format: `{provider_type}:{uuid}`
 
 3. **REST API Controllers** (`includes/REST/`)
    - Each controller is a dedicated class (separation of concerns)
    - Export controllers handle multi-step export workflow
-   - All endpoints use namespace `aether/site-exporter`
+   - All endpoints use namespace `altolith/deploy`
    - CORS headers automatically added for Playground compatibility
    - **No provider-specific logic in controllers**
 
@@ -318,7 +318,7 @@ Key principles:
    - Asset tracking and deduplication
 
 4. **Provider Integration**
-   - Providers dynamically loaded via `window.aether.providerScriptsBaseUrl`
+   - Providers dynamically loaded via `window.altolith.providerScriptsBaseUrl`
    - Providers implement standard methods (getId, getName, deploy, etc.)
    - Config fields built via `ConfigFieldBuilder`
    - Each provider is isolated in its own file
@@ -335,33 +335,33 @@ Key principles:
 ### REST API Endpoints
 
 **Settings:**
-- `GET /aether/site-exporter/settings` - Get plugin settings
-- `POST /aether/site-exporter/settings` - Update settings
+- `GET /altolith/deploy/settings` - Get plugin settings
+- `POST /altolith/deploy/settings` - Update settings
 
 **Export Operations:**
-- `POST /aether/site-exporter/export/createArchive` - Create WordPress archive
-- `POST /aether/site-exporter/export/initArchive` - Initialize archive
-- `POST /aether/site-exporter/export/finalizeArchive` - Finalize archive
-- `POST /aether/site-exporter/export/generateBlueprintBundle` - Generate blueprint
-- `GET /aether/site-exporter/export/steps/getHtmlContent` - Get HTML for URL
+- `POST /altolith/deploy/export/createArchive` - Create WordPress archive
+- `POST /altolith/deploy/export/initArchive` - Initialize archive
+- `POST /altolith/deploy/export/finalizeArchive` - Finalize archive
+- `POST /altolith/deploy/export/generateBlueprintBundle` - Generate blueprint
+- `GET /altolith/deploy/export/steps/getHtmlContent` - Get HTML for URL
 
 **Provider Management:**
-- `GET/POST/DELETE /aether/site-exporter/providers/{providerId}/config` - Manage provider config
-- `POST /aether/site-exporter/providers/{providerId}/test` - Test provider
+- `GET/POST/DELETE /altolith/deploy/providers/{providerId}/config` - Manage provider config
+- `POST /altolith/deploy/providers/{providerId}/test` - Test provider
 
 **URL Discovery & Assets:**
-- `POST /aether/site-exporter/url-discovery/discover` - Discover site URLs
-- `GET /aether/site-exporter/assets/manifest` - Get assets manifest
+- `POST /altolith/deploy/url-discovery/discover` - Discover site URLs
+- `GET /altolith/deploy/assets/manifest` - Get assets manifest
 
 **Local Storage:**
-- `POST /aether/site-exporter/local-storage/upload` - Upload file
-- `DELETE /aether/site-exporter/local-storage/delete` - Delete file
-- `GET /aether/site-exporter/local-storage/download` - Download file
+- `POST /altolith/deploy/local-storage/upload` - Upload file
+- `DELETE /altolith/deploy/local-storage/delete` - Delete file
+- `GET /altolith/deploy/local-storage/download` - Download file
 
 ### State Management
 
 **PHP:**
-- Settings stored in `aether_site_exporter_settings` option
+- Settings stored in `altolith_deploy_settings` option
 - Provider instance configs stored in settings array under `providers` key
 
 **JavaScript:**
@@ -392,8 +392,8 @@ Key principles:
 
 **CORS Security:**
 - Whitelisted origins only (Playground domains + same-origin)
-- Local development requires `AETHER_ALLOW_LOCAL_CORS` constant
-- Custom origins via `aether_site_exporter_cors_allowed_origins` filter
+- Local development requires `ALTOLITH_ALLOW_LOCAL_CORS` constant
+- Custom origins via `altolith_deploy_cors_allowed_origins` filter
 
 ### Testing Practices
 
@@ -447,7 +447,7 @@ describe('MyProvider', () => {
 **2. Create Provider Class (JavaScript)**
 ```javascript
 // assets/src/providers/my-provider/MyProvider.js
-import { AbstractProvider } from '@aether/providers/base/AbstractProvider';
+import { AbstractProvider } from '@altolith/providers/base/AbstractProvider';
 
 class MyProvider extends AbstractProvider {
     getId() {
@@ -473,13 +473,13 @@ class MyProvider extends AbstractProvider {
 ```javascript
 // assets/src/providers/my-provider/index.js
 import { MyProvider } from './MyProvider';
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
 import { doAction } from '@wordpress/hooks';
 
 // Create and register provider
 const provider = new MyProvider();
 ProviderRegistry.register(provider.getId(), provider);
-doAction('aether.providers.register', provider);
+doAction('altolith.providers.register', provider);
 ```
 
 **Key Rules:**
@@ -506,7 +506,7 @@ describe('myStep', () => {
 import { addAction } from '@wordpress/hooks';
 import StepRegistry from '../../registry/StepRegistry';
 
-addAction('aether.export.register_steps', 'aether/my-step', (registry) => {
+addAction('altolith.export.register_steps', 'altolith/my-step', (registry) => {
     registry.register({
         id: 'myStep',
         label: 'My Step',
@@ -686,7 +686,7 @@ async function processAndUpload(fetcher, storage, uploader) {
 ## File Organization
 
 ```
-aether-site-exporter/
+altolith-deploy/
 ├── includes/              # PHP backend (thin REST API layer)
 │   ├── Admin/            # WordPress admin integration
 │   ├── CLI/              # WP-CLI commands

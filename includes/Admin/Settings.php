@@ -1,19 +1,19 @@
 <?php
 
 /**
- * Admin Settings Manager for Aether
+ * Admin Settings Manager for Altolith
  *
  * Handles settings storage, validation, and menu initialization.
  *
- * @package Aether\Admin
+ * @package Altolith\Admin
  */
 
-namespace Aether\SiteExporter\Admin;
+namespace Altolith\Deploy\Admin;
 
 \defined('ABSPATH') || exit;
 
 /**
- * Settings page class for Aether plugin.
+ * Settings page class for Altolith plugin.
  */
 class Settings
 {
@@ -54,8 +54,8 @@ class Settings
 	public function registerSettings(): void
 	{
 		\register_setting(
-			'aether_site_exporter_settings',
-			'aether_site_exporter_settings',
+			'altolith_deploy_settings',
+			'altolith_deploy_settings',
 			[
 				'sanitize_callback' => [ $this, 'sanitizeSettings' ],
 			]
@@ -81,7 +81,7 @@ class Settings
 	 */
 	public function get(): array
 	{
-		$settings = \get_option('aether_site_exporter_settings', []);
+		$settings = \get_option('altolith_deploy_settings', []);
 		return \is_array($settings) ? $settings : [];
 	}
 
@@ -93,6 +93,6 @@ class Settings
 	 */
 	public function update(array $settings): bool
 	{
-		return \update_option('aether_site_exporter_settings', $settings);
+		return \update_option('altolith_deploy_settings', $settings);
 	}
 }

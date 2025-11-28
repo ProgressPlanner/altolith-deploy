@@ -15,7 +15,7 @@ jest.mock( '@wordpress/i18n', () => ( {
 } ) );
 
 // Mock child components to simplify testing
-jest.mock( '@aether/components/StepNode', () => ( {
+jest.mock( '@altolith/components/StepNode', () => ( {
 	StepNode: ( { stepNumber, label, status, statusLabels, statusData } ) => (
 		<span
 			data-testid={ `step-node-${ stepNumber }` }
@@ -29,7 +29,7 @@ jest.mock( '@aether/components/StepNode', () => ( {
 	),
 } ) );
 
-jest.mock( '@aether/components/StepConnector', () => ( {
+jest.mock( '@altolith/components/StepConnector', () => ( {
 	StepConnector: ( { isComplete } ) => (
 		<span
 			data-testid="step-connector"
@@ -41,7 +41,7 @@ jest.mock( '@aether/components/StepConnector', () => ( {
 } ) );
 
 // Mock styles
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	colors: {
 		primary: '#0073aa',
 		textMuted: '#757575',
@@ -117,7 +117,7 @@ describe( 'VerticalStepper', () => {
 			render( <VerticalStepper steps={ defaultSteps } /> );
 
 			const container = screen.getByRole( 'list' );
-			expect( container ).toHaveClass( 'aether-vertical-stepper' );
+			expect( container ).toHaveClass( 'altolith-vertical-stepper' );
 		} );
 	} );
 

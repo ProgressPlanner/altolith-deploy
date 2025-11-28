@@ -5,13 +5,13 @@
  * Tests for WordPress Playground-compatible temporary directory management.
  * Critical for universal compatibility across hosting environments.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Utilities;
+namespace Altolith\Deploy\Tests\Unit\Utilities;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Utilities\TempDirectoryManager;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Utilities\TempDirectoryManager;
 
 /**
  * TempDirectoryManager test case.
@@ -30,7 +30,7 @@ class TempDirectoryManagerTest extends TestCase {
 	 */
 	public function set_up() {
 		parent::set_up();
-		$this->custom_temp_dir = WP_CONTENT_DIR . '/uploads/test-aether-temp';
+		$this->custom_temp_dir = WP_CONTENT_DIR . '/uploads/test-altolith-temp';
 	}
 
 	/**
@@ -62,7 +62,7 @@ class TempDirectoryManagerTest extends TestCase {
 		$temp_dir = TempDirectoryManager::getTempDirectory();
 
 		$this->assertIsString( $temp_dir );
-		$this->assertStringContainsString( 'aether-temp', $temp_dir );
+		$this->assertStringContainsString( 'altolith-temp', $temp_dir );
 		$this->assertStringContainsString( WP_CONTENT_DIR, $temp_dir );
 	}
 
@@ -71,7 +71,7 @@ class TempDirectoryManagerTest extends TestCase {
 	 */
 	public function test_temp_directory_filter() {
 		add_filter(
-			'aether_site_exporter_temp_directory',
+			'altolith_deploy_temp_directory',
 			function ( $dir ) {
 				return $this->custom_temp_dir;
 			}
@@ -367,7 +367,7 @@ class TempDirectoryManagerTest extends TestCase {
 	public function test_get_size_nonexistent_directory() {
 		// Use filter to point to non-existent directory.
 		add_filter(
-			'aether_site_exporter_temp_directory',
+			'altolith_deploy_temp_directory',
 			function () {
 				return WP_CONTENT_DIR . '/nonexistent-dir';
 			}

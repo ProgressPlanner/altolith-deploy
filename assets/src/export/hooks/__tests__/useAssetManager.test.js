@@ -13,15 +13,15 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { useAssetManager } from '../useAssetManager';
-import { storage } from '@aether/utils/storage';
+import { storage } from '@altolith/utils/storage';
 import {
 	AssetManagerService,
 	filterChangedAssets,
 	clearAllUploadFlags,
-} from '@aether/services/AssetManagerService';
+} from '@altolith/services/AssetManagerService';
 
 // Mock dependencies
-jest.mock( '@aether/utils/storage', () => ( {
+jest.mock( '@altolith/utils/storage', () => ( {
 	storage: {
 		get: jest.fn(),
 		set: jest.fn(),
@@ -35,8 +35,10 @@ let mockMarkAsChanged;
 let mockUpdateFromServer;
 let mockSyncWithServer;
 
-jest.mock( '@aether/services/AssetManagerService', () => {
-	const actual = jest.requireActual( '@aether/services/AssetManagerService' );
+jest.mock( '@altolith/services/AssetManagerService', () => {
+	const actual = jest.requireActual(
+		'@altolith/services/AssetManagerService'
+	);
 	return {
 		...actual,
 		AssetManagerService: jest.fn().mockImplementation( () => ( {

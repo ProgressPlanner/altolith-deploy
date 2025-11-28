@@ -15,16 +15,16 @@ import {
 	fetchProviderConfig,
 	buildStorageConfig,
 } from '../../utils/staticSiteConfig';
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
 
 /**
  * Status labels for the step
  * Don't show provider-specific info - per-provider progress is shown in provider pills
  */
 const statusLabels = {
-	pending: __( 'Upload blueprint', 'aether-site-exporter' ),
-	running: () => __( 'Uploading blueprint…', 'aether-site-exporter' ),
-	complete: () => __( 'Blueprint uploaded', 'aether-site-exporter' ),
+	pending: __( 'Upload blueprint', 'altolith-deploy' ),
+	running: () => __( 'Uploading blueprint…', 'altolith-deploy' ),
+	complete: () => __( 'Blueprint uploaded', 'altolith-deploy' ),
 };
 
 /**
@@ -82,7 +82,7 @@ async function handler( context ) {
 		throw new Error(
 			__(
 				'Provider instance not found in thread context',
-				'aether-site-exporter'
+				'altolith-deploy'
 			)
 		);
 	}
@@ -111,7 +111,7 @@ async function handler( context ) {
 			/* translators: %1$s: Provider label, %2$s: File size */
 			__(
 				'Uploading blueprint bundle (%2$s) to %1$s…',
-				'aether-site-exporter'
+				'altolith-deploy'
 			),
 			providerLabel,
 			bundleSizeFormatted
@@ -138,10 +138,7 @@ async function handler( context ) {
 		throw new Error(
 			sprintf(
 				/* translators: %s: Provider label */
-				__(
-					'Storage service not available for %s',
-					'aether-site-exporter'
-				),
+				__( 'Storage service not available for %s', 'altolith-deploy' ),
 				providerLabel
 			)
 		);
@@ -164,10 +161,7 @@ async function handler( context ) {
 	if ( ! uploadResult.success ) {
 		throw new Error(
 			uploadResult.error ||
-				__(
-					'Failed to upload blueprint bundle',
-					'aether-site-exporter'
-				)
+				__( 'Failed to upload blueprint bundle', 'altolith-deploy' )
 		);
 	}
 
@@ -187,10 +181,7 @@ async function handler( context ) {
 	setStatusMessage(
 		sprintf(
 			/* translators: %1$s: Provider label, %2$s: File size */
-			__(
-				'Uploaded blueprint bundle (%2$s) to %1$s',
-				'aether-site-exporter'
-			),
+			__( 'Uploaded blueprint bundle (%2$s) to %1$s', 'altolith-deploy' ),
 			providerLabel,
 			bundleSizeFormatted
 		),
@@ -214,10 +205,10 @@ async function handler( context ) {
  */
 const stepDefinition = {
 	id: 'uploadBlueprintBundle',
-	label: __( 'Upload Blueprint Bundle', 'aether-site-exporter' ),
+	label: __( 'Upload Blueprint Bundle', 'altolith-deploy' ),
 	description: __(
 		'Upload blueprint-bundle.zip to providers',
-		'aether-site-exporter'
+		'altolith-deploy'
 	),
 	deploymentType: 'blueprint_bundle',
 	supportsProgress: true,
@@ -259,8 +250,8 @@ const stepDefinition = {
  * Register step via WordPress hooks
  */
 addAction(
-	'aether.export.register_steps',
-	'aether/step-uploadBlueprintBundle',
+	'altolith.export.register_steps',
+	'altolith/step-uploadBlueprintBundle',
 	( registry ) => {
 		registry.register( stepDefinition );
 	},

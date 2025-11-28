@@ -10,7 +10,7 @@ import { applyFilters } from '@wordpress/hooks';
 import { processHtml, getStaticFilePath } from './htmlProcessor';
 import { getAssetLocalPath } from './assetExtractor';
 import { uploadFilesWithProgress } from './fileUploadManager';
-import { calculateFileHash } from '@aether/utils/fileHash';
+import { calculateFileHash } from '@altolith/utils/fileHash';
 import {
 	fetchManifest,
 	updateManifestEntry,
@@ -18,7 +18,7 @@ import {
 	uploadManifest,
 	cleanupManifest,
 	getStaleFiles,
-} from '@aether/utils/manifestManager';
+} from '@altolith/utils/manifestManager';
 
 /**
  * Fetch and prepare manifest for upload phase.
@@ -38,14 +38,14 @@ export async function prepareManifest(
 	try {
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				__( 'Fetching file manifest…', 'aether-site-exporter' ),
+				__( 'Fetching file manifest…', 'altolith-deploy' ),
 				'progress',
 				'fetchManifest'
 			);
 		}
 
 		manifest = applyFilters(
-			'aether.export.step.uploadStaticSiteFiles.manifest.fetch',
+			'altolith.export.step.uploadStaticSiteFiles.manifest.fetch',
 			null,
 			storageService,
 			providerId
@@ -62,7 +62,7 @@ export async function prepareManifest(
 					/* translators: %d: Number of manifest entries */
 					__(
 						'Fetched file manifest (%d entries)',
-						'aether-site-exporter'
+						'altolith-deploy'
 					),
 					manifestEntryCount
 				),
@@ -130,7 +130,7 @@ export async function processAssets( {
 				method: 'GET',
 				credentials: 'omit',
 				headers: {
-					'User-Agent': 'Aether Static Site Generator',
+					'User-Agent': 'Altolith Static Site Generator',
 				},
 			} );
 
@@ -155,7 +155,7 @@ export async function processAssets( {
 
 			// Filter asset before processing
 			const filteredAssetData = applyFilters(
-				'aether.export.step.uploadStaticSiteFiles.asset.process',
+				'altolith.export.step.uploadStaticSiteFiles.asset.process',
 				{
 					blob: assetBlob,
 					path: assetPath,
@@ -267,7 +267,7 @@ export async function processAssets( {
 				);
 
 				currentManifest = applyFilters(
-					'aether.export.step.uploadStaticSiteFiles.manifest.update',
+					'altolith.export.step.uploadStaticSiteFiles.manifest.update',
 					currentManifest,
 					assetKey,
 					providerId
@@ -316,7 +316,7 @@ export async function uploadHtmlFile( {
 } ) {
 	// Filter HTML before processing
 	let processedHtml = applyFilters(
-		'aether.export.step.uploadStaticSiteFiles.html.process',
+		'altolith.export.step.uploadStaticSiteFiles.html.process',
 		rawHtml,
 		url,
 		siteUrl,
@@ -388,7 +388,7 @@ export async function uploadHtmlFile( {
 		throw new Error(
 			sprintf(
 				/* translators: %s: Error message */
-				__( 'Failed to upload HTML file: %s', 'aether-site-exporter' ),
+				__( 'Failed to upload HTML file: %s', 'altolith-deploy' ),
 				htmlUploadResult.error
 			)
 		);
@@ -398,7 +398,7 @@ export async function uploadHtmlFile( {
 		setStatusMessage(
 			sprintf(
 				/* translators: %s: File path */
-				__( 'Uploaded %s', 'aether-site-exporter' ),
+				__( 'Uploaded %s', 'altolith-deploy' ),
 				htmlPath
 			),
 			'success',
@@ -456,10 +456,7 @@ export async function finalizeManifest(
 				setStatusMessage(
 					sprintf(
 						/* translators: %d: Number of stale files to delete */
-						__(
-							'Deleting %d stale files…',
-							'aether-site-exporter'
-						),
+						__( 'Deleting %d stale files…', 'altolith-deploy' ),
 						staleFiles.length
 					),
 					'progress',
@@ -475,10 +472,7 @@ export async function finalizeManifest(
 					setStatusMessage(
 						sprintf(
 							/* translators: %d: Number of deleted files */
-							__(
-								'Deleted %d stale files',
-								'aether-site-exporter'
-							),
+							__( 'Deleted %d stale files', 'altolith-deploy' ),
 							deletedFilesCount
 						),
 						'success',
@@ -489,7 +483,7 @@ export async function finalizeManifest(
 				// Log but don't fail - some files may already be gone
 				// eslint-disable-next-line no-console
 				console.warn(
-					'[Aether] Failed to delete some stale files:',
+					'[Altolith] Failed to delete some stale files:',
 					deleteError
 				);
 			}
@@ -498,7 +492,7 @@ export async function finalizeManifest(
 		// Clean up manifest (remove entries not in current files)
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				__( 'Updating file manifest…', 'aether-site-exporter' ),
+				__( 'Updating file manifest…', 'altolith-deploy' ),
 				'progress',
 				'updateManifest'
 			);
@@ -507,7 +501,7 @@ export async function finalizeManifest(
 		let cleanedManifest = cleanupManifest( manifest, currentFileKeys );
 
 		cleanedManifest = applyFilters(
-			'aether.export.step.uploadStaticSiteFiles.manifest.cleanup',
+			'altolith.export.step.uploadStaticSiteFiles.manifest.cleanup',
 			cleanedManifest,
 			currentFileKeys,
 			providerId
@@ -517,7 +511,7 @@ export async function finalizeManifest(
 
 		if ( setStatusMessage ) {
 			setStatusMessage(
-				__( 'Updated file manifest', 'aether-site-exporter' ),
+				__( 'Updated file manifest', 'altolith-deploy' ),
 				'success',
 				'updateManifest'
 			);

@@ -9,7 +9,7 @@
 
 import { useMemo } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { useAPIData } from '@aether/hooks/useAPIData';
+import { useAPIData } from '@altolith/hooks/useAPIData';
 
 /**
  * Check export readiness based on settings and provider status
@@ -22,11 +22,11 @@ export function useExportReadiness() {
 		loading: settingsLoading,
 		refresh,
 	} = useAPIData( {
-		path: '/aether/site-exporter/settings',
+		path: '/altolith/deploy/settings',
 		transform: ( response ) => {
 			if ( ! response.success ) {
 				throw new Error(
-					__( 'Failed to fetch settings', 'aether-site-exporter' )
+					__( 'Failed to fetch settings', 'altolith-deploy' )
 				);
 			}
 			return response.value || {};
@@ -40,7 +40,7 @@ export function useExportReadiness() {
 		refresh: refreshStatus,
 	} = useAPIData( {
 		path: settings?.provider_types?.storage
-			? `/aether/site-exporter/providers/${ settings.provider_types.storage }/status`
+			? `/altolith/deploy/providers/${ settings.provider_types.storage }/status`
 			: null,
 		fetchOnMount: false,
 		initialData: null,
@@ -78,7 +78,7 @@ export function useExportReadiness() {
 			issues.push(
 				__(
 					'No blueprint storage provider is selected.',
-					'aether-site-exporter'
+					'altolith-deploy'
 				)
 			);
 		}
@@ -91,7 +91,7 @@ export function useExportReadiness() {
 						/* translators: %s: provider name */
 						__(
 							'Blueprint provider "%s" is not fully configured.',
-							'aether'
+							'altolith'
 						),
 						blueprintProvider
 					)

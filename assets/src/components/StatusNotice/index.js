@@ -27,7 +27,7 @@ export default function StatusNotice( {
 	className = '',
 } ) {
 	const noticeClassName =
-		`aether-status-notice aether-status-notice--${ status } ${ className }`.trim();
+		`altolith-status-notice altolith-status-notice--${ status } ${ className }`.trim();
 
 	return (
 		<Notice

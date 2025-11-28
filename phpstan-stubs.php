@@ -7,8 +7,8 @@
  */
 
 // Define plugin constants for PHPStan analysis.
-if (!\defined('AETHER_PLUGIN_URL')) {
-	\define('AETHER_PLUGIN_URL', '');
+if (!\defined('ALTOLITH_PLUGIN_URL')) {
+	\define('ALTOLITH_PLUGIN_URL', '');
 }
 
 // WordPress cookie constants for PHPStan analysis.

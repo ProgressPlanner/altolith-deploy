@@ -12,8 +12,8 @@ import { Modal, TextControl, SelectControl } from '@wordpress/components';
 // eslint-disable-next-line import/no-unresolved
 import { v4 as uuidv4 } from 'uuid';
 import ModalActions from '../ModalActions';
-import { spacing } from '@aether/utils/styles';
-import { getDeploymentTypeLabel } from '@aether/utils/deploymentTypes';
+import { spacing } from '@altolith/utils/styles';
+import { getDeploymentTypeLabel } from '@altolith/utils/deploymentTypes';
 
 // Styles - extracted to module level for performance
 const formStyle = {
@@ -92,7 +92,7 @@ export default function AddProviderInstanceModal( {
 			alert(
 				__(
 					'Failed to create instance. Please try again.',
-					'aether-site-exporter'
+					'altolith-deploy'
 				)
 			);
 		} finally {
@@ -118,36 +118,36 @@ export default function AddProviderInstanceModal( {
 	const modalTitle = deploymentType
 		? sprintf(
 				/* translators: %s: deployment type label */
-				__( 'Add %s Provider', 'aether-site-exporter' ),
+				__( 'Add %s Provider', 'altolith-deploy' ),
 				getDeploymentTypeLabel( deploymentType )
 		  )
-		: __( 'Add Provider Instance', 'aether-site-exporter' );
+		: __( 'Add Provider Instance', 'altolith-deploy' );
 
 	// Always show provider selection if there are any providers
 	const showProviderSelection = providers.length > 0;
 
 	return (
 		<Modal
-			className="aether-add-provider-instance-modal"
+			className="altolith-add-provider-instance-modal"
 			title={ modalTitle }
 			onRequestClose={ handleClose }
 			size="medium"
 		>
 			<div
-				className="aether-add-provider-instance-modal__form"
+				className="altolith-add-provider-instance-modal__form"
 				style={ formStyle }
 			>
 				{ showProviderSelection && (
 					<SelectControl
-						className="aether-add-provider-instance-modal__provider-select"
-						label={ __( 'Provider Type', 'aether-site-exporter' ) }
+						className="altolith-add-provider-instance-modal__provider-select"
+						label={ __( 'Provider Type', 'altolith-deploy' ) }
 						value={ selectedProviderType }
 						onChange={ setSelectedProviderType }
 						options={ [
 							{
 								label: __(
 									'Select a provider…',
-									'aether-site-exporter'
+									'altolith-deploy'
 								),
 								value: '',
 							},
@@ -161,7 +161,7 @@ export default function AddProviderInstanceModal( {
 								? selectedProvider.description
 								: __(
 										'Choose which type of provider to create',
-										'aether-site-exporter'
+										'altolith-deploy'
 								  )
 						}
 					/>
@@ -169,21 +169,18 @@ export default function AddProviderInstanceModal( {
 
 				{ selectedProviderType && (
 					<TextControl
-						className="aether-add-provider-instance-modal__instance-name"
-						label={ __( 'Instance Name', 'aether-site-exporter' ) }
+						className="altolith-add-provider-instance-modal__instance-name"
+						label={ __( 'Instance Name', 'altolith-deploy' ) }
 						value={ instanceName }
 						onChange={ setInstanceName }
 						placeholder={ sprintf(
 							/* translators: %s: provider name */
-							__(
-								'e.g., "%s Production"',
-								'aether-site-exporter'
-							),
+							__( 'e.g., "%s Production"', 'altolith-deploy' ),
 							selectedProvider?.name || 'My'
 						) }
 						help={ __(
 							'Choose a descriptive name for this instance',
-							'aether-site-exporter'
+							'altolith-deploy'
 						) }
 					/>
 				) }
@@ -191,18 +188,15 @@ export default function AddProviderInstanceModal( {
 				<ModalActions
 					onCancel={ handleClose }
 					onSubmit={ handleCreate }
-					cancelLabel={ __( 'Cancel', 'aether-site-exporter' ) }
-					submitLabel={ __(
-						'Create Instance',
-						'aether-site-exporter'
-					) }
+					cancelLabel={ __( 'Cancel', 'altolith-deploy' ) }
+					submitLabel={ __( 'Create Instance', 'altolith-deploy' ) }
 					isSubmitting={ isCreating }
 					isSubmitDisabled={
 						! selectedProviderType ||
 						! instanceName.trim() ||
 						isCreating
 					}
-					className="aether-add-provider-instance-modal__actions"
+					className="altolith-add-provider-instance-modal__actions"
 				/>
 			</div>
 		</Modal>

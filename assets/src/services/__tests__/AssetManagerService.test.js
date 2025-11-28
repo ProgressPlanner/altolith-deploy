@@ -420,7 +420,7 @@ describe( 'AssetManagerService', () => {
 				const result = service.load();
 
 				expect( mockStorage.get ).toHaveBeenCalledWith(
-					'aetherAssets',
+					'altolithAssets',
 					{}
 				);
 				expect( result ).toEqual( mockAssets );
@@ -444,7 +444,7 @@ describe( 'AssetManagerService', () => {
 				service.save( assets );
 
 				expect( mockStorage.set ).toHaveBeenCalledWith(
-					'aetherAssets',
+					'altolithAssets',
 					assets
 				);
 			} );

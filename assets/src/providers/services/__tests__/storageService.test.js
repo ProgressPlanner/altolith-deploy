@@ -26,7 +26,7 @@ jest.mock( '../filesystemAdapter', () => ( {
 
 describe( 'StorageService', () => {
 	let service;
-	const mockStaticPath = 'wp-content/aether-static';
+	const mockStaticPath = 'wp-content/altolith-static';
 	const mockConfig = {
 		base_url: 'https://cdn.example.com',
 	};

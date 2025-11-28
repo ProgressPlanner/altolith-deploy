@@ -9,8 +9,8 @@
  */
 
 import { Spinner } from '@wordpress/components';
-import { colors, fontSize, fontWeight, spacing } from '@aether/utils/styles';
-import { ProviderPill } from '@aether/components/ProviderPill';
+import { colors, fontSize, fontWeight, spacing } from '@altolith/utils/styles';
+import { ProviderPill } from '@altolith/components/ProviderPill';
 
 const NODE_SIZE = 28;
 
@@ -259,26 +259,26 @@ export function StepNode( {
 
 	return (
 		<div
-			className={ `aether-step-node aether-step-node--${ status }` }
+			className={ `altolith-step-node altolith-step-node--${ status }` }
 			style={ stepRowStyle }
 			role="listitem"
 			aria-label={ `Step ${ stepNumber }: ${ displayLabel } - ${ status }` }
 		>
 			<span
-				className="aether-step-node__circle"
+				className="altolith-step-node__circle"
 				style={ { ...nodeBaseStyle, ...nodeStatusStyle } }
 			>
 				{ content }
 			</span>
 			<span
-				className="aether-step-node__label"
+				className="altolith-step-node__label"
 				style={ { ...labelBaseStyle, ...labelStatusStyle } }
 			>
 				{ displayLabel }
 			</span>
 			{ stepProviders.length > 0 && (
 				<span
-					className="aether-step-node__providers"
+					className="altolith-step-node__providers"
 					style={ {
 						display: 'inline-flex',
 						flexWrap: 'wrap',

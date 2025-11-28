@@ -17,13 +17,13 @@
  * - Must test attack vectors (subdomain, protocol, port attacks)
  * - Must verify correct CORS behavior
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Utilities;
+namespace Altolith\Deploy\Tests\Unit\Utilities;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Utilities\CorsHandler;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Utilities\CorsHandler;
 
 /**
  * CORS handler test case.
@@ -207,15 +207,15 @@ class CorsHandlerTest extends TestCase {
 	}
 
 	/**
-	 * Test local development origins with AETHER_ALLOW_LOCAL_CORS.
+	 * Test local development origins with ALTOLITH_ALLOW_LOCAL_CORS.
 	 *
 	 * Severity: MEDIUM - Local dev convenience vs security
 	 */
 	public function test_allows_local_dev_with_constant() {
 		// Enable local CORS.
 		define( 'WP_DEBUG', true );
-		if ( ! defined( 'AETHER_ALLOW_LOCAL_CORS' ) ) {
-			define( 'AETHER_ALLOW_LOCAL_CORS', true );
+		if ( ! defined( 'ALTOLITH_ALLOW_LOCAL_CORS' ) ) {
+			define( 'ALTOLITH_ALLOW_LOCAL_CORS', true );
 		}
 
 		$reflection = new \ReflectionClass( $this->handler );
@@ -253,7 +253,7 @@ class CorsHandlerTest extends TestCase {
 		$method->setAccessible( true );
 
 		// Without the constant check in getAllowedOrigins, getLocalDevelopmentOrigins
-		// would return empty unless WP_DEBUG and AETHER_ALLOW_LOCAL_CORS are both true.
+		// would return empty unless WP_DEBUG and ALTOLITH_ALLOW_LOCAL_CORS are both true.
 
 		// Test that getLocalDevelopmentOrigins validates port numbers.
 		$safe_port   = $method->invoke( $this->handler, 'http://localhost:3000' );
@@ -274,8 +274,8 @@ class CorsHandlerTest extends TestCase {
 	 */
 	public function test_blocks_non_standard_local_ports() {
 		define( 'WP_DEBUG', true );
-		if ( ! defined( 'AETHER_ALLOW_LOCAL_CORS' ) ) {
-			define( 'AETHER_ALLOW_LOCAL_CORS', true );
+		if ( ! defined( 'ALTOLITH_ALLOW_LOCAL_CORS' ) ) {
+			define( 'ALTOLITH_ALLOW_LOCAL_CORS', true );
 		}
 
 		$reflection = new \ReflectionClass( $this->handler );
@@ -307,7 +307,7 @@ class CorsHandlerTest extends TestCase {
 	public function test_respects_filter_for_custom_origins() {
 		// Add a custom origin via filter.
 		add_filter(
-			'aether_site_exporter_cors_allowed_origins',
+			'altolith_deploy_cors_allowed_origins',
 			function ( $origins ) {
 				$origins[] = 'https://custom-dev.local';
 				return $origins;
@@ -327,7 +327,7 @@ class CorsHandlerTest extends TestCase {
 		);
 
 		// Clean up filter.
-		remove_all_filters( 'aether_site_exporter_cors_allowed_origins' );
+		remove_all_filters( 'altolith_deploy_cors_allowed_origins' );
 	}
 
 	// ========================================================================
@@ -335,11 +335,11 @@ class CorsHandlerTest extends TestCase {
 	// ========================================================================
 
 	/**
-	 * Test OPTIONS request to Aether endpoint is handled.
+	 * Test OPTIONS request to Altolith endpoint is handled.
 	 */
-	public function test_handlePreflight_processes_options_to_aether_endpoint() {
-		// Create mock OPTIONS request to /aether/ endpoint.
-		$request = new \WP_REST_Request( 'OPTIONS', '/aether/v1/test' );
+	public function test_handlePreflight_processes_options_to_altolith_endpoint() {
+		// Create mock OPTIONS request to /altolith/ endpoint.
+		$request = new \WP_REST_Request( 'OPTIONS', '/altolith/v1/test' );
 		$server  = new \WP_REST_Server();
 
 		$result = $this->handler->handlePreflight( null, $server, $request );
@@ -370,7 +370,7 @@ class CorsHandlerTest extends TestCase {
 		$server  = new \WP_REST_Server();
 
 		foreach ( $methods as $method ) {
-			$request = new \WP_REST_Request( $method, '/aether/v1/test' );
+			$request = new \WP_REST_Request( $method, '/altolith/v1/test' );
 			$result  = $this->handler->handlePreflight( 'original', $server, $request );
 
 			$this->assertEquals(
@@ -382,9 +382,9 @@ class CorsHandlerTest extends TestCase {
 	}
 
 	/**
-	 * Test OPTIONS to non-Aether endpoint passes through.
+	 * Test OPTIONS to non-Altolith endpoint passes through.
 	 */
-	public function test_handlePreflight_ignores_non_aether_endpoints() {
+	public function test_handlePreflight_ignores_non_altolith_endpoints() {
 		$request = new \WP_REST_Request( 'OPTIONS', '/wp/v2/posts' );
 		$server  = new \WP_REST_Server();
 
@@ -393,7 +393,7 @@ class CorsHandlerTest extends TestCase {
 		$this->assertEquals(
 			'original',
 			$result,
-			'Should not process non-Aether endpoint'
+			'Should not process non-Altolith endpoint'
 		);
 	}
 
@@ -402,10 +402,10 @@ class CorsHandlerTest extends TestCase {
 	// ========================================================================
 
 	/**
-	 * Test addHeadersFilter processes Aether endpoints.
+	 * Test addHeadersFilter processes Altolith endpoints.
 	 */
-	public function test_addHeadersFilter_processes_aether_requests() {
-		$request  = new \WP_REST_Request( 'GET', '/aether/v1/test' );
+	public function test_addHeadersFilter_processes_altolith_requests() {
+		$request  = new \WP_REST_Request( 'GET', '/altolith/v1/test' );
 		$response = new \WP_REST_Response( [ 'success' => true ] );
 		$server   = new \WP_REST_Server();
 
@@ -416,16 +416,16 @@ class CorsHandlerTest extends TestCase {
 	}
 
 	/**
-	 * Test addHeadersFilter ignores non-Aether endpoints.
+	 * Test addHeadersFilter ignores non-Altolith endpoints.
 	 */
-	public function test_addHeadersFilter_ignores_non_aether_endpoints() {
+	public function test_addHeadersFilter_ignores_non_altolith_endpoints() {
 		$request  = new \WP_REST_Request( 'GET', '/wp/v2/posts' );
 		$response = new \WP_REST_Response( [ 'success' => true ] );
 		$server   = new \WP_REST_Server();
 
 		$result = $this->handler->addHeadersFilter( false, $response, $request, $server );
 
-		$this->assertFalse( $result, 'Should return unchanged for non-Aether endpoint' );
+		$this->assertFalse( $result, 'Should return unchanged for non-Altolith endpoint' );
 	}
 
 	/**
@@ -446,27 +446,27 @@ class CorsHandlerTest extends TestCase {
 	// ========================================================================
 
 	/**
-	 * Test addHeadersAction processes Aether requests from $_SERVER.
+	 * Test addHeadersAction processes Altolith requests from $_SERVER.
 	 */
-	public function test_addHeadersAction_processes_aether_requests() {
+	public function test_addHeadersAction_processes_altolith_requests() {
 		global $wp_rest_server;
 		$wp_rest_server = new \WP_REST_Server(); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase
 
-		$_SERVER['REQUEST_URI'] = '/wp-json/aether/v1/test';
+		$_SERVER['REQUEST_URI'] = '/wp-json/altolith/v1/test';
 
 		// Should not throw errors.
 		$this->handler->addHeadersAction();
 
 		// No exception = success (can't verify headers in tests).
-		$this->assertTrue( true, 'Should process Aether request without errors' );
+		$this->assertTrue( true, 'Should process Altolith request without errors' );
 
 		unset( $wp_rest_server );
 	}
 
 	/**
-	 * Test addHeadersAction ignores non-Aether requests.
+	 * Test addHeadersAction ignores non-Altolith requests.
 	 */
-	public function test_addHeadersAction_ignores_non_aether_requests() {
+	public function test_addHeadersAction_ignores_non_altolith_requests() {
 		global $wp_rest_server;
 		$wp_rest_server = new \WP_REST_Server(); // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase
 
@@ -475,7 +475,7 @@ class CorsHandlerTest extends TestCase {
 		// Should return early without processing.
 		$this->handler->addHeadersAction();
 
-		$this->assertTrue( true, 'Should ignore non-Aether request' );
+		$this->assertTrue( true, 'Should ignore non-Altolith request' );
 
 		unset( $wp_rest_server );
 	}
@@ -487,7 +487,7 @@ class CorsHandlerTest extends TestCase {
 		global $wp_rest_server;
 		$wp_rest_server = null; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.VariableNotSnakeCase
 
-		$_SERVER['REQUEST_URI'] = '/wp-json/aether/v1/test';
+		$_SERVER['REQUEST_URI'] = '/wp-json/altolith/v1/test';
 
 		// Should return early without errors.
 		$this->handler->addHeadersAction();

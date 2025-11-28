@@ -106,7 +106,7 @@ export function shouldCollectAsset( url, siteUrl, source = 'css' ) {
 	 * @param {string}  extension     File extension.
 	 */
 	shouldCollect = applyFilters(
-		'aether.assets.should_collect',
+		'altolith.assets.should_collect',
 		shouldCollect,
 		url,
 		siteUrl,

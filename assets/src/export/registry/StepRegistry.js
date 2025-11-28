@@ -69,25 +69,19 @@ class StepRegistry {
 		// Validate required properties
 		if ( ! step || typeof step !== 'object' ) {
 			throw new Error(
-				__( 'Step must be an object', 'aether-site-exporter' )
+				__( 'Step must be an object', 'altolith-deploy' )
 			);
 		}
 
 		if ( ! step.id || typeof step.id !== 'string' ) {
 			throw new Error(
-				__(
-					'Step must have a valid id (string)',
-					'aether-site-exporter'
-				)
+				__( 'Step must have a valid id (string)', 'altolith-deploy' )
 			);
 		}
 
 		if ( ! step.label || typeof step.label !== 'string' ) {
 			throw new Error(
-				__(
-					'Step must have a valid label (string)',
-					'aether-site-exporter'
-				)
+				__( 'Step must have a valid label (string)', 'altolith-deploy' )
 			);
 		}
 
@@ -95,7 +89,7 @@ class StepRegistry {
 			throw new Error(
 				__(
 					'Step must have a valid handler (function)',
-					'aether-site-exporter'
+					'altolith-deploy'
 				)
 			);
 		}
@@ -104,7 +98,7 @@ class StepRegistry {
 			throw new Error(
 				__(
 					'Step must have a valid requires object (data dependencies)',
-					'aether-site-exporter'
+					'altolith-deploy'
 				)
 			);
 		}
@@ -113,7 +107,7 @@ class StepRegistry {
 			throw new Error(
 				__(
 					'Step must have a valid provides object (output declaration)',
-					'aether-site-exporter'
+					'altolith-deploy'
 				)
 			);
 		}

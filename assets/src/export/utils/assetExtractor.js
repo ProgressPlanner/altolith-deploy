@@ -115,7 +115,7 @@ export async function extractAssetsFromHtml( html, pageUrl, siteUrl ) {
 	let assets = Array.from( collected );
 
 	assets = applyFilters(
-		'aether.assets.extracted',
+		'altolith.assets.extracted',
 		assets,
 		html,
 		pageUrl,
@@ -279,7 +279,7 @@ async function collectCssDependencies( cssUrl, siteUrl, collected, processed ) {
 		const response = await fetch( cssUrl, {
 			method: 'GET',
 			credentials: 'omit',
-			headers: { 'User-Agent': 'Aether Static Site Generator' },
+			headers: { 'User-Agent': 'Altolith Static Site Generator' },
 		} );
 		if ( ! response.ok ) {
 			return;
@@ -369,7 +369,7 @@ async function collectJsDependencies( jsUrl, siteUrl, collected, processed ) {
 		const response = await fetch( jsUrl, {
 			method: 'GET',
 			credentials: 'omit',
-			headers: { 'User-Agent': 'Aether Static Site Generator' },
+			headers: { 'User-Agent': 'Altolith Static Site Generator' },
 		} );
 		if ( ! response.ok ) {
 			return;

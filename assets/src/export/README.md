@@ -1,6 +1,6 @@
 # Export Workflow
 
-Static site generation and deployment orchestration for the Aether plugin.
+Static site generation and deployment orchestration for the Altolith plugin.
 
 ## Overview
 
@@ -41,7 +41,7 @@ Steps are defined in `steps/index.js` and registered via `@wordpress/hooks`. Eac
 6. **preScanStaticSite** - Pre-scan URLs to extract assets before upload
 7. **uploadStaticFiles** - Generate and upload static HTML/CSS/JS
 
-Steps register via the `aether.export.register_steps` action hook. Each step declares its data dependencies (`requires`) and outputs (`provides`), allowing the StepExecutor to automatically resolve dependencies and execute steps in parallel when possible.
+Steps register via the `altolith.export.register_steps` action hook. Each step declares its data dependencies (`requires`) and outputs (`provides`), allowing the StepExecutor to automatically resolve dependencies and execute steps in parallel when possible.
 
 ## Directory Structure
 
@@ -120,7 +120,7 @@ Main orchestration hook using the step-based workflow system.
 - Uses `@wordpress/hooks` for step orchestration
 - Steps declare dependencies and provided data
 - Automatic dependency resolution
-- Extensible via `aether.export.steps` filter
+- Extensible via `altolith.export.steps` filter
 
 ### useStaticSiteGenerator
 
@@ -162,12 +162,12 @@ const steps = getRegisteredSteps();
 // - handler: async function that executes the step
 ```
 
-Steps can be extended via the `aether.export.steps` filter:
+Steps can be extended via the `altolith.export.steps` filter:
 
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('aether.export.steps', 'my-plugin/custom-step', (steps) => {
+addFilter('altolith.export.steps', 'my-plugin/custom-step', (steps) => {
     return [...steps, myCustomStep];
 });
 ```

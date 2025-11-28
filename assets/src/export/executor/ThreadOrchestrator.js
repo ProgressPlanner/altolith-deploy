@@ -10,7 +10,7 @@
 
 import { isThreadStep } from './DataValidator';
 import { executeSteps } from './StepExecutor';
-import ProviderRegistry from '@aether/providers/registry/ProviderRegistry';
+import ProviderRegistry from '@altolith/providers/registry/ProviderRegistry';
 
 /**
  * Execute async functions with concurrency limit
@@ -565,12 +565,12 @@ export async function executeThreadedWorkflow(
 			if ( typeof window !== 'undefined' && window.console ) {
 				// eslint-disable-next-line no-console
 				console.error(
-					'[Aether] ThreadOrchestrator - Thread execution failed for provider:',
+					'[Altolith] ThreadOrchestrator - Thread execution failed for provider:',
 					providerInstance.id,
 					error
 				);
 				// eslint-disable-next-line no-console
-				console.error( '[Aether] Error stack:', error.stack );
+				console.error( '[Altolith] Error stack:', error.stack );
 			}
 
 			// Mark provider as error

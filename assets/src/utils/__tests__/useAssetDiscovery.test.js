@@ -408,8 +408,8 @@ describe( 'useAssetDiscovery', () => {
 				success: true,
 				plugins: [
 					{
-						slug: 'aether/aether.php',
-						name: 'Aether',
+						slug: 'altolith/altolith.php',
+						name: 'Altolith',
 						version: '1.0',
 						is_active: true,
 					},
@@ -442,7 +442,7 @@ describe( 'useAssetDiscovery', () => {
 			} );
 
 			// Built-in plugins should be excluded
-			expect( assets.plugins ).not.toContain( 'aether' );
+			expect( assets.plugins ).not.toContain( 'altolith' );
 			expect( assets.plugins ).not.toContain(
 				'sqlite-database-integration'
 			);

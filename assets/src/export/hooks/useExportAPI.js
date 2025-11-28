@@ -7,10 +7,10 @@
  */
 
 import { useCallback, useMemo } from '@wordpress/element';
-import apiFetch from '@aether/utils/api';
-import useAssetDiscovery from '@aether/utils/useAssetDiscovery';
-import { storage } from '@aether/utils/storage';
-import { ExportAPIService } from '@aether/services/ExportAPIService';
+import apiFetch from '@altolith/utils/api';
+import useAssetDiscovery from '@altolith/utils/useAssetDiscovery';
+import { storage } from '@altolith/utils/storage';
+import { ExportAPIService } from '@altolith/services/ExportAPIService';
 
 export function useExportAPI() {
 	const assetDiscovery = useAssetDiscovery();

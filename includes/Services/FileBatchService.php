@@ -5,10 +5,10 @@
  *
  * Handles file counting, batching, and file listing operations for exports.
  *
- * @package Aether\Services
+ * @package Altolith\Services
  */
 
-namespace Aether\SiteExporter\Services;
+namespace Altolith\Deploy\Services;
 
 \defined('ABSPATH') || exit;
 
@@ -235,7 +235,7 @@ class FileBatchService
 				INNER JOIN `{$wpdb->posts}` p ON pm.post_id = p.ID
 				WHERE pm.meta_key = %s
 				AND p.post_type = 'attachment'",
-				'_aether_media_metadata'
+				'_altolith_media_metadata'
 			)
 		);
 

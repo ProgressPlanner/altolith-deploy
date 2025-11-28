@@ -6,10 +6,10 @@
  * Provides common functionality for REST controllers.
  * Replaces BaseRESTController inheritance.
  *
- * @package Aether\REST
+ * @package Altolith\REST
  */
 
-namespace Aether\SiteExporter\REST;
+namespace Altolith\Deploy\REST;
 
 /**
  * Trait providing REST API helper methods.
@@ -59,12 +59,12 @@ trait RESTHelpersTrait
 			// Log security event for monitoring (only in debug mode)
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
 				$ip = isset($_SERVER['REMOTE_ADDR']) ? \sanitize_text_field(\wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
-				\error_log(\sprintf('Aether Security: Missing nonce from IP %s', $ip));
+				\error_log(\sprintf('Altolith Security: Missing nonce from IP %s', $ip));
 			}
 
 			return new \WP_Error(
 				'missing_nonce',
-				\__('CSRF token missing. Please refresh and try again.', 'aether-site-exporter'),
+				\__('CSRF token missing. Please refresh and try again.', 'altolith-deploy'),
 				['status' => 403]
 			);
 		}
@@ -74,12 +74,12 @@ trait RESTHelpersTrait
 			// Log security event for monitoring (only in debug mode)
 			if (\defined('WP_DEBUG') && WP_DEBUG) {
 				$ip = isset($_SERVER['REMOTE_ADDR']) ? \sanitize_text_field(\wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown';
-				\error_log(\sprintf('Aether Security: Invalid nonce verification from IP %s', $ip));
+				\error_log(\sprintf('Altolith Security: Invalid nonce verification from IP %s', $ip));
 			}
 
 			return new \WP_Error(
 				'invalid_nonce',
-				\__('CSRF token invalid. Please refresh and try again.', 'aether-site-exporter'),
+				\__('CSRF token invalid. Please refresh and try again.', 'altolith-deploy'),
 				['status' => 403]
 			);
 		}
@@ -94,7 +94,7 @@ trait RESTHelpersTrait
 	 */
 	public function getNamespace(): string
 	{
-		return 'aether/site-exporter';
+		return 'altolith/deploy';
 	}
 
 	/**
@@ -113,7 +113,7 @@ trait RESTHelpersTrait
 			return new \WP_Error(
 				"missing_{$paramName}",
 				/* translators: %s: Parameter name */
-				\sprintf(\__('%s is required', 'aether-site-exporter'), $paramName),
+				\sprintf(\__('%s is required', 'altolith-deploy'), $paramName),
 				['status' => 400]
 			);
 		}
@@ -136,7 +136,7 @@ trait RESTHelpersTrait
 			return new \WP_Error(
 				"missing_{$paramName}",
 				/* translators: %s: Parameter name */
-				\sprintf(\__('%s array is required', 'aether-site-exporter'), $paramName),
+				\sprintf(\__('%s array is required', 'altolith-deploy'), $paramName),
 				['status' => 400]
 			);
 		}
@@ -172,7 +172,7 @@ trait RESTHelpersTrait
 					'array_too_deep',
 					\sprintf(
 						/* translators: %d: maximum allowed depth */
-						\__('Request data is too deeply nested (max depth: %d).', 'aether-site-exporter'),
+						\__('Request data is too deeply nested (max depth: %d).', 'altolith-deploy'),
 						$maxDepth
 					),
 					['status' => 400]
@@ -189,7 +189,7 @@ trait RESTHelpersTrait
 						'array_too_large',
 						\sprintf(
 							/* translators: %d: maximum allowed elements */
-							\__('Request data is too large (max elements: %d).', 'aether-site-exporter'),
+							\__('Request data is too large (max elements: %d).', 'altolith-deploy'),
 							$maxElements
 						),
 						['status' => 400]
@@ -367,7 +367,7 @@ trait RESTHelpersTrait
 		 * @param int   $depth     Current recursion depth.
 		 *
 		 * @example
-		 * add_filter('aether_provider_config_sanitize', function($sanitized, $config, $depth) {
+		 * add_filter('altolith_provider_config_sanitize', function($sanitized, $config, $depth) {
 		 *     // Only process at root level
 		 *     if ($depth === 0 && isset($sanitized['custom_field'])) {
 		 *         $sanitized['custom_field'] = strtoupper($sanitized['custom_field']);
@@ -375,6 +375,6 @@ trait RESTHelpersTrait
 		 *     return $sanitized;
 		 * }, 10, 3);
 		 */
-		return \apply_filters('aether_provider_config_sanitize', $sanitized, $config, $depth);
+		return \apply_filters('altolith_provider_config_sanitize', $sanitized, $config, $depth);
 	}
 }

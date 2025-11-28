@@ -2,40 +2,40 @@
  * API Fetch Utility
  *
  * Wrapper around @wordpress/api-fetch with:
- * - Nonce handling from window.aetherData
+ * - Nonce handling from window.altolithData
  * - Auth header utilities for external APIs
  */
 
 import apiFetch from '@wordpress/api-fetch';
 
 /**
- * Get REST API base URL from window.aetherData or default.
+ * Get REST API base URL from window.altolithData or default.
  *
  * @return {string} REST API base URL (without namespace).
  */
 function getRestUrl() {
 	if (
 		typeof window !== 'undefined' &&
-		window.aetherData &&
-		window.aetherData.restUrl
+		window.altolithData &&
+		window.altolithData.restUrl
 	) {
-		return window.aetherData.restUrl;
+		return window.altolithData.restUrl;
 	}
 	return '/wp-json/';
 }
 
 /**
- * Get REST API nonce from window.aetherData or default.
+ * Get REST API nonce from window.altolithData or default.
  *
  * @return {string} REST API nonce.
  */
 function getNonce() {
 	if (
 		typeof window !== 'undefined' &&
-		window.aetherData &&
-		window.aetherData.nonce
+		window.altolithData &&
+		window.altolithData.nonce
 	) {
-		return window.aetherData.nonce;
+		return window.altolithData.nonce;
 	}
 	return '';
 }
@@ -51,10 +51,10 @@ export function setAPINonce( nonce ) {
 
 /**
  * Configure API fetch with base URL and nonce.
- * Automatically fetches from window.aetherData if not provided.
+ * Automatically fetches from window.altolithData if not provided.
  *
- * @param {string} restUrl Optional REST API base URL (fetches from window.aetherData if not provided).
- * @param {string} nonce   Optional WordPress REST API nonce (fetches from window.aetherData if not provided).
+ * @param {string} restUrl Optional REST API base URL (fetches from window.altolithData if not provided).
+ * @param {string} nonce   Optional WordPress REST API nonce (fetches from window.altolithData if not provided).
  */
 export function configureAPI( restUrl, nonce ) {
 	const url = restUrl || getRestUrl();

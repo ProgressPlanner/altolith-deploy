@@ -20,7 +20,7 @@ jest.mock( '@wordpress/components', () => ( {
 } ) );
 
 // Mock ProviderPill component
-jest.mock( '@aether/components/ProviderPill', () => ( {
+jest.mock( '@altolith/components/ProviderPill', () => ( {
 	ProviderPill: ( { label, status } ) => (
 		<span
 			data-testid="provider-pill"
@@ -33,7 +33,7 @@ jest.mock( '@aether/components/ProviderPill', () => ( {
 } ) );
 
 // Mock styles
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	colors: {
 		primary: '#0073aa',
 		success: '#00a32a',
@@ -144,8 +144,8 @@ describe( 'StepNode', () => {
 			);
 
 			const node = screen.getByRole( 'listitem' );
-			expect( node ).toHaveClass( 'aether-step-node' );
-			expect( node ).toHaveClass( 'aether-step-node--pending' );
+			expect( node ).toHaveClass( 'altolith-step-node' );
+			expect( node ).toHaveClass( 'altolith-step-node--pending' );
 		} );
 
 		test( 'should have base class and status-specific class for active', () => {
@@ -154,8 +154,8 @@ describe( 'StepNode', () => {
 			);
 
 			const node = screen.getByRole( 'listitem' );
-			expect( node ).toHaveClass( 'aether-step-node' );
-			expect( node ).toHaveClass( 'aether-step-node--active' );
+			expect( node ).toHaveClass( 'altolith-step-node' );
+			expect( node ).toHaveClass( 'altolith-step-node--active' );
 		} );
 
 		test( 'should have base class and status-specific class for complete', () => {
@@ -164,16 +164,16 @@ describe( 'StepNode', () => {
 			);
 
 			const node = screen.getByRole( 'listitem' );
-			expect( node ).toHaveClass( 'aether-step-node' );
-			expect( node ).toHaveClass( 'aether-step-node--complete' );
+			expect( node ).toHaveClass( 'altolith-step-node' );
+			expect( node ).toHaveClass( 'altolith-step-node--complete' );
 		} );
 
 		test( 'should have base class and status-specific class for error', () => {
 			render( <StepNode stepNumber={ 1 } label="Test" status="error" /> );
 
 			const node = screen.getByRole( 'listitem' );
-			expect( node ).toHaveClass( 'aether-step-node' );
-			expect( node ).toHaveClass( 'aether-step-node--error' );
+			expect( node ).toHaveClass( 'altolith-step-node' );
+			expect( node ).toHaveClass( 'altolith-step-node--error' );
 		} );
 	} );
 

@@ -5,15 +5,15 @@
  * Tests the complete export workflow from start to finish.
  * Validates that exports create valid files and handle errors gracefully.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Integration\Workflows;
+namespace Altolith\Deploy\Tests\Integration\Workflows;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Services\ExportService;
-use Aether\SiteExporter\Plugin;
-use Aether\SiteExporter\Utilities\TempDirectoryManager;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Services\ExportService;
+use Altolith\Deploy\Plugin;
+use Altolith\Deploy\Utilities\TempDirectoryManager;
 
 /**
  * ExportService workflow test case.
@@ -86,7 +86,7 @@ class ExportWorkflowTest extends TestCase {
 			],
 		];
 
-		update_option( 'aether_site_exporter_settings', $settings );
+		update_option( 'altolith_deploy_settings', $settings );
 
 		// Export should succeed using temp location.
 		$result = $this->export_service->exportCompleteSite();
@@ -115,7 +115,7 @@ class ExportWorkflowTest extends TestCase {
 			],
 		];
 
-		update_option( 'aether_site_exporter_settings', $settings );
+		update_option( 'altolith_deploy_settings', $settings );
 
 		// Export should succeed using temp location.
 		$result = $this->export_service->exportCompleteSite();
@@ -144,7 +144,7 @@ class ExportWorkflowTest extends TestCase {
 			],
 		];
 
-		update_option( 'aether_site_exporter_settings', $settings );
+		update_option( 'altolith_deploy_settings', $settings );
 
 		// Export should succeed using temp location.
 		$result = $this->export_service->exportCompleteSite();
@@ -187,7 +187,7 @@ class ExportWorkflowTest extends TestCase {
 		$temp_path = TempDirectoryManager::getTempFilePath( 'location-test-' );
 
 		$this->assertStringContainsString( 'wp-content', $temp_path );
-		$this->assertStringContainsString( 'aether-temp', $temp_path );
+		$this->assertStringContainsString( 'altolith-temp', $temp_path );
 	}
 
 	// ========================================================================
@@ -200,7 +200,7 @@ class ExportWorkflowTest extends TestCase {
 	public function test_export_handles_temp_directory_failure() {
 		// Use filter to simulate temp directory failure.
 		add_filter(
-			'aether_site_exporter_temp_directory',
+			'altolith_deploy_temp_directory',
 			function () {
 				return '/nonexistent/invalid/path';
 			}

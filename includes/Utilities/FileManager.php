@@ -7,10 +7,10 @@
  * like WordPress Playground. Provides validation, error handling,
  * and fallback mechanisms.
  *
- * @package Aether\SiteExporter
+ * @package Altolith\Deploy
  */
 
-namespace Aether\SiteExporter\Utilities;
+namespace Altolith\Deploy\Utilities;
 
 /**
  * Class FileManager
@@ -84,7 +84,7 @@ class FileManager
 		if (\defined('WP_DEBUG') && WP_DEBUG) {
 			\error_log(
 				\sprintf(
-					'Aether File Manager: File missing before %s: %s (may indicate ephemeral filesystem)',
+					'Altolith File Manager: File missing before %s: %s (may indicate ephemeral filesystem)',
 					$operation,
 					$filePath
 				)
@@ -126,7 +126,7 @@ class FileManager
 		// Log persistent failure
 		\error_log(
 			\sprintf(
-				'Aether File Manager: Failed to read file after %d attempts: %s',
+				'Altolith File Manager: Failed to read file after %d attempts: %s',
 				$maxRetries,
 				$filePath
 			)
@@ -153,7 +153,7 @@ class FileManager
 			if (! \wp_mkdir_p($directory)) {
 				\error_log(
 					\sprintf(
-						'Aether File Manager: Failed to create directory: %s',
+						'Altolith File Manager: Failed to create directory: %s',
 						$directory
 					)
 				);
@@ -180,7 +180,7 @@ class FileManager
 		// Log persistent failure
 		\error_log(
 			\sprintf(
-				'Aether File Manager: Failed to write file after %d attempts: %s',
+				'Altolith File Manager: Failed to write file after %d attempts: %s',
 				$maxRetries,
 				$filePath
 			)
@@ -207,7 +207,7 @@ class FileManager
 		if (! \is_file($filePath)) {
 			\error_log(
 				\sprintf(
-					'Aether File Manager: Cannot delete non-file: %s',
+					'Altolith File Manager: Cannot delete non-file: %s',
 					$filePath
 				)
 			);
@@ -219,7 +219,7 @@ class FileManager
 		if (! $result) {
 			\error_log(
 				\sprintf(
-					'Aether File Manager: Failed to delete file: %s',
+					'Altolith File Manager: Failed to delete file: %s',
 					$filePath
 				)
 			);
@@ -230,7 +230,7 @@ class FileManager
 		if (\file_exists($filePath)) {
 			\error_log(
 				\sprintf(
-					'Aether File Manager: File still exists after deletion: %s (may indicate filesystem issue)',
+					'Altolith File Manager: File still exists after deletion: %s (may indicate filesystem issue)',
 					$filePath
 				)
 			);
@@ -297,13 +297,13 @@ class FileManager
 	{
 		global $wpdb;
 
-		// Find all aether_file_ transients
+		// Find all altolith_file_ transients
 		$transients = $wpdb->get_col(
 			$wpdb->prepare(
 				"SELECT option_name FROM {$wpdb->options}
 				WHERE option_name LIKE %s
 				AND option_name NOT LIKE %s",
-				$wpdb->esc_like('_transient_aether_file_') . '%',
+				$wpdb->esc_like('_transient_altolith_file_') . '%',
 				$wpdb->esc_like('_transient_timeout_') . '%'
 			)
 		);
@@ -343,10 +343,10 @@ class FileManager
 	public static function getEphemeralStorageWarning($context = 'files')
 	{
 		$warnings = [
-			'export'  => \__('Export files are stored temporarily and should be downloaded immediately. Files may not persist across browser sessions in some environments.', 'aether-site-exporter'),
-			'upload'  => \__('Uploaded files may not persist across sessions in some environments. Download your files after generation.', 'aether-site-exporter'),
-			'temp'    => \__('Temporary files are automatically cleaned up after 1 hour.', 'aether-site-exporter'),
-			'files'   => \__('Files may not persist across browser sessions in some environments. Download important files immediately.', 'aether-site-exporter'),
+			'export'  => \__('Export files are stored temporarily and should be downloaded immediately. Files may not persist across browser sessions in some environments.', 'altolith-deploy'),
+			'upload'  => \__('Uploaded files may not persist across sessions in some environments. Download your files after generation.', 'altolith-deploy'),
+			'temp'    => \__('Temporary files are automatically cleaned up after 1 hour.', 'altolith-deploy'),
+			'files'   => \__('Files may not persist across browser sessions in some environments. Download important files immediately.', 'altolith-deploy'),
 		];
 
 		return $warnings[ $context ] ?? $warnings['files'];
@@ -366,7 +366,7 @@ class FileManager
 		if (! self::fileExistsAndAccessible($source)) {
 			\error_log(
 				\sprintf(
-					'Aether File Manager: Source file does not exist: %s',
+					'Altolith File Manager: Source file does not exist: %s',
 					$source
 				)
 			);
@@ -379,7 +379,7 @@ class FileManager
 			if (! \wp_mkdir_p($destDir)) {
 				\error_log(
 					\sprintf(
-						'Aether File Manager: Failed to create destination directory: %s',
+						'Altolith File Manager: Failed to create destination directory: %s',
 						$destDir
 					)
 				);
@@ -394,7 +394,7 @@ class FileManager
 				if (!\rmdir($destination)) {
 					\error_log(
 						\sprintf(
-							'Aether File Manager: Failed to remove empty directory at destination path: %s',
+							'Altolith File Manager: Failed to remove empty directory at destination path: %s',
 							$destination
 						)
 					);
@@ -402,7 +402,7 @@ class FileManager
 				}
 				\error_log(
 					\sprintf(
-						'Aether File Manager: Removed empty directory at destination path: %s',
+						'Altolith File Manager: Removed empty directory at destination path: %s',
 						$destination
 					)
 				);
@@ -410,7 +410,7 @@ class FileManager
 				// Directory is not empty, cannot proceed.
 				\error_log(
 					\sprintf(
-						'Aether File Manager: Destination path exists as non-empty directory: %s',
+						'Altolith File Manager: Destination path exists as non-empty directory: %s',
 						$destination
 					)
 				);
@@ -423,7 +423,7 @@ class FileManager
 		if (! $result) {
 			\error_log(
 				\sprintf(
-					'Aether File Manager: Failed to copy file from %s to %s',
+					'Altolith File Manager: Failed to copy file from %s to %s',
 					$source,
 					$destination
 				)
@@ -435,7 +435,7 @@ class FileManager
 		if (! self::fileExistsAndAccessible($destination)) {
 			\error_log(
 				\sprintf(
-					'Aether File Manager: File copy verification failed: %s',
+					'Altolith File Manager: File copy verification failed: %s',
 					$destination
 				)
 			);

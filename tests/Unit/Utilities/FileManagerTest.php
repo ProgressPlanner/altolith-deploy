@@ -5,14 +5,14 @@
  * Tests for file operations with persistence checks.
  * Critical for WordPress Playground compatibility.
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit\Utilities;
+namespace Altolith\Deploy\Tests\Unit\Utilities;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Utilities\FileManager;
-use Aether\SiteExporter\Utilities\TempDirectoryManager;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Utilities\FileManager;
+use Altolith\Deploy\Utilities\TempDirectoryManager;
 
 /**
  * FileManager test case.

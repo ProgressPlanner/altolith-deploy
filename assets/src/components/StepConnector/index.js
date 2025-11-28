@@ -7,7 +7,7 @@
  * @since 1.0.0
  */
 
-import { colors } from '@aether/utils/styles';
+import { colors } from '@altolith/utils/styles';
 
 const connectorStyle = {
 	display: 'block',
@@ -29,7 +29,7 @@ export function StepConnector( { isComplete } ) {
 
 	return (
 		<span
-			className="aether-step-connector"
+			className="altolith-step-connector"
 			style={ { ...connectorStyle, backgroundColor } }
 			aria-hidden="true"
 		/>

@@ -12,14 +12,14 @@
  * - Must test permission checks and authorization
  * - Must fail if implementation allows ANY security bypass or workflow corruption
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Integration\REST;
+namespace Altolith\Deploy\Tests\Integration\REST;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\REST\Export\ExportStepsController;
-use Aether\SiteExporter\Plugin;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\REST\Export\ExportStepsController;
+use Altolith\Deploy\Plugin;
 use WP_REST_Request;
 
 /**
@@ -46,7 +46,7 @@ class ExportStepsControllerTest extends TestCase {
 	 *
 	 * @var string
 	 */
-	private $namespace = 'aether/site-exporter';
+	private $namespace = 'altolith/deploy';
 
 	/**
 	 * Set up test environment.
@@ -84,7 +84,7 @@ class ExportStepsControllerTest extends TestCase {
 	private function clean_up_test_exports() {
 		// Clean up any test zip files
 		$patterns = [
-			WP_CONTENT_DIR . '/uploads/aether-temp/*.zip',
+			WP_CONTENT_DIR . '/uploads/altolith-temp/*.zip',
 			ABSPATH . 'blueprint-bundle/*.zip',
 		];
 

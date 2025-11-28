@@ -12,13 +12,13 @@
  * - Must test key public methods
  * - Must test anonymous user forcing for static site generation
  *
- * @package Aether\SiteExporter\Tests
+ * @package Altolith\Deploy\Tests
  */
 
-namespace Aether\SiteExporter\Tests\Unit;
+namespace Altolith\Deploy\Tests\Unit;
 
-use Aether\SiteExporter\Tests\Helpers\TestCase;
-use Aether\SiteExporter\Plugin;
+use Altolith\Deploy\Tests\Helpers\TestCase;
+use Altolith\Deploy\Plugin;
 
 /**
  * Plugin test case.
@@ -42,8 +42,8 @@ class PluginTest extends TestCase {
 	public function tear_down() {
 		// Clean up $_SERVER superglobal modifications.
 		unset( $_SERVER['HTTP_USER_AGENT'] );
-		unset( $_SERVER['HTTP_X_AETHER_SITE_EXPORTER_ANONYMOUS'] );
-		unset( $_GET['aether_site_exporter_anonymous'] );
+		unset( $_SERVER['HTTP_X_ALTOLITH_DEPLOY_ANONYMOUS'] );
+		unset( $_GET['altolith_deploy_anonymous'] );
 
 		parent::tear_down();
 	}
@@ -150,11 +150,11 @@ class PluginTest extends TestCase {
 	// ========================================================================
 
 	/**
-	 * Test forceAnonymousUser with Aether User-Agent.
+	 * Test forceAnonymousUser with Altolith User-Agent.
 	 *
 	 * Purpose: Verify requests from static site generator are forced anonymous
 	 */
-	public function test_forceAnonymousUser_forces_anonymous_with_aether_user_agent() {
+	public function test_forceAnonymousUser_forces_anonymous_with_altolith_user_agent() {
 		$plugin = Plugin::getInstance();
 
 		// Create logged in user.
@@ -163,8 +163,8 @@ class PluginTest extends TestCase {
 
 		$this->assertEquals( $user_id, get_current_user_id(), 'Should start as logged in user' );
 
-		// Set Aether User-Agent.
-		$_SERVER['HTTP_USER_AGENT'] = 'Aether Static Site Generator';
+		// Set Altolith User-Agent.
+		$_SERVER['HTTP_USER_AGENT'] = 'Altolith Static Site Generator';
 
 		$plugin->forceAnonymousUser();
 
@@ -182,7 +182,7 @@ class PluginTest extends TestCase {
 		wp_set_current_user( $user_id );
 
 		// Set custom header.
-		$_SERVER['HTTP_X_AETHER_SITE_EXPORTER_ANONYMOUS'] = 'true';
+		$_SERVER['HTTP_X_ALTOLITH_DEPLOY_ANONYMOUS'] = 'true';
 
 		$plugin->forceAnonymousUser();
 
@@ -200,7 +200,7 @@ class PluginTest extends TestCase {
 		wp_set_current_user( $user_id );
 
 		// Set query parameter.
-		$_GET['aether_site_exporter_anonymous'] = '1';
+		$_GET['altolith_deploy_anonymous'] = '1';
 
 		$plugin->forceAnonymousUser();
 
@@ -275,7 +275,7 @@ class PluginTest extends TestCase {
 		$plugin = Plugin::getInstance();
 
 		$tag    = '<script src="provider.js"></script>';
-		$handle = 'aether-provider-local-filesystem';
+		$handle = 'altolith-provider-local-filesystem';
 
 		$result = $plugin->addProviderScriptAttribute( $tag, $handle );
 
@@ -319,7 +319,7 @@ class PluginTest extends TestCase {
 		$assetDiscovery = $plugin->getAssetDiscovery();
 
 		$this->assertInstanceOf(
-			\Aether\SiteExporter\Sync\AssetDiscoveryService::class,
+			\Altolith\Deploy\Sync\AssetDiscoveryService::class,
 			$assetDiscovery,
 			'Should return AssetDiscoveryService instance'
 		);

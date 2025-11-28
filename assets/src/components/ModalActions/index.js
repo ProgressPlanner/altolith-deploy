@@ -7,7 +7,7 @@
  */
 
 import { Button } from '@wordpress/components';
-import { spacing } from '@aether/utils/styles';
+import { spacing } from '@altolith/utils/styles';
 
 // Styles - extracted to module level for performance
 const actionsContainerStyle = {
@@ -43,14 +43,14 @@ export default function ModalActions( {
 	children = null,
 	className = '',
 } ) {
-	const containerClassName = `aether-modal-actions ${ className }`.trim();
+	const containerClassName = `altolith-modal-actions ${ className }`.trim();
 
 	return (
 		<div className={ containerClassName } style={ actionsContainerStyle }>
 			{ children }
 			{ onCancel && (
 				<Button
-					className="aether-modal-actions__cancel"
+					className="altolith-modal-actions__cancel"
 					variant="secondary"
 					onClick={ onCancel }
 					disabled={ isSubmitting }
@@ -60,7 +60,7 @@ export default function ModalActions( {
 			) }
 			{ onSubmit && (
 				<Button
-					className="aether-modal-actions__submit"
+					className="altolith-modal-actions__submit"
 					variant={ submitVariant }
 					onClick={ onSubmit }
 					isBusy={ isSubmitting }

@@ -25,7 +25,7 @@ jest.mock( '@wordpress/i18n', () => ( {
 } ) );
 
 // Mock styles
-jest.mock( '@aether/utils/styles', () => ( {
+jest.mock( '@altolith/utils/styles', () => ( {
 	colors: { textMuted: '#666' },
 	spacing: { xs: '4px' },
 	fontSize: { sm: '12px' },
@@ -61,7 +61,7 @@ describe( 'ProgressBar', () => {
 			);
 
 			expect(
-				container.querySelector( '.aether-progress-bar' )
+				container.querySelector( '.altolith-progress-bar' )
 			).toBeInTheDocument();
 		} );
 
@@ -88,7 +88,7 @@ describe( 'ProgressBar', () => {
 			);
 
 			expect(
-				container.querySelector( '.aether-progress-bar__description' )
+				container.querySelector( '.altolith-progress-bar__description' )
 			).not.toBeInTheDocument();
 		} );
 
