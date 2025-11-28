@@ -50,6 +50,7 @@ export function ProgressBar( { progress, description, height } ) {
 	return (
 		<div style={ containerStyle } className="altolith-progress-bar">
 			<progress
+				className="altolith-progress-bar__element"
 				style={ progressStyle }
 				max={ progress.total }
 				value={ progress.current }

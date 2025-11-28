@@ -12,6 +12,8 @@ import {
 	SelectControl,
 } from '@wordpress/components';
 import { doAction, applyFilters } from '@wordpress/hooks';
+// eslint-disable-next-line import/no-unresolved
+import ProfileSelector from '@altolith/profiles/components/ProfileSelector';
 
 /**
  * Render a provider configuration field.
@@ -105,6 +107,32 @@ export default function ProviderField( {
 					checked={ value || false }
 					onChange={ ( newValue ) => onChange( id, newValue ) }
 					__nextHasNoMarginBottom={ true }
+				/>
+			</div>
+		);
+	}
+
+	// Handle profile fields (profile selector with inline creation)
+	if ( type === 'profile' ) {
+		const profileCategory = field.profile_category;
+		const profileType = field.profile_type;
+
+		return renderWithHooks(
+			<div
+				className={ `altolith-provider-field altolith-provider-field--${ type } ${
+					error ? 'altolith-provider-field--error' : ''
+				}` }
+				style={ fieldWrapperStyle }
+			>
+				<ProfileSelector
+					label={ label }
+					help={ help }
+					category={ profileCategory }
+					profileType={ profileType }
+					value={ value || '' }
+					onChange={ ( newValue ) => onChange( id, newValue ) }
+					required={ required }
+					error={ error }
 				/>
 			</div>
 		);

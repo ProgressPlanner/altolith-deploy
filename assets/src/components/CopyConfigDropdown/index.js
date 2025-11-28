@@ -149,14 +149,20 @@ export default function CopyConfigDropdown( {
 
 	return (
 		<div className="altolith-copy-config-dropdown" style={ containerStyle }>
-			<span style={ labelStyle }>
+			<span
+				className="altolith-copy-config-dropdown__label"
+				style={ labelStyle }
+			>
 				{ __(
 					'Copy settings from another instance',
 					'altolith-deploy'
 				) }
 			</span>
 
-			<div style={ selectWrapperStyle }>
+			<div
+				className="altolith-copy-config-dropdown__select-wrapper"
+				style={ selectWrapperStyle }
+			>
 				<SelectControl
 					className="altolith-copy-config-dropdown__select"
 					label={ __( 'Select source instance', 'altolith-deploy' ) }

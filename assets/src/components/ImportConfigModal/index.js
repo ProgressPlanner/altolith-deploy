@@ -256,6 +256,7 @@ export default function ImportConfigModal( {
 				>
 					<input
 						ref={ fileInputRef }
+						className="altolith-import-config-modal__file-input"
 						type="file"
 						accept=".json"
 						onChange={ handleFileUpload }
@@ -269,7 +270,10 @@ export default function ImportConfigModal( {
 					>
 						{ __( 'Choose File…', 'altolith-deploy' ) }
 					</Button>
-					<span style={ helpTextStyle }>
+					<span
+						className="altolith-import-config-modal__help-text"
+						style={ helpTextStyle }
+					>
 						{ __( 'or paste JSON below', 'altolith-deploy' ) }
 					</span>
 				</div>
@@ -306,6 +310,7 @@ export default function ImportConfigModal( {
 				{ validation.valid && (
 					<div className="altolith-import-config-modal__validation-success">
 						<div
+							className="altolith-import-config-modal__validation-success-text"
 							style={ validationSuccessStyle }
 							data-testid="validation-success"
 						>
@@ -333,9 +338,15 @@ export default function ImportConfigModal( {
 									),
 									conflicts.length
 								) }
-								<ul style={ conflictListStyle }>
+								<ul
+									className="altolith-import-config-modal__conflict-list"
+									style={ conflictListStyle }
+								>
 									{ conflicts.map( ( id ) => (
-										<li key={ id }>
+										<li
+											key={ id }
+											className="altolith-import-config-modal__conflict-item"
+										>
 											{ existingConfigs[ id ]
 												?.instance_name || id }
 										</li>

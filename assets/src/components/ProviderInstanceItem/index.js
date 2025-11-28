@@ -238,6 +238,7 @@ export default function ProviderInstanceItem( {
 
 	return (
 		<tr
+			className="altolith-provider-instance-item"
 			style={ tableRowStyle }
 			onMouseEnter={ ( e ) => {
 				e.currentTarget.style.backgroundColor =
@@ -248,7 +249,10 @@ export default function ProviderInstanceItem( {
 			} }
 		>
 			{ /* Instance Name */ }
-			<td style={ tableCellStyleWithoutHorizontalBorder }>
+			<td
+				className="altolith-provider-instance-item__name-cell"
+				style={ tableCellStyleWithoutHorizontalBorder }
+			>
 				{ isEditing ? (
 					<input
 						ref={ inputRef }
@@ -263,10 +267,12 @@ export default function ProviderInstanceItem( {
 								handleNameCancel();
 							}
 						} }
+						className="altolith-provider-instance-item__name-input"
 						style={ nameInputStyle }
 					/>
 				) : (
 					<div
+						className="altolith-provider-instance-item__name-display"
 						style={ nameStyle }
 						onClick={ handleNameEdit }
 						onKeyDown={ ( e ) => {
@@ -292,14 +298,21 @@ export default function ProviderInstanceItem( {
 			</td>
 
 			{ /* Provider Type */ }
-			<td style={ tableCellStyleWithoutHorizontalBorder }>
+			<td
+				className="altolith-provider-instance-item__provider-cell"
+				style={ tableCellStyleWithoutHorizontalBorder }
+			>
 				{ providerMetadata.name || provider?.id || providerType }
 			</td>
 
 			{ /* Deployment Type */ }
-			<td style={ tableCellStyleWithoutHorizontalBorder }>
+			<td
+				className="altolith-provider-instance-item__deployment-cell"
+				style={ tableCellStyleWithoutHorizontalBorder }
+			>
 				{ deploymentTypeLabel && (
 					<span
+						className={ `altolith-provider-instance-item__deployment-tag altolith-provider-instance-item__deployment-tag--${ deploymentType }` }
 						style={ {
 							...tagBaseStyle,
 							backgroundColor:
@@ -313,12 +326,16 @@ export default function ProviderInstanceItem( {
 
 			{ /* Settings Status */ }
 			<td
+				className="altolith-provider-instance-item__status-cell"
 				style={ {
 					...tableCellStyleWithoutHorizontalBorder,
 					textAlign: 'center',
 				} }
 			>
 				<Icon
+					className={ `altolith-provider-instance-item__status-icon altolith-provider-instance-item__status-icon--${
+						allRequiredFilled ? 'complete' : 'incomplete'
+					}` }
 					icon={ SettingsIcon }
 					style={ {
 						color: settingsIconColor,
@@ -338,15 +355,23 @@ export default function ProviderInstanceItem( {
 			</td>
 
 			{ /* Actions */ }
-			<td style={ tableCellStyle }>
+			<td
+				className="altolith-provider-instance-item__actions-cell"
+				style={ tableCellStyle }
+			>
 				<div
+					className="altolith-provider-instance-item__actions-wrapper"
 					style={ {
 						...createFlexStyle( 'row', spacing.sm ),
 						justifyContent: 'flex-end',
 					} }
 				>
-					<div style={ actionsCellStyle }>
+					<div
+						className="altolith-provider-instance-item__actions"
+						style={ actionsCellStyle }
+					>
 						<Button
+							className="altolith-provider-instance-item__settings-button"
 							variant="secondary"
 							icon={ settings }
 							onClick={ () => setIsModalOpen( true ) }
@@ -354,6 +379,7 @@ export default function ProviderInstanceItem( {
 							{ __( 'Settings', 'altolith-deploy' ) }
 						</Button>
 						<Button
+							className="altolith-provider-instance-item__delete-button"
 							variant="secondary"
 							isDestructive
 							icon={ trash }
@@ -377,6 +403,7 @@ export default function ProviderInstanceItem( {
 							size="medium"
 						>
 							<div
+								className="altolith-provider-instance-settings-modal__content"
 								style={ {
 									...createFlexStyle( 'column', spacing.lg ),
 									paddingTop: spacing.md,
@@ -384,6 +411,7 @@ export default function ProviderInstanceItem( {
 							>
 								{ saveError && (
 									<StatusNotice
+										className="altolith-provider-instance-settings-modal__error"
 										status="error"
 										message={ saveError }
 										isDismissible
@@ -392,6 +420,7 @@ export default function ProviderInstanceItem( {
 								) }
 
 								<CopyConfigDropdown
+									className="altolith-provider-instance-settings-modal__copy-config"
 									currentInstanceId={ instance.instanceId }
 									allInstances={ allInstances }
 									targetFields={ settingsFields.map(
@@ -407,6 +436,7 @@ export default function ProviderInstanceItem( {
 
 								{ settingsFields.length > 0 && (
 									<ProviderForm
+										className="altolith-provider-instance-settings-modal__form"
 										providerId={ instance.instanceId }
 										fields={ settingsFields }
 										initialValues={ formInitialValues }

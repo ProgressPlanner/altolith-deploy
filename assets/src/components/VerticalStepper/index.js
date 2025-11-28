@@ -46,7 +46,10 @@ export function VerticalStepper( {
 				const isStepComplete = step.status === 'complete';
 
 				return (
-					<div key={ step.id }>
+					<div
+						key={ step.id }
+						className="altolith-vertical-stepper__step"
+					>
 						<StepNode
 							stepNumber={ index + 1 }
 							label={ step.label }

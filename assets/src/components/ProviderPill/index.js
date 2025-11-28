@@ -99,9 +99,18 @@ export function ProviderPill( { label, status = 'pending', progress = 0 } ) {
 		label.length > 12 ? label.substring( 0, 10 ) + '…' : label;
 
 	return (
-		<span style={ pillStyle } title={ `${ label }: ${ status }` }>
-			<span>{ shortLabel }</span>
-			<span style={ { display: 'inline-flex', alignItems: 'center' } }>
+		<span
+			className={ `altolith-provider-pill altolith-provider-pill--${ status }` }
+			style={ pillStyle }
+			title={ `${ label }: ${ status }` }
+		>
+			<span className="altolith-provider-pill__label">
+				{ shortLabel }
+			</span>
+			<span
+				className="altolith-provider-pill__icon"
+				style={ { display: 'inline-flex', alignItems: 'center' } }
+			>
 				{ icon }
 			</span>
 		</span>

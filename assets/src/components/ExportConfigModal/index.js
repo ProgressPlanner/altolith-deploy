@@ -211,7 +211,10 @@ export default function ExportConfigModal( {
 							indeterminate={ isIndeterminate }
 							onChange={ handleToggleAll }
 						/>
-						<div style={ checkboxListStyle }>
+						<div
+							className="altolith-export-config-modal__checkbox-list"
+							style={ checkboxListStyle }
+						>
 							{ instanceIds.map( ( instanceId ) => {
 								const config = providerConfigs[ instanceId ];
 								const providerType =
