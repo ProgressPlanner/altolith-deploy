@@ -141,6 +141,10 @@ module.exports = {
 				__dirname,
 				'assets/src/admin-settings'
 			),
+			'@altolith/profiles': path.resolve(
+				__dirname,
+				'assets/src/profiles'
+			),
 		},
 		fallback: {
 			...defaultConfig.resolve?.fallback,
