@@ -15,6 +15,7 @@ use Altolith\Deploy\Utilities\CorsHandler;
 use Altolith\Deploy\Utilities\CookieManager;
 use Altolith\Deploy\Utilities\SecurityValidator;
 use Altolith\Deploy\Utilities\FileManager;
+use Altolith\Deploy\Core\ProfileResolver;
 
 /**
  * Main plugin orchestrator class.
@@ -48,6 +49,13 @@ class Plugin
 	 * @var CookieManager
 	 */
 	private CookieManager $cookieManager;
+
+	/**
+	 * Profile Resolver instance.
+	 *
+	 * @var ProfileResolver
+	 */
+	private ProfileResolver $profileResolver;
 
 	/**
 	 * Get plugin instance.
@@ -96,6 +104,10 @@ class Plugin
 
 		// Initialize CORS handler.
 		$this->corsHandler = new CorsHandler();
+
+		// Initialize profile resolver (resolves profile references in provider configs).
+		$this->profileResolver = new ProfileResolver();
+		$this->profileResolver->init();
 
 		// Initialize provider registry and register providers.
 		$this->initProviders();
@@ -329,6 +341,7 @@ class Plugin
 		// Initialize REST controllers.
 		$settingsController = new REST\SettingsController();
 		$providerConfigController = new REST\ProviderConfigController();
+		$profilesController = new REST\ProfilesController();
 		$assetsController = new REST\AssetsController();
 		$localStorageController = new REST\LocalStorageController();
 		$urlDiscoveryController = new REST\URLDiscoveryController();
@@ -341,6 +354,7 @@ class Plugin
 		// Register routes from each controller.
 		$settingsController->registerRoutes();
 		$providerConfigController->registerRoutes();
+		$profilesController->registerRoutes();
 		$assetsController->registerRoutes();
 		$localStorageController->registerRoutes();
 		$urlDiscoveryController->registerRoutes();
