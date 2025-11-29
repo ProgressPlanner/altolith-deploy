@@ -13,6 +13,7 @@ import StepRegistry from '../registry/StepRegistry';
 // Import step files to ensure they register themselves
 import './discoverAndScanSite';
 import './createBlueprintBundle';
+import './gatherFilesToDeploy';
 import './upload';
 
 /**
@@ -49,20 +50,13 @@ export function getActiveSteps( context ) {
 
 	const steps = getRegisteredSteps();
 
-	// Filter out steps that should be skipped based on provider configuration
+	// Filter out steps when no provider instances exist for their deployment type
 	const filteredSteps = steps.filter( ( step ) => {
-		// If step has a static skip function, check it
-		if ( typeof step.shouldSkip === 'function' ) {
-			return ! step.shouldSkip( context );
-		}
-
-		// Skip steps when no provider instances exist for their deployment type
 		if ( step.deploymentType ) {
 			const instances =
 				providerInstancesByType[ step.deploymentType ] || [];
 			return instances.length > 0;
 		}
-
 		return true;
 	} );
 
