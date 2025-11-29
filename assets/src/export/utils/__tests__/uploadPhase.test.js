@@ -15,6 +15,7 @@
 import { prepareManifest, processAssets } from '../uploadPhase';
 import { fetchManifest } from '@altolith/utils/manifestManager';
 import { calculateFileHash } from '@altolith/utils/fileHash';
+import { shouldStoreInMemory } from '../fileTypeUtils';
 
 jest.mock( '@wordpress/i18n', () => ( {
 	__: ( text ) => text,
@@ -48,6 +49,23 @@ jest.mock( '../assetExtractor', () => ( {
 
 jest.mock( '../fileUploadManager', () => ( {
 	uploadFilesWithProgress: jest.fn(),
+} ) );
+
+jest.mock( '../fileTypeUtils', () => ( {
+	shouldStoreInMemory: jest.fn( ( url ) => {
+		// Default behavior: CSS/JS need memory, images don't
+		if ( url.endsWith( '.css' ) || url.endsWith( '.js' ) ) {
+			return true;
+		}
+		if (
+			url.endsWith( '.jpg' ) ||
+			url.endsWith( '.png' ) ||
+			url.endsWith( '.gif' )
+		) {
+			return false;
+		}
+		return true;
+	} ),
 } ) );
 
 describe( 'uploadPhase', () => {
@@ -208,6 +226,37 @@ describe( 'uploadPhase', () => {
 
 			// Should continue despite error
 			expect( result ).toBeDefined();
+		} );
+
+		it( 'should call shouldStoreInMemory for each asset', async () => {
+			const assetUrls = [
+				'http://example.com/style.css',
+				'http://example.com/image.jpg',
+				'http://example.com/script.js',
+			];
+
+			await processAssets( {
+				assetUrls,
+				assetTracker: mockAssetTracker,
+				storageService: mockStorageService,
+				manifest: {},
+				providerId: 'test-provider',
+				filesUploaded: 0,
+				totalFilesToUpload: 3,
+				onProgress: jest.fn(),
+				setStatusMessage: mockSetStatusMessage,
+			} );
+
+			// Verify shouldStoreInMemory was called for each URL
+			expect( shouldStoreInMemory ).toHaveBeenCalledWith(
+				'http://example.com/style.css'
+			);
+			expect( shouldStoreInMemory ).toHaveBeenCalledWith(
+				'http://example.com/image.jpg'
+			);
+			expect( shouldStoreInMemory ).toHaveBeenCalledWith(
+				'http://example.com/script.js'
+			);
 		} );
 	} );
 } );

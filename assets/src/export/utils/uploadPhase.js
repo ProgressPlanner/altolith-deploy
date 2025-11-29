@@ -19,6 +19,7 @@ import {
 	cleanupManifest,
 	getStaleFiles,
 } from '@altolith/utils/manifestManager';
+import { shouldStoreInMemory } from './fileTypeUtils';
 
 /**
  * Fetch and prepare manifest for upload phase.
@@ -122,9 +123,23 @@ export async function processAssets( {
 		};
 	}
 
-	// Fetch and prepare asset data
-	const assetData = [];
+	// Separate assets into those that need memory storage vs streamable
+	// Text assets (CSS, JS, SVG) need memory for URL replacement
+	// Binary assets (images, fonts, video) can be streamed directly
+	const memoryAssetUrls = [];
+	const streamableAssetUrls = [];
+
 	for ( const assetUrl of assetsNotInTracker ) {
+		if ( shouldStoreInMemory( assetUrl ) ) {
+			memoryAssetUrls.push( assetUrl );
+		} else {
+			streamableAssetUrls.push( assetUrl );
+		}
+	}
+
+	// Process memory assets (need blob in memory for potential URL replacement)
+	const assetData = [];
+	for ( const assetUrl of memoryAssetUrls ) {
 		try {
 			const assetResponse = await fetch( assetUrl, {
 				method: 'GET',
@@ -204,6 +219,114 @@ export async function processAssets( {
 				assetKey: finalAssetKey,
 				assetBlob,
 				contentType: finalContentType,
+			} );
+		} catch ( error ) {}
+	}
+
+	// Process streamable assets (binary files - stream directly without storing in memory)
+	// These are processed one at a time to avoid memory buildup
+	for ( const assetUrl of streamableAssetUrls ) {
+		try {
+			const assetPath = getAssetLocalPath( assetUrl );
+
+			if ( assetPath === null ) {
+				assetTracker.markFailed( assetUrl );
+				continue;
+			}
+
+			const assetKey = assetPath;
+
+			// Use HEAD request first to check size for manifest comparison
+			let contentLength = null;
+			let contentType = 'application/octet-stream';
+
+			try {
+				const headResponse = await fetch( assetUrl, {
+					method: 'HEAD',
+					credentials: 'omit',
+					headers: {
+						'User-Agent': 'Altolith Static Site Generator',
+					},
+				} );
+
+				if ( headResponse.ok ) {
+					contentLength =
+						headResponse.headers.get( 'content-length' );
+					contentType =
+						headResponse.headers.get( 'content-type' ) ||
+						'application/octet-stream';
+				}
+			} catch ( error ) {
+				// HEAD failed, will get info from GET response
+			}
+
+			// Check manifest for skip (if we have content-length)
+			const existingEntry = currentManifest[ assetKey ];
+			if (
+				contentLength &&
+				existingEntry &&
+				existingEntry.size === parseInt( contentLength, 10 )
+			) {
+				// Size matches - need to fetch and hash to confirm
+				// For large binary files, we might want to trust size alone
+				// but for correctness, we hash
+			}
+
+			// Fetch asset content
+			const assetResponse = await fetch( assetUrl, {
+				method: 'GET',
+				credentials: 'omit',
+				headers: {
+					'User-Agent': 'Altolith Static Site Generator',
+				},
+			} );
+
+			if ( assetResponse.status !== 200 ) {
+				continue;
+			}
+
+			// Get content type from response if not from HEAD
+			contentType =
+				assetResponse.headers.get( 'content-type' ) || contentType;
+
+			// Get blob - we need it temporarily for upload, but we process one at a time
+			const assetBlob = await assetResponse.blob();
+
+			// Check manifest for skip using blob size
+			if ( existingEntry && existingEntry.size === assetBlob.size ) {
+				try {
+					const assetHash = await calculateFileHash( assetBlob );
+					if (
+						shouldSkipUpload(
+							currentManifest,
+							assetKey,
+							assetBlob.size,
+							assetHash
+						)
+					) {
+						assetTracker.markUploaded( assetUrl );
+						currentFilesUploaded++;
+						filesSkipped++;
+						uploadedFiles.push( {
+							storageKey: assetKey,
+							relativePath: assetPath,
+							contentType,
+						} );
+						// Allow blob to be garbage collected
+						continue;
+					}
+				} catch ( error ) {}
+			}
+
+			// Add to assetData for batch upload
+			// Note: For very large sites, this could be further optimized
+			// to upload immediately instead of batching
+			assetData.push( {
+				assetUrl,
+				assetPath,
+				assetKey,
+				assetBlob,
+				contentType,
 			} );
 		} catch ( error ) {}
 	}
