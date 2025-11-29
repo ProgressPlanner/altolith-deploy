@@ -18605,26 +18605,26 @@ const statusLabels = {
   pending: (0,external_wp_i18n_namespaceObject.__)('Discover site', 'altolith-deploy'),
   running: data => {
     const {
-      pagesScanned = 0,
+      urlsScanned = 0,
       assetsFound = 0
     } = data;
-    if (pagesScanned === 0) {
+    if (urlsScanned === 0) {
       return (0,external_wp_i18n_namespaceObject.__)('Fetching URLs from WordPress…', 'altolith-deploy');
     }
-    return (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$d: Pages scanned, %2$d: Assets found */
-    (0,external_wp_i18n_namespaceObject.__)('Scanning… %1$d pages, %2$d assets', 'altolith-deploy'), pagesScanned, assetsFound);
+    return (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$d: URLs scanned, %2$d: Assets found */
+    (0,external_wp_i18n_namespaceObject.__)('Scanning… %1$d URLs, %2$d assets', 'altolith-deploy'), urlsScanned, assetsFound);
   },
   complete: data => {
     const {
       htmlCount = 0,
       assetCount = 0
     } = data;
-    const pagesText = (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %d: Number of pages */
-    (0,external_wp_i18n_namespaceObject._n)('%d page', '%d pages', htmlCount, 'altolith-deploy'), htmlCount);
+    const urlsText = (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %d: Number of URLs */
+    (0,external_wp_i18n_namespaceObject._n)('%d URL', '%d URLs', htmlCount, 'altolith-deploy'), htmlCount);
     const assetsText = (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %d: Number of assets */
     (0,external_wp_i18n_namespaceObject._n)('%d asset', '%d assets', assetCount, 'altolith-deploy'), assetCount);
-    return (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Pages text, %2$s: Assets text */
-    (0,external_wp_i18n_namespaceObject.__)('Discovered %1$s with %2$s', 'altolith-deploy'), pagesText, assetsText);
+    return (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: URLs text, %2$s: Assets text */
+    (0,external_wp_i18n_namespaceObject.__)('Discovered %1$s with %2$s', 'altolith-deploy'), urlsText, assetsText);
   }
 };
 
@@ -18786,8 +18786,8 @@ async function handler(context) {
         current: processedCount,
         total: discoveredUrls.size,
         statusData: {
-          pagesScanned: processedCount,
-          pagesDiscovered: discoveredUrls.size,
+          urlsScanned: processedCount,
+          urlsDiscovered: discoveredUrls.size,
           assetsFound: allAssets.size,
           fetchStrategy: status.strategy,
           phpFetchCount,
@@ -18799,8 +18799,8 @@ async function handler(context) {
     // Update status message after batch
     const status = strategyManager.getStatus();
     const modeText = status.strategy === STRATEGY.JS_ONLY ? (0,external_wp_i18n_namespaceObject.__)(' (fallback mode)', 'altolith-deploy') : '';
-    setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$d: Pages scanned, %2$d: Total discovered */
-    (0,external_wp_i18n_namespaceObject.__)('Scanned %1$d pages, discovered %2$d URLs…', 'altolith-deploy'), processedCount, discoveredUrls.size) + modeText, 'progress', 'discoverAndScanSite');
+    setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$d: URLs scanned, %2$d: Total discovered */
+    (0,external_wp_i18n_namespaceObject.__)('Scanned %1$d of %2$d URLs…', 'altolith-deploy'), processedCount, discoveredUrls.size) + modeText, 'progress', 'discoverAndScanSite');
   }
 
   // Log strategy status for debugging

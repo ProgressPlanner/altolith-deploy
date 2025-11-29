@@ -112,22 +112,22 @@ async function processHtmlResult(
 const statusLabels = {
 	pending: __( 'Discover site', 'altolith-deploy' ),
 	running: ( data ) => {
-		const { pagesScanned = 0, assetsFound = 0 } = data;
-		if ( pagesScanned === 0 ) {
+		const { urlsScanned = 0, assetsFound = 0 } = data;
+		if ( urlsScanned === 0 ) {
 			return __( 'Fetching URLs from WordPress…', 'altolith-deploy' );
 		}
 		return sprintf(
-			/* translators: %1$d: Pages scanned, %2$d: Assets found */
-			__( 'Scanning… %1$d pages, %2$d assets', 'altolith-deploy' ),
-			pagesScanned,
+			/* translators: %1$d: URLs scanned, %2$d: Assets found */
+			__( 'Scanning… %1$d URLs, %2$d assets', 'altolith-deploy' ),
+			urlsScanned,
 			assetsFound
 		);
 	},
 	complete: ( data ) => {
 		const { htmlCount = 0, assetCount = 0 } = data;
-		const pagesText = sprintf(
-			/* translators: %d: Number of pages */
-			_n( '%d page', '%d pages', htmlCount, 'altolith-deploy' ),
+		const urlsText = sprintf(
+			/* translators: %d: Number of URLs */
+			_n( '%d URL', '%d URLs', htmlCount, 'altolith-deploy' ),
 			htmlCount
 		);
 		const assetsText = sprintf(
@@ -136,9 +136,9 @@ const statusLabels = {
 			assetCount
 		);
 		return sprintf(
-			/* translators: %1$s: Pages text, %2$s: Assets text */
+			/* translators: %1$s: URLs text, %2$s: Assets text */
 			__( 'Discovered %1$s with %2$s', 'altolith-deploy' ),
-			pagesText,
+			urlsText,
 			assetsText
 		);
 	},
@@ -350,8 +350,8 @@ async function handler( context ) {
 				current: processedCount,
 				total: discoveredUrls.size,
 				statusData: {
-					pagesScanned: processedCount,
-					pagesDiscovered: discoveredUrls.size,
+					urlsScanned: processedCount,
+					urlsDiscovered: discoveredUrls.size,
 					assetsFound: allAssets.size,
 					fetchStrategy: status.strategy,
 					phpFetchCount,
@@ -368,9 +368,9 @@ async function handler( context ) {
 				: '';
 		setStatusMessage(
 			sprintf(
-				/* translators: %1$d: Pages scanned, %2$d: Total discovered */
+				/* translators: %1$d: URLs scanned, %2$d: Total discovered */
 				__(
-					'Scanned %1$d pages, discovered %2$d URLs…',
+					'Scanned %1$d of %2$d URLs…',
 					'altolith-deploy'
 				),
 				processedCount,

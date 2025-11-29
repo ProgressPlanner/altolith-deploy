@@ -467,7 +467,7 @@ describe( 'discoverAndScanSite step', () => {
 			);
 			expect(
 				stepDefinition.statusLabels.running( {
-					pagesScanned: 5,
+					urlsScanned: 5,
 					assetsFound: 10,
 				} )
 			).toBeTruthy();
@@ -485,16 +485,16 @@ describe( 'discoverAndScanSite step', () => {
 			).toBeTruthy();
 		} );
 
-		test( 'running label should show initial message when no pages scanned', () => {
+		test( 'running label should show initial message when no URLs scanned', () => {
 			const label = stepDefinition.statusLabels.running( {
-				pagesScanned: 0,
+				urlsScanned: 0,
 			} );
 			expect( label ).toContain( 'Fetching URLs from WordPress' );
 		} );
 
-		test( 'running label should show progress when pages are being scanned', () => {
+		test( 'running label should show progress when URLs are being scanned', () => {
 			const label = stepDefinition.statusLabels.running( {
-				pagesScanned: 5,
+				urlsScanned: 5,
 				assetsFound: 10,
 			} );
 			expect( label ).toContain( '5' );
