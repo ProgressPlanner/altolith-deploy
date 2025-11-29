@@ -270,11 +270,7 @@ export function buildBlueprintSteps( config ) {
 	 *     return steps;
 	 * });
 	 */
-	return applyFilters(
-		'altolith.blueprint.steps',
-		steps,
-		config
-	);
+	return applyFilters( 'altolith.blueprint.steps', steps, config );
 }
 
 /**
@@ -324,9 +320,5 @@ export function buildBlueprintJson( steps ) {
 	 *     return blueprint;
 	 * });
 	 */
-	return applyFilters(
-		'altolith.blueprint.json',
-		blueprint,
-		steps
-	);
+	return applyFilters( 'altolith.blueprint.json', blueprint, steps );
 }

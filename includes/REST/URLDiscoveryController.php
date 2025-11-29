@@ -47,13 +47,6 @@ class URLDiscoveryController
 	private function getDiscoverArgs(): array
 	{
 		return [
-			'page' => [
-				'description'       => 'Page number for paginated results',
-				'type'              => 'integer',
-				'default'           => 1,
-				'minimum'           => 1,
-				'sanitize_callback' => 'absint',
-			],
 			'types' => [
 				'description'       => 'URL types to discover',
 				'type'              => 'array',
@@ -73,74 +66,54 @@ class URLDiscoveryController
 	/**
 	 * Discover URLs for static site generation.
 	 *
-	 * Consolidated endpoint that replaces the previous separate endpoints.
+	 * Returns all URLs in a single request (no pagination).
 	 *
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response Response with URLs.
 	 */
 	public function discoverUrls(WP_REST_Request $request): WP_REST_Response
 	{
-		$page = $request->get_param('page') ?? 1;
 		$types = $request->get_param('types') ?? [ 'posts', 'terms', 'authors', 'archives', 'pagination' ];
-		$offset = ($page - 1) * \Altolith\Deploy\Constants\ExportLimits::PER_PAGE;
 
 		$allUrls = [];
-		$totals = [];
 
 		// Collect URLs from each requested type
 		if (\in_array('posts', $types, true)) {
-			$postUrls = $this->getPostUrls($offset);
-			$allUrls = \array_merge($allUrls, $postUrls['urls']);
-			$totals['posts'] = $postUrls['total'];
+			$allUrls = \array_merge($allUrls, $this->getAllPostUrls());
 		}
 
 		if (\in_array('terms', $types, true)) {
-			$termUrls = $this->getTermUrls($offset);
-			$allUrls = \array_merge($allUrls, $termUrls['urls']);
-			$totals['terms'] = $termUrls['total'];
+			$allUrls = \array_merge($allUrls, $this->getAllTermUrls());
 		}
 
 		if (\in_array('authors', $types, true)) {
-			$authorUrls = $this->getAuthorUrls($offset);
-			$allUrls = \array_merge($allUrls, $authorUrls['urls']);
-			$totals['authors'] = $authorUrls['total'];
+			$allUrls = \array_merge($allUrls, $this->getAllAuthorUrls());
 		}
 
 		if (\in_array('archives', $types, true)) {
-			$archiveUrls = $this->getArchiveUrls();
-			$allUrls = \array_merge($allUrls, $archiveUrls);
-			$totals['archives'] = \count($archiveUrls);
+			$allUrls = \array_merge($allUrls, $this->getArchiveUrls());
 		}
 
 		if (\in_array('pagination', $types, true)) {
-			$paginationUrls = $this->getPaginationUrls();
-			$allUrls = \array_merge($allUrls, $paginationUrls);
-			$totals['pagination'] = \count($paginationUrls);
+			$allUrls = \array_merge($allUrls, $this->getPaginationUrls());
 		}
-
-		// Calculate if there are more results
-		$totalItems = \array_sum($totals);
-		$hasMore = ($offset + \Altolith\Deploy\Constants\ExportLimits::PER_PAGE) < $totalItems;
 
 		// Deduplicate URLs
 		$uniqueUrls = \array_values(\array_unique($allUrls));
 
 		return new WP_REST_Response([
-			'success'  => true,
-			'urls'     => $uniqueUrls,
-			'hasMore'  => $hasMore,
-			'nextPage' => $hasMore ? $page + 1 : null,
-			'total'    => $totalItems,
+			'success' => true,
+			'urls'    => $uniqueUrls,
+			'total'   => \count($uniqueUrls),
 		], 200);
 	}
 
 	/**
-	 * Get post URLs (all public post types).
+	 * Get all post URLs (all public post types).
 	 *
-	 * @param int $offset Query offset.
-	 * @return array{urls: array<string>, total: int} URLs and total count.
+	 * @return array<string> Post URLs.
 	 */
-	private function getPostUrls(int $offset): array
+	private function getAllPostUrls(): array
 	{
 		$postTypes = \get_post_types(['public' => true], 'names');
 		$postTypesArray = \array_values($postTypes);
@@ -148,8 +121,7 @@ class URLDiscoveryController
 		$posts = \get_posts([
 			'post_type'      => $postTypesArray,
 			'post_status'    => 'publish',
-			'posts_per_page' => \Altolith\Deploy\Constants\ExportLimits::PER_PAGE,
-			'offset'         => $offset,
+			'posts_per_page' => -1,
 			'fields'         => 'ids',
 			'orderby'        => 'ID',
 			'order'          => 'ASC',
@@ -163,41 +135,15 @@ class URLDiscoveryController
 			}
 		}
 
-		return [
-			'urls'  => $urls,
-			'total' => $this->getTotalPostsCount($postTypesArray),
-		];
+		return $urls;
 	}
 
 	/**
-	 * Get total count of posts with publish status for given post types.
+	 * Get all term URLs (categories, tags, custom taxonomies).
 	 *
-	 * @param array<string> $postTypes Post types to count.
-	 * @return int Total count.
+	 * @return array<string> Term URLs.
 	 */
-	private function getTotalPostsCount(array $postTypes): int
-	{
-		global $wpdb;
-
-		$placeholders = \implode(',', \array_fill(0, \count($postTypes), '%s'));
-
-		// phpcs:disable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
-		$query = $wpdb->prepare(
-			"SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type IN ({$placeholders}) AND post_status = %s",
-			...\array_merge($postTypes, ['publish'])
-		);
-
-		return (int) $wpdb->get_var($query);
-		// phpcs:enable WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQL.NotPrepared
-	}
-
-	/**
-	 * Get term URLs (categories, tags, custom taxonomies).
-	 *
-	 * @param int $offset Query offset.
-	 * @return array{urls: array<string>, total: int} URLs and total count.
-	 */
-	private function getTermUrls(int $offset): array
+	private function getAllTermUrls(): array
 	{
 		$taxonomies = \get_taxonomies(['public' => true], 'names');
 		$taxonomiesArray = \array_values($taxonomies);
@@ -205,8 +151,7 @@ class URLDiscoveryController
 		$terms = \get_terms([
 			'taxonomy'   => $taxonomiesArray,
 			'hide_empty' => true,
-			'number'     => \Altolith\Deploy\Constants\ExportLimits::PER_PAGE,
-			'offset'     => $offset,
+			'number'     => 0, // All terms
 			'orderby'    => 'term_id',
 			'order'      => 'ASC',
 		]);
@@ -221,40 +166,19 @@ class URLDiscoveryController
 			}
 		}
 
-		return [
-			'urls'  => $urls,
-			'total' => $this->getTotalTermsCount($taxonomiesArray),
-		];
+		return $urls;
 	}
 
 	/**
-	 * Get total count of non-empty terms for given taxonomies.
+	 * Get all author URLs.
 	 *
-	 * @param array<string> $taxonomies Taxonomies to count.
-	 * @return int Total count.
+	 * @return array<string> Author URLs.
 	 */
-	private function getTotalTermsCount(array $taxonomies): int
-	{
-		$count = \wp_count_terms([
-			'taxonomy'   => $taxonomies,
-			'hide_empty' => true,
-		]);
-
-		return \is_wp_error($count) ? 0 : (int) $count;
-	}
-
-	/**
-	 * Get author URLs.
-	 *
-	 * @param int $offset Query offset.
-	 * @return array{urls: array<string>, total: int} URLs and total count.
-	 */
-	private function getAuthorUrls(int $offset): array
+	private function getAllAuthorUrls(): array
 	{
 		$authors = \get_users([
 			'capability' => 'edit_posts',
-			'number'     => \Altolith\Deploy\Constants\ExportLimits::PER_PAGE,
-			'offset'     => $offset,
+			'number'     => 0, // All authors
 			'orderby'    => 'ID',
 			'order'      => 'ASC',
 		]);
@@ -264,26 +188,7 @@ class URLDiscoveryController
 			$urls[] = \get_author_posts_url($author->ID);
 		}
 
-		return [
-			'urls'  => $urls,
-			'total' => $this->getTotalAuthorsCount(),
-		];
-	}
-
-	/**
-	 * Get total count of authors with edit_posts capability.
-	 *
-	 * @return int Total count.
-	 */
-	private function getTotalAuthorsCount(): int
-	{
-		$query = new \WP_User_Query([
-			'capability'   => 'edit_posts',
-			'count_total'  => true,
-			'number'       => 0,
-		]);
-
-		return $query->get_total();
+		return $urls;
 	}
 
 	/**

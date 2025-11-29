@@ -11252,94 +11252,39 @@ class ExportAPIService {
   }
 
   /**
-   * Fetch all pages of a paginated URL endpoint.
-   *
-   * @param {string}   endpoint       API endpoint path.
-   * @param {Function} onPageComplete Optional callback after each page.
-   * @return {Promise<Array>} All URLs from all pages.
-   */
-  async fetchAllPaginatedUrls(endpoint, onPageComplete = null) {
-    const allUrls = [];
-    let page = 1;
-    let hasMore = true;
-    while (hasMore) {
-      const response = await this.apiFetch({
-        path: `${endpoint}?page=${page}`,
-        method: 'GET'
-      });
-      if (!response.success) {
-        throw new Error(response.message || `Failed to fetch URLs from ${endpoint}`);
-      }
-      allUrls.push(...(response.urls || []));
-      hasMore = response.hasMore;
-      page = response.nextPage || page + 1;
-      if (onPageComplete) {
-        onPageComplete({
-          page: page - 1,
-          urlsCount: allUrls.length,
-          total: response.total,
-          hasMore
-        });
-      }
-    }
-    return allUrls;
-  }
-
-  /**
    * Discover URLs for static site generation
    *
    * Calls the consolidated URL discovery endpoint to get all URLs.
-   * Includes posts, terms, authors, archives, and pagination URLs.
+   * Returns all URLs in a single request (no pagination).
    *
    * @param {Function} onProgress Optional callback for progress updates.
    * @return {Promise<Object>} Response with urls array and staticSiteUrl
    */
   async discoverUrls(onProgress = null) {
     try {
-      const allUrls = [];
-      let page = 1;
-      let hasMore = true;
       if (onProgress) {
         onProgress({
           status: 'fetching',
           type: 'all'
         });
       }
-
-      // Fetch all URLs from consolidated endpoint
-      while (hasMore) {
-        const response = await this.apiFetch({
-          path: `${ENDPOINTS.URL_DISCOVERY.DISCOVER}?page=${page}`,
-          method: 'GET'
-        });
-        if (!response.success) {
-          throw new Error(response.message || 'Failed to discover URLs');
-        }
-        allUrls.push(...(response.urls || []));
-        hasMore = response.hasMore;
-        page = response.nextPage || page + 1;
-        if (onProgress) {
-          onProgress({
-            status: 'fetching',
-            page: page - 1,
-            urlsCount: allUrls.length,
-            total: response.total,
-            hasMore
-          });
-        }
+      const response = await this.apiFetch({
+        path: ENDPOINTS.URL_DISCOVERY.DISCOVER,
+        method: 'GET'
+      });
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to discover URLs');
       }
-
-      // Deduplicate URLs
-      const uniqueUrls = [...new Set(allUrls)];
+      const urls = response.urls || [];
       if (onProgress) {
         onProgress({
           status: 'complete',
-          urlsCount: uniqueUrls.length
+          urlsCount: urls.length
         });
       }
       return {
         success: true,
-        urls: uniqueUrls,
+        urls,
         staticSiteUrl: null // Will be determined by provider config
       };
     } catch (error) {

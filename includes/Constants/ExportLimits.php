@@ -33,13 +33,6 @@ class ExportLimits
 	public const MAX_FILE_SIZE = 512 * 1024 * 1024;
 
 	/**
-	 * Number of items per page for pagination.
-	 *
-	 * Used in URL discovery and other paginated operations.
-	 */
-	public const PER_PAGE = 500;
-
-	/**
 	 * Maximum number of files per batch.
 	 *
 	 * Used when creating file batches for processing.

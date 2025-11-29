@@ -369,10 +369,7 @@ async function handler( context ) {
 		setStatusMessage(
 			sprintf(
 				/* translators: %1$d: URLs scanned, %2$d: Total discovered */
-				__(
-					'Scanned %1$d of %2$d URLs…',
-					'altolith-deploy'
-				),
+				__( 'Scanned %1$d of %2$d URLs…', 'altolith-deploy' ),
 				processedCount,
 				discoveredUrls.size
 			) + modeText,
