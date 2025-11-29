@@ -12,9 +12,9 @@ import StepRegistry from '../registry/StepRegistry';
 
 // Import step files to ensure they register themselves
 import './discoverAndScanSite';
-import './createBlueprintBundle';
+import './prepareBlueprint';
 import './gatherFilesToDeploy';
-import './upload';
+import './deploy';
 
 /**
  * Get all registered steps

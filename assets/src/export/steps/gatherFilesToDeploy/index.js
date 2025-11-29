@@ -3,7 +3,7 @@
  *
  * Collects all files from previous steps into a unified structure for deployment:
  * - Static site files from discoverAndScanSite (URLs, HTML data)
- * - Blueprint files from createBlueprintBundle (wp-content.zip, plugin/theme zips, JSON)
+ * - Blueprint files from prepareBlueprint (wp-content.zip, plugin/theme zips, JSON)
  *
  * This step provides a single extension point for 3rd-party plugins to add files
  * via the 'altolith.export.filesToDeploy' filter.
@@ -235,15 +235,15 @@ const stepDefinition = {
 		'altolith-deploy'
 	),
 	supportsProgress: false,
-	dependencies: [ 'discoverAndScanSite', 'createBlueprintBundle' ],
+	dependencies: [ 'discoverAndScanSite', 'prepareBlueprint' ],
 	requires: {
 		// From discoverAndScanSite (optional - may not have static site enabled)
 		urls: { from: 'discoverAndScanSite', optional: true },
 		htmlDataMap: { from: 'discoverAndScanSite', optional: true },
 		siteUrl: true,
-		// From createBlueprintBundle (optional - may not have blueprint enabled)
-		blueprintFiles: { from: 'createBlueprintBundle', optional: true },
-		blueprintJson: { from: 'createBlueprintBundle', optional: true },
+		// From prepareBlueprint (optional - may not have blueprint enabled)
+		blueprintFiles: { from: 'prepareBlueprint', optional: true },
+		blueprintJson: { from: 'prepareBlueprint', optional: true },
 		// From initial context
 		setStatusMessage: true,
 		setStepProgress: false,

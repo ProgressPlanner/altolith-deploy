@@ -12,8 +12,9 @@ describe( 'steps', () => {
 			const stepIds = steps.map( ( step ) => step.id );
 
 			expect( stepIds ).toContain( 'discoverAndScanSite' );
-			expect( stepIds ).toContain( 'createBlueprintBundle' );
-			expect( stepIds ).toContain( 'upload' );
+			expect( stepIds ).toContain( 'prepareBlueprint' );
+			expect( stepIds ).toContain( 'gatherFilesToDeploy' );
+			expect( stepIds ).toContain( 'deploy' );
 		} );
 
 		test( 'each step has required properties', () => {
@@ -35,15 +36,15 @@ describe( 'steps', () => {
 				( s ) => ! s.supportsProgress
 			);
 
-			// Upload and discover steps support progress
-			expect( progressSteps.map( ( s ) => s.id ) ).toContain( 'upload' );
+			// Deploy and discover steps support progress
+			expect( progressSteps.map( ( s ) => s.id ) ).toContain( 'deploy' );
 			expect( progressSteps.map( ( s ) => s.id ) ).toContain(
 				'discoverAndScanSite'
 			);
 
-			// Blueprint bundle creation step doesn't support progress
+			// Prepare blueprint step doesn't support progress
 			expect( noProgressSteps.map( ( s ) => s.id ) ).toContain(
-				'createBlueprintBundle'
+				'prepareBlueprint'
 			);
 		} );
 	} );

@@ -95,12 +95,12 @@ async function uploadStaticFilesFromGather(
 			providerLabel
 		),
 		'progress',
-		'upload'
+		'deploy'
 	);
 
 	// Filter URLs before processing
 	const filteredUrls = applyFilters(
-		'altolith.export.step.upload.staticFiles.urls',
+		'altolith.deploy.staticFiles.urls',
 		urls,
 		[ providerId ],
 		{
@@ -193,14 +193,14 @@ async function uploadBlueprintFilesFromGather(
 	// Helper to update progress
 	const updateProgress = () => {
 		if ( setStepProgress ) {
-			setStepProgress( 'upload', {
+			setStepProgress( 'deploy', {
 				current: uploadedCount,
 				total: totalBlueprintFiles,
 			} );
 		}
 		if ( setProviderProgress ) {
 			setProviderProgress( providerId, {
-				stepId: 'upload',
+				stepId: 'deploy',
 				stepLabel: 'Deploy Files',
 				progress: {
 					current: uploadedCount,
@@ -218,7 +218,7 @@ async function uploadBlueprintFilesFromGather(
 			providerLabel
 		),
 		'progress',
-		'upload'
+		'deploy'
 	);
 
 	// Find the first path to determine storage service (use any path)
@@ -258,7 +258,7 @@ async function uploadBlueprintFilesFromGather(
 				providerLabel
 			),
 			'progress',
-			'upload'
+			'deploy'
 		);
 
 		let uploadResult;
@@ -398,7 +398,7 @@ async function handler( context ) {
 
 	// Initial progress update
 	if ( setStepProgress ) {
-		setStepProgress( 'upload', {
+		setStepProgress( 'deploy', {
 			current: 0,
 			total: totalTasks,
 			statusData: { providerLabel },
@@ -428,7 +428,7 @@ async function handler( context ) {
 		completedTasks++;
 
 		if ( setStepProgress ) {
-			setStepProgress( 'upload', {
+			setStepProgress( 'deploy', {
 				current: completedTasks,
 				total: totalTasks,
 				statusData: { providerLabel },
@@ -443,7 +443,7 @@ async function handler( context ) {
 				results.staticUploadResults.filesUploaded
 			),
 			'success',
-			'upload'
+			'deploy'
 		);
 	}
 
@@ -458,7 +458,7 @@ async function handler( context ) {
 		completedTasks++;
 
 		if ( setStepProgress ) {
-			setStepProgress( 'upload', {
+			setStepProgress( 'deploy', {
 				current: completedTasks,
 				total: totalTasks,
 				statusData: { providerLabel },
@@ -476,7 +476,7 @@ async function handler( context ) {
 				providerLabel
 			),
 			'success',
-			'upload'
+			'deploy'
 		);
 	}
 
@@ -498,18 +498,18 @@ async function handler( context ) {
 				providerLabel
 			),
 			'success',
-			'upload'
+			'deploy'
 		);
 	} else {
 		setStatusMessage(
 			__( 'No files to deploy', 'altolith-deploy' ),
 			'success',
-			'upload'
+			'deploy'
 		);
 	}
 
-	return applyFilters( 'altolith.export.step.upload.result', {
-		uploadResults: results,
+	return applyFilters( 'altolith.deploy.result', {
+		deployResults: results,
 	} );
 }
 
@@ -517,7 +517,7 @@ async function handler( context ) {
  * Step definition
  */
 const stepDefinition = {
-	id: 'upload',
+	id: 'deploy',
 	label: __( 'Deploy Files', 'altolith-deploy' ),
 	description: __(
 		'Deploy static files and blueprint bundles to providers',
@@ -536,7 +536,7 @@ const stepDefinition = {
 		updateStaticSiteProgressContext: false,
 	},
 	provides: {
-		uploadResults: {
+		deployResults: {
 			type: 'object',
 			scope: 'thread',
 		},
@@ -550,7 +550,7 @@ const stepDefinition = {
  */
 addAction(
 	'altolith.export.register_steps',
-	'altolith/step-upload',
+	'altolith/step-deploy',
 	( registry ) => {
 		registry.register( stepDefinition );
 	},

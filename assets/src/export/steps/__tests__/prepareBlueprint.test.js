@@ -1,5 +1,5 @@
 /**
- * Create Blueprint Bundle Step Tests
+ * Prepare Blueprint Step Tests
  *
  * Tests for the prepare blueprint files step that:
  * 1. Generates blueprint JSON with URL-based resources
@@ -87,10 +87,10 @@ function createMockBlueprintGenerator( overrides = {} ) {
 	} );
 }
 
-describe( 'createBlueprintBundle step', () => {
+describe( 'prepareBlueprint step', () => {
 	beforeAll( () => {
 		// Import the module to trigger addAction
-		require( '../createBlueprintBundle' );
+		require( '../prepareBlueprint' );
 
 		// Extract the step definition from the mock call
 		const registerCall = mockAddAction.mock.calls.find(
@@ -115,11 +115,11 @@ describe( 'createBlueprintBundle step', () => {
 
 	describe( 'step registration', () => {
 		test( 'should register with correct id', () => {
-			expect( stepDefinition.id ).toBe( 'createBlueprintBundle' );
+			expect( stepDefinition.id ).toBe( 'prepareBlueprint' );
 		} );
 
 		test( 'should have descriptive label', () => {
-			expect( stepDefinition.label ).toBe( 'Prepare Blueprint Files' );
+			expect( stepDefinition.label ).toBe( 'Prepare Blueprint' );
 		} );
 
 		test( 'should have no dependencies', () => {
@@ -436,7 +436,7 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( context );
 
 			expect( mockSetStepProgress ).toHaveBeenCalledWith(
-				'createBlueprintBundle',
+				'prepareBlueprint',
 				{
 					current: 1,
 					total: 1,
@@ -461,7 +461,7 @@ describe( 'createBlueprintBundle step', () => {
 			await handler( context );
 
 			expect( mockApplyFilters ).toHaveBeenCalledWith(
-				'altolith.export.step.createBlueprintBundle.blueprintData',
+				'altolith.export.step.prepareBlueprint.blueprintData',
 				expect.any( Object ),
 				context
 			);

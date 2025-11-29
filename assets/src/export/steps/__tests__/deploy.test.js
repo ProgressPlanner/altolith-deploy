@@ -1,5 +1,5 @@
 /**
- * Tests for deploy step (formerly upload)
+ * Tests for deploy step
  *
  * Tests the deploy step that handles deploying files from gatherFilesToDeploy
  * to providers. Includes static files and blueprint bundles.
@@ -44,7 +44,7 @@ jest.mock( '../../utils/helpers', () => ( {
 
 import { addAction } from '@wordpress/hooks';
 
-describe( 'deploy step (upload)', () => {
+describe( 'deploy step', () => {
 	let stepDefinition;
 
 	beforeEach( () => {
@@ -52,7 +52,7 @@ describe( 'deploy step (upload)', () => {
 
 		// Import the step to trigger registration
 		jest.isolateModules( () => {
-			require( '../upload' );
+			require( '../deploy' );
 		} );
 
 		// Get the registered step definition
@@ -71,7 +71,7 @@ describe( 'deploy step (upload)', () => {
 
 	describe( 'step definition', () => {
 		it( 'should have correct id', () => {
-			expect( stepDefinition.id ).toBe( 'upload' );
+			expect( stepDefinition.id ).toBe( 'deploy' );
 		} );
 
 		it( 'should have correct label', () => {
@@ -95,9 +95,9 @@ describe( 'deploy step (upload)', () => {
 			} );
 		} );
 
-		it( 'should provide uploadResults', () => {
-			expect( stepDefinition.provides ).toHaveProperty( 'uploadResults' );
-			expect( stepDefinition.provides.uploadResults.type ).toBe(
+		it( 'should provide deployResults', () => {
+			expect( stepDefinition.provides ).toHaveProperty( 'deployResults' );
+			expect( stepDefinition.provides.deployResults.type ).toBe(
 				'object'
 			);
 		} );
@@ -149,13 +149,13 @@ describe( 'deploy step (upload)', () => {
 
 			const result = await stepDefinition.handler( context );
 
-			expect( result.uploadResults ).toBeDefined();
-			expect( result.uploadResults.staticUploadResults ).toBeNull();
-			expect( result.uploadResults.blueprintUploadResults ).toBeNull();
+			expect( result.deployResults ).toBeDefined();
+			expect( result.deployResults.staticUploadResults ).toBeNull();
+			expect( result.deployResults.blueprintUploadResults ).toBeNull();
 			expect( context.setStatusMessage ).toHaveBeenCalledWith(
 				'No files to deploy',
 				'success',
-				'upload'
+				'deploy'
 			);
 		} );
 	} );

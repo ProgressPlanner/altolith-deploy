@@ -2,7 +2,7 @@
  * Gather Files to Deploy Step Tests
  *
  * Tests for the gatherFilesToDeploy step that collects files
- * from discoverAndScanSite and createBlueprintBundle steps.
+ * from discoverAndScanSite and prepareBlueprint steps.
  */
 
 // Mock WordPress hooks
@@ -64,12 +64,12 @@ describe( 'gatherFilesToDeploy step', () => {
 			expect( stepDefinition.label ).toBe( 'Gather Files' );
 		} );
 
-		test( 'should depend on discoverAndScanSite and createBlueprintBundle', () => {
+		test( 'should depend on discoverAndScanSite and prepareBlueprint', () => {
 			expect( stepDefinition.dependencies ).toContain(
 				'discoverAndScanSite'
 			);
 			expect( stepDefinition.dependencies ).toContain(
-				'createBlueprintBundle'
+				'prepareBlueprint'
 			);
 		} );
 

@@ -1,13 +1,13 @@
 /**
- * Prepare Blueprint Files Step
+ * Prepare Blueprint Step
  *
- * Prepares individual blueprint files for upload:
+ * Prepares individual blueprint files for deployment:
  * 1. wp-content.zip archive (database, uploads, mu-plugins)
  * 2. Individual plugin zips for custom plugins
  * 3. Individual theme zips for custom themes
  * 4. Blueprint JSON data (with URL-based resources)
  *
- * Files are uploaded separately by the upload step, NOT bundled into a single zip.
+ * Files are deployed separately by the deploy step, NOT bundled into a single zip.
  *
  * @since 1.0.0
  */
@@ -121,7 +121,7 @@ async function handler( context ) {
 	setStatusMessage(
 		__( 'Generating blueprint\u2026', 'altolith-deploy' ),
 		'progress',
-		'createBlueprintBundle'
+		'prepareBlueprint'
 	);
 
 	let blueprintResult;
@@ -145,7 +145,7 @@ async function handler( context ) {
 
 	// Allow filtering of blueprint data (JSON only)
 	const filteredBlueprint = applyFilters(
-		'altolith.export.step.createBlueprintBundle.blueprintData',
+		'altolith.export.step.prepareBlueprint.blueprintData',
 		blueprintData,
 		context
 	);
@@ -164,7 +164,7 @@ async function handler( context ) {
 					assetDescription
 			  );
 
-	setStatusMessage( discoveryMessage, 'progress', 'createBlueprintBundle' );
+	setStatusMessage( discoveryMessage, 'progress', 'prepareBlueprint' );
 
 	// Build blueprintFiles object - maps relative paths to source info
 	const blueprintFiles = {};
@@ -176,7 +176,7 @@ async function handler( context ) {
 			'altolith-deploy'
 		),
 		'progress',
-		'createBlueprintBundle'
+		'prepareBlueprint'
 	);
 
 	const coreContentResponse = await api.exportCoreContent();
@@ -204,7 +204,7 @@ async function handler( context ) {
 				customPlugins.length
 			),
 			'progress',
-			'createBlueprintBundle'
+			'prepareBlueprint'
 		);
 
 		for ( const slug of customPlugins ) {
@@ -235,7 +235,7 @@ async function handler( context ) {
 				customThemes.length
 			),
 			'progress',
-			'createBlueprintBundle'
+			'prepareBlueprint'
 		);
 
 		for ( const slug of customThemes ) {
@@ -259,7 +259,7 @@ async function handler( context ) {
 
 	// Update progress with statusData for dynamic label
 	if ( setStepProgress ) {
-		setStepProgress( 'createBlueprintBundle', {
+		setStepProgress( 'prepareBlueprint', {
 			current: 1,
 			total: 1,
 			statusData: {
@@ -272,7 +272,7 @@ async function handler( context ) {
 	setStatusMessage(
 		__( 'Blueprint files prepared', 'altolith-deploy' ),
 		'success',
-		'createBlueprintBundle'
+		'prepareBlueprint'
 	);
 
 	// Return simplified output: just blueprintFiles and blueprintJson
@@ -288,10 +288,10 @@ async function handler( context ) {
  * Step definition
  */
 const stepDefinition = {
-	id: 'createBlueprintBundle',
-	label: __( 'Prepare Blueprint Files', 'altolith-deploy' ),
+	id: 'prepareBlueprint',
+	label: __( 'Prepare Blueprint', 'altolith-deploy' ),
 	description: __(
-		'Prepare wp-content archive and blueprint files for upload',
+		'Prepare wp-content archive and blueprint files for deployment',
 		'altolith-deploy'
 	),
 	supportsProgress: false,
@@ -321,7 +321,7 @@ const stepDefinition = {
  */
 addAction(
 	'altolith.export.register_steps',
-	'altolith/step-createBlueprintBundle',
+	'altolith/step-prepareBlueprint',
 	( registry ) => {
 		registry.register( stepDefinition );
 	},

@@ -19014,17 +19014,17 @@ function getEnabledOutputTypes() {
   }
   return enabled;
 }
-;// ./assets/src/export/steps/createBlueprintBundle/index.js
+;// ./assets/src/export/steps/prepareBlueprint/index.js
 /**
- * Prepare Blueprint Files Step
+ * Prepare Blueprint Step
  *
- * Prepares individual blueprint files for upload:
+ * Prepares individual blueprint files for deployment:
  * 1. wp-content.zip archive (database, uploads, mu-plugins)
  * 2. Individual plugin zips for custom plugins
  * 3. Individual theme zips for custom themes
  * 4. Blueprint JSON data (with URL-based resources)
  *
- * Files are uploaded separately by the upload step, NOT bundled into a single zip.
+ * Files are deployed separately by the deploy step, NOT bundled into a single zip.
  *
  * @since 1.0.0
  */
@@ -19059,7 +19059,7 @@ function buildAssetDescription(customPlugins, customThemes) {
 /**
  * Status labels for the step
  */
-const createBlueprintBundle_statusLabels = {
+const prepareBlueprint_statusLabels = {
   pending: (0,external_wp_i18n_namespaceObject.__)('Prepare blueprint files', 'altolith-deploy'),
   running: () => (0,external_wp_i18n_namespaceObject.__)('Preparing blueprint files…', 'altolith-deploy'),
   complete: data => {
@@ -19091,7 +19091,7 @@ const createBlueprintBundle_statusLabels = {
  * @param {Function} context.setStepProgress       - Step progress updater
  * @return {Promise<Object>} Step result with individual file paths and blueprint data
  */
-async function createBlueprintBundle_handler(context) {
+async function prepareBlueprint_handler(context) {
   const {
     api,
     generateBlueprintJson,
@@ -19115,7 +19115,7 @@ async function createBlueprintBundle_handler(context) {
   const subfolder = 'playground'; // Default subfolder for blueprint files
 
   // --- Phase 1: Generate blueprint JSON with URL-based resources ---
-  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Generating blueprint\u2026', 'altolith-deploy'), 'progress', 'createBlueprintBundle');
+  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Generating blueprint\u2026', 'altolith-deploy'), 'progress', 'prepareBlueprint');
   let blueprintResult;
   if (typeof generateBlueprintJson === 'function') {
     // Pass baseUrl and subfolder so blueprint uses URL-based resources
@@ -19133,19 +19133,19 @@ async function createBlueprintBundle_handler(context) {
   } = blueprintResult;
 
   // Allow filtering of blueprint data (JSON only)
-  const filteredBlueprint = (0,external_wp_hooks_.applyFilters)('altolith.export.step.createBlueprintBundle.blueprintData', blueprintData, context);
+  const filteredBlueprint = (0,external_wp_hooks_.applyFilters)('altolith.export.step.prepareBlueprint.blueprintData', blueprintData, context);
 
   // Sub-step message for discovery completion
   const assetDescription = buildAssetDescription(customPlugins.length, customThemes.length);
   const discoveryMessage = customPlugins.length === 0 && customThemes.length === 0 ? (0,external_wp_i18n_namespaceObject.__)('No custom plugins or themes to bundle', 'altolith-deploy') : (0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Discovered assets description */
   (0,external_wp_i18n_namespaceObject.__)('Will bundle %s', 'altolith-deploy'), assetDescription);
-  setStatusMessage(discoveryMessage, 'progress', 'createBlueprintBundle');
+  setStatusMessage(discoveryMessage, 'progress', 'prepareBlueprint');
 
   // Build blueprintFiles object - maps relative paths to source info
   const blueprintFiles = {};
 
   // --- Phase 2: Export core content ---
-  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Exporting core content (database, uploads)\u2026', 'altolith-deploy'), 'progress', 'createBlueprintBundle');
+  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Exporting core content (database, uploads)\u2026', 'altolith-deploy'), 'progress', 'prepareBlueprint');
   const coreContentResponse = await api.exportCoreContent();
   if (!coreContentResponse.success) {
     throw new Error(coreContentResponse.message || (0,external_wp_i18n_namespaceObject.__)('Failed to export core content', 'altolith-deploy'));
@@ -19161,7 +19161,7 @@ async function createBlueprintBundle_handler(context) {
   // --- Phase 3: Export custom plugins ---
   if (customPlugins.length > 0) {
     setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %d: Number of plugins */
-    (0,external_wp_i18n_namespaceObject.__)('Exporting %d custom plugin(s)\u2026', 'altolith-deploy'), customPlugins.length), 'progress', 'createBlueprintBundle');
+    (0,external_wp_i18n_namespaceObject.__)('Exporting %d custom plugin(s)\u2026', 'altolith-deploy'), customPlugins.length), 'progress', 'prepareBlueprint');
     for (const slug of customPlugins) {
       const pluginResponse = await api.exportPlugin(slug);
       if (pluginResponse.success) {
@@ -19181,7 +19181,7 @@ async function createBlueprintBundle_handler(context) {
   // --- Phase 4: Export custom themes ---
   if (customThemes.length > 0) {
     setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %d: Number of themes */
-    (0,external_wp_i18n_namespaceObject.__)('Exporting %d custom theme(s)\u2026', 'altolith-deploy'), customThemes.length), 'progress', 'createBlueprintBundle');
+    (0,external_wp_i18n_namespaceObject.__)('Exporting %d custom theme(s)\u2026', 'altolith-deploy'), customThemes.length), 'progress', 'prepareBlueprint');
     for (const slug of customThemes) {
       const themeResponse = await api.exportTheme(slug);
       if (themeResponse.success) {
@@ -19200,7 +19200,7 @@ async function createBlueprintBundle_handler(context) {
 
   // Update progress with statusData for dynamic label
   if (setStepProgress) {
-    setStepProgress('createBlueprintBundle', {
+    setStepProgress('prepareBlueprint', {
       current: 1,
       total: 1,
       statusData: {
@@ -19209,7 +19209,7 @@ async function createBlueprintBundle_handler(context) {
       }
     });
   }
-  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Blueprint files prepared', 'altolith-deploy'), 'success', 'createBlueprintBundle');
+  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Blueprint files prepared', 'altolith-deploy'), 'success', 'prepareBlueprint');
 
   // Return simplified output: just blueprintFiles and blueprintJson
   // blueprintFiles: maps relative paths to source info
@@ -19223,10 +19223,10 @@ async function createBlueprintBundle_handler(context) {
 /**
  * Step definition
  */
-const createBlueprintBundle_stepDefinition = {
-  id: 'createBlueprintBundle',
-  label: (0,external_wp_i18n_namespaceObject.__)('Prepare Blueprint Files', 'altolith-deploy'),
-  description: (0,external_wp_i18n_namespaceObject.__)('Prepare wp-content archive and blueprint files for upload', 'altolith-deploy'),
+const prepareBlueprint_stepDefinition = {
+  id: 'prepareBlueprint',
+  label: (0,external_wp_i18n_namespaceObject.__)('Prepare Blueprint', 'altolith-deploy'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Prepare wp-content archive and blueprint files for deployment', 'altolith-deploy'),
   supportsProgress: false,
   dependencies: [],
   requires: {
@@ -19245,15 +19245,15 @@ const createBlueprintBundle_stepDefinition = {
       scope: 'global'
     }
   },
-  statusLabels: createBlueprintBundle_statusLabels,
-  handler: createBlueprintBundle_handler
+  statusLabels: prepareBlueprint_statusLabels,
+  handler: prepareBlueprint_handler
 };
 
 /**
  * Register step via WordPress hooks
  */
-(0,external_wp_hooks_.addAction)('altolith.export.register_steps', 'altolith/step-createBlueprintBundle', registry => {
-  registry.register(createBlueprintBundle_stepDefinition);
+(0,external_wp_hooks_.addAction)('altolith.export.register_steps', 'altolith/step-prepareBlueprint', registry => {
+  registry.register(prepareBlueprint_stepDefinition);
 }, 10);
 ;// ./assets/src/export/steps/gatherFilesToDeploy/index.js
 /**
@@ -19261,7 +19261,7 @@ const createBlueprintBundle_stepDefinition = {
  *
  * Collects all files from previous steps into a unified structure for deployment:
  * - Static site files from discoverAndScanSite (URLs, HTML data)
- * - Blueprint files from createBlueprintBundle (wp-content.zip, plugin/theme zips, JSON)
+ * - Blueprint files from prepareBlueprint (wp-content.zip, plugin/theme zips, JSON)
  *
  * This step provides a single extension point for 3rd-party plugins to add files
  * via the 'altolith.export.filesToDeploy' filter.
@@ -19455,7 +19455,7 @@ const gatherFilesToDeploy_stepDefinition = {
   label: (0,external_wp_i18n_namespaceObject.__)('Gather Files', 'altolith-deploy'),
   description: (0,external_wp_i18n_namespaceObject.__)('Collect all files to deploy from previous steps', 'altolith-deploy'),
   supportsProgress: false,
-  dependencies: ['discoverAndScanSite', 'createBlueprintBundle'],
+  dependencies: ['discoverAndScanSite', 'prepareBlueprint'],
   requires: {
     // From discoverAndScanSite (optional - may not have static site enabled)
     urls: {
@@ -19467,13 +19467,13 @@ const gatherFilesToDeploy_stepDefinition = {
       optional: true
     },
     siteUrl: true,
-    // From createBlueprintBundle (optional - may not have blueprint enabled)
+    // From prepareBlueprint (optional - may not have blueprint enabled)
     blueprintFiles: {
-      from: 'createBlueprintBundle',
+      from: 'prepareBlueprint',
       optional: true
     },
     blueprintJson: {
-      from: 'createBlueprintBundle',
+      from: 'prepareBlueprint',
       optional: true
     },
     // From initial context
@@ -19497,7 +19497,7 @@ const gatherFilesToDeploy_stepDefinition = {
   registry.register(gatherFilesToDeploy_stepDefinition);
 }, 20 // Run after discoverAndScanSite (10) and createBlueprintBundle (10)
 );
-;// ./assets/src/export/steps/upload/index.js
+;// ./assets/src/export/steps/deploy/index.js
 /**
  * Deploy Step
  *
@@ -19521,7 +19521,7 @@ const gatherFilesToDeploy_stepDefinition = {
 /**
  * Status labels for the step
  */
-const upload_statusLabels = {
+const deploy_statusLabels = {
   pending: (0,external_wp_i18n_namespaceObject.__)('Deploy files', 'altolith-deploy'),
   running: () => (0,external_wp_i18n_namespaceObject.__)('Deploying files\u2026', 'altolith-deploy'),
   complete: () => (0,external_wp_i18n_namespaceObject.__)('Files deployed', 'altolith-deploy')
@@ -19570,10 +19570,10 @@ async function uploadStaticFilesFromGather(context, providerConfig, staticFiles,
   // Use provider-specific public_url if available
   const providerSpecificStaticSiteUrl = providerConfig.public_url || targetUrl;
   setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Provider label */
-  (0,external_wp_i18n_namespaceObject.__)('Processing static site for %s\u2026', 'altolith-deploy'), providerLabel), 'progress', 'upload');
+  (0,external_wp_i18n_namespaceObject.__)('Processing static site for %s\u2026', 'altolith-deploy'), providerLabel), 'progress', 'deploy');
 
   // Filter URLs before processing
-  const filteredUrls = (0,external_wp_hooks_.applyFilters)('altolith.export.step.upload.staticFiles.urls', urls, [providerId], {
+  const filteredUrls = (0,external_wp_hooks_.applyFilters)('altolith.deploy.staticFiles.urls', urls, [providerId], {
     siteUrl,
     staticSiteUrl: providerSpecificStaticSiteUrl,
     providerId
@@ -19634,14 +19634,14 @@ async function uploadBlueprintFilesFromGather(context, providerConfig, blueprint
   // Helper to update progress
   const updateProgress = () => {
     if (setStepProgress) {
-      setStepProgress('upload', {
+      setStepProgress('deploy', {
         current: uploadedCount,
         total: totalBlueprintFiles
       });
     }
     if (setProviderProgress) {
       setProviderProgress(providerId, {
-        stepId: 'upload',
+        stepId: 'deploy',
         stepLabel: 'Deploy Files',
         progress: {
           current: uploadedCount,
@@ -19652,7 +19652,7 @@ async function uploadBlueprintFilesFromGather(context, providerConfig, blueprint
     }
   };
   setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Provider label */
-  (0,external_wp_i18n_namespaceObject.__)('Uploading blueprint files to %s\u2026', 'altolith-deploy'), providerLabel), 'progress', 'upload');
+  (0,external_wp_i18n_namespaceObject.__)('Uploading blueprint files to %s\u2026', 'altolith-deploy'), providerLabel), 'progress', 'deploy');
 
   // Find the first path to determine storage service (use any path)
   const firstPath = Object.keys(blueprintFiles)[0];
@@ -19673,7 +19673,7 @@ async function uploadBlueprintFilesFromGather(context, providerConfig, blueprint
       sourcePath
     } = fileInfo;
     setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: File path, %2$s: Provider label */
-    (0,external_wp_i18n_namespaceObject.__)('Uploading %1$s to %2$s\u2026', 'altolith-deploy'), relativePath, providerLabel), 'progress', 'upload');
+    (0,external_wp_i18n_namespaceObject.__)('Uploading %1$s to %2$s\u2026', 'altolith-deploy'), relativePath, providerLabel), 'progress', 'deploy');
     let uploadResult;
     if (type === 'blueprint-json' && content) {
       // Serialize JSON content with {targetUrl} replacement
@@ -19747,7 +19747,7 @@ async function uploadBlueprintFilesFromGather(context, providerConfig, blueprint
  * @param {Function} context.setStepProgress         - Step progress updater
  * @return {Promise<Object>} Step result with uploaded files
  */
-async function upload_handler(context) {
+async function deploy_handler(context) {
   const {
     currentProviderInstance,
     filesToDeploy,
@@ -19784,7 +19784,7 @@ async function upload_handler(context) {
 
   // Initial progress update
   if (setStepProgress) {
-    setStepProgress('upload', {
+    setStepProgress('deploy', {
       current: 0,
       total: totalTasks,
       statusData: {
@@ -19808,7 +19808,7 @@ async function upload_handler(context) {
     results.staticUploadResults = await uploadStaticFilesFromGather(context, providerConfig, staticFiles, targetUrl);
     completedTasks++;
     if (setStepProgress) {
-      setStepProgress('upload', {
+      setStepProgress('deploy', {
         current: completedTasks,
         total: totalTasks,
         statusData: {
@@ -19817,7 +19817,7 @@ async function upload_handler(context) {
       });
     }
     setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Provider label, %2$d: Files uploaded */
-    (0,external_wp_i18n_namespaceObject.__)('Uploaded %2$d static files to %1$s', 'altolith-deploy'), providerLabel, results.staticUploadResults.filesUploaded), 'success', 'upload');
+    (0,external_wp_i18n_namespaceObject.__)('Uploaded %2$d static files to %1$s', 'altolith-deploy'), providerLabel, results.staticUploadResults.filesUploaded), 'success', 'deploy');
   }
 
   // Upload blueprint files if any
@@ -19825,7 +19825,7 @@ async function upload_handler(context) {
     results.blueprintUploadResults = await uploadBlueprintFilesFromGather(context, providerConfig, blueprintFiles, targetUrl);
     completedTasks++;
     if (setStepProgress) {
-      setStepProgress('upload', {
+      setStepProgress('deploy', {
         current: completedTasks,
         total: totalTasks,
         statusData: {
@@ -19834,7 +19834,7 @@ async function upload_handler(context) {
       });
     }
     setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$d: Number of files, %2$s: Provider label */
-    (0,external_wp_i18n_namespaceObject.__)('Uploaded %1$d blueprint files to %2$s', 'altolith-deploy'), results.blueprintUploadResults.filesUploaded, providerLabel), 'success', 'upload');
+    (0,external_wp_i18n_namespaceObject.__)('Uploaded %1$d blueprint files to %2$s', 'altolith-deploy'), results.blueprintUploadResults.filesUploaded, providerLabel), 'success', 'deploy');
   }
 
   // Final success message
@@ -19847,20 +19847,20 @@ async function upload_handler(context) {
   }
   if (uploadedTypes.length > 0) {
     setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Upload types, %2$s: Provider label */
-    (0,external_wp_i18n_namespaceObject.__)('Deployed %1$s to %2$s', 'altolith-deploy'), uploadedTypes.join((0,external_wp_i18n_namespaceObject.__)(' and ', 'altolith-deploy')), providerLabel), 'success', 'upload');
+    (0,external_wp_i18n_namespaceObject.__)('Deployed %1$s to %2$s', 'altolith-deploy'), uploadedTypes.join((0,external_wp_i18n_namespaceObject.__)(' and ', 'altolith-deploy')), providerLabel), 'success', 'deploy');
   } else {
-    setStatusMessage((0,external_wp_i18n_namespaceObject.__)('No files to deploy', 'altolith-deploy'), 'success', 'upload');
+    setStatusMessage((0,external_wp_i18n_namespaceObject.__)('No files to deploy', 'altolith-deploy'), 'success', 'deploy');
   }
-  return (0,external_wp_hooks_.applyFilters)('altolith.export.step.upload.result', {
-    uploadResults: results
+  return (0,external_wp_hooks_.applyFilters)('altolith.deploy.result', {
+    deployResults: results
   });
 }
 
 /**
  * Step definition
  */
-const upload_stepDefinition = {
-  id: 'upload',
+const deploy_stepDefinition = {
+  id: 'deploy',
   label: (0,external_wp_i18n_namespaceObject.__)('Deploy Files', 'altolith-deploy'),
   description: (0,external_wp_i18n_namespaceObject.__)('Deploy static files and blueprint bundles to providers', 'altolith-deploy'),
   supportsProgress: true,
@@ -19881,20 +19881,20 @@ const upload_stepDefinition = {
     updateStaticSiteProgressContext: false
   },
   provides: {
-    uploadResults: {
+    deployResults: {
       type: 'object',
       scope: 'thread'
     }
   },
-  statusLabels: upload_statusLabels,
-  handler: upload_handler
+  statusLabels: deploy_statusLabels,
+  handler: deploy_handler
 };
 
 /**
  * Register step via WordPress hooks
  */
-(0,external_wp_hooks_.addAction)('altolith.export.register_steps', 'altolith/step-upload', registry => {
-  registry.register(upload_stepDefinition);
+(0,external_wp_hooks_.addAction)('altolith.export.register_steps', 'altolith/step-deploy', registry => {
+  registry.register(deploy_stepDefinition);
 }, 10);
 ;// ./assets/src/export/steps/index.js
 /**

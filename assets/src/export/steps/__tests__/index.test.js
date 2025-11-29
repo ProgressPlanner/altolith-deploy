@@ -6,7 +6,7 @@
 
 import StepRegistry from '../../registry/StepRegistry';
 
-// Mock steps data for registration - 3 steps total (unified upload step)
+// Mock steps data for registration - 4 steps total
 const mockSteps = [
 	{
 		id: 'discoverAndScanSite',
@@ -16,15 +16,22 @@ const mockSteps = [
 		provides: {},
 	},
 	{
-		id: 'createBlueprintBundle',
-		label: 'Create Bundle',
+		id: 'prepareBlueprint',
+		label: 'Prepare Blueprint',
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
 	},
 	{
-		id: 'upload',
-		label: 'Upload Files',
+		id: 'gatherFilesToDeploy',
+		label: 'Gather Files',
+		handler: jest.fn(),
+		requires: {},
+		provides: {},
+	},
+	{
+		id: 'deploy',
+		label: 'Deploy Files',
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
@@ -62,8 +69,9 @@ jest.mock( '@wordpress/i18n', () => ( {
 
 // Mock step modules - they self-register via addAction
 jest.mock( '../discoverAndScanSite', () => {} );
-jest.mock( '../createBlueprintBundle', () => {} );
-jest.mock( '../upload', () => {} );
+jest.mock( '../prepareBlueprint', () => {} );
+jest.mock( '../gatherFilesToDeploy', () => {} );
+jest.mock( '../deploy', () => {} );
 
 // Import after mocks are set up
 import { getRegisteredSteps, getActiveSteps } from '../index';
@@ -82,8 +90,8 @@ describe( 'Steps Index', () => {
 		test( 'should return array of steps', () => {
 			const steps = getRegisteredSteps();
 			expect( Array.isArray( steps ) ).toBe( true );
-			// doAction mock populates with 3 steps (unified upload)
-			expect( steps.length ).toBe( 3 );
+			// doAction mock populates with 4 steps
+			expect( steps.length ).toBe( 4 );
 		} );
 
 		test( 'should call doAction with registration hook', () => {
@@ -112,8 +120,8 @@ describe( 'Steps Index', () => {
 			// Call getRegisteredSteps - should clear first then repopulate via doAction
 			const steps = getRegisteredSteps();
 
-			// Registry should have the 3 mock steps, not the 'testStep' we added manually
-			expect( steps ).toHaveLength( 3 );
+			// Registry should have the 4 mock steps, not the 'testStep' we added manually
+			expect( steps ).toHaveLength( 4 );
 			expect(
 				steps.find( ( s ) => s.id === 'testStep' )
 			).toBeUndefined();
@@ -131,7 +139,7 @@ describe( 'Steps Index', () => {
 			const steps = getActiveSteps( context );
 
 			// Mock steps don't have deploymentType or shouldSkip, so all should be included
-			expect( steps ).toHaveLength( 3 );
+			expect( steps ).toHaveLength( 4 );
 		} );
 
 		test( 'should call shouldSkip function when present', () => {
@@ -141,7 +149,7 @@ describe( 'Steps Index', () => {
 
 			// The mock steps don't have shouldSkip, so we verify the filter logic
 			// works by checking all steps are included
-			expect( steps ).toHaveLength( 3 );
+			expect( steps ).toHaveLength( 4 );
 
 			// Test the shouldSkip filter logic manually on a step array
 			const stepsWithSkip = [
