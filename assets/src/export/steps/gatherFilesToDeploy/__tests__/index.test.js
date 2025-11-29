@@ -89,7 +89,10 @@ describe( 'gatherFilesToDeploy step', () => {
 		test( 'should have optional requirements from previous steps', () => {
 			expect( stepDefinition.requires.urls.optional ).toBe( true );
 			expect( stepDefinition.requires.htmlDataMap.optional ).toBe( true );
-			expect( stepDefinition.requires.blueprintData.optional ).toBe(
+			expect( stepDefinition.requires.blueprintFiles.optional ).toBe(
+				true
+			);
+			expect( stepDefinition.requires.blueprintJson.optional ).toBe(
 				true
 			);
 		} );
@@ -153,12 +156,24 @@ describe( 'gatherFilesToDeploy step', () => {
 
 			const context = {
 				siteUrl: 'https://example.com',
-				blueprintData: { steps: [] },
-				coreContentZipPath: '/tmp/wp-content.zip',
-				coreContentZipSize: 1024,
-				pluginZips: { 'my-plugin': '/tmp/my-plugin.zip' },
-				themeZips: { 'my-theme': '/tmp/my-theme.zip' },
-				blueprintSubfolder: 'playground',
+				blueprintJson: { steps: [] },
+				blueprintFiles: {
+					'wp-content.zip': {
+						sourcePath: '/tmp/wp-content.zip',
+						size: 1024,
+						type: 'core',
+					},
+					'plugins/my-plugin.zip': {
+						sourcePath: '/tmp/my-plugin.zip',
+						type: 'plugin',
+						slug: 'my-plugin',
+					},
+					'themes/my-theme.zip': {
+						sourcePath: '/tmp/my-theme.zip',
+						type: 'theme',
+						slug: 'my-theme',
+					},
+				},
 				setStatusMessage: jest.fn(),
 				setStepProgress: jest.fn(),
 			};
@@ -181,8 +196,13 @@ describe( 'gatherFilesToDeploy step', () => {
 
 			const context = {
 				siteUrl: 'https://example.com',
-				blueprintData: { steps: [] },
-				coreContentZipPath: '/tmp/wp-content.zip',
+				blueprintJson: { steps: [] },
+				blueprintFiles: {
+					'wp-content.zip': {
+						sourcePath: '/tmp/wp-content.zip',
+						type: 'core',
+					},
+				},
 				setStatusMessage: jest.fn(),
 				setStepProgress: jest.fn(),
 			};
@@ -197,11 +217,23 @@ describe( 'gatherFilesToDeploy step', () => {
 
 			const context = {
 				siteUrl: 'https://example.com',
-				blueprintData: { steps: [] },
-				coreContentZipPath: '/tmp/wp-content.zip',
-				pluginZips: { plugin: '/tmp/plugin.zip' },
-				themeZips: { theme: '/tmp/theme.zip' },
-				blueprintSubfolder: 'playground',
+				blueprintJson: { steps: [] },
+				blueprintFiles: {
+					'wp-content.zip': {
+						sourcePath: '/tmp/wp-content.zip',
+						type: 'core',
+					},
+					'plugins/plugin.zip': {
+						sourcePath: '/tmp/plugin.zip',
+						type: 'plugin',
+						slug: 'plugin',
+					},
+					'themes/theme.zip': {
+						sourcePath: '/tmp/theme.zip',
+						type: 'theme',
+						slug: 'theme',
+					},
+				},
 				setStatusMessage: jest.fn(),
 				setStepProgress: jest.fn(),
 			};
@@ -245,9 +277,13 @@ describe( 'gatherFilesToDeploy step', () => {
 				siteUrl: 'https://example.com',
 				urls: [ 'https://example.com/' ],
 				htmlDataMap,
-				blueprintData: { steps: [] },
-				coreContentZipPath: '/tmp/wp-content.zip',
-				blueprintSubfolder: 'playground',
+				blueprintJson: { steps: [] },
+				blueprintFiles: {
+					'wp-content.zip': {
+						sourcePath: '/tmp/wp-content.zip',
+						type: 'core',
+					},
+				},
 				setStatusMessage: jest.fn(),
 				setStepProgress: jest.fn(),
 			};
@@ -300,9 +336,13 @@ describe( 'gatherFilesToDeploy step', () => {
 				siteUrl: 'https://example.com',
 				urls: [ 'https://example.com/', 'https://example.com/about/' ],
 				htmlDataMap,
-				blueprintData: { steps: [] },
-				coreContentZipPath: '/tmp/wp-content.zip',
-				blueprintSubfolder: 'playground',
+				blueprintJson: { steps: [] },
+				blueprintFiles: {
+					'wp-content.zip': {
+						sourcePath: '/tmp/wp-content.zip',
+						type: 'core',
+					},
+				},
 				setStatusMessage: jest.fn(),
 				setStepProgress: mockSetStepProgress,
 			};

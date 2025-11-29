@@ -19104,24 +19104,18 @@ async function createBlueprintBundle_handler(context) {
   if (!enabledOutputTypes.includes('blueprint')) {
     // Blueprint not enabled, return empty result
     return {
-      coreContentZipPath: null,
-      coreContentZipSize: 0,
-      pluginZips: {},
-      themeZips: {},
-      blueprintData: null,
-      customPlugins: [],
-      customThemes: [],
-      blueprintSubfolder: 'playground'
+      blueprintFiles: {},
+      blueprintJson: null
     };
   }
 
   // Use placeholder URL - will be replaced during deploy step
   // Each provider will replace {targetUrl} with their actual public_url
   const baseUrl = '{targetUrl}';
-  const subfolder = 'playground'; // Default, providers can override
+  const subfolder = 'playground'; // Default subfolder for blueprint files
 
-  // --- Phase 2: Generate blueprint JSON with URL-based resources ---
-  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Generating blueprint…', 'altolith-deploy'), 'progress', 'createBlueprintBundle');
+  // --- Phase 1: Generate blueprint JSON with URL-based resources ---
+  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Generating blueprint\u2026', 'altolith-deploy'), 'progress', 'createBlueprintBundle');
   let blueprintResult;
   if (typeof generateBlueprintJson === 'function') {
     // Pass baseUrl and subfolder so blueprint uses URL-based resources
@@ -19147,26 +19141,35 @@ async function createBlueprintBundle_handler(context) {
   (0,external_wp_i18n_namespaceObject.__)('Will bundle %s', 'altolith-deploy'), assetDescription);
   setStatusMessage(discoveryMessage, 'progress', 'createBlueprintBundle');
 
+  // Build blueprintFiles object - maps relative paths to source info
+  const blueprintFiles = {};
+
   // --- Phase 2: Export core content ---
-  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Exporting core content (database, uploads)…', 'altolith-deploy'), 'progress', 'createBlueprintBundle');
+  setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Exporting core content (database, uploads)\u2026', 'altolith-deploy'), 'progress', 'createBlueprintBundle');
   const coreContentResponse = await api.exportCoreContent();
   if (!coreContentResponse.success) {
     throw new Error(coreContentResponse.message || (0,external_wp_i18n_namespaceObject.__)('Failed to export core content', 'altolith-deploy'));
   }
-  const {
-    zipPath: coreContentZipPath,
-    zipSize: coreContentZipSize
-  } = coreContentResponse;
+
+  // Add core content to blueprintFiles
+  blueprintFiles['wp-content.zip'] = {
+    sourcePath: coreContentResponse.zipPath,
+    size: coreContentResponse.zipSize || 0,
+    type: 'core'
+  };
 
   // --- Phase 3: Export custom plugins ---
-  const pluginZips = {};
   if (customPlugins.length > 0) {
     setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %d: Number of plugins */
-    (0,external_wp_i18n_namespaceObject.__)('Exporting %d custom plugin(s)…', 'altolith-deploy'), customPlugins.length), 'progress', 'createBlueprintBundle');
+    (0,external_wp_i18n_namespaceObject.__)('Exporting %d custom plugin(s)\u2026', 'altolith-deploy'), customPlugins.length), 'progress', 'createBlueprintBundle');
     for (const slug of customPlugins) {
       const pluginResponse = await api.exportPlugin(slug);
       if (pluginResponse.success) {
-        pluginZips[slug] = pluginResponse.zipPath;
+        blueprintFiles[`plugins/${slug}.zip`] = {
+          sourcePath: pluginResponse.zipPath,
+          type: 'plugin',
+          slug
+        };
       } else {
         // Log warning but continue - one plugin failure shouldn't stop the bundle
         // eslint-disable-next-line no-console
@@ -19176,14 +19179,17 @@ async function createBlueprintBundle_handler(context) {
   }
 
   // --- Phase 4: Export custom themes ---
-  const themeZips = {};
   if (customThemes.length > 0) {
     setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %d: Number of themes */
-    (0,external_wp_i18n_namespaceObject.__)('Exporting %d custom theme(s)…', 'altolith-deploy'), customThemes.length), 'progress', 'createBlueprintBundle');
+    (0,external_wp_i18n_namespaceObject.__)('Exporting %d custom theme(s)\u2026', 'altolith-deploy'), customThemes.length), 'progress', 'createBlueprintBundle');
     for (const slug of customThemes) {
       const themeResponse = await api.exportTheme(slug);
       if (themeResponse.success) {
-        themeZips[slug] = themeResponse.zipPath;
+        blueprintFiles[`themes/${slug}.zip`] = {
+          sourcePath: themeResponse.zipPath,
+          type: 'theme',
+          slug
+        };
       } else {
         // Log warning but continue
         // eslint-disable-next-line no-console
@@ -19205,22 +19211,12 @@ async function createBlueprintBundle_handler(context) {
   }
   setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Blueprint files prepared', 'altolith-deploy'), 'success', 'createBlueprintBundle');
 
-  // Return individual file paths for the upload step
-  // NO bundle - files are uploaded individually
+  // Return simplified output: just blueprintFiles and blueprintJson
+  // blueprintFiles: maps relative paths to source info
+  // blueprintJson: the JSON data with {targetUrl} placeholders
   return {
-    // Core content archive data
-    coreContentZipPath,
-    coreContentZipSize,
-    // Plugin and theme zips (individual files)
-    pluginZips,
-    themeZips,
-    // Blueprint JSON data (will be serialized and uploaded by upload step)
-    blueprintData: filteredBlueprint,
-    // Lists of custom assets
-    customPlugins,
-    customThemes,
-    // Blueprint subfolder for upload step
-    blueprintSubfolder: subfolder
+    blueprintFiles,
+    blueprintJson: filteredBlueprint
   };
 }
 
@@ -19235,42 +19231,17 @@ const createBlueprintBundle_stepDefinition = {
   dependencies: [],
   requires: {
     api: true,
-    providerInstances: true,
     generateBlueprintJson: true,
     setStatusMessage: true,
     setStepProgress: false
   },
   provides: {
-    coreContentZipPath: {
-      type: 'string',
-      scope: 'global'
-    },
-    coreContentZipSize: {
-      type: 'number',
-      scope: 'global'
-    },
-    pluginZips: {
+    blueprintFiles: {
       type: 'object',
       scope: 'global'
     },
-    themeZips: {
+    blueprintJson: {
       type: 'object',
-      scope: 'global'
-    },
-    blueprintData: {
-      type: 'object',
-      scope: 'global'
-    },
-    customPlugins: {
-      type: 'array',
-      scope: 'global'
-    },
-    customThemes: {
-      type: 'array',
-      scope: 'global'
-    },
-    blueprintSubfolder: {
-      type: 'string',
       scope: 'global'
     }
   },
@@ -19369,60 +19340,22 @@ function buildStaticSiteFiles(urls, htmlDataMap, siteUrl) {
 }
 
 /**
- * Build blueprint file entries from prepared blueprint data
+ * Map blueprint file type from createBlueprintBundle to deploy types
  *
- * @param {Object} blueprintData     The blueprint JSON data
- * @param {string} coreContentPath   Path to wp-content.zip
- * @param {number} coreContentSize   Size of wp-content.zip
- * @param {Object} pluginZips        Map of plugin slug to zip path
- * @param {Object} themeZips         Map of theme slug to zip path
- * @param {string} subfolder         Blueprint subfolder (e.g., 'playground')
- * @return {Object} Object mapping relative paths to file info
+ * @param {string} type The type from createBlueprintBundle (core, plugin, theme)
+ * @return {string} The deploy type (blueprint-archive, blueprint-plugin, blueprint-theme)
  */
-function buildBlueprintFiles(blueprintData, coreContentPath, coreContentSize, pluginZips, themeZips, subfolder) {
-  const files = {};
-  const prefix = subfolder ? `${subfolder}/` : '';
-
-  // Add blueprint.json
-  if (blueprintData) {
-    files[`${prefix}blueprint.json`] = {
-      type: 'blueprint-json',
-      content: blueprintData
-      // Will be stringified and URL-replaced during deploy
-    };
+function mapBlueprintFileType(type) {
+  switch (type) {
+    case 'core':
+      return 'blueprint-archive';
+    case 'plugin':
+      return 'blueprint-plugin';
+    case 'theme':
+      return 'blueprint-theme';
+    default:
+      return type;
   }
-
-  // Add wp-content.zip
-  if (coreContentPath) {
-    files[`${prefix}wp-content.zip`] = {
-      type: 'blueprint-archive',
-      sourcePath: coreContentPath,
-      size: coreContentSize || 0
-    };
-  }
-
-  // Add plugin zips
-  if (pluginZips && typeof pluginZips === 'object') {
-    for (const [slug, zipPath] of Object.entries(pluginZips)) {
-      files[`${prefix}plugins/${slug}.zip`] = {
-        type: 'blueprint-plugin',
-        sourcePath: zipPath,
-        slug
-      };
-    }
-  }
-
-  // Add theme zips
-  if (themeZips && typeof themeZips === 'object') {
-    for (const [slug, zipPath] of Object.entries(themeZips)) {
-      files[`${prefix}themes/${slug}.zip`] = {
-        type: 'blueprint-theme',
-        sourcePath: zipPath,
-        slug
-      };
-    }
-  }
-  return files;
 }
 
 /**
@@ -19440,13 +19373,9 @@ async function gatherFilesToDeploy_handler(context) {
     urls,
     htmlDataMap,
     siteUrl,
-    // From createBlueprintBundle
-    blueprintData,
-    coreContentZipPath,
-    coreContentZipSize,
-    pluginZips,
-    themeZips,
-    blueprintSubfolder,
+    // From createBlueprintBundle (simplified output)
+    blueprintFiles,
+    blueprintJson,
     // Status callbacks
     setStatusMessage,
     setStepProgress
@@ -19469,9 +19398,29 @@ async function gatherFilesToDeploy_handler(context) {
     filesToDeploy.staticSite = buildStaticSiteFiles(urls, htmlDataMap, siteUrl);
   }
 
-  // Gather blueprint files
-  if (blueprintEnabled && blueprintData) {
-    filesToDeploy.blueprint = buildBlueprintFiles(blueprintData, coreContentZipPath, coreContentZipSize, pluginZips, themeZips, blueprintSubfolder || 'playground');
+  // Gather blueprint files from createBlueprintBundle output
+  if (blueprintEnabled && blueprintFiles) {
+    // blueprintFiles already contains the file entries from createBlueprintBundle
+    // Add subfolder prefix and copy entries
+    const subfolder = 'playground';
+    const prefix = `${subfolder}/`;
+
+    // Add blueprint.json if we have the JSON data
+    if (blueprintJson) {
+      filesToDeploy.blueprint[`${prefix}blueprint.json`] = {
+        type: 'blueprint-json',
+        content: blueprintJson
+      };
+    }
+
+    // Copy blueprint files with subfolder prefix
+    for (const [relativePath, fileInfo] of Object.entries(blueprintFiles)) {
+      filesToDeploy.blueprint[`${prefix}${relativePath}`] = {
+        ...fileInfo,
+        // Map types for deploy step
+        type: mapBlueprintFileType(fileInfo.type)
+      };
+    }
   }
 
   // Apply filter for 3rd-party extensions
@@ -19519,27 +19468,11 @@ const gatherFilesToDeploy_stepDefinition = {
     },
     siteUrl: true,
     // From createBlueprintBundle (optional - may not have blueprint enabled)
-    blueprintData: {
+    blueprintFiles: {
       from: 'createBlueprintBundle',
       optional: true
     },
-    coreContentZipPath: {
-      from: 'createBlueprintBundle',
-      optional: true
-    },
-    coreContentZipSize: {
-      from: 'createBlueprintBundle',
-      optional: true
-    },
-    pluginZips: {
-      from: 'createBlueprintBundle',
-      optional: true
-    },
-    themeZips: {
-      from: 'createBlueprintBundle',
-      optional: true
-    },
-    blueprintSubfolder: {
+    blueprintJson: {
       from: 'createBlueprintBundle',
       optional: true
     },

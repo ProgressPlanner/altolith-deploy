@@ -92,68 +92,22 @@ function buildStaticSiteFiles( urls, htmlDataMap, siteUrl ) {
 }
 
 /**
- * Build blueprint file entries from prepared blueprint data
+ * Map blueprint file type from createBlueprintBundle to deploy types
  *
- * @param {Object} blueprintData   The blueprint JSON data
- * @param {string} coreContentPath Path to wp-content.zip
- * @param {number} coreContentSize Size of wp-content.zip
- * @param {Object} pluginZips      Map of plugin slug to zip path
- * @param {Object} themeZips       Map of theme slug to zip path
- * @param {string} subfolder       Blueprint subfolder (e.g., 'playground')
- * @return {Object} Object mapping relative paths to file info
+ * @param {string} type The type from createBlueprintBundle (core, plugin, theme)
+ * @return {string} The deploy type (blueprint-archive, blueprint-plugin, blueprint-theme)
  */
-function buildBlueprintFiles(
-	blueprintData,
-	coreContentPath,
-	coreContentSize,
-	pluginZips,
-	themeZips,
-	subfolder
-) {
-	const files = {};
-	const prefix = subfolder ? `${ subfolder }/` : '';
-
-	// Add blueprint.json
-	if ( blueprintData ) {
-		files[ `${ prefix }blueprint.json` ] = {
-			type: 'blueprint-json',
-			content: blueprintData,
-			// Will be stringified and URL-replaced during deploy
-		};
+function mapBlueprintFileType( type ) {
+	switch ( type ) {
+		case 'core':
+			return 'blueprint-archive';
+		case 'plugin':
+			return 'blueprint-plugin';
+		case 'theme':
+			return 'blueprint-theme';
+		default:
+			return type;
 	}
-
-	// Add wp-content.zip
-	if ( coreContentPath ) {
-		files[ `${ prefix }wp-content.zip` ] = {
-			type: 'blueprint-archive',
-			sourcePath: coreContentPath,
-			size: coreContentSize || 0,
-		};
-	}
-
-	// Add plugin zips
-	if ( pluginZips && typeof pluginZips === 'object' ) {
-		for ( const [ slug, zipPath ] of Object.entries( pluginZips ) ) {
-			files[ `${ prefix }plugins/${ slug }.zip` ] = {
-				type: 'blueprint-plugin',
-				sourcePath: zipPath,
-				slug,
-			};
-		}
-	}
-
-	// Add theme zips
-	if ( themeZips && typeof themeZips === 'object' ) {
-		for ( const [ slug, zipPath ] of Object.entries( themeZips ) ) {
-			files[ `${ prefix }themes/${ slug }.zip` ] = {
-				type: 'blueprint-theme',
-				sourcePath: zipPath,
-				slug,
-			};
-		}
-	}
-
-	return files;
 }
 
 /**
@@ -171,13 +125,9 @@ async function handler( context ) {
 		urls,
 		htmlDataMap,
 		siteUrl,
-		// From createBlueprintBundle
-		blueprintData,
-		coreContentZipPath,
-		coreContentZipSize,
-		pluginZips,
-		themeZips,
-		blueprintSubfolder,
+		// From createBlueprintBundle (simplified output)
+		blueprintFiles,
+		blueprintJson,
 		// Status callbacks
 		setStatusMessage,
 		setStepProgress,
@@ -209,16 +159,31 @@ async function handler( context ) {
 		);
 	}
 
-	// Gather blueprint files
-	if ( blueprintEnabled && blueprintData ) {
-		filesToDeploy.blueprint = buildBlueprintFiles(
-			blueprintData,
-			coreContentZipPath,
-			coreContentZipSize,
-			pluginZips,
-			themeZips,
-			blueprintSubfolder || 'playground'
-		);
+	// Gather blueprint files from createBlueprintBundle output
+	if ( blueprintEnabled && blueprintFiles ) {
+		// blueprintFiles already contains the file entries from createBlueprintBundle
+		// Add subfolder prefix and copy entries
+		const subfolder = 'playground';
+		const prefix = `${ subfolder }/`;
+
+		// Add blueprint.json if we have the JSON data
+		if ( blueprintJson ) {
+			filesToDeploy.blueprint[ `${ prefix }blueprint.json` ] = {
+				type: 'blueprint-json',
+				content: blueprintJson,
+			};
+		}
+
+		// Copy blueprint files with subfolder prefix
+		for ( const [ relativePath, fileInfo ] of Object.entries(
+			blueprintFiles
+		) ) {
+			filesToDeploy.blueprint[ `${ prefix }${ relativePath }` ] = {
+				...fileInfo,
+				// Map types for deploy step
+				type: mapBlueprintFileType( fileInfo.type ),
+			};
+		}
 	}
 
 	// Apply filter for 3rd-party extensions
@@ -277,12 +242,8 @@ const stepDefinition = {
 		htmlDataMap: { from: 'discoverAndScanSite', optional: true },
 		siteUrl: true,
 		// From createBlueprintBundle (optional - may not have blueprint enabled)
-		blueprintData: { from: 'createBlueprintBundle', optional: true },
-		coreContentZipPath: { from: 'createBlueprintBundle', optional: true },
-		coreContentZipSize: { from: 'createBlueprintBundle', optional: true },
-		pluginZips: { from: 'createBlueprintBundle', optional: true },
-		themeZips: { from: 'createBlueprintBundle', optional: true },
-		blueprintSubfolder: { from: 'createBlueprintBundle', optional: true },
+		blueprintFiles: { from: 'createBlueprintBundle', optional: true },
+		blueprintJson: { from: 'createBlueprintBundle', optional: true },
 		// From initial context
 		setStatusMessage: true,
 		setStepProgress: false,

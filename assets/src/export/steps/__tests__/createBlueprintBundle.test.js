@@ -140,32 +140,22 @@ describe( 'createBlueprintBundle step', () => {
 			expect( stepDefinition.requires.setStatusMessage ).toBe( true );
 		} );
 
-		test( 'should provide coreContentZipPath with global scope', () => {
-			expect( stepDefinition.provides.coreContentZipPath.type ).toBe(
-				'string'
-			);
-			expect( stepDefinition.provides.coreContentZipPath.scope ).toBe(
-				'global'
-			);
-		} );
-
-		test( 'should provide blueprintData with global scope', () => {
-			expect( stepDefinition.provides.blueprintData.type ).toBe(
+		test( 'should provide blueprintFiles with global scope', () => {
+			expect( stepDefinition.provides.blueprintFiles.type ).toBe(
 				'object'
 			);
-			expect( stepDefinition.provides.blueprintData.scope ).toBe(
+			expect( stepDefinition.provides.blueprintFiles.scope ).toBe(
 				'global'
 			);
 		} );
 
-		test( 'should provide pluginZips with global scope', () => {
-			expect( stepDefinition.provides.pluginZips.type ).toBe( 'object' );
-			expect( stepDefinition.provides.pluginZips.scope ).toBe( 'global' );
-		} );
-
-		test( 'should provide themeZips with global scope', () => {
-			expect( stepDefinition.provides.themeZips.type ).toBe( 'object' );
-			expect( stepDefinition.provides.themeZips.scope ).toBe( 'global' );
+		test( 'should provide blueprintJson with global scope', () => {
+			expect( stepDefinition.provides.blueprintJson.type ).toBe(
+				'object'
+			);
+			expect( stepDefinition.provides.blueprintJson.scope ).toBe(
+				'global'
+			);
 		} );
 	} );
 
@@ -182,10 +172,8 @@ describe( 'createBlueprintBundle step', () => {
 
 			const result = await handler( context );
 
-			expect( result.coreContentZipPath ).toBeNull();
-			expect( result.blueprintData ).toBeNull();
-			expect( result.pluginZips ).toEqual( {} );
-			expect( result.themeZips ).toEqual( {} );
+			expect( result.blueprintFiles ).toEqual( {} );
+			expect( result.blueprintJson ).toBeNull();
 			expect( context.api.exportCoreContent ).not.toHaveBeenCalled();
 		} );
 	} );
@@ -320,7 +308,10 @@ describe( 'createBlueprintBundle step', () => {
 
 			// Should not throw
 			const result = await handler( context );
-			expect( result.pluginZips ).toEqual( {} );
+			// Plugin should not be in blueprintFiles since export failed
+			expect(
+				'plugins/missing-plugin.zip' in result.blueprintFiles
+			).toBe( false );
 			expect( consoleSpy ).toHaveBeenCalled();
 
 			consoleSpy.mockRestore();
@@ -328,7 +319,7 @@ describe( 'createBlueprintBundle step', () => {
 	} );
 
 	describe( 'handler - return value', () => {
-		test( 'should return all expected fields', async () => {
+		test( 'should return blueprintFiles and blueprintJson', async () => {
 			const mockApi = createMockApi();
 			const context = {
 				api: mockApi,
@@ -339,17 +330,34 @@ describe( 'createBlueprintBundle step', () => {
 
 			const result = await handler( context );
 
-			expect( result ).toHaveProperty( 'coreContentZipPath' );
-			expect( result ).toHaveProperty( 'coreContentZipSize' );
-			expect( result ).toHaveProperty( 'pluginZips' );
-			expect( result ).toHaveProperty( 'themeZips' );
-			expect( result ).toHaveProperty( 'blueprintData' );
-			expect( result ).toHaveProperty( 'customPlugins' );
-			expect( result ).toHaveProperty( 'customThemes' );
-			expect( result ).toHaveProperty( 'blueprintSubfolder' );
+			expect( result ).toHaveProperty( 'blueprintFiles' );
+			expect( result ).toHaveProperty( 'blueprintJson' );
 		} );
 
-		test( 'should return plugin zips keyed by slug', async () => {
+		test( 'should include wp-content.zip in blueprintFiles', async () => {
+			const mockApi = createMockApi();
+			const context = {
+				api: mockApi,
+				generateBlueprintJson: createMockBlueprintGenerator( {
+					customPlugins: [],
+					customThemes: [],
+				} ),
+				setStatusMessage: jest.fn(),
+				setStepProgress: jest.fn(),
+			};
+
+			const result = await handler( context );
+
+			expect( 'wp-content.zip' in result.blueprintFiles ).toBe( true );
+			expect( result.blueprintFiles[ 'wp-content.zip' ].type ).toBe(
+				'core'
+			);
+			expect( result.blueprintFiles[ 'wp-content.zip' ].sourcePath ).toBe(
+				'/tmp/wp-content.zip'
+			);
+		} );
+
+		test( 'should include plugin zips in blueprintFiles', async () => {
 			const mockApi = createMockApi( {
 				exportPlugin: jest.fn().mockResolvedValue( {
 					success: true,
@@ -369,9 +377,46 @@ describe( 'createBlueprintBundle step', () => {
 
 			const result = await handler( context );
 
-			expect( result.pluginZips ).toEqual( {
-				'my-plugin': '/tmp/my-plugin.zip',
+			expect( 'plugins/my-plugin.zip' in result.blueprintFiles ).toBe(
+				true
+			);
+			expect(
+				result.blueprintFiles[ 'plugins/my-plugin.zip' ].type
+			).toBe( 'plugin' );
+			expect(
+				result.blueprintFiles[ 'plugins/my-plugin.zip' ].slug
+			).toBe( 'my-plugin' );
+		} );
+
+		test( 'should include theme zips in blueprintFiles', async () => {
+			const mockApi = createMockApi( {
+				exportTheme: jest.fn().mockResolvedValue( {
+					success: true,
+					zipPath: '/tmp/my-theme.zip',
+				} ),
 			} );
+
+			const context = {
+				api: mockApi,
+				generateBlueprintJson: createMockBlueprintGenerator( {
+					customPlugins: [],
+					customThemes: [ 'my-theme' ],
+				} ),
+				setStatusMessage: jest.fn(),
+				setStepProgress: jest.fn(),
+			};
+
+			const result = await handler( context );
+
+			expect( 'themes/my-theme.zip' in result.blueprintFiles ).toBe(
+				true
+			);
+			expect( result.blueprintFiles[ 'themes/my-theme.zip' ].type ).toBe(
+				'theme'
+			);
+			expect( result.blueprintFiles[ 'themes/my-theme.zip' ].slug ).toBe(
+				'my-theme'
+			);
 		} );
 	} );
 
