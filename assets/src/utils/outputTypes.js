@@ -14,9 +14,10 @@ import { applyFilters } from '@wordpress/hooks';
 /**
  * Hook name for registering output types.
  *
+ * @deprecated Use altolith.outputTypes instead
  * @type {string}
  */
-export const OUTPUT_TYPES_HOOK = 'altolith.provider.outputTypes';
+export const OUTPUT_TYPES_HOOK = 'altolith.outputTypes';
 
 /**
  * Core output types provided by altolith-deploy.
@@ -71,16 +72,25 @@ const CORE_OUTPUT_TYPES = [
  * Get all registered output types.
  *
  * Returns core output types plus any added by 3rd-party plugins via the
- * 'altolith.provider.outputTypes' filter.
+ * 'altolith.outputTypes' filter.
+ *
+ * Output type definition:
+ * - id: Unique identifier (e.g., 'media_offload')
+ * - label: Display label
+ * - description: Help text
+ * - fields: Array of provider config fields
+ * - settingsComponent: Optional React component for Global Settings modal
  *
  * @example
  * // In a 3rd-party plugin:
  * import { addFilter } from '@wordpress/hooks';
  *
- * addFilter('altolith.provider.outputTypes', 'my-plugin', (types) => {
+ * addFilter('altolith.outputTypes', 'my-plugin', (types) => {
  *     return [...types, {
  *         id: 'media_offload',
  *         label: 'Media Offloading',
+ *         description: 'Offload media files to external storage',
+ *         settingsComponent: MediaOffloadSettings, // Optional React component
  *         fields: [
  *             { id: 'media_subfolder', type: 'text', label: 'Media Subfolder', default: 'wp-content/uploads' },
  *         ],
@@ -124,6 +134,18 @@ export function getOutputType( typeId ) {
  */
 export function getOutputTypeIds() {
 	return getOutputTypes().map( ( type ) => type.id );
+}
+
+/**
+ * Get output types that have custom settings components.
+ *
+ * Returns output types that provide a settingsComponent for the
+ * Global Settings modal. Core types use built-in toggles.
+ *
+ * @return {Array<Object>} Output types with settingsComponent defined.
+ */
+export function getOutputTypesWithSettingsComponent() {
+	return getOutputTypes().filter( ( type ) => type.settingsComponent );
 }
 
 /**
