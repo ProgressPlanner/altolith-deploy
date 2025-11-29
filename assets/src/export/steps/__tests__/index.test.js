@@ -30,6 +30,7 @@ const mockSteps = [
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
+		hidden: true, // Hidden from UI but still executes
 		// No deploymentType - should show if ANY output type is enabled
 	},
 	{
@@ -78,17 +79,16 @@ jest.mock( '../gatherFilesToDeploy', () => {} );
 jest.mock( '../deploy', () => {} );
 
 // Mock outputTypes utility
-const mockGetEnabledOutputTypes = jest.fn( () => [ 'static_site', 'blueprint' ] );
+const mockGetEnabledOutputTypes = jest.fn( () => [
+	'static_site',
+	'blueprint',
+] );
 jest.mock( '@altolith/utils/outputTypes', () => ( {
 	getEnabledOutputTypes: mockGetEnabledOutputTypes,
 } ) );
 
 // Import after mocks are set up
-import {
-	getRegisteredSteps,
-	getActiveSteps,
-	getStepsForUI,
-} from '../index';
+import { getRegisteredSteps, getActiveSteps, getStepsForUI } from '../index';
 
 describe( 'Steps Index', () => {
 	let registry;
@@ -153,12 +153,14 @@ describe( 'Steps Index', () => {
 		test( 'should return all steps when both output types are enabled', () => {
 			const steps = getStepsForUI();
 
-			expect( steps ).toHaveLength( 4 );
+			expect( steps ).toHaveLength( 3 ); // gatherFilesToDeploy is hidden
 			expect( steps.map( ( s ) => s.id ) ).toContain(
 				'discoverAndScanSite'
 			);
-			expect( steps.map( ( s ) => s.id ) ).toContain( 'prepareBlueprint' );
 			expect( steps.map( ( s ) => s.id ) ).toContain(
+				'prepareBlueprint'
+			);
+			expect( steps.map( ( s ) => s.id ) ).not.toContain(
 				'gatherFilesToDeploy'
 			);
 			expect( steps.map( ( s ) => s.id ) ).toContain( 'deploy' );
@@ -172,8 +174,10 @@ describe( 'Steps Index', () => {
 			expect( steps.map( ( s ) => s.id ) ).not.toContain(
 				'discoverAndScanSite'
 			);
-			expect( steps.map( ( s ) => s.id ) ).toContain( 'prepareBlueprint' );
 			expect( steps.map( ( s ) => s.id ) ).toContain(
+				'prepareBlueprint'
+			);
+			expect( steps.map( ( s ) => s.id ) ).not.toContain(
 				'gatherFilesToDeploy'
 			);
 			expect( steps.map( ( s ) => s.id ) ).toContain( 'deploy' );
@@ -190,7 +194,7 @@ describe( 'Steps Index', () => {
 			expect( steps.map( ( s ) => s.id ) ).not.toContain(
 				'prepareBlueprint'
 			);
-			expect( steps.map( ( s ) => s.id ) ).toContain(
+			expect( steps.map( ( s ) => s.id ) ).not.toContain(
 				'gatherFilesToDeploy'
 			);
 			expect( steps.map( ( s ) => s.id ) ).toContain( 'deploy' );
@@ -240,7 +244,9 @@ describe( 'Steps Index', () => {
 			expect( steps.map( ( s ) => s.id ) ).not.toContain(
 				'discoverAndScanSite'
 			);
-			expect( steps.map( ( s ) => s.id ) ).toContain( 'prepareBlueprint' );
+			expect( steps.map( ( s ) => s.id ) ).toContain(
+				'prepareBlueprint'
+			);
 		} );
 
 		test( 'should filter out steps when no provider instances exist', () => {

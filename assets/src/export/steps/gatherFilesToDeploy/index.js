@@ -168,17 +168,20 @@ async function handler( context ) {
 
 		// Add blueprint.json if we have the JSON data
 		if ( blueprintJson ) {
-			filesToDeploy.blueprint[ `${ placeholderPrefix }blueprint.json` ] = {
-				type: 'blueprint-json',
-				content: blueprintJson,
-			};
+			filesToDeploy.blueprint[ `${ placeholderPrefix }blueprint.json` ] =
+				{
+					type: 'blueprint-json',
+					content: blueprintJson,
+				};
 		}
 
 		// Copy blueprint files with placeholder prefix
 		for ( const [ relativePath, fileInfo ] of Object.entries(
 			blueprintFiles
 		) ) {
-			filesToDeploy.blueprint[ `${ placeholderPrefix }${ relativePath }` ] = {
+			filesToDeploy.blueprint[
+				`${ placeholderPrefix }${ relativePath }`
+			] = {
 				...fileInfo,
 				// Map types for deploy step
 				type: mapBlueprintFileType( fileInfo.type ),
@@ -234,6 +237,7 @@ const stepDefinition = {
 		'Collect all files to deploy from previous steps',
 		'altolith-deploy'
 	),
+	hidden: true, // Internal orchestration step - hide from UI but still execute
 	supportsProgress: false,
 	dependencies: [ 'discoverAndScanSite', 'prepareBlueprint' ],
 	requires: {

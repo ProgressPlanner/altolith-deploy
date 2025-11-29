@@ -52,8 +52,12 @@ export function getStepsForUI() {
 	const enabledOutputTypes = getEnabledOutputTypes();
 	const steps = getRegisteredSteps();
 
-	// Filter steps by enabled output types
+	// Filter steps by enabled output types and hidden property
 	const filteredSteps = steps.filter( ( step ) => {
+		// Hide steps marked as hidden (internal orchestration steps)
+		if ( step.hidden === true ) {
+			return false;
+		}
 		// Steps with deploymentType: show only if that output type is enabled
 		if ( step.deploymentType ) {
 			return enabledOutputTypes.includes( step.deploymentType );
