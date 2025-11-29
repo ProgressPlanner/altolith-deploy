@@ -9,10 +9,55 @@
  * - Global scope: Data shared across all threads (read-only)
  * - Thread scope: Data isolated to specific provider instance thread
  *
+ * Requires format (simplified):
+ * - `api: true` - From initial context (no step dependency)
+ * - `urls: 'discoverAndScanSite'` - Required from specific step
+ * - `data: { from: 'stepId', optional: true }` - Optional from specific step
+ * - `instance: 'thread'` - From thread context
+ *
  * @since 1.0.0
  */
 
 import { __ } from '@wordpress/i18n';
+
+/**
+ * Normalize a requirement to the full object format
+ *
+ * Converts simplified formats to the full { from, required, optional } format.
+ *
+ * @param {boolean|string|Object} requirement - Requirement in any format
+ * @return {Object} Normalized requirement with { from, required }
+ */
+export function normalizeRequirement( requirement ) {
+	// `true` means from initial context, required
+	if ( requirement === true ) {
+		return { from: null, required: true };
+	}
+
+	// `false` means from initial context, optional
+	if ( requirement === false ) {
+		return { from: null, required: false };
+	}
+
+	// String means from that step, required
+	if ( typeof requirement === 'string' ) {
+		return { from: requirement, required: true };
+	}
+
+	// Object format - normalize it
+	if ( typeof requirement === 'object' && requirement !== null ) {
+		return {
+			from: requirement.from || null,
+			required:
+				requirement.optional === true
+					? false
+					: requirement.required !== false,
+		};
+	}
+
+	// Fallback: treat as required from initial
+	return { from: null, required: true };
+}
 
 /**
  * Determine if a step is a per-thread step
@@ -27,9 +72,10 @@ export function isThreadStep( step ) {
 		return false;
 	}
 
-	return Object.values( step.requires ).some(
-		( requirement ) => requirement.from === 'thread'
-	);
+	return Object.values( step.requires ).some( ( requirement ) => {
+		const normalized = normalizeRequirement( requirement );
+		return normalized.from === 'thread';
+	} );
 }
 
 /**
@@ -119,12 +165,12 @@ export function validate( step, context ) {
 	const missingDetails = [];
 
 	Object.entries( step.requires ).forEach( ( [ key, requirement ] ) => {
-		const isRequired = requirement.required !== false;
+		const normalized = normalizeRequirement( requirement );
+		const isRequired = normalized.required;
 
 		if ( ! ( key in context ) && isRequired ) {
-			missingDetails.push(
-				`  - "${ key }" (from: ${ requirement.from })`
-			);
+			const fromLabel = normalized.from || 'initial context';
+			missingDetails.push( `  - "${ key }" (from: ${ fromLabel })` );
 		}
 	} );
 
@@ -169,6 +215,17 @@ export function validateOutput( step, result ) {
 }
 
 /**
+ * Get the source step for a requirement
+ *
+ * @param {boolean|string|Object} requirement - Requirement in any format
+ * @return {string|null} Source step ID or null for initial context
+ */
+export function getRequirementSource( requirement ) {
+	const normalized = normalizeRequirement( requirement );
+	return normalized.from;
+}
+
+/**
  * Get data requirements summary
  *
  * Returns a human-readable summary of what data a step requires.
@@ -183,9 +240,10 @@ export function getRequirementsSummary( step ) {
 
 	const requirements = Object.entries( step.requires ).map(
 		( [ key, requirement ] ) => {
-			const required = requirement.required !== false;
-			const requiredLabel = required ? 'required' : 'optional';
-			return `  - ${ key } (from: ${ requirement.from }, ${ requiredLabel })`;
+			const normalized = normalizeRequirement( requirement );
+			const fromLabel = normalized.from || 'initial context';
+			const requiredLabel = normalized.required ? 'required' : 'optional';
+			return `  - ${ key } (from: ${ fromLabel }, ${ requiredLabel })`;
 		}
 	);
 
@@ -229,4 +287,6 @@ export default {
 	getProvideScope,
 	getRequirementsSummary,
 	getProvidesSummary,
+	normalizeRequirement,
+	getRequirementSource,
 };

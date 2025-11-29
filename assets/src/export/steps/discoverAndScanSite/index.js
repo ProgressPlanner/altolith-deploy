@@ -440,22 +440,10 @@ const stepDefinition = {
 	supportsProgress: true,
 	dependencies: [],
 	requires: {
-		api: {
-			from: 'initial',
-			required: true,
-		},
-		siteUrl: {
-			from: 'initial',
-			required: true,
-		},
-		setStatusMessage: {
-			from: 'initial',
-			required: true,
-		},
-		setStepProgress: {
-			from: 'initial',
-			required: false,
-		},
+		api: true,
+		siteUrl: true,
+		setStatusMessage: true,
+		setStepProgress: false,
 	},
 	provides: {
 		urls: {

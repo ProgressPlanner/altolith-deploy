@@ -28,29 +28,6 @@ const statusLabels = {
 };
 
 /**
- * Check if step should be skipped for this provider
- *
- * Skip if no output types are enabled for this provider instance.
- *
- * @param {Object} context - Execution context
- * @return {boolean} True if step should be skipped
- */
-function shouldSkip( context ) {
-	const { currentProviderInstance } = context;
-
-	if ( ! currentProviderInstance ) {
-		return false; // Let handler throw the proper error
-	}
-
-	// Check which output types are enabled for this provider instance
-	const instanceConfig = currentProviderInstance.config || {};
-	const enabledOutputTypes = getEnabledOutputTypes( instanceConfig );
-
-	// Skip if no output types are enabled
-	return enabledOutputTypes.length === 0;
-}
-
-/**
  * Upload static files for a provider
  *
  * @param {Object} context        - Execution context
@@ -176,6 +153,8 @@ async function uploadBlueprintFiles( context, providerConfig ) {
 		blueprintSubfolder: contextSubfolder,
 		siteUrl,
 		setStatusMessage,
+		setStepProgress,
+		setProviderProgress,
 	} = context;
 
 	const providerId = currentProviderInstance.id;
@@ -185,6 +164,38 @@ async function uploadBlueprintFiles( context, providerConfig ) {
 	// Get subfolder from provider config, falling back to context subfolder or default
 	const subfolder =
 		providerConfig.blueprint_subfolder || contextSubfolder || 'playground';
+
+	// Calculate total files to upload for progress tracking
+	const pluginCount = pluginZips ? Object.keys( pluginZips ).length : 0;
+	const themeCount = themeZips ? Object.keys( themeZips ).length : 0;
+	const totalBlueprintFiles =
+		( coreContentZipPath ? 1 : 0 ) + // wp-content.zip
+		pluginCount + // plugin zips
+		themeCount + // theme zips
+		( blueprintData ? 1 : 0 ); // blueprint.json
+
+	let uploadedCount = 0;
+
+	// Helper to update progress
+	const updateProgress = () => {
+		if ( setStepProgress ) {
+			setStepProgress( 'upload', {
+				current: uploadedCount,
+				total: totalBlueprintFiles,
+			} );
+		}
+		if ( setProviderProgress ) {
+			setProviderProgress( providerId, {
+				stepId: 'upload',
+				stepLabel: 'Upload Files',
+				progress: {
+					current: uploadedCount,
+					total: totalBlueprintFiles,
+				},
+				status: 'active',
+			} );
+		}
+	};
 
 	setStatusMessage(
 		sprintf(
@@ -248,6 +259,8 @@ async function uploadBlueprintFiles( context, providerConfig ) {
 
 		uploadedFiles.push( wpContentPath );
 		totalSize += result.size || 0;
+		uploadedCount++;
+		updateProgress();
 	}
 
 	// 2. Upload plugin zips
@@ -283,6 +296,8 @@ async function uploadBlueprintFiles( context, providerConfig ) {
 			} else {
 				uploadedFiles.push( pluginPath );
 				totalSize += result.size || 0;
+				uploadedCount++;
+				updateProgress();
 			}
 		}
 	}
@@ -320,6 +335,8 @@ async function uploadBlueprintFiles( context, providerConfig ) {
 			} else {
 				uploadedFiles.push( themePath );
 				totalSize += result.size || 0;
+				uploadedCount++;
+				updateProgress();
 			}
 		}
 	}
@@ -361,6 +378,8 @@ async function uploadBlueprintFiles( context, providerConfig ) {
 
 		uploadedFiles.push( blueprintPath );
 		totalSize += blueprintJson.length;
+		uploadedCount++;
+		updateProgress();
 	}
 
 	return {
@@ -416,9 +435,8 @@ async function handler( context ) {
 	const providerLabel =
 		currentProviderInstance.label || currentProviderInstance.id;
 
-	// Get enabled output types for this provider
-	const instanceConfig = currentProviderInstance.config || {};
-	const enabledOutputTypes = getEnabledOutputTypes( instanceConfig );
+	// Get enabled output types from global settings
+	const enabledOutputTypes = getEnabledOutputTypes();
 
 	const willUploadStatic = enabledOutputTypes.includes( 'static_site' );
 	const willUploadBlueprint = enabledOutputTypes.includes( 'blueprint' );
@@ -567,65 +585,21 @@ const stepDefinition = {
 	),
 	supportsProgress: true,
 	dependencies: [ 'discoverAndScanSite', 'createBlueprintBundle' ],
-	skip: shouldSkip,
 	requires: {
-		currentProviderInstance: {
-			from: 'thread',
-			required: true,
-		},
-		urls: {
-			from: 'discoverAndScanSite',
-			required: false, // Only required if static_site is enabled
-		},
-		htmlDataMap: {
-			from: 'discoverAndScanSite',
-			required: false,
-		},
-		staticSiteUrl: {
-			from: 'discoverAndScanSite',
-			required: false,
-		},
-		// Individual blueprint file paths (not a bundle)
-		blueprintData: {
-			from: 'createBlueprintBundle',
-			required: false, // Only required if blueprint is enabled
-		},
-		coreContentZipPath: {
-			from: 'createBlueprintBundle',
-			required: false,
-		},
-		pluginZips: {
-			from: 'createBlueprintBundle',
-			required: false,
-		},
-		themeZips: {
-			from: 'createBlueprintBundle',
-			required: false,
-		},
-		blueprintSubfolder: {
-			from: 'createBlueprintBundle',
-			required: false,
-		},
-		siteUrl: {
-			from: 'initial',
-			required: true,
-		},
-		processStaticSiteUrls: {
-			from: 'initial',
-			required: false, // Only required if static_site is enabled
-		},
-		setStatusMessage: {
-			from: 'initial',
-			required: true,
-		},
-		setStepProgress: {
-			from: 'initial',
-			required: false,
-		},
-		updateStaticSiteProgressContext: {
-			from: 'initial',
-			required: false,
-		},
+		currentProviderInstance: 'thread',
+		urls: { from: 'discoverAndScanSite', optional: true },
+		htmlDataMap: { from: 'discoverAndScanSite', optional: true },
+		staticSiteUrl: { from: 'discoverAndScanSite', optional: true },
+		blueprintData: { from: 'createBlueprintBundle', optional: true },
+		coreContentZipPath: { from: 'createBlueprintBundle', optional: true },
+		pluginZips: { from: 'createBlueprintBundle', optional: true },
+		themeZips: { from: 'createBlueprintBundle', optional: true },
+		blueprintSubfolder: { from: 'createBlueprintBundle', optional: true },
+		siteUrl: true,
+		processStaticSiteUrls: false,
+		setStatusMessage: true,
+		setStepProgress: false,
+		updateStaticSiteProgressContext: false,
 	},
 	provides: {
 		uploadResults: {

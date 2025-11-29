@@ -4,9 +4,8 @@
  * Defines core output types and provides a filterable hook for 3rd-party plugins
  * to register additional output types with their configuration fields.
  *
- * Output types replace the old DEPLOYMENT_TYPE concept. Instead of providers
- * being classified by deployment type, providers are now generic storage backends
- * and users choose which output types to enable via config toggles.
+ * Output types are controlled via global settings, not per-provider toggles.
+ * Provider-specific fields (like blueprint_subfolder) are still defined here.
  */
 
 import { __ } from '@wordpress/i18n';
@@ -22,6 +21,9 @@ export const OUTPUT_TYPES_HOOK = 'altolith.provider.outputTypes';
 /**
  * Core output types provided by altolith-deploy.
  *
+ * Note: Enable toggles are now in global settings, not per-provider.
+ * Only provider-specific configuration fields are defined here.
+ *
  * @type {Array<Object>}
  */
 const CORE_OUTPUT_TYPES = [
@@ -32,18 +34,8 @@ const CORE_OUTPUT_TYPES = [
 			'Export your WordPress site as static HTML files.',
 			'altolith-deploy'
 		),
-		fields: [
-			{
-				id: 'enable_static_site',
-				type: 'toggle',
-				label: __( 'Export Static Site', 'altolith-deploy' ),
-				default: true,
-				help: __(
-					'Export static HTML, CSS, JS, and media files.',
-					'altolith-deploy'
-				),
-			},
-		],
+		// No provider-specific fields for static site
+		fields: [],
 	},
 	{
 		id: 'blueprint',
@@ -54,16 +46,6 @@ const CORE_OUTPUT_TYPES = [
 		),
 		fields: [
 			{
-				id: 'enable_blueprint',
-				type: 'toggle',
-				label: __( 'Export Blueprint', 'altolith-deploy' ),
-				default: false,
-				help: __(
-					'Export blueprint.json and supporting ZIP files for WordPress Playground.',
-					'altolith-deploy'
-				),
-			},
-			{
 				id: 'blueprint_subfolder',
 				type: 'text',
 				label: __( 'Blueprint Subfolder', 'altolith-deploy' ),
@@ -73,7 +55,6 @@ const CORE_OUTPUT_TYPES = [
 					'Subfolder where blueprint files will be stored (e.g., "playground" creates /playground/blueprint.json).',
 					'altolith-deploy'
 				),
-				showWhen: ( config ) => config.enable_blueprint === true,
 				validation: {
 					pattern: /^[a-zA-Z0-9_-]+$/,
 					message: __(
@@ -101,7 +82,6 @@ const CORE_OUTPUT_TYPES = [
  *         id: 'media_offload',
  *         label: 'Media Offloading',
  *         fields: [
- *             { id: 'enable_media_offload', type: 'toggle', label: 'Offload Media', default: false },
  *             { id: 'media_subfolder', type: 'text', label: 'Media Subfolder', default: 'wp-content/uploads' },
  *         ],
  *     }];
@@ -147,29 +127,47 @@ export function getOutputTypeIds() {
 }
 
 /**
- * Check which output types are enabled in a config object.
+ * Check which output types are enabled based on global settings.
  *
- * @param {Object} config Provider instance config.
+ * Reads from global settings stored in window.altolithData.globalSettings
+ * or falls back to defaults.
+ *
  * @return {Array<string>} Array of enabled output type IDs.
  */
-export function getEnabledOutputTypes( config ) {
+export function getEnabledOutputTypes() {
+	// Get global settings from window or use defaults
+	const globalSettings = window?.altolithData?.globalSettings || {};
+
+	const enabled = [];
+
+	// Check static site (default: true)
+	if ( globalSettings.exportStaticSite !== false ) {
+		enabled.push( 'static_site' );
+	}
+
+	// Check blueprint (default: true)
+	if ( globalSettings.exportBlueprint !== false ) {
+		enabled.push( 'blueprint' );
+	}
+
+	// Allow 3rd-party output types to check their own settings
 	const outputTypes = getOutputTypes();
-	return outputTypes
-		.filter( ( type ) => {
-			// Find the enable toggle field for this type
-			const enableField = type.fields?.find(
-				( field ) =>
-					field.id === `enable_${ type.id }` &&
-					field.type === 'toggle'
-			);
-			if ( ! enableField ) {
-				return false;
-			}
-			// Check if enabled in config (default to field's default value)
-			const fieldValue = config?.[ enableField.id ];
-			return fieldValue !== undefined
-				? fieldValue
-				: enableField.default || false;
-		} )
-		.map( ( type ) => type.id );
+	for ( const type of outputTypes ) {
+		// Skip core types already handled
+		if ( type.id === 'static_site' || type.id === 'blueprint' ) {
+			continue;
+		}
+
+		// Check for a matching global setting (e.g., exportMediaOffload for media_offload)
+		const settingKey = `export${ type.id
+			.split( '_' )
+			.map( ( word ) => word.charAt( 0 ).toUpperCase() + word.slice( 1 ) )
+			.join( '' ) }`;
+
+		if ( globalSettings[ settingKey ] === true ) {
+			enabled.push( type.id );
+		}
+	}
+
+	return enabled;
 }

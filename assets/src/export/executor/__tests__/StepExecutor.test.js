@@ -154,25 +154,6 @@ describe( 'StepExecutor', () => {
 			} );
 		} );
 
-		test( 'should skip steps when skip function returns true', async () => {
-			const onStepSkipped = jest.fn();
-			const handlerSpy = jest.fn();
-
-			const steps = [
-				{
-					id: 'skippedStep',
-					dependencies: [],
-					skip: () => true,
-					handler: handlerSpy,
-				},
-			];
-
-			await executeSteps( steps, {}, { onStepSkipped } );
-
-			expect( handlerSpy ).not.toHaveBeenCalled();
-			expect( onStepSkipped ).toHaveBeenCalledWith( 'skippedStep' );
-		} );
-
 		test( 'should throw on invalid dependencies', async () => {
 			const steps = [
 				{

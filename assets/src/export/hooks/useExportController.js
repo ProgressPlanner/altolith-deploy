@@ -15,7 +15,7 @@ import { executeThreadedWorkflow } from '@altolith/export/executor/ThreadOrchest
 import { getActiveSteps, getRegisteredSteps } from '@altolith/export/steps';
 import {
 	prepareExportConfiguration,
-	buildProviderInstancesByType,
+	buildProviderInstancesByOutputType,
 	buildWorkflowContext,
 } from '@altolith/export/utils/exportConfiguration';
 
@@ -159,8 +159,8 @@ export function useExportController( exportState ) {
 			// Get current site URL for static site generation (use pure function)
 			const siteUrl = window.location.origin;
 
-			// Build provider instances by deployment type (automatically uses all registered types)
-			const providerInstancesByType = buildProviderInstancesByType(
+			// Build provider instances by output type (automatically uses all registered types)
+			const providerInstancesByType = buildProviderInstancesByOutputType(
 				exportConfig.providerConfigs
 			);
 

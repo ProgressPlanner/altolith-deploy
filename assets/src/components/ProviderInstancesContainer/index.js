@@ -73,8 +73,8 @@ export default function ProviderInstancesContainer( {
 			instance.instanceId.split( ':' )[ 0 ];
 		const fullProvider = providers.find( ( p ) => p.id === providerType );
 
-		// Get enabled output types from instance config
-		const enabledOutputTypes = getEnabledOutputTypes( instance.config );
+		// Get enabled output types from global settings
+		const enabledOutputTypes = getEnabledOutputTypes();
 
 		const providerName =
 			fullProvider?.name || fullProvider?.id || providerType;

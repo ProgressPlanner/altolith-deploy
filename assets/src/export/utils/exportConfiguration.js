@@ -33,16 +33,15 @@ export function prepareExportConfiguration( settingsResponse ) {
 }
 
 /**
- * Get provider instances that have a specific output type enabled.
+ * Get all valid provider instance IDs.
  *
  * In the new architecture, providers are generic storage backends.
- * Output types (static_site, blueprint, etc.) are enabled per-instance via config toggles.
+ * Output types are controlled globally - all instances deploy all enabled output types.
  *
  * @param {Object} providerConfigs - All provider configurations
- * @param {string} outputType      - Output type to filter by (e.g., 'static_site', 'blueprint')
- * @return {Array<string>} Array of instance IDs that have this output type enabled
+ * @return {Array<string>} Array of valid instance IDs
  */
-export function getInstancesForOutputType( providerConfigs, outputType ) {
+export function getValidProviderInstanceIds( providerConfigs ) {
 	try {
 		if ( ! providerConfigs || typeof providerConfigs !== 'object' ) {
 			return [];
@@ -61,13 +60,7 @@ export function getInstancesForOutputType( providerConfigs, outputType ) {
 				}
 
 				const ProviderClass = ProviderRegistry.get( providerType );
-				if ( ! ProviderClass ) {
-					return false;
-				}
-
-				// Check if this output type is enabled in instance config
-				const enabledTypes = getEnabledOutputTypes( instanceConfig );
-				return enabledTypes.includes( outputType );
+				return !! ProviderClass;
 			} )
 			.map( ( [ id ] ) => id );
 	} catch ( error ) {
@@ -76,25 +69,24 @@ export function getInstancesForOutputType( providerConfigs, outputType ) {
 }
 
 /**
- * Get provider instances for a specific deployment type (legacy compatibility).
+ * Get provider instances for a specific output type.
  *
- * @deprecated Use getInstancesForOutputType instead.
+ * In the new architecture, all valid provider instances deploy all enabled output types.
+ * This function returns all valid instances if the output type is globally enabled.
+ *
  * @param {Object} providerConfigs - All provider configurations
- * @param {string} deploymentType  - Deployment type to filter by
- * @return {Array<string>} Array of instance IDs
+ * @param {string} outputType      - Output type to check (e.g., 'static_site', 'blueprint')
+ * @return {Array<string>} Array of instance IDs (all valid instances if output type enabled)
  */
-export function getInstancesForDeploymentType(
-	providerConfigs,
-	deploymentType
-) {
-	// Map legacy deployment types to output types
-	const outputTypeMapping = {
-		static_site: 'static_site',
-		blueprint_bundle: 'blueprint',
-	};
+export function getInstancesForOutputType( providerConfigs, outputType ) {
+	// Check if output type is globally enabled
+	const enabledTypes = getEnabledOutputTypes();
+	if ( ! enabledTypes.includes( outputType ) ) {
+		return [];
+	}
 
-	const outputType = outputTypeMapping[ deploymentType ] || deploymentType;
-	return getInstancesForOutputType( providerConfigs, outputType );
+	// Return all valid instances - they all deploy enabled output types
+	return getValidProviderInstanceIds( providerConfigs );
 }
 
 /**
@@ -164,25 +156,6 @@ export function buildProviderInstancesForOutputType(
 }
 
 /**
- * Build provider instance objects from configurations (legacy compatibility).
- *
- * @deprecated Use buildProviderInstancesForOutputType instead.
- * @param {Object} providerConfigs - All provider configurations
- * @param {string} deploymentType  - Deployment type to filter by
- * @return {Array<Object>} Valid provider instance objects with { id, label, config }
- */
-export function buildProviderInstances( providerConfigs, deploymentType ) {
-	// Map legacy deployment types to output types
-	const outputTypeMapping = {
-		static_site: 'static_site',
-		blueprint_bundle: 'blueprint',
-	};
-
-	const outputType = outputTypeMapping[ deploymentType ] || deploymentType;
-	return buildProviderInstancesForOutputType( providerConfigs, outputType );
-}
-
-/**
  * Determine providers for all output types.
  *
  * Pure function that takes provider configs and returns
@@ -208,17 +181,6 @@ export function determineProvidersByOutputType( providerConfigs ) {
 }
 
 /**
- * Determine providers for all deployment types (legacy compatibility).
- *
- * @deprecated Use determineProvidersByOutputType instead.
- * @param {Object} providerConfigs - All provider configurations
- * @return {Object} Object with arrays of instance IDs keyed by deployment type
- */
-export function determineProvidersByDeploymentType( providerConfigs ) {
-	return determineProvidersByOutputType( providerConfigs );
-}
-
-/**
  * Build provider instances by output type.
  *
  * Creates a map of output type to provider instance arrays.
@@ -239,17 +201,6 @@ export function buildProviderInstancesByOutputType( providerConfigs ) {
 	} );
 
 	return result;
-}
-
-/**
- * Build provider instances by deployment type (legacy compatibility).
- *
- * @deprecated Use buildProviderInstancesByOutputType instead.
- * @param {Object} providerConfigs - All provider configurations
- * @return {Object} Object with arrays of provider instances keyed by deployment type
- */
-export function buildProviderInstancesByType( providerConfigs ) {
-	return buildProviderInstancesByOutputType( providerConfigs );
 }
 
 /**

@@ -25,18 +25,9 @@ jest.mock( '@wordpress/hooks', () => ( {
 	applyFilters: jest.fn( ( hook, value ) => value ),
 } ) );
 
-// Mock outputTypes
+// Mock outputTypes - new architecture with global settings
 jest.mock( '@altolith/utils/outputTypes', () => ( {
-	getEnabledOutputTypes: jest.fn( ( config ) => {
-		const enabled = [];
-		if ( config?.enable_static_site === true ) {
-			enabled.push( 'static_site' );
-		}
-		if ( config?.enable_blueprint === true ) {
-			enabled.push( 'blueprint' );
-		}
-		return enabled;
-	} ),
+	getEnabledOutputTypes: jest.fn( () => [ 'static_site', 'blueprint' ] ),
 } ) );
 
 // Mock staticSiteConfig
@@ -57,7 +48,8 @@ jest.mock( '../../utils/helpers', () => ( {
 } ) );
 
 import { addAction } from '@wordpress/hooks';
-import { getEnabledOutputTypes } from '@altolith/utils/outputTypes';
+// Import the mocked module to control return values
+const { getEnabledOutputTypes } = require( '@altolith/utils/outputTypes' );
 
 describe( 'upload step', () => {
 	let stepDefinition;
@@ -114,72 +106,6 @@ describe( 'upload step', () => {
 		} );
 	} );
 
-	describe( 'shouldSkip', () => {
-		it( 'should skip when no output types are enabled', () => {
-			getEnabledOutputTypes.mockReturnValue( [] );
-
-			const context = {
-				currentProviderInstance: {
-					id: 'test:123',
-					config: {},
-				},
-			};
-
-			expect( stepDefinition.skip( context ) ).toBe( true );
-		} );
-
-		it( 'should not skip when static_site is enabled', () => {
-			getEnabledOutputTypes.mockReturnValue( [ 'static_site' ] );
-
-			const context = {
-				currentProviderInstance: {
-					id: 'test:123',
-					config: { enable_static_site: true },
-				},
-			};
-
-			expect( stepDefinition.skip( context ) ).toBe( false );
-		} );
-
-		it( 'should not skip when blueprint is enabled', () => {
-			getEnabledOutputTypes.mockReturnValue( [ 'blueprint' ] );
-
-			const context = {
-				currentProviderInstance: {
-					id: 'test:123',
-					config: { enable_blueprint: true },
-				},
-			};
-
-			expect( stepDefinition.skip( context ) ).toBe( false );
-		} );
-
-		it( 'should not skip when both output types are enabled', () => {
-			getEnabledOutputTypes.mockReturnValue( [
-				'static_site',
-				'blueprint',
-			] );
-
-			const context = {
-				currentProviderInstance: {
-					id: 'test:123',
-					config: {
-						enable_static_site: true,
-						enable_blueprint: true,
-					},
-				},
-			};
-
-			expect( stepDefinition.skip( context ) ).toBe( false );
-		} );
-
-		it( 'should not skip when provider instance is missing (let handler throw)', () => {
-			const context = {};
-
-			expect( stepDefinition.skip( context ) ).toBe( false );
-		} );
-	} );
-
 	describe( 'handler', () => {
 		it( 'should throw error when provider instance is missing', async () => {
 			const context = {
@@ -193,13 +119,14 @@ describe( 'upload step', () => {
 		} );
 
 		it( 'should throw error when static_site enabled but urls missing', async () => {
+			// Mock only static_site enabled
 			getEnabledOutputTypes.mockReturnValue( [ 'static_site' ] );
 
 			const context = {
 				currentProviderInstance: {
 					id: 'test:123',
 					label: 'Test Provider',
-					config: { enable_static_site: true },
+					config: {},
 				},
 				setStatusMessage: jest.fn(),
 				setStepProgress: jest.fn(),
@@ -210,21 +137,22 @@ describe( 'upload step', () => {
 			);
 		} );
 
-		it( 'should throw error when blueprint enabled but bundle missing', async () => {
+		it( 'should throw error when blueprint enabled but data missing', async () => {
+			// Mock only blueprint enabled
 			getEnabledOutputTypes.mockReturnValue( [ 'blueprint' ] );
 
 			const context = {
 				currentProviderInstance: {
 					id: 'test:123',
 					label: 'Test Provider',
-					config: { enable_blueprint: true },
+					config: {},
 				},
 				setStatusMessage: jest.fn(),
 				setStepProgress: jest.fn(),
 			};
 
 			await expect( stepDefinition.handler( context ) ).rejects.toThrow(
-				'Blueprint bundle not found'
+				'Blueprint data not found'
 			);
 		} );
 	} );

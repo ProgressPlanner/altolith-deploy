@@ -15,7 +15,6 @@
 import { __, sprintf, _n } from '@wordpress/i18n';
 import { addAction, applyFilters } from '@wordpress/hooks';
 import { getEnabledOutputTypes } from '@altolith/utils/outputTypes';
-import { fetchProviderConfig } from '@altolith/export/utils/staticSiteConfig';
 
 /**
  * Build a human-readable description of discovered assets
@@ -84,52 +83,45 @@ const statusLabels = {
  * Prepare blueprint files step handler
  *
  * Performs four phases:
- * 1. Determine target URL from provider config
- * 2. Generate blueprint JSON with URL-based resources
- * 3. Export core content (database, uploads, mu-plugins)
- * 4. Export custom plugins and themes as individual zips
+ * 1. Generate blueprint JSON with URL-based resources (using placeholder URL)
+ * 2. Export core content (database, uploads, mu-plugins)
+ * 3. Export custom plugins as individual zips
+ * 4. Export custom themes as individual zips
  *
- * Files are NOT bundled - they're returned as individual paths for the upload step.
+ * Files are NOT bundled - they're returned as individual paths for the deploy step.
+ * The placeholder URL {targetUrl} will be replaced by each provider during deployment.
  *
  * @param {Object}   context                       - Execution context
  * @param {Object}   context.api                   - ExportAPI instance
- * @param {Array}    context.providerInstances     - All provider instances
  * @param {Function} context.generateBlueprintJson - Blueprint JSON generator function
  * @param {Function} context.setStatusMessage      - Status message updater
  * @param {Function} context.setStepProgress       - Step progress updater
  * @return {Promise<Object>} Step result with individual file paths and blueprint data
  */
 async function handler( context ) {
-	const {
-		api,
-		providerInstances = [],
-		generateBlueprintJson,
-		setStatusMessage,
-		setStepProgress,
-	} = context;
+	const { api, generateBlueprintJson, setStatusMessage, setStepProgress } =
+		context;
 
-	// --- Phase 1: Determine target URL from first blueprint-enabled provider ---
-	// Find the first provider instance that has blueprint enabled
-	let blueprintProviderConfig = null;
-	for ( const instance of providerInstances ) {
-		const instanceConfig = instance.config || {};
-		const enabledOutputTypes = getEnabledOutputTypes( instanceConfig );
-		if ( enabledOutputTypes.includes( 'blueprint' ) ) {
-			// Fetch full provider config to get public_url
-			blueprintProviderConfig = await fetchProviderConfig( instance.id );
-			break;
-		}
+	// Check if blueprint export is enabled in global settings
+	const enabledOutputTypes = getEnabledOutputTypes();
+	if ( ! enabledOutputTypes.includes( 'blueprint' ) ) {
+		// Blueprint not enabled, return empty result
+		return {
+			coreContentZipPath: null,
+			coreContentZipSize: 0,
+			pluginZips: {},
+			themeZips: {},
+			blueprintData: null,
+			customPlugins: [],
+			customThemes: [],
+			blueprintSubfolder: 'playground',
+		};
 	}
 
-	if ( ! blueprintProviderConfig ) {
-		throw new Error(
-			__( 'No provider with blueprint enabled found', 'altolith-deploy' )
-		);
-	}
-
-	const baseUrl = blueprintProviderConfig.public_url || '';
-	const subfolder =
-		blueprintProviderConfig.blueprint_subfolder || 'playground';
+	// Use placeholder URL - will be replaced during deploy step
+	// Each provider will replace {targetUrl} with their actual public_url
+	const baseUrl = '{targetUrl}';
+	const subfolder = 'playground'; // Default, providers can override
 
 	// --- Phase 2: Generate blueprint JSON with URL-based resources ---
 	setStatusMessage(
@@ -293,28 +285,6 @@ async function handler( context ) {
 }
 
 /**
- * Check if step should be skipped
- *
- * Skip if no provider instance has blueprint export enabled.
- *
- * @param {Object} context - Execution context
- * @return {boolean} True if step should be skipped
- */
-function shouldSkip( context ) {
-	const { providerInstances = [] } = context;
-
-	// Check if any provider instance has blueprint enabled
-	const anyBlueprintEnabled = providerInstances.some( ( instance ) => {
-		const instanceConfig = instance.config || {};
-		const enabledOutputTypes = getEnabledOutputTypes( instanceConfig );
-		return enabledOutputTypes.includes( 'blueprint' );
-	} );
-
-	// Skip if no provider has blueprint enabled
-	return ! anyBlueprintEnabled;
-}
-
-/**
  * Step definition
  */
 const stepDefinition = {
@@ -324,30 +294,14 @@ const stepDefinition = {
 		'Prepare wp-content archive and blueprint files for upload',
 		'altolith-deploy'
 	),
-	shouldSkip,
 	supportsProgress: false,
 	dependencies: [],
 	requires: {
-		api: {
-			from: 'initial',
-			required: true,
-		},
-		providerInstances: {
-			from: 'initial',
-			required: true,
-		},
-		generateBlueprintJson: {
-			from: 'initial',
-			required: true,
-		},
-		setStatusMessage: {
-			from: 'initial',
-			required: true,
-		},
-		setStepProgress: {
-			from: 'initial',
-			required: false,
-		},
+		api: true,
+		providerInstances: true,
+		generateBlueprintJson: true,
+		setStatusMessage: true,
+		setStepProgress: false,
 	},
 	provides: {
 		coreContentZipPath: {

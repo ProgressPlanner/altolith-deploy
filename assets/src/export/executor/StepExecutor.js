@@ -25,7 +25,6 @@ export async function executeSteps( steps, context, options = {} ) {
 	const {
 		onStepStart = () => {},
 		onStepComplete = () => {},
-		onStepSkipped = () => {},
 		onError = () => {},
 		allSteps = null, // Optional: All steps for dependency validation
 	} = options;
@@ -59,7 +58,6 @@ export async function executeSteps( steps, context, options = {} ) {
 		workflowId,
 		progressTracker,
 		completedSteps: [],
-		skippedSteps: [],
 		state: {},
 	};
 
@@ -78,7 +76,6 @@ export async function executeSteps( steps, context, options = {} ) {
 			executeStepWhenReady( step, steps, executionContext, tracker, {
 				onStepStart,
 				onStepComplete,
-				onStepSkipped,
 				onError,
 			} )
 		);
@@ -126,7 +123,7 @@ export async function executeSteps( steps, context, options = {} ) {
  * @param {Object} executionContext Current execution context.
  * @param {Object} tracker          Dependency tracker.
  * @param {Object} options          Execution options with callbacks.
- * @return {Promise<Object|undefined>} Step result or undefined if skipped/failed dependency.
+ * @return {Promise<Object|undefined>} Step result or undefined if failed dependency.
  */
 async function executeStepWhenReady(
 	step,
@@ -135,7 +132,7 @@ async function executeStepWhenReady(
 	tracker,
 	options
 ) {
-	const { onStepStart, onStepComplete, onStepSkipped, onError } = options;
+	const { onStepStart, onStepComplete, onError } = options;
 
 	// Wait for this step's dependencies to complete
 	try {
@@ -152,30 +149,9 @@ async function executeStepWhenReady(
 	// Check if any dependency failed (defensive check)
 	if ( tracker.hasDependencyFailed( step ) ) {
 		const error = new Error(
-			`Skipping "${ step.id }" due to dependency failure`
+			`Step "${ step.id }" cannot run due to dependency failure`
 		);
 		tracker.fail( step.id, error );
-		return;
-	}
-
-	// Check skip condition
-	const shouldSkip = applyFilters(
-		`altolith.export.step.${ step.id }.skip`,
-		step.skip ? step.skip( executionContext ) : false,
-		executionContext,
-		executionContext.currentProviderInstance || null
-	);
-
-	if ( shouldSkip ) {
-		executionContext.skippedSteps.push( step.id );
-		onStepSkipped( step.id );
-		doAction(
-			`altolith.export.step.${ step.id }.skipped`,
-			executionContext,
-			executionContext.currentProviderInstance || null
-		);
-		// Mark as "complete" for dependency purposes (skipped is not failed)
-		tracker.complete( step.id, {} );
 		return;
 	}
 

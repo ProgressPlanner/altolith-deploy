@@ -7,8 +7,10 @@
 
 import { useState, useEffect, useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { Button } from '@wordpress/components';
+import { Button, Icon } from '@wordpress/components';
+import { settings as settingsIcon } from '@wordpress/icons';
 import ExportProgressModal from '../components/ExportProgressModal';
+import GlobalSettingsModal from './components/GlobalSettingsModal';
 import ProviderSettings from './ProviderSettings';
 import StatusNotice from '../components/StatusNotice';
 import { colors, spacing, fontWeight, createFlexStyle } from '../utils/styles';
@@ -16,6 +18,7 @@ import apiFetch from '../utils/api';
 
 export default function AdminSettings() {
 	const [ isExportModalOpen, setIsExportModalOpen ] = useState( false );
+	const [ isGlobalSettingsOpen, setIsGlobalSettingsOpen ] = useState( false );
 	const [ providerConfigs, setProviderConfigs ] = useState( {} );
 	const [ notices, setNotices ] = useState( [] );
 
@@ -86,6 +89,11 @@ export default function AdminSettings() {
 		...createFlexStyle( 'column', spacing.lg ),
 	};
 
+	const headerButtonsStyle = {
+		display: 'flex',
+		gap: spacing.sm,
+	};
+
 	return (
 		<div className="altolith-admin-settings" style={ containerStyle }>
 			<div
@@ -101,13 +109,22 @@ export default function AdminSettings() {
 						'altolith-deploy'
 					) }
 				</h1>
-				<Button
-					className="altolith-admin-settings__export-button"
-					variant="primary"
-					onClick={ () => setIsExportModalOpen( true ) }
-				>
-					{ __( 'Export Site', 'altolith-deploy' ) }
-				</Button>
+				<div style={ headerButtonsStyle }>
+					<Button
+						className="altolith-admin-settings__settings-button"
+						variant="secondary"
+						onClick={ () => setIsGlobalSettingsOpen( true ) }
+						icon={ <Icon icon={ settingsIcon } /> }
+						label={ __( 'Export Settings', 'altolith-deploy' ) }
+					/>
+					<Button
+						className="altolith-admin-settings__export-button"
+						variant="primary"
+						onClick={ () => setIsExportModalOpen( true ) }
+					>
+						{ __( 'Export Site', 'altolith-deploy' ) }
+					</Button>
+				</div>
 			</div>
 
 			<div
@@ -146,6 +163,11 @@ export default function AdminSettings() {
 			<ExportProgressModal
 				isOpen={ isExportModalOpen }
 				onClose={ () => setIsExportModalOpen( false ) }
+			/>
+
+			<GlobalSettingsModal
+				isOpen={ isGlobalSettingsOpen }
+				onClose={ () => setIsGlobalSettingsOpen( false ) }
 			/>
 		</div>
 	);

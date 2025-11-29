@@ -152,14 +152,14 @@ describe( 'discoverAndScanSite step', () => {
 			expect( stepDefinition.dependencies ).toEqual( [] );
 		} );
 
-		test( 'should require api from initial', () => {
-			expect( stepDefinition.requires.api.from ).toBe( 'initial' );
-			expect( stepDefinition.requires.api.required ).toBe( true );
+		test( 'should require api from initial context', () => {
+			// New simplified format: true means required from initial context
+			expect( stepDefinition.requires.api ).toBe( true );
 		} );
 
-		test( 'should require siteUrl from initial', () => {
-			expect( stepDefinition.requires.siteUrl.from ).toBe( 'initial' );
-			expect( stepDefinition.requires.siteUrl.required ).toBe( true );
+		test( 'should require siteUrl from initial context', () => {
+			// New simplified format: true means required from initial context
+			expect( stepDefinition.requires.siteUrl ).toBe( true );
 		} );
 
 		test( 'should provide urls', () => {

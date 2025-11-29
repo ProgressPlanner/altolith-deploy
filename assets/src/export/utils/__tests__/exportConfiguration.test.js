@@ -8,8 +8,8 @@
 
 import {
 	prepareExportConfiguration,
+	getValidProviderInstanceIds,
 	getInstancesForOutputType,
-	getInstancesForDeploymentType,
 	determineProvidersByOutputType,
 	buildWorkflowContext,
 } from '../exportConfiguration';
@@ -22,38 +22,32 @@ jest.mock( '../../../providers/registry/ProviderRegistry', () => ( {
 	},
 } ) );
 
-// Mock outputTypes
+// Mock outputTypes - new architecture with global settings
 jest.mock( '../../../utils/outputTypes', () => ( {
 	getOutputTypes: jest.fn( () => [
 		{
 			id: 'static_site',
 			label: 'Static Site',
-			fields: [
-				{ id: 'enable_static_site', type: 'toggle', default: true },
-			],
+			fields: [],
 		},
 		{
 			id: 'blueprint',
 			label: 'Blueprint',
 			fields: [
-				{ id: 'enable_blueprint', type: 'toggle', default: false },
+				{
+					id: 'blueprint_subfolder',
+					type: 'text',
+					default: 'playground',
+				},
 			],
 		},
 	] ),
-	getEnabledOutputTypes: jest.fn( ( config ) => {
-		const enabled = [];
-		if ( config.enable_static_site === true ) {
-			enabled.push( 'static_site' );
-		}
-		if ( config.enable_blueprint === true ) {
-			enabled.push( 'blueprint' );
-		}
-		return enabled;
-	} ),
+	getEnabledOutputTypes: jest.fn( () => [ 'static_site', 'blueprint' ] ),
 } ) );
 
-// Import the mocked registry to access the mock functions
+// Import the mocked modules
 import ProviderRegistry from '../../../providers/registry/ProviderRegistry';
+import { getEnabledOutputTypes } from '../../../utils/outputTypes';
 const mockProviderRegistry = ProviderRegistry;
 
 describe( 'exportConfiguration', () => {
@@ -118,33 +112,120 @@ describe( 'exportConfiguration', () => {
 		} );
 	} );
 
+	describe( 'getValidProviderInstanceIds()', () => {
+		beforeEach( () => {
+			jest.clearAllMocks();
+		} );
+
+		test( 'should return all valid provider instances', () => {
+			const providerConfigs = {
+				'local-filesystem:1': {
+					provider_type: 'local-filesystem',
+				},
+				'local-filesystem:2': {
+					provider_type: 'local-filesystem',
+				},
+				'cloudflare:1': {
+					provider_type: 'cloudflare',
+				},
+			};
+
+			class MockProvider {
+				static ID = 'local-filesystem';
+			}
+			mockProviderRegistry.get.mockReturnValue( MockProvider );
+
+			const result = getValidProviderInstanceIds( providerConfigs );
+
+			expect( result ).toEqual( [
+				'local-filesystem:1',
+				'local-filesystem:2',
+				'cloudflare:1',
+			] );
+		} );
+
+		test( 'should filter out invalid instances', () => {
+			const providerConfigs = {
+				'local-filesystem:1': null,
+				'local-filesystem:2': 'invalid',
+				'local-filesystem:3': {
+					// Missing provider_type
+				},
+				'local-filesystem:4': {
+					provider_type: 'local-filesystem',
+				},
+			};
+
+			class MockProvider {
+				static ID = 'local-filesystem';
+			}
+			mockProviderRegistry.get.mockReturnValue( MockProvider );
+
+			const result = getValidProviderInstanceIds( providerConfigs );
+
+			expect( result ).toEqual( [ 'local-filesystem:4' ] );
+		} );
+
+		test( 'should filter out instances with unregistered provider types', () => {
+			const providerConfigs = {
+				'local-filesystem:1': {
+					provider_type: 'local-filesystem',
+				},
+				'unknown:1': {
+					provider_type: 'unknown',
+				},
+			};
+
+			// Mock to return provider only for local-filesystem
+			mockProviderRegistry.get.mockImplementation( ( type ) => {
+				if ( type === 'local-filesystem' ) {
+					return class MockProvider {};
+				}
+				return null;
+			} );
+
+			const result = getValidProviderInstanceIds( providerConfigs );
+
+			expect( result ).toEqual( [ 'local-filesystem:1' ] );
+		} );
+
+		test( 'should handle empty provider configs', () => {
+			const result = getValidProviderInstanceIds( {} );
+
+			expect( result ).toEqual( [] );
+		} );
+
+		test( 'should handle null/undefined provider configs', () => {
+			const result1 = getValidProviderInstanceIds( null );
+			const result2 = getValidProviderInstanceIds( undefined );
+
+			expect( result1 ).toEqual( [] );
+			expect( result2 ).toEqual( [] );
+		} );
+	} );
+
 	describe( 'getInstancesForOutputType()', () => {
 		beforeEach( () => {
 			jest.clearAllMocks();
 		} );
 
-		test( 'should return instances with output type enabled', () => {
+		test( 'should return all valid instances when output type is enabled globally', () => {
 			const providerConfigs = {
 				'local-filesystem:1': {
 					provider_type: 'local-filesystem',
-					enable_static_site: true,
 				},
 				'local-filesystem:2': {
 					provider_type: 'local-filesystem',
-					enable_static_site: true,
-					enable_blueprint: true,
-				},
-				'local-filesystem:3': {
-					provider_type: 'local-filesystem',
-					enable_blueprint: true,
 				},
 			};
 
-			// Mock ProviderRegistry.get() to return a valid provider
 			class MockProvider {
 				static ID = 'local-filesystem';
 			}
 			mockProviderRegistry.get.mockReturnValue( MockProvider );
+
+			// Mock static_site as enabled
+			getEnabledOutputTypes.mockReturnValue( [ 'static_site' ] );
 
 			const result = getInstancesForOutputType(
 				providerConfigs,
@@ -157,15 +238,10 @@ describe( 'exportConfiguration', () => {
 			] );
 		} );
 
-		test( 'should return instances with blueprint enabled', () => {
+		test( 'should return empty array when output type is not enabled globally', () => {
 			const providerConfigs = {
 				'local-filesystem:1': {
 					provider_type: 'local-filesystem',
-					enable_static_site: true,
-				},
-				'local-filesystem:2': {
-					provider_type: 'local-filesystem',
-					enable_blueprint: true,
 				},
 			};
 
@@ -173,106 +249,24 @@ describe( 'exportConfiguration', () => {
 				static ID = 'local-filesystem';
 			}
 			mockProviderRegistry.get.mockReturnValue( MockProvider );
+
+			// Mock blueprint as NOT enabled
+			getEnabledOutputTypes.mockReturnValue( [ 'static_site' ] );
 
 			const result = getInstancesForOutputType(
 				providerConfigs,
 				'blueprint'
 			);
 
-			expect( result ).toEqual( [ 'local-filesystem:2' ] );
-		} );
-
-		test( 'should handle empty provider configs', () => {
-			const result = getInstancesForOutputType( {}, 'static_site' );
-
 			expect( result ).toEqual( [] );
 		} );
 
-		test( 'should handle null/undefined provider configs', () => {
-			const result1 = getInstancesForOutputType( null, 'static_site' );
-			const result2 = getInstancesForOutputType(
-				undefined,
-				'static_site'
-			);
+		test( 'should handle empty provider configs', () => {
+			getEnabledOutputTypes.mockReturnValue( [ 'static_site' ] );
 
-			expect( result1 ).toEqual( [] );
-			expect( result2 ).toEqual( [] );
-		} );
+			const result = getInstancesForOutputType( {}, 'static_site' );
 
-		test( 'should handle malformed provider configs', () => {
-			const providerConfigs = {
-				'local-filesystem:1': null,
-				'local-filesystem:2': 'invalid',
-				'local-filesystem:3': {
-					// Missing provider_type
-					enable_static_site: true,
-				},
-				'local-filesystem:4': {
-					provider_type: 'local-filesystem',
-					enable_static_site: true,
-				},
-			};
-
-			class MockProvider {
-				static ID = 'local-filesystem';
-			}
-			mockProviderRegistry.get.mockReturnValue( MockProvider );
-
-			const result = getInstancesForOutputType(
-				providerConfigs,
-				'static_site'
-			);
-
-			// Only provider-4 should be included
-			expect( result ).toEqual( [ 'local-filesystem:4' ] );
-		} );
-	} );
-
-	describe( 'getInstancesForDeploymentType() (legacy compatibility)', () => {
-		beforeEach( () => {
-			jest.clearAllMocks();
-		} );
-
-		test( 'should map static_site deployment type to output type', () => {
-			const providerConfigs = {
-				'local-filesystem:1': {
-					provider_type: 'local-filesystem',
-					enable_static_site: true,
-				},
-			};
-
-			class MockProvider {
-				static ID = 'local-filesystem';
-			}
-			mockProviderRegistry.get.mockReturnValue( MockProvider );
-
-			const result = getInstancesForDeploymentType(
-				providerConfigs,
-				'static_site'
-			);
-
-			expect( result ).toEqual( [ 'local-filesystem:1' ] );
-		} );
-
-		test( 'should map blueprint_bundle deployment type to blueprint output type', () => {
-			const providerConfigs = {
-				'local-filesystem:1': {
-					provider_type: 'local-filesystem',
-					enable_blueprint: true,
-				},
-			};
-
-			class MockProvider {
-				static ID = 'local-filesystem';
-			}
-			mockProviderRegistry.get.mockReturnValue( MockProvider );
-
-			const result = getInstancesForDeploymentType(
-				providerConfigs,
-				'blueprint_bundle'
-			);
-
-			expect( result ).toEqual( [ 'local-filesystem:1' ] );
+			expect( result ).toEqual( [] );
 		} );
 	} );
 
@@ -281,20 +275,13 @@ describe( 'exportConfiguration', () => {
 			jest.clearAllMocks();
 		} );
 
-		test( 'should group providers by output type', () => {
+		test( 'should return all valid instances for each enabled output type', () => {
 			const providerConfigs = {
 				'local-filesystem:1': {
 					provider_type: 'local-filesystem',
-					enable_static_site: true,
 				},
 				'local-filesystem:2': {
 					provider_type: 'local-filesystem',
-					enable_static_site: true,
-					enable_blueprint: true,
-				},
-				'local-filesystem:3': {
-					provider_type: 'local-filesystem',
-					enable_blueprint: true,
 				},
 			};
 
@@ -302,20 +289,26 @@ describe( 'exportConfiguration', () => {
 				static ID = 'local-filesystem';
 			}
 			mockProviderRegistry.get.mockReturnValue( MockProvider );
+
+			// Both types enabled
+			getEnabledOutputTypes.mockReturnValue( [
+				'static_site',
+				'blueprint',
+			] );
 
 			const result = determineProvidersByOutputType( providerConfigs );
 
+			// All valid instances for each enabled output type
 			expect( result ).toEqual( {
 				static_site: [ 'local-filesystem:1', 'local-filesystem:2' ],
-				blueprint: [ 'local-filesystem:2', 'local-filesystem:3' ],
+				blueprint: [ 'local-filesystem:1', 'local-filesystem:2' ],
 			} );
 		} );
 
-		test( 'should return empty arrays for output types with no providers', () => {
+		test( 'should return empty array for disabled output types', () => {
 			const providerConfigs = {
 				'local-filesystem:1': {
 					provider_type: 'local-filesystem',
-					enable_static_site: true,
 				},
 			};
 
@@ -323,6 +316,9 @@ describe( 'exportConfiguration', () => {
 				static ID = 'local-filesystem';
 			}
 			mockProviderRegistry.get.mockReturnValue( MockProvider );
+
+			// Only static_site enabled
+			getEnabledOutputTypes.mockReturnValue( [ 'static_site' ] );
 
 			const result = determineProvidersByOutputType( providerConfigs );
 
