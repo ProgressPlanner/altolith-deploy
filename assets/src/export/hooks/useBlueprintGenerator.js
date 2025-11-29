@@ -77,7 +77,7 @@ export function useBlueprintGenerator() {
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
 			 *
-			 * addFilter('altolith.export.step.createBlueprintBundle.assets', 'my-plugin', (assets) => {
+			 * addFilter('altolith.blueprint.extensions', 'my-plugin', (assets) => {
 			 *     // Exclude specific plugins
 			 *     assets.plugins = assets.plugins.filter(slug => slug !== 'unwanted-plugin');
 			 *
@@ -88,7 +88,7 @@ export function useBlueprintGenerator() {
 			 * });
 			 */
 			const filteredAssets = applyFilters(
-				'altolith.export.step.createBlueprintBundle.assets',
+				'altolith.blueprint.extensions',
 				{
 					plugins: wporgPlugins,
 					themes: wporgThemes,
@@ -130,7 +130,7 @@ export function useBlueprintGenerator() {
 				actualSetStatusMessage(
 					`Blueprint generated: ${ steps.length } total steps`,
 					'success',
-					'createBlueprintBundle'
+					'prepareBlueprint'
 				);
 				// Update detection message to success
 				actualSetStatusMessage(
@@ -200,7 +200,7 @@ export function useBlueprintGenerator() {
 			 * @example
 			 * import { addFilter } from '@wordpress/hooks';
 			 *
-			 * addFilter('altolith.export.step.createBlueprintBundle.generated', 'my-plugin', (blueprint) => {
+			 * addFilter('altolith.blueprint.generated', 'my-plugin', (blueprint) => {
 			 *     // Add custom metadata
 			 *     blueprint.description = 'My custom WordPress site';
 			 *
@@ -208,7 +208,7 @@ export function useBlueprintGenerator() {
 			 * });
 			 */
 			blueprint = applyFilters(
-				'altolith.export.step.createBlueprintBundle.generated',
+				'altolith.blueprint.generated',
 				blueprint,
 				wporgPlugins,
 				wporgThemes,

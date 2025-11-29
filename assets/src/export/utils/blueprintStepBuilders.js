@@ -261,7 +261,7 @@ export function buildBlueprintSteps( config ) {
 	 * @example
 	 * import { addFilter } from '@wordpress/hooks';
 	 *
-	 * addFilter('altolith.export.step.createBlueprintBundle.steps', 'my-plugin', (steps, config) => {
+	 * addFilter('altolith.blueprint.steps', 'my-plugin', (steps, config) => {
 	 *     // Add custom step at the end
 	 *     steps.push({
 	 *         step: 'runPHP',
@@ -271,7 +271,7 @@ export function buildBlueprintSteps( config ) {
 	 * });
 	 */
 	return applyFilters(
-		'altolith.export.step.createBlueprintBundle.steps',
+		'altolith.blueprint.steps',
 		steps,
 		config
 	);
@@ -308,7 +308,7 @@ export function buildBlueprintJson( steps ) {
 	 * @example
 	 * import { addFilter } from '@wordpress/hooks';
 	 *
-	 * addFilter('altolith.export.step.createBlueprintBundle.json', 'my-plugin', (blueprint, steps) => {
+	 * addFilter('altolith.blueprint.json', 'my-plugin', (blueprint, steps) => {
 	 *     // Customize landing page
 	 *     blueprint.landingPage = '/wp-admin/';
 	 *
@@ -325,7 +325,7 @@ export function buildBlueprintJson( steps ) {
 	 * });
 	 */
 	return applyFilters(
-		'altolith.export.step.createBlueprintBundle.json',
+		'altolith.blueprint.json',
 		blueprint,
 		steps
 	);

@@ -16078,7 +16078,7 @@ function buildBlueprintSteps(config) {
    * @example
    * import { addFilter } from '@wordpress/hooks';
    *
-   * addFilter('altolith.export.step.createBlueprintBundle.steps', 'my-plugin', (steps, config) => {
+   * addFilter('altolith.blueprint.steps', 'my-plugin', (steps, config) => {
    *     // Add custom step at the end
    *     steps.push({
    *         step: 'runPHP',
@@ -16087,7 +16087,7 @@ function buildBlueprintSteps(config) {
    *     return steps;
    * });
    */
-  return (0,external_wp_hooks_.applyFilters)('altolith.export.step.createBlueprintBundle.steps', steps, config);
+  return (0,external_wp_hooks_.applyFilters)('altolith.blueprint.steps', steps, config);
 }
 
 /**
@@ -16121,7 +16121,7 @@ function buildBlueprintJson(steps) {
    * @example
    * import { addFilter } from '@wordpress/hooks';
    *
-   * addFilter('altolith.export.step.createBlueprintBundle.json', 'my-plugin', (blueprint, steps) => {
+   * addFilter('altolith.blueprint.json', 'my-plugin', (blueprint, steps) => {
    *     // Customize landing page
    *     blueprint.landingPage = '/wp-admin/';
    *
@@ -16137,7 +16137,7 @@ function buildBlueprintJson(steps) {
    *     return blueprint;
    * });
    */
-  return (0,external_wp_hooks_.applyFilters)('altolith.export.step.createBlueprintBundle.json', blueprint, steps);
+  return (0,external_wp_hooks_.applyFilters)('altolith.blueprint.json', blueprint, steps);
 }
 ;// ./assets/src/export/hooks/useBlueprintGenerator.js
 /**
@@ -16213,7 +16213,7 @@ function useBlueprintGenerator() {
      * @example
      * import { addFilter } from '@wordpress/hooks';
      *
-     * addFilter('altolith.export.step.createBlueprintBundle.assets', 'my-plugin', (assets) => {
+     * addFilter('altolith.blueprint.extensions', 'my-plugin', (assets) => {
      *     // Exclude specific plugins
      *     assets.plugins = assets.plugins.filter(slug => slug !== 'unwanted-plugin');
      *
@@ -16223,7 +16223,7 @@ function useBlueprintGenerator() {
      *     return assets;
      * });
      */
-    const filteredAssets = (0,external_wp_hooks_.applyFilters)('altolith.export.step.createBlueprintBundle.assets', {
+    const filteredAssets = (0,external_wp_hooks_.applyFilters)('altolith.blueprint.extensions', {
       plugins: wporgPlugins,
       themes: wporgThemes,
       customPlugins,
@@ -16253,7 +16253,7 @@ function useBlueprintGenerator() {
     // Construct blueprint JSON.
     let blueprint = buildBlueprintJson(steps);
     if (actualSetStatusMessage) {
-      actualSetStatusMessage(`Blueprint generated: ${steps.length} total steps`, 'success', 'createBlueprintBundle');
+      actualSetStatusMessage(`Blueprint generated: ${steps.length} total steps`, 'success', 'prepareBlueprint');
       // Update detection message to success
       actualSetStatusMessage('Detected plugins and themes', 'success', 'detectAssets');
       // Update configuration message to success
@@ -16290,14 +16290,14 @@ function useBlueprintGenerator() {
      * @example
      * import { addFilter } from '@wordpress/hooks';
      *
-     * addFilter('altolith.export.step.createBlueprintBundle.generated', 'my-plugin', (blueprint) => {
+     * addFilter('altolith.blueprint.generated', 'my-plugin', (blueprint) => {
      *     // Add custom metadata
      *     blueprint.description = 'My custom WordPress site';
      *
      *     return blueprint;
      * });
      */
-    blueprint = (0,external_wp_hooks_.applyFilters)('altolith.export.step.createBlueprintBundle.generated', blueprint, wporgPlugins, wporgThemes, customPlugins, customThemes);
+    blueprint = (0,external_wp_hooks_.applyFilters)('altolith.blueprint.generated', blueprint, wporgPlugins, wporgThemes, customPlugins, customThemes);
 
     // Return blueprint with asset lists for bundle generation.
     return {
@@ -19340,9 +19340,9 @@ function buildStaticSiteFiles(urls, htmlDataMap, siteUrl) {
 }
 
 /**
- * Map blueprint file type from createBlueprintBundle to deploy types
+ * Map blueprint file type from prepareBlueprint to deploy types
  *
- * @param {string} type The type from createBlueprintBundle (core, plugin, theme)
+ * @param {string} type The type from prepareBlueprint (core, plugin, theme)
  * @return {string} The deploy type (blueprint-archive, blueprint-plugin, blueprint-theme)
  */
 function mapBlueprintFileType(type) {
@@ -19361,7 +19361,7 @@ function mapBlueprintFileType(type) {
 /**
  * Gather files to deploy step handler
  *
- * Collects files from discoverAndScanSite and createBlueprintBundle steps,
+ * Collects files from discoverAndScanSite and prepareBlueprint steps,
  * then applies a filter for 3rd-party extensions.
  *
  * @param {Object} context Execution context
@@ -19373,7 +19373,7 @@ async function gatherFilesToDeploy_handler(context) {
     urls,
     htmlDataMap,
     siteUrl,
-    // From createBlueprintBundle (simplified output)
+    // From prepareBlueprint (simplified output)
     blueprintFiles,
     blueprintJson,
     // Status callbacks
@@ -19398,9 +19398,9 @@ async function gatherFilesToDeploy_handler(context) {
     filesToDeploy.staticSite = buildStaticSiteFiles(urls, htmlDataMap, siteUrl);
   }
 
-  // Gather blueprint files from createBlueprintBundle output
+  // Gather blueprint files from prepareBlueprint output
   if (blueprintEnabled && blueprintFiles) {
-    // blueprintFiles already contains the file entries from createBlueprintBundle
+    // blueprintFiles already contains the file entries from prepareBlueprint
     // Add subfolder prefix and copy entries
     const subfolder = 'playground';
     const prefix = `${subfolder}/`;
@@ -19495,7 +19495,7 @@ const gatherFilesToDeploy_stepDefinition = {
  */
 (0,external_wp_hooks_.addAction)('altolith.export.register_steps', 'altolith/step-gatherFilesToDeploy', registry => {
   registry.register(gatherFilesToDeploy_stepDefinition);
-}, 20 // Run after discoverAndScanSite (10) and createBlueprintBundle (10)
+}, 20 // Run after discoverAndScanSite (10) and prepareBlueprint (10)
 );
 ;// ./assets/src/export/steps/deploy/index.js
 /**
