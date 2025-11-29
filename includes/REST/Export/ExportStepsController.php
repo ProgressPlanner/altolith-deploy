@@ -13,6 +13,7 @@ namespace Altolith\Deploy\REST\Export;
 use Altolith\Deploy\REST\RESTHelpersTrait;
 use Altolith\Deploy\Services\ExportService;
 use Altolith\Deploy\Utilities\PathValidator;
+use Altolith\Deploy\Utilities\TempDirectoryManager;
 use WP_REST_Request;
 use WP_Error;
 
@@ -240,19 +241,27 @@ class ExportStepsController
 		// Determine if path is absolute or relative
 		$fullPath = $path;
 		if (!\preg_match('#^[/\\\\]#', $path) && !\preg_match('#^[A-Za-z]:[/\\\\]#', $path)) {
-			// Relative path - assume it's relative to WordPress temp directory or ABSPATH
-			$fullPath = \get_temp_dir() . \ltrim($path, '/');
+			// Relative path - assume it's relative to WordPress temp directory
+			$tempDir = TempDirectoryManager::getTempDirectory();
+			$fullPath = $tempDir . '/' . \ltrim($path, '/');
 		}
 
 		// Security: Validate path to prevent path traversal attacks
+		// Allow paths within ABSPATH or the temp directory
+		$tempDir = TempDirectoryManager::getTempDirectory();
 		$validation = PathValidator::validatePath($fullPath, \ABSPATH, false);
+		
+		// If validation against ABSPATH fails, try temp directory
 		if (!$validation['valid']) {
-			return new WP_Error(
-				'invalid_path',
-				/* translators: %s: Validation error message */
-				\sprintf(\__('Invalid file path: %s', 'altolith-deploy'), $validation['error']),
-				['status' => 400]
-			);
+			$tempValidation = PathValidator::validatePath($fullPath, $tempDir, false);
+			if (!$tempValidation['valid']) {
+				return new WP_Error(
+					'invalid_path',
+					/* translators: %s: Validation error message */
+					\sprintf(\__('Invalid file path: %s', 'altolith-deploy'), $validation['error']),
+					['status' => 400]
+				);
+			}
 		}
 
 		// Verify file exists
@@ -279,10 +288,25 @@ class ExportStepsController
 		}
 
 		// Return file with appropriate headers
+		// WordPress REST API will serve binary data correctly when Content-Type is set
 		$response = new \WP_REST_Response($fileContent, 200);
 		$response->header('Content-Type', $contentType);
 		$response->header('Content-Disposition', 'attachment; filename="' . \basename($fullPath) . '"');
 		$response->header('Content-Length', \strlen($fileContent));
+		
+		// Prevent JSON encoding of binary data by using rest_pre_serve_request filter
+		\add_filter('rest_pre_serve_request', function($served, $result, $request, $server) use ($response, $fileContent, $contentType, $fullPath) {
+			// Only handle our export-file endpoint
+			if ($result === $response && \strpos($request->get_route(), '/export-file') !== false) {
+				// Send headers and binary content directly
+				\header('Content-Type: ' . $contentType);
+				\header('Content-Disposition: attachment; filename="' . \basename($fullPath) . '"');
+				\header('Content-Length: ' . \strlen($fileContent));
+				echo $fileContent;
+				return true; // Mark as served, prevent default handling
+			}
+			return $served;
+		}, 10, 4);
 
 		return $response;
 	}
