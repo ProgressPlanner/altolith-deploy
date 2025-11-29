@@ -19499,16 +19499,19 @@ const gatherFilesToDeploy_stepDefinition = {
 );
 ;// ./assets/src/export/steps/upload/index.js
 /**
- * Unified Upload Step
+ * Deploy Step
  *
- * Handles uploading both static files and blueprint bundles based on
- * provider output type configuration (enable_static_site, enable_blueprint).
+ * Handles deploying files to providers based on the filesToDeploy object
+ * from the gatherFilesToDeploy step. Supports both static site files
+ * and blueprint bundles.
  *
- * This unified step replaces the separate uploadStaticFiles and uploadBlueprintBundle steps.
+ * This step:
+ * 1. Consumes filesToDeploy from gatherFilesToDeploy
+ * 2. Replaces {targetUrl} placeholders with provider-specific public_url
+ * 3. Uploads files to the provider
  *
  * @since 1.0.0
  */
-
 
 
 
@@ -19519,47 +19522,59 @@ const gatherFilesToDeploy_stepDefinition = {
  * Status labels for the step
  */
 const upload_statusLabels = {
-  pending: (0,external_wp_i18n_namespaceObject.__)('Upload files', 'altolith-deploy'),
-  running: () => (0,external_wp_i18n_namespaceObject.__)('Uploading files…', 'altolith-deploy'),
-  complete: () => (0,external_wp_i18n_namespaceObject.__)('Files uploaded', 'altolith-deploy')
+  pending: (0,external_wp_i18n_namespaceObject.__)('Deploy files', 'altolith-deploy'),
+  running: () => (0,external_wp_i18n_namespaceObject.__)('Deploying files\u2026', 'altolith-deploy'),
+  complete: () => (0,external_wp_i18n_namespaceObject.__)('Files deployed', 'altolith-deploy')
 };
 
 /**
- * Upload static files for a provider
+ * Replace {targetUrl} placeholder in content
+ *
+ * @param {string} content   - Content with {targetUrl} placeholders
+ * @param {string} targetUrl - The provider's public URL
+ * @return {string} Content with placeholders replaced
+ */
+function replaceTargetUrlPlaceholder(content, targetUrl) {
+  if (typeof content !== 'string') {
+    return content;
+  }
+  // Apply filter to allow customizing URL replacement
+  const replacedContent = (0,external_wp_hooks_.applyFilters)('altolith.deploy.replaceTargetUrl', content.replace(/\{targetUrl\}/g, targetUrl), content, targetUrl);
+  return replacedContent;
+}
+
+/**
+ * Upload static files from filesToDeploy structure
  *
  * @param {Object} context        - Execution context
  * @param {Object} providerConfig - Provider configuration
+ * @param {Object} staticFiles    - Static files from filesToDeploy.staticSite
+ * @param {string} targetUrl      - Provider's public URL for URL replacement
  * @return {Promise<Object>} Upload result
  */
-async function uploadStaticFiles(context, providerConfig) {
+async function uploadStaticFilesFromGather(context, providerConfig, staticFiles, targetUrl) {
   const {
     currentProviderInstance,
-    urls,
     htmlDataMap,
-    staticSiteUrl,
     siteUrl,
     processStaticSiteUrls,
     setStatusMessage,
     updateStaticSiteProgressContext
   } = context;
-
-  // blueprintData is optional
-  const blueprintData = context.blueprintData || null;
   const providerId = currentProviderInstance.id;
   const providerLabel = currentProviderInstance.label || currentProviderInstance.id;
 
+  // Extract URLs from static files for processStaticSiteUrls
+  const urls = Object.values(staticFiles).filter(file => file.url).map(file => file.url);
+
   // Use provider-specific public_url if available
-  let providerSpecificStaticSiteUrl = staticSiteUrl;
-  if (providerConfig.public_url) {
-    providerSpecificStaticSiteUrl = providerConfig.public_url;
-  }
+  const providerSpecificStaticSiteUrl = providerConfig.public_url || targetUrl;
   setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Provider label */
-  (0,external_wp_i18n_namespaceObject.__)('Processing static site for %s…', 'altolith-deploy'), providerLabel), 'progress', 'upload');
+  (0,external_wp_i18n_namespaceObject.__)('Processing static site for %s\u2026', 'altolith-deploy'), providerLabel), 'progress', 'upload');
 
   // Filter URLs before processing
   const filteredUrls = (0,external_wp_hooks_.applyFilters)('altolith.export.step.upload.staticFiles.urls', urls, [providerId], {
     siteUrl,
-    blueprintData,
     staticSiteUrl: providerSpecificStaticSiteUrl,
     providerId
   });
@@ -19593,26 +19608,17 @@ async function uploadStaticFiles(context, providerConfig) {
 }
 
 /**
- * Upload individual blueprint files for a provider
- *
- * Uploads:
- * - blueprint.json (serialized from blueprintData)
- * - wp-content.zip (core content)
- * - plugins/{slug}.zip (for each custom plugin)
- * - themes/{slug}.zip (for each custom theme)
+ * Upload blueprint files from filesToDeploy structure
  *
  * @param {Object} context        - Execution context
  * @param {Object} providerConfig - Provider configuration
+ * @param {Object} blueprintFiles - Blueprint files from filesToDeploy.blueprint
+ * @param {string} targetUrl      - Provider's public URL for URL replacement
  * @return {Promise<Object>} Upload result
  */
-async function uploadBlueprintFiles(context, providerConfig) {
+async function uploadBlueprintFilesFromGather(context, providerConfig, blueprintFiles, targetUrl) {
   const {
     currentProviderInstance,
-    blueprintData,
-    coreContentZipPath,
-    pluginZips,
-    themeZips,
-    blueprintSubfolder: contextSubfolder,
     siteUrl,
     setStatusMessage,
     setStepProgress,
@@ -19621,20 +19627,8 @@ async function uploadBlueprintFiles(context, providerConfig) {
   const providerId = currentProviderInstance.id;
   const providerLabel = currentProviderInstance.label || currentProviderInstance.id;
 
-  // Get subfolder from provider config, falling back to context subfolder or default
-  const subfolder = providerConfig.blueprint_subfolder || contextSubfolder || 'playground';
-
   // Calculate total files to upload for progress tracking
-  const pluginCount = pluginZips ? Object.keys(pluginZips).length : 0;
-  const themeCount = themeZips ? Object.keys(themeZips).length : 0;
-  const totalBlueprintFiles = (coreContentZipPath ? 1 : 0) +
-  // wp-content.zip
-  pluginCount +
-  // plugin zips
-  themeCount + (
-  // theme zips
-  blueprintData ? 1 : 0); // blueprint.json
-
+  const totalBlueprintFiles = Object.keys(blueprintFiles).length;
   let uploadedCount = 0;
 
   // Helper to update progress
@@ -19648,7 +19642,7 @@ async function uploadBlueprintFiles(context, providerConfig) {
     if (setProviderProgress) {
       setProviderProgress(providerId, {
         stepId: 'upload',
-        stepLabel: 'Upload Files',
+        stepLabel: 'Deploy Files',
         progress: {
           current: uploadedCount,
           total: totalBlueprintFiles
@@ -19658,11 +19652,12 @@ async function uploadBlueprintFiles(context, providerConfig) {
     }
   };
   setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Provider label */
-  (0,external_wp_i18n_namespaceObject.__)('Uploading blueprint files to %s…', 'altolith-deploy'), providerLabel), 'progress', 'upload');
+  (0,external_wp_i18n_namespaceObject.__)('Uploading blueprint files to %s\u2026', 'altolith-deploy'), providerLabel), 'progress', 'upload');
 
-  // Build storage config and create storage service
+  // Find the first path to determine storage service (use any path)
+  const firstPath = Object.keys(blueprintFiles)[0];
   const storageConfig = buildStorageConfig(siteUrl, siteUrl, providerId);
-  const storageService = await createStorageService(`${subfolder}/blueprint.json`, storageConfig, providerId, providerConfig);
+  const storageService = await createStorageService(firstPath, storageConfig, providerId, providerConfig);
   if (!storageService) {
     throw new Error((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Provider label */
     (0,external_wp_i18n_namespaceObject.__)('Storage service not available for %s', 'altolith-deploy'), providerLabel));
@@ -19670,121 +19665,66 @@ async function uploadBlueprintFiles(context, providerConfig) {
   const uploadedFiles = [];
   let totalSize = 0;
 
-  // 1. Upload wp-content.zip
-  if (coreContentZipPath) {
-    const wpContentPath = `${subfolder}/wp-content.zip`;
-    setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Provider label */
-    (0,external_wp_i18n_namespaceObject.__)('Uploading wp-content.zip to %s…', 'altolith-deploy'), providerLabel), 'progress', 'upload');
-    const dummyBlob = new Blob([], {
-      type: 'application/zip'
-    });
-    const result = await storageService.upload(wpContentPath, dummyBlob, {
-      contentType: 'application/zip',
-      sourcePath: coreContentZipPath,
-      filePath: coreContentZipPath,
-      metadata: {
-        siteUrl
+  // Upload each file from blueprintFiles
+  for (const [relativePath, fileInfo] of Object.entries(blueprintFiles)) {
+    const {
+      type,
+      content,
+      sourcePath
+    } = fileInfo;
+    setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: File path, %2$s: Provider label */
+    (0,external_wp_i18n_namespaceObject.__)('Uploading %1$s to %2$s\u2026', 'altolith-deploy'), relativePath, providerLabel), 'progress', 'upload');
+    let uploadResult;
+    if (type === 'blueprint-json' && content) {
+      // Serialize JSON content with {targetUrl} replacement
+      let jsonString = JSON.stringify(content, null, 2);
+      jsonString = replaceTargetUrlPlaceholder(jsonString, targetUrl);
+      const jsonBlob = new Blob([jsonString], {
+        type: 'application/json'
+      });
+      uploadResult = await storageService.upload(relativePath, jsonBlob, {
+        contentType: 'application/json',
+        metadata: {
+          siteUrl
+        }
+      });
+      if (uploadResult.success) {
+        totalSize += jsonString.length;
       }
-    });
-    if (!result.success) {
-      throw new Error(result.error || (0,external_wp_i18n_namespaceObject.__)('Failed to upload wp-content.zip', 'altolith-deploy'));
-    }
-    uploadedFiles.push(wpContentPath);
-    totalSize += result.size || 0;
-    uploadedCount++;
-    updateProgress();
-  }
-
-  // 2. Upload plugin zips
-  if (pluginZips && Object.keys(pluginZips).length > 0) {
-    for (const [slug, zipPath] of Object.entries(pluginZips)) {
-      const pluginPath = `${subfolder}/plugins/${slug}.zip`;
-      setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Plugin slug, %2$s: Provider label */
-      (0,external_wp_i18n_namespaceObject.__)('Uploading plugin %1$s to %2$s…', 'altolith-deploy'), slug, providerLabel), 'progress', 'upload');
+    } else if (sourcePath) {
+      // Upload from source path (zip files)
       const dummyBlob = new Blob([], {
         type: 'application/zip'
       });
-      const result = await storageService.upload(pluginPath, dummyBlob, {
+      uploadResult = await storageService.upload(relativePath, dummyBlob, {
         contentType: 'application/zip',
-        sourcePath: zipPath,
-        filePath: zipPath,
+        sourcePath,
+        filePath: sourcePath,
         metadata: {
-          siteUrl,
-          slug
+          siteUrl
         }
       });
-      if (!result.success) {
-        // Log warning but continue - one plugin failure shouldn't stop everything
-        // eslint-disable-next-line no-console
-        console.warn(`Failed to upload plugin ${slug}:`, result.error);
-      } else {
-        uploadedFiles.push(pluginPath);
-        totalSize += result.size || 0;
-        uploadedCount++;
-        updateProgress();
+      if (uploadResult.success) {
+        totalSize += uploadResult.size || 0;
       }
+    } else {
+      // Skip files without content or sourcePath
+      // eslint-disable-next-line no-console
+      console.warn(`Skipping blueprint file ${relativePath}: no content or sourcePath`);
+      continue;
     }
-  }
-
-  // 3. Upload theme zips
-  if (themeZips && Object.keys(themeZips).length > 0) {
-    for (const [slug, zipPath] of Object.entries(themeZips)) {
-      const themePath = `${subfolder}/themes/${slug}.zip`;
-      setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Theme slug, %2$s: Provider label */
-      (0,external_wp_i18n_namespaceObject.__)('Uploading theme %1$s to %2$s…', 'altolith-deploy'), slug, providerLabel), 'progress', 'upload');
-      const dummyBlob = new Blob([], {
-        type: 'application/zip'
-      });
-      const result = await storageService.upload(themePath, dummyBlob, {
-        contentType: 'application/zip',
-        sourcePath: zipPath,
-        filePath: zipPath,
-        metadata: {
-          siteUrl,
-          slug
-        }
-      });
-      if (!result.success) {
-        // Log warning but continue
-        // eslint-disable-next-line no-console
-        console.warn(`Failed to upload theme ${slug}:`, result.error);
-      } else {
-        uploadedFiles.push(themePath);
-        totalSize += result.size || 0;
-        uploadedCount++;
-        updateProgress();
-      }
+    if (!uploadResult.success) {
+      // Log warning but continue - one file failure shouldn't stop everything
+      // eslint-disable-next-line no-console
+      console.warn(`Failed to upload ${relativePath}:`, uploadResult.error);
+    } else {
+      uploadedFiles.push(relativePath);
+      uploadedCount++;
+      updateProgress();
     }
-  }
-
-  // 4. Upload blueprint.json
-  if (blueprintData) {
-    const blueprintPath = `${subfolder}/blueprint.json`;
-    setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %s: Provider label */
-    (0,external_wp_i18n_namespaceObject.__)('Uploading blueprint.json to %s…', 'altolith-deploy'), providerLabel), 'progress', 'upload');
-
-    // Serialize blueprint data to JSON
-    const blueprintJson = JSON.stringify(blueprintData, null, 2);
-    const blueprintBlob = new Blob([blueprintJson], {
-      type: 'application/json'
-    });
-    const result = await storageService.upload(blueprintPath, blueprintBlob, {
-      contentType: 'application/json',
-      metadata: {
-        siteUrl
-      }
-    });
-    if (!result.success) {
-      throw new Error(result.error || (0,external_wp_i18n_namespaceObject.__)('Failed to upload blueprint.json', 'altolith-deploy'));
-    }
-    uploadedFiles.push(blueprintPath);
-    totalSize += blueprintJson.length;
-    uploadedCount++;
-    updateProgress();
   }
   return {
     success: true,
-    subfolder,
     uploadedFiles,
     totalSize,
     filesUploaded: uploadedFiles.length
@@ -19792,21 +19732,15 @@ async function uploadBlueprintFiles(context, providerConfig) {
 }
 
 /**
- * Unified upload step handler
+ * Deploy step handler
  *
  * Processes a single provider instance (thread context).
- * Uploads static files and/or individual blueprint files based on output type config.
+ * Deploys files from filesToDeploy to the provider.
  *
  * @param {Object}   context                         - Execution context
  * @param {Object}   context.currentProviderInstance - Current provider instance from thread
- * @param {Array}    context.urls                    - URLs from discoverAndScanSite
+ * @param {Object}   context.filesToDeploy           - Files to deploy from gatherFilesToDeploy
  * @param {Object}   context.htmlDataMap             - HTML data from discoverAndScanSite
- * @param {string}   context.staticSiteUrl           - Static site URL
- * @param {Object}   context.blueprintData           - Blueprint JSON data from createBlueprintBundle
- * @param {string}   context.coreContentZipPath      - Path to wp-content.zip
- * @param {Object}   context.pluginZips              - Plugin slug to zip path map
- * @param {Object}   context.themeZips               - Theme slug to zip path map
- * @param {string}   context.blueprintSubfolder      - Subfolder for blueprint files
  * @param {string}   context.siteUrl                 - WordPress site URL
  * @param {Function} context.processStaticSiteUrls   - Static site generator function
  * @param {Function} context.setStatusMessage        - Status message updater
@@ -19816,28 +19750,35 @@ async function uploadBlueprintFiles(context, providerConfig) {
 async function upload_handler(context) {
   const {
     currentProviderInstance,
-    urls,
-    blueprintData,
+    filesToDeploy,
     setStatusMessage,
     setStepProgress
   } = context;
   if (!currentProviderInstance) {
     throw new Error((0,external_wp_i18n_namespaceObject.__)('Provider instance not found in thread context', 'altolith-deploy'));
   }
+  if (!filesToDeploy) {
+    throw new Error((0,external_wp_i18n_namespaceObject.__)('Files to deploy not found. Please run gatherFilesToDeploy first.', 'altolith-deploy'));
+  }
   const providerId = currentProviderInstance.id;
   const providerLabel = currentProviderInstance.label || currentProviderInstance.id;
 
-  // Get enabled output types from global settings
-  const enabledOutputTypes = getEnabledOutputTypes();
-  const willUploadStatic = enabledOutputTypes.includes('static_site');
-  const willUploadBlueprint = enabledOutputTypes.includes('blueprint');
+  // Fetch provider config to get public_url for {targetUrl} replacement
+  const providerConfig = await fetchProviderConfig(providerId);
+  const targetUrl = providerConfig.public_url || '';
+
+  // Count files in each category
+  const staticFiles = filesToDeploy.staticSite || {};
+  const blueprintFiles = filesToDeploy.blueprint || {};
+  const staticFileCount = Object.keys(staticFiles).length;
+  const blueprintFileCount = Object.keys(blueprintFiles).length;
 
   // Calculate total tasks for progress
   let totalTasks = 0;
-  if (willUploadStatic) {
+  if (staticFileCount > 0) {
     totalTasks++;
   }
-  if (willUploadBlueprint) {
+  if (blueprintFileCount > 0) {
     totalTasks++;
   }
 
@@ -19851,23 +19792,20 @@ async function upload_handler(context) {
       }
     });
   }
-
-  // Fetch provider config once
-  const providerConfig = await fetchProviderConfig(providerId);
   const results = {
     providerId,
     providerLabel,
     staticUploadResults: null,
-    blueprintUploadResults: null
+    blueprintUploadResults: null,
+    targetUrl
   };
   let completedTasks = 0;
 
-  // Upload static files if enabled
-  if (willUploadStatic) {
-    if (!urls || !Array.isArray(urls)) {
-      throw new Error((0,external_wp_i18n_namespaceObject.__)('URLs not found. Please run discoverAndScanSite first.', 'altolith-deploy'));
-    }
-    results.staticUploadResults = await uploadStaticFiles(context, providerConfig);
+  // Upload static files if any
+  if (staticFileCount > 0) {
+    // For static files, use the existing processStaticSiteUrls function
+    // but pass in the files from filesToDeploy
+    results.staticUploadResults = await uploadStaticFilesFromGather(context, providerConfig, staticFiles, targetUrl);
     completedTasks++;
     if (setStepProgress) {
       setStepProgress('upload', {
@@ -19882,12 +19820,9 @@ async function upload_handler(context) {
     (0,external_wp_i18n_namespaceObject.__)('Uploaded %2$d static files to %1$s', 'altolith-deploy'), providerLabel, results.staticUploadResults.filesUploaded), 'success', 'upload');
   }
 
-  // Upload individual blueprint files if enabled
-  if (willUploadBlueprint) {
-    if (!blueprintData) {
-      throw new Error((0,external_wp_i18n_namespaceObject.__)('Blueprint data not found. Please run createBlueprintBundle first.', 'altolith-deploy'));
-    }
-    results.blueprintUploadResults = await uploadBlueprintFiles(context, providerConfig);
+  // Upload blueprint files if any
+  if (blueprintFileCount > 0) {
+    results.blueprintUploadResults = await uploadBlueprintFilesFromGather(context, providerConfig, blueprintFiles, targetUrl);
     completedTasks++;
     if (setStepProgress) {
       setStepProgress('upload', {
@@ -19904,14 +19839,18 @@ async function upload_handler(context) {
 
   // Final success message
   const uploadedTypes = [];
-  if (willUploadStatic) {
+  if (staticFileCount > 0) {
     uploadedTypes.push((0,external_wp_i18n_namespaceObject.__)('static files', 'altolith-deploy'));
   }
-  if (willUploadBlueprint) {
+  if (blueprintFileCount > 0) {
     uploadedTypes.push((0,external_wp_i18n_namespaceObject.__)('blueprint', 'altolith-deploy'));
   }
-  setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Upload types, %2$s: Provider label */
-  (0,external_wp_i18n_namespaceObject.__)('Uploaded %1$s to %2$s', 'altolith-deploy'), uploadedTypes.join((0,external_wp_i18n_namespaceObject.__)(' and ', 'altolith-deploy')), providerLabel), 'success', 'upload');
+  if (uploadedTypes.length > 0) {
+    setStatusMessage((0,external_wp_i18n_namespaceObject.sprintf)(/* translators: %1$s: Upload types, %2$s: Provider label */
+    (0,external_wp_i18n_namespaceObject.__)('Deployed %1$s to %2$s', 'altolith-deploy'), uploadedTypes.join((0,external_wp_i18n_namespaceObject.__)(' and ', 'altolith-deploy')), providerLabel), 'success', 'upload');
+  } else {
+    setStatusMessage((0,external_wp_i18n_namespaceObject.__)('No files to deploy', 'altolith-deploy'), 'success', 'upload');
+  }
   return (0,external_wp_hooks_.applyFilters)('altolith.export.step.upload.result', {
     uploadResults: results
   });
@@ -19922,42 +19861,17 @@ async function upload_handler(context) {
  */
 const upload_stepDefinition = {
   id: 'upload',
-  label: (0,external_wp_i18n_namespaceObject.__)('Upload Files', 'altolith-deploy'),
-  description: (0,external_wp_i18n_namespaceObject.__)('Upload static files and blueprint bundles to providers', 'altolith-deploy'),
+  label: (0,external_wp_i18n_namespaceObject.__)('Deploy Files', 'altolith-deploy'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Deploy static files and blueprint bundles to providers', 'altolith-deploy'),
   supportsProgress: true,
-  dependencies: ['discoverAndScanSite', 'createBlueprintBundle'],
+  dependencies: ['gatherFilesToDeploy'],
   requires: {
     currentProviderInstance: 'thread',
-    urls: {
-      from: 'discoverAndScanSite',
-      optional: true
+    filesToDeploy: {
+      from: 'gatherFilesToDeploy'
     },
     htmlDataMap: {
       from: 'discoverAndScanSite',
-      optional: true
-    },
-    staticSiteUrl: {
-      from: 'discoverAndScanSite',
-      optional: true
-    },
-    blueprintData: {
-      from: 'createBlueprintBundle',
-      optional: true
-    },
-    coreContentZipPath: {
-      from: 'createBlueprintBundle',
-      optional: true
-    },
-    pluginZips: {
-      from: 'createBlueprintBundle',
-      optional: true
-    },
-    themeZips: {
-      from: 'createBlueprintBundle',
-      optional: true
-    },
-    blueprintSubfolder: {
-      from: 'createBlueprintBundle',
       optional: true
     },
     siteUrl: true,

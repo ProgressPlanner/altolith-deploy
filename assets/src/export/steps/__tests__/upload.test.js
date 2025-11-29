@@ -1,8 +1,8 @@
 /**
- * Tests for unified upload step
+ * Tests for deploy step (formerly upload)
  *
- * Tests the upload step that handles both static files and blueprint bundles
- * based on provider output type configuration.
+ * Tests the deploy step that handles deploying files from gatherFilesToDeploy
+ * to providers. Includes static files and blueprint bundles.
  */
 
 // Mock WordPress dependencies
@@ -25,11 +25,6 @@ jest.mock( '@wordpress/hooks', () => ( {
 	applyFilters: jest.fn( ( hook, value ) => value ),
 } ) );
 
-// Mock outputTypes - new architecture with global settings
-jest.mock( '@altolith/utils/outputTypes', () => ( {
-	getEnabledOutputTypes: jest.fn( () => [ 'static_site', 'blueprint' ] ),
-} ) );
-
 // Mock staticSiteConfig
 jest.mock( '@altolith/export/utils/staticSiteConfig', () => ( {
 	fetchProviderConfig: jest.fn().mockResolvedValue( {
@@ -48,10 +43,8 @@ jest.mock( '../../utils/helpers', () => ( {
 } ) );
 
 import { addAction } from '@wordpress/hooks';
-// Import the mocked module to control return values
-const { getEnabledOutputTypes } = require( '@altolith/utils/outputTypes' );
 
-describe( 'upload step', () => {
+describe( 'deploy step (upload)', () => {
 	let stepDefinition;
 
 	beforeEach( () => {
@@ -82,20 +75,24 @@ describe( 'upload step', () => {
 		} );
 
 		it( 'should have correct label', () => {
-			expect( stepDefinition.label ).toBe( 'Upload Files' );
+			expect( stepDefinition.label ).toBe( 'Deploy Files' );
 		} );
 
 		it( 'should support progress', () => {
 			expect( stepDefinition.supportsProgress ).toBe( true );
 		} );
 
-		it( 'should depend on discoverAndScanSite and createBlueprintBundle', () => {
+		it( 'should depend on gatherFilesToDeploy', () => {
 			expect( stepDefinition.dependencies ).toContain(
-				'discoverAndScanSite'
+				'gatherFilesToDeploy'
 			);
-			expect( stepDefinition.dependencies ).toContain(
-				'createBlueprintBundle'
-			);
+			expect( stepDefinition.dependencies ).toHaveLength( 1 );
+		} );
+
+		it( 'should require filesToDeploy from gatherFilesToDeploy', () => {
+			expect( stepDefinition.requires.filesToDeploy ).toEqual( {
+				from: 'gatherFilesToDeploy',
+			} );
 		} );
 
 		it( 'should provide uploadResults', () => {
@@ -118,10 +115,7 @@ describe( 'upload step', () => {
 			);
 		} );
 
-		it( 'should throw error when static_site enabled but urls missing', async () => {
-			// Mock only static_site enabled
-			getEnabledOutputTypes.mockReturnValue( [ 'static_site' ] );
-
+		it( 'should throw error when filesToDeploy is missing', async () => {
 			const context = {
 				currentProviderInstance: {
 					id: 'test:123',
@@ -133,26 +127,35 @@ describe( 'upload step', () => {
 			};
 
 			await expect( stepDefinition.handler( context ) ).rejects.toThrow(
-				'URLs not found'
+				'Files to deploy not found'
 			);
 		} );
 
-		it( 'should throw error when blueprint enabled but data missing', async () => {
-			// Mock only blueprint enabled
-			getEnabledOutputTypes.mockReturnValue( [ 'blueprint' ] );
-
+		it( 'should handle empty filesToDeploy gracefully', async () => {
 			const context = {
 				currentProviderInstance: {
 					id: 'test:123',
 					label: 'Test Provider',
 					config: {},
 				},
+				filesToDeploy: {
+					staticSite: {},
+					blueprint: {},
+				},
+				siteUrl: 'https://example.com',
 				setStatusMessage: jest.fn(),
 				setStepProgress: jest.fn(),
 			};
 
-			await expect( stepDefinition.handler( context ) ).rejects.toThrow(
-				'Blueprint data not found'
+			const result = await stepDefinition.handler( context );
+
+			expect( result.uploadResults ).toBeDefined();
+			expect( result.uploadResults.staticUploadResults ).toBeNull();
+			expect( result.uploadResults.blueprintUploadResults ).toBeNull();
+			expect( context.setStatusMessage ).toHaveBeenCalledWith(
+				'No files to deploy',
+				'success',
+				'upload'
 			);
 		} );
 	} );
@@ -160,7 +163,7 @@ describe( 'upload step', () => {
 	describe( 'statusLabels', () => {
 		it( 'should have pending label', () => {
 			expect( stepDefinition.statusLabels.pending ).toBe(
-				'Upload files'
+				'Deploy files'
 			);
 		} );
 
@@ -168,8 +171,8 @@ describe( 'upload step', () => {
 			expect( typeof stepDefinition.statusLabels.running ).toBe(
 				'function'
 			);
-			expect( stepDefinition.statusLabels.running() ).toBe(
-				'Uploading files…'
+			expect( stepDefinition.statusLabels.running() ).toContain(
+				'Deploying'
 			);
 		} );
 
@@ -177,8 +180,8 @@ describe( 'upload step', () => {
 			expect( typeof stepDefinition.statusLabels.complete ).toBe(
 				'function'
 			);
-			expect( stepDefinition.statusLabels.complete() ).toBe(
-				'Files uploaded'
+			expect( stepDefinition.statusLabels.complete() ).toContain(
+				'deployed'
 			);
 		} );
 	} );
