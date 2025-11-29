@@ -14,6 +14,7 @@ const mockSteps = [
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
+		deploymentType: 'static_site',
 	},
 	{
 		id: 'prepareBlueprint',
@@ -21,6 +22,7 @@ const mockSteps = [
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
+		deploymentType: 'blueprint',
 	},
 	{
 		id: 'gatherFilesToDeploy',
@@ -28,6 +30,7 @@ const mockSteps = [
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
+		// No deploymentType - should show if ANY output type is enabled
 	},
 	{
 		id: 'deploy',
@@ -35,6 +38,7 @@ const mockSteps = [
 		handler: jest.fn(),
 		requires: {},
 		provides: {},
+		// No deploymentType - should show if ANY output type is enabled
 	},
 ];
 
@@ -73,8 +77,18 @@ jest.mock( '../prepareBlueprint', () => {} );
 jest.mock( '../gatherFilesToDeploy', () => {} );
 jest.mock( '../deploy', () => {} );
 
+// Mock outputTypes utility
+const mockGetEnabledOutputTypes = jest.fn( () => [ 'static_site', 'blueprint' ] );
+jest.mock( '@altolith/utils/outputTypes', () => ( {
+	getEnabledOutputTypes: mockGetEnabledOutputTypes,
+} ) );
+
 // Import after mocks are set up
-import { getRegisteredSteps, getActiveSteps } from '../index';
+import {
+	getRegisteredSteps,
+	getActiveSteps,
+	getStepsForUI,
+} from '../index';
 
 describe( 'Steps Index', () => {
 	let registry;
@@ -128,77 +142,145 @@ describe( 'Steps Index', () => {
 		} );
 	} );
 
+	describe( 'getStepsForUI', () => {
+		beforeEach( () => {
+			mockGetEnabledOutputTypes.mockReturnValue( [
+				'static_site',
+				'blueprint',
+			] );
+		} );
+
+		test( 'should return all steps when both output types are enabled', () => {
+			const steps = getStepsForUI();
+
+			expect( steps ).toHaveLength( 4 );
+			expect( steps.map( ( s ) => s.id ) ).toContain(
+				'discoverAndScanSite'
+			);
+			expect( steps.map( ( s ) => s.id ) ).toContain( 'prepareBlueprint' );
+			expect( steps.map( ( s ) => s.id ) ).toContain(
+				'gatherFilesToDeploy'
+			);
+			expect( steps.map( ( s ) => s.id ) ).toContain( 'deploy' );
+		} );
+
+		test( 'should filter out static_site step when only blueprint is enabled', () => {
+			mockGetEnabledOutputTypes.mockReturnValue( [ 'blueprint' ] );
+
+			const steps = getStepsForUI();
+
+			expect( steps.map( ( s ) => s.id ) ).not.toContain(
+				'discoverAndScanSite'
+			);
+			expect( steps.map( ( s ) => s.id ) ).toContain( 'prepareBlueprint' );
+			expect( steps.map( ( s ) => s.id ) ).toContain(
+				'gatherFilesToDeploy'
+			);
+			expect( steps.map( ( s ) => s.id ) ).toContain( 'deploy' );
+		} );
+
+		test( 'should filter out blueprint step when only static_site is enabled', () => {
+			mockGetEnabledOutputTypes.mockReturnValue( [ 'static_site' ] );
+
+			const steps = getStepsForUI();
+
+			expect( steps.map( ( s ) => s.id ) ).toContain(
+				'discoverAndScanSite'
+			);
+			expect( steps.map( ( s ) => s.id ) ).not.toContain(
+				'prepareBlueprint'
+			);
+			expect( steps.map( ( s ) => s.id ) ).toContain(
+				'gatherFilesToDeploy'
+			);
+			expect( steps.map( ( s ) => s.id ) ).toContain( 'deploy' );
+		} );
+
+		test( 'should return empty array when no output types are enabled', () => {
+			mockGetEnabledOutputTypes.mockReturnValue( [] );
+
+			const steps = getStepsForUI();
+
+			expect( steps ).toHaveLength( 0 );
+		} );
+	} );
+
 	describe( 'getActiveSteps', () => {
-		// Steps are registered via the mocked doAction hook
-		// Note: With unified provider architecture, steps no longer have deploymentType
-		// and instead use shouldSkip functions based on output type config
+		beforeEach( () => {
+			mockGetEnabledOutputTypes.mockReturnValue( [
+				'static_site',
+				'blueprint',
+			] );
+		} );
 
-		test( 'should include all steps when no shouldSkip filter rejects them', () => {
-			const context = {};
+		test( 'should filter steps by enabled output types and provider instances', () => {
+			const context = {
+				providerInstancesByType: {
+					static_site: [ { id: 'provider1' } ],
+					blueprint: [ { id: 'provider2' } ],
+				},
+			};
 
 			const steps = getActiveSteps( context );
 
-			// Mock steps don't have deploymentType or shouldSkip, so all should be included
+			// All steps should be included when both types are enabled and have providers
 			expect( steps ).toHaveLength( 4 );
 		} );
 
-		test( 'should call shouldSkip function when present', () => {
-			const context = {};
+		test( 'should filter out static_site step when not enabled', () => {
+			mockGetEnabledOutputTypes.mockReturnValue( [ 'blueprint' ] );
+			const context = {
+				providerInstancesByType: {
+					blueprint: [ { id: 'provider2' } ],
+				},
+			};
 
 			const steps = getActiveSteps( context );
 
-			// The mock steps don't have shouldSkip, so we verify the filter logic
-			// works by checking all steps are included
-			expect( steps ).toHaveLength( 4 );
-
-			// Test the shouldSkip filter logic manually on a step array
-			const stepsWithSkip = [
-				...mockSteps,
-				{
-					id: 'skipMe',
-					label: 'Skip Me',
-					handler: jest.fn(),
-					requires: {},
-					provides: {},
-					shouldSkip: () => true,
-				},
-			];
-
-			// Filter manually using the same logic as getActiveSteps
-			const filtered = stepsWithSkip.filter( ( step ) => {
-				if ( typeof step.shouldSkip === 'function' ) {
-					return ! step.shouldSkip( context );
-				}
-				return true;
-			} );
-
-			expect( filtered.map( ( s ) => s.id ) ).not.toContain( 'skipMe' );
+			expect( steps.map( ( s ) => s.id ) ).not.toContain(
+				'discoverAndScanSite'
+			);
+			expect( steps.map( ( s ) => s.id ) ).toContain( 'prepareBlueprint' );
 		} );
 
-		test( 'should include step when shouldSkip returns false', () => {
-			const context = {};
-
-			// Test the shouldSkip filter logic manually
-			const stepsWithSkip = [
-				{
-					id: 'includeMe',
-					label: 'Include Me',
-					handler: jest.fn(),
-					requires: {},
-					provides: {},
-					shouldSkip: () => false,
+		test( 'should filter out steps when no provider instances exist', () => {
+			const context = {
+				providerInstancesByType: {
+					static_site: [],
+					blueprint: [],
 				},
-			];
+			};
 
-			// Filter manually using the same logic as getActiveSteps
-			const filtered = stepsWithSkip.filter( ( step ) => {
-				if ( typeof step.shouldSkip === 'function' ) {
-					return ! step.shouldSkip( context );
-				}
-				return true;
-			} );
+			const steps = getActiveSteps( context );
 
-			expect( filtered.map( ( s ) => s.id ) ).toContain( 'includeMe' );
+			// Steps with deploymentType should be filtered out when no providers
+			expect( steps.map( ( s ) => s.id ) ).not.toContain(
+				'discoverAndScanSite'
+			);
+			expect( steps.map( ( s ) => s.id ) ).not.toContain(
+				'prepareBlueprint'
+			);
+			// Steps without deploymentType should also be filtered out
+			expect( steps ).toHaveLength( 0 );
+		} );
+
+		test( 'should include steps without deploymentType when any output type has providers', () => {
+			const context = {
+				providerInstancesByType: {
+					static_site: [ { id: 'provider1' } ],
+					blueprint: [],
+				},
+			};
+
+			const steps = getActiveSteps( context );
+
+			expect( steps.map( ( s ) => s.id ) ).toContain(
+				'discoverAndScanSite'
+			);
+			expect( steps.map( ( s ) => s.id ) ).toContain(
+				'gatherFilesToDeploy'
+			);
+			expect( steps.map( ( s ) => s.id ) ).toContain( 'deploy' );
 		} );
 	} );
 } );
