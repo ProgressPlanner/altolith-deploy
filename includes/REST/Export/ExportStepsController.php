@@ -12,6 +12,7 @@ namespace Altolith\Deploy\REST\Export;
 
 use Altolith\Deploy\REST\RESTHelpersTrait;
 use Altolith\Deploy\Services\ExportService;
+use Altolith\Deploy\Utilities\PathValidator;
 use WP_REST_Request;
 use WP_Error;
 
@@ -59,6 +60,24 @@ class ExportStepsController
 				'methods'             => 'POST',
 				'callback'            => [ $this, 'exportTheme' ],
 				'permission_callback' => [ $this, 'permissionCheck' ],
+			]
+		);
+
+		// Serve export file by path (for R2 and other cloud providers).
+		\register_rest_route(
+			$this->getNamespace(),
+			'/export-file',
+			[
+				'methods'             => 'GET',
+				'callback'            => [ $this, 'serveExportFile' ],
+				'permission_callback' => [ $this, 'permissionCheck' ],
+				'args'                => [
+					'path' => [
+						'required' => true,
+						'type'     => 'string',
+						'validate_callback' => [ $this, 'validateFilePath' ],
+					],
+				],
 			]
 		);
 	}
@@ -195,5 +214,96 @@ class ExportStepsController
 			'success' => true,
 			'data' => $result,
 		]);
+	}
+
+	/**
+	 * Serve an export file by path.
+	 *
+	 * This endpoint allows cloud providers (like R2) to fetch export files
+	 * that are stored locally on the server.
+	 *
+	 * @param WP_REST_Request $request Request object with 'path' parameter.
+	 * @return \WP_REST_Response|WP_Error File response or error.
+	 */
+	public function serveExportFile(WP_REST_Request $request)
+	{
+		$path = $request->get_param('path');
+
+		if (empty($path)) {
+			return new WP_Error(
+				'missing_path',
+				\__('File path is required.', 'altolith-deploy'),
+				['status' => 400]
+			);
+		}
+
+		// Determine if path is absolute or relative
+		$fullPath = $path;
+		if (!\preg_match('#^[/\\\\]#', $path) && !\preg_match('#^[A-Za-z]:[/\\\\]#', $path)) {
+			// Relative path - assume it's relative to WordPress temp directory or ABSPATH
+			$fullPath = \get_temp_dir() . \ltrim($path, '/');
+		}
+
+		// Security: Validate path to prevent path traversal attacks
+		$validation = PathValidator::validatePath($fullPath, \ABSPATH, false);
+		if (!$validation['valid']) {
+			return new WP_Error(
+				'invalid_path',
+				/* translators: %s: Validation error message */
+				\sprintf(\__('Invalid file path: %s', 'altolith-deploy'), $validation['error']),
+				['status' => 400]
+			);
+		}
+
+		// Verify file exists
+		if (!\file_exists($fullPath) || !\is_file($fullPath)) {
+			return new WP_Error(
+				'file_not_found',
+				\__('Export file not found.', 'altolith-deploy'),
+				['status' => 404]
+			);
+		}
+
+		// Get file MIME type
+		$mimeType = \wp_check_filetype($fullPath);
+		$contentType = $mimeType['type'] ?: 'application/octet-stream';
+
+		// Read and serve file
+		$fileContent = \file_get_contents($fullPath);
+		if ($fileContent === false) {
+			return new WP_Error(
+				'read_failed',
+				\__('Failed to read export file.', 'altolith-deploy'),
+				['status' => 500]
+			);
+		}
+
+		// Return file with appropriate headers
+		$response = new \WP_REST_Response($fileContent, 200);
+		$response->header('Content-Type', $contentType);
+		$response->header('Content-Disposition', 'attachment; filename="' . \basename($fullPath) . '"');
+		$response->header('Content-Length', \strlen($fileContent));
+
+		return $response;
+	}
+
+	/**
+	 * Validate file path parameter.
+	 *
+	 * @param string $path File path to validate.
+	 * @return bool True if valid, false otherwise.
+	 */
+	public function validateFilePath($path)
+	{
+		if (empty($path) || !\is_string($path)) {
+			return false;
+		}
+
+		// Basic validation - no path traversal
+		if (\preg_match('#(^|/|\\\\)\.\.($|/|\\\\)#', $path)) {
+			return false;
+		}
+
+		return true;
 	}
 }
