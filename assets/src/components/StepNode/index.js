@@ -197,13 +197,19 @@ function getProvidersForStep( stepId, providerProgress, providerInstances ) {
 				return null;
 			}
 
-			// Calculate percentage
+			// Calculate percentage (clamp to 0-100 range)
 			const percent =
 				progress.progress?.total > 0
-					? Math.round(
-							( progress.progress.current /
-								progress.progress.total ) *
-								100
+					? Math.min(
+							100,
+							Math.max(
+								0,
+								Math.round(
+									( progress.progress.current /
+										progress.progress.total ) *
+										100
+								)
+							)
 					  )
 					: 0;
 
@@ -218,6 +224,28 @@ function getProvidersForStep( stepId, providerProgress, providerInstances ) {
 }
 
 /**
+ * Calculate progress percentage from progress object
+ *
+ * @param {Object} progress Progress object with current and total
+ * @return {number|null} Percentage (0-100) or null if invalid
+ */
+function calculateProgressPercentage( progress ) {
+	if ( ! progress || typeof progress.total !== 'number' || progress.total <= 0 ) {
+		return null;
+	}
+	// Clamp percentage to 0-100 range
+	const percent = Math.round( ( progress.current / progress.total ) * 100 );
+	return Math.min( 100, Math.max( 0, percent ) );
+}
+
+const progressTextStyle = {
+	fontSize: fontSize.xs,
+	color: colors.textMuted,
+	marginLeft: spacing.xs,
+	fontWeight: fontWeight.normal,
+};
+
+/**
  * StepNode Component
  *
  * @param {Object}      props                   Component props
@@ -227,6 +255,8 @@ function getProvidersForStep( stepId, providerProgress, providerInstances ) {
  * @param {Object|null} props.statusLabels      Status label definitions { pending, running, complete }
  * @param {Object}      props.statusData        Dynamic data for label interpolation
  * @param {string}      props.stepId            Step ID for provider filtering
+ * @param {boolean}     props.supportsProgress   Whether step supports progress tracking
+ * @param {Object}      props.progress           Progress object with current and total
  * @param {Object}      props.providerProgress  Provider progress object from context
  * @param {Array}       props.providerInstances Provider instances array from context
  * @return {JSX.Element} StepNode component
@@ -238,6 +268,8 @@ export function StepNode( {
 	statusLabels,
 	statusData,
 	stepId,
+	supportsProgress,
+	progress,
 	providerProgress,
 	providerInstances,
 } ) {
@@ -251,11 +283,33 @@ export function StepNode( {
 		statusData
 	);
 
-	// Get providers for this step (only for thread steps)
-	const isThreadStep = THREAD_STEP_IDS.includes( stepId );
-	const stepProviders = isThreadStep
-		? getProvidersForStep( stepId, providerProgress, providerInstances )
-		: [];
+	// Get providers for this step (check any step that has provider progress, not just hardcoded thread steps)
+	const stepProviders = getProvidersForStep(
+		stepId,
+		providerProgress,
+		providerInstances
+	);
+
+	// Calculate overall step progress percentage
+	// Show progress for active steps, and for complete steps if progress data exists
+	const stepProgressPercent =
+		supportsProgress &&
+		( status === 'active' || status === 'complete' ) &&
+		progress
+			? calculateProgressPercentage( progress )
+			: null;
+
+	// Build progress display text
+	let progressText = null;
+	if ( stepProviders.length > 0 ) {
+		// Show per-provider progress for multi-thread steps
+		progressText = stepProviders
+			.map( ( provider ) => `${ provider.label }: ${ provider.progress }%` )
+			.join( ', ' );
+	} else if ( stepProgressPercent !== null ) {
+		// Show overall step progress for single-thread steps
+		progressText = `${ stepProgressPercent }%`;
+	}
 
 	return (
 		<div
@@ -276,7 +330,16 @@ export function StepNode( {
 			>
 				{ displayLabel }
 			</span>
-			{ stepProviders.length > 0 && (
+			{ progressText && (
+				<span
+					className="altolith-step-node__progress"
+					style={ progressTextStyle }
+				>
+					{ progressText }
+				</span>
+			) }
+			{ /* Show pills only for legacy thread steps when no progress text is shown */ }
+			{ stepProviders.length > 0 && ! progressText && THREAD_STEP_IDS.includes( stepId ) && (
 				<span
 					className="altolith-step-node__providers"
 					style={ {

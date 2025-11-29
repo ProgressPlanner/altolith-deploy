@@ -57,6 +57,8 @@ export function VerticalStepper( {
 							statusLabels={ step.statusLabels }
 							statusData={ step.statusData }
 							stepId={ step.id }
+							supportsProgress={ step.supportsProgress }
+							progress={ step.progress }
 							providerProgress={ providerProgress }
 							providerInstances={ providerInstances }
 						/>
