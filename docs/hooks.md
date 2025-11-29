@@ -285,35 +285,6 @@ Fires when a specific workflow step fails.
 
 ---
 
-#### `altolith.export.step.{stepId}.skip`
-
-**Type**: Filter
-**Location**: `StepExecutor.js:162`
-
-Determines whether a specific workflow step should be skipped.
-
-**Parameters**:
-- `shouldSkip` (boolean): Whether step should be skipped
-- `executionContext` (Object): Execution context
-- `providerInstance` (Object|null): Current provider instance
-
-**Returns**: Boolean
-
----
-
-#### `altolith.export.step.{stepId}.skipped`
-
-**Type**: Action
-**Location**: `StepExecutor.js:172`
-
-Fires when a specific workflow step is skipped.
-
-**Parameters**:
-- `executionContext` (Object): Execution context
-- `providerInstance` (Object|null): Current provider instance
-
----
-
 #### `altolith.export.step.{stepId}.retry`
 
 **Type**: Action
@@ -588,76 +559,16 @@ Allows providing a custom StorageService instance.
 
 ### Blueprint Generation
 
-#### `altolith.export.step.createBlueprintBundle.assets`
+#### `altolith.export.step.prepareBlueprint.blueprintData`
 
 **Type**: Filter
-**Location**: `assets/src/export/hooks/useBlueprintGenerator.js:76`
-
-Filters discovered WordPress.org assets before blueprint generation.
-
-**Parameters**:
-- `assets` (Object): Discovered assets with `plugins` and `themes` arrays
-- `assetsResponse` (Object): Full asset discovery response
-
-**Returns**: Modified assets object
-
----
-
-#### `altolith.export.step.createBlueprintBundle.generated`
-
-**Type**: Filter
-**Location**: `assets/src/export/hooks/useBlueprintGenerator.js:174`
-
-Filters final generated blueprint before deployment.
-
-**Parameters**:
-- `blueprint` (Object): Complete blueprint JSON object
-- `wporgPlugins` (Array): WordPress.org plugin slugs
-- `wporgThemes` (Array): WordPress.org theme slugs
-
-**Returns**: Modified blueprint object
-
----
-
-#### `altolith.export.step.createBlueprintBundle.steps`
-
-**Type**: Filter
-**Location**: `assets/src/export/utils/blueprintStepBuilders.js:116`
-
-Filters blueprint steps array before final JSON generation.
-
-**Parameters**:
-- `steps` (Array): Blueprint steps array
-- `config` (Object): Configuration object
-
-**Returns**: Modified steps array
-
----
-
-#### `altolith.export.step.createBlueprintBundle.json`
-
-**Type**: Filter
-**Location**: `assets/src/export/utils/blueprintStepBuilders.js:170`
-
-Filters complete blueprint JSON object.
-
-**Parameters**:
-- `blueprint` (Object): Complete blueprint JSON
-- `steps` (Array): Blueprint steps array
-
-**Returns**: Modified blueprint object
-
----
-
-#### `altolith.export.step.createBlueprintBundle.blueprintData`
-
-**Type**: Filter
-**Location**: `assets/src/export/steps/createBlueprintBundle/index.js:213`
+**Location**: `assets/src/export/steps/prepareBlueprint/index.js:147`
 
 Filters blueprint data before returning from step.
 
 **Parameters**:
 - `blueprintData` (Object): Blueprint data object
+- `context` (Object): Execution context
 
 **Returns**: Modified blueprint data
 
@@ -1188,7 +1099,7 @@ addFilter('altolith.assets.extracted', 'my-plugin', (assets) => {
 ```javascript
 import { addFilter } from '@wordpress/hooks';
 
-addFilter('altolith.export.step.createBlueprintBundle.json', 'my-plugin', (blueprint) => {
+addFilter('altolith.export.step.prepareBlueprint.blueprintData', 'my-plugin', (blueprint) => {
     blueprint.landingPage = '/wp-admin/';
     blueprint.preferredVersions.php = '8.2';
     return blueprint;

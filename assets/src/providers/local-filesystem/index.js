@@ -80,3 +80,37 @@ addFilter(
 	},
 	10
 );
+
+/**
+ * Register blueprint path filter for local-filesystem provider.
+ *
+ * Uses the blueprint_subfolder config field if available, otherwise returns
+ * the default path unchanged.
+ */
+addFilter(
+	'altolith.blueprint.path',
+	'altolith/local-filesystem',
+	( path, providerConfig, providerId ) => {
+		// Only handle this provider type
+		if ( ! providerId?.startsWith( 'local-filesystem' ) ) {
+			return path;
+		}
+
+		// Skip if this is an old provider ID format
+		if (
+			providerId?.startsWith( 'local-filesystem-static-site' ) ||
+			providerId?.startsWith( 'local-filesystem-blueprint-bundle' )
+		) {
+			return path;
+		}
+
+		// Use blueprint_subfolder from config if available
+		if ( providerConfig?.blueprint_subfolder ) {
+			return providerConfig.blueprint_subfolder;
+		}
+
+		// Return default path unchanged
+		return path;
+	},
+	10
+);

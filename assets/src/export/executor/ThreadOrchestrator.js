@@ -366,11 +366,14 @@ export async function executeThreadedWorkflow(
 	if ( globalSteps.length > 0 ) {
 		// executeSteps returns the execution state directly
 		// Pass all callbacks for global steps (they complete normally)
-		globalState = await executeSteps(
-			globalSteps,
-			initialContext,
-			options
-		);
+		// Pass allSteps (global + thread) for dependency validation.
+		// This allows steps to declare dependencies on steps that may be filtered
+		// out by deploymentType - validation passes because the step exists in
+		// the full registry, and buildParallelPlan filters to active deps only.
+		globalState = await executeSteps( globalSteps, initialContext, {
+			...options,
+			allSteps: options.allSteps || [ ...globalSteps, ...threadSteps ],
+		} );
 	}
 
 	// Build global context (initial + global step results)

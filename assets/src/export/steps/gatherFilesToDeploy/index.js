@@ -162,23 +162,23 @@ async function handler( context ) {
 	// Gather blueprint files from prepareBlueprint output
 	if ( blueprintEnabled && blueprintFiles ) {
 		// blueprintFiles already contains the file entries from prepareBlueprint
-		// Add subfolder prefix and copy entries
-		const subfolder = 'playground';
-		const prefix = `${ subfolder }/`;
+		// Use placeholder prefix - will be replaced in deploy step with actual path from provider config
+		// The deploy step will apply the altolith.blueprint.path filter to determine the correct path
+		const placeholderPrefix = '{blueprintPath}/';
 
 		// Add blueprint.json if we have the JSON data
 		if ( blueprintJson ) {
-			filesToDeploy.blueprint[ `${ prefix }blueprint.json` ] = {
+			filesToDeploy.blueprint[ `${ placeholderPrefix }blueprint.json` ] = {
 				type: 'blueprint-json',
 				content: blueprintJson,
 			};
 		}
 
-		// Copy blueprint files with subfolder prefix
+		// Copy blueprint files with placeholder prefix
 		for ( const [ relativePath, fileInfo ] of Object.entries(
 			blueprintFiles
 		) ) {
-			filesToDeploy.blueprint[ `${ prefix }${ relativePath }` ] = {
+			filesToDeploy.blueprint[ `${ placeholderPrefix }${ relativePath }` ] = {
 				...fileInfo,
 				// Map types for deploy step
 				type: mapBlueprintFileType( fileInfo.type ),

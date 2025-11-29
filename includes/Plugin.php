@@ -222,14 +222,24 @@ class Plugin
 		$publicUrl = \home_url();
 		$adminUrl = \admin_url();
 
+		// Get global settings from database for JavaScript access.
+		// This enables getEnabledOutputTypes() to work correctly.
+		$settings = \get_option('altolith_deploy_settings', []);
+		$globalSettings = $settings['global'] ?? [
+			'exportStaticSite' => true,
+			'exportBlueprint' => true,
+			'crawlBatchSize' => 10,
+		];
+
 		$script = \sprintf(
-			'window.altolithData = window.altolithData || {}; window.altolithData.restUrl = %s; window.altolithData.restNamespace = %s; window.altolithData.nonce = %s; window.altolithData.pluginUrl = %s; window.altolithData.publicUrl = %s; window.altolithData.adminUrl = %s;',
+			'window.altolithData = window.altolithData || {}; window.altolithData.restUrl = %s; window.altolithData.restNamespace = %s; window.altolithData.nonce = %s; window.altolithData.pluginUrl = %s; window.altolithData.publicUrl = %s; window.altolithData.adminUrl = %s; window.altolithData.globalSettings = %s;',
 			\wp_json_encode($restUrl),
 			\wp_json_encode($namespace),
 			\wp_json_encode($nonce),
 			\wp_json_encode($pluginUrl),
 			\wp_json_encode($publicUrl),
-			\wp_json_encode($adminUrl)
+			\wp_json_encode($adminUrl),
+			\wp_json_encode($globalSettings)
 		);
 
 		\wp_add_inline_script($scriptHandle, $script, 'before');

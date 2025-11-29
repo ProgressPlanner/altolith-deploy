@@ -287,12 +287,21 @@ export function useExportController( exportState ) {
 			// Get steps filtered by available providers
 			const activeSteps = getActiveSteps( workflowContext );
 
+			// Get ALL registered steps for dependency validation.
+			// Steps may declare dependencies on steps that are filtered out by
+			// deploymentType (e.g., gatherFilesToDeploy depends on discoverAndScanSite).
+			// Validation should pass if the step exists in the full registry.
+			const allRegisteredSteps = getRegisteredSteps();
+
 			// Execute workflow with ThreadOrchestrator (handles 0, 1, or N providers)
 			await executeThreadedWorkflow(
 				activeSteps,
 				workflowContext,
 				allProviderInstances,
-				workflowOptions
+				{
+					...workflowOptions,
+					allSteps: allRegisteredSteps,
+				}
 			);
 
 			// Clear asset upload tracking flags (reset state for next export)

@@ -221,11 +221,23 @@ async function uploadBlueprintFilesFromGather(
 		'deploy'
 	);
 
-	// Find the first path to determine storage service (use any path)
-	const firstPath = Object.keys( blueprintFiles )[ 0 ];
+	// Get the blueprint path from provider config, with filter support
+	// Default to blueprint_subfolder config field or 'playground' fallback
+	const defaultBlueprintPath =
+		providerConfig.blueprint_subfolder || 'playground';
+	const blueprintPath = applyFilters(
+		'altolith.blueprint.path',
+		defaultBlueprintPath,
+		providerConfig,
+		providerId
+	);
+
+	// Use provider's base_path as staticPath for storage service
+	// For local-filesystem, this is the base directory where files are stored
+	const staticPath = providerConfig.base_path || 'static/';
 	const storageConfig = buildStorageConfig( siteUrl, siteUrl, providerId );
 	const storageService = await createStorageService(
-		firstPath,
+		staticPath,
 		storageConfig,
 		providerId,
 		providerConfig
@@ -250,11 +262,17 @@ async function uploadBlueprintFilesFromGather(
 	) ) {
 		const { type, content, sourcePath } = fileInfo;
 
+		// Replace {blueprintPath} placeholder with the actual filtered path
+		const finalPath = relativePath.replace(
+			/\{blueprintPath\}/g,
+			blueprintPath
+		);
+
 		setStatusMessage(
 			sprintf(
 				/* translators: %1$s: File path, %2$s: Provider label */
 				__( 'Uploading %1$s to %2$s\u2026', 'altolith-deploy' ),
-				relativePath,
+				finalPath,
 				providerLabel
 			),
 			'progress',
@@ -264,15 +282,17 @@ async function uploadBlueprintFilesFromGather(
 		let uploadResult;
 
 		if ( type === 'blueprint-json' && content ) {
-			// Serialize JSON content with {targetUrl} replacement
+			// Serialize JSON content with {targetUrl} and {blueprintPath} replacement
 			let jsonString = JSON.stringify( content, null, 2 );
 			jsonString = replaceTargetUrlPlaceholder( jsonString, targetUrl );
+			// Replace {blueprintPath} placeholder with the filtered blueprint path
+			jsonString = jsonString.replace( /\{blueprintPath\}/g, blueprintPath );
 			const jsonBlob = new Blob( [ jsonString ], {
 				type: 'application/json',
 			} );
 
 			uploadResult = await storageService.upload(
-				relativePath,
+				finalPath,
 				jsonBlob,
 				{
 					contentType: 'application/json',
@@ -287,7 +307,7 @@ async function uploadBlueprintFilesFromGather(
 			// Upload from source path (zip files)
 			const dummyBlob = new Blob( [], { type: 'application/zip' } );
 			uploadResult = await storageService.upload(
-				relativePath,
+				finalPath,
 				dummyBlob,
 				{
 					contentType: 'application/zip',
@@ -304,7 +324,7 @@ async function uploadBlueprintFilesFromGather(
 			// Skip files without content or sourcePath
 			// eslint-disable-next-line no-console
 			console.warn(
-				`Skipping blueprint file ${ relativePath }: no content or sourcePath`
+				`Skipping blueprint file ${ finalPath }: no content or sourcePath`
 			);
 			continue;
 		}
@@ -313,11 +333,11 @@ async function uploadBlueprintFilesFromGather(
 			// Log warning but continue - one file failure shouldn't stop everything
 			// eslint-disable-next-line no-console
 			console.warn(
-				`Failed to upload ${ relativePath }:`,
+				`Failed to upload ${ finalPath }:`,
 				uploadResult.error
 			);
 		} else {
-			uploadedFiles.push( relativePath );
+			uploadedFiles.push( finalPath );
 			uploadedCount++;
 			updateProgress();
 		}

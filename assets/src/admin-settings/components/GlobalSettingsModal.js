@@ -123,6 +123,13 @@ export default function GlobalSettingsModal( { isOpen, onClose } ) {
 				},
 			} );
 
+			// Update window.altolithData.globalSettings for reactivity.
+			// This ensures getEnabledOutputTypes() reflects the new settings
+			// without requiring a page reload.
+			if ( window.altolithData ) {
+				window.altolithData.globalSettings = { ...settings };
+			}
+
 			setHasChanges( false );
 			onClose();
 		} catch ( err ) {

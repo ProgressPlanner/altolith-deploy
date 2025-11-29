@@ -64,13 +64,14 @@ describe( 'gatherFilesToDeploy step', () => {
 			expect( stepDefinition.label ).toBe( 'Gather Files' );
 		} );
 
-		test( 'should depend on discoverAndScanSite and prepareBlueprint', () => {
-			expect( stepDefinition.dependencies ).toContain(
-				'discoverAndScanSite'
-			);
-			expect( stepDefinition.dependencies ).toContain(
-				'prepareBlueprint'
-			);
+		test( 'should declare dependencies on upstream steps', () => {
+			// gatherFilesToDeploy depends on discoverAndScanSite and prepareBlueprint
+			// When these steps are filtered out by deploymentType, the DependencyResolver
+			// automatically filters the dependencies to only include active steps
+			expect( stepDefinition.dependencies ).toEqual( [
+				'discoverAndScanSite',
+				'prepareBlueprint',
+			] );
 		} );
 
 		test( 'should provide filesToDeploy with global scope', () => {

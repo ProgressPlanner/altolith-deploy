@@ -115,7 +115,9 @@ async function handler( context ) {
 	// Use placeholder URL - will be replaced during deploy step
 	// Each provider will replace {targetUrl} with their actual public_url
 	const baseUrl = '{targetUrl}';
-	const subfolder = 'playground'; // Default subfolder for blueprint files
+	// Use placeholder for blueprint path - will be replaced during deploy step
+	// Each provider will replace {blueprintPath} with their actual blueprint_subfolder
+	const subfolder = '{blueprintPath}';
 
 	// --- Phase 1: Generate blueprint JSON with URL-based resources ---
 	setStatusMessage(
@@ -294,6 +296,7 @@ const stepDefinition = {
 		'Prepare wp-content archive and blueprint files for deployment',
 		'altolith-deploy'
 	),
+	deploymentType: 'blueprint',
 	supportsProgress: false,
 	dependencies: [],
 	requires: {
