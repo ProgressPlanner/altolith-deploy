@@ -18424,6 +18424,187 @@ function htmlFetchStrategy_categorizeError(error, responseText = '') {
   }
   return ERROR_TYPE.PHP_ERROR;
 }
+;// ./assets/src/utils/outputTypes.js
+/**
+ * Output Types
+ *
+ * Defines core output types and provides a filterable hook for 3rd-party plugins
+ * to register additional output types with their configuration fields.
+ *
+ * Output types are controlled via global settings, not per-provider toggles.
+ * Provider-specific fields (like blueprint_subfolder) are still defined here.
+ */
+
+
+
+
+/**
+ * Hook name for registering output types.
+ *
+ * @type {string}
+ */
+const OUTPUT_TYPES_HOOK = 'altolith.provider.outputTypes';
+
+/**
+ * Core output types provided by altolith-deploy.
+ *
+ * Note: Enable toggles are now in global settings, not per-provider.
+ * Only provider-specific configuration fields are defined here.
+ *
+ * @type {Array<Object>}
+ */
+const CORE_OUTPUT_TYPES = [{
+  id: 'static_site',
+  label: (0,external_wp_i18n_namespaceObject.__)('Static Site', 'altolith-deploy'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Export your WordPress site as static HTML files.', 'altolith-deploy'),
+  // No provider-specific fields for static site
+  fields: []
+}, {
+  id: 'blueprint',
+  label: (0,external_wp_i18n_namespaceObject.__)('Blueprint', 'altolith-deploy'),
+  description: (0,external_wp_i18n_namespaceObject.__)('Export WordPress Playground blueprint files.', 'altolith-deploy'),
+  fields: [{
+    id: 'blueprint_subfolder',
+    type: 'text',
+    label: (0,external_wp_i18n_namespaceObject.__)('Blueprint Subfolder', 'altolith-deploy'),
+    default: 'playground',
+    placeholder: 'playground',
+    help: (0,external_wp_i18n_namespaceObject.__)('Subfolder where blueprint files will be stored (e.g., "playground" creates /playground/blueprint.json).', 'altolith-deploy'),
+    validation: {
+      pattern: /^[a-zA-Z0-9_-]+$/,
+      message: (0,external_wp_i18n_namespaceObject.__)('Subfolder must contain only letters, numbers, hyphens, and underscores.', 'altolith-deploy')
+    }
+  }]
+}];
+
+/**
+ * Get all registered output types.
+ *
+ * Returns core output types plus any added by 3rd-party plugins via the
+ * 'altolith.provider.outputTypes' filter.
+ *
+ * @example
+ * // In a 3rd-party plugin:
+ * import { addFilter } from '@wordpress/hooks';
+ *
+ * addFilter('altolith.provider.outputTypes', 'my-plugin', (types) => {
+ *     return [...types, {
+ *         id: 'media_offload',
+ *         label: 'Media Offloading',
+ *         fields: [
+ *             { id: 'media_subfolder', type: 'text', label: 'Media Subfolder', default: 'wp-content/uploads' },
+ *         ],
+ *     }];
+ * });
+ *
+ * @return {Array<Object>} Array of output type definitions.
+ */
+function outputTypes_getOutputTypes() {
+  return (0,external_wp_hooks_.applyFilters)(OUTPUT_TYPES_HOOK, CORE_OUTPUT_TYPES);
+}
+
+/**
+ * Get all output type config fields.
+ *
+ * Flattens the fields from all output types into a single array,
+ * suitable for merging with provider config fields.
+ *
+ * @return {Array<Object>} Array of config field definitions.
+ */
+function getOutputTypeFields() {
+  const outputTypes = outputTypes_getOutputTypes();
+  return outputTypes.flatMap(type => type.fields || []);
+}
+
+/**
+ * Get an output type by ID.
+ *
+ * @param {string} typeId Output type ID (e.g., 'static_site', 'blueprint').
+ * @return {Object|null} Output type definition or null if not found.
+ */
+function getOutputType(typeId) {
+  const outputTypes = outputTypes_getOutputTypes();
+  return outputTypes.find(type => type.id === typeId) || null;
+}
+
+/**
+ * Get IDs of all registered output types.
+ *
+ * @return {Array<string>} Array of output type IDs.
+ */
+function getOutputTypeIds() {
+  return outputTypes_getOutputTypes().map(type => type.id);
+}
+
+/**
+ * Get global settings.
+ *
+ * Returns global settings from window.altolithData.globalSettings
+ * or defaults.
+ *
+ * @return {Object} Global settings object.
+ */
+function getGlobalSettings() {
+  return window?.altolithData?.globalSettings || {};
+}
+
+/**
+ * Get crawl batch size from global settings.
+ *
+ * Returns the configured batch size for URL crawling (1-50, default: 10).
+ *
+ * @return {number} Batch size for URL crawling.
+ */
+function getCrawlBatchSize() {
+  const globalSettings = getGlobalSettings();
+  const batchSize = globalSettings.crawlBatchSize;
+
+  // Validate and clamp to range 1-50
+  if (typeof batchSize === 'number' && batchSize >= 1 && batchSize <= 50) {
+    return batchSize;
+  }
+  return 10; // Default
+}
+
+/**
+ * Check which output types are enabled based on global settings.
+ *
+ * Reads from global settings stored in window.altolithData.globalSettings
+ * or falls back to defaults.
+ *
+ * @return {Array<string>} Array of enabled output type IDs.
+ */
+function getEnabledOutputTypes() {
+  // Get global settings from window or use defaults
+  const globalSettings = getGlobalSettings();
+  const enabled = [];
+
+  // Check static site (default: true)
+  if (globalSettings.exportStaticSite !== false) {
+    enabled.push('static_site');
+  }
+
+  // Check blueprint (default: true)
+  if (globalSettings.exportBlueprint !== false) {
+    enabled.push('blueprint');
+  }
+
+  // Allow 3rd-party output types to check their own settings
+  const outputTypes = outputTypes_getOutputTypes();
+  for (const type of outputTypes) {
+    // Skip core types already handled
+    if (type.id === 'static_site' || type.id === 'blueprint') {
+      continue;
+    }
+
+    // Check for a matching global setting (e.g., exportMediaOffload for media_offload)
+    const settingKey = `export${type.id.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('')}`;
+    if (globalSettings[settingKey] === true) {
+      enabled.push(type.id);
+    }
+  }
+  return enabled;
+}
 ;// ./assets/src/export/steps/discoverAndScanSite/index.js
 /**
  * Discover and Scan Site Step
@@ -18441,10 +18622,6 @@ function htmlFetchStrategy_categorizeError(error, responseText = '') {
 
 
 
-/**
- * Batch size for PHP endpoint requests
- */
-const BATCH_SIZE = 10;
 
 /**
  * Fetch single URL via JavaScript fallback
@@ -18575,6 +18752,9 @@ async function handler(context) {
     setStepProgress
   } = context;
 
+  // Get configurable batch size from global settings
+  const batchSize = getCrawlBatchSize();
+
   // Phase 1: Get seed URLs from WordPress API
   setStatusMessage((0,external_wp_i18n_namespaceObject.__)('Fetching URLs from WordPress…', 'altolith-deploy'), 'progress', 'discoverAndScanSite');
   const urlResponse = await api.discoverUrls(progress => {
@@ -18607,7 +18787,7 @@ async function handler(context) {
   while (pendingUrls.length > 0) {
     // Collect batch of URLs to process (filter out already processed)
     const batch = [];
-    while (batch.length < BATCH_SIZE && pendingUrls.length > 0) {
+    while (batch.length < batchSize && pendingUrls.length > 0) {
       const url = pendingUrls.shift();
       const normalizedUrl = normalize(url, siteUrl);
       if (!processedUrls.has(normalizedUrl)) {
@@ -18808,157 +18988,6 @@ const stepDefinition = {
 (0,external_wp_hooks_.addAction)('altolith.export.register_steps', 'altolith/step-discoverAndScanSite', registry => {
   registry.register(stepDefinition);
 }, 10);
-;// ./assets/src/utils/outputTypes.js
-/**
- * Output Types
- *
- * Defines core output types and provides a filterable hook for 3rd-party plugins
- * to register additional output types with their configuration fields.
- *
- * Output types are controlled via global settings, not per-provider toggles.
- * Provider-specific fields (like blueprint_subfolder) are still defined here.
- */
-
-
-
-
-/**
- * Hook name for registering output types.
- *
- * @type {string}
- */
-const OUTPUT_TYPES_HOOK = 'altolith.provider.outputTypes';
-
-/**
- * Core output types provided by altolith-deploy.
- *
- * Note: Enable toggles are now in global settings, not per-provider.
- * Only provider-specific configuration fields are defined here.
- *
- * @type {Array<Object>}
- */
-const CORE_OUTPUT_TYPES = [{
-  id: 'static_site',
-  label: (0,external_wp_i18n_namespaceObject.__)('Static Site', 'altolith-deploy'),
-  description: (0,external_wp_i18n_namespaceObject.__)('Export your WordPress site as static HTML files.', 'altolith-deploy'),
-  // No provider-specific fields for static site
-  fields: []
-}, {
-  id: 'blueprint',
-  label: (0,external_wp_i18n_namespaceObject.__)('Blueprint', 'altolith-deploy'),
-  description: (0,external_wp_i18n_namespaceObject.__)('Export WordPress Playground blueprint files.', 'altolith-deploy'),
-  fields: [{
-    id: 'blueprint_subfolder',
-    type: 'text',
-    label: (0,external_wp_i18n_namespaceObject.__)('Blueprint Subfolder', 'altolith-deploy'),
-    default: 'playground',
-    placeholder: 'playground',
-    help: (0,external_wp_i18n_namespaceObject.__)('Subfolder where blueprint files will be stored (e.g., "playground" creates /playground/blueprint.json).', 'altolith-deploy'),
-    validation: {
-      pattern: /^[a-zA-Z0-9_-]+$/,
-      message: (0,external_wp_i18n_namespaceObject.__)('Subfolder must contain only letters, numbers, hyphens, and underscores.', 'altolith-deploy')
-    }
-  }]
-}];
-
-/**
- * Get all registered output types.
- *
- * Returns core output types plus any added by 3rd-party plugins via the
- * 'altolith.provider.outputTypes' filter.
- *
- * @example
- * // In a 3rd-party plugin:
- * import { addFilter } from '@wordpress/hooks';
- *
- * addFilter('altolith.provider.outputTypes', 'my-plugin', (types) => {
- *     return [...types, {
- *         id: 'media_offload',
- *         label: 'Media Offloading',
- *         fields: [
- *             { id: 'media_subfolder', type: 'text', label: 'Media Subfolder', default: 'wp-content/uploads' },
- *         ],
- *     }];
- * });
- *
- * @return {Array<Object>} Array of output type definitions.
- */
-function outputTypes_getOutputTypes() {
-  return (0,external_wp_hooks_.applyFilters)(OUTPUT_TYPES_HOOK, CORE_OUTPUT_TYPES);
-}
-
-/**
- * Get all output type config fields.
- *
- * Flattens the fields from all output types into a single array,
- * suitable for merging with provider config fields.
- *
- * @return {Array<Object>} Array of config field definitions.
- */
-function getOutputTypeFields() {
-  const outputTypes = outputTypes_getOutputTypes();
-  return outputTypes.flatMap(type => type.fields || []);
-}
-
-/**
- * Get an output type by ID.
- *
- * @param {string} typeId Output type ID (e.g., 'static_site', 'blueprint').
- * @return {Object|null} Output type definition or null if not found.
- */
-function getOutputType(typeId) {
-  const outputTypes = outputTypes_getOutputTypes();
-  return outputTypes.find(type => type.id === typeId) || null;
-}
-
-/**
- * Get IDs of all registered output types.
- *
- * @return {Array<string>} Array of output type IDs.
- */
-function getOutputTypeIds() {
-  return outputTypes_getOutputTypes().map(type => type.id);
-}
-
-/**
- * Check which output types are enabled based on global settings.
- *
- * Reads from global settings stored in window.altolithData.globalSettings
- * or falls back to defaults.
- *
- * @return {Array<string>} Array of enabled output type IDs.
- */
-function getEnabledOutputTypes() {
-  // Get global settings from window or use defaults
-  const globalSettings = window?.altolithData?.globalSettings || {};
-  const enabled = [];
-
-  // Check static site (default: true)
-  if (globalSettings.exportStaticSite !== false) {
-    enabled.push('static_site');
-  }
-
-  // Check blueprint (default: true)
-  if (globalSettings.exportBlueprint !== false) {
-    enabled.push('blueprint');
-  }
-
-  // Allow 3rd-party output types to check their own settings
-  const outputTypes = outputTypes_getOutputTypes();
-  for (const type of outputTypes) {
-    // Skip core types already handled
-    if (type.id === 'static_site' || type.id === 'blueprint') {
-      continue;
-    }
-
-    // Check for a matching global setting (e.g., exportMediaOffload for media_offload)
-    const settingKey = `export${type.id.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('')}`;
-    if (globalSettings[settingKey] === true) {
-      enabled.push(type.id);
-    }
-  }
-  return enabled;
-}
 ;// ./assets/src/export/steps/prepareBlueprint/index.js
 /**
  * Prepare Blueprint Step

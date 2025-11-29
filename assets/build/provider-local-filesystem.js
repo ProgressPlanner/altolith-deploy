@@ -896,6 +896,36 @@ function getOutputTypeIds() {
 }
 
 /**
+ * Get global settings.
+ *
+ * Returns global settings from window.altolithData.globalSettings
+ * or defaults.
+ *
+ * @return {Object} Global settings object.
+ */
+function getGlobalSettings() {
+  return window?.altolithData?.globalSettings || {};
+}
+
+/**
+ * Get crawl batch size from global settings.
+ *
+ * Returns the configured batch size for URL crawling (1-50, default: 10).
+ *
+ * @return {number} Batch size for URL crawling.
+ */
+function getCrawlBatchSize() {
+  const globalSettings = getGlobalSettings();
+  const batchSize = globalSettings.crawlBatchSize;
+
+  // Validate and clamp to range 1-50
+  if (typeof batchSize === 'number' && batchSize >= 1 && batchSize <= 50) {
+    return batchSize;
+  }
+  return 10; // Default
+}
+
+/**
  * Check which output types are enabled based on global settings.
  *
  * Reads from global settings stored in window.altolithData.globalSettings
@@ -905,7 +935,7 @@ function getOutputTypeIds() {
  */
 function getEnabledOutputTypes() {
   // Get global settings from window or use defaults
-  const globalSettings = window?.altolithData?.globalSettings || {};
+  const globalSettings = getGlobalSettings();
   const enabled = [];
 
   // Check static site (default: true)

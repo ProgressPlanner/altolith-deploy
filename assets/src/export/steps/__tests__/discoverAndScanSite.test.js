@@ -57,6 +57,11 @@ jest.mock( '@altolith/export/utils/urlUtils', () => ( {
 	} ),
 } ) );
 
+// Mock outputTypes for getCrawlBatchSize
+jest.mock( '@altolith/utils/outputTypes', () => ( {
+	getCrawlBatchSize: jest.fn( () => 10 ),
+} ) );
+
 // Import after mocks
 import { extractAssetsFromHtml } from '@altolith/export/utils/assetExtractor';
 

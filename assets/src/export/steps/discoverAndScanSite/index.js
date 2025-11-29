@@ -17,11 +17,7 @@ import {
 	categorizeError,
 	STRATEGY,
 } from '@altolith/export/utils/htmlFetchStrategy';
-
-/**
- * Batch size for PHP endpoint requests
- */
-const BATCH_SIZE = 10;
+import { getCrawlBatchSize } from '@altolith/utils/outputTypes';
 
 /**
  * Fetch single URL via JavaScript fallback
@@ -160,6 +156,9 @@ const statusLabels = {
 async function handler( context ) {
 	const { api, siteUrl, setStatusMessage, setStepProgress } = context;
 
+	// Get configurable batch size from global settings
+	const batchSize = getCrawlBatchSize();
+
 	// Phase 1: Get seed URLs from WordPress API
 	setStatusMessage(
 		__( 'Fetching URLs from WordPress…', 'altolith-deploy' ),
@@ -217,7 +216,7 @@ async function handler( context ) {
 	while ( pendingUrls.length > 0 ) {
 		// Collect batch of URLs to process (filter out already processed)
 		const batch = [];
-		while ( batch.length < BATCH_SIZE && pendingUrls.length > 0 ) {
+		while ( batch.length < batchSize && pendingUrls.length > 0 ) {
 			const url = pendingUrls.shift();
 			const normalizedUrl = normalize( url, siteUrl );
 
