@@ -89,10 +89,11 @@ class ExportStepsController
 	 * Creates wp-content.zip containing only core content, excluding
 	 * custom plugins and themes which are exported separately.
 	 *
-	 * @param WP_REST_Request $request Request object.
+	 * @param WP_REST_Request<array<string, mixed>> $_request Request object (unused but required by REST API callback signature).
 	 * @return \WP_REST_Response|WP_Error
 	 */
-	public function exportCoreContent(WP_REST_Request $request)
+	// phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable -- Required by REST API callback signature
+	public function exportCoreContent(WP_REST_Request $_request)
 	{
 		/**
 		 * Action fired before core content export starts.
@@ -250,7 +251,7 @@ class ExportStepsController
 		// Allow paths within ABSPATH or the temp directory
 		$tempDir = TempDirectoryManager::getTempDirectory();
 		$validation = PathValidator::validatePath($fullPath, \ABSPATH, false);
-		
+
 		// If validation against ABSPATH fails, try temp directory
 		if (!$validation['valid']) {
 			$tempValidation = PathValidator::validatePath($fullPath, $tempDir, false);
@@ -292,16 +293,18 @@ class ExportStepsController
 		$response = new \WP_REST_Response($fileContent, 200);
 		$response->header('Content-Type', $contentType);
 		$response->header('Content-Disposition', 'attachment; filename="' . \basename($fullPath) . '"');
-		$response->header('Content-Length', \strlen($fileContent));
-		
+		$response->header('Content-Length', (string) \strlen($fileContent));
+
 		// Prevent JSON encoding of binary data by using rest_pre_serve_request filter
-		\add_filter('rest_pre_serve_request', function($served, $result, $request, $server) use ($response, $fileContent, $contentType, $fullPath) {
+		// phpcs:ignore VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable -- Required by WordPress filter callback signature
+		\add_filter('rest_pre_serve_request', function ($served, $result, $request, $_server) use ($response, $fileContent, $contentType, $fullPath) {
 			// Only handle our export-file endpoint
 			if ($result === $response && \strpos($request->get_route(), '/export-file') !== false) {
 				// Send headers and binary content directly
 				\header('Content-Type: ' . $contentType);
 				\header('Content-Disposition: attachment; filename="' . \basename($fullPath) . '"');
 				\header('Content-Length: ' . \strlen($fileContent));
+				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Binary file content should not be escaped
 				echo $fileContent;
 				return true; // Mark as served, prevent default handling
 			}
@@ -314,12 +317,12 @@ class ExportStepsController
 	/**
 	 * Validate file path parameter.
 	 *
-	 * @param string $path File path to validate.
+	 * @param mixed $path File path to validate.
 	 * @return bool True if valid, false otherwise.
 	 */
 	public function validateFilePath($path)
 	{
-		if (empty($path) || !\is_string($path)) {
+		if (!\is_string($path) || empty($path)) {
 			return false;
 		}
 

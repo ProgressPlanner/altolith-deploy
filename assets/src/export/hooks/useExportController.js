@@ -188,10 +188,7 @@ export function useExportController( exportState ) {
 			// Initialize steps with 'discoverBlueprintBundleAssets' as the active step
 			// This sets up steps array, active step, and lastStepIndex correctly
 			// Use getStepsForUI() to filter steps by enabled output types from global settings
-			initializeSteps(
-				getStepsForUI(),
-				'discoverBlueprintBundleAssets'
-			);
+			initializeSteps( getStepsForUI(), 'discoverBlueprintBundleAssets' );
 			// Set isExporting to true to start the workflow
 			setIsExporting( true );
 

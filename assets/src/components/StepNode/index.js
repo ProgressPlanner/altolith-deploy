@@ -230,7 +230,11 @@ function getProvidersForStep( stepId, providerProgress, providerInstances ) {
  * @return {number|null} Percentage (0-100) or null if invalid
  */
 function calculateProgressPercentage( progress ) {
-	if ( ! progress || typeof progress.total !== 'number' || progress.total <= 0 ) {
+	if (
+		! progress ||
+		typeof progress.total !== 'number' ||
+		progress.total <= 0
+	) {
 		return null;
 	}
 	// Clamp percentage to 0-100 range
@@ -255,8 +259,8 @@ const progressTextStyle = {
  * @param {Object|null} props.statusLabels      Status label definitions { pending, running, complete }
  * @param {Object}      props.statusData        Dynamic data for label interpolation
  * @param {string}      props.stepId            Step ID for provider filtering
- * @param {boolean}     props.supportsProgress   Whether step supports progress tracking
- * @param {Object}      props.progress           Progress object with current and total
+ * @param {boolean}     props.supportsProgress  Whether step supports progress tracking
+ * @param {Object}      props.progress          Progress object with current and total
  * @param {Object}      props.providerProgress  Provider progress object from context
  * @param {Array}       props.providerInstances Provider instances array from context
  * @return {JSX.Element} StepNode component
@@ -304,7 +308,9 @@ export function StepNode( {
 	if ( stepProviders.length > 0 ) {
 		// Show per-provider progress for multi-thread steps
 		progressText = stepProviders
-			.map( ( provider ) => `${ provider.label }: ${ provider.progress }%` )
+			.map(
+				( provider ) => `${ provider.label }: ${ provider.progress }%`
+			)
 			.join( ', ' );
 	} else if ( stepProgressPercent !== null ) {
 		// Show overall step progress for single-thread steps
@@ -339,26 +345,28 @@ export function StepNode( {
 				</span>
 			) }
 			{ /* Show pills only for legacy thread steps when no progress text is shown */ }
-			{ stepProviders.length > 0 && ! progressText && THREAD_STEP_IDS.includes( stepId ) && (
-				<span
-					className="altolith-step-node__providers"
-					style={ {
-						display: 'inline-flex',
-						flexWrap: 'wrap',
-						gap: '4px',
-						marginLeft: spacing.sm,
-					} }
-				>
-					{ stepProviders.map( ( provider ) => (
-						<ProviderPill
-							key={ provider.id }
-							label={ provider.label }
-							status={ provider.status }
-							progress={ provider.progress }
-						/>
-					) ) }
-				</span>
-			) }
+			{ stepProviders.length > 0 &&
+				! progressText &&
+				THREAD_STEP_IDS.includes( stepId ) && (
+					<span
+						className="altolith-step-node__providers"
+						style={ {
+							display: 'inline-flex',
+							flexWrap: 'wrap',
+							gap: '4px',
+							marginLeft: spacing.sm,
+						} }
+					>
+						{ stepProviders.map( ( provider ) => (
+							<ProviderPill
+								key={ provider.id }
+								label={ provider.label }
+								status={ provider.status }
+								progress={ provider.progress }
+							/>
+						) ) }
+					</span>
+				) }
 		</div>
 	);
 }

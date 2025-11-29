@@ -286,19 +286,18 @@ async function uploadBlueprintFilesFromGather(
 			let jsonString = JSON.stringify( content, null, 2 );
 			jsonString = replaceTargetUrlPlaceholder( jsonString, targetUrl );
 			// Replace {blueprintPath} placeholder with the filtered blueprint path
-			jsonString = jsonString.replace( /\{blueprintPath\}/g, blueprintPath );
+			jsonString = jsonString.replace(
+				/\{blueprintPath\}/g,
+				blueprintPath
+			);
 			const jsonBlob = new Blob( [ jsonString ], {
 				type: 'application/json',
 			} );
 
-			uploadResult = await storageService.upload(
-				finalPath,
-				jsonBlob,
-				{
-					contentType: 'application/json',
-					metadata: { siteUrl },
-				}
-			);
+			uploadResult = await storageService.upload( finalPath, jsonBlob, {
+				contentType: 'application/json',
+				metadata: { siteUrl },
+			} );
 
 			if ( uploadResult.success ) {
 				totalSize += jsonString.length;
@@ -306,16 +305,12 @@ async function uploadBlueprintFilesFromGather(
 		} else if ( sourcePath ) {
 			// Upload from source path (zip files)
 			const dummyBlob = new Blob( [], { type: 'application/zip' } );
-			uploadResult = await storageService.upload(
-				finalPath,
-				dummyBlob,
-				{
-					contentType: 'application/zip',
-					sourcePath,
-					filePath: sourcePath,
-					metadata: { siteUrl },
-				}
-			);
+			uploadResult = await storageService.upload( finalPath, dummyBlob, {
+				contentType: 'application/zip',
+				sourcePath,
+				filePath: sourcePath,
+				metadata: { siteUrl },
+			} );
 
 			if ( uploadResult.success ) {
 				totalSize += uploadResult.size || 0;
