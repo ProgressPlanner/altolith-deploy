@@ -50,13 +50,13 @@ class URLDiscoveryController
 			'types' => [
 				'description'       => 'URL types to discover',
 				'type'              => 'array',
-				'default'           => [ 'posts', 'terms', 'authors', 'archives', 'pagination' ],
+				'default'           => [ 'posts', 'terms', 'authors', 'archives' ],
 				'items'             => [ 'type' => 'string' ],
 				'sanitize_callback' => function ($types) {
 					if (!\is_array($types)) {
-						return ['posts', 'terms', 'authors', 'archives', 'pagination'];
+						return ['posts', 'terms', 'authors', 'archives'];
 					}
-					$valid = ['posts', 'terms', 'authors', 'archives', 'pagination'];
+					$valid = ['posts', 'terms', 'authors', 'archives'];
 					return \array_values(\array_intersect($types, $valid));
 				},
 			],
@@ -66,14 +66,15 @@ class URLDiscoveryController
 	/**
 	 * Discover URLs for static site generation.
 	 *
-	 * Returns all URLs in a single request (no pagination).
+	 * Returns all URLs in a single request.
+	 * Note: Pagination URLs are discovered via the crawl-based link extraction.
 	 *
 	 * @param WP_REST_Request $request Request object.
 	 * @return WP_REST_Response Response with URLs.
 	 */
 	public function discoverUrls(WP_REST_Request $request): WP_REST_Response
 	{
-		$types = $request->get_param('types') ?? [ 'posts', 'terms', 'authors', 'archives', 'pagination' ];
+		$types = $request->get_param('types') ?? [ 'posts', 'terms', 'authors', 'archives' ];
 
 		$allUrls = [];
 
@@ -92,10 +93,6 @@ class URLDiscoveryController
 
 		if (\in_array('archives', $types, true)) {
 			$allUrls = \array_merge($allUrls, $this->getArchiveUrls());
-		}
-
-		if (\in_array('pagination', $types, true)) {
-			$allUrls = \array_merge($allUrls, $this->getPaginationUrls());
 		}
 
 		// Deduplicate URLs
@@ -243,185 +240,5 @@ class URLDiscoveryController
 		}
 
 		return $urls;
-	}
-
-	/**
-	 * Get pagination URLs for archives.
-	 *
-	 * Calculates pagination URLs for blog, categories, tags, authors, and CPT archives.
-	 *
-	 * @return array<string> Pagination URLs.
-	 */
-	private function getPaginationUrls(): array
-	{
-		$postsPerPage = (int) \get_option('posts_per_page', 10);
-
-		// Collect all pagination URLs from different archive types
-		// Using spread operator to merge all arrays at once (more efficient than multiple array_merge calls)
-		return [
-			...$this->getCategoryPaginationUrls($postsPerPage),
-			...$this->getTagPaginationUrls($postsPerPage),
-			...$this->getAuthorPaginationUrls($postsPerPage),
-			...$this->getCptArchivePaginationUrls($postsPerPage),
-			...$this->getDateArchivePaginationUrls($postsPerPage),
-		];
-	}
-
-	/**
-	 * Generate pagination URLs for a list of items.
-	 *
-	 * Unified helper method for generating pagination URLs across different
-	 * archive types (categories, tags, authors, CPTs, date archives).
-	 *
-	 * @param array<mixed>  $items        Array of items to generate URLs for.
-	 * @param callable       $getCount     Callable to get post count for an item.
-	 * @param callable       $getBaseUrl   Callable to get base URL for an item.
-	 * @param int            $postsPerPage Posts per page setting.
-	 * @return array<string> Pagination URLs.
-	 */
-	private function generatePaginationUrls(array $items, callable $getCount, callable $getBaseUrl, int $postsPerPage): array
-	{
-		$urls = [];
-
-		foreach ($items as $item) {
-			$count = $getCount($item);
-			$totalPages = (int) \ceil($count / $postsPerPage);
-
-			if ($totalPages < 2) {
-				continue; // No pagination needed
-			}
-
-			$baseUrl = $getBaseUrl($item);
-
-			// Skip if URL is invalid or WP_Error
-			if (\is_wp_error($baseUrl) || empty($baseUrl)) {
-				continue;
-			}
-
-			// Generate pagination URLs (page 2, 3, 4, etc.)
-			for ($i = 2; $i <= $totalPages; $i++) {
-				$urls[] = \trailingslashit($baseUrl) . 'page/' . $i . '/';
-			}
-		}
-
-		return $urls;
-	}
-
-	/**
-	 * Get category archive pagination URLs.
-	 *
-	 * @param int $postsPerPage Posts per page setting.
-	 * @return array<string> Pagination URLs.
-	 */
-	private function getCategoryPaginationUrls(int $postsPerPage): array
-	{
-		$categories = \get_categories(['hide_empty' => true]);
-
-		return $this->generatePaginationUrls(
-			$categories,
-			fn($category) => $category->count,
-			fn($category) => \get_term_link($category),
-			$postsPerPage
-		);
-	}
-
-	/**
-	 * Get tag archive pagination URLs.
-	 *
-	 * @param int $postsPerPage Posts per page setting.
-	 * @return array<string> Pagination URLs.
-	 */
-	private function getTagPaginationUrls(int $postsPerPage): array
-	{
-		$tags = \get_tags(['hide_empty' => true]);
-
-		if (!\is_array($tags)) {
-			return [];
-		}
-
-		return $this->generatePaginationUrls(
-			$tags,
-			fn($tag) => $tag->count,
-			fn($tag) => \get_term_link($tag),
-			$postsPerPage
-		);
-	}
-
-	/**
-	 * Get author archive pagination URLs.
-	 *
-	 * @param int $postsPerPage Posts per page setting.
-	 * @return array<string> Pagination URLs.
-	 */
-	private function getAuthorPaginationUrls(int $postsPerPage): array
-	{
-		$authors = \get_users(['capability' => 'edit_posts']);
-
-		return $this->generatePaginationUrls(
-			$authors,
-			fn($author) => (int) \count_user_posts($author->ID, 'post', true),
-			fn($author) => \get_author_posts_url($author->ID),
-			$postsPerPage
-		);
-	}
-
-	/**
-	 * Get CPT archive pagination URLs.
-	 *
-	 * @param int $postsPerPage Posts per page setting.
-	 * @return array<string> Pagination URLs.
-	 */
-	private function getCptArchivePaginationUrls(int $postsPerPage): array
-	{
-		$postTypes = \get_post_types([
-			'public'   => true,
-			'_builtin' => false,
-		], 'objects');
-
-		// Filter to only post types with archives
-		$postTypesWithArchives = \array_filter($postTypes, fn($postType) => (bool) $postType->has_archive);
-
-		return $this->generatePaginationUrls(
-			$postTypesWithArchives,
-			fn($postType) => (int) \wp_count_posts($postType->name)->publish,
-			fn($postType) => \get_post_type_archive_link($postType->name),
-			$postsPerPage
-		);
-	}
-
-	/**
-	 * Get date archive pagination URLs.
-	 *
-	 * @param int $postsPerPage Posts per page setting.
-	 * @return array<string> Pagination URLs.
-	 */
-	private function getDateArchivePaginationUrls(int $postsPerPage): array
-	{
-		global $wpdb;
-
-		// Get all months with posts and their post counts
-		$monthsWithPosts = $wpdb->get_results(
-			$wpdb->prepare(
-				"SELECT YEAR(post_date) as year, MONTH(post_date) as month, COUNT(*) as count
-				FROM {$wpdb->posts}
-				WHERE post_status = %s
-				AND post_type = %s
-				GROUP BY YEAR(post_date), MONTH(post_date)
-				ORDER BY post_date DESC",
-				'publish',
-				'post'
-			)
-		);
-
-		if (!\is_array($monthsWithPosts)) {
-			return [];
-		}
-
-		return $this->generatePaginationUrls(
-			$monthsWithPosts,
-			fn($monthData) => (int) $monthData->count,
-			fn($monthData) => \get_month_link((int) $monthData->year, (int) $monthData->month),
-			$postsPerPage
-		);
 	}
 }

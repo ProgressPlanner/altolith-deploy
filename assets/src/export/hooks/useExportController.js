@@ -5,7 +5,13 @@
  *
  */
 
-import { useCallback, useState, useRef } from '@wordpress/element';
+import {
+	useCallback,
+	useState,
+	useRef,
+	useMemo,
+	useEffect,
+} from '@wordpress/element';
 import { useExportAPI } from './useExportAPI';
 import { useAssetManager } from './useAssetManager';
 import { useStaticSiteGenerator } from './useStaticSiteGenerator';
@@ -18,6 +24,10 @@ import {
 	buildProviderInstancesByOutputType,
 	buildWorkflowContext,
 } from '@altolith/export/utils/exportConfiguration';
+import {
+	createProgressEmitter,
+	PROGRESS_EVENTS,
+} from '@altolith/export/utils/progressEmitter';
 
 export function useExportController( exportState ) {
 	const {
@@ -42,6 +52,59 @@ export function useExportController( exportState ) {
 
 	const api = useExportAPI();
 	const assetManager = useAssetManager();
+
+	// Create progress emitter singleton for workflow-wide progress tracking
+	const progressEmitter = useMemo( () => createProgressEmitter(), [] );
+
+	// Subscribe UI callbacks to progress emitter events
+	useEffect( () => {
+		// Step progress handler
+		const stepHandler = ( data ) => {
+			if ( data.stepId ) {
+				setStepProgress( data.stepId, {
+					current: data.current,
+					total: data.total,
+					statusData: data.statusData,
+				} );
+			}
+		};
+
+		// Provider progress handler
+		const providerHandler = ( data ) => {
+			if ( data.providerId ) {
+				setProviderProgress( data.providerId, {
+					stepId: data.stepId,
+					stepLabel: data.stepLabel,
+					progress: data.progress,
+					status: data.status,
+				} );
+			}
+		};
+
+		// Status message handler
+		const statusHandler = ( data ) => {
+			if ( data.message ) {
+				setStatusMessage( data.message, data.type, data.key );
+			}
+		};
+
+		// Subscribe to events
+		progressEmitter.on( PROGRESS_EVENTS.STEP, stepHandler );
+		progressEmitter.on( PROGRESS_EVENTS.PROVIDER, providerHandler );
+		progressEmitter.on( PROGRESS_EVENTS.STATUS, statusHandler );
+
+		// Cleanup on unmount
+		return () => {
+			progressEmitter.off( PROGRESS_EVENTS.STEP, stepHandler );
+			progressEmitter.off( PROGRESS_EVENTS.PROVIDER, providerHandler );
+			progressEmitter.off( PROGRESS_EVENTS.STATUS, statusHandler );
+		};
+	}, [
+		progressEmitter,
+		setStepProgress,
+		setProviderProgress,
+		setStatusMessage,
+	] );
 
 	// Create blueprint generator hook.
 	const { generateBlueprint: generateBlueprintJson } =
@@ -197,6 +260,7 @@ export function useExportController( exportState ) {
 					setStatusMessage,
 					setStepProgress,
 					setProviderProgress,
+					progressEmitter,
 				}
 			);
 
@@ -263,6 +327,7 @@ export function useExportController( exportState ) {
 		setOverallProgressValue,
 		setProviders,
 		markAllComplete,
+		progressEmitter,
 	] );
 
 	return {

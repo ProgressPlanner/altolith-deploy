@@ -533,6 +533,7 @@ const stepDefinition = {
 		processStaticSiteUrls: false,
 		setStatusMessage: true,
 		setStepProgress: false,
+		setProviderProgress: false,
 		updateStaticSiteProgressContext: false,
 	},
 	provides: {

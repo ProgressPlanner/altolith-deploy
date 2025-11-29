@@ -431,22 +431,10 @@ export async function executeThreadedWorkflow(
 	const stepProviderCount = new Map();
 	const stepCompletions = new Map();
 
-	// Count how many providers will run each step (accounting for skip conditions)
-	for ( const providerInstance of providerInstances ) {
-		const providerContext = {
-			...globalContext,
-			currentProviderInstance: providerInstance,
-		};
-		for ( const step of threadSteps ) {
-			// Check if this provider will run this step (not skipped)
-			const willSkip = step.skip ? step.skip( providerContext ) : false;
-			if ( ! willSkip ) {
-				stepProviderCount.set(
-					step.id,
-					( stepProviderCount.get( step.id ) || 0 ) + 1
-				);
-			}
-		}
+	// Count how many providers will run each step
+	for ( const step of threadSteps ) {
+		// All providers run all thread steps
+		stepProviderCount.set( step.id, providerInstances.length );
 	}
 
 	// Initialize completion counts to 0

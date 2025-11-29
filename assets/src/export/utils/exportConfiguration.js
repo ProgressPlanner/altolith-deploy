@@ -225,6 +225,7 @@ export function buildWorkflowContext( config, dependencies ) {
 		setStatusMessage,
 		setStepProgress,
 		setProviderProgress,
+		progressEmitter,
 	} = dependencies;
 
 	return {
@@ -249,6 +250,9 @@ export function buildWorkflowContext( config, dependencies ) {
 		setStatusMessage,
 		setStepProgress,
 		setProviderProgress,
+
+		// Progress emitter for unified event-driven progress tracking
+		progressEmitter,
 
 		// Discovered assets (populated during workflow)
 		discoveredAssets: null,

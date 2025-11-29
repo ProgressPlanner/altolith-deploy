@@ -1,7 +1,7 @@
 /**
  * Discover and Scan Site Step
  *
- * Unified step that discovers URLs from WordPress and crawls pages
+ * Unified step that discovers URLs from WordPress and crawls them
  * to extract assets (CSS, JS, images) and discover internal links.
  *
  * @since 1.0.0
@@ -143,7 +143,7 @@ const statusLabels = {
 /**
  * Discover and scan site step handler
  *
- * Combines URL discovery from WordPress API with crawl-based page scanning
+ * Combines URL discovery from WordPress API with crawl-based URL scanning
  * and asset extraction into a single unified step.
  *
  * @param {Object}   context                  - Execution context
@@ -190,9 +190,9 @@ async function handler( context ) {
 	const seedUrls = urlResponse.urls || [];
 	const staticSiteUrl = urlResponse.staticSiteUrl || siteUrl;
 
-	// Phase 2: Crawl and discover pages + assets
+	// Phase 2: Crawl and discover URLs + assets
 	setStatusMessage(
-		__( 'Scanning pages and discovering assets…', 'altolith-deploy' ),
+		__( 'Scanning URLs and discovering assets…', 'altolith-deploy' ),
 		'progress',
 		'discoverAndScanSite'
 	);
@@ -387,7 +387,7 @@ async function handler( context ) {
 		);
 	}
 
-	// Combine processed page URLs with discovered assets
+	// Combine processed URLs with discovered assets
 	const expandedUrls = [ ...processedUrls, ...allAssets ];
 
 	// Final progress update with complete statusData
@@ -404,8 +404,8 @@ async function handler( context ) {
 
 	setStatusMessage(
 		sprintf(
-			/* translators: %1$d: Number of pages, %2$d: Number of assets */
-			__( 'Found %1$d pages and %2$d assets', 'altolith-deploy' ),
+			/* translators: %1$d: Number of URLs, %2$d: Number of assets */
+			__( 'Found %1$d URLs and %2$d assets', 'altolith-deploy' ),
 			processedUrls.size,
 			allAssets.size
 		),
@@ -428,10 +428,7 @@ async function handler( context ) {
 const stepDefinition = {
 	id: 'discoverAndScanSite',
 	label: __( 'Discover Site', 'altolith-deploy' ),
-	description: __(
-		'Find all pages and assets for export',
-		'altolith-deploy'
-	),
+	description: __( 'Find all URLs and assets for export', 'altolith-deploy' ),
 	deploymentType: 'static_site',
 	supportsProgress: true,
 	dependencies: [],
