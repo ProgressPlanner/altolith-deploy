@@ -20,6 +20,7 @@ import {
 	createStorageService,
 	buildStorageConfig,
 } from '../../utils/staticSiteConfig';
+import { buildPlaygroundRedirectHtml } from '../../utils/playgroundRedirect';
 
 /**
  * Status labels for the step
@@ -255,6 +256,9 @@ async function uploadBlueprintFilesFromGather(
 
 	const uploadedFiles = [];
 	let totalSize = 0;
+	// Captured resolved blueprint JSON (with placeholders replaced) so we can
+	// generate the wp-admin Playground redirect after the loop.
+	let resolvedBlueprintJson = null;
 
 	// Upload each file from blueprintFiles
 	for ( const [ relativePath, fileInfo ] of Object.entries(
@@ -290,6 +294,8 @@ async function uploadBlueprintFilesFromGather(
 				/\{blueprintPath\}/g,
 				blueprintPath
 			);
+			// Capture the fully-resolved blueprint for the wp-admin redirect.
+			resolvedBlueprintJson = jsonString;
 			const jsonBlob = new Blob( [ jsonString ], {
 				type: 'application/json',
 			} );
@@ -335,6 +341,51 @@ async function uploadBlueprintFilesFromGather(
 			uploadedFiles.push( finalPath );
 			uploadedCount++;
 			updateProgress();
+		}
+	}
+
+	// Generate wp-admin/index.html: a redirect into WordPress Playground with the
+	// exported blueprint preloaded (base64 in the URL hash). Visiting /wp-admin/
+	// on the static site opens an editable Playground instance of this site.
+	if ( resolvedBlueprintJson ) {
+		setStatusMessage(
+			sprintf(
+				/* translators: %s: Provider label */
+				__(
+					'Generating wp-admin Playground redirect for %s…',
+					'altolith-deploy'
+				),
+				providerLabel
+			),
+			'progress',
+			'deploy'
+		);
+
+		const redirectHtml = buildPlaygroundRedirectHtml(
+			resolvedBlueprintJson
+		);
+		const redirectBlob = new Blob( [ redirectHtml ], {
+			type: 'text/html',
+		} );
+
+		const redirectResult = await storageService.upload(
+			'wp-admin/index.html',
+			redirectBlob,
+			{ contentType: 'text/html', metadata: { siteUrl } }
+		);
+
+		if ( redirectResult.success ) {
+			uploadedFiles.push( 'wp-admin/index.html' );
+			uploadedCount++;
+			totalSize += redirectHtml.length;
+			updateProgress();
+		} else {
+			// Non-fatal: the rest of the blueprint deployed fine.
+			// eslint-disable-next-line no-console
+			console.warn(
+				'Failed to upload wp-admin Playground redirect:',
+				redirectResult.error
+			);
 		}
 	}
 

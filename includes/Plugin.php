@@ -133,6 +133,11 @@ class Plugin
 		// Add filter to add data-provider-id attribute to provider script tags
 		\add_filter('script_loader_tag', [ $this, 'addProviderScriptAttribute' ], 10, 2);
 
+		// Advertise core provider scripts so they can be lazy-loaded by the
+		// admin-bar export flow (via the admin-bar-dependencies endpoint), not
+		// just on the settings page. Third-party providers hook the same filter.
+		\add_filter('altolith_provider_scripts', [ $this, 'registerCoreProviderScripts' ]);
+
 		// Remove emoji scripts for cleaner static site generation.
 		$this->removeEmojiScripts();
 	}
@@ -277,6 +282,55 @@ class Plugin
 	 * @param string $providerId Provider ID (e.g., 'local-filesystem').
 	 * @return void
 	 */
+	/**
+	 * Register core provider scripts on the `altolith_provider_scripts` filter.
+	 *
+	 * This list is consumed by the admin-bar dependencies endpoint so the export
+	 * modal triggered from the admin bar (on any page) loads the provider scripts
+	 * that register providers into the shared ProviderRegistry. Without this the
+	 * admin-bar export has no providers to deploy to.
+	 *
+	 * @param array<int, array<string, mixed>> $scripts Provider scripts collected so far.
+	 * @return array<int, array<string, mixed>> Provider scripts including core providers.
+	 */
+	public function registerCoreProviderScripts(array $scripts): array
+	{
+		$scripts[] = $this->buildProviderScriptEntry(
+			'altolith-provider-local-filesystem',
+			ALTOLITH_DEPLOY_PLUGIN_URL,
+			ALTOLITH_DEPLOY_PLUGIN_DIR,
+			'provider-local-filesystem'
+		);
+
+		return $scripts;
+	}
+
+	/**
+	 * Build a provider-script descriptor (handle, src, deps, version) from its
+	 * compiled bundle + asset file. Shared shape for the provider-scripts filter.
+	 *
+	 * @param string $handle    Script handle.
+	 * @param string $pluginUrl Plugin URL base.
+	 * @param string $pluginDir Plugin directory base.
+	 * @param string $bundle    Build bundle name (without extension).
+	 * @return array{handle: string, src: string, dependencies: array<string>, version: string}
+	 */
+	public function buildProviderScriptEntry(string $handle, string $pluginUrl, string $pluginDir, string $bundle): array
+	{
+		$assetFile = $pluginDir . 'assets/build/' . $bundle . '.asset.php';
+		$asset = \file_exists($assetFile) ? require $assetFile : [
+			'dependencies' => [ 'wp-hooks', 'wp-i18n' ],
+			'version'      => false,
+		];
+
+		return [
+			'handle'       => $handle,
+			'src'          => $pluginUrl . 'assets/build/' . $bundle . '.js',
+			'dependencies' => $asset['dependencies'] ?? [],
+			'version'      => $asset['version'] ?? '',
+		];
+	}
+
 	public function enqueueProviderScript(string $providerId): void
 	{
 		$handle = 'altolith-provider-' . $providerId;

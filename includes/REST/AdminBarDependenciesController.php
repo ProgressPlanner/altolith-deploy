@@ -79,6 +79,12 @@ class AdminBarDependenciesController
 			$scriptsData = $this->getScriptsData();
 			$stylesData  = $this->getStylesData();
 
+			// Append provider scripts (registered via the altolith_provider_scripts
+			// filter) so the admin-bar export modal loads them and the providers
+			// register themselves into the shared ProviderRegistry. Without this,
+			// publishing from the admin bar has no provider to deploy to.
+			$scriptsData = \array_merge($scriptsData, $this->getProviderScriptsData());
+
 			return new WP_REST_Response([
 				'success' => true,
 				'scripts' => $scriptsData,
@@ -173,6 +179,43 @@ class AdminBarDependenciesController
 
 		// Convert to indexed array for response.
 		return \array_values($allScripts);
+	}
+
+	/**
+	 * Get provider scripts registered via the `altolith_provider_scripts` filter.
+	 *
+	 * Each provider (core or third-party) advertises its compiled bundle here so
+	 * the admin-bar export flow can lazy-load it, registering the provider into
+	 * the shared JS ProviderRegistry. Normalized to match getScriptsData() shape.
+	 *
+	 * @return array<int, array{handle: string, id: string, src: string, version: string, dependencies: array<string>}> Provider scripts data.
+	 */
+	private function getProviderScriptsData(): array
+	{
+		/** @var array<int, array<string, mixed>> $providers */
+		$providers = \apply_filters('altolith_provider_scripts', []);
+
+		$out = [];
+		foreach ((array) $providers as $provider) {
+			if (empty($provider['handle']) || empty($provider['src'])) {
+				continue;
+			}
+
+			$src = (string) $provider['src'];
+			if (!empty($provider['version'])) {
+				$src = \add_query_arg('ver', $provider['version'], $src);
+			}
+
+			$out[] = [
+				'handle'       => (string) $provider['handle'],
+				'id'           => $provider['handle'] . '-js',
+				'src'          => \esc_url_raw($src),
+				'version'      => isset($provider['version']) ? (string) $provider['version'] : '',
+				'dependencies' => \array_values((array) ($provider['dependencies'] ?? [])),
+			];
+		}
+
+		return $out;
 	}
 
 	/**
